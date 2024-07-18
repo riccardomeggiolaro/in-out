@@ -1,0 +1,38 @@
+{
+    "app_api": {
+        "port": 8000,
+        "rfid": {
+            "connection": {
+                "baudrate": 9600,
+                "node": null,
+                "serial_port_name": "/dev/ttyACM0",
+                "timeout": 1
+            },
+            "module": "rfidserialrfid",
+            "setup": {}
+        },
+        "weigher": {
+            "connection": {
+                "ip": "192.168.0.229",
+                "port": 4001,
+                "timeout": 1.0
+            },
+            "nodes": [
+                {
+                    "diagnostic_has_priority_than_realtime": true,
+                    "division": 1,
+                    "maintaine_session_realtime_after_command": true,
+                    "max_weight": 50000,
+                    "min_weight": 20,
+                    "node": "01",
+                    "terminal": "dgt1"
+                }
+            ],
+            "time_between_actions": 0.3
+        }
+    },
+    "log": {
+        "max-size-mb": 10
+    },
+    "name": "goldrake"
+}
