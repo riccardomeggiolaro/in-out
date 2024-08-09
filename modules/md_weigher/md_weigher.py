@@ -28,9 +28,36 @@ def init():
 	lb_log.info("init")
 # ==============================================================
 
+import socket
+import psutil
+
+def is_wifi_connection():
+    wifi_interfaces = []
+    
+    # Ottieni informazioni sugli adattatori di rete
+    for interface, addrs in psutil.net_if_addrs().items():
+        for addr in addrs:
+            if addr.family == psutil.AF_LINK:
+                if "wifi" in interface.lower() or "wlan" in interface.lower():
+                    wifi_interfaces.append(interface)
+    
+    if not wifi_interfaces:
+        return False
+    
+    # Ottieni informazioni sulle connessioni attive
+    for conn in psutil.net_connections(kind='inet'):
+        if conn.status == psutil.CONN_ESTABLISHED:
+            local_ip = conn.laddr.ip
+            for interface in wifi_interfaces:
+                if local_ip in [addr.address for addr in psutil.net_if_addrs()[interface] if addr.family == socket.AF_INET]:
+                    return True
+    
+    return False
+
 # ==== MAINPRGLOOP =============================================
 # funzione che scrive e legge in loop conn e in base alla stringa ricevuta esegue funzioni specifiche
 def mainprg():
+	c = is_wifi_connection()
 	while lb_config.g_enabled:
 		for weigher in weighers:
 			time_start = time.time()
@@ -41,7 +68,9 @@ def mainprg():
 			time.sleep(timeout)
 			lb_log.info(f"Status: {status}, Command: {command}, Response; {response}, Error: {error}")
 			if weigher.diagnostic.status == 301:
+				lb_log.info("Errore di connessione, sto chiudendo per provare a riaprire")
 				connection.connection.close()
+				time.sleep(connection.connection.timeout)
 				status, error_message = connection.connection.try_connection()
 				if status:
 					for w in weighers:
