@@ -42,6 +42,7 @@ def mainprg():
 			lb_log.info(f"Status: {status}, Command: {command}, Response; {response}, Error: {error}")
 			if weigher.diagnostic.status == 301:
 				connection.connection.close()
+				time.sleep(connection.connection.timeout)
 				status, error_message = connection.connection.try_connection()
 				if status:
 					for w in weighers:
