@@ -112,7 +112,7 @@ def mainprg():
 
 	@app.get("/stop/all_command")
 	async def StopAllCommand(node: Optional[str] = None):
-		result = weigher.setModope(node=node, modope="")
+		result = weigher.setModope(node=node, modope="OK")
 		return {
 			"status_command": result
 		}

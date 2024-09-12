@@ -12,6 +12,7 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	diagnostic_has_priority_than_realtime: Optional[bool] = None
 	node: Optional[Union[str, None]] = "undefined"
 	terminal: Optional[str] = None
+	run: Optional[bool] = None
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):
@@ -41,6 +42,7 @@ class SetupWeigherDTO(CustomBaseModel):
 	diagnostic_has_priority_than_realtime: bool
 	node: Optional[Union[str, None]] = None
 	terminal: str
+	run: bool
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):

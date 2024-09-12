@@ -6,6 +6,7 @@ import lib.lb_log as lb_log
 from lib.lb_utils import checkCallbackFormat
 from pydantic import BaseModel
 from typing import Optional, Callable, Union
+import select
 
 class __SetupWeigherConnection(BaseModel):
 	max_weight: int
@@ -15,24 +16,32 @@ class __SetupWeigherConnection(BaseModel):
 	diagnostic_has_priority_than_realtime: bool = True
 	node: Optional[str] = None
 	terminal: str
+	run: bool = True
 
 	def try_connection(self):
 		return connection.connection.try_connection()
 	
 	def write(self, cmd):
-		try:
-			if self.node and self.node is not None:
-				cmd = self.node + cmd
-			connection.connection.write(cmd=cmd)
-		except Exception as e:
-			lb_log.info(f"Write: {e}")
+		if self.node and self.node is not None:
+			cmd = self.node + cmd
+		status = connection.connection.write(cmd=cmd)
+		if not status:
+			if not self.is_open():
+				raise TimeoutError()
+			else:
+				raise BrokenPipeError()
 
 	def read(self):
-		status, read, error = connection.connection.read()
-		if status:
+		read = connection.connection.read()
+		if read:
 			decode = read.decode("utf-8", errors="ignore").replace(self.node, "", 1).replace("\r\n", "")
 			read = decode
-		return status, read, error
+		else:
+			if not self.is_open():
+				raise TimeoutError()
+			else:
+				raise BrokenPipeError()
+		return read
 
 	def decode_read(self, read):
 		decode = read
@@ -45,8 +54,8 @@ class __SetupWeigherConnection(BaseModel):
 	def flush(self):
 		connection.connection.flush()
 
-	def is_connected(self):
-		connection.connection.is_open()
+	def is_open(self):
+		return connection.connection.is_open()
 
 	def close_connection(self):
 		connection.connection.close()
@@ -107,7 +116,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"division": self.division,
 			"maintaine_session_realtime_after_command": self.maintaine_session_realtime_after_command,
 			"diagnostic_has_priority_than_realtime": self.diagnostic_has_priority_than_realtime,
-			"terminal": self.terminal
+			"terminal": self.terminal,
+			"run": self.run
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
@@ -123,6 +133,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.diagnostic_has_priority_than_realtime = setup.diagnostic_has_priority_than_realtime
 		if setup.node != "undefined":
 			self.node = setup.node
+		if setup.run is not None:
+			self.run = setup.run
 		return self.getSetup()
 
 	def getDataInExecution(self):
@@ -172,12 +184,16 @@ class __SetupWeigher(__SetupWeigherConnection):
 
 	# setta il modope_to_execute
 	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int] = None):
-		commands = ["VER", "SN", ""]
+		if mod == "":
+			self.modope = ""
+			self.modope_to_execute = ""
+			return 100 
+		commands = ["VER", "SN", "OK"]
 		direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING"]
 		if mod in commands:
 			self.modope_to_execute = mod
 			return 100
-		if self.diagnostic.status in [301, 305, 307] and mod != "REALTIME" and mod != "DIAGNOSTICS" and mod != "":
+		if self.diagnostic.status in [301, 305] and mod != "REALTIME" and mod != "DIAGNOSTICS" and mod != "OK":
 			return self.diagnostic.status
 		# se passo una stringa vuota imposta a stringa vuota il comando da eseguire dopo, quindi non verranno più eseguiti comandi diretti sulla pesa
 		# se passo DIAGNOSTICS lo imposto come comando da eseguire, se c'era qualsiasi altro comando viene sovrascritto perchè la diagnostica ha la precedenza

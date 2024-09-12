@@ -18,7 +18,7 @@ import time  # noqa: E402
 from lib.lb_system import SerialPort, Tcp  # noqa: E402
 from modules.md_weigher.types import DataInExecution  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
-from modules.md_weigher.terminals.dgt1 import Dgt1  # noqa: E402
+from modules.md_weigher.terminals.dgt import Dgt  # noqa: E402
 from modules.md_weigher.globals import terminalsClasses  # noqa: E402
 # ==============================================================
 
@@ -33,29 +33,27 @@ def init():
 def mainprg():
 	while lb_config.g_enabled:
 		for weigher in weighers:
-			time_start = time.time()
-			status, command, response, error = weigher.main()
-			time_end = time.time()
-			time_execute = time_end - time_start
-			timeout = max(0, time_between_actions - time_execute)
-			time.sleep(timeout)
-			lb_log.info(f"Status: {status}, Command: {command}, Response; {response}, Error: {error}")
-			if weigher.diagnostic.status == 301:
-				connection.connection.close()
-				time.sleep(connection.connection.timeout)
-				status, error_message = connection.connection.try_connection()
-				if status:
-					for w in weighers:
-						time_start = time.time()
-						w.initialize()
-						time_end = time.time()
-						time_execute = time_end - time_start
-						timeout = max(0, time_between_actions - time_execute)
-						time.sleep(timeout)
-				else:
-					for w in weighers:
-						w.diagnostic.status = 301
+			if weigher.run:
+				time_start = time.time()
+				status, command, response, error = weigher.main()
+				time_end = time.time()
+				time_execute = time_end - time_start
+				timeout = max(0, time_between_actions - time_execute)
+				time.sleep(timeout)
+				lb_log.info(f"Node: {weigher.node}, Status: {status}, Command: {command}, Response; {response}, Error: {error}")
+				if weigher.diagnostic.status == 301:
 					connection.connection.close()
+					status, error_message = connection.connection.try_connection()
+					for w in weighers:
+						if status:
+							time_start = time.time()
+							w.initialize()
+							time_end = time.time()
+							time_execute = time_end - time_start
+							timeout = max(0, time_between_actions - time_execute)
+							time.sleep(timeout)
+						else:
+							connection.connection.close()
 # ==============================================================
 
 # ==== START ===================================================
@@ -82,7 +80,7 @@ def initialize(configuration: ConfigurationDTO):
 	time_between_actions = configuration.time_between_actions
 	for node in configuration.nodes:
 		node_dict = node.dict()
-		n = Dgt1(**node_dict)
+		n = Dgt(**node_dict)
 		n.initialize()
 		weighers.append(n)
 		# ottenere firmware e nome del modello
@@ -152,8 +150,6 @@ def setNode(node: Union[str, None], setup: ChangeSetupWeigherDTO = {}):
 			node_to_changed = SetupWeigherDTO(**result)
 			deleteNode(node_to_changed.node)
 			addNode(node_to_changed)
-		else:
-			node_found[0].initialize()
 	return result
 
 def deleteNode(node: Union[str, None]):

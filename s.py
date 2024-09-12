@@ -217,17 +217,16 @@ class Tcp(Connection):
 
 	def is_open(self):
 		try:
-			status = None
-			with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-				result = sock.connect_ex((self.ip, self.port))
-				if result == 0:
-					status = True
-				else:
-					status = False
-			return status
-		except socket.timeout:
-			return False
-		except Exception as e:
+			if isinstance(self.conn, socket.socket):
+				# Use select to check if the socket is ready for reading
+				readable, _, _ = select.select([self.conn], [], [], 0)
+				if readable:
+					# If the socket is ready for reading, attempt to read with MSG_PEEK
+					data = self.conn.recv(1, socket.MSG_PEEK)
+					if data == b'':
+						return False
+			return True
+		except (socket.error, OSError):
 			return False
 
 	def try_connection(self):
@@ -267,7 +266,6 @@ class Tcp(Connection):
 	def close(self):
 		status = False
 		error_message = None
-		lb_log.error("Close")
 		try:
 			# Shutdown the socket to indicate no more data will be sent or received
 			self.conn.shutdown(socket.SHUT_RDWR)
@@ -282,23 +280,34 @@ class Tcp(Connection):
 
 	def write(self, cmd):
 		status = False
+		error_message = None
 		try:
 			command = (cmd + chr(13)+chr(10)).encode()
 			self.conn.sendall(command[:1024])
 			status = True
 		except socket.error as e:
-			pass
-		return status
+			error_message = "error"
+			status = False
+		return status, error_message
 		
-	def read(self):
+	def read(self): 
+		status = False
 		message = None
+		error_message = None
 		try:
-			readable, _, _ = select.select([self.conn], [], [], self.timeout)
-			if readable:
-				message = self.conn.recv(1024)
-		except socket.timeout as e:
-			pass
-		return message
+			message = self.conn.recv(1024, socket.MSG_DONTWAIT)
+			status = True
+		# except BlockingIOError as e:
+		# 	status = False
+		# 	error_message = e
+		# 	lb_log.info(f"Error on read: {e}")
+		except socket.error as e:
+			if e.errno in (socket.errno.ECONNRESET, socket.errno.ENOTCONN):
+				error_message = "timeout"
+			else:
+				error_message = "error"
+			status = False
+		return message, status, error_message
 
 	def decode_read(self, read):
 		status = True
