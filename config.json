@@ -15,7 +15,7 @@
             "connection": {
                 "ip": "192.168.0.229",
                 "port": 4001,
-                "timeout": 0.1
+                "timeout": 0.3
             },
             "nodes": [
                 {
@@ -39,7 +39,7 @@
                     "terminal": "dgt1"
                 }
             ],
-            "time_between_actions": 0.1
+            "time_between_actions": 0.3
         }
     },
     "log": {

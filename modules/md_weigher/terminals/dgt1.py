@@ -5,7 +5,7 @@ import re
 from modules.md_weigher.setup_terminal import Terminal
 from socket import socket
 
-class Dgt(Terminal):
+class Dgt1(Terminal):
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
 		# in base al valore del modope scrive un comando specifico nella conn
@@ -244,5 +244,5 @@ class Dgt(Terminal):
 			
 terminalsClasses.append({
 	"terminal": "dgt1",
-	"class": Dgt
+	"class": Dgt1
 })

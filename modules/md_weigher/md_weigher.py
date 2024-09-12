@@ -18,7 +18,7 @@ import time  # noqa: E402
 from lib.lb_system import SerialPort, Tcp  # noqa: E402
 from modules.md_weigher.types import DataInExecution  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
-from modules.md_weigher.terminals.dgt import Dgt  # noqa: E402
+from modules.md_weigher.terminals.dgt1 import Dgt1  # noqa: E402
 from modules.md_weigher.globals import terminalsClasses  # noqa: E402
 # ==============================================================
 
@@ -80,7 +80,7 @@ def initialize(configuration: ConfigurationDTO):
 	time_between_actions = configuration.time_between_actions
 	for node in configuration.nodes:
 		node_dict = node.dict()
-		n = Dgt(**node_dict)
+		n = Dgt1(**node_dict)
 		n.initialize()
 		weighers.append(n)
 		# ottenere firmware e nome del modello

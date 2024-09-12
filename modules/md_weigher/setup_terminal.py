@@ -184,10 +184,6 @@ class __SetupWeigher(__SetupWeigherConnection):
 
 	# setta il modope_to_execute
 	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int] = None):
-		if mod == "":
-			self.modope = ""
-			self.modope_to_execute = ""
-			return 100 
 		commands = ["VER", "SN", "OK"]
 		direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING"]
 		if mod in commands:
@@ -231,7 +227,6 @@ class __SetupWeigher(__SetupWeigherConnection):
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
 							self.weight.data_assigned = data_assigned
-							lb_log.info(data_assigned)
 						else:
 							return 500 # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire

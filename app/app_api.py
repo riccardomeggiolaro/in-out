@@ -134,8 +134,6 @@ def mainprg():
 			data = id
 		else:
 			data = weigher.getDataInExecution(node=node)
-			if data is not None:
-				data = weigher.DataInExecution(**data)
 		result = weigher.setModope(node=node, modope="WEIGHING", data_assigned=data)
 		if result:
 			weigher.deleteDataInExecution(node=node)
@@ -303,12 +301,16 @@ def mainprg():
 
 	@app.delete("/config_weigher/connection")
 	async def DeleteConfigWeigherConnection():
-		connection_removed = weigher.deleteConnection()
-		if connection_removed:
-			lb_config.g_config["app_api"]["weigher"]["connection"] = None
-			lb_config.saveconfig()
+		status = True
+		if lb_config.g_config["app_api"]["weigher"]["connection"] == None:
+			status = False
+		else:
+			connection = weigher.deleteConnection()
+			if connection:
+				lb_config.g_config["app_api"]["weigher"]["connection"] = None
+				lb_config.saveconfig()
 		return {
-			"status_command": connection_removed
+			"status_command": connection
 		}
 
 	# @app.get("/config_rfid")

@@ -26,16 +26,16 @@ class Connection(BaseModel):
 		return False, ConnectionError('Close: No connection set')
 
 	def write(self, cmd):
-		return False, ConnectionError('Write: No connection set')
+		return False
 
 	def read(self):
-		return False, None, ConnectionError('Read: No connection set')
+		return None
 
 	def decode_read(self, read):
 		return False, None, ConnectionError('Decode read: No connection set')
 
 	def is_open(self):
-		return False, None, ConnectionError('Is open: No connection set')
+		return False
 
 class SerialPort(Connection):
 	baudrate: int = 19200
@@ -239,7 +239,8 @@ class Tcp(Connection):
 			self.conn.setblocking(False)
 			self.conn.settimeout(self.timeout)
 			self.conn.connect((self.ip, self.port))
-		except TimeoutError as e:
+		except Exception as e:
+			status = False
 			error_message = e
 		return status, error_message
 
@@ -267,7 +268,6 @@ class Tcp(Connection):
 	def close(self):
 		status = False
 		error_message = None
-		lb_log.error("Close")
 		try:
 			# Shutdown the socket to indicate no more data will be sent or received
 			self.conn.shutdown(socket.SHUT_RDWR)
@@ -333,7 +333,7 @@ class ConfigConnection():
 	def deleteConnection(self):
 		status, message = self.connection.close()
 		self.connection = Connection(**{})
-		return status
+		return self.getConnection()
 
 # ==== FUNZIONE RICHIAMBILI FUORI DALLA LIBRERIA ===============
 def enable_serial_port(port_name):
