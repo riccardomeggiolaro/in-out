@@ -37,7 +37,8 @@ class __SetupWeigherConnection(BaseModel):
 			decode = read.decode("utf-8", errors="ignore").replace(self.node, "", 1).replace("\r\n", "")
 			read = decode
 		else:
-			if not self.is_open():
+			connected = self.is_open()
+			if not connected:
 				raise TimeoutError()
 			else:
 				raise BrokenPipeError()

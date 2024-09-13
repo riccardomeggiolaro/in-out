@@ -31,9 +31,6 @@ class Connection(BaseModel):
 	def read(self):
 		return None
 
-	def decode_read(self, read):
-		return False, None, ConnectionError('Decode read: No connection set')
-
 	def is_open(self):
 		return False
 
@@ -175,19 +172,6 @@ class SerialPort(Connection):
 			# lb_log.error(f"TypeError on read: {error_message}")
 		return status, message, error_message
 
-	def decode_read(self, read):
-		status = True
-		message = None
-		error_message = None
-		try:
-			message = read.decode('utf-8', errors='ignore').replace("\r\n", "").strip()
-		except AttributeError as e:
-			status = False
-			error_message = e
-			# lb_log.info(read)
-			# lb_log.error(f"AttributeError on decode read: {error_message}")
-		return status, message, error_message
-
 class Tcp(Connection):
 	ip: str
 	port: int
@@ -219,6 +203,8 @@ class Tcp(Connection):
 		try:
 			status = None
 			with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+				sock.setblocking(False)
+				sock.settimeout(self.timeout)
 				result = sock.connect_ex((self.ip, self.port))
 				if result == 0:
 					status = True
@@ -262,7 +248,6 @@ class Tcp(Connection):
 		except Exception as e:
 			status = False
 			error_message = e
-			lb_log.info(e)
 		return status, error_message
 
 	def close(self):
@@ -299,19 +284,6 @@ class Tcp(Connection):
 		except socket.timeout as e:
 			pass
 		return message
-
-	def decode_read(self, read):
-		status = True
-		message = None
-		error_message = None
-		try:
-			message = read.decode('utf-8', errors='ignore').replace("\r\n", "").strip()
-		except AttributeError as e:
-			status = False
-			error_message = e
-			# lb_log.info(read)
-			# lb_log.error(f"AttributeError on decode read: {error_message}")
-		return status, message, error_message
 
 class ConfigConnection():
 	connection: Union[SerialPort, Tcp, Connection] = Connection(**{})
@@ -404,7 +376,6 @@ def enable_serial_port_linux(port_name):
 		# Controlla se il file esiste
 		if not os.path.exists(port_name):
 			message = "Errore: La porta seriale " + port_name + " non esiste."
-			lb_log.info(message)
 			return False, message
 
 		# Modifica i permessi del file
@@ -413,14 +384,11 @@ def enable_serial_port_linux(port_name):
 		# Controlla se i permessi sono stati modificati correttamente
 		if not os.path.exists(port_name) or not os.access(port_name, os.W_OK):
 			message = "Errore: Impossibile modificare i permessi del file."
-			lb_log.info(message)
 			return False, message
 
 		message = "Porta seriale " + port_name + " abilitata correttamente."
-		lb_log.info(message)
 		return True, message
 	except Exception as e:
-		lb_log.error(e)
 		return False, e
 
 def enable_serial_port_windows(port_name):
@@ -437,7 +405,6 @@ def enable_serial_port_windows(port_name):
 		# Controlla se la porta seriale è valida
 		if not port_name.startswith("COM"):
 			message = f"Errore: Porta seriale non valida: {port_name}"
-			lb_log.info(message)
 			return False, message
 
 		# Aprire la chiave del Registro di sistema
@@ -468,10 +435,8 @@ def enable_serial_port_windows(port_name):
 		os.system("net start Serial")
 
 		message = f"Porta seriale {port_name} abilitata correttamente."
-		lb_log.info(message)
 		return True, message
 	except Exception as e:
-		lb_log.error(e)
 		return False, e
 
 def list_serial_port_linux():
@@ -482,7 +447,6 @@ def list_serial_port_linux():
 			serial_ports.append(port)
 		return True, serial_ports
 	except Exception as e:
-		lb_log.error(e)
 		return False, e
 
 def list_serial_port_windows():
@@ -493,7 +457,6 @@ def list_serial_port_windows():
 			serial_ports.append(port)
 		return True, serial_ports
 	except Exception as e:
-		lb_log.error(e)
 		return False, e
 
 def serial_port_not_just_in_use_linux(port_name):
@@ -520,7 +483,6 @@ def serial_port_not_just_in_use_windows(port_name):
 	try:
 		return True, None
 	except Exception as e:
-		lb_log.error(e)
 		return False, e
 
 def exist_serial_port_linux(port_name):
@@ -528,17 +490,14 @@ def exist_serial_port_linux(port_name):
 		# Controlla se il file esiste
 		if not os.path.exists(port_name):
 			message = "Errore: La porta seriale " + port_name + " non esiste."
-			lb_log.info(message)
 			return False, message
 		return True, None
 	except Exception as e:
-		lb_log.error(e)
 		return False, e
 
 def exist_serial_port_windows(port_name):
 	try:
 		return True, None
 	except Exception as e:
-		lb_log.error(e)
 		return False, e
 # ==============================================================
