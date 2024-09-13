@@ -20,12 +20,13 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 import uvicorn  # noqa: E402
 import asyncio  # noqa: E402
 import psutil  # noqa: E402
-import modules.md_weigher.md_weigher as weigher  # noqa: E402
+import modules.md_weigher.md_weigher as md_weigher  # noqa: E402
 # import modules.md_rfid as rfid
 from modules.md_weigher.types import DataInExecution  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
 from lib.lb_system import SerialPort, Tcp  # noqa: E402
 from typing import Optional, Union  # noqa: E402
+from lib.lb_utils import GracefulKiller, createThread, startThread, closeThread
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -86,6 +87,7 @@ def mainprg():
 	global manager_diagnostic
 	global manager_data_in_execution
 	global app
+	global WEIGHERS
 
 	@app.get("/list_serial_ports")
 	async def ListSerialPorts():
@@ -98,28 +100,28 @@ def mainprg():
 
 	@app.get("/start/realtime")
 	async def StartRealtime(node: Optional[str] = None):
-		result = weigher.setModope(node=node, modope="REALTIME")
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="REALTIME")
 		return {
 			"status_command": result
 		}
 
 	@app.get("/start/diagnostics")
 	async def StartDiagnostics(node: Optional[str] = None):
-		result = weigher.setModope(node=node, modope="DIAGNOSTICS")
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="DIAGNOSTICS")
 		return {
 			"status_command": result
 		}
 
 	@app.get("/stop/all_command")
 	async def StopAllCommand(node: Optional[str] = None):
-		result = weigher.setModope(node=node, modope="OK")
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="OK")
 		return {
 			"status_command": result
 		}
 
 	@app.get("/print")
 	async def Print(node: Optional[str] = None):
-		result = weigher.setModope(node=node, modope="WEIGHING", data_assigned=None)
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="WEIGHING", data_assigned=None)
 		if result:
 			return {
 				"status_command": result,
@@ -133,10 +135,10 @@ def mainprg():
 		if id is not None:
 			data = id
 		else:
-			data = weigher.getDataInExecution(node=node)
-		result = weigher.setModope(node=node, modope="WEIGHING", data_assigned=data)
+			data = WEIGHERS[0]["module"].getDataInExecution(node=node)
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="WEIGHING", data_assigned=data)
 		if result:
-			weigher.deleteDataInExecution(node=node)
+			WEIGHERS[0]["module"].deleteDataInExecution(node=node)
 			return {
 				"status_command": result
 			}
@@ -145,28 +147,28 @@ def mainprg():
 
 	@app.get("/tare")
 	async def Tare(node: Optional[str] = None):
-		result = weigher.setModope(node=node, modope="TARE")
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="TARE")
 		return {
 			"status_command": result
 		}
 
 	@app.get("/presettare")
 	async def PresetTare(node: Optional[str] = None, tare: Optional[int] = 0):
-		result = weigher.setModope(node=node, modope="PRESETTARE", presettare=tare)
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="PRESETTARE", presettare=tare)
 		return {
 			"status_command": result
 		}
 
 	@app.get("/zero")
 	async def Zero(node: Optional[str] = None):
-		result = weigher.setModope(node=node, modope="ZERO")
+		result = WEIGHERS[0]["module"].setModope(node=node, modope="ZERO")
 		return {
 			"status_command": result
 		}	 
 
 	@app.get("/data_in_execution")
 	async def GetDataInExecution(node: Optional[str] = None):
-		result = weigher.getDataInExecution(node=node)
+		result = WEIGHERS[0]["module"].getDataInExecution(node=node)
 		if result:
 			return {
 				"node": node,
@@ -177,7 +179,7 @@ def mainprg():
 
 	@app.patch("/set/data_in_execution")
 	async def SetDataInExecution(node: Optional[str] = None, data: DataInExecution = {}):
-		result = weigher.setDataInExecution(node=node, data_in_execution=data)
+		result = WEIGHERS[0]["module"].setDataInExecution(node=node, data_in_execution=data)
 		if result:
 			await manager_data_in_execution.broadcast(result)
 			return {
@@ -189,7 +191,7 @@ def mainprg():
 
 	@app.delete("/delete/data_in_execution")
 	async def DeleteDataInExecution(node: Optional[str] = None):
-		result = weigher.deleteDataInExecution(node=node)
+		result = WEIGHERS[0]["module"].deleteDataInExecution(node=node)
 		if result:
 			await manager_data_in_execution.broadcast(result)
 			return {
@@ -201,11 +203,11 @@ def mainprg():
 
 	@app.get("/config_weigher")
 	async def GetConfigWeigher():
-		return weigher.getConfig()
+		return WEIGHERS[0]["module"].getConfig()
 
 	@app.delete("/config_weigher")
 	async def DeleteConfigWeigher():
-		result, message = weigher.deleteConfig()
+		result, message = WEIGHERS[0]["module"].deleteConfig()
 		if result:
 			lb_config.g_config["app_api"]["weigher"]["nodes"] = []
 			lb_config.g_config["app_api"]["weigher"]["connection"] = None
@@ -217,21 +219,21 @@ def mainprg():
 
 	@app.get("/config_weigher/nodes")
 	async def GetConfigWeigherNodes():
-		result = weigher.getNodes()
+		result = WEIGHERS[0]["module"].getNodes()
 		return result
 
 	@app.get("/config_weigher/node")
 	async def GetConfigWeigherNode(node: Optional[str] = None):
-		result = weigher.getNode(node)
+		result = WEIGHERS[0]["module"].getNode(node)
 		if not result:
 			raise HTTPException(status_code=404, detail='Not found')
 		return result
 
 	@app.post("/config_weigher/node")
 	async def AddConfigWeigherNode(node: SetupWeigherDTO):
-		result = weigher.addNode(node)
+		result = WEIGHERS[0]["module"].addNode(node)
 		if result:
-			weigher.setActionNode(
+			WEIGHERS[0]["module"].setActionNode(
 					node=node,
 					cb_realtime=Callback_Realtime, 
 					cb_diagnostic=Callback_Diagnostic, 
@@ -245,7 +247,7 @@ def mainprg():
 	async def SetConfigWeigherSetup(node: Optional[str] = None, setup: ChangeSetupWeigherDTO = {}):
 		if node == "null":
 			node = None
-		response = weigher.setNode(node, setup)
+		response = WEIGHERS[0]["module"].setNode(node, setup)
 		if response:
 			node_found = [n for n in lb_config.g_config["app_api"]["weigher"]["nodes"] if n["node"] == node]
 			index_node_found = lb_config.g_config["app_api"]["weigher"]["nodes"].index(node_found[0])
@@ -257,7 +259,7 @@ def mainprg():
 
 	@app.delete("/config_weigher/node")
 	async def DeleteConfigWeigherSetup(node: Optional[str] = None):
-		node_removed = weigher.deleteNode(node)
+		node_removed = WEIGHERS[0]["module"].deleteNode(node)
 		if node_removed:
 			node_found = [n for n in lb_config.g_config["app_api"]["weigher"]["nodes"] if n["node"] == node]
 			lb_config.g_config["app_api"]["weigher"]["nodes"].remove(node_found[0])
@@ -270,14 +272,14 @@ def mainprg():
 
 	@app.get("/config_weigher/connection")
 	async def GetConfigWeigherConnection():
-		connection = weigher.getConnection()
+		connection = WEIGHERS[0]["module"].getConnection()
 		if connection:
 			return connection
 		raise HTTPException(status_code=404, detail='Not found')
 
 	@app.patch("/config_weigher/connection")
 	async def SetConfigWeigherConnection(connection: Union[SerialPort, Tcp]):
-		connected, conn, message = weigher.setConnection(connection)
+		connected, conn, message = WEIGHERS[0]["module"].setConnection(connection)
 		lb_config.g_config["app_api"]["weigher"]["connection"] = conn
 		lb_config.saveconfig()
 		return {
@@ -292,7 +294,7 @@ def mainprg():
 			return {
 				"message": "Time must be greater or same than 0"
 			}
-		result = weigher.setTimeBetweenActions(time=time)
+		result = WEIGHERS[0]["module"].setTimeBetweenActions(time=time)
 		lb_config.g_config["app_api"]["weigher"]["time_between_actions"] = result
 		lb_config.saveconfig()
 		return {
@@ -305,7 +307,7 @@ def mainprg():
 		if lb_config.g_config["app_api"]["weigher"]["connection"] == None:
 			status = False
 		else:
-			connection = weigher.deleteConnection()
+			connection = WEIGHERS[0]["module"].deleteConnection()
 			if connection:
 				lb_config.g_config["app_api"]["weigher"]["connection"] = None
 				lb_config.saveconfig()
@@ -370,30 +372,30 @@ def mainprg():
 		await manager_realtime.connect(websocket)
 		try:
 			if len(manager_realtime.active_connections) == 1:
-				if weigher is not None:
-					weigher.realTime()
+				if WEIGHERS[0]["module"] is not None:
+					WEIGHERS[0]["module"].realTime()
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
 			await manager_realtime.disconnect(websocket)
 			if len(manager_realtime.active_connections) == 0:
-				if weigher is not None:
-					weigher.stopCommand()
+				if WEIGHERS[0]["module"] is not None:
+					WEIGHERS[0]["module"].stopCommand()
 
 	@app.websocket("/diagnostic")
 	async def websocket_diagnostic(websocket: WebSocket):
 		await manager_diagnostic.connect(websocket)
 		try:
 			if len(manager_diagnostic.active_connections) == 1:
-				if weigher is not None:
-					weigher.diagnostic()
+				if WEIGHERS[0]["module"] is not None:
+					WEIGHERS[0]["module"].diagnostic()
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
 			await manager_diagnostic.disconnect(websocket)
 			if len(manager_diagnostic.active_connections) == 0 and len(manager_realtime.active_connections) >= 1:
-				if weigher is not None:
-					weigher.realTime()
+				if WEIGHERS[0]["module"] is not None:
+					WEIGHERS[0]["module"].realTime()
 
 	@app.websocket("/datainexecution")
 	async def weboscket_datainexecution(websocket: WebSocket):
@@ -417,20 +419,26 @@ def start():
 # ==============================================================
 
 def stop():
+	global WEIGHERS
+    
+	for weigher in WEIGHERS:  # Per ogni modulo
+		lb_log.info("..killing weigher configuration: %s" % weigher["name"])  # Logga un messaggio informativo
+		closeThread(weigher["thread"], weigher["module"])
+
 	try:
 		port = lb_config.g_config["app_api"]["port"]
 		connection = [conn for conn in psutil.net_connections() if conn.laddr.port == port] 
-		print(f"Chiudendo il processo che utilizza la porta {port}...")
+		lb_log.info(f"Chiudendo il processo che utilizza la porta {port}...")
 		p = psutil.Process(connection[-1].pid)
 		p.kill()
 		p.wait(timeout=5)  # Attendere al massimo 5 secondi per la chiusura
-		print(f"Processo sulla porta {port} chiuso con successo.")
+		lb_log.info(f"Processo sulla porta {port} chiuso con successo.")
 	except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.TimeoutExpired) as e:	
-		print(f"Impossibile chiudere il processo sulla porta {port}. {e}")
+		lb_log.info(f"Impossibile chiudere il processo sulla porta {port}. {e}")
 
 # ==== INIT ====================================================
 # funzione che dichiara tutte le globali
-def init():
+def init():    
 	lb_log.info("init")
 	global manager_realtime
 	global manager_diagnostic
@@ -440,6 +448,9 @@ def init():
 	global modules
 	global weigher_modules
 	global rfid_modules
+	global WEIGHERS
+
+	WEIGHERS = []
 
 	manager_realtime = ConnectionManager()
 	manager_diagnostic = ConnectionManager()
@@ -455,13 +466,27 @@ def init():
 		allow_headers=["*"],
 	)
 
-	configuration = ConfigurationDTO(**lb_config.g_config["app_api"]["weigher"])
-	weigher.initialize(configuration=configuration)
-	weigher.setAction(
+	i = 0
+
+	# Carica thread per i moduli esterni.
+	lb_log.info("loading weighers...")
+	for weigher_configuration in lb_config.g_config["app_api"]["weighers"]:
+		name = weigher_configuration["name"]
+		module = md_weigher
+		configuration = ConfigurationDTO(**weigher_configuration)
+		module.initialize(configuration=configuration)
+		module.setAction(
 			cb_realtime=Callback_Realtime, 
 			cb_diagnostic=Callback_Diagnostic, 
-			cb_weighing=Callback_Weighing, 
+			cb_weighing=Callback_Weighing,
 			cb_tare_ptare_zero=Callback_TarePTareZero)
+		# Inizializza il modulo.
+		module.init()  # Inizializzazione del modulo
+		# Crea e avvia il thread del modulo.
+		thread = createThread(module.start)
+		WEIGHERS.append({"name": name, "module": module, "thread": thread})
+		startThread(thread)
+		i += 1
 
 	# rfid.setAction(cb_cardcode=Callback_Cardcode)
 

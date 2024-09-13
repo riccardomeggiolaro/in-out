@@ -38,7 +38,7 @@ def callCallback(callback):
 
 def createThread(function):
     if callable(function):
-    	return threading.Thread(target=function)
+    	return threading.Thread(target=function, daemon=True)
 
 def startThread(thread):
     if not thread.is_alive():

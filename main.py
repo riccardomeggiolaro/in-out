@@ -18,7 +18,6 @@ import app.app_api as app_api
 from lib.lb_utils import GracefulKiller, createThread, startThread, closeThread
 # ==============================================================
 
-MODULES = [md_weigher]
 APPS = [app_api]
 
 # ==== MAINPRGLOOP =============================================
@@ -33,19 +32,6 @@ def mainprg():
 
 	# Carica thread per il logger in background.
 	thr_logger = createThread(lb_log.start)
-
-	# Carica thread per i moduli esterni.
-	md_thr = {}  # Dizionario per archiviare informazioni sui moduli
-	lb_log.info("loading modules...")
-	for modpath in MODULES:
-		# Estrae informazioni sul modulo.
-		namefile = modpath.namefile
-		lb_log.info("... " + namefile)
-		# Inizializza il modulo.
-		modpath.init()  # Inizializzazione del modulo
-		# Crea e avvia il thread del modulo.
-		thread = createThread(modpath.start)
-		md_thr[namefile] = {"filename": namefile, "module": modpath, "thread": thread}
 
 	# Carica thread per le applicazioni esterne.
 	app_thr = {}
@@ -66,9 +52,6 @@ def mainprg():
 		startThread(thr_logger)
 
 		# === THREAD Livello 3:
-		# Moduli
-		for modname in md_thr.keys():  # Per ogni modulo
-			startThread(md_thr[modname]["thread"])
 		# Applicazioni
 		for appname in app_thr.keys():  # Per ogni applicazione
 			startThread(app_thr[appname]["thread"])
@@ -77,10 +60,6 @@ def mainprg():
 
 	# Chiusura dei thread collegati
 	lb_log.info("ending threads:")  # Logga un messaggio informativo
-
-	for modname in md_thr.keys():  # Per ogni modulo
-		lb_log.info("..killing: %s" % modname)  # Logga un messaggio informativo
-		closeThread(md_thr[modname]["thread"], md_thr[modname]["module"])
 
 	for appname in app_thr.keys(): # Per ogni applicazione
 		lb_log.info("::killing %s" % appname) # Logga un messaggio informativo
