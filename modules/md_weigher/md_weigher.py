@@ -67,7 +67,6 @@ def start():
 
 def stop():
 	result = connection.deleteConnection()
-	lb_log.info(f"Result {result}")
 
 # ==== FUNZIONI RICHIAMABILI DA MODULI ESTERNI =================
 def initialize(configuration: ConfigurationDTO):

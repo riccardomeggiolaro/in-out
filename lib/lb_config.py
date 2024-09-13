@@ -140,16 +140,12 @@ def init():
 	# stati, timestamp, percorsi di lavoro e altre informazioni utili.
 
 	global g_config  # Variabile per memorizzare le configurazioni.
-	global g_status  # Variabile per memorizzare gli stati.
-	global g_config_ts  # Variabile per memorizzare il timestamp dell'ultima modifica del file di configurazione.
 	global g_enabled  # Variabile per abilitare/disabilitare funzionalità.
-	global g_vers  # Variabile per memorizzare la versione dell'applicazione.
-	global g_name # Variabile per memorizzare il nome dell'applicazione.
 	global g_workpath  # Variabile per memorizzare il percorso di lavoro.
 	global g_defalogfile  # Variabile per memorizzare il percorso del file di log predefinito.
-	global g_tz  # Variabile per memorizzare il fuso orario predefinito.
 	global config_path  # Variabile per memorizzare il percorso della configurazione.
-	global database_path
+	global g_name
+	global g_vers
 
 	# Ottiene il percorso della directory del modulo corrente.
 	# Determina il percorso base a seconda se l'applicazione è in esecuzione come eseguibile o come sorgente
@@ -158,7 +154,7 @@ def init():
 	g_workpath = config_path.replace("/lib", "/")
 
 	# Imposta la versione dell'applicazione.
-	g_vers = ""
+	g_vers = "0.0002"
 	# Imposta il nome dell'applicazione.
 	g_name = ""
 	# Inizializza le variabili globali con valori predefiniti.

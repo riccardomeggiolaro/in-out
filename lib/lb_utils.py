@@ -1,5 +1,9 @@
 from pydantic import BaseModel
 import inspect
+import signal
+import lib.lb_config as lb_config
+import lib.lb_log as lb_log
+import threading
 
 # Definizione di CustomBaseModel che estende BaseModel di Pydantic.
 class CustomBaseModel(BaseModel):
@@ -31,3 +35,36 @@ def checkCallbackFormat(callback):
 def callCallback(callback):
     if callable(callback):
         callback()
+
+def createThread(function):
+    if callable(function):
+    	return threading.Thread(target=function)
+
+def startThread(thread):
+    if not thread.is_alive():
+        thread.start()
+        
+def closeThread(thread, path=None):
+    if thread.is_alive():
+        if path:
+            path.stop()
+        thread.join()
+
+# ==== CLASSE PER KILLARE I PROCESSI ===========================
+# Classe per gestire l'uscita controllata del programma in risposta a segnali come SIGINT (Ctrl+C) e SIGTERM.
+class GracefulKiller:
+	# Flag di terminazione, inizializzato a False.
+	kill_now = False
+
+	# Metodo di inizializzazione che registra i gestori dei segnali.
+	def __init__(self):
+		signal.signal(signal.SIGINT, self.exit_gracefully)
+		signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+	# Metodo invocato quando viene ricevuto un segnale.
+	def exit_gracefully(self, *args):
+		# Registra un messaggio informativo che indica l'uscita dovuta a un segnale.
+		lb_log.info("SIGTEM exit")
+		# Imposta un flag nella configurazione globale per indicare la terminazione controllata.
+		lb_config.g_enabled = False
+# ==============================================================

@@ -44,14 +44,6 @@ class __SetupWeigherConnection(BaseModel):
 				raise BrokenPipeError()
 		return read
 
-	def decode_read(self, read):
-		decode = read
-		decode = read.decode('utf-8', errors='ignore')
-		decode = decode.strip()
-		if self.node and self.node is not None:
-			decode = decode.replace(self.node, "", 1)
-		return decode
-
 	def flush(self):
 		connection.connection.flush()
 
