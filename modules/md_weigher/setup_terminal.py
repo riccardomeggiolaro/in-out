@@ -110,7 +110,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"maintaine_session_realtime_after_command": self.maintaine_session_realtime_after_command,
 			"diagnostic_has_priority_than_realtime": self.diagnostic_has_priority_than_realtime,
 			"terminal": self.terminal,
-			"run": self.run
+			"run": self.run,
+   			"status": self.diagnostic.status
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):

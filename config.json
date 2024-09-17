@@ -13,23 +13,13 @@
         },
         "weighers": [
             {
-                "name": "1",
                 "connection": {
                     "ip": "192.168.0.229",
                     "port": 4001,
                     "timeout": 0.3
                 },
+                "name": "1",
                 "nodes": [
-                    {
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "maintaine_session_realtime_after_command": true,
-                        "max_weight": 50000,
-                        "min_weight": 20,
-                        "node": "01",
-                        "run": true,
-                        "terminal": "dgt1"
-                    },
                     {
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
@@ -38,6 +28,17 @@
                         "min_weight": 20,
                         "node": "02",
                         "run": false,
+                        "terminal": "dgt1"
+                    },
+                    {
+                        "diagnostic_has_priority_than_realtime": true,
+                        "division": 1,
+                        "maintaine_session_realtime_after_command": true,
+                        "max_weight": 50000,
+                        "min_weight": 20,
+                        "node": "01",
+                        "run": true,
+                        "status": 200,
                         "terminal": "dgt1"
                     }
                 ],

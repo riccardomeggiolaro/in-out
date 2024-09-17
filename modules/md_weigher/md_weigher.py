@@ -25,13 +25,18 @@ from modules.md_weigher.globals import terminalsClasses  # noqa: E402
 # ==== INIT ====================================================
 # funzione che dichiara tutte le globali
 def init():
+	global m_enabled
+
 	lb_log.info("init")
+	m_enabled = True
 # ==============================================================
 
 # ==== MAINPRGLOOP =============================================
 # funzione che scrive e legge in loop conn e in base alla stringa ricevuta esegue funzioni specifiche
 def mainprg():
-	while lb_config.g_enabled:
+	global m_enabled
+ 	
+	while m_enabled:
 		for weigher in weighers:
 			if weigher.run:
 				time_start = time.time()
@@ -66,6 +71,9 @@ def start():
 # ==============================================================
 
 def stop():
+	global m_enabled
+
+	m_enabled = False
 	result = connection.deleteConnection()
 
 # ==== FUNZIONI RICHIAMABILI DA MODULI ESTERNI =================
@@ -107,10 +115,10 @@ def getConnection():
 
 def setConnection(conn: Union[SerialPort, Tcp]):
 	deleteConnection()
-	connected = connection.setConnection(connection=conn)
+	connected, conn, message = connection.setConnection(connection=conn)
 	for weigher in weighers:
 		weigher.initialize()
-	return connected
+	return connected, conn, message
 
 def deleteConnection():
 	response = connection.deleteConnection()
@@ -159,8 +167,19 @@ def deleteNode(node: Union[str, None]):
 		response = True
 	return response
 
+def deleteNodes():
+	response = False
+	e_weighers = [n for n in weighers if n.node]
+	if len(e_weighers) != 0:
+		for weigher in e_weighers:
+			weighers.remove(weigher)
+		response = True
+	return response
+
+def getTimeBetweenActions():
+	return time_between_actions
+
 def setTimeBetweenActions(time: Union[int, float]):
-    global time_between_actions
     time_between_actions = time
     return time_between_actions
 

@@ -283,6 +283,8 @@ class Tcp(Connection):
 				message = self.conn.recv(1024)
 		except socket.timeout as e:
 			pass
+		except AttributeError as e:
+			pass
 		return message
 
 class ConfigConnection():
