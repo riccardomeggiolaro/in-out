@@ -292,20 +292,19 @@ class ConfigConnection():
 	
 	def getConnection(self):
 		conn = self.connection.copy().dict()
+		conn["connected"] = self.connection.is_open()
 		if "conn" in conn:
 			del conn["conn"]
 		return conn
 
 	def setConnection(self, connection: Union[SerialPort, Tcp]):
-		connected, message = False, None
 		self.deleteConnection()
 		self.connection = connection
-		connected, message = self.connection.try_connection()
-		conn = self.getConnection()
-		return connected, conn, message
+		self.connection.try_connection()
+		return self.getConnection()
 
 	def deleteConnection(self):
-		status, message = self.connection.close()
+		self.connection.close()
 		self.connection = Connection(**{})
 		return self.getConnection()
 

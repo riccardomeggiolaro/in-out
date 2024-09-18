@@ -182,29 +182,32 @@ class __SetupWeigher(__SetupWeigherConnection):
 		direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING"]
 		if mod in commands:
 			self.modope_to_execute = mod
-			return 100
+			return 100, None
 		if self.diagnostic.status in [301, 305] and mod != "REALTIME" and mod != "DIAGNOSTICS" and mod != "OK":
-			return self.diagnostic.status
+			error_message = "Connection not set"
+			if self.diagnostic.status == 305:
+				error_message = "Node not exist"
+			return 500, error_message
 		# se passo una stringa vuota imposta a stringa vuota il comando da eseguire dopo, quindi non verranno più eseguiti comandi diretti sulla pesa
 		# se passo DIAGNOSTICS lo imposto come comando da eseguire, se c'era qualsiasi altro comando viene sovrascritto perchè la diagnostica ha la precedenza
 		if mod == "DIAGNOSTICS":
 			self.modope_to_execute = mod # imposto la diagnostica
-			return 100 # ritorno il successo
+			return 100, None # ritorno il successo
 		# se passo REALTIME
 		if mod == "REALTIME":
 			# se il comando in esecuzione o il comando che dovrà essere eseguito è la diagnostica ed ha la priorità ritorno errore
 			if self.modope_to_execute == "DIAGNOSTICS" and self.diagnostic_has_priority_than_realtime:
-				return 400
+				return 400, "Diagnostic in executing"
 			self.modope_to_execute = mod # se non si è verificata nessuna delle condizioni imposto REALTIME come comando da eseguire
-			return 100 # ritorno il successo
+			return 100, None # ritorno il successo
 		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING")
 		elif mod in direct_commands:
 			# controllo se il comando attualmente in esecuzione in loop è DIAGNOSTICS e se si ritorno errore
 			if self.modope == "DIAGNOSTICS":
-				return 400
+				return 400, "Diagnostic in executing"
 			# controllo se c'è qualche comando diretto verso la pesa attualmente in esecuzione e se si ritorno errore
 			elif self.modope in commands or self.modope in direct_commands:
-				return 405
+				return 405, f"{self.modope} in executing"
 			# controllo che il comando attualmente in esecuzione in loop sia REALTIME
 			elif self.modope == "REALTIME":
 				# controllo che anche il comando da eseguire sia impostato a REALTIME per assicurarmi che non sia cambiato
@@ -215,23 +218,23 @@ class __SetupWeigher(__SetupWeigherConnection):
 						if str(presettare).isdigit() and int(presettare) >= 0:
 							self.preset_tare = presettare # imposto la presettare
 						else:
-							return 500 # ritorno errore se la presettare non era valida
+							return 500, "Tare need to be bigger or equal than 0" # ritorno errore se la presettare non era valida
 					# se passo WEIGHING
 					elif mod == "WEIGHING":
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
 							self.weight.data_assigned = data_assigned
 						else:
-							return 500 # ritorno errore se il peso non era valido
+							return 500, f"Weight need to be bigger or equal than {self.min_weight}" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire
-					return 100 # ritorno il successo
+					return 100, None # ritorno il successo
 				elif self.modope_to_execute == "DIAGNOSTICS":
-					return 400
+					return 400, "Diagnostic in executing"
 				elif self.modope_to_execute in commands or self.modope_to_execute in direct_commands:
-					return 405
+					return 405, f"{self.modope} in executing"
 		# se il comando passato non è valido ritorno errore
 		else:
-			return 404
+			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
 	########################

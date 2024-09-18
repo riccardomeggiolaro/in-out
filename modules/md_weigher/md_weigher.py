@@ -98,8 +98,8 @@ def getConfig():
 	nodes_dict = [n.getSetup() for n in weighers]
 	return {
 		"connection": conn,
-		"nodes": nodes_dict,
-		"time_between_actions": time_between_actions
+  		"time_between_actions": time_between_actions,
+		"nodes": nodes_dict
 	}
 
 def deleteConfig():
@@ -115,14 +115,13 @@ def getConnection():
 
 def setConnection(conn: Union[SerialPort, Tcp]):
 	deleteConnection()
-	connected, conn, message = connection.setConnection(connection=conn)
+	conn = connection.setConnection(connection=conn)
 	for weigher in weighers:
 		weigher.initialize()
-	return connected, conn, message
+	return conn
 
 def deleteConnection():
-	response = connection.deleteConnection()
-	return response
+	return connection.deleteConnection()
 
 def getNodes():
 	global weighers
@@ -186,19 +185,25 @@ def setTimeBetweenActions(time: Union[int, float]):
 def getDataInExecution(node: Union[str, None]):
 	node_found = [n for n in weighers if n.node == node]
 	if len(node_found) > 0:
-		return node_found[0].getDataInExecution()
+		data = node_found[0].getDataInExecution()
+		status = node_found[0].diagnostic.status
+		return status, data
 	return node_found
 
 def setDataInExecution(node: Union[str, None], data_in_execution: DataInExecution):
 	node_found = [n for n in weighers if n.node == node]
 	if len(node_found) > 0:
-		return node_found[0].setDataInExecution(data_in_execution)
+		data = node_found[0].setDataInExecution(data_in_execution)
+		status = node_found[0].diagnostic.status
+		return status, data
 	return node_found
 
 def deleteDataInExecution(node: Union[str, None]):
 	node_found = [n for n in weighers if n.node == node]
 	if len(node_found) > 0:
-		return node_found[0].deleteDataInExecution()
+		data = node_found[0].deleteDataInExecution()
+		status = node_found[0].diagnostic.status
+		return status, data
 	return node_found
 
 # Funzione per settare le funzioni di callback
@@ -238,12 +243,12 @@ def deleteDataInExecution(node: Union[str, None]):
 # DIAGNOSTICS, REALTIME, WEIGHING, TARE, PRESETTARE, ZERO
 def setModope(node: Union[str, None], modope, presettare=0, data_assigned = None):
 	node_found = [n for n in weighers if n.node == node]
-	status, status_modope, command_execute = False, None, False
+	status, status_modope, command_execute, error_message = None, None, False, None
 	if len(node_found) != 0:
-		status = True
-		status_modope = node_found[0].setModope(mod=modope, presettare=presettare, data_assigned=data_assigned)
+		status_modope, error_message = node_found[0].setModope(mod=modope, presettare=presettare, data_assigned=data_assigned)
+		status = node_found[0].diagnostic.status
 		command_execute = status_modope == 100
-	return status, status_modope, command_execute
+	return status, status_modope, command_execute, error_message
 
 def setActionNode(node: Union[str, None], cb_realtime: Callable[[dict], any] = None, cb_diagnostic: Callable[[dict], any] = None, cb_weighing: Callable[[dict], any] = None, cb_tare_ptare_zero: Callable[[str], any] = None):
 	global weighers

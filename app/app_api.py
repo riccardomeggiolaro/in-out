@@ -190,38 +190,55 @@ def mainprg():
 
 	@app.get("/start/realtime")
 	async def StartRealtime(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="REALTIME")
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="REALTIME")
 		return {
 			"instance": instance,
-			"status_command": result
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
 		}
 
 	@app.get("/start/diagnostics")
 	async def StartDiagnostics(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="DIAGNOSTICS")
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="DIAGNOSTICS")
 		return {
 			"instance": instance,
-			"status_command": result
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
 		}
 
 	@app.get("/stop/all_command")
 	async def StopAllCommand(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="OK")
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="OK")
 		return {
 			"instance": instance,
-			"status_command": result
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
 		}
 
 	@app.get("/print")
 	async def Print(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=None)
-		if result:
-			return {
-				"instance": instance,
-				"status_command": result,
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=None)
+		return {
+			"instance": instance,
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
 			}
-		else:
-			raise HTTPException(status_code=404, detail='Not found')
+		}
 
 	@app.get("/weighing")
 	async def Weighing(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node), id: Optional[int] = None):
@@ -230,74 +247,86 @@ def mainprg():
 			data = id
 		else:
 			data = WEIGHERS[instance.index]["module"].getDataInExecution(node=instance.node)
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
-		if result:
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
+		if status_command:
 			WEIGHERS[instance.index]["module"].deleteDataInExecution(node=instance.node)
-			return {
-				"instance": instance,
-				"status_command": result
+		return {
+			"instance": instance,
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
 			}
-		else:
-			raise HTTPException(status_code=404, detail='Not found')
+		}
 
 	@app.get("/tare")
 	async def Tare(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="TARE")
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="TARE")
 		return {
 			"instance": instance,
-			"status_command": result
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
 		}
 
 	@app.get("/presettare")
 	async def PresetTare(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node), tare: Optional[int] = 0):
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="PRESETTARE", presettare=tare)
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="PRESETTARE", presettare=tare)
 		return {
 			"instance": instance,
-			"status_command": result
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
 		}
 
 	@app.get("/zero")
 	async def Zero(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="ZERO")
+		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="ZERO")
 		return {
 			"instance": instance,
-			"status_command": result
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
 		}	 
 
 	@app.get("/data_in_execution")
 	async def GetDataInExecution(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].getDataInExecution(node=instance.node)
-		if result:
-			return {
-				"instance": instance,
-				"data_in_execution": result
-			}
-		else:
-			raise HTTPException(status_code=404, detail='Not found')
+		status, data = WEIGHERS[instance.index]["module"].getDataInExecution(node=instance.node)
+		return {
+			"instance": instance,
+			"data_in_execution": data,
+			"status": status
+		}
 
 	@app.patch("/set/data_in_execution")
-	async def SetDataInExecution(data: DataInExecution = {}, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].setDataInExecution(node=instance.node, data_in_execution=data)
-		if result:
-			await manager_data_in_execution.broadcast(result)
-			return {
-				"instance": instance,
-				"data_in_execution": result
-			}
-		else:
-			raise HTTPException(status_code=404, detail='Not found')
+	async def SetDataInExecution(data_in_execution: DataInExecution = {}, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
+		status, data = WEIGHERS[instance.index]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
+		await manager_data_in_execution.broadcast(data)
+		return {
+			"instance": instance,
+			"data_in_execution": data,
+			"status": status
+		}
 
 	@app.delete("/delete/data_in_execution")
 	async def DeleteDataInExecution(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		result = WEIGHERS[instance.index]["module"].deleteDataInExecution(node=instance.node)
-		if result:
-			await manager_data_in_execution.broadcast(result)
-			return {
-				"instance": instance,
-				"data_in_execution": result
-			}
-		else:
-			raise HTTPException(status_code=404, detail='Not found')
+		status, data = WEIGHERS[instance.index]["module"].deleteDataInExecution(node=instance.node)
+		await manager_data_in_execution.broadcast(data)
+		return {
+			"instance": instance,
+			"data_in_execution": data,
+			"status": status
+		}
 
 	@app.get("/config_weigher")
 	async def GetConfigWeigher(instance: InstanceIndexDTO = Depends(get_query_params_index)):
@@ -394,38 +423,37 @@ def mainprg():
 
 	@app.get("/config_weigher/connection")
 	async def GetConfigWeigherConnection(instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		connection = WEIGHERS[instance.index]["module"].getConnection()
+		conn = WEIGHERS[instance.index]["module"].getConnection()
 		time_between_actions = WEIGHERS[instance.index]["module"].getTimeBetweenActions()
-		if connection:
+		if conn:
 			return {
 				"instance": instance,
-       			"connection": connection,
+       			"connection": conn,
 				"time_between_actions": time_between_actions
 			}
 		raise HTTPException(status_code=404, detail='Not found')
 
 	@app.patch("/config_weigher/connection")
 	async def SetConfigWeigherConnection(connection: Union[SerialPort, Tcp], instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		connected, conn, message = WEIGHERS[instance.index]["module"].setConnection(connection)
+		conn = WEIGHERS[instance.index]["module"].setConnection(connection)
 		time_between_actions = WEIGHERS[instance.index]["module"].getTimeBetweenActions()
 		lb_config.g_config["app_api"]["weighers"][instance.index]["connection"] = conn
 		lb_config.saveconfig()
 		return {
 			"instance": instance,
-			"connected": connected,
 			"connection": conn,
 			"time_between_actions": time_between_actions,
-			"error_message": message
 		}
 
 	@app.delete("/config_weigher/connection")
 	async def DeleteConfigWeigherConnection(instance: InstanceIndexDTO = Depends(get_query_params_index)):
 		if lb_config.g_config["app_api"]["weighers"][instance.index]["connection"] != None:
-			WEIGHERS[instance.index]["module"].deleteConnection()
+			conn = WEIGHERS[instance.index]["module"].deleteConnection()
 			lb_config.g_config["app_api"]["weighers"][instance.index]["connection"] = None
 			lb_config.saveconfig()
 			return {
 				"instance": instance,
+				"connection": conn,
 				"status_command": True
 			}
 		raise HTTPException(status_code=404, detail='Not found')
