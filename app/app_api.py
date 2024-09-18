@@ -15,7 +15,7 @@ namefile = inspect.getfile(__frame).split("/")[-1].replace(".py", "")
 import lib.lb_log as lb_log  # noqa: E402
 import lib.lb_system as lb_system  # noqa: E402
 import lib.lb_config as lb_config  # noqa: E402
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Path, Depends, Query  # noqa: E402
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Path, Depends, Query, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 import uvicorn  # noqa: E402
 import asyncio  # noqa: E402
@@ -29,6 +29,12 @@ from typing import Optional, Union  # noqa: E402
 from lib.lb_utils import GracefulKiller, createThread, startThread, closeThread
 from pydantic import BaseModel, validator
 import threading
+from os.path import exists
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+import os
+from fastapi.responses import RedirectResponse
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -178,6 +184,20 @@ def mainprg():
 	global manager_data_in_execution
 	global app
 	global WEIGHERS
+
+	@app.get("/{filename:path}", response_class=HTMLResponse)
+	async def Static(request: Request, filename: Optional[str] = None):
+		base_dir_templates = os.getcwd()
+		templates = Jinja2Templates(directory=f"{base_dir_templates}/app/static")
+		if filename is None or filename == "":
+			return templates.TemplateResponse("index.html", {"request": request})
+		elif filename == "index.html":
+			return RedirectResponse(url="/")
+		file_path = f'app/static/{filename}'
+		file_exist = os.path.isfile(f"{base_dir_templates}/{file_path}")
+		if file_exist:
+			return templates.TemplateResponse(filename, {"request": request})
+		return RedirectResponse(url="not-found.html")
 
 	@app.get("/list_serial_ports")
 	async def ListSerialPorts():
@@ -474,58 +494,6 @@ def mainprg():
 			"time_between_actions": result
 		}
 
-	# @app.get("/config_rfid")
-	# async def GetConfiRfid():
-	# 	return lb_config.g_config["app_api"]["rfid"]
-
-	# @app.patch("/set/config_rfid")
-	# async def SetConfigRfid(config: ConfigRfid):
-	# 	global rfid
-	# 	global modules
-	# 	code = config.module
-	# 	r_module = next((m for m in modules if m["code"] == code), None)
-	# 	rfid = r_module["module"]
-	# 	result = rfid.initialize(connection=config.connection, setup=config.setup)
-	# 	if result is True:
-	# 		lb_config.g_config["app_api"]["rfid"] = config.dict()
-	# 		lb_config.saveconfig()
-	# 		rfid.setAction(cb_cardcode=Callback_Cardcode)
-	# 	else:
-	# 		rfid = None
-	# 	return {
-	# 		"message": result
-	# 	}
-
-	# @app.patch("/set/config_rfid/setup")
-	# async def SetConfigRfidSetup(setup: SetupRfid):
-	# 	global rfid
-	# 	if rfid is not None:
-	# 		result = rfid.setSetup(setup)
-	# 		lb_config.g_config["app_api"]["rfid"]["setup"] = result
-	# 		lb_config.saveconfig()
-	# 		return result
-	# 	return {
-	# 		"status_command": 0
-	# 	}
-
-	# @app.delete("/config_rfid")
-	# async def DeleteConfigRfid():
-	# 	global rfid
-	# 	if rfid is not None:
-	# 		result = rfid.deleteConfig()
-	# 		if result is True:
-	# 			rfid = None
-	# 			lb_config.g_config["app_api"]["rfid"]["module"] = None
-	# 			lb_config.g_config["app_api"]["rfid"]["connection"] = None
-	# 			lb_config.g_config["app_api"]["rfid"]["setup"] = {}
-	# 			lb_config.saveconfig()
-	# 		return {
-	# 			"message": result
-	# 		}
-	# 	return {
-	# 		"status_command": 0
-	# 	}
-
 	@app.websocket("/realtime")
 	async def websocket_endpoint(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
 		await manager_realtime.connect(websocket)
@@ -616,6 +584,11 @@ def init():
 	manager_data_in_execution = ConnectionManager()
 
 	app = FastAPI()
+
+	# app.mount("/static/javascript", StaticFiles(directory="static/javascript"), name="javascript")
+	# app.mount("/static/css", StaticFiles(directory="static/css"), name="css")
+	# app.mount("/static/img", StaticFiles(directory="static/img"), name="img")
+	# app.mount("/app/static", StaticFiles(directory="app/static"), name="static")
 
 	app.add_middleware(
 		CORSMiddleware, 
