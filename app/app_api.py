@@ -184,20 +184,24 @@ def mainprg():
 	global manager_data_in_execution
 	global app
 	global WEIGHERS
+	global base_dir_templates
+	global templates
 
 	@app.get("/{filename:path}", response_class=HTMLResponse)
 	async def Static(request: Request, filename: Optional[str] = None):
-		base_dir_templates = os.getcwd()
-		templates = Jinja2Templates(directory=f"{base_dir_templates}/app/static")
 		if filename is None or filename == "":
 			return templates.TemplateResponse("index.html", {"request": request})
-		elif filename == "index.html":
+		elif filename in ["index", "index.html"]:
 			return RedirectResponse(url="/")
-		file_path = f'app/static/{filename}'
-		file_exist = os.path.isfile(f"{base_dir_templates}/{file_path}")
+		file_exist = os.path.isfile(f"{base_dir_templates}/{filename}")
 		if file_exist:
 			return templates.TemplateResponse(filename, {"request": request})
-		return RedirectResponse(url="not-found.html")
+		else:
+			filename_html = f'{filename}.html'
+			file_exist = os.path.isfile(f"{base_dir_templates}/{filename_html}")
+			if file_exist:
+				return templates.TemplateResponse(filename_html, {"request": request})
+		return RedirectResponse(url="/")
 
 	@app.get("/list_serial_ports")
 	async def ListSerialPorts():
@@ -576,6 +580,8 @@ def init():
 	global weigher_modules
 	global rfid_modules
 	global WEIGHERS
+	global base_dir_templates
+	global templates
 
 	WEIGHERS = []
 
@@ -585,10 +591,10 @@ def init():
 
 	app = FastAPI()
 
-	# app.mount("/static/javascript", StaticFiles(directory="static/javascript"), name="javascript")
-	# app.mount("/static/css", StaticFiles(directory="static/css"), name="css")
-	# app.mount("/static/img", StaticFiles(directory="static/img"), name="img")
-	# app.mount("/app/static", StaticFiles(directory="app/static"), name="static")
+	base_dir_templates = os.getcwd() + "/client/build"
+	templates = Jinja2Templates(directory=f"{base_dir_templates}")
+	app.mount("/_app", StaticFiles(directory=f"{base_dir_templates}/_app"), name="_app")
+	app.mount("/assets", StaticFiles(directory=f"{base_dir_templates}/assets"), name="assets")
 
 	app.add_middleware(
 		CORSMiddleware, 
