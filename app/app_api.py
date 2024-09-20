@@ -35,13 +35,16 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import os
 from fastapi.responses import RedirectResponse
+import json
+from modules.md_weigher.types import Realtime
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
-def Callback_Realtime(pesa_real_time: dict):
-	asyncio.run(manager_realtime.broadcast(pesa_real_time))
-	lb_log.info(pesa_real_time)
+def Callback_Realtime(pesa_real_time: Realtime):
+	pesa_real_time.net_weight = pesa_real_time.net_weight.zfill(6)
+	pesa_real_time.tare = pesa_real_time.tare.zfill(6)
+	asyncio.run(manager_realtime.broadcast(pesa_real_time.dict()))
 
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
 def Callback_Diagnostic(diagnostic: dict):
@@ -186,22 +189,6 @@ def mainprg():
 	global WEIGHERS
 	global base_dir_templates
 	global templates
-
-	@app.get("/{filename:path}", response_class=HTMLResponse)
-	async def Static(request: Request, filename: Optional[str] = None):
-		if filename is None or filename == "":
-			return templates.TemplateResponse("index.html", {"request": request})
-		elif filename in ["index", "index.html"]:
-			return RedirectResponse(url="/")
-		file_exist = os.path.isfile(f"{base_dir_templates}/{filename}")
-		if file_exist:
-			return templates.TemplateResponse(filename, {"request": request})
-		else:
-			filename_html = f'{filename}.html'
-			file_exist = os.path.isfile(f"{base_dir_templates}/{filename_html}")
-			if file_exist:
-				return templates.TemplateResponse(filename_html, {"request": request})
-		return RedirectResponse(url="/")
 
 	@app.get("/list_serial_ports")
 	async def ListSerialPorts():
@@ -351,6 +338,10 @@ def mainprg():
 			"data_in_execution": data,
 			"status": status
 		}
+
+	@app.get("/all/config_weigher")
+	async def GetConfigWeighers():
+		return lb_config.g_config["app_api"]["weighers"]
 
 	@app.get("/config_weigher")
 	async def GetConfigWeigher(instance: InstanceIndexDTO = Depends(get_query_params_index)):
@@ -504,14 +495,14 @@ def mainprg():
 		try:
 			if len(manager_realtime.active_connections) == 1:
 				if WEIGHERS[instance.index]["module"] is not None:
-					WEIGHERS[instance.index]["module"].realTime()
+					WEIGHERS[instance.index]["module"].setModope(instance.node, "REALTIME")
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
 			await manager_realtime.disconnect(websocket)
 			if len(manager_realtime.active_connections) == 0:
 				if WEIGHERS[instance.index]["module"] is not None:
-					WEIGHERS[instance.index]["module"].stopCommand()
+					WEIGHERS[0][instance.index].setModope(instance.node, "OK")
 
 	@app.websocket("/diagnostic")
 	async def websocket_diagnostic(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
@@ -536,6 +527,22 @@ def mainprg():
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
 			await manager_data_in_execution.disconnect(websocket)
+
+	@app.get("/{filename:path}", response_class=HTMLResponse)
+	async def Static(request: Request, filename: Optional[str] = None):
+		if filename is None or filename == "":
+			return templates.TemplateResponse("index.html", {"request": request})
+		elif filename in ["index", "index.html"]:
+			return RedirectResponse(url="/")
+		file_exist = os.path.isfile(f"{base_dir_templates}/{filename}")
+		if file_exist:
+			return templates.TemplateResponse(filename, {"request": request})
+		else:
+			filename_html = f'{filename}.html'
+			file_exist = os.path.isfile(f"{base_dir_templates}/{filename_html}")
+			if file_exist:
+				return templates.TemplateResponse(filename_html, {"request": request})
+		return RedirectResponse(url="/")
 
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================

@@ -1,117 +1,121 @@
+<script>
+    // @ts-nocheck
+
+    import { onMount, afterUpdate } from 'svelte';
+
+    let data = {
+        status: undefined,
+        type: undefined,
+        net_weight: undefined,
+        gross_weight: undefined,
+        tare: undefined,
+        unite_measure: undefined
+    };
+
+    let weightCell;
+    let isLoaded = false;
+
+    function adjustFontSize() {
+        if (!weightCell) return;
+        
+        const cellWidth = weightCell.offsetWidth;
+        const cellHeight = weightCell.offsetHeight;
+        
+        // Inizia con una dimensione del font più grande
+        let fontSize = Math.min(cellWidth, cellHeight) * 0.9;
+        weightCell.style.fontSize = `${fontSize}px`;
+        
+        while (weightCell.scrollWidth > cellWidth || weightCell.scrollHeight > cellHeight) {
+            fontSize *= 0.9;
+            weightCell.style.fontSize = `${fontSize}px`;
+        }
+    }
+
+    onMount(() => {
+        const _data = new WebSocket('ws://localhost:8000/realtime?name=1&node=01');
+        _data.addEventListener('message', (e) => {
+            data = JSON.parse(e.data);
+        });
+
+        isLoaded = true;
+    });
+
+    afterUpdate(() => {
+        if (isLoaded) {
+            adjustFontSize();
+        }
+    });
+</script>
+
 <svelte:head>
-	<title>Dashboard</title>
-	<meta name="description" content="About this app" />
+    <title>Dashboard</title>
+    <meta name="description" content="About this app" />
 </svelte:head>
 
-<div class="content">
-    <div>
-        <span>000000</span>
-        <span>kg</span>
-    </div>
-    <div>
-        <div>
-            000000
-        </div>
-        <div>
-            ST
-        </div>
-    </div>
-</div>
+{#if isLoaded}
+<table id="myTable">
+    <tbody>
+        <tr>
+            <td rowspan="2" class="weight" bind:this={weightCell}>
+                {data.net_weight !== undefined ? data.net_weight : 'N/A'}
+                <span class="unite-misure">
+                    {data.unite_measure !== undefined ? data.unite_measure : 'N/A'}
+                </span>
+            </td>
+            <td class="tare">
+                {data.tare !== undefined ? data.tare : 'N/A'}
+            </td>
+        </tr>
+        <tr>
+            <td class="status">
+                {data.status !== undefined ? data.status : 'N/A'}
+            </td>
+        </tr>
+    </tbody>
+</table>
 
 <div class="banner">
-
+    <h1>Ciao</h1>
 </div>
+{/if}
 
 <style>
-    div {
+    table,
+    .banner {
+        width: 100%;
+        height: 50vh;
+    }
+    table {
         border: 2px solid black;
         border-radius: 15px;
-        margin: 3px;
+        background-color: aliceblue;
+        table-layout: fixed;
     }
-
-    .content,
-    .banner {
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-content: center;
+    td {
+        border: 2px solid black;
+        border-radius: 15px;
+        box-sizing: border-box;
+        overflow: hidden;
+        text-align: center;
+        white-space: nowrap;
+        padding: 5px;
     }
-
-    .content,
-    .banner {
-        border: 0px;
-        margin: 0px;        
-    }
-
-    .content > div:last-child {
-        border: 0px;
-        margin-bottom: 0px;
-        margin-top: 0px;
-    }
-
-    .content {
-        height: 50vh;
-    }
-
-    .banner {
-        height: 50vh;
-    }
-
-    .content div:first-child {
-        width: 75%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+    .weight {
         position: relative;
+        text-align: center;
+        overflow: hidden;
+        width: 75%;
+        line-height: 1;
     }
-
-    .content div:first-child span:first-child {
-        font-size: 20vw;
-        font-weight: bold;
-        margin-bottom: 80px !important;
-    }
-
-    .content div:first-child span:last-child {
-        position: absolute; 
-        bottom: 0; 
-        right: 0; 
-        font-size: 4.5vw;
-        font-weight: 500;
-    }
-
-    .content div:last-child {
+    .tare,
+    .status {
         width: 25%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .content div:first-child div:last-child {
-        width: 100%;
-        height: 30vh;
-        font-size: 2.5vw;
-        font-weight: 500;
-    }
-    
-    .content div:last-child div {
-        width: 100%;
-        height: 50vh;
         font-size: 6.5vw;
-        font-weight: 500;
     }
-
-    table {
-        border: 1px solid black;
-        width: 100%;
-    }
-
-    td div {
-        width: 10px;
-        height: 10px;
-        background-color: green;
-        border-radius: 100%;
+    .unite-misure {
+        position: absolute;
+        bottom: 8px;
+        right: 5px;
+        font-size: 0.15em;
     }
 </style>
