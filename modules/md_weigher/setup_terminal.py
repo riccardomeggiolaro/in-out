@@ -8,23 +8,25 @@ from pydantic import BaseModel
 from typing import Optional, Callable, Union
 import select
 
-class __SetupWeigherConnection(BaseModel):
-	max_weight: int
-	min_weight: int
-	division: int
-	maintaine_session_realtime_after_command: bool = True
-	diagnostic_has_priority_than_realtime: bool = True
-	node: Optional[str] = None
-	terminal: str
-	run: bool = True
+class __SetupWeigherConnection:
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run):
+		self.self_config = self_config
+		self.max_weight = max_weight
+		self.min_weight = min_weight
+		self.division = division
+		self.maintaine_session_realtime_after_command = maintaine_session_realtime_after_command
+		self.diagnostic_has_priority_than_realtime = diagnostic_has_priority_than_realtime
+		self.node = node
+		self.terminal = terminal
+		self.run = run
 
 	def try_connection(self):
-		return connection.connection.try_connection()
+		return self.self_config.connection.connection.try_connection()
 	
 	def write(self, cmd):
 		if self.node and self.node is not None:
 			cmd = self.node + cmd
-		status = connection.connection.write(cmd=cmd)
+		status = self.self_config.connection.connection.write(cmd=cmd)
 		if not status:
 			if not self.is_open():
 				raise TimeoutError()
@@ -32,7 +34,7 @@ class __SetupWeigherConnection(BaseModel):
 				raise BrokenPipeError()
 
 	def read(self):
-		read = connection.connection.read()
+		read = self.self_config.connection.connection.read()
 		if read:
 			decode = read.decode("utf-8", errors="ignore").replace(self.node, "", 1).replace("\r\n", "")
 			read = decode
@@ -45,61 +47,65 @@ class __SetupWeigherConnection(BaseModel):
 		return read
 
 	def flush(self):
-		connection.connection.flush()
+		self.self_config.connection.connection.flush()
 
 	def is_open(self):
-		return connection.connection.is_open()
+		return self.self_config.connection.connection.is_open()
 
 	def close_connection(self):
-		connection.connection.close()
-		connection.connection = Connection(**{})
+		self.self_config.connection.connection.close()
+		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	pesa_real_time: Realtime = Realtime(**{
-		"status": "",
-		"type": "",
-		"net_weight": "", 
-		"gross_weight": "", 
-		"tare": "",
-		"unite_measure": ""
-	})
-	diagnostic: Diagnostic = Diagnostic(**{
-		"status": 301,
-		"firmware": "",
-		"model_name": "",
-		"serial_number": "",
-		"vl": "",
-		"rz": ""
-	})
-	weight: Weight = Weight(**{
-		"weight_executed": {
-			"net_weight": "",
-			"gross_weight": "",
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run):
+		# Chiama il costruttore della classe base
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run)
+
+		self.pesa_real_time: Realtime = Realtime(**{
+			"status": "",
+			"type": "",
+			"net_weight": "", 
+			"gross_weight": "", 
 			"tare": "",
-			"unite_misure": "",
-			"pid": "",
-			"bil": "",
-			"status": ""
-		},
-		"data_assigned": None
-	})
-	ok_value: str = ""
-	modope: str = ""
-	modope_to_execute: str = ""
-	valore_alterno: int = 1
-	preset_tare: int = 0
-	just_send_message_failed_reconnection: bool = False
-	callback_realtime: str = ""
-	callback_diagnostics: str = ""
-	callback_weighing: str = ""
-	callback_tare_ptare_zero: str = ""
-	data_in_execution: DataInExecution = DataInExecution(**{
-		"customer": None,
-		"supplier": None,
-		"plate": None,
-		"vehicle": None,
-		"material": None
-	})
+			"unite_measure": ""
+		})
+		self.diagnostic: Diagnostic = Diagnostic(**{
+			"status": 301,
+			"firmware": "",
+			"model_name": "",
+			"serial_number": "",
+			"vl": "",
+			"rz": ""
+		})
+		self.weight: Weight = Weight(**{
+			"weight_executed": {
+				"net_weight": "",
+				"gross_weight": "",
+				"tare": "",
+				"unite_misure": "",
+				"pid": "",
+				"bil": "",
+				"status": ""
+			},
+			"data_assigned": None
+		})
+		self.ok_value: str = ""
+		self.modope: str = ""
+		self.modope_to_execute: str = ""
+		self.valore_alterno: int = 1
+		self.preset_tare: int = 0
+		self.just_send_message_failed_reconnection: bool = False
+		self.callback_realtime: str = ""
+		self.callback_diagnostics: str = ""
+		self.callback_weighing: str = ""
+		self.callback_tare_ptare_zero: str = ""
+		self.data_in_execution: DataInExecution = DataInExecution(**{
+			"customer": None,
+			"supplier": None,
+			"plate": None,
+			"vehicle": None,
+			"material": None
+		})
 
 	def getSetup(self):
 		return {
@@ -237,6 +243,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run):
+    		# Chiama il costruttore della classe base
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run)
+
 	########################
 	# functions to overwrite
 	########################

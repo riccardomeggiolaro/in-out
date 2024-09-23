@@ -20,8 +20,8 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 import uvicorn  # noqa: E402
 import asyncio  # noqa: E402
 import psutil  # noqa: E402
-import modules.md_weigher.md_weigher as md_weigher  # noqa: E402
 # import modules.md_rfid as rfid
+from modules.md_weigher.md_weigher import WeigherInstance   # noqa: E402
 from modules.md_weigher.types import DataInExecution  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
 from lib.lb_system import SerialPort, Tcp  # noqa: E402
@@ -42,9 +42,10 @@ from modules.md_weigher.types import Realtime
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
 def Callback_Realtime(pesa_real_time: Realtime):
+	global WEIGHERS
 	pesa_real_time.net_weight = pesa_real_time.net_weight.zfill(6)
 	pesa_real_time.tare = pesa_real_time.tare.zfill(6)
-	asyncio.run(manager_realtime.broadcast(pesa_real_time.dict()))
+	asyncio.run(WEIGHERS[0]["node_sockets"]["01"].manager_realtime.broadcast(pesa_real_time.dict()))
 
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
 def Callback_Diagnostic(diagnostic: dict):
@@ -71,7 +72,7 @@ def createIstanceWeigher(configuration):
 	global WEIGHERS
 
 	name = configuration["name"]
-	module = md_weigher
+	module = WeigherInstance()
 	weigher_configuration = ConfigurationDTO(**configuration)
 	module.initialize(configuration=weigher_configuration)
 	module.setAction(
@@ -83,7 +84,15 @@ def createIstanceWeigher(configuration):
 	module.init()  # Inizializzazione del modulo
 	# Crea e avvia il thread del modulo.
 	thread = createThread(module.start)
-	WEIGHERS.append({"name": name, "module": module, "thread": thread})
+	nodes_sockets = {}
+	for node in weigher_configuration.nodes:
+		nodes_sockets[node.node] = NodeConnectionManager()
+	WEIGHERS.append({
+		"name": name, 
+		"module": module, 
+		"thread": thread,
+		"node_sockets": nodes_sockets
+	})
 	startThread(thread)
  
 def findInstanceWeigher(name):
@@ -106,6 +115,12 @@ def deleteInstanceWeigher(name):
 	for i, weigher in enumerate(WEIGHERS):
 		if weigher["name"] == name:
 			lb_log.info("..killing weigher configuration: %s" % weigher["name"])  # Logga un messaggio informativo
+			WEIGHERS[instance.index]["websockets"]["manager_realtime"].broadcast("Weigher instance deleted")
+			WEIGHERS[instance.index]["websockets"]["manager_realtime"].disconnect_all()
+			WEIGHERS[instance.index]["websockets"]["manager_diagnostic"].broadcast("Weigher instance deleted")
+			WEIGHERS[instance.index]["websockets"]["manager_diagnostic"].disconnect_all()
+			WEIGHERS[instance.index]["websockets"]["manager_data_in_execution"].broadcast("Weigher instance deleted")
+			WEIGHERS[instance.index]["websockets"]["manager_data_in_execution"].disconnect_all()
 			closeThread(weigher["thread"], weigher["module"])
 			deleted = True
 	return deleted
@@ -135,6 +150,10 @@ class ConnectionManager:
 	def disconnect(self, websocket: WebSocket):
 		self.active_connections.remove(websocket)
 
+	def disconnect_all(self):
+		for connection in self.active_connections:
+			self.disconnect(connection)
+
 	async def send_personal_message(self, message: str, websocket: WebSocket):
 		await websocket.send_text(message)
 
@@ -158,7 +177,13 @@ class InstanceIndexDTO(BaseModel):
 
 class InstanceIndexNodeDTO(InstanceIndexDTO):
     node: Optional[str] = None
- 
+
+class NodeConnectionManager:
+	def __init__(self):
+		self.manager_realtime = ConnectionManager()
+		self.manager_diagnostic = ConnectionManager()
+		self.manager_data_in_execution = ConnectionManager()
+
 def get_query_params_index(params: InstanceWeigherIndexDTO = Depends()):
 	global WEIGHERS
 
@@ -182,9 +207,6 @@ def get_query_params_index_node(params: InstanceWeigherIndexNodeDTO = Depends())
 # funzione che si connette a redis, setta i moduli e imposta le callback da richiamare dentro i moduli
 def mainprg():
 	global data_in_execution
-	global manager_realtime
-	global manager_diagnostic
-	global manager_data_in_execution
 	global app
 	global WEIGHERS
 	global base_dir_templates
@@ -351,6 +373,24 @@ def mainprg():
 			"config_weigher": response
 		}
 
+	@app.post("/config_weigher/{name}/{time_between_actions}")
+	async def CreateConfigWeighers(name: str, time_between_actions: Union[int, float], connection: Union[SerialPort, Tcp]):
+		conn_to_check = connection.dict()
+		del conn_to_check["conn"]
+		for conn in lb_config.g_config["app_api"]["weighers"]:
+			if conn_to_check == conn["connection"]:
+				return HTTPException(status_code=400, detail='Just exist')
+		instance = {
+			"connection": conn_to_check,
+			"nodes": [],
+			"time_between_actions": time_between_actions,
+			"name": name
+		}
+		createIstanceWeigher(instance)
+		lb_config.g_config["app_api"]["weighers"].append(instance)
+		lb_config.saveconfig()
+		return instance
+
 	@app.delete("/config_weigher")
 	async def DeleteConfigWeigher(instance: InstanceIndexDTO = Depends(get_query_params_index)):
 		WEIGHERS[instance.index]["module"].deleteConfig()
@@ -491,42 +531,42 @@ def mainprg():
 
 	@app.websocket("/realtime")
 	async def websocket_endpoint(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		await manager_realtime.connect(websocket)
+		await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.connect(websocket)
 		try:
-			if len(manager_realtime.active_connections) == 1:
+			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.active_connections) == 1:
 				if WEIGHERS[instance.index]["module"] is not None:
 					WEIGHERS[instance.index]["module"].setModope(instance.node, "REALTIME")
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
-			await manager_realtime.disconnect(websocket)
-			if len(manager_realtime.active_connections) == 0:
+			await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.disconnect(websocket)
+			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.active_connections) == 0:
 				if WEIGHERS[instance.index]["module"] is not None:
-					WEIGHERS[0][instance.index].setModope(instance.node, "OK")
+					WEIGHERS[0][instance.index]["module"].setModope(instance.node, "OK")
 
 	@app.websocket("/diagnostic")
 	async def websocket_diagnostic(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		await manager_diagnostic.connect(websocket)
+		await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.connect(websocket)
 		try:
-			if len(manager_diagnostic.active_connections) == 1:
+			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.active_connections) == 1:
 				if WEIGHERS[instance.index]["module"] is not None:
 					WEIGHERS[instance.index]["module"].diagnostic()
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
-			await manager_diagnostic.disconnect(websocket)
-			if len(manager_diagnostic.active_connections) == 0 and len(manager_realtime.active_connections) >= 1:
+			await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.disconnect(websocket)
+			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.active_connections) == 0 and len(WEIGHERS[instance.index]["websockets"].manager_realtime.active_connections) >= 1:
 				if WEIGHERS[instance.index]["module"] is not None:
 					WEIGHERS[instance.index]["module"].realTime()
 
 	@app.websocket("/datainexecution")
-	async def weboscket_datainexecution(websocket: WebSocket):
-		await manager_data_in_execution.connect(websocket)
+	async def weboscket_datainexecution(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
+		await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_data_in_execution.connect(websocket)
 		try:
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
-			await manager_data_in_execution.disconnect(websocket)
+			await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_data_in_execution.disconnect(websocket)
 
 	@app.get("/{filename:path}", response_class=HTMLResponse)
 	async def Static(request: Request, filename: Optional[str] = None):
@@ -578,9 +618,6 @@ def stop():
 # funzione che dichiara tutte le globali
 def init():    
 	lb_log.info("init")
-	global manager_realtime
-	global manager_diagnostic
-	global manager_data_in_execution
 	global app
 	global rfid
 	global modules
@@ -591,10 +628,6 @@ def init():
 	global templates
 
 	WEIGHERS = []
-
-	manager_realtime = ConnectionManager()
-	manager_diagnostic = ConnectionManager()
-	manager_data_in_execution = ConnectionManager()
 
 	app = FastAPI()
 
