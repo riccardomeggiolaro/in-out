@@ -1,4 +1,3 @@
-from modules.md_weigher.globals import terminalsClasses
 import lib.lb_log as lb_log
 from lib.lb_utils import callCallback
 import re
@@ -245,8 +244,3 @@ class Dgt1(Terminal):
 			self.diagnostic.status = 305
 			self.setModope("OK")
 		return self.diagnostic.status, self.modope, response, error
-			
-terminalsClasses.append({
-	"terminal": "dgt1",
-	"class": Dgt1
-})

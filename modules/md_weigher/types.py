@@ -1,5 +1,6 @@
 from lib.lb_utils import CustomBaseModel
-from typing import Optional, Union
+from lib.lb_system import SerialPort, Tcp, Connection
+from typing import Optional, Union, List
 from pydantic import BaseModel
 
 class DataInExecution(BaseModel):
@@ -41,3 +42,18 @@ class WeightExecuted(BaseModel):
 class Weight(BaseModel):
 	weight_executed: WeightExecuted
 	data_assigned: Optional[Union[DataInExecution, int]] = None
+ 
+class SetupWeigher(CustomBaseModel):
+	max_weight: int
+	min_weight: int
+	division: int
+	maintaine_session_realtime_after_command: bool
+	diagnostic_has_priority_than_realtime: bool
+	node: Optional[str] = None
+	terminal: str
+	run: bool
+
+class Configuration(CustomBaseModel):
+	nodes: Optional[List[SetupWeigher]] = []
+	connection: Optional[Union[SerialPort, Tcp, Connection]] = Connection(**{})
+	time_between_actions: Union[int, float]

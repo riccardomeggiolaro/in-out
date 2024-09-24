@@ -24,6 +24,7 @@ import psutil  # noqa: E402
 from modules.md_weigher.md_weigher import WeigherInstance   # noqa: E402
 from modules.md_weigher.types import DataInExecution  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
+from modules.md_weigher.types import Configuration
 from lib.lb_system import SerialPort, Tcp  # noqa: E402
 from typing import Optional, Union  # noqa: E402
 from lib.lb_utils import GracefulKiller, createThread, startThread, closeThread
@@ -73,7 +74,8 @@ def createIstanceWeigher(configuration):
 
 	name = configuration["name"]
 	module = WeigherInstance()
-	weigher_configuration = ConfigurationDTO(**configuration)
+	module.init()  # Inizializzazione del modulo
+	weigher_configuration = Configuration(**configuration)
 	module.initialize(configuration=weigher_configuration)
 	module.setAction(
 		cb_realtime=Callback_Realtime, 
@@ -81,7 +83,6 @@ def createIstanceWeigher(configuration):
 		cb_weighing=Callback_Weighing,
 		cb_tare_ptare_zero=Callback_TarePTareZero)
 	# Inizializza il modulo.
-	module.init()  # Inizializzazione del modulo
 	# Crea e avvia il thread del modulo.
 	thread = createThread(module.start)
 	nodes_sockets = {}

@@ -180,3 +180,5 @@ cython_debug/
 # Vite
 /client/vite.config.js.timestamp-*
 /client/vite.config.ts.timestamp-*
+
+ssh_tools.jsonc

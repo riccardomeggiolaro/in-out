@@ -16,10 +16,14 @@ import time
 from lib.lb_system import SerialPort, Tcp
 from modules.md_weigher.types import DataInExecution
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO
-from modules.md_weigher.terminals.dgt1 import Dgt1
 from modules.md_weigher.globals import terminalsClasses
 from lib.lb_system import ConfigConnection
+from modules.md_weigher.terminals.dgt1 import Dgt1
 # ==============================================================
+
+terminalsClasses = {
+	"dgt1": Dgt1
+}
 
 class WeigherInstance:
 	def __init__(self):
@@ -85,9 +89,8 @@ class WeigherInstance:
 		lb_log.info(connected)
 		self.time_between_actions = configuration.time_between_actions
 		for node in configuration.nodes:
-			lb_log.error(node.node)
 			node_dict = node.dict()
-			n = Dgt1(
+			n = terminalsClasses[node.terminal](
        			self_config=self, 
           		max_weight=node.max_weight, 
             	min_weight=node.min_weight, 
@@ -100,9 +103,6 @@ class WeigherInstance:
             )
 			n.initialize()
 			self.weighers.append(n)
-			# ottenere firmware e nome del modello
-		lb_log.warning(connected)
-		lb_log.warning(message)
 		return connected, message # ritorno True o False in base se status della pesa è 200
 
 	def getConfig(self):

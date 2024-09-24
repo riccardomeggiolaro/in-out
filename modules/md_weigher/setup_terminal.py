@@ -1,6 +1,5 @@
 from modules.md_weigher.types import Realtime, Diagnostic, Weight, DataInExecution
 from modules.md_weigher.dto import SetupWeigherDTO
-from modules.md_weigher.globals import connection
 from lib.lb_system import Connection
 import lib.lb_log as lb_log
 from lib.lb_utils import checkCallbackFormat

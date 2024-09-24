@@ -1,8 +1,9 @@
 from pydantic import validator
 from typing import Optional, Union, List
 from lib.lb_system import Connection, SerialPort, Tcp
-from modules.md_weigher.globals import terminalsClasses, weighers
+from modules.md_weigher.globals import terminalsClasses
 from lib.lb_utils import CustomBaseModel
+from modules.md_weigher.types import SetupWeigher
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	max_weight: Optional[int] = None
@@ -17,24 +18,16 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):
 		if v is not None and v < 1:
-			raise ValueError('Value must be greater than or equal to 1')
-		return v
-
-	@validator('node', pre=True, always=False)
-	def check_node(cls, v, values, **kwargs):
-		nodes = [n for n in weighers if n.node == v]
-		if len(nodes) > 0:
-			raise ValueError('Node just exist')
+			raise ValueError(f'Value must be greater than or equal to 1')
 		return v
 
 	@validator('terminal', pre=True, always=True)
 	def check_terminal(cls, v, values, **kwargs):
-		for terminal in terminalsClasses:
-			if v == terminal["terminal"] or v is None:
-				return v
+		if v in terminalsClasses:
+			return v
 		raise ValueError("Terminal don't exist")
 
-class SetupWeigherDTO(CustomBaseModel):
+class SetupWeigherDTO(SetupWeigher):
 	max_weight: int
 	min_weight: int
 	division: int
@@ -50,27 +43,13 @@ class SetupWeigherDTO(CustomBaseModel):
 			raise ValueError('Value must be greater than or equal to 1')
 		return v
 
-	@validator('node', pre=True, always=False)
-	def check_node(cls, v, values, **kwargs):
-		nodes = [n for n in weighers if n.node == v]
-		if len(nodes) > 0:
-			raise ValueError('Node just exist')
-		return v
-
 	@validator('terminal', pre=True, always=True)
 	def check_terminal(cls, v, values, **kwargs):
-		for terminal in terminalsClasses:
-			if v == terminal["terminal"]:
-				return v
+		if v in terminalsClasses:
+			return v
 		raise ValueError("Terminal don't exist")
  
 class ConfigurationDTO(CustomBaseModel):
-	nodes: List[SetupWeigherDTO] = []
-	connection: Union[SerialPort, Tcp, Connection, None] = None
+	nodes: Optional[List[SetupWeigherDTO]] = []
+	connection: Optional[Union[SerialPort, Tcp, Connection]] = Connection(**{})
 	time_between_actions: Union[int, float]
-
-	@validator('connection', pre=True, always=True)
-	def check_connection(cls, v):
-		if v is None:
-			return Connection(**{})
-		return v
