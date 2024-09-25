@@ -114,22 +114,6 @@ async def deleteInstanceWeigher(name):
 		deleted = True
 	return deleted
 
-def renameInstanceWeigher(name: str, newName: str):
-	global WEIGHERS
-
-	updated = False
- 
-	if name in WEIGHERS:
-		instance_data = lb_config.g_config["app_api"]["weighers"][name]
-		deleteInstanceWeigher(name)
-		lb_config.g_config["app_api"]["weighers"].pop(name)
-		lb_config.saveconfig()
-		createIstanceWeigher(name, instance_data)
-		lb_config.g_config["app_api"]["weighers"][name] = instance_data
-		lb_config.saveconfig()
-		updated = True
-	return updated
-
 # create connectio manager of weight real time
 class ConnectionManager:
 	def __init__(self):
@@ -409,8 +393,7 @@ def mainprg():
 
 	@app.post("/config_weigher/node")
 	async def AddConfigWeigherNode(node: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
-		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == node.node]
-		if len(node_found) > 0:
+		if node.node in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"]:
 			raise HTTPException(status_code=400, detail='Node just exist')
 		response = WEIGHERS[instance.name]["module"].addNode(node)
 		if response:
@@ -427,7 +410,7 @@ def mainprg():
 
 	@app.patch("/config_weigher/node")
 	async def SetConfigWeigherSetup(setup: ChangeSetupWeigherDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		if len([n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == setup.node]) > 0:
+		if node.node in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"]:
 			raise HTTPException(status_code=400, detail='Node just exist')
 		response = WEIGHERS[instance.name]["module"].setNode(instance.node, setup)
 		if response:
@@ -435,7 +418,7 @@ def mainprg():
 			index_node_found = lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].index(node_found[0])
 			lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found] = response
 			lb_config.saveconfig()
-			response["instance_name"] = instance.name
+			response["instance"] = instance
 			return response
 		else:
 			raise HTTPException(status_code=404, detail='Not found')
