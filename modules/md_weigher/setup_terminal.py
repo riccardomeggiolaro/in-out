@@ -170,16 +170,16 @@ class __SetupWeigher(__SetupWeigherConnection):
 		cb_tare_ptare_zero: Callable[[str], any] = None):
 		check_cb_realtime = checkCallbackFormat(cb_realtime) # controllo se la funzione cb_realtime è richiamabile
 		if check_cb_realtime: # se è richiamabile assegna alla globale callback_realtime la funzione passata come parametro
-			self.callback_realtime = lambda: cb_realtime(self.pesa_real_time) 
+			self.callback_realtime = lambda: cb_realtime(self.self_config.name, self.node, self.pesa_real_time)
 		check_cb_diagnostic = checkCallbackFormat(cb_diagnostic) # controllo se la funzione cb_diagnostic è richiamabile
 		if check_cb_diagnostic: # se è richiamabile assegna alla globale callback_diagnostics la funzione passata come parametro
-			self.callback_diagnostics = lambda: cb_diagnostic(self.diagnostic)
+			self.callback_diagnostics = lambda: cb_diagnostic(self.self_config.name, self.node, self.diagnostic)
 		check_cb_weighing = checkCallbackFormat(cb_weighing) # controllo se la funzione cb_weighing è richiamabile
 		if check_cb_weighing: # se è richiamabile assegna alla globale callback_weighing la funzione passata come parametro
-			self.callback_weighing = lambda: cb_weighing(self.weight)
+			self.callback_weighing = lambda: cb_weighing(self.self_config.name, self.node, self.weight)
 		check_cb_tare_ptare_zero = checkCallbackFormat(cb_tare_ptare_zero) # controllo se la funzione cb_tare_ptare_zero è richiamabile
 		if check_cb_tare_ptare_zero: # se è richiamabile assegna alla globale callback_tare_ptare_zero la funzione passata come parametro
-			self.callback_tare_ptare_zero = lambda: cb_tare_ptare_zero(self.ok_value)
+			self.callback_tare_ptare_zero = lambda: cb_tare_ptare_zero(self.self_config.name, self.node, self.ok_value)
 
 	# setta il modope_to_execute
 	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int] = None):

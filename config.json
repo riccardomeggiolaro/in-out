@@ -11,25 +11,14 @@
             "module": "rfidserialrfid",
             "setup": {}
         },
-        "weighers": [
-            {
+        "weighers": {
+            "1": {
                 "connection": {
                     "ip": "192.168.0.229",
                     "port": 4001,
-                    "timeout": 0.3
+                    "timeout": 0.1
                 },
-                "name": "1",
                 "nodes": [
-                    {
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "maintaine_session_realtime_after_command": true,
-                        "max_weight": 50000,
-                        "min_weight": 20,
-                        "node": "02",
-                        "run": false,
-                        "terminal": "dgt1"
-                    },
                     {
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
@@ -41,31 +30,9 @@
                         "terminal": "dgt1"
                     }
                 ],
-                "time_between_actions": 0.3
-            },
-            {
-                "connection": {
-                    "ip": "192.168.0.230",
-                    "port": 4001,
-                    "timeout": 0.3
-                },
-                "name": "2",
-                "nodes": [
-                    {
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "maintaine_session_realtime_after_command": true,
-                        "max_weight": 50000,
-                        "min_weight": 20,
-                        "node": "02",
-                        "run": true,
-                        "status": 301,
-                        "terminal": "dgt1"
-                    }
-                ],
-                "time_between_actions": 0.3
+                "time_between_actions": 0.1
             }
-        ]
+        }
     },
     "log": {
         "max-size-mb": 10

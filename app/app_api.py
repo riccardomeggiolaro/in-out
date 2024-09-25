@@ -42,26 +42,27 @@ from modules.md_weigher.types import Realtime
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
-def Callback_Realtime(pesa_real_time: Realtime):
+def Callback_Realtime(instance_name: str, instance_node: Union[str, None], pesa_real_time: Realtime):
 	global WEIGHERS
 	pesa_real_time.net_weight = pesa_real_time.net_weight.zfill(6)
 	pesa_real_time.tare = pesa_real_time.tare.zfill(6)
-	asyncio.run(WEIGHERS[0]["node_sockets"]["01"].manager_realtime.broadcast(pesa_real_time.dict()))
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(pesa_real_time.dict()))
 
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
-def Callback_Diagnostic(diagnostic: dict):
-	asyncio.run(manager_diagnostic.broadcast(diagnostic))
-	lb_log.info(diagnostic)
+def Callback_Diagnostic(instance_name: str, instance_node: Union[str, None], diagnostic: dict):
+	global WEIGHERS
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_diagnostic.broadcast(diagnostic))
 
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
-def Callback_Weighing(last_pesata: dict):
-	asyncio.run(manager_data_in_execution.broadcast(last_pesata))
-	lb_log.info(last_pesata)
+def Callback_Weighing(instance_name: str, instance_node: Union[str, None], last_pesata: dict):
+	global WEIGHERS
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_data_in_execution.broadcast(last_pesata))
+	lb_log.warning(last_pesata)
  
-def Callback_TarePTareZero(ok_value: str):
+def Callback_TarePTareZero(instance_name: str, instance_node: Union[str, None], ok_value: str):
+	global WEIGHERS
 	result = {"command_executend": ok_value}
-	asyncio.run(manager_data_in_execution.broadcast(result))
-	lb_log.info(ok_value)
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_data_in_execution.broadcast(result))
 
 def Callback_Cardcode(cardcode: str):
 	result = {"cardcode": cardcode}
@@ -69,12 +70,10 @@ def Callback_Cardcode(cardcode: str):
 	lb_log.info(cardcode)
 
 # Function to create a new instance of weigher module
-def createIstanceWeigher(configuration):
+def createIstanceWeigher(name, configuration):
 	global WEIGHERS
 
-	name = configuration["name"]
-	module = WeigherInstance()
-	module.init()  # Inizializzazione del modulo
+	module = WeigherInstance(name)
 	weigher_configuration = Configuration(**configuration)
 	module.initialize(configuration=weigher_configuration)
 	module.setAction(
@@ -83,47 +82,36 @@ def createIstanceWeigher(configuration):
 		cb_weighing=Callback_Weighing,
 		cb_tare_ptare_zero=Callback_TarePTareZero)
 	# Inizializza il modulo.
+	module.init()  # Inizializzazione del modulo
 	# Crea e avvia il thread del modulo.
 	thread = createThread(module.start)
 	nodes_sockets = {}
 	for node in weigher_configuration.nodes:
 		nodes_sockets[node.node] = NodeConnectionManager()
-	WEIGHERS.append({
-		"name": name, 
+	WEIGHERS[name] = {
 		"module": module, 
 		"thread": thread,
 		"node_sockets": nodes_sockets
-	})
+	}
 	startThread(thread)
- 
-def findInstanceWeigher(name):
-	global WEIGHERS
 
-	index = None
- 
-	for i, weigher in enumerate(WEIGHERS):
-		if weigher["name"] == name:
-			exist = True
-			index = i
-
-	return index
-
-def deleteInstanceWeigher(name):
+async def deleteInstanceWeigher(name):
 	global WEIGHERS
 
 	deleted = False
  
-	for i, weigher in enumerate(WEIGHERS):
-		if weigher["name"] == name:
-			lb_log.info("..killing weigher configuration: %s" % weigher["name"])  # Logga un messaggio informativo
-			WEIGHERS[instance.index]["websockets"]["manager_realtime"].broadcast("Weigher instance deleted")
-			WEIGHERS[instance.index]["websockets"]["manager_realtime"].disconnect_all()
-			WEIGHERS[instance.index]["websockets"]["manager_diagnostic"].broadcast("Weigher instance deleted")
-			WEIGHERS[instance.index]["websockets"]["manager_diagnostic"].disconnect_all()
-			WEIGHERS[instance.index]["websockets"]["manager_data_in_execution"].broadcast("Weigher instance deleted")
-			WEIGHERS[instance.index]["websockets"]["manager_data_in_execution"].disconnect_all()
-			closeThread(weigher["thread"], weigher["module"])
-			deleted = True
+	if name in WEIGHERS:
+		lb_log.info("..killing weigher configuration: %s" % name)  # Logga un messaggio informativo
+		for node in WEIGHERS[name]["node_sockets"]:
+			lb_log.warning(WEIGHERS[name]["node_sockets"])
+			await WEIGHERS[name]["node_sockets"][node].manager_realtime.broadcast("Weigher instance deleted")
+			WEIGHERS[name]["node_sockets"][node].manager_realtime.disconnect_all()
+			await WEIGHERS[name]["node_sockets"][node].manager_diagnostic.broadcast("Weigher instance deleted")
+			WEIGHERS[name]["node_sockets"][node].manager_diagnostic.disconnect_all()
+			await WEIGHERS[name]["node_sockets"][node].manager_data_in_execution.broadcast("Weigher instance deleted")
+			WEIGHERS[name]["node_sockets"][node].manager_data_in_execution.disconnect_all()
+		closeThread(WEIGHERS[name]["thread"], WEIGHERS[name]["module"])
+		deleted = True
 	return deleted
 
 def renameInstanceWeigher(name: str, newName: str):
@@ -131,12 +119,15 @@ def renameInstanceWeigher(name: str, newName: str):
 
 	updated = False
  
-	for i, weigher in enumerate(WEIGHERS):
-		if weigher["name"] == name:
-			weigher["name"] = newName
-			lb_config.g_config["app_api"]["weighers"][i]["name"] = newName
-			lb_config.saveconfig()
-			updated = True
+	if name in WEIGHERS:
+		instance_data = lb_config.g_config["app_api"]["weighers"][name]
+		deleteInstanceWeigher(name)
+		lb_config.g_config["app_api"]["weighers"].pop(name)
+		lb_config.saveconfig()
+		createIstanceWeigher(name, instance_data)
+		lb_config.g_config["app_api"]["weighers"][name] = instance_data
+		lb_config.saveconfig()
+		updated = True
 	return updated
 
 # create connectio manager of weight real time
@@ -166,17 +157,10 @@ class ConnectionManager:
 				#print("client down")
 				self.disconnect(connection)
 
-class InstanceWeigherIndexDTO(BaseModel):
+class InstanceNameDTO(BaseModel):
 	name: str
- 
-class InstanceWeigherIndexNodeDTO(InstanceWeigherIndexDTO):
-	node: Optional[str] = None
 
-class InstanceIndexDTO(BaseModel):
-	name: str
-	index: int
-
-class InstanceIndexNodeDTO(InstanceIndexDTO):
+class InstanceNameNodeDTO(InstanceNameDTO):
     node: Optional[str] = None
 
 class NodeConnectionManager:
@@ -185,23 +169,21 @@ class NodeConnectionManager:
 		self.manager_diagnostic = ConnectionManager()
 		self.manager_data_in_execution = ConnectionManager()
 
-def get_query_params_index(params: InstanceWeigherIndexDTO = Depends()):
+def get_query_params_name(params: InstanceNameDTO = Depends()):
 	global WEIGHERS
 
-	index = findInstanceWeigher(params.name)
-	if index is None:
+	if params.name not in WEIGHERS:
 		raise HTTPException(status_code=404, detail='Name instance does not exist')
-	return InstanceIndexDTO(**{"name": params.name, "index": index})
+	return params
  
-def get_query_params_index_node(params: InstanceWeigherIndexNodeDTO = Depends()):
+def get_query_params_name_node(params: InstanceNameNodeDTO = Depends()):
 	global WEIGHERS
 
-	index = findInstanceWeigher(params.name)
-	if index is None:
+	if params.name not in WEIGHERS:
 		raise HTTPException(status_code=404, detail='Name instance does not exist')
-	if WEIGHERS[index]["module"].getNode(params.node) is None:
+	if WEIGHERS[params.name]["module"].getNode(params.node) is None:
 		raise HTTPException(status_code=404, detail='Node not exist')
-	return InstanceIndexNodeDTO(**{"name": params.name, "index": index, "node": params.node})
+	return params
 # ==============================================================
 
 # ==== MAINPRGLOOP =============================================
@@ -223,8 +205,8 @@ def mainprg():
 		return data
 
 	@app.get("/start/realtime")
-	async def StartRealtime(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="REALTIME")
+	async def StartRealtime(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="REALTIME")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -236,8 +218,8 @@ def mainprg():
 		}
 
 	@app.get("/start/diagnostics")
-	async def StartDiagnostics(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="DIAGNOSTICS")
+	async def StartDiagnostics(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="DIAGNOSTICS")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -249,8 +231,8 @@ def mainprg():
 		}
 
 	@app.get("/stop/all_command")
-	async def StopAllCommand(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="OK")
+	async def StopAllCommand(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="OK")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -262,8 +244,8 @@ def mainprg():
 		}
 
 	@app.get("/print")
-	async def Print(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=None)
+	async def Print(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=None)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -275,15 +257,15 @@ def mainprg():
 		}
 
 	@app.get("/weighing")
-	async def Weighing(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node), id: Optional[int] = None):
+	async def Weighing(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node), id: Optional[int] = None):
 		data = None
 		if id is not None:
 			data = id
 		else:
-			data = WEIGHERS[instance.index]["module"].getDataInExecution(node=instance.node)
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
+			data = WEIGHERS[instance.name]["module"].getDataInExecution(node=instance.node)
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
 		if status_command:
-			WEIGHERS[instance.index]["module"].deleteDataInExecution(node=instance.node)
+			WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -295,8 +277,8 @@ def mainprg():
 		}
 
 	@app.get("/tare")
-	async def Tare(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="TARE")
+	async def Tare(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="TARE")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -308,8 +290,8 @@ def mainprg():
 		}
 
 	@app.get("/presettare")
-	async def PresetTare(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node), tare: Optional[int] = 0):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="PRESETTARE", presettare=tare)
+	async def PresetTare(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node), tare: Optional[int] = 0):
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="PRESETTARE", presettare=tare)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -321,8 +303,8 @@ def mainprg():
 		}
 
 	@app.get("/zero")
-	async def Zero(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.index]["module"].setModope(node=instance.node, modope="ZERO")
+	async def Zero(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="ZERO")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -334,8 +316,8 @@ def mainprg():
 		}	 
 
 	@app.get("/data_in_execution")
-	async def GetDataInExecution(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, data = WEIGHERS[instance.index]["module"].getDataInExecution(node=instance.node)
+	async def GetDataInExecution(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, data = WEIGHERS[instance.name]["module"].getDataInExecution(node=instance.node)
 		return {
 			"instance": instance,
 			"data_in_execution": data,
@@ -343,9 +325,9 @@ def mainprg():
 		}
 
 	@app.patch("/set/data_in_execution")
-	async def SetDataInExecution(data_in_execution: DataInExecution = {}, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, data = WEIGHERS[instance.index]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
-		await manager_data_in_execution.broadcast(data)
+	async def SetDataInExecution(data_in_execution: DataInExecution = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.broadcast(data)
 		return {
 			"instance": instance,
 			"data_in_execution": data,
@@ -353,9 +335,9 @@ def mainprg():
 		}
 
 	@app.delete("/delete/data_in_execution")
-	async def DeleteDataInExecution(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		status, data = WEIGHERS[instance.index]["module"].deleteDataInExecution(node=instance.node)
-		await manager_data_in_execution.broadcast(data)
+	async def DeleteDataInExecution(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, data = WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node)
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.broadcast(data)
 		return {
 			"instance": instance,
 			"data_in_execution": data,
@@ -367,120 +349,129 @@ def mainprg():
 		return lb_config.g_config["app_api"]["weighers"]
 
 	@app.get("/config_weigher")
-	async def GetConfigWeigher(instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		response = WEIGHERS[instance.index]["module"].getConfig()
+	async def GetConfigWeigher(instance: InstanceNameDTO = Depends(get_query_params_name)):
+		response = WEIGHERS[instance.name]["module"].getConfig()
 		return {
-			"instance": instance,
+			"instance_name": instance.name,
 			"config_weigher": response
 		}
 
-	@app.post("/config_weigher/{name}/{time_between_actions}")
-	async def CreateConfigWeighers(name: str, time_between_actions: Union[int, float], connection: Union[SerialPort, Tcp]):
-		conn_to_check = connection.dict()
+	@app.post("/config_weigher")
+	async def CreateConfigWeighers(configuration: ConfigurationDTO):
+		conn_to_check = configuration.connection.dict()
 		del conn_to_check["conn"]
-		for conn in lb_config.g_config["app_api"]["weighers"]:
-			if conn_to_check == conn["connection"]:
-				return HTTPException(status_code=400, detail='Just exist')
+		for instance_name, instance_data in lb_config.g_config["app_api"]["weighers"].items():
+			conn_to_check_without_timeout = {key: value for key, value in conn_to_check.items() if key != "timeout"}
+			conn_without_timeout = {key: value for key, value in instance_data["connection"].items() if key != "timeout"}
+			if configuration.name == instance_name:
+    				return HTTPException(status_code=400, detail='Name just exist')
+			if conn_to_check_without_timeout == conn_without_timeout:
+				return HTTPException(status_code=400, detail='Connection just exist')
 		instance = {
 			"connection": conn_to_check,
 			"nodes": [],
-			"time_between_actions": time_between_actions,
-			"name": name
+			"time_between_actions": configuration.time_between_actions,
 		}
-		createIstanceWeigher(instance)
-		lb_config.g_config["app_api"]["weighers"].append(instance)
+		createIstanceWeigher(configuration.name, instance)
+		lb_config.g_config["app_api"]["weighers"][configuration.name] = instance
 		lb_config.saveconfig()
 		return instance
 
 	@app.delete("/config_weigher")
-	async def DeleteConfigWeigher(instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		WEIGHERS[instance.index]["module"].deleteConfig()
-		result = deleteInstanceWeigher(WEIGHERS[instance.index]["name"])
+	async def DeleteConfigWeigher(instance: InstanceNameDTO = Depends(get_query_params_name)):
+		WEIGHERS[instance.name]["module"].deleteConfig()
+		result = await deleteInstanceWeigher(instance.name)
 		if result:
-			WEIGHERS.pop(instance.index)
-			lb_config.g_config["app_api"]["weighers"].pop(instance.index)
+			WEIGHERS.pop(instance.name)
+			lb_config.g_config["app_api"]["weighers"].pop(instance.name)
 			lb_config.saveconfig()
 		return {
-			"instance": instance,
+			"instance_name": instance.name,
 			"status_command": result
 		}
 
 	@app.get("/config_weigher/nodes")
-	async def GetConfigWeigherNodes(instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		responses = WEIGHERS[instance.index]["module"].getNodes()
+	async def GetConfigWeigherNodes(instance: InstanceNameDTO = Depends(get_query_params_name)):
+		responses = WEIGHERS[instance.name]["module"].getNodes()
 		response = {
-      		"instance": instance,
+      		"instance_name": instance.name,
 			"nodes": responses
 		}
 		return response
 
 	@app.get("/config_weigher/node")
-	async def GetConfigWeigherNode(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		response = WEIGHERS[instance.index]["module"].getNode(instance.node)
+	async def GetConfigWeigherNode(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		response = WEIGHERS[instance.name]["module"].getNode(instance.node)
 		if not response:
 			raise HTTPException(status_code=404, detail='Not found')
-		response["instance"] = instance
+		response["instance_name"] = instance.name
 		return response
 
 	@app.post("/config_weigher/node")
-	async def AddConfigWeigherNode(node: SetupWeigherDTO, instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		response = WEIGHERS[instance.index]["module"].addNode(node)
+	async def AddConfigWeigherNode(node: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == node.node]
+		if len(node_found) > 0:
+			raise HTTPException(status_code=400, detail='Node just exist')
+		response = WEIGHERS[instance.name]["module"].addNode(node)
 		if response:
-			WEIGHERS[instance.index]["module"].setActionNode(
+			WEIGHERS[instance.name]["module"].setActionNode(
 					node=node,
 					cb_realtime=Callback_Realtime, 
 					cb_diagnostic=Callback_Diagnostic, 
 					cb_weighing=Callback_Weighing, 
 					cb_tare_ptare_zero=Callback_TarePTareZero)
-			lb_config.g_config["app_api"]["weighers"][instance.index]["nodes"].append(response)
+			lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].append(response)
 			lb_config.saveconfig()
-		response["instance"] = instance
+		response["instance_name"] = instance.name
 		return response
 
 	@app.patch("/config_weigher/node")
-	async def SetConfigWeigherSetup(setup: ChangeSetupWeigherDTO = {}, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		response = WEIGHERS[instance.index]["module"].setNode(instance.node, setup)
+	async def SetConfigWeigherSetup(setup: ChangeSetupWeigherDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		if len([n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == setup.node]) > 0:
+			raise HTTPException(status_code=400, detail='Node just exist')
+		response = WEIGHERS[instance.name]["module"].setNode(instance.node, setup)
 		if response:
-			node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.index]["nodes"] if n["node"] == instance.node]
-			index_node_found = lb_config.g_config["app_api"]["weighers"][instance.index]["nodes"].index(node_found[0])
-			lb_config.g_config["app_api"]["weighers"][instance.index]["nodes"][index_node_found] = response
+			node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == instance.node]
+			index_node_found = lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].index(node_found[0])
+			lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found] = response
 			lb_config.saveconfig()
-			response["instance"] = instance
+			response["instance_name"] = instance.name
 			return response
 		else:
 			raise HTTPException(status_code=404, detail='Not found')
 
 	@app.delete("/config_weigher/node")
-	async def DeleteConfigWeigherSetup(instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		node_removed = WEIGHERS[instance.index]["module"].deleteNode(instance.node)
+	async def DeleteConfigWeigherSetup(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		node_removed = WEIGHERS[instance.name]["module"].deleteNode(instance.node)
 		if node_removed:
-			node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.index]["nodes"] if n["node"] == instance.node]
-			lb_config.g_config["app_api"]["weighers"][instance.index]["nodes"].remove(node_found[0])
+			node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == instance.node]
+			lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].remove(node_found[0])
 			lb_config.saveconfig()
 			return {
-				"instance": instance,
+				"instance_name": instance.name,
+				"node": instance.node,
 				"status_command": node_removed
 			}
 		else:
 			raise HTTPException(status_code=404, detail='Not found')
 
 	@app.delete("/config_weigher/nodes")
-	async def DeleteConfigWeigherSetup(instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		nodes_removed = WEIGHERS[instance.index]["module"].deleteNodes()
+	async def DeleteConfigWeigherSetup(instance: InstanceNameDTO = Depends(get_query_params_name)):
+		nodes_removed = WEIGHERS[instance.name]["module"].deleteNodes()
 		if nodes_removed:
-			lb_config.g_config["app_api"]["weighers"][instance.index]["nodes"] = []
+			lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] = []
 			lb_config.saveconfig()
 			return {
-				"instance": instance,
+				"instance_name": instance.name,
 				"status_command": nodes_removed
 			}
 		else:
 			raise HTTPException(status_code=404, detail='Not found')
 
 	@app.get("/config_weigher/connection")
-	async def GetConfigWeigherConnection(instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		conn = WEIGHERS[instance.index]["module"].getConnection()
-		time_between_actions = WEIGHERS[instance.index]["module"].getTimeBetweenActions()
+	async def GetConfigWeigherConnection(instance: InstanceNameDTO = Depends(get_query_params_name)):
+		conn = WEIGHERS[instance.name]["module"].getConnection()
+		time_between_actions = WEIGHERS[instance.name]["module"].getTimeBetweenActions()
 		if conn:
 			return {
 				"instance": instance,
@@ -490,10 +481,10 @@ def mainprg():
 		raise HTTPException(status_code=404, detail='Not found')
 
 	@app.patch("/config_weigher/connection")
-	async def SetConfigWeigherConnection(connection: Union[SerialPort, Tcp], instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		conn = WEIGHERS[instance.index]["module"].setConnection(connection)
-		time_between_actions = WEIGHERS[instance.index]["module"].getTimeBetweenActions()
-		lb_config.g_config["app_api"]["weighers"][instance.index]["connection"] = conn
+	async def SetConfigWeigherConnection(connection: Union[SerialPort, Tcp], instance: InstanceNameDTO = Depends(get_query_params_name)):
+		conn = WEIGHERS[instance.name]["module"].setConnection(connection)
+		time_between_actions = WEIGHERS[instance.name]["module"].getTimeBetweenActions()
+		lb_config.g_config["app_api"]["weighers"][instance.name]["connection"] = conn
 		lb_config.saveconfig()
 		return {
 			"instance": instance,
@@ -502,10 +493,10 @@ def mainprg():
 		}
 
 	@app.delete("/config_weigher/connection")
-	async def DeleteConfigWeigherConnection(instance: InstanceIndexDTO = Depends(get_query_params_index)):
-		if lb_config.g_config["app_api"]["weighers"][instance.index]["connection"] != None:
-			conn = WEIGHERS[instance.index]["module"].deleteConnection()
-			lb_config.g_config["app_api"]["weighers"][instance.index]["connection"] = None
+	async def DeleteConfigWeigherConnection(instance: InstanceNameDTO = Depends(get_query_params_name)):
+		if lb_config.g_config["app_api"]["weighers"][instance.name]["connection"] != None:
+			conn = WEIGHERS[instance.name]["module"].deleteConnection()
+			lb_config.g_config["app_api"]["weighers"][instance.name]["connection"] = None
 			lb_config.saveconfig()
 			return {
 				"instance": instance,
@@ -515,14 +506,14 @@ def mainprg():
 		raise HTTPException(status_code=404, detail='Not found')
 
 	@app.patch("/config_weigher/time_between_actions/{time}")
-	async def SetTimeBetweenActions(time: Union[int, float], instance: InstanceIndexDTO = Depends(get_query_params_index)):
+	async def SetTimeBetweenActions(time: Union[int, float], instance: InstanceNameDTO = Depends(get_query_params_name)):
 		if time < 0:
 			return {
 				"message": "Time must be greater or same than 0"
 			}
-		result = WEIGHERS[instance.index]["module"].setTimeBetweenActions(time=time)
-		connection = WEIGHERS[instance.index]["module"].getConnection()
-		lb_config.g_config["app_api"]["weighers"][instance.index]["time_between_actions"] = result
+		result = WEIGHERS[instance.name]["module"].setTimeBetweenActions(time=time)
+		connection = WEIGHERS[instance.name]["module"].getConnection()
+		lb_config.g_config["app_api"]["weighers"][instance.name]["time_between_actions"] = result
 		lb_config.saveconfig()
 		return {
 			"instance": instance,
@@ -531,43 +522,43 @@ def mainprg():
 		}
 
 	@app.websocket("/realtime")
-	async def websocket_endpoint(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.connect(websocket)
+	async def websocket_endpoint(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.connect(websocket)
 		try:
-			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.active_connections) == 1:
-				if WEIGHERS[instance.index]["module"] is not None:
-					WEIGHERS[instance.index]["module"].setModope(instance.node, "REALTIME")
+			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) == 1:
+				if WEIGHERS[instance.name]["module"] is not None:
+					WEIGHERS[instance.name]["module"].setModope(instance.node, "REALTIME")
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
-			await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.disconnect(websocket)
-			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_realtime.active_connections) == 0:
-				if WEIGHERS[instance.index]["module"] is not None:
-					WEIGHERS[0][instance.index]["module"].setModope(instance.node, "OK")
+			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.disconnect(websocket)
+			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) == 0:
+				if WEIGHERS[instance.name]["module"] is not None:
+					WEIGHERS[0][instance.name]["module"].setModope(instance.node, "OK")
 
 	@app.websocket("/diagnostic")
-	async def websocket_diagnostic(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.connect(websocket)
+	async def websocket_diagnostic(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_diagnostic.connect(websocket)
 		try:
-			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.active_connections) == 1:
-				if WEIGHERS[instance.index]["module"] is not None:
-					WEIGHERS[instance.index]["module"].diagnostic()
+			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_diagnostic.active_connections) == 1:
+				if WEIGHERS[instance.name]["module"] is not None:
+					WEIGHERS[instance.name]["module"].diagnostic()
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
-			await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.disconnect(websocket)
-			if len(WEIGHERS[instance.index]["node_sockets"][instance.node].manager_diagnostic.active_connections) == 0 and len(WEIGHERS[instance.index]["websockets"].manager_realtime.active_connections) >= 1:
-				if WEIGHERS[instance.index]["module"] is not None:
-					WEIGHERS[instance.index]["module"].realTime()
+			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_diagnostic.disconnect(websocket)
+			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_diagnostic.active_connections) == 0 and len(WEIGHERS[instance.name]["websockets"].manager_realtime.active_connections) >= 1:
+				if WEIGHERS[instance.name]["module"] is not None:
+					WEIGHERS[instance.name]["module"].realTime()
 
 	@app.websocket("/datainexecution")
-	async def weboscket_datainexecution(websocket: WebSocket, instance: InstanceIndexNodeDTO = Depends(get_query_params_index_node)):
-		await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_data_in_execution.connect(websocket)
+	async def weboscket_datainexecution(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.connect(websocket)
 		try:
 			while True:
 				await asyncio.sleep(0.2)
 		except WebSocketDisconnect:
-			await WEIGHERS[instance.index]["node_sockets"][instance.node].manager_data_in_execution.disconnect(websocket)
+			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.disconnect(websocket)
 
 	@app.get("/{filename:path}", response_class=HTMLResponse)
 	async def Static(request: Request, filename: Optional[str] = None):
@@ -601,9 +592,8 @@ def stop():
 	global WEIGHERS
     
 	for weigher in WEIGHERS:  # Per ogni modulo
-		lb_log.info("..killing weigher configuration: %s" % weigher["name"])  # Logga un messaggio informativo
-		closeThread(weigher["thread"], weigher["module"])
-
+		lb_log.info("..killing weigher configuration: %s" % weigher)  # Logga un messaggio informativo
+		asyncio.run(deleteInstanceWeigher(weigher))
 	try:
 		port = lb_config.g_config["app_api"]["port"]
 		connection = [conn for conn in psutil.net_connections() if conn.laddr.port == port] 
@@ -628,7 +618,7 @@ def init():
 	global base_dir_templates
 	global templates
 
-	WEIGHERS = []
+	WEIGHERS = {}
 
 	app = FastAPI()
 
@@ -647,8 +637,8 @@ def init():
 
 	# Carica thread per i moduli esterni.
 	lb_log.info("loading weighers...")
-	for weigher_configuration in lb_config.g_config["app_api"]["weighers"]:
-		createIstanceWeigher(weigher_configuration)
+	for instance_name, instance_data in lb_config.g_config["app_api"]["weighers"].items():
+		createIstanceWeigher(instance_name, instance_data)
 
 	# rfid.setAction(cb_cardcode=Callback_Cardcode)
 

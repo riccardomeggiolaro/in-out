@@ -27,7 +27,7 @@ def checkCallbackFormat(callback):
 	if callable(callback):
 		signature = inspect.signature(callback)
 		num_params = len(signature.parameters)
-		if num_params == 1:
+		if num_params == 3:
 			return True
 	return False
 
