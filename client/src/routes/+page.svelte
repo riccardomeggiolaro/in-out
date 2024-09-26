@@ -32,7 +32,16 @@
     }
 
     onMount(() => {
-        const _data = new WebSocket('ws://localhost:8000/realtime?name=1&node=01');
+        // Ottieni la base URL del dominio corrente
+        let baseUrl = window.location.origin;
+
+        baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
+
+        // Costruisci l'URL WebSocket
+        const websocketUrl = `${baseUrl}/realtime?name=1&node=01`;
+
+        const _data = new WebSocket(websocketUrl);
+
         _data.addEventListener('message', (e) => {
             data = JSON.parse(e.data);
         });

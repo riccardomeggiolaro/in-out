@@ -1,5 +1,6 @@
 {
     "app_api": {
+        "tunneling_token": "2mbPtWkPOkLiX92P0K7AaskvObI_5M22es8J53h3BHvD21UC6",
         "port": 8000,
         "rfid": {
             "connection": {

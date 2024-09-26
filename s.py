@@ -1,22 +1,24 @@
-class Weigher:
-    def __init__(self, self_config, name):
-        self.s = self_config
-        self.name = name
-        print(self.s.name)
+from fastapi import FastAPI
+from pyngrok import ngrok
+import uvicorn
 
-class Config:
-    def __init__(self):
-        self.name = "kjuewfhnkojiefwqnjhl"
-        self.weighers = []
+ngrok.set_auth_token("2mbKhRzUKfW6okLpCDGbZDB2r19_5bs5RDKWrXvNb1b5wKC8M")
 
-    def addWeigher(self):
-        w = Weigher(self_config=self, name="jewfojkln")
-        self.weighers.append(w)
-        
-c = Config()
+app = FastAPI()
 
-c.addWeigher()
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
 
-c.name = "kjwefkjhewfjklnhfewdjklnh"
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    return {"item_id": item_id}
 
-print(c.name)
+# Aggiungi qui altre route e funzionalità del tuo script
+
+# Configura ngrok
+ngrok_tunnel = ngrok.connect(8000)
+print('Public URL:', ngrok_tunnel.public_url)
+
+# Avvia il server
+uvicorn.run(app, port=8000)
