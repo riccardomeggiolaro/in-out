@@ -7,6 +7,7 @@ import os
 import lib.lb_log as lb_log
 import platform
 import subprocess
+import serial
 import serial.tools.list_ports
 from pydantic import BaseModel, validator
 from serial import SerialException
@@ -39,7 +40,7 @@ class SerialPort(Connection):
 	serial_port_name: str
 	timeout: int = 1
 
-	conn: Optional[socket.socket] = None
+	conn: Optional[serial.Serial] = None
 
 	class Config:
 		arbitrary_types_allowed = True
@@ -65,39 +66,34 @@ class SerialPort(Connection):
 		return v
 
 	def try_connection(self):
-		status = True
+		status = False
 		error_message = None
 		try:
-			if isinstance(self.conn, serial.Serial) and self.conn.is_open:
-				self.conn.flush()
-				self.conn.close()
-			return serial.Serial(port=self.serial_port_name, baudrate=self.baudrate, timeout=self.timeout)
+			self.conn = None
+			self.conn = serial.Serial(port=self.serial_port_name, baudrate=self.baudrate, timeout=self.timeout)
+			status = True
 		except SerialException as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"SerialException on try connection: {error_message}")
 		except AttributeError as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"AttributeError on try connection: {error_message}")
 		except TypeError as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"TypeError on try connection: {error_message}")
 		return status, error_message
 
 	def flush(self):
-		status = True
+		status = False
 		error_message = None
 		try:
 			if isinstance(self.conn, serial.Serial) and self.conn.is_open:
 				self.conn.flush()
+				status = True
 		except SerialException as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"SerialException on flush: {error_message}")
 		except AttributeError as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"AttributeError on flush: {error_message}")
 		return status, error_message
@@ -112,65 +108,39 @@ class SerialPort(Connection):
 				self.conn = None
 				status = True
 		except SerialException as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"SerialException on close: {error_message}")
 		except AttributeError as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"AttributeError on close: {error_message}")
 		except TypeError as e:
-			status = False
 			error_message = e
 			# lb_log.error(f"TypeError on close: {error_message}")
 		return status, error_message
 
 	def write(self, cmd):
-		status = True
-		error_message = None
+		status = False
 		try:
-			status = False
 			if isinstance(self.conn, serial.Serial) and self.conn.is_open:
 				command = (cmd + chr(13)+chr(10)).encode()
 				self.conn.write(command)
-			else:
-				raise SerialException()
-		except SerialException as e:
-			status = False
-			error_message = e
-			# lb_log.error(f"SerialException on write: {error_message}")
+				status = True
 		except AttributeError as e:
-			status = False
-			error_message = e
-			# lb_log.error(f"AttributeError on write: {error_message}")
-		except TypeError as e:
-			status = False
-			error_message = e
-			# lb_log.error(f"TypeError on write: {error_message}")
-		return status, error_message
+			pass
+		return status
 
 	def read(self):
-		status = True
 		message = None
-		error_message = None
 		try:
 			if isinstance(self.conn, serial.Serial) and self.conn.is_open:
 				message = self.conn.readline()
-			else:
-				raise SerialException()
+		except TimeoutError as e:
+			pass
 		except SerialException as e:
-			status = False
-			error_message = e
-			# lb_log.error(f"SerialException on read: {error_message}")
+			pass
 		except AttributeError as e:
-			status = False
-			error_message = e
-			# lb_log.error(f"AttributeError on read: {error_message}")
-		except TypeError as e:
-			status = False
-			error_message = e
-			# lb_log.error(f"TypeError on read: {error_message}")
-		return status, message, error_message
+			pass
+		return message
 
 class Tcp(Connection):
 	ip: str

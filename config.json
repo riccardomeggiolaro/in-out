@@ -15,9 +15,9 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "ip": "192.168.0.229",
-                    "port": 4001,
-                    "timeout": 0.1
+                    "baudrate": 19200,
+                    "serial_port_name": "/dev/ttyS0",
+                    "timeout": 1
                 },
                 "nodes": [
                     {
@@ -26,7 +26,7 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_weight": 50000,
                         "min_weight": 20,
-                        "node": "01",
+                        "node": null,
                         "run": true,
                         "terminal": "dgt1"
                     }

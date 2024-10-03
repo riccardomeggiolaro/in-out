@@ -35,6 +35,7 @@ class __SetupWeigherConnection:
 	def read(self):
 		read = self.self_config.connection.connection.read()
 		if read:
+			lb_log.warning(read)
 			decode = read.decode("utf-8", errors="ignore").replace(self.node, "", 1).replace("\r\n", "")
 			read = decode
 		else:
