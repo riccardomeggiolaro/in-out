@@ -1,6 +1,7 @@
 python-dateutil==2.9.0.post0
 pyserial==3.5
 pydantic==2.9.1
-fastapi
+fastapi[standard]
 uvicorn
 psutil==6.0.0
+jinja2

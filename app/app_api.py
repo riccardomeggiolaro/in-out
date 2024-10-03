@@ -38,7 +38,6 @@ import os
 from fastapi.responses import RedirectResponse
 import json
 from modules.md_weigher.types import Realtime
-from pyngrok import ngrok
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -560,11 +559,6 @@ def mainprg():
 			if file_exist:
 				return templates.TemplateResponse(filename_html, {"request": request})
 		return RedirectResponse(url="/")
-
-	if lb_config.g_config["app_api"]["tunneling_token"]:
-		ngrok.set_auth_token(lb_config.g_config["app_api"]["tunneling_token"])
-		public_url = ngrok.connect(lb_config.g_config["app_api"]["port"])
-		lb_log.info(f"API is available at: {public_url}")
 
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================
