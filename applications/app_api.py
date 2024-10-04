@@ -12,9 +12,9 @@
 import inspect
 __frame = inspect.currentframe()
 namefile = inspect.getfile(__frame).split("/")[-1].replace(".py", "")
-import lib.lb_log as lb_log  # noqa: E402
-import lib.lb_system as lb_system  # noqa: E402
-import lib.lb_config as lb_config  # noqa: E402
+import libs.lb_log as lb_log  # noqa: E402
+import libs.lb_system as lb_system  # noqa: E402
+import libs.lb_config as lb_config  # noqa: E402
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Path, Depends, Query, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 import uvicorn  # noqa: E402
@@ -25,9 +25,9 @@ from modules.md_weigher.md_weigher import WeigherInstance   # noqa: E402
 from modules.md_weigher.types import DataInExecution  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
 from modules.md_weigher.types import Configuration
-from lib.lb_system import SerialPort, Tcp  # noqa: E402
+from libs.lb_system import SerialPort, Tcp, Connection  # noqa: E402
 from typing import Optional, Union  # noqa: E402
-from lib.lb_utils import GracefulKiller, createThread, startThread, closeThread
+from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
 from pydantic import BaseModel, validator
 import threading
 from os.path import exists
@@ -74,6 +74,8 @@ def createIstanceWeigher(name, configuration):
 	global WEIGHERS
 
 	module = WeigherInstance(name)
+	if configuration["connection"] is None:
+		configuration["connection"] = Connection(**{})
 	weigher_configuration = Configuration(**configuration)
 	module.initialize(configuration=weigher_configuration)
 	module.setAction(
@@ -101,9 +103,7 @@ async def deleteInstanceWeigher(name):
 	deleted = False
  
 	if name in WEIGHERS:
-		lb_log.info("..killing weigher configuration: %s" % name)  # Logga un messaggio informativo
 		for node in WEIGHERS[name]["node_sockets"]:
-			lb_log.warning(WEIGHERS[name]["node_sockets"])
 			await WEIGHERS[name]["node_sockets"][node].manager_realtime.broadcast("Weigher instance deleted")
 			WEIGHERS[name]["node_sockets"][node].manager_realtime.disconnect_all()
 			await WEIGHERS[name]["node_sockets"][node].manager_diagnostic.broadcast("Weigher instance deleted")
@@ -545,7 +545,6 @@ def mainprg():
 
 	@app.get("/{filename:path}", response_class=HTMLResponse)
 	async def Static(request: Request, filename: Optional[str] = None):
-		lb_log.warning("jhwdch")
 		if filename is None or filename == "":
 			return templates.TemplateResponse("index.html", {"request": request})
 		elif filename in ["index", "index.html"]:
@@ -628,6 +627,12 @@ def init():
 
 	# if lb_config.g_config["app_api"]["rfid"]["connection"] != None:
 	# 	config = (**lb_config.g_config["app_api"]["rfid"])
-	# 	setup = info["class_setup"](**lb_config.g_config["app_api"]["rfid"]["setup"])
-	# 	rfid.initialize(configuration=config)
+	# 	setup = i# ==============================================================
+# = App......: main					   =
+# = Description.: Applicazione			   =
+# = Author......: Riccardo Meggiolaro				   =
+# = Last rev....: 0.0002					   =
+# -------------------------------------------------------------=
+# 0.0002 : Implementato....
+# 0.0001 : Creazione della applicazione
 # ==============================================================

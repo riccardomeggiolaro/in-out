@@ -1,8 +1,8 @@
 from modules.md_weigher.types import Realtime, Diagnostic, Weight, DataInExecution
 from modules.md_weigher.dto import SetupWeigherDTO
-from lib.lb_system import Connection
-import lib.lb_log as lb_log
-from lib.lb_utils import checkCallbackFormat
+from libs.lb_system import Connection
+import libs.lb_log as lb_log
+from libs.lb_utils import checkCallbackFormat
 from pydantic import BaseModel
 from typing import Optional, Callable, Union
 import select
@@ -23,7 +23,7 @@ class __SetupWeigherConnection:
 		return self.self_config.connection.connection.try_connection()
 	
 	def write(self, cmd):
-		if self.node and self.node is not None:
+		if self.node is not None:
 			cmd = self.node + cmd
 		status = self.self_config.connection.connection.write(cmd=cmd)
 		if not status:
@@ -35,8 +35,7 @@ class __SetupWeigherConnection:
 	def read(self):
 		read = self.self_config.connection.connection.read()
 		if read:
-			lb_log.warning(read)
-			decode = read.decode("utf-8", errors="ignore").replace(self.node, "", 1).replace("\r\n", "")
+			decode = read.decode("utf-8", errors="ignore").replace(self.node if isinstance(self.node, str) else "", "", 1).replace("\r\n", "")
 			read = decode
 		else:
 			connected = self.is_open()

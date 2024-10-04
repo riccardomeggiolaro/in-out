@@ -4,7 +4,7 @@
 
 # ==== LIBRERIE DA IMPORTARE ===================================
 import os
-import lib.lb_log as lb_log
+import libs.lb_log as lb_log
 import platform
 import subprocess
 import serial
@@ -45,30 +45,42 @@ class SerialPort(Connection):
 	class Config:
 		arbitrary_types_allowed = True
 
-	@validator('baudrate', 'timeout', pre=True, always=True)
-	def check_positive(cls, v):
-		if v is not None and v < 1:
-			raise ValueError('Value must be greater than or equal to 1')
-		return v
+	@validator('baudrate', pre=True, always=True)
+	def check_baudrate(cls, v):
+		if v in [9600, 19200, 115200]:
+			return v
+		raise ValueError('Baudrate not valid')
 
 	@validator('serial_port_name', pre=True, always=True)
-	def check_format(cls, v):
-		if v is not None:
-			result, message = exist_serial_port(v)
-			if result is False:
-				raise ValueError(message)
-			result, message = enable_serial_port(v)
-			if result is False:
-				raise ValueError(message)
-			result, message = serial_port_not_just_in_use(v)
-			if result is False:
-				raise ValueError(message)
+	def check_serial_port_name(cls, v):
+		exist, message = exist_serial_port(v)
+		if not exist:
+			raise ValueError(message)
+		usable, message = serial_port_not_just_in_use(v)
+		if not usable:
+			raise ValueError(message)
+		enabled, message = enable_serial_port(v)
+		if not enabled:
+			raise ValueError(message)
 		return v
+
+	@validator('timeout', pre=True, always=True)
+	def check_timeout(cls, v):
+		if v > 0:
+			return v
+		raise("Timeout must to be bigger than 0")
+
+	def is_open(self):
+		status = False
+		if isinstance(self.conn, serial.Serial) and self.conn.is_open:
+			status = True
+		return status
 
 	def try_connection(self):
 		status = False
 		error_message = None
 		try:
+			self.flush()
 			self.conn = None
 			self.conn = serial.Serial(port=self.serial_port_name, baudrate=self.baudrate, timeout=self.timeout)
 			status = True
@@ -130,15 +142,13 @@ class SerialPort(Connection):
 		return status
 
 	def read(self):
-		message = None
 		try:
+			message = None
 			if isinstance(self.conn, serial.Serial) and self.conn.is_open:
-				message = self.conn.readline()
-		except TimeoutError as e:
-			pass
-		except SerialException as e:
-			pass
+				message = self.conn.readline()  # Leggi i dati disponibili
 		except AttributeError as e:
+			pass
+		except TypeError as e:
 			pass
 		return message
 
@@ -271,7 +281,9 @@ class ConfigConnection():
 		self.deleteConnection()
 		self.connection = connection
 		self.connection.try_connection()
-		return self.getConnection()
+		conn = self.getConnection()
+		del conn["connected"]
+		return conn
 
 	def deleteConnection(self):
 		self.connection.close()

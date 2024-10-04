@@ -1,7 +1,7 @@
 from pydantic import validator
 from typing import Optional, Union, List
-from lib.lb_system import Connection, SerialPort, Tcp
-from lib.lb_utils import CustomBaseModel
+from libs.lb_system import Connection, SerialPort, Tcp
+from libs.lb_utils import CustomBaseModel
 from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 
@@ -54,3 +54,9 @@ class ConfigurationDTO(CustomBaseModel):
 	name: str
 	connection: Optional[Union[SerialPort, Tcp, Connection]] = Connection(**{})
 	time_between_actions: Union[int, float]
+ 
+	@validator('connection', pre=True, always=True)
+	def check_connection(cls, v, values, **kwargs):
+		if v is None:
+			v = Connection(**{})
+		return v

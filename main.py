@@ -10,12 +10,12 @@ import time
 import threading
 import sys
 import signal
-import lib.lb_config as lb_config  # Importa il modulo per la configurazione
-import lib.lb_log as lb_log  # Importa il modulo per il logger
+import libs.lb_config as lb_config  # Importa il modulo per la configurazione
+import libs.lb_log as lb_log  # Importa il modulo per il logger
 import modules.md_weigher.md_weigher as md_weigher
 # import modules.md_rfid as md_rfid
-import app.app_api as app_api
-from lib.lb_utils import GracefulKiller, createThread, startThread, closeThread
+import applications.app_api as app_api
+from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
 # ==============================================================
 
 APPS = [app_api]

@@ -9,15 +9,15 @@
 import inspect
 __frame = inspect.currentframe()
 namefile = inspect.getfile(__frame).split("/")[-1].replace(".py", "")
-import lib.lb_log as lb_log
-import lib.lb_config as lb_config
+import libs.lb_log as lb_log
+import libs.lb_config as lb_config
 from typing import Callable, Union
 import time
-from lib.lb_system import SerialPort, Tcp
+from libs.lb_system import SerialPort, Tcp, Connection
 from modules.md_weigher.types import DataInExecution
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO
 from modules.md_weigher.globals import terminalsClasses
-from lib.lb_system import ConfigConnection
+from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
 # ==============================================================
 

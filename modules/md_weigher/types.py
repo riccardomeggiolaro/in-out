@@ -1,5 +1,5 @@
-from lib.lb_utils import CustomBaseModel
-from lib.lb_system import SerialPort, Tcp, Connection
+from libs.lb_utils import CustomBaseModel
+from libs.lb_system import SerialPort, Tcp, Connection
 from typing import Optional, Union, List
 from pydantic import BaseModel
 

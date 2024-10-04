@@ -1,3 +1,3 @@
-from lib.lb_system import ConfigConnection
+from libs.lb_system import ConfigConnection
 
 terminalsClasses = {}

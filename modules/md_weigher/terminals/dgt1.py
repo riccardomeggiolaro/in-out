@@ -1,5 +1,5 @@
-import lib.lb_log as lb_log
-from lib.lb_utils import callCallback
+import libs.lb_log as lb_log
+from libs.lb_utils import callCallback
 import re
 from modules.md_weigher.setup_terminal import Terminal
 from socket import socket
@@ -76,7 +76,7 @@ class Dgt1(Terminal):
 			lb_log.info("------------------------------------------------------")
 			lb_log.info("INITIALIZATION")
 			lb_log.info("INFOSTART: " + "Accensione con successo")
-			lb_log.info("NODE: " + self.node)
+			lb_log.info("NODE: " + str(self.node))
 			lb_log.info("FIRMWARE: " + self.diagnostic.firmware) 
 			lb_log.info("MODELNAME: " + self.diagnostic.model_name)
 			lb_log.info("SERIALNUMBER: " + self.diagnostic.serial_number)

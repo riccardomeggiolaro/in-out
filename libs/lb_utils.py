@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 import inspect
 import signal
-import lib.lb_config as lb_config
-import lib.lb_log as lb_log
+import libs.lb_config as lb_config
+import libs.lb_log as lb_log
 import threading
 
 # Definizione di CustomBaseModel che estende BaseModel di Pydantic.

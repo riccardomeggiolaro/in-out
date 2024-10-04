@@ -6,7 +6,7 @@
 import os
 import json
 import time
-import lib.lb_log as lb_log
+import libs.lb_log as lb_log
 from dateutil import tz
 import sys
 # ==============================================================

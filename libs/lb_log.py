@@ -6,7 +6,7 @@
 import os
 import time
 import inspect
-import lib.lb_config as lb_config
+import libs.lb_config as lb_config
 from datetime import datetime
 # ==============================================================
 
