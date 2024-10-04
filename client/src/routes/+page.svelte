@@ -38,7 +38,7 @@
         baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
 
         // Costruisci l'URL WebSocket
-        const websocketUrl = `${baseUrl}/realtime?name=1&node=01`;
+        const websocketUrl = `${baseUrl}/realtime?name=1`;
 
         const _data = new WebSocket(websocketUrl);
 

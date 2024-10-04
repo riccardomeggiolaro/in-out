@@ -38,7 +38,7 @@ class Connection(BaseModel):
 class SerialPort(Connection):
 	baudrate: int = 19200
 	serial_port_name: str
-	timeout: int = 1
+	timeout: float = 1
 
 	conn: Optional[serial.Serial] = None
 
@@ -178,6 +178,12 @@ class Tcp(Connection):
 			return v
 		else:
 			raise ValueError('Ip no valid')
+
+	@validator('timeout', pre=True, always=True)
+	def check_timeout(cls, v):
+		if v > 0:
+			return v
+		raise("Timeout must to be bigger than 0")
 
 	def is_open(self):
 		try:

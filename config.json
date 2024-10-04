@@ -17,7 +17,7 @@
                 "connection": {
                     "baudrate": 115200,
                     "serial_port_name": "/dev/ttyS0",
-                    "timeout": 1
+                    "timeout": 0.1
                 },
                 "nodes": [
                     {
@@ -31,7 +31,7 @@
                         "terminal": "dgt1"
                     }
                 ],
-                "time_between_actions": 0.3
+                "time_between_actions": 0.1
             }
         }
     },
