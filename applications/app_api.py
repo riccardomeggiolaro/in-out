@@ -132,7 +132,10 @@ class ConnectionManager:
 			self.disconnect(connection)
 
 	async def send_personal_message(self, message: str, websocket: WebSocket):
-		await websocket.send_text(message)
+		try:
+			await websocket.send_text(message)
+		except Exception:
+			self.disconnect(websocket)
 
 	async def broadcast(self, message: str):
 		for connection in self.active_connections:
@@ -509,17 +512,40 @@ def mainprg():
 	@app.websocket("/realtime")
 	async def websocket_endpoint(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.connect(websocket)
-		try:
-			while True:
-				status = WEIGHERS[instance.name]["module"].getNode(instance.node)
-				if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) == 1 or status != 200:
-					WEIGHERS[instance.name]["module"].setModope(instance.node, "REALTIME")
-				await asyncio.sleep(1)
-		except WebSocketDisconnect:
-			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.disconnect(websocket)
-			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) == 0:
-				if WEIGHERS[instance.name]["module"] is not None:
-					WEIGHERS[0][instance.name]["module"].setModope(instance.node, "OK")
+		while True:
+			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) > 0:
+				status = WEIGHERS[instance.name]["module"].getNode(instance.node)["status"]
+				if status == 200:
+					modope_in_execution = WEIGHERS[instance.name]["module"].getModope(instance.node)
+					if modope_in_execution in ["OK", "DIAGNOSTICS"]:
+						if modope_in_execution == "DIAGNOSTICS":
+							await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.broadcast({
+								"status":"--",
+								"type":"--",
+								"net_weight": "Diagnostica in corso",
+								"gross_weight":"--",
+								"tare":"--",
+								"unite_measure": "--"
+							})
+						WEIGHERS[instance.name]["module"].setModope(instance.node, "REALTIME")
+				else:
+					message = "Pesa scollegata"
+					if status == 301:
+						message = "Connessione non settata"
+					elif status == 201:
+						message = "Protocollo pesa non valido"
+					await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.broadcast({
+         				"status":"--",
+             			"type":"--",
+                		"net_weight": message,
+                  		"gross_weight":"--",
+                    	"tare":"--",
+                     	"unite_measure": str(status)
+                    })
+			else:
+				WEIGHERS[instance.name]["module"].setModope(instance.node, "OK")
+				break
+			await asyncio.sleep(1)
 
 	@app.websocket("/diagnostic")
 	async def websocket_diagnostic(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):

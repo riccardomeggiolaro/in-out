@@ -221,41 +221,11 @@ class WeigherInstance:
 			return status, data
 		return node_found
 
-	# Funzione per settare le funzioni di callback
-	# I parametri possono essere omessi o passati come funzioni che hanno un solo parametro come
-	# 	1) REALTIME 
-	# 			{
-	# 				"status": "Pesa scollegata", 
-	# 				"type": "",
-	# 				"net_weight": "", 
-	# 				"gross_weight": "", 
-	# 				"tare": "",
-	# 				"unite_measure": ""
-	# 			}
-	# 	2) DIAGNOSTICS
-	# 			{
-	#	 			"status": "Pesa scollegata",
-	# 				"firmware": "",
-	# 				"model_name": "",
-	# 				"serial_number": "",
-	# 				"vl": "",
-	# 				"rz": ""
-	# 			}
-	# 	3) WEIGHING
-	# 			{
-	# 				"net_weight": "",
-	# 				"gross_weight": "",
-	# 				"tare": "",
-	# 				"unite_misure": "",
-	# 				"pid": "",
-	# 				"bil": "",
-	# 				"status": ""
-	#	 		}
-	#   4) OK
-	#		   string
+	def getModope(self, node: Union[str, None]):
+		node_found = [n for n in self.nodes if n.node == node]
+		if len(node_found) != 0:
+			return node_found[0].modope_to_execute
 
-	# funzione per impostare la diagnostica continua
-	# DIAGNOSTICS, REALTIME, WEIGHING, TARE, PRESETTARE, ZERO
 	def setModope(self, node: Union[str, None], modope, presettare=0, data_assigned = None):
 		node_found = [n for n in self.nodes if n.node == node]
 		status, status_modope, command_execute, error_message = None, None, False, None
