@@ -42,7 +42,6 @@ def createThread(function, args=(), stop=None):
 
 def startThread(thread):
     if not thread.is_alive():
-        lb_log.info("wdcejice")
         thread.start()
         
 def closeThread(thread, path=None):
