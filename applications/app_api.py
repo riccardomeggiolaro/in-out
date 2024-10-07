@@ -38,6 +38,7 @@ import os
 from fastapi.responses import RedirectResponse
 import json
 from modules.md_weigher.types import Realtime
+from libs.lb_ssh import ssh_tunnel, SshClientConnection
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -178,6 +179,7 @@ def mainprg():
 	global WEIGHERS
 	global base_dir_templates
 	global templates
+	global thread_ssh_tunnel
 
 	@app.get("/list_serial_ports")
 	async def ListSerialPorts():
@@ -508,11 +510,11 @@ def mainprg():
 	async def websocket_endpoint(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.connect(websocket)
 		try:
-			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) == 1:
-				if WEIGHERS[instance.name]["module"] is not None:
-					WEIGHERS[instance.name]["module"].setModope(instance.node, "REALTIME")
 			while True:
-				await asyncio.sleep(0.2)
+				status = WEIGHERS[instance.name]["module"].getNode(instance.node)
+				if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) == 1 or status != 200:
+					WEIGHERS[instance.name]["module"].setModope(instance.node, "REALTIME")
+				await asyncio.sleep(1)
 		except WebSocketDisconnect:
 			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.disconnect(websocket)
 			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.active_connections) == 0:
@@ -573,6 +575,7 @@ def start():
 
 def stop():
 	global WEIGHERS
+	global ssh_client
     
 	for weigher in WEIGHERS:  # Per ogni modulo
 		lb_log.info("..killing weigher configuration: %s" % weigher)  # Logga un messaggio informativo
@@ -588,6 +591,8 @@ def stop():
 	except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.TimeoutExpired) as e:	
 		lb_log.info(f"Impossibile chiudere il processo sulla porta {port}. {e}")
 
+	closeThread(ssh_client)
+
 # ==== INIT ====================================================
 # funzione che dichiara tutte le globali
 def init():    
@@ -600,6 +605,7 @@ def init():
 	global WEIGHERS
 	global base_dir_templates
 	global templates
+	global ssh_client
 
 	WEIGHERS = {}
 
@@ -622,6 +628,13 @@ def init():
 	lb_log.info("loading weighers...")
 	for instance_name, instance_data in lb_config.g_config["app_api"]["weighers"].items():
 		createIstanceWeigher(instance_name, instance_data)
+
+	ssh_client = None
+	if lb_config.g_config["app_api"]["ssh_client"]:
+		ssh_client = lb_config.g_config["app_api"]["ssh_client"]
+		ssh_client["local_port"] = lb_config.g_config["app_api"]["port"]
+		ssh_client = createThread(ssh_tunnel, (SshClientConnection(**ssh_client),))
+		startThread(ssh_client)
 
 	# rfid.setAction(cb_cardcode=Callback_Cardcode)
 

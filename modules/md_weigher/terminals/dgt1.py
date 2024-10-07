@@ -49,51 +49,55 @@ class Dgt1(Terminal):
 		return self.modope
 
 	def initialize_content(self):
-		self.setModope("VER")
-		self.command()
-		response = self.read()
-		if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
-			# lb_log.info(response)
-			values = response.split(",")
-			# se il numero di sottostringhe è 3 assegna i valori all'oggetto diagnostic
-			if len(values) == 3:
-				self.diagnostic.firmware = values[1].lstrip()
-				self.diagnostic.model_name = values[2].rstrip()
-			# se il numero di sottostringhe non è 3 manda errore
-			else:
-				raise ValueError("Firmware and model name not found")
-		# ottenere numero conn
-		self.setModope("SN")
-		self.command()
-		response = self.read()
-		if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
-			value = response.replace("SN: ", "")
-			self.diagnostic.serial_number = value
-		# controllo se ho ottenuto firmware, nome modello e numero conn
-		if self.diagnostic.firmware and self.diagnostic.model_name and self.diagnostic.serial_number:
-			self.diagnostic.status = 200 # imposto status della pesa a 200 per indicare che è accesa
-			self.setModope("OK")
-			lb_log.info("------------------------------------------------------")
-			lb_log.info("INITIALIZATION")
-			lb_log.info("INFOSTART: " + "Accensione con successo")
-			lb_log.info("NODE: " + str(self.node))
-			lb_log.info("FIRMWARE: " + self.diagnostic.firmware) 
-			lb_log.info("MODELNAME: " + self.diagnostic.model_name)
-			lb_log.info("SERIALNUMBER: " + self.diagnostic.serial_number)
-			lb_log.info("------------------------------------------------------")
-
-	def initialize(self):
 		try:
-			self.initialize_content()
+			self.setModope("VER")
+			self.command()
+			response = self.read()
+			if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
+				# lb_log.info(response)
+				values = response.split(",")
+				# se il numero di sottostringhe è 3 assegna i valori all'oggetto diagnostic
+				if len(values) == 3:
+					self.diagnostic.firmware = values[1].lstrip()
+					self.diagnostic.model_name = values[2].rstrip()
+				# se il numero di sottostringhe non è 3 manda errore
+				else:
+					raise ValueError("Firmware and model name not found")
+			# ottenere numero conn
+			self.setModope("SN")
+			self.command()
+			response = self.read()
+			if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
+				value = response.replace("SN: ", "")
+				self.diagnostic.serial_number = value
+			# controllo se ho ottenuto firmware, nome modello e numero conn
+			if self.diagnostic.firmware and self.diagnostic.model_name and self.diagnostic.serial_number:
+				self.diagnostic.status = 200 # imposto status della pesa a 200 per indicare che è accesa
+				if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
+					self.setModope("OK")
+				lb_log.info("------------------------------------------------------")
+				lb_log.info("INITIALIZATION")
+				lb_log.info("INFOSTART: " + "Accensione con successo")
+				lb_log.info("NODE: " + str(self.node))
+				lb_log.info("FIRMWARE: " + self.diagnostic.firmware) 
+				lb_log.info("MODELNAME: " + self.diagnostic.model_name)
+				lb_log.info("SERIALNUMBER: " + self.diagnostic.serial_number)
+				lb_log.info("------------------------------------------------------")
 		except TimeoutError as e:
 			self.diagnostic.status = 301
-			self.setModope("OK")
+			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
+				self.setModope("OK")
 		except BrokenPipeError as e:
 			self.diagnostic.status = 305
-			self.setModope("OK")
+			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
+				self.setModope("OK")
 		except ValueError as e:
 			self.diagnostic.status = 201
-			self.setModope("OK")
+			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
+				self.setModope("OK")
+
+	def initialize(self):
+		self.initialize_content()
 		return {
 			"max_weight": self.max_weight,
 			"min_weight": self.min_weight,

@@ -36,19 +36,21 @@ def callCallback(callback):
     if callable(callback):
         callback()
 
-def createThread(function, stop=None):
+def createThread(function, args=(), stop=None):
     if callable(function):
-        return threading.Thread(target=function, daemon=True)
+        return threading.Thread(target=function, args=args, daemon=True)
 
 def startThread(thread):
     if not thread.is_alive():
+        lb_log.info("wdcejice")
         thread.start()
         
 def closeThread(thread, path=None):
     if thread.is_alive():
         if path:
             path.stop()
-    thread.join()
+    if thread.is_alive():
+        thread.join()
 
 # ==== CLASSE PER KILLARE I PROCESSI ===========================
 # Classe per gestire l'uscita controllata del programma in risposta a segnali come SIGINT (Ctrl+C) e SIGTERM.

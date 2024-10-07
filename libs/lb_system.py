@@ -72,8 +72,11 @@ class SerialPort(Connection):
 
 	def is_open(self):
 		status = False
-		if isinstance(self.conn, serial.Serial) and self.conn.is_open:
-			status = True
+		try:
+			if isinstance(self.conn, serial.Serial) and self.conn.is_open:
+				status = True
+		except TypeError as e:
+			pass
 		return status
 
 	def try_connection(self):
@@ -108,6 +111,8 @@ class SerialPort(Connection):
 		except AttributeError as e:
 			error_message = e
 			# lb_log.error(f"AttributeError on flush: {error_message}")
+		except TypeError as e:
+			pass
 		return status, error_message
 
 	def close(self):
@@ -138,6 +143,8 @@ class SerialPort(Connection):
 				self.conn.write(command)
 				status = True
 		except AttributeError as e:
+			pass
+		except TypeError as e:
 			pass
 		return status
 
