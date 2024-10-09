@@ -122,7 +122,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.1s;
+            transition: background-color 0.3s;
             flex: 1 0 45%;
             margin: 3px;
             height: 60px;
@@ -130,7 +130,12 @@
         }
 
         button:active {
-            background-color: #00346b; /* Colore durante il clic */
+            background-color: #00346b;
+        }
+
+        .disabled-button {
+            opacity: 0.5; /* Rende il bottone traslucido */
+            pointer-events: none; /* Disabilita gli eventi del mouse */
         }
 
         .popup {
