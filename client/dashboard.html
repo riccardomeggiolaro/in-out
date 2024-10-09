@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Peso</title>
+    <meta name="description" content="About this app" />
+    <style>
+        /* styles.css */
+        #snackbar {
+            background-color: #333; /* Colore di sfondo */
+            color: #fff; /* Colore del testo */
+            text-align: center; /* Testo centrato */
+            border-radius: 2px; /* Angoli arrotondati */
+            padding: 16px; /* Spaziatura */
+            z-index: 1; /* Porta in primo piano */
+            font-size: 17px; /* Dimensione del font */
+            transform: translateY(100%); /* Inizialmente nascosto */
+            transition: visibility 0s linear 0.1s, opacity 0.1s linear, transform 0.1s ease-in-out;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #snackbar.show {
+            transform: translateY(0); /* Mostra nella posizione originale */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        .box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .container {
+            background: rgb(209, 217, 228);
+            border-radius: 12px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            width: 95%;
+            max-width: 350px;
+            height: 95%;
+            max-height: 900px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .display {
+            margin-bottom: 20px;
+            position: relative;
+            width: 100%;
+        }
+
+        .weight {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 3rem;
+            padding: 2rem 0;
+        }
+
+        .display p {
+            position: absolute;
+            right: 3px;
+            bottom: 3px;
+            font-size: 2rem;
+        }
+
+        .info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-top: 0px;
+            width: 100%;
+        }
+
+        .message {
+            width: 98%;
+            height: 30px;
+            text-align: center;
+            margin-top: 9px;
+            margin-bottom: 9px;
+            background-color: #a5afb9;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tara, .status {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 1.1rem 0;
+            border-radius: 8px;
+            flex: 1;
+            margin: 3px;
+            margin-bottom: 20px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        button {
+            background-color: #1362b8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            flex: 1 0 45%;
+            margin: 3px;
+            height: 60px;
+            font-size: 1.3rem;
+        }
+
+        button:active {
+            background-color: #00346b; /* Colore durante il clic */
+        }
+
+        .popup {
+            display: none; /* Nasconde il popup per default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5); /* Sfondo traslucido */
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            height: fit-content;
+            border-radius: 8px;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        input {
+            width: inherit;
+            height: 40px;
+            font-size: 2rem;
+            border: 2px solid black;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="container">
+            <div class="display">
+                <div class="weight">
+                    <h2 id="netWeight">N/A</h2>
+                    <p id="unitMeasure">N/A</p>
+                </div>
+            </div>
+            <div class="info">
+                <div class="tara">
+                    <h2>Tara: <br><span id="tare">N/A</span></h2>
+                </div>
+                <div class="status">
+                    <h2>Stato: <br><span id="status">N/A</span></h2>
+                </div>
+            </div>
+            <div class="buttons">
+                <button onclick="handleTara()">Tara</button>
+                <button onclick="handleZero()">Zero</button>
+                <button onclick="openPopup()">P Tara</button>
+                <button onclick="handlePesata()">Pesata</button>
+            </div>
+        </div>    
+        <div id="snackbar"></div>
+        <div id="myPopup" class="popup">
+            <div class="popup-content">
+                <span class="close-button" onclick="closePopup()">&times;</span>
+                <h2>Preset Tara</h2>
+                <br>
+                <input type="number" placeholder="0">
+                <br>
+                <br>
+                <button>OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let snackbarTimeout;
+
+        // script.js
+        function showSnackbar(message) {
+            const snackbar = document.getElementById("snackbar");
+            snackbar.textContent = message; // Imposta il messaggio
+            snackbar.className = "show"; // Aggiungi la classe "show"
+
+            // Cancella il timeout precedente se esiste
+            if (snackbarTimeout) {
+                clearTimeout(snackbarTimeout);
+            }
+
+            // Dopo 5 secondi, nascondi lo snackbar
+            snackbarTimeout = setTimeout(() => {
+                if (snackbar.className === "show") {
+                    snackbar.className = snackbar.className.replace("show", ""); // Rimuovi la classe
+                }
+            }, 3000); // Durata in millisecondi
+        }
+
+        function openPopup() {
+            document.getElementById("myPopup").style.display = "flex";
+        }
+
+        function closePopup() {
+            document.getElementById("myPopup").style.display = "none";
+        }
+
+        // Chiudi il popup quando si fa clic all'esterno
+        window.onclick = function(event) {
+            const popup = document.getElementById("myPopup");
+            if (event.target === popup) {
+                closePopup();
+            }
+        };
+
+        let data = {
+            status: undefined,
+            type: undefined,
+            net_weight: undefined,
+            gross_weight: undefined,
+            tare: undefined,
+            unite_measure: undefined
+        };
+
+        let _data;
+        let reconnectInterval;
+
+        const buttons = document.querySelectorAll("button");
+
+        function connectWebSocket(path, exe) {
+            // Ottieni la base URL del dominio corrente
+            let baseUrl = window.location.origin;
+            baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
+
+            // Costruisci l'URL WebSocket
+            const websocketUrl = `${baseUrl}/${path}`;
+            _data = new WebSocket(websocketUrl);
+
+            _data.addEventListener('message', (e) => {
+                exe(e);
+            });
+
+            _data.addEventListener('error', () => {
+                console.error("WebSocket error. Trying to reconnect...");
+                attemptReconnect();
+            });
+
+            _data.addEventListener('close', () => {
+                console.warn("WebSocket closed. Trying to reconnect...");
+                attemptReconnect();
+            });
+        }
+
+        function attemptReconnect() {
+            if (!reconnectInterval) {
+                reconnectInterval = setInterval(() => {
+                    console.log("Attempting to reconnect...");
+                    connectWebSocket();
+                }, 3000);
+            }
+        }
+
+        function updateUI(e) {
+            data = JSON.parse(e.data);
+            if (data.status == "WG") {
+                buttons.forEach(button => {
+                    button.disabled = true;
+                    button.classList.add("disabled-button"); // Aggi
+                });
+                showSnackbar("Pesando...")
+            }
+            document.getElementById('tare').innerText = data.tare !== undefined ? data.tare : 'N/A';
+            document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
+            document.getElementById('unitMeasure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
+            document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
+        }
+
+        async function handleTara() {
+            await fetch("http://on.baron.it:3323/tare?name=1")
+            .then(res => res.json())
+            .then(data => {
+                return data; // Puoi restituirlo se necessario
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+        }
+
+        async function handleZero() {
+            await fetch("http://on.baron.it:3323/zero?name=1")
+            .then(res => res.json())
+            .then(data => {
+                return data; // Puoi restituirlo se necessario
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+        }
+
+        async function handlePTara() {
+            await fetch("http://on.baron.it:3323/presettare?name=1&tare=0")
+            .then(res => res.json())
+            .then(data => {
+                return data; // Puoi restituirlo se necessario
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+        }
+
+        async function handlePesata() {
+            const r = await fetch("http://on.baron.it:3323/print?name=1")
+            .then(res => res.json())
+            .then(data => {
+                return data; // Puoi restituirlo se necessario
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+            console.log(r);
+            if (r.command_executed.status_command == false) {
+                showSnackbar(r.command_executed.error_message);
+            }
+        }
+
+        function r(e) {
+            if (e.data != "ping") {
+                const obj = JSON.parse(e.data);
+                showSnackbar("Pesata eseguita con successo! PID: " + obj.weight_executed.pid);
+                buttons.forEach(button => {
+                    button.disabled = false;
+                    button.classList.remove("disabled-button"); // Aggi
+                });
+            }
+            console.log(e);
+        }
+
+        // Inizializza la connessione WebSocket al caricamento della pagina
+        connectWebSocket('realtime?name=1', updateUI);
+        connectWebSocket('data_in_execution?name=1', r);
+    </script>
+</body>
+</html>

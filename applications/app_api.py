@@ -22,7 +22,7 @@ import asyncio  # noqa: E402
 import psutil  # noqa: E402
 # import modules.md_rfid as rfid
 from modules.md_weigher.md_weigher import WeigherInstance   # noqa: E402
-from modules.md_weigher.types import DataInExecution  # noqa: E402
+from modules.md_weigher.types import DataInExecution, Weight  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
 from modules.md_weigher.types import Configuration
 from libs.lb_system import SerialPort, Tcp, Connection  # noqa: E402
@@ -55,10 +55,11 @@ def Callback_Diagnostic(instance_name: str, instance_node: Union[str, None], dia
 	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_diagnostic.broadcast(diagnostic))
 
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
-def Callback_Weighing(instance_name: str, instance_node: Union[str, None], last_pesata: dict):
+def Callback_Weighing(instance_name: str, instance_node: Union[str, None], last_pesata: Weight):
+	import time
 	global WEIGHERS
-	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_data_in_execution.broadcast(last_pesata))
-	lb_log.warning(last_pesata)
+	time.sleep(1)
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_data_in_execution.broadcast(last_pesata.dict()))
  
 def Callback_TarePTareZero(instance_name: str, instance_node: Union[str, None], ok_value: str):
 	global WEIGHERS
@@ -143,6 +144,15 @@ class ConnectionManager:
 				await connection.send_json(message)
 			except Exception:
 				#print("client down")
+				self.disconnect(connection)
+    
+	async def check_connections(self):
+		for connection in self.active_connections:
+			try:
+                # Invia un messaggio di ping per controllare se la connessione è attiva
+				await connection.send_text("ping")
+			except Exception:
+                # Se il messaggio non può essere inviato, la connessione è chiusa
 				self.disconnect(connection)
 
 class InstanceNameDTO(BaseModel):
@@ -562,14 +572,14 @@ def mainprg():
 				if WEIGHERS[instance.name]["module"] is not None:
 					WEIGHERS[instance.name]["module"].realTime()
 
-	@app.websocket("/datainexecution")
+	@app.websocket("/data_in_execution")
 	async def weboscket_datainexecution(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.connect(websocket)
-		try:
-			while True:
-				await asyncio.sleep(0.2)
-		except WebSocketDisconnect:
-			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.disconnect(websocket)
+		while True:
+			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.check_connections()
+			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.active_connections) == 0:
+				break
+			await asyncio.sleep(5)
 
 	@app.get("/{filename:path}", response_class=HTMLResponse)
 	async def Static(request: Request, filename: Optional[str] = None):
@@ -637,10 +647,10 @@ def init():
 
 	app = FastAPI()
 
-	base_dir_templates = os.getcwd() + "/client/build"
+	base_dir_templates = os.getcwd() + "/client"
 	templates = Jinja2Templates(directory=f"{base_dir_templates}")
-	app.mount("/_app", StaticFiles(directory=f"{base_dir_templates}/_app"), name="_app")
-	app.mount("/assets", StaticFiles(directory=f"{base_dir_templates}/assets"), name="assets")
+	# app.mount("/_app", StaticFiles(directory=f"{base_dir_templates}/_app"), name="_app")
+	# app.mount("/assets", StaticFiles(directory=f"{base_dir_templates}/assets"), name="assets")
 
 	app.add_middleware(
 		CORSMiddleware, 

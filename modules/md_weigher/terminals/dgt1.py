@@ -9,6 +9,10 @@ class Dgt1(Terminal):
 		# Chiama il costruttore della classe base
 		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run)
     
+	def broadcastWeighingExecuting(self):
+		self.pesa_real_time.status = "WG"
+		callCallback(self.callback_realtime)
+    
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
 		# in base al valore del modope scrive un comando specifico nella conn
