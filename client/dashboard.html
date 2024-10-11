@@ -149,8 +149,7 @@
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.5); /* Sfondo traslucido */
             justify-content: center;
-            align-items: center;
-            flex-direction: row;
+            align-items: center; /* Allinea al centro */
         }
 
         .popup-content {
@@ -162,9 +161,17 @@
             max-width: 350px;
             height: fit-content;
             border-radius: 8px;
+            opacity: 0; /* Inizialmente trasparente */
+            transform: scale(0.8); /* Inizialmente ridotto */
+            transition: opacity 0.1s ease, transform 0.1s ease; /* Transizione per apparizione */
         }
 
-        .myNumberInput {
+        .popup-content.show {
+            opacity: 1; /* Rendi visibile */
+            transform: scale(1); /* Dimensione normale */
+        }
+        
+        #myNumberInput {
             width: 100%;
             height: 60px;
             font-size: 2.3rem;
@@ -175,11 +182,11 @@
             text-align: center;
         }
 
-        .myNumberInput:focus {
+        #myNumberInput:focus {
             outline: none;
         }
 
-        .myNumberInput::placeholder {
+        #myNumberInput::placeholder {
             opacity: 1;
         }
 
@@ -225,7 +232,7 @@
         <div id="myPopup" class="popup">
             <div class="popup-content">
                 <h2>Preset Tara</h2>
-                <input type="number" placeholder="0" class="myNumberInput">
+                <input type="number" placeholder="0" id="myNumberInput" autocomplete="off">
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button onclick="handlePTara()">OK</button>
@@ -235,7 +242,7 @@
     </div>
 
     <script>
-        const myNumberInput = document.getElementsByClassName("myNumberInput");
+        const myNumberInput = document.getElementById("myNumberInput");
 
         myNumberInput.onkeydown = function(event) {
             // Controlla se il tasto premuto è una freccia, Backspace, o altre combinazioni speciali
@@ -281,12 +288,26 @@
         }
 
         function openPopup() {
-            document.getElementById("myPopup").style.display = "flex";
+            const popup = document.getElementById("myPopup");
+            const popupContent = popup.querySelector(".popup-content");
+            popup.style.display = "flex"; // Mostra il popup
+            setTimeout(() => {
+                popupContent.classList.add("show"); // Aggiungi la classe per mostrare
+            }, 10); // Breve ritardo per assicurarsi che il display sia impostato
         }
 
         function closePopup() {
-            myNumberInput.value = "";
-            document.getElementById("myPopup").style.display = "none";
+            const popup = document.getElementById("myPopup");
+            const popupContent = popup.querySelector(".popup-content");
+            
+            // Rimuovi la classe per nascondere
+            popupContent.classList.remove("show");
+            
+            // Aspetta il tempo di transizione prima di nascondere il popup
+            setTimeout(() => {
+                popup.style.display = "none"; // Nascondi il popup
+                myNumberInput.value = "";
+            }, 300); // Tempo della transizione
         }
 
         // Chiudi il popup quando si fa clic all'esterno
@@ -390,7 +411,7 @@
         }
 
         async function handlePTara() {
-            let preset_tare = "0";
+            let preset_tare = 0;
             if (myNumberInput.value) preset_tare = myNumberInput.value;
             await fetch(`http://on.baron.it:3323/presettare?name=1&tare=${preset_tare}`)
             .then(res => {
