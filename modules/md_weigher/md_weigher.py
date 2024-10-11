@@ -50,8 +50,6 @@ class WeigherInstance:
 					timeout = max(0, self.time_between_actions - time_execute)
 					time.sleep(timeout)
 					lb_log.info(f"Node: {node.node}, Status: {status}, Command: {command}, Response; {response}, Error: {error}")
-					if node.modope_to_execute == "WEIGHING":
-						node.broadcastWeighingExecuting()
 					if node.diagnostic.status == 301:
 						self.connection.connection.close()
 						status, error_message = self.connection.connection.try_connection()
@@ -237,7 +235,15 @@ class WeigherInstance:
 			command_execute = status_modope == 100
 		return status, status_modope, command_execute, error_message
 
-	def setActionNode(self, node: Union[str, None], cb_realtime: Callable[[dict], any] = None, cb_diagnostic: Callable[[dict], any] = None, cb_weighing: Callable[[dict], any] = None, cb_tare_ptare_zero: Callable[[str], any] = None):
+	def setActionNode(
+    	self, 
+     	node: Union[str, None], 
+      	cb_realtime: Callable[[dict], any] = None, 
+       	cb_diagnostic: Callable[[dict], any] = None, 
+        cb_weighing: Callable[[dict], any] = None, 
+        cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
 		global nodes
 		node_found = [n for n in self.nodes if n.node == node]
 		if len(node_found) > 0:
@@ -245,10 +251,26 @@ class WeigherInstance:
 				cb_realtime=cb_realtime,
 				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
-				cb_tare_ptare_zero=cb_tare_ptare_zero
+				cb_tare_ptare_zero=cb_tare_ptare_zero,
+				cb_data_in_execution=cb_data_in_execution,
+				cb_action_in_execution=cb_action_in_execution
 			)
 
-	def setAction(self, cb_realtime: Callable[[dict], any] = None, cb_diagnostic: Callable[[dict], any] = None, cb_weighing: Callable[[dict], any] = None, cb_tare_ptare_zero: Callable[[str], any] = None):
+	def setAction(
+    	self, 
+    	cb_realtime: Callable[[dict], any] = None, 
+     	cb_diagnostic: Callable[[dict], any] = None, 
+      	cb_weighing: Callable[[dict], any] = None, 
+       	cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
 		for weigher in self.nodes:
-			weigher.setAction(cb_realtime=cb_realtime, cb_diagnostic=cb_diagnostic, cb_weighing=cb_weighing, cb_tare_ptare_zero=cb_tare_ptare_zero)
+			weigher.setAction(
+       			cb_realtime=cb_realtime, 
+          		cb_diagnostic=cb_diagnostic, 
+            	cb_weighing=cb_weighing, 
+             	cb_tare_ptare_zero=cb_tare_ptare_zero,
+				cb_data_in_execution=cb_data_in_execution,
+				cb_action_in_execution=cb_action_in_execution
+    		)
 	# ==============================================================

@@ -2,7 +2,7 @@ from modules.md_weigher.types import Realtime, Diagnostic, Weight, DataInExecuti
 from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
 import libs.lb_log as lb_log
-from libs.lb_utils import checkCallbackFormat
+from libs.lb_utils import checkCallbackFormat, callCallback
 from pydantic import BaseModel
 from typing import Optional, Callable, Union
 import select
@@ -88,6 +88,13 @@ class __SetupWeigher(__SetupWeigherConnection):
 			},
 			"data_assigned": None
 		})
+		self.data_in_execution: DataInExecution = DataInExecution(**{
+			"customer": None,
+			"supplier": None,
+			"plate": None,
+			"vehicle": None,
+			"material": None
+		})
 		self.ok_value: str = ""
 		self.modope: str = ""
 		self.modope_to_execute: str = ""
@@ -98,13 +105,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_diagnostics: str = ""
 		self.callback_weighing: str = ""
 		self.callback_tare_ptare_zero: str = ""
-		self.data_in_execution: DataInExecution = DataInExecution(**{
-			"customer": None,
-			"supplier": None,
-			"plate": None,
-			"vehicle": None,
-			"material": None
-		})
+		self.callback_data_in_execution: str = ""
+		self.callback_action_in_execution: str = ""
+		self.commands = ["VER", "SN", "OK"]
+		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING"]
 
 	def getSetup(self):
 		return {
@@ -147,6 +151,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 				self.data_in_execution.setAttribute(key=key, value=None)
 			else:
 				self.data_in_execution.setAttribute(key, value)
+			callCallback(self.callback_data_in_execution)
 		return self.getDataInExecution()
 
 	def deleteDataInExecution(self):
@@ -157,6 +162,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"vehicle": None,
 			"material": None
 		})
+		callCallback(self.callback_data_in_execution)
 		return self.getDataInExecution()
 
 	def maintaineSessionRealtime(self):
@@ -167,7 +173,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		cb_realtime: Callable[[dict], any] = None, 
 		cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
-		cb_tare_ptare_zero: Callable[[str], any] = None):
+		cb_tare_ptare_zero: Callable[[str], any] = None,
+  		cb_data_in_execution: Callable[[dict], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
 		check_cb_realtime = checkCallbackFormat(cb_realtime) # controllo se la funzione cb_realtime è richiamabile
 		if check_cb_realtime: # se è richiamabile assegna alla globale callback_realtime la funzione passata come parametro
 			self.callback_realtime = lambda: cb_realtime(self.self_config.name, self.node, self.pesa_real_time)
@@ -180,12 +188,16 @@ class __SetupWeigher(__SetupWeigherConnection):
 		check_cb_tare_ptare_zero = checkCallbackFormat(cb_tare_ptare_zero) # controllo se la funzione cb_tare_ptare_zero è richiamabile
 		if check_cb_tare_ptare_zero: # se è richiamabile assegna alla globale callback_tare_ptare_zero la funzione passata come parametro
 			self.callback_tare_ptare_zero = lambda: cb_tare_ptare_zero(self.self_config.name, self.node, self.ok_value)
+		check_cb_data_in_execution = checkCallbackFormat(cb_data_in_execution)
+		if check_cb_data_in_execution:
+			self.callback_data_in_execution = lambda: cb_data_in_execution(self.self_config.name, self.node, self.data_in_execution)
+		check_cb_action_in_execution = checkCallbackFormat(cb_action_in_execution)
+		if check_cb_action_in_execution:
+			self.callback_action_in_execution = lambda: cb_action_in_execution(self.self_config.name, self.node, self.modope_to_execute)
 
 	# setta il modope_to_execute
 	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int] = None):
-		commands = ["VER", "SN", "OK"]
-		direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING"]
-		if mod in commands:
+		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
 		if self.diagnostic.status in [301, 305] and mod != "REALTIME" and mod != "DIAGNOSTICS" and mod != "OK":
@@ -206,12 +218,12 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.modope_to_execute = mod # se non si è verificata nessuna delle condizioni imposto REALTIME come comando da eseguire
 			return 100, None # ritorno il successo
 		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING")
-		elif mod in direct_commands:
+		elif mod in self.direct_commands:
 			# controllo se il comando attualmente in esecuzione in loop è DIAGNOSTICS e se si ritorno errore
 			if self.modope == "DIAGNOSTICS":
 				return 400, "Diagnostica in esecuzione"
 			# controllo se c'è qualche comando diretto verso la pesa attualmente in esecuzione e se si ritorno errore
-			elif self.modope in commands or self.modope in direct_commands:
+			elif self.modope in self.commands or self.modope in self.direct_commands:
 				return 405, f"{self.modope} in esecuzione"
 			# controllo che il comando attualmente in esecuzione in loop sia REALTIME
 			elif self.modope == "REALTIME":
@@ -232,10 +244,11 @@ class __SetupWeigher(__SetupWeigherConnection):
 						else:
 							return 500, f"Il peso deve essere maggiore di {self.min_weight}" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire
+					callCallback(self.callback_action_in_execution)
 					return 100, None # ritorno il successo
 				elif self.modope_to_execute == "DIAGNOSTICS":
 					return 400, "Diagnostica in esecuzione"
-				elif self.modope_to_execute in commands or self.modope_to_execute in direct_commands:
+				elif self.modope_to_execute in self.commands or self.modope_to_execute in self.direct_commands:
 					return 405, f"{self.modope} in esecuzione"
 		# se il comando passato non è valido ritorno errore
 		else:

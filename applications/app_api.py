@@ -39,6 +39,7 @@ from fastapi.responses import RedirectResponse
 import json
 from modules.md_weigher.types import Realtime
 from libs.lb_ssh import ssh_tunnel, SshClientConnection
+import time
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -56,15 +57,31 @@ def Callback_Diagnostic(instance_name: str, instance_node: Union[str, None], dia
 
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 def Callback_Weighing(instance_name: str, instance_node: Union[str, None], last_pesata: Weight):
-	import time
 	global WEIGHERS
 	time.sleep(1)
-	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_data_in_execution.broadcast(last_pesata.dict()))
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(last_pesata.dict()))
  
 def Callback_TarePTareZero(instance_name: str, instance_node: Union[str, None], ok_value: str):
 	global WEIGHERS
 	result = {"command_executend": ok_value}
-	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_data_in_execution.broadcast(result))
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(result))
+
+def Callback_DataInExecution(instance_name: str, instance_node: Union[str, None], data_in_execution: DataInExecution):
+	global WEIGHERS
+	if asyncio.get_event_loop().is_running():
+		asyncio.create_task(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(data_in_execution.dict()))	
+	else:
+		loop = asyncio.get_event_loop()
+		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(data_in_execution.dict()))
+
+def Callback_ActionInExecution(instance_name: str, instance_node: Union[str, None], action_in_execution: str):
+	global WEIGHERS
+	result = {"command_in_executing": action_in_execution}
+	if asyncio.get_event_loop().is_running():
+		asyncio.create_task(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(result))
+	else:
+		loop = asyncio.get_event_loop()
+		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(result))
 
 def Callback_Cardcode(cardcode: str):
 	result = {"cardcode": cardcode}
@@ -81,10 +98,13 @@ def createIstanceWeigher(name, configuration):
 	weigher_configuration = Configuration(**configuration)
 	module.initialize(configuration=weigher_configuration)
 	module.setAction(
-		cb_realtime=Callback_Realtime, 
+		cb_realtime=Callback_Realtime,
 		cb_diagnostic=Callback_Diagnostic, 
 		cb_weighing=Callback_Weighing,
-		cb_tare_ptare_zero=Callback_TarePTareZero)
+		cb_tare_ptare_zero=Callback_TarePTareZero,
+		cb_data_in_execution=Callback_DataInExecution,
+		cb_action_in_execution=Callback_ActionInExecution
+ 	)
 	# Inizializza il modulo.
 	module.init()  # Inizializzazione del modulo
 	# Crea e avvia il thread del modulo.
@@ -110,8 +130,8 @@ async def deleteInstanceWeigher(name):
 			WEIGHERS[name]["node_sockets"][node].manager_realtime.disconnect_all()
 			await WEIGHERS[name]["node_sockets"][node].manager_diagnostic.broadcast("Weigher instance deleted")
 			WEIGHERS[name]["node_sockets"][node].manager_diagnostic.disconnect_all()
-			await WEIGHERS[name]["node_sockets"][node].manager_data_in_execution.broadcast("Weigher instance deleted")
-			WEIGHERS[name]["node_sockets"][node].manager_data_in_execution.disconnect_all()
+			await WEIGHERS[name]["node_sockets"][node].manager_execution.broadcast("Weigher instance deleted")
+			WEIGHERS[name]["node_sockets"][node].manager_execution.disconnect_all()
 		closeThread(WEIGHERS[name]["thread"], WEIGHERS[name]["module"])
 		deleted = True
 	return deleted
@@ -145,15 +165,6 @@ class ConnectionManager:
 			except Exception:
 				#print("client down")
 				self.disconnect(connection)
-    
-	async def check_connections(self):
-		for connection in self.active_connections:
-			try:
-                # Invia un messaggio di ping per controllare se la connessione è attiva
-				await connection.send_text("ping")
-			except Exception:
-                # Se il messaggio non può essere inviato, la connessione è chiusa
-				self.disconnect(connection)
 
 class InstanceNameDTO(BaseModel):
 	name: str
@@ -165,7 +176,7 @@ class NodeConnectionManager:
 	def __init__(self):
 		self.manager_realtime = ConnectionManager()
 		self.manager_diagnostic = ConnectionManager()
-		self.manager_data_in_execution = ConnectionManager()
+		self.manager_execution = ConnectionManager()
 
 def get_query_params_name(params: InstanceNameDTO = Depends()):
 	global WEIGHERS
@@ -326,7 +337,7 @@ def mainprg():
 	@app.patch("/set/data_in_execution")
 	async def SetDataInExecution(data_in_execution: DataInExecution = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
-		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.broadcast(data)
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.broadcast(data)
 		return {
 			"instance": instance,
 			"data_in_execution": data,
@@ -336,7 +347,7 @@ def mainprg():
 	@app.delete("/delete/data_in_execution")
 	async def DeleteDataInExecution(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, data = WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node)
-		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.broadcast(data)
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.broadcast(data)
 		return {
 			"instance": instance,
 			"data_in_execution": data,
@@ -572,14 +583,13 @@ def mainprg():
 				if WEIGHERS[instance.name]["module"] is not None:
 					WEIGHERS[instance.name]["module"].realTime()
 
-	@app.websocket("/data_in_execution")
+	@app.websocket("/execution")
 	async def weboscket_datainexecution(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.connect(websocket)
+		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.connect(websocket)
 		while True:
-			await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.check_connections()
-			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_data_in_execution.active_connections) == 0:
+			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.active_connections) == 0:
 				break
-			await asyncio.sleep(5)
+			await asyncio.sleep(1)
 
 	@app.get("/{filename:path}", response_class=HTMLResponse)
 	async def Static(request: Request, filename: Optional[str] = None):

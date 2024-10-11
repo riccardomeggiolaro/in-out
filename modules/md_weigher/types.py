@@ -42,7 +42,7 @@ class WeightExecuted(BaseModel):
 class Weight(BaseModel):
 	weight_executed: WeightExecuted
 	data_assigned: Optional[Union[DataInExecution, int]] = None
- 
+
 class SetupWeigher(CustomBaseModel):
 	max_weight: int
 	min_weight: int

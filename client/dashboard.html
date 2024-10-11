@@ -155,36 +155,47 @@
 
         .popup-content {
             background-color: white;
-            padding: 20px;
+            padding: 10px;
             border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
+            width: min-content;
+            min-width: 350px;
+            max-width: 350px;
             height: fit-content;
             border-radius: 8px;
         }
 
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        input {
-            width: inherit;
-            height: 40px;
-            font-size: 2rem;
+        .myNumberInput {
+            width: 100%;
+            height: 60px;
+            font-size: 2.3rem;
             border: 2px solid black;
-            border-radius: 8px;
+            margin-top: 30px;
+            border: 0px;
+            border-bottom: 2px solid black;
+            text-align: center;
         }
-    </style>
+
+        .myNumberInput:focus {
+            outline: none;
+        }
+
+        .myNumberInput::placeholder {
+            opacity: 1;
+        }
+
+        .footer-buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;            
+            margin-top: 30px;
+        }
+
+        .close-button {
+            background-color: transparent;
+            border: 2px solid #1362b8;
+            color: #1362b8;
+        }
+</style>
 </head>
 <body>
     <div class="box">
@@ -213,18 +224,41 @@
         <div id="snackbar"></div>
         <div id="myPopup" class="popup">
             <div class="popup-content">
-                <span class="close-button" onclick="closePopup()">&times;</span>
                 <h2>Preset Tara</h2>
-                <br>
-                <input type="number" placeholder="0">
-                <br>
-                <br>
-                <button>OK</button>
+                <input type="number" placeholder="0" class="myNumberInput">
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button onclick="handlePTara()">OK</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        const myNumberInput = document.getElementsByClassName("myNumberInput");
+
+        myNumberInput.onkeydown = function(event) {
+            // Controlla se il tasto premuto è una freccia, Backspace, o altre combinazioni speciali
+            const validKeys = [
+                'Backspace', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Control', 'Meta', 'Tab'
+            ];
+
+            // Permetti la selezione di tutto (Ctrl + A)
+            if (event.ctrlKey && event.key === 'a') {
+                return; // Non fare nulla, consenti l'azione
+            }
+
+            // Permetti anche la combinazione Ctrl (per altri scopi)
+            if (event.ctrlKey || event.metaKey) {
+                return; // Non fare nulla, consenti l'azione
+            }
+
+            // Controlla se il tasto è un numero o una chiave valida
+            if (isNaN(event.key) && !validKeys.includes(event.key)) {
+                event.preventDefault(); // Blocca il tasto
+            }
+        };
+
         let snackbarTimeout;
 
         // script.js
@@ -251,6 +285,7 @@
         }
 
         function closePopup() {
+            myNumberInput.value = "";
             document.getElementById("myPopup").style.display = "none";
         }
 
@@ -309,76 +344,86 @@
             }
         }
 
-        function updateUI(e) {
+        function updateUIRealtime(e) {
             data = JSON.parse(e.data);
-            if (data.status == "WG") {
-                buttons.forEach(button => {
-                    button.disabled = true;
-                    button.classList.add("disabled-button"); // Aggi
-                });
-                showSnackbar("Pesando...")
-            }
             document.getElementById('tare').innerText = data.tare !== undefined ? data.tare : 'N/A';
             document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
             document.getElementById('unitMeasure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
             document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
         }
 
+        function updateUIExecution(e) {
+            if (e.data != "ping") {
+                const obj = JSON.parse(e.data);
+                if (obj.command_in_executing) {
+                    if (obj.command_in_executing == "TARE") showSnackbar("Tara");
+                    if (obj.command_in_executing == "PRESETTARE") showSnackbar("Preset tara");
+                    if (obj.command_in_executing == "ZERO") showSnackbar("Zero");
+                    if (obj.command_in_executing == "WEIGHING") {
+                        showSnackbar("Pesando...");
+                        buttons.forEach(button => {
+                            button.disabled = true;
+                            button.classList.add("disabled-button"); // Aggi
+                        });
+                    }                    
+                } else if (obj.weight_executed) {
+                    if (obj.weight_executed.pid != "") showSnackbar("Pesata eseguita! Identificativo: " + obj.weight_executed.pid);
+                    else showSnackbar("Pesata fallita!");
+                    buttons.forEach(button => {
+                        button.disabled = false;
+                        button.classList.remove("disabled-button"); // Aggi
+                    });
+                }
+            }
+        }
+
         async function handleTara() {
             await fetch("http://on.baron.it:3323/tare?name=1")
             .then(res => res.json())
-            .then(data => {
-                return data; // Puoi restituirlo se necessario
-            })
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
         async function handleZero() {
             await fetch("http://on.baron.it:3323/zero?name=1")
             .then(res => res.json())
-            .then(data => {
-                return data; // Puoi restituirlo se necessario
-            })
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
         async function handlePTara() {
-            await fetch("http://on.baron.it:3323/presettare?name=1&tare=0")
-            .then(res => res.json())
-            .then(data => {
-                return data; // Puoi restituirlo se necessario
+            let preset_tare = "0";
+            if (myNumberInput.value) preset_tare = myNumberInput.value;
+            await fetch(`http://on.baron.it:3323/presettare?name=1&tare=${preset_tare}`)
+            .then(res => {
+                closePopup();
+                return res.json();
             })
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
         async function handlePesata() {
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.classList.add("disabled-button"); // Aggi
+            });
             const r = await fetch("http://on.baron.it:3323/print?name=1")
-            .then(res => res.json())
-            .then(data => {
-                return data; // Puoi restituirlo se necessario
+            .then(res => {
+                return res.json();
             })
             .catch(error => console.error('Errore nella fetch:', error));
-            console.log(r);
-            if (r.command_executed.status_command == false) {
+            if (r.command_executed.status_command == true) {
+                showSnackbar("Pesando...");
+            } else {
                 showSnackbar(r.command_executed.error_message);
-            }
-        }
-
-        function r(e) {
-            if (e.data != "ping") {
-                const obj = JSON.parse(e.data);
-                showSnackbar("Pesata eseguita con successo! PID: " + obj.weight_executed.pid);
                 buttons.forEach(button => {
                     button.disabled = false;
                     button.classList.remove("disabled-button"); // Aggi
                 });
             }
-            console.log(e);
         }
 
         // Inizializza la connessione WebSocket al caricamento della pagina
-        connectWebSocket('realtime?name=1', updateUI);
-        connectWebSocket('data_in_execution?name=1', r);
+        connectWebSocket('realtime?name=1', updateUIRealtime);
+        connectWebSocket('execution?name=1', updateUIExecution);
     </script>
 </body>
 </html>

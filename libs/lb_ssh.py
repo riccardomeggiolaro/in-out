@@ -52,17 +52,25 @@ def ssh_tunnel(connection: SshClientConnection):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    try:
-        client.connect(connection.server, port=connection.ssh_port, username=connection.user, password=connection.password, allow_agent=False, look_for_keys=False)
-    except Exception as e:
-        lb_log.info(f'Errore di connessione al server SSH: {str(e)}')
-        return
+    while True:
+        try:
+            client.connect(
+                connection.server,
+                port=connection.ssh_port,
+                username=connection.user,
+                password=connection.password,
+                allow_agent=False,
+                look_for_keys=False
+            )
+            lb_log.info('Connessione SSH stabilita.')
 
-    try:
-        transport = client.get_transport()
-        transport.request_port_forward('', connection.forwarding_port)
-        reverse_forward_tunnel(connection.forwarding_port, connection.local_port, transport)
-    except KeyboardInterrupt:
-        lb_log.info('Interruzione da tastiera. Chiusura del tunnel.')
-    finally:
-        client.close()
+            transport = client.get_transport()
+            transport.request_port_forward('', connection.forwarding_port)
+            reverse_forward_tunnel(connection.forwarding_port, connection.local_port, transport)
+
+        except Exception as e:
+            lb_log.info(f'Errore di connessione al server SSH: {str(e)}')
+            time.sleep(5)  # Aspetta 5 secondi prima di riprovare
+        finally:
+            client.close()
+            lb_log.info('Tunnel SSH chiuso. Riprovo a connettermi...')
