@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <link rel="icon" href="https://ucee6719089b5cee957833c2cf73.dl.dropboxusercontent.com/cd/0/inline/CcYncFRExapaUKJ1n_h7ca2R36B4ciOS9YX-P2uNJq7Bu5gyvxuFLQRx8jzHY05A-XZa0OIWbs1F0bTqlQzKQMvoxjqUh2VqPghoQD3dgxhzcIZesUi6vDxiF7HOJNeZHCYkg1eqHKqfWi5TtS-nHxWo/file#">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Peso</title>
@@ -41,7 +42,7 @@
             width: 100%;
         }
 
-        .container {
+        .loading {
             background: rgb(209, 217, 228);
             border-radius: 12px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
@@ -54,7 +55,34 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;            
+            transition: display 0.3s;
+        }
+
+        .img-loading {
+            max-width: 100%;
+            border-radius: 12px;
+        }
+
+        .container {
+            background: rgb(209, 217, 228);
+            border-radius: 12px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            width: 95%;
+            max-width: 350px;
+            height: 95%;
+            max-height: 900px;
+            display: none;
+            justify-content: center;
+            align-items: center;
             flex-direction: column;
+        }
+
+        p {
+            margin-top: 20px;
+            font-size: 1.5rem;
         }
 
         .display {
@@ -138,6 +166,12 @@
             pointer-events: none; /* Disabilita gli eventi del mouse */
         }
 
+        .img-container {
+            width: 80%;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+
         .popup {
             display: none; /* Nasconde il popup per default */
             position: fixed;
@@ -206,6 +240,10 @@
 </head>
 <body>
     <div class="box">
+        <div class="loading">
+            <img class="img-loading" src="https://ucdd273e906d6cc9665cfa5a5892.dl.dropboxusercontent.com/cd/0/inline/CcYbiKr4QXM0Cj3oVXrBpcnd-06TvVQLtz4BqHXAWCDuwhdRqp13cuYE4hHfBpnZHmoZxFIehuVdK6weBAY3RtTZqduK8XI2f97uZA43W3-4a03pZIXsYdfc9WapofKrYOlhGduhykBvKFiKMOIqjQnS/file#" alt="">
+            <p>Connessione...</p>
+        </div>
         <div class="container">
             <div class="display">
                 <div class="weight">
@@ -227,6 +265,7 @@
                 <button onclick="openPopup()">P Tara</button>
                 <button onclick="handlePesata()">Pesata</button>
             </div>
+            <img class="img-container" src="https://ucdd273e906d6cc9665cfa5a5892.dl.dropboxusercontent.com/cd/0/inline/CcYbiKr4QXM0Cj3oVXrBpcnd-06TvVQLtz4BqHXAWCDuwhdRqp13cuYE4hHfBpnZHmoZxFIehuVdK6weBAY3RtTZqduK8XI2f97uZA43W3-4a03pZIXsYdfc9WapofKrYOlhGduhykBvKFiKMOIqjQnS/file#" alt="">
         </div>    
         <div id="snackbar"></div>
         <div id="myPopup" class="popup">
@@ -242,7 +281,22 @@
     </div>
 
     <script>
+        let isRefreshing = false;
+
+        window.onbeforeunload = function() {
+            isRefreshing = true; // Imposta il flag prima del refresh
+            clearTimeout(reconnectTimeout);
+        };
+
         const myNumberInput = document.getElementById("myNumberInput");
+
+        let pathname = '';
+
+        pathname = '/gateway';
+
+        let lastSlashIndex = window.location.pathname.lastIndexOf('/');
+
+        pathname = lastSlashIndex !== -1 ? pathname.substring(0, lastSlashIndex) : pathname;
 
         myNumberInput.onkeydown = function(event) {
             // Controlla se il tasto premuto è una freccia, Backspace, o altre combinazioni speciali
@@ -328,84 +382,104 @@
         };
 
         let _data;
-        let reconnectInterval;
+        let reconnectTimeout;
 
         const buttons = document.querySelectorAll("button");
 
         function connectWebSocket(path, exe) {
             // Ottieni la base URL del dominio corrente
-            let baseUrl = window.location.origin;
+            let baseUrl = window.location.origin + pathname;
+
             baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
 
             // Costruisci l'URL WebSocket
             const websocketUrl = `${baseUrl}/${path}`;
+
             _data = new WebSocket(websocketUrl);
 
             _data.addEventListener('message', (e) => {
                 exe(e);
             });
 
-            _data.addEventListener('error', () => {
-                console.error("WebSocket error. Trying to reconnect...");
-                attemptReconnect();
-            });
-
-            _data.addEventListener('close', () => {
-                console.warn("WebSocket closed. Trying to reconnect...");
-                attemptReconnect();
-            });
-        }
-
-        function attemptReconnect() {
-            if (!reconnectInterval) {
-                reconnectInterval = setInterval(() => {
-                    console.log("Attempting to reconnect...");
-                    connectWebSocket();
-                }, 3000);
-            }
-        }
-
-        function updateUIRealtime(e) {
-            data = JSON.parse(e.data);
-            document.getElementById('tare').innerText = data.tare !== undefined ? data.tare : 'N/A';
-            document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
-            document.getElementById('unitMeasure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
-            document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
-        }
-
-        function updateUIExecution(e) {
-            if (e.data != "ping") {
-                const obj = JSON.parse(e.data);
-                if (obj.command_in_executing) {
-                    if (obj.command_in_executing == "TARE") showSnackbar("Tara");
-                    if (obj.command_in_executing == "PRESETTARE") showSnackbar("Preset tara");
-                    if (obj.command_in_executing == "ZERO") showSnackbar("Zero");
-                    if (obj.command_in_executing == "WEIGHING") {
-                        showSnackbar("Pesando...");
-                        buttons.forEach(button => {
-                            button.disabled = true;
-                            button.classList.add("disabled-button"); // Aggi
-                        });
-                    }                    
-                } else if (obj.weight_executed) {
-                    if (obj.weight_executed.pid != "") showSnackbar("Pesata eseguita! Identificativo: " + obj.weight_executed.pid);
-                    else showSnackbar("Pesata fallita!");
+            _data.addEventListener('open', () => {
+                setTimeout(() => {
+                    document.querySelector('.loading').style.display = 'none';
+                    document.querySelector('.container').style.display = 'flex';
                     buttons.forEach(button => {
                         button.disabled = false;
                         button.classList.remove("disabled-button"); // Aggi
                     });
+                }, 300);
+            })
+
+            _data.addEventListener('error', () => {
+                if (isRefreshing) {
+                    console.log("WebSocket closed due to refresh");
+                } else {
+                    console.error("WebSocket error. Trying to reconnect...");
+                    document.querySelector('.loading').style.display = 'flex';
+                    document.querySelector('.container').style.display = 'none';
+                    attemptReconnect();
                 }
+            });
+
+            _data.addEventListener('close', () => {
+                if (isRefreshing) {
+                    console.log("WebSocket closed due to refresh");
+                } else {
+                    console.warn("WebSocket closed. Trying to reconnect...");
+                    document.querySelector('.loading').style.display = 'flex';
+                    document.querySelector('.container').style.display = 'none';
+                    attemptReconnect();
+                }
+            });
+        }
+
+        function attemptReconnect() {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = setTimeout(() => {
+                console.log("Attempting to reconnect...");
+                connectWebSocket('realtime?name=1', updateUIRealtime);
+            }, 3000);
+        }
+
+        function updateUIRealtime(e) {
+            const obj = JSON.parse(e.data);
+            if (obj.command_in_executing) {
+                if (obj.command_in_executing == "TARE") showSnackbar("Tara");
+                if (obj.command_in_executing == "PRESETTARE") showSnackbar("Preset tara");
+                if (obj.command_in_executing == "ZERO") showSnackbar("Zero");
+                if (obj.command_in_executing == "WEIGHING") {
+                    showSnackbar("Pesando...");
+                    buttons.forEach(button => {
+                        button.disabled = true;
+                        button.classList.add("disabled-button"); // Aggi
+                    });
+                }                    
+            } else if (obj.weight_executed) {
+                if (obj.weight_executed.pid != "") showSnackbar("Pesata eseguita! Identificativo: " + obj.weight_executed.pid);
+                else showSnackbar("Pesata fallita!");
+                buttons.forEach(button => {
+                    button.disabled = false;
+                    button.classList.remove("disabled-button"); // Aggi
+                });
+            } else if (obj.tare) {
+                data = obj;
+                document.getElementById('tare').innerText = data.tare !== undefined ? data.tare : 'N/A';
+                document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
+                document.getElementById('unitMeasure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
+                document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
             }
         }
 
         async function handleTara() {
-            await fetch("http://on.baron.it:3323/tare?name=1")
+            await fetch(`${pathname}/tare?name=1`)
             .then(res => res.json())
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
         async function handleZero() {
-            await fetch("http://on.baron.it:3323/zero?name=1")
+            await fetch(`${pathname}/zero?name=1`)
             .then(res => res.json())
             .catch(error => console.error('Errore nella fetch:', error));
         }
@@ -413,7 +487,7 @@
         async function handlePTara() {
             let preset_tare = 0;
             if (myNumberInput.value) preset_tare = myNumberInput.value;
-            await fetch(`http://on.baron.it:3323/presettare?name=1&tare=${preset_tare}`)
+            await fetch(`${pathname}/presettare?name=1&tare=${preset_tare}`)
             .then(res => {
                 closePopup();
                 return res.json();
@@ -426,7 +500,7 @@
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
             });
-            const r = await fetch("http://on.baron.it:3323/print?name=1")
+            const r = await fetch(`${pathname}/print?name=1`)
             .then(res => {
                 return res.json();
             })
@@ -444,7 +518,6 @@
 
         // Inizializza la connessione WebSocket al caricamento della pagina
         connectWebSocket('realtime?name=1', updateUIRealtime);
-        connectWebSocket('execution?name=1', updateUIExecution);
     </script>
 </body>
 </html>

@@ -59,29 +59,29 @@ def Callback_Diagnostic(instance_name: str, instance_node: Union[str, None], dia
 def Callback_Weighing(instance_name: str, instance_node: Union[str, None], last_pesata: Weight):
 	global WEIGHERS
 	time.sleep(1)
-	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(last_pesata.dict()))
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(last_pesata.dict()))
  
 def Callback_TarePTareZero(instance_name: str, instance_node: Union[str, None], ok_value: str):
 	global WEIGHERS
 	result = {"command_executend": ok_value}
-	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(result))
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(result))
 
 def Callback_DataInExecution(instance_name: str, instance_node: Union[str, None], data_in_execution: DataInExecution):
 	global WEIGHERS
 	if asyncio.get_event_loop().is_running():
-		asyncio.create_task(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(data_in_execution.dict()))	
+		asyncio.create_task(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data_in_execution.dict()))	
 	else:
 		loop = asyncio.get_event_loop()
-		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(data_in_execution.dict()))
+		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data_in_execution.dict()))
 
 def Callback_ActionInExecution(instance_name: str, instance_node: Union[str, None], action_in_execution: str):
 	global WEIGHERS
 	result = {"command_in_executing": action_in_execution}
 	if asyncio.get_event_loop().is_running():
-		asyncio.create_task(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(result))
+		asyncio.create_task(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(result))
 	else:
 		loop = asyncio.get_event_loop()
-		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_execution.broadcast(result))
+		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(result))
 
 def Callback_Cardcode(cardcode: str):
 	result = {"cardcode": cardcode}
@@ -582,14 +582,6 @@ def mainprg():
 			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_diagnostic.active_connections) == 0 and len(WEIGHERS[instance.name]["websockets"].manager_realtime.active_connections) >= 1:
 				if WEIGHERS[instance.name]["module"] is not None:
 					WEIGHERS[instance.name]["module"].realTime()
-
-	@app.websocket("/execution")
-	async def weboscket_datainexecution(websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.connect(websocket)
-		while True:
-			if len(WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.active_connections) == 0:
-				break
-			await asyncio.sleep(1)
 
 	@app.get("/{filename:path}", response_class=HTMLResponse)
 	async def Static(request: Request, filename: Optional[str] = None):
