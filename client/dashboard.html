@@ -78,6 +78,7 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
+            position: relative;
         }
 
         p {
@@ -167,9 +168,14 @@
         }
 
         .img-container {
-            width: 80%;
+            width: 50%;
             border-radius: 5px;
-            margin-top: 30px;
+            position: absolute;
+            bottom: 9px;
+        }
+
+        .img-container:hover {
+            cursor: pointer;
         }
 
         .popup {
@@ -242,7 +248,7 @@
     <div class="box">
         <div class="loading">
             <img class="img-loading" src="https://ucdd273e906d6cc9665cfa5a5892.dl.dropboxusercontent.com/cd/0/inline/CcYbiKr4QXM0Cj3oVXrBpcnd-06TvVQLtz4BqHXAWCDuwhdRqp13cuYE4hHfBpnZHmoZxFIehuVdK6weBAY3RtTZqduK8XI2f97uZA43W3-4a03pZIXsYdfc9WapofKrYOlhGduhykBvKFiKMOIqjQnS/file#" alt="">
-            <p>Connessione...</p>
+            <p>Connessione alla pesa...</p>
         </div>
         <div class="container">
             <div class="display">
@@ -266,7 +272,7 @@
                 <button onclick="handlePesata()">Pesata</button>
             </div>
             <img class="img-container" src="https://ucdd273e906d6cc9665cfa5a5892.dl.dropboxusercontent.com/cd/0/inline/CcYbiKr4QXM0Cj3oVXrBpcnd-06TvVQLtz4BqHXAWCDuwhdRqp13cuYE4hHfBpnZHmoZxFIehuVdK6weBAY3RtTZqduK8XI2f97uZA43W3-4a03pZIXsYdfc9WapofKrYOlhGduhykBvKFiKMOIqjQnS/file#" alt="">
-        </div>    
+        </div>
         <div id="snackbar"></div>
         <div id="myPopup" class="popup">
             <div class="popup-content">
@@ -288,8 +294,6 @@
             clearTimeout(reconnectTimeout);
         };
 
-        const myNumberInput = document.getElementById("myNumberInput");
-
         let pathname = '';
 
         pathname = '/gateway';
@@ -297,6 +301,8 @@
         let lastSlashIndex = window.location.pathname.lastIndexOf('/');
 
         pathname = lastSlashIndex !== -1 ? pathname.substring(0, lastSlashIndex) : pathname;
+
+        const myNumberInput = document.getElementById("myNumberInput");
 
         myNumberInput.onkeydown = function(event) {
             // Controlla se il tasto premuto è una freccia, Backspace, o altre combinazioni speciali
@@ -320,6 +326,12 @@
             }
         };
 
+        let imgContainer = document.querySelector('.img-container');
+
+        imgContainer.addEventListener('click', () => {
+            window.location.href = 'https://www.baronpesi.it'; 
+        });
+
         let snackbarTimeout;
 
         // script.js
@@ -338,7 +350,7 @@
                 if (snackbar.className === "show") {
                     snackbar.className = snackbar.className.replace("show", ""); // Rimuovi la classe
                 }
-            }, 3000); // Durata in millisecondi
+            }, 5000); // Durata in millisecondi
         }
 
         function openPopup() {
@@ -409,7 +421,7 @@
                         button.disabled = false;
                         button.classList.remove("disabled-button"); // Aggi
                     });
-                }, 300);
+                }, 1000);
             })
 
             _data.addEventListener('error', () => {
