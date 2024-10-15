@@ -287,6 +287,21 @@
     </div>
 
     <script>
+        let connected;
+
+        function updateOnlineStatus() {
+            if (location.protocol === "https:") {
+                console.error("WebSocket error. Trying to reconnect...");
+                document.querySelector('.loading').style.display = 'flex';
+                document.querySelector('.container').style.display = 'none';
+                attemptReconnect();
+            }
+        }
+
+        // Aggiungi gli event listener per gli eventi online e offline
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
         let isRefreshing = false;
 
         window.onbeforeunload = function() {
