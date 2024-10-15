@@ -1,0 +1,11 @@
+[Unit]
+Description=Avvia il mio server FastAPI
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/goldrake-server
+ExecStart=/home/goldrake-server/start.sh
+
+[Install]
+WantedBy=multi-user.target

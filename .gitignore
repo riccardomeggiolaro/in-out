@@ -182,3 +182,11 @@ cython_debug/
 /client/vite.config.ts.timestamp-*
 
 ssh_tools.jsonc
+
+main.spec
+
+service.log
+
+/dist
+
+/build
