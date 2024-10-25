@@ -11,7 +11,7 @@
         "rfid": {
             "connection": {
                 "baudrate": 9600,
-                "node": null,
+                "node": "01",
                 "serial_port_name": "/dev/ttyACM0",
                 "timeout": 1
             },

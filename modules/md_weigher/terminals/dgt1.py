@@ -85,14 +85,23 @@ class Dgt1(Terminal):
 				lb_log.info("------------------------------------------------------")
 		except TimeoutError as e:
 			self.diagnostic.status = 301
+			self.diagnostic.firmware = None
+			self.diagnostic.model_name = None
+			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
 				self.setModope("OK")
 		except BrokenPipeError as e:
 			self.diagnostic.status = 305
+			self.diagnostic.firmware = None
+			self.diagnostic.model_name = None
+			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
 				self.setModope("OK")
 		except ValueError as e:
 			self.diagnostic.status = 201
+			self.diagnostic.firmware = None
+			self.diagnostic.model_name = None
+			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
 				self.setModope("OK")
 

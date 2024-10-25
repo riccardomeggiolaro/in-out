@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .info-container {
+            display: inline-flex;
+            position: relative;
+        }
+
+        .info-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: 130%;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 200px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 12px;  /* Cambiato da right a left */
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent #333 transparent;
+        }
+
+        .info-container:hover .tooltip {
+            display: block;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-container">
+        <div class="info-icon">i</div>
+        <div class="tooltip">
+            <h4 style="margin: 0 0 8px 0">Dettagli Prodotto</h4>
+            <p style="margin: 0">Prezzo: €99.99</p>
+            <p style="margin: 0">Disponibilità: In magazzino</p>
+            <p style="margin: 0">Spedizione: 2-3 giorni</p>
+        </div>
+    </div>
+    <p>ciaooooo</p>
+</body>
+</html>

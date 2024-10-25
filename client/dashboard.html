@@ -7,16 +7,25 @@
     <title>Dashboard Peso</title>
     <meta name="description" content="About this app" />
     <style>
+        html,
+        body {
+            margin: 0px;
+        }
+
+        * {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
         /* styles.css */
         #snackbar {
-            background-color: #333; /* Colore di sfondo */
-            color: #fff; /* Colore del testo */
-            text-align: center; /* Testo centrato */
-            border-radius: 2px; /* Angoli arrotondati */
-            padding: 16px; /* Spaziatura */
-            z-index: 1; /* Porta in primo piano */
-            font-size: 17px; /* Dimensione del font */
-            transform: translateY(100%); /* Inizialmente nascosto */
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            z-index: 1;
+            font-size: 17px;
+            transform: translateY(100%);
             transition: visibility 0s linear 0.1s, opacity 0.1s linear, transform 0.1s ease-in-out;
             position: fixed;
             bottom: 0;
@@ -24,14 +33,7 @@
         }
 
         #snackbar.show {
-            transform: translateY(0); /* Mostra nella posizione originale */
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            transform: translateY(0);
         }
 
         .box {
@@ -44,14 +46,10 @@
 
         .loading {
             background: rgb(209, 217, 228);
-            border-radius: 12px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            padding: 20px;
             text-align: center;
-            width: 95%;
-            max-width: 350px;
-            height: 95%;
-            max-height: 900px;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -61,81 +59,213 @@
 
         .img-loading {
             max-width: 100%;
+            max-width: 250px;
             border-radius: 12px;
+        }
+
+        .loading p {
+            margin-top: 20px;
+            font-size: 1.5rem;
         }
 
         .container {
             background: rgb(209, 217, 228);
-            border-radius: 12px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            padding: 20px;
             text-align: center;
-            width: 95%;
-            max-width: 350px;
-            height: 95%;
-            max-height: 900px;
+            width: 100%;
+            height: 100%;
             display: none;
-            justify-content: center;
             align-items: center;
             flex-direction: column;
             position: relative;
         }
 
-        p {
-            margin-top: 20px;
-            font-size: 1.5rem;
+        .display-wrapper {
+            height: 85%;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        /* Side columns (25% each) */
+        .anagrafic,
+        .ins {
+            width: 20%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .anagrafic div {
+            margin: auto;
+            width: 98.8%;
+            max-width: 270px;
+        }
+
+        .anagrafic div input {
+            width: 95%;
+            height: 30px;
+            border: 3px solid #1362b8;
+            border-radius: 8px;
+        }
+
+        .anagrafic div h2 {
+            margin-top: 0px;
+        }
+
+        .anagrafic div * {
+            margin-bottom: 0px;
         }
 
         .display {
-            margin-bottom: 20px;
-            position: relative;
             width: 100%;
+            flex: 1 1 300px;
+            display: flex;
+            flex-direction: column;
         }
 
         .weight {
             background: #f8f9fa;
             border: 1px solid #dee2e6;
             border-radius: 8px;
+            margin: 3px;
+            padding-top: auto;
+            padding-bottom: auto;
+            position: relative;
             font-size: 3rem;
-            padding: 2rem 0;
         }
 
-        .display p {
+        #info-container {
+            position: absolute;
+            left: 3px;
+            bottom: 3px;
+            font-size: 1rem;
+            margin: 0;            
+        }
+
+        .info-container {
+            display: inline-flex;
+            position: relative;
+        }
+
+        .info-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: 130%;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 200px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 30;
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 12px;  /* Cambiato da right a left */
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent #333 transparent;
+        }
+
+        .info-container:hover .tooltip {
+            display: block;
+            opacity: 1;
+        }
+
+        .tooltip h4 {
+            margin: 0 0 8px 0; 
+            text-align: left;
+        }
+
+        .tooltip p {
+            margin: 0; 
+            text-align: left;
+        }
+
+        #uniteMisure {
             position: absolute;
             right: 3px;
+            bottom: 0;
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        #tare {
             bottom: 3px;
             font-size: 2rem;
+            margin: 0;
+        }
+
+        #status {
+            position: absolute;
+            right: 3px;
+            top: 0;
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        #netWeight {
+            margin: 1.5rem 0px 0px 0px;
         }
 
         .info {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            margin-top: 0px;
-            width: 100%;
-        }
-
-        .message {
-            width: 98%;
-            height: 30px;
-            text-align: center;
-            margin-top: 9px;
-            margin-bottom: 9px;
-            background-color: #a5afb9;
+            background-color: #1362b8;
+            height: 100%;
+            margin: 3px;
             border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            text-align: left;
+            padding: 3px;
         }
 
         .tara, .status {
             background: #f8f9fa;
             border: 1px solid #dee2e6;
-            padding: 1.1rem 0;
             border-radius: 8px;
             flex: 1;
             margin: 3px;
-            margin-bottom: 20px;
+            height: fit-content;
+        }
+
+        /* Updated in-out section */
+        .in-out {
+            display: flex;
+            width: 100%;
+            position: absolute;
+            bottom: 0px;
+            height: 15%;
+        }
+
+        .in-out .item {
+            flex: 0 0 auto;
+        }
+
+        .in,
+        .out {
+            width: 19.4%;
+        }
+
+        .buttons.item {
+            width: 60%;
         }
 
         .buttons {
@@ -143,19 +273,21 @@
             flex-wrap: wrap;
             justify-content: space-between;
             width: 100%;
+            height: 50%;
         }
 
         button {
-            background-color: #1362b8;
-            color: white;
+            background-color: white;
+            color: #1362b8;
             border: none;
             border-radius: 5px;
+            border-color: #1362b8;
             cursor: pointer;
             transition: background-color 0.3s;
-            flex: 1 0 45%;
-            margin: 3px;
-            height: 60px;
-            font-size: 1.3rem;
+            flex: 0 0 24%;
+            font-size: 1.6rem;
+            margin: 3px auto;
+            box-shadow: 0 4px 30px rgba(202, 73, 73, 0.1);
         }
 
         button:active {
@@ -163,15 +295,8 @@
         }
 
         .disabled-button {
-            opacity: 0.5; /* Rende il bottone traslucido */
-            pointer-events: none; /* Disabilita gli eventi del mouse */
-        }
-
-        .img-container {
-            width: 35%;
-            border-radius: 5px;
-            position: absolute;
-            bottom: 9px;
+            opacity: 0.5;
+            pointer-events: none;
         }
 
         .img-container:hover {
@@ -179,7 +304,7 @@
         }
 
         .popup {
-            display: none; /* Nasconde il popup per default */
+            display: none;
             position: fixed;
             z-index: 1;
             left: 0;
@@ -187,9 +312,9 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5); /* Sfondo traslucido */
+            background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
-            align-items: center; /* Allinea al centro */
+            align-items: center;
         }
 
         .popup-content {
@@ -201,16 +326,20 @@
             max-width: 350px;
             height: fit-content;
             border-radius: 8px;
-            opacity: 0; /* Inizialmente trasparente */
-            transform: scale(0.8); /* Inizialmente ridotto */
-            transition: opacity 0.1s ease, transform 0.1s ease; /* Transizione per apparizione */
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.1s ease, transform 0.1s ease;
         }
 
         .popup-content.show {
-            opacity: 1; /* Rendi visibile */
-            transform: scale(1); /* Dimensione normale */
+            opacity: 1;
+            transform: scale(1);
         }
         
+        .popup-content h2 {
+            margin: 10px auto;
+        }
+
         #myNumberInput {
             width: 100%;
             height: 60px;
@@ -222,12 +351,23 @@
             text-align: center;
         }
 
-        #myNumberInput:focus {
+        #myNumberInput:focus,
+        .input {
             outline: none;
         }
 
-        #myNumberInput::placeholder {
+        #myNumberInput::placeholder,
+        .input {
             opacity: 1;
+        }
+
+        .input {
+            width: 100%;
+            height: 40px;
+            font-size: 1.8rem;
+            border: 2px solid black;
+            border: 0px;
+            border-bottom: 2px solid black;
         }
 
         .footer-buttons {
@@ -237,11 +377,187 @@
             margin-top: 30px;
         }
 
+        .footer-buttons button {
+            flex: 0 0 49%;
+            height: 60px;
+        }
+
         .close-button {
             background-color: transparent;
             border: 2px solid #1362b8;
             color: #1362b8;
         }
+
+        .in,
+        .out,
+        .p-tare-button {
+            background-color: #1362b8;
+            color: white;
+        }
+
+        /* Updated media queries */
+        @media (max-width: 800px) {
+            .display-wrapper,
+            .in-out {
+                max-width: 700px;
+            }
+
+            .container {
+                justify-content: center;
+            }
+
+            .anagrafic,
+            .ins {
+                display: none;
+            }
+
+            .weight {
+                font-size: 3rem;
+            }
+
+            #netWeight {
+                font-size: 4.5rem;
+            }
+
+            .display-wrapper {
+                height: auto;
+            }
+
+            .display-wrapper {
+                display: block;
+            }
+
+            .display.item {
+                width: 100%;
+            }
+
+            .tara, .status {
+                width: 100%;
+            }
+
+            .info {
+                flex-direction: row;
+            }
+            
+            .tara, .status {
+                flex: 1;
+            }
+            
+            .item {
+                flex: auto;
+            }
+
+            .item:nth-child(1) {
+                order: 2;
+                flex: 0 0 49%;
+            }
+            .item:nth-child(2) {
+                order: 1;
+                width: 100%;
+                flex: 1 1 100%;
+            }
+            .item:nth-child(3) {
+                order: 3;
+                flex: 0 0 49%;
+            }
+
+            .in-out {
+                position: relative;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                height: auto;
+            }
+
+            .in,
+            .out,
+            button {
+                height: 60px;
+            }
+
+            button {
+                flex: 0 0 49%;
+                font-size: 1.3rem;
+            }
+
+            .in,
+            .out {
+                margin-top: 16px;
+            }
+        }
+
+        @media (max-width: 315px) {
+            #netWeight {
+                font-size: 2rem;
+            }
+        }
+
+        @media (min-width: 800px) and (max-height: 490px) {
+            .container {
+                display: inline-flex;
+            }
+
+            .display-wrapper {
+                height: auto;
+            }
+
+            .in-out {
+                height: max-content;
+                position: relative;
+            }
+        }
+
+        .arrow {
+            margin-left: 8px;
+            font-size: 0.8em;
+        }
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            border-radius: 8px;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 8px;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .suggestions-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 5px 0 0;
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            height: 300px;
+        }
+        .suggestions-list li {
+            padding: 8px;
+            cursor: pointer;
+        }
+        .suggestions-list li:hover {
+            background-color: #f0f0f0;
+        }
+        .highlight {
+            background-color: yellow; /* Colore di evidenziazione */
+        }
+    </style>
+</head>
+<!-- Rest of your HTML remains unchanged -->
 </style>
 </head>
 <body>
@@ -251,43 +567,338 @@
             <p>Connessione alla pesa...</p>
         </div>
         <div class="container">
-            <div class="display">
-                <div class="weight">
-                    <h2 id="netWeight">N/A</h2>
-                    <p id="unitMeasure">N/A</p>
+            <div class="display-wrapper">
+                <div class="item anagrafic">
+                    <div>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Veicolo</h2>
+                        <p style="text-align: left; margin-top: 0px;">Descrizione:</p>
+                        <input type="text"name="plate" onclick="showSuggestions(suggestionsVehicle, 'myDescriptionVehicleInput', this.value, 'description', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup')" >
+                        <p style="text-align: left; margin-top: 0px;">Targa:</p>
+                        <input type="text"name="plate" onclick="showSuggestions(suggestionsVehicle, 'myPlateInput', this.value, 'plate', ['description'], 'platePopup', 'suggestionsListPlateVehicle'); openPopup('platePopup')" >
+                        <br>
+                    </div>
+
+                    <div>
+                        <div class="dropdown">
+                            <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;" id="header">Cliente<span class="arrow">▼</span></h2>
+                            <div class="dropdown-content">
+                                <a href="#" onclick="changeContent('Cliente', 'customer')">Cliente</a>
+                                <a href="#" onclick="changeContent('Fornitore', 'supplier')">Fornitore</a>
+                            </div>
+                        </div>
+                        <p style="text-align: left; margin-top: 0px;">Nome:</p>
+                        <input type="text"name="plate" onclick="showSuggestions(suggestionSocialReason, 'nameSocialReasonInput', this.value, 'name', ['description'], 'nameSocialReasonPopup', 'suggestionsListNameSocialReason', 'type', isCustomerSupplier); openPopup('nameSocialReasonPopup')" >
+                        <p style="text-align: left; margin-top: 0px;">Descrizione:</p>
+                        <input type="text"name="plate" onclick="showSuggestions(suggestionSocialReason, 'myDescriptionSocialReasonInput', this.value, 'description', ['name'], 'descriptionSocialReasonPopup', 'suggestionsListDescriptionSocialReason', 'type', isCustomerSupplier); openPopup('descriptionSocialReasonPopup')" >
+                        <br>
+                    </div>
+
+                    <div>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Materiale</h2>
+                        <input type="text"name="plate" onclick="showSuggestions(suggestionMaterials, 'myMaterialInput', this.value, 'material', [], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup')" >
+                        <br>
+                    </div>
+
+                    <div>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Note</h2>
+                        <input type="text"name="plate" onclick="openPopup('notePopup')" >
+                        <br>
+                    </div>
+                </div>
+                <div class="display item">
+                    <div class="weight">
+                        <h2 id="netWeight">000000</h2>
+                        <div class="info-container" id="info-container">
+                            <div class="info-icon"><strong><em>i</em></strong></div>
+                            <div class="tooltip">
+                                <h4>Dettagli terminale</h4>
+                                <p>Firmware: <strong>807</strong></p>
+                                <p>Model name: <strong>DGT1</strong></p>
+                                <p>Serial number: <strong>101214005</strong></p>
+                                <p>Portata massima: <strong>60000 kg</strong></p>
+                                <p>Divisione: <strong>1</strong></p>
+                            </div>
+                        </div>
+                        <p id="uniteMisure">kg</p>
+                        <p id="tare">000000</p>
+                        <p id="status">ST</p>
+                    </div>
+                    <div class="info">
+                    </div>
+                </div>
+                <div class="item ins">
+                    <h3>Entrate</h3>
+                    <ul>
+                       <li style="">VSVSVSV - P1</li> 
+                       <li>VSVSVSV - P1</li> 
+                       <li>VSVSVSV - P1</li> 
+                       <li>VSVSVSV - P1</li> 
+                       <li>VSVSVSV - P1</li> 
+                       <li>VSVSVSV - P1</li> 
+                    </ul>
                 </div>
             </div>
-            <div class="info">
-                <div class="tara">
-                    <h2>Tara: <br><span id="tare">N/A</span></h2>
+            <div class="in-out">
+                <button class="item in" onclick="openPopup()">In</button>
+                <div class="buttons item">
+                    <button onclick="handleTara()">Tara</button>
+                    <button onclick="handleZero()">Zero</button>
+                    <button onclick="openPopup('myPopup')">P Tara</button>
+                    <button onclick="handlePesata()">Stampa</button>
                 </div>
-                <div class="status">
-                    <h2>Stato: <br><span id="status">N/A</span></h2>
-                </div>
-            </div>
-            <div class="buttons">
-                <button onclick="handleTara()">Tara</button>
-                <button onclick="handleZero()">Zero</button>
-                <button onclick="openPopup()">P Tara</button>
-                <button onclick="handlePesata()">Pesata</button>
-            </div>
-            <img class="img-container" src="https://on.baron.it/tecnico/pesi/LOGO_BARONPESI.png" alt="Logo Baron Pesi">
+                <button class="item out" onclick="handlePesata()">Out</button>
+            </div>            
         </div>
+
         <div id="snackbar"></div>
+
         <div id="myPopup" class="popup">
             <div class="popup-content">
                 <h2>Preset Tara</h2>
                 <input type="number" placeholder="0" id="myNumberInput" autocomplete="off">
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button onclick="handlePTara()">OK</button>
+                    <button class="p-tare-button" onclick="handlePTara()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="descriptionVehiclePopup" class="popup">
+            <div class="popup-content">
+                <h2>Descrizione:</h2>
+                <input type="text" id="myDescriptionVehicleInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionsVehicle, 'myDescriptionVehicleInput', this.value, 'description', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="platePopup" class="popup">
+            <div class="popup-content">
+                <h2>Targa:</h2>
+                <input type="text" id="myPlateInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionsVehicle, 'myPlateInput', this.value, 'plate', ['description'], 'platePopup', 'suggestionsListPlateVehicle');">
+                <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="nameSocialReasonPopup" class="popup">
+            <div class="popup-content">
+                <h2>Nome:</h2>
+                <input type="text" id="nameSocialReasonInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionSocialReason, 'nameSocialReasonInput', this.value, 'name', ['description'], 'nameSocialReasonPopup', 'suggestionsListNameSocialReason', 'type', isCustomerSupplier);">
+                <ul id="suggestionsListNameSocialReason" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="descriptionSocialReasonPopup" class="popup">
+            <div class="popup-content">
+                <h2>Descrizione:</h2>
+                <input type="text" id="myDescriptionSocialReasonInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionSocialReason, 'myDescriptionSocialReasonInput', this.value, 'description', ['name'], 'descriptionSocialReasonPopup', 'suggestionsListDescriptionSocialReason', 'type', isCustomerSupplier);">
+                <ul id="suggestionsListDescriptionSocialReason" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="materialPopup" class="popup">
+            <div class="popup-content">
+                <h2>Materiale:</h2>
+                <input type="text" id="myMaterialInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionMaterials, 'myMaterialInput', this.value, 'material', [], 'materialPopup', 'suggestionsListMaterial');">
+                <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="notePopup" class="popup">
+            <div class="popup-content">
+                <h2>Note:</h2>
+                <input type="text" id="myNoteInput" autocomplete="off" class="input">
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="">OK</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        let currentPopup;
+
         let connected;
+
+        let isCustomerSupplier = 'customer';
+
+        const suggestionsVehicle = [
+            {
+                "description": "ccccccccccccc",
+                "plate": "ABC123" 
+            },
+            {
+                "description": "",
+                "plate": "XYZ456" 
+            }, 
+            {
+                "description": "",
+                "plate": "LMN789", 
+            },
+            {
+                "description": "",
+                "plate": "ABC123" 
+            },
+            {
+                "description": "",
+                "plate": "XYZ456" 
+            }, 
+            {
+                "description": "",
+                "plate": "LMN789", 
+            },
+            {
+                "description": "",
+                "plate": "ABC123" 
+            },
+            {
+                "description": "",
+                "plate": "XYZ456" 
+            }, 
+            {
+                "description": "",
+                "plate": "LMN789", 
+            } 
+        ]; // Esempi di suggerimenti
+
+        const suggestionSocialReason = [
+            {
+                "name": "Riccardo",
+                "description": "Baron Srl",
+                "type": "customer"
+            },            
+            {
+                "name": "Lorenzo",
+                "description": "Cavallino",
+                "type": "supplier"
+            },            
+            {
+                "name": "Sofia",
+                "description": "Easy Group" ,
+                "type": "customer"
+            },            
+            {
+                "name": "Riccardo",
+                "description": "Baron Srl",
+                "type": "supplier"
+            },            
+            {
+                "name": "Lorenzo",
+                "description": "Cavallino",
+                "type": "customer"
+            },            
+            {
+                "name": "Sofia",
+                "description": "Easy Group",
+                "type": "supplier"
+            },            
+            {
+                "name": "Riccardo",
+                "description": "Baron Srl",
+                "type": "supplier"
+            },            
+            {
+                "name": "Lorenzo",
+                "description": "Cavallino",
+                "type": "customer"
+            },            
+            {
+                "name": "Sofia",
+                "description": "Easy Group",
+                "type": "supplier"
+            },            
+        ]
+
+        const suggestionMaterials = [
+            {
+                "material": "Ferro"
+            },
+            {
+                "material": "Alluminio"
+            },
+            {
+                "material": "Legno"
+            },
+            {
+                "material": "Ferro"
+            },
+            {
+                "material": "Alluminio"
+            },
+            {
+                "material": "Legno"
+            },
+            {
+                "material": "Ferro"
+            },
+            {
+                "material": "Alluminio"
+            },
+            {
+                "material": "Legno"
+            }
+        ]
+
+        function showSuggestions(list, inputHtml, inputValue, filter, data, popup, showList, condition = null, valueCondition = null) {
+            console.log(condition, valueCondition)
+
+            const suggestionsList = document.getElementById(showList);
+            suggestionsList.innerHTML = ""; // Pulisce la lista precedente
+
+            const filteredSuggestions = list.filter(suggestion => {
+                if (condition && suggestion[condition] === valueCondition) return suggestion[filter].toLowerCase().includes(inputValue.toLowerCase());
+                else if (!condition) return suggestion[filter].toLowerCase().includes(inputValue.toLowerCase());
+            });
+
+            filteredSuggestions.forEach(suggestion => {
+                const li = document.createElement("li");
+                let text = highlightText(suggestion, inputValue, filter);
+                data.forEach(key => {
+                    if (suggestion[key]) text += `  -   ${suggestion[key]}`;
+                })
+                li.innerHTML = text; // Evidenzia il testo
+                li.onclick = () => selectSuggestion(suggestion, filter, inputHtml, showList, popup);
+                suggestionsList.appendChild(li);
+            });
+        }
+
+        function highlightText(suggestion, input, filter) {
+            const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
+            return suggestion[filter].replace(regex, `<span class="highlight">$1</span>`);
+        }
+
+        function selectSuggestion(suggestion, filter, inputHtml, showList, popup) {
+            document.getElementById(inputHtml).value = suggestion[filter];
+            document.getElementById(showList).innerHTML = ""; // Pulisce la lista dopo la selezione
+            console.log(popup)
+            closePopup(popup);
+        }
+
+        function changeContent(type, value) {
+            document.getElementById('header').innerHTML = `${type} <span class="arrow">▼</span>`;
+            isCustomerSupplier = value;
+            console.log(isCustomerSupplier)
+        }
 
         function updateOnlineStatus() {
             if (location.protocol === "https:") {
@@ -343,9 +954,9 @@
 
         let imgContainer = document.querySelector('.img-container');
 
-        imgContainer.addEventListener('click', () => {
-            window.location.href = 'https://www.baronpesi.it'; 
-        });
+        // imgContainer.addEventListener('click', () => {
+        //     window.location.href = 'https://www.baronpesi.it'; 
+        // });
 
         let snackbarTimeout;
 
@@ -368,8 +979,9 @@
             }, 5000); // Durata in millisecondi
         }
 
-        function openPopup() {
-            const popup = document.getElementById("myPopup");
+        function openPopup(name) {
+            currentPopup = name;
+            const popup = document.getElementById(name);
             const popupContent = popup.querySelector(".popup-content");
             popup.style.display = "flex"; // Mostra il popup
             setTimeout(() => {
@@ -378,7 +990,7 @@
         }
 
         function closePopup() {
-            const popup = document.getElementById("myPopup");
+            const popup = document.getElementById(currentPopup);
             const popupContent = popup.querySelector(".popup-content");
             
             // Rimuovi la classe per nascondere
@@ -393,9 +1005,9 @@
 
         // Chiudi il popup quando si fa clic all'esterno
         window.onclick = function(event) {
-            const popup = document.getElementById("myPopup");
+            const popup = document.getElementById(currentPopup);
             if (event.target === popup) {
-                closePopup();
+                closePopup(currentPopup);
             }
         };
 
@@ -494,7 +1106,7 @@
                 data = obj;
                 document.getElementById('tare').innerText = data.tare !== undefined ? data.tare : 'N/A';
                 document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
-                document.getElementById('unitMeasure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
+                document.getElementById('uniteMisure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
                 document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
             }
         }

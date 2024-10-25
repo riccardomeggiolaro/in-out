@@ -119,8 +119,13 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"maintaine_session_realtime_after_command": self.maintaine_session_realtime_after_command,
 			"diagnostic_has_priority_than_realtime": self.diagnostic_has_priority_than_realtime,
 			"terminal": self.terminal,
+			"terminal_data": {
+				"firmware": self.diagnostic.firmware,
+				"model_name": self.diagnostic.model_name,
+				"serial_number": self.diagnostic.serial_number
+			},
 			"run": self.run,
-   			"status": self.diagnostic.status
+   			"status": self.diagnostic.status,
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
@@ -235,14 +240,14 @@ class __SetupWeigher(__SetupWeigherConnection):
 						if str(presettare).isdigit() and int(presettare) >= 0:
 							self.preset_tare = presettare # imposto la presettare
 						else:
-							return 500, "La tara deve essere almeno 0" # ritorno errore se la presettare non era valida
+							return 500, "La tara deve essere di almeno 0 kg" # ritorno errore se la presettare non era valida
 					# se passo WEIGHING
 					elif mod == "WEIGHING":
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
 							self.weight.data_assigned = data_assigned
 						else:
-							return 500, f"Il peso deve essere maggiore di {self.min_weight}" # ritorno errore se il peso non era valido
+							return 500, f"Il peso deve essere maggiore di {self.min_weight} kg" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire
 					callCallback(self.callback_action_in_execution)
 					return 100, None # ritorno il successo
