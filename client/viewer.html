@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
@@ -27,7 +28,7 @@
         }
         td {
             border: 2px solid black;
-            border-radius: 15px;
+            border-radius: 5px;
             box-sizing: border-box;
             overflow: hidden;
             text-align: center;
@@ -54,17 +55,29 @@
         }
         .banner {
             text-align: center;
-            margin-top: 20px;
+            position: relative;
+            object-fit: inherit;
         }
     </style>
 </head>
 <body>
     <div id="app"></div>
-    <div class="banner">
-        <h1>Ciao</h1>
-    </div>
+    <video class="banner" autoplay muted loop controls>
+        <source src="https://on.baron.it/tecnico/pesi/banner.mp4" type="video/mp4">
+        Il tuo browser non supporta il tag video.
+    </video>
 
     <script>
+        let pathname = '';
+
+        pathname = '/gateway';
+
+        let lastSlashIndex = window.location.pathname.lastIndexOf('/');
+
+        pathname = lastSlashIndex !== -1 ? pathname.substring(0, lastSlashIndex) : pathname;
+
+        const baseUrl = window.location.origin.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss') + pathname;
+
         let data = {
             status: undefined,
             type: undefined,
@@ -96,7 +109,6 @@
         }
 
         function connectWebSocket() {
-            const baseUrl = window.location.origin.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
             const websocketUrl = `${baseUrl}/realtime?name=1`;
             socket = new WebSocket(websocketUrl);
 
