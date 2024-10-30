@@ -93,6 +93,12 @@
         let socket;
         let reconnectInterval;
 
+        window.onbeforeunload = function() {
+            if (websocket) {
+                websocket.close();
+            }
+        };
+
         function adjustFontSize() {
             if (!weightCell) return;
 
@@ -129,6 +135,7 @@
         }
 
         function attemptReconnect() {
+            websocket.close();
             if (!reconnectInterval) {
                 reconnectInterval = setInterval(() => {
                     console.log("Attempting to reconnect...");
