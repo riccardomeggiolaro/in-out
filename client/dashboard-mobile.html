@@ -331,7 +331,7 @@
                         <h2>Tara: <br><span id="tare">N/A</span></h2>
                     </div>
                     <div class="status">
-                        <h2>Stato: <br><span id="status">N/A</span></h2>
+                        <h2>Stato: <br><span id="statusText">N/A</span></h2>
                     </div>
                 </div>
             </div>
@@ -576,7 +576,7 @@
                 else document.getElementById('netWeight').style.fontSize = '4rem';
                 document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
                 document.getElementById('unitMeasure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
-                document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
+                document.getElementById('statusText').innerText = data.status !== undefined ? data.status : 'N/A';
             }
         }
 

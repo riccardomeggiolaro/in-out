@@ -2,10 +2,10 @@
     "app_api": {
         "port": 8000,
         "ssh_client": {
-            "server": "192.168.1.103",
+            "server": "on.baron.it",
             "user": "root",
             "password": "318101",
-            "ssh_port": 10022,
+            "ssh_port": 3322,
             "forwarding_port": 80
         },
         "rfid": {

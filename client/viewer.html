@@ -25,15 +25,15 @@
         }
         table {
             table-layout: fixed;
+            border-collapse: collapse; /* Aggiungi questa riga */
         }
         td {
             border: 2px solid black;
-            border-radius: 5px;
             box-sizing: border-box;
             overflow: hidden;
             text-align: center;
             white-space: nowrap;
-            padding: 5px;
+            width: 100%;
         }
         .weight {
             position: relative;
@@ -44,6 +44,7 @@
         }
         .tare,
         .status {
+        position: relative;
             width: 25%;
             font-size: 6.5vw;
         }
@@ -53,6 +54,19 @@
             right: 5px;
             font-size: 0.15em;
         }
+        .tare .unite-misure, 
+        .tareTitle,
+        .statusTitle {
+
+            font-size: 0.35em;
+        }
+        .tareTitle,
+        .statusTitle {
+            position: absolute;
+            bottom: 5px;
+            margin: 0px;
+            width: 100%;
+        }
         .banner {
             text-align: center;
             position: relative;
@@ -61,13 +75,40 @@
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div id="app">
+        <table id="myTable">
+            <tbody>
+                <tr>
+                    <td rowspan="2" class="weight" id="weightCell">
+                        <span class="netWeight">N/A</span>
+                        <span class="unite-misure">N/A</span>
+                    </td>
+                    <td class="tare">
+                        <p class="tareTitle">Tara</p>
+                        <span class="tareWeight">N/A</span>
+                        <span class="unite-misure">N/A</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="status">
+                        <p class="statusTitle">Stato</p>
+                        <span class="statusText">N/A</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <video class="banner" autoplay muted loop controls>
         <source src="https://on.baron.it/tecnico/pesi/banner.mp4" type="video/mp4">
         Il tuo browser non supporta il tag video.
     </video>
 
     <script>
+        let netWeight = document.querySelector('.netWeight');
+        let uniteMeasure = document.querySelectorAll('.unite-misure');
+        let tareWeight = document.querySelector('.tareWeight');
+        let statusText = document.querySelector('.statusText');
+
         let pathname = '';
 
         pathname = '/gateway';
@@ -145,29 +186,12 @@
         }
 
         function render() {
-            appDiv.innerHTML = `
-                <table id="myTable">
-                    <tbody>
-                        <tr>
-                            <td rowspan="2" class="weight" id="weightCell">
-                                ${data.net_weight !== undefined ? data.net_weight : 'N/A'}
-                                <span class="unite-misure">
-                                    ${data.unite_measure !== undefined ? data.unite_measure : 'N/A'}
-                                </span>
-                            </td>
-                            <td class="tare">
-                                ${data.tare !== undefined ? data.tare : 'N/A'}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="status">
-                                ${data.status !== undefined ? data.status : 'N/A'}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            `;
-
+            netWeight.textContent = data.net_weight !== undefined ? data.net_weight : 'N/A';
+            uniteMeasure.forEach(element => {
+                element.textContent = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
+            })
+            tareWeight.textContent = data.tare !== undefined ? data.tare : 'N/A';
+            statusText.textContent = data.status
             weightCell = document.getElementById('weightCell');
             adjustFontSize();
             isLoaded = true;
