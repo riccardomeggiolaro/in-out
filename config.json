@@ -1,13 +1,8 @@
 {
     "app_api": {
         "port": 8000,
-        "ssh_client": {
-            "server": "on.baron.it",
-            "user": "root",
-            "password": "318101",
-            "ssh_port": 3322,
-            "forwarding_port": 80
-        },
+        "database_url": "sqlite:////home/riccardo/Scaricati/goldrake-server/database.db",
+        "ssh_client": null,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -18,7 +13,6 @@
             "module": "rfidserialrfid",
             "setup": {}
         },
-        "tunneling_token": "2mbPtWkPOkLiX92P0K7AaskvObI_5M22es8J53h3BHvD21UC6",
         "weighers": {
             "1": {
                 "connection": {

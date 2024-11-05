@@ -40,6 +40,7 @@ import json
 from modules.md_weigher.types import Realtime
 from libs.lb_ssh import ssh_tunnel, SshClientConnection
 import time
+import libs.lb_database as lb_database  # noqa: E402
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -673,6 +674,8 @@ def init():
 		ssh_client["local_port"] = lb_config.g_config["app_api"]["port"]
 		ssh_client = createThread(ssh_tunnel, (SshClientConnection(**ssh_client),))
 		startThread(ssh_client)
+
+	lb_database.init(lb_config.g_config["app_api"]["database_url"])
 
 	# rfid.setAction(cb_cardcode=Callback_Cardcode)
 
