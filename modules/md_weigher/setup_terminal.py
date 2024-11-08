@@ -151,14 +151,15 @@ class __SetupWeigher(__SetupWeigherConnection):
 	def setDataInExecution(self, data: DataInExecution):
 		# Chiama la funzione per aggiornare self.data_in_execution con i dati forniti
 		self.data_in_execution.setAttribute(data)
+		callCallback(self.callback_data_in_execution)
 		return self.getDataInExecution()
 
 	def deleteDataInExecution(self):
 		self.data_in_execution = DataInExecution(**{
-			"customer": None,
-			"supplier": None,
-			"vehicle": None,
-			"material": None
+			"customer": SocialReasonDTO(**{}),
+			"supplier": SocialReasonDTO(**{}),
+			"vehicle": VehicleDTO(**{}),
+			"material": MaterialDTO(**{})
 		})
 		callCallback(self.callback_data_in_execution)
 		return self.getDataInExecution()

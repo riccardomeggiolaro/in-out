@@ -338,7 +338,6 @@ def mainprg():
 	@app.patch("/set/data_in_execution")
 	async def SetDataInExecution(data_in_execution: DataInExecutionDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
-		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.broadcast(data)
 		return {
 			"instance": instance,
 			"data_in_execution": data,
@@ -348,7 +347,6 @@ def mainprg():
 	@app.delete("/delete/data_in_execution")
 	async def DeleteDataInExecution(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, data = WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node)
-		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.broadcast(data)
 		return {
 			"instance": instance,
 			"data_in_execution": data,
