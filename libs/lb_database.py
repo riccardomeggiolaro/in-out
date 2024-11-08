@@ -3,12 +3,18 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.exc import NoResultFound
 import os
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, validator
 
 # Connessione al database
 Base = declarative_base()
 SessionLocal = None
+
+required_columns = {
+	"vehicle": {"plate": str, "name": str},
+	"social_reason": {"name": str, "cell": int, "cfpiva": str},
+	"material": {"name": str}
+}
 
 # Modello per la tabella Vehicle
 class Vehicle(Base):
@@ -125,6 +131,38 @@ def init():
 	# Creazione delle tabelle
 	Base.metadata.create_all(engine)
 
+# Funzione per caricare l'array di record nel database
+def load_records_into_db(table_name: str, records: List[object]):
+	global SessionLocal
+
+	# Verifica che il modello esista nel dizionario dei modelli
+	model = table_models.get(table_name.lower())
+	if not model:
+		raise ValueError(f"Tabella '{table_name}' non trovata.")
+
+	# Crea una sessione e cerca il record
+	session = SessionLocal()
+
+	try:
+		# Crea un array di oggetti Record da inserire nel DB
+		db_records = [model(**record) for record in records]
+
+		# Aggiungi i record al DB
+		session.add_all(db_records)
+		
+		# Esegui il commit delle modifiche
+		session.commit()
+
+		return len(records)
+	
+	except Exception as e:
+		db.rollback()  # Rollback in caso di errore
+		raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+	finally:
+		# Chiusura della sessione
+		session.close()
+
 def get_data_by_id(table_name, record_id, set_selected=False):
 	"""Ottiene un record specifico da una tabella tramite l'ID e imposta 'selected' a True.
 
@@ -149,7 +187,7 @@ def get_data_by_id(table_name, record_id, set_selected=False):
 		# Recupera il record specifico in base all'ID
 		record = session.query(model).filter_by(id=record_id).one_or_none()
 		if record is None:
-			print(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
+			lb_log.error(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
 			return None
 
 		# Imposta l'attributo 'selected' a True e salva la modifica
@@ -162,7 +200,7 @@ def get_data_by_id(table_name, record_id, set_selected=False):
 		return record_dict
 
 	except Exception as e:
-		print(f"Errore durante il recupero e l'aggiornamento del record: {e}")
+		lb_log.error(f"Errore durante il recupero e l'aggiornamento del record: {e}")
 		session.rollback()  # Ripristina eventuali modifiche in caso di errore
 		return None
 	finally:
@@ -206,9 +244,9 @@ def filter_data(table_name, filters=None):
 					elif value[0] == "like":
 						query = query.filter(getattr(model, column).like(f'%{value[1]}%'))
 					else:
-						print(f"Operatore di ricerca '{value[0]}' non supportato.")
+						lb_log.error(f"Operatore di ricerca '{value[0]}' non supportato.")
 				else:
-					print(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
+					lb_log.error(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
 
 		# Esegue la query e converte i risultati in una lista di dizionari
 		results = query.all()
@@ -219,7 +257,7 @@ def filter_data(table_name, filters=None):
 		return result_list
 
 	except Exception as e:
-		print(f"Errore durante la ricerca filtrata: {e}")
+		lb_log.error(f"Errore durante la ricerca filtrata: {e}")
 		return []
 	finally:
 		session.close()
@@ -271,7 +309,7 @@ def update_data(table_name, record_id, updated_data):
 		# Recupera il record specifico in base all'ID
 		record = session.query(model).filter_by(id=record_id).one_or_none()
 		if record is None:
-			print(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
+			lb_log.error(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
 			return
 		
 		# Aggiorna i campi con i nuovi valori
@@ -279,13 +317,12 @@ def update_data(table_name, record_id, updated_data):
 			if hasattr(record, key):  # Verifica che il campo esista
 				setattr(record, key, value)
 			else:
-				print(f"Campo '{key}' non trovato nella tabella '{table_name}' e sarà ignorato.")
+				lb_log.error(f"Campo '{key}' non trovato nella tabella '{table_name}' e sarà ignorato.")
 
 		session.commit()
-		print(f"Record con ID {record_id} aggiornato con successo nella tabella '{table_name}'.")
 	except Exception as e:
 		session.rollback()
-		print(f"Errore durante l'aggiornamento del record: {e}")
+		lb_log.error(f"Errore durante l'aggiornamento del record: {e}")
 	finally:
 		session.close()
 
@@ -307,15 +344,14 @@ def delete_data(table_name, record_id):
 		# Recupera il record specifico in base all'ID
 		record = session.query(model).filter_by(id=record_id).one_or_none()
 		if record is None:
-			print(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
+			lb_log.error(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
 			return
 
 		# Elimina il record
 		session.delete(record)
 		session.commit()
-		print(f"Record con ID {record_id} eliminato con successo dalla tabella '{table_name}'.")
 	except Exception as e:
 		session.rollback()
-		print(f"Errore durante l'eliminazione del record: {e}")
+		lb_log.error(f"Errore durante l'eliminazione del record: {e}")
 	finally:
 		session.close()
