@@ -23,7 +23,7 @@ import psutil  # noqa: E402
 # import modules.md_rfid as rfid
 from modules.md_weigher.md_weigher import WeigherInstance   # noqa: E402
 from modules.md_weigher.types import DataInExecution, Weight  # noqa: E402
-from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO  # noqa: E402
+from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataInExecutionDTO  # noqa: E402
 from modules.md_weigher.types import Configuration
 from libs.lb_system import SerialPort, Tcp, Connection  # noqa: E402
 from typing import Optional, Union  # noqa: E402
@@ -336,7 +336,7 @@ def mainprg():
 		}
 
 	@app.patch("/set/data_in_execution")
-	async def SetDataInExecution(data_in_execution: DataInExecution = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+	async def SetDataInExecution(data_in_execution: DataInExecutionDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
 		await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_execution.broadcast(data)
 		return {
@@ -675,7 +675,7 @@ def init():
 		ssh_client = createThread(ssh_tunnel, (SshClientConnection(**ssh_client),))
 		startThread(ssh_client)
 
-	lb_database.init(lb_config.g_config["app_api"]["database_url"])
+	lb_database.init()
 
 	# rfid.setAction(cb_cardcode=Callback_Cardcode)
 

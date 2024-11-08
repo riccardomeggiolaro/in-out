@@ -6,6 +6,7 @@ from libs.lb_utils import checkCallbackFormat, callCallback
 from pydantic import BaseModel
 from typing import Optional, Callable, Union
 import select
+from libs.lb_database import VehicleDTO, SocialReasonDTO, MaterialDTO
 
 class __SetupWeigherConnection:
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run):
@@ -89,11 +90,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"data_assigned": None
 		})
 		self.data_in_execution: DataInExecution = DataInExecution(**{
-			"customer": None,
-			"supplier": None,
-			"plate": None,
-			"vehicle": None,
-			"material": None
+			"customer": SocialReasonDTO(**{}),
+			"supplier": SocialReasonDTO(**{}),
+			"vehicle": VehicleDTO(**{}),
+			"material": MaterialDTO(**{})
 		})
 		self.ok_value: str = ""
 		self.modope: str = ""
@@ -149,21 +149,14 @@ class __SetupWeigher(__SetupWeigherConnection):
 		return self.data_in_execution.dict()
 
 	def setDataInExecution(self, data: DataInExecution):
-		for key, value in data:
-			if value is None:
-				continue
-			elif value == "undefined":
-				self.data_in_execution.setAttribute(key=key, value=None)
-			else:
-				self.data_in_execution.setAttribute(key, value)
-			callCallback(self.callback_data_in_execution)
+		# Chiama la funzione per aggiornare self.data_in_execution con i dati forniti
+		self.data_in_execution.setAttribute(data)
 		return self.getDataInExecution()
 
 	def deleteDataInExecution(self):
 		self.data_in_execution = DataInExecution(**{
 			"customer": None,
 			"supplier": None,
-			"plate": None,
 			"vehicle": None,
 			"material": None
 		})

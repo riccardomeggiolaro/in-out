@@ -1,7 +1,6 @@
 {
     "app_api": {
         "port": 8000,
-        "database_url": "sqlite:////home/riccardo/Scaricati/goldrake-server/database.db",
         "ssh_client": null,
         "rfid": {
             "connection": {

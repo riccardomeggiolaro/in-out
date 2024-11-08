@@ -2,17 +2,30 @@ from libs.lb_utils import CustomBaseModel
 from libs.lb_system import SerialPort, Tcp, Connection
 from typing import Optional, Union, List
 from pydantic import BaseModel
+from libs.lb_database import VehicleDTO, SocialReasonDTO, MaterialDTO
+import libs.lb_log as lb_log
 
 class DataInExecution(BaseModel):
-	customer: Optional[str] = None
-	supplier: Optional[str] = None
-	plate: Optional[str] = None
-	vehicle: Optional[str] = None
-	material: Optional[str] = None
-	
-	def setAttribute(self, key, value):
-		if hasattr(self, key):
-			setattr(self, key, value)
+	customer: SocialReasonDTO
+	supplier: SocialReasonDTO
+	vehicle: VehicleDTO
+	material: MaterialDTO
+
+	def setAttribute(self, source):
+		for key, value in vars(source).items():
+			if isinstance(value, object) and value is not None:
+				current_attr = getattr(self, key)
+				if hasattr(current_attr, 'id') and isinstance(getattr(current_attr, 'id'), int):
+					# Verifica se `source` ha qualsiasi altro attributo diverso da `id`				
+					if any(sub_key != 'id' for sub_key in vars(source).keys()):
+						# Se ci sono altri attributi, resetta tutti gli attributi di `self` a None, tranne `id`
+						for attr in vars(current_attr):
+							setattr(current_attr, attr, None)
+				for sub_key, sub_value in vars(value).items():
+					# Se il valore è un tipo primitivo, log e aggiornamento diretto
+					if sub_value in ["undefined", -1]:
+						sub_value = None
+					setattr(current_attr, sub_key, sub_value)
 
 class Realtime(BaseModel):
 	status: str
