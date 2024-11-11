@@ -1,8 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Enum as SQLAlchemyEnum, func, CheckConstraint, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy.exc import NoResultFound
 import os
-from enum import Enum
 from typing import Optional, List
 from pydantic import BaseModel, validator
 
@@ -10,61 +8,59 @@ from pydantic import BaseModel, validator
 Base = declarative_base()
 SessionLocal = None
 
-required_columns = {
-	"vehicle": {"plate": str, "name": str},
-	"social_reason": {"name": str, "cell": int, "cfpiva": str},
-	"material": {"name": str}
-}
-
 # Modello per la tabella Vehicle
 class Vehicle(Base):
 	__tablename__ = 'vehicle'
 	id = Column(Integer, primary_key=True, index=True)
-	plate = Column(String, index=True)
-	name = Column(String, index=True)
-	selected = Column(Boolean, index=True)
+	plate = Column(String)
+	name = Column(String)
+	selected = Column(Boolean, default=False)
 
 class VehicleDTO(BaseModel):
-	id: Optional[int] = None
 	plate: Optional[str] = None
 	name: Optional[str] = None
+	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
-	def check_id(cls, v):
+	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('vehicle', v, True)
+			data = get_data_by_id('vehicle', v, True, True)
 			if not data:
 				raise ValueError('Id not exist in vehicle')
 			else:
-				plate = data.get('plate')
-				name = data.get('name')
+				values['plate'] = data.get('plate')
+				values['name'] = data.get('name')
 		return v
+
+	class Config:
+		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
+		arbitrary_types_allowed = True
 
 # Modello per la tabella SocialReason
 class SocialReason(Base):
 	__tablename__ = 'social_reason'
 	id = Column(Integer, primary_key=True, index=True)
-	name = Column(String, index=True)
-	cell = Column(Integer, index=True)
-	cfpiva = Column(String, index=True)
-	selected = Column(Boolean, index=True)
+	name = Column(String)
+	cell = Column(Integer)
+	cfpiva = Column(String)
+	selected = Column(Boolean, default=False)
 
 class SocialReasonDTO(BaseModel):
-	id: Optional[int] = None
 	name: Optional[str] = None
 	cell: Optional[int] = None
 	cfpiva: Optional[str] = None
+	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
-	def check_id(cls, v):
+	def check_id(cls, v, values):
 		if v not in (None, -1):
 			data = get_data_by_id('social_reason', v, True)
 			if not data:
 				raise ValueError('Id not exist in social reason')
 			else:
-				name = data.get('name')
-				cell = data.get('cell')
-				cfpiva = data.get('cfpiva')
+				values['name'] = data.get('name')
+				values['cell'] = data.get('cell')
+				values['cfpiva'] = data.get('cfpiva')
 		return v
 
 	@validator('cell', pre=True, always=True)
@@ -79,20 +75,20 @@ class Material(Base):
 	__tablename__ = 'material'
 	id = Column(Integer, primary_key=True, index=True) 
 	name = Column(String, index=True)
-	selected = Column(Boolean, index=True)
+	selected = Column(Boolean, index=True, default=False)
 
 class MaterialDTO(BaseModel):
-	id: Optional[int] = None
 	name: Optional[str] = None
+	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
-	def check_id(cls, v):
-		if v not in (None, -1):
+	def check_id(cls, v, values):
+		if v not in [None, -1]:
 			data = get_data_by_id('material', v, True)
 			if not data:
 				raise ValueError('Id not exist in material')
 			else:
-				name = data.get('name')
+				values['name'] = data.get('name')
 		return v
 
 # Modello per la tabella Weighing
@@ -156,14 +152,14 @@ def load_records_into_db(table_name: str, records: List[object]):
 		return len(records)
 	
 	except Exception as e:
-		db.rollback()  # Rollback in caso di errore
-		raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+		raise e
+		session.rollback()  # Rollback in caso di errore
 
 	finally:
 		# Chiusura della sessione
 		session.close()
 
-def get_data_by_id(table_name, record_id, set_selected=False):
+def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=False):
 	"""Ottiene un record specifico da una tabella tramite l'ID e imposta 'selected' a True.
 
 	Args:
@@ -186,9 +182,13 @@ def get_data_by_id(table_name, record_id, set_selected=False):
 	try:
 		# Recupera il record specifico in base all'ID
 		record = session.query(model).filter_by(id=record_id).one_or_none()
+
 		if record is None:
-			lb_log.error(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
-			return None
+			raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
+
+		# Aggiunge una condizione alla query se if_is_selected è True
+		if if_not_selected and record.selected:
+			raise ValueError(f"Record con ID {record_id} già in uso nella tabella '{table_name}'.")
 
 		# Imposta l'attributo 'selected' a True e salva la modifica
 		if set_selected:
@@ -200,9 +200,8 @@ def get_data_by_id(table_name, record_id, set_selected=False):
 		return record_dict
 
 	except Exception as e:
-		lb_log.error(f"Errore durante il recupero e l'aggiornamento del record: {e}")
+		raise e
 		session.rollback()  # Ripristina eventuali modifiche in caso di errore
-		return None
 	finally:
 		session.close()
 
@@ -244,9 +243,9 @@ def filter_data(table_name, filters=None):
 					elif value[0] == "like":
 						query = query.filter(getattr(model, column).like(f'%{value[1]}%'))
 					else:
-						lb_log.error(f"Operatore di ricerca '{value[0]}' non supportato.")
+						raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
 				else:
-					lb_log.error(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
+					raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
 
 		# Esegue la query e converte i risultati in una lista di dizionari
 		results = query.all()
@@ -257,8 +256,7 @@ def filter_data(table_name, filters=None):
 		return result_list
 
 	except Exception as e:
-		lb_log.error(f"Errore durante la ricerca filtrata: {e}")
-		return []
+		raise e
 	finally:
 		session.close()
 
@@ -285,18 +283,19 @@ def add_data(table_name, data):
 		session.add(record)
 		session.commit()
 	except Exception as e:
-		lb_log.error(f"Errore durante l'aggiunta del record: {e}")
+		raise e
 		session.rollback()
 	finally:
 		session.close()
 
-def update_data(table_name, record_id, updated_data):
+def update_data(table_name, record_id, updated_data, if_not_selected=False):
 	"""Aggiorna un record specifico in una tabella.
 
 	Args:
 		table_name (str): Il nome della tabella in cui aggiornare i dati.
 		record_id (int): L'ID del record da aggiornare.
 		updated_data (dict): Un dizionario dei nuovi valori per i campi da aggiornare.
+		if_is_selected (bool): Se True, aggiunge una condizione addizionale alla query.
 	"""
 	# Verifica che il modello esista nel dizionario dei modelli
 	model = table_models.get(table_name.lower())
@@ -308,30 +307,33 @@ def update_data(table_name, record_id, updated_data):
 	try:
 		# Recupera il record specifico in base all'ID
 		record = session.query(model).filter_by(id=record_id).one_or_none()
+
 		if record is None:
-			lb_log.error(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
-			return
-		
+			raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
+
+		# Aggiunge una condizione alla query se if_is_selected è True
+		if if_not_selected and record.selected:
+			raise ValueError(f"Record con ID {record_id} è in uso nella tabella '{table_name}'.")
+
 		# Aggiorna i campi con i nuovi valori
 		for key, value in updated_data.items():
-			if hasattr(record, key):  # Verifica che il campo esista
+			if hasattr(record, key) and value is not None:  # Verifica che il campo esista
 				setattr(record, key, value)
-			else:
-				lb_log.error(f"Campo '{key}' non trovato nella tabella '{table_name}' e sarà ignorato.")
 
 		session.commit()
 	except Exception as e:
+		raise e
 		session.rollback()
-		lb_log.error(f"Errore durante l'aggiornamento del record: {e}")
 	finally:
 		session.close()
 
-def delete_data(table_name, record_id):
+def delete_data(table_name, record_id, if_not_selected=False):
 	"""Elimina un record specifico da una tabella.
 
 	Args:
 		table_name (str): Il nome della tabella da cui eliminare il record.
 		record_id (int): L'ID del record da eliminare.
+		if_is_selected (bool): Se True, aggiunge una condizione addizionale alla query.
 	"""
 	# Verifica che il modello esista nel dizionario dei modelli
 	model = table_models.get(table_name.lower())
@@ -341,17 +343,32 @@ def delete_data(table_name, record_id):
 	# Crea una sessione e elimina il record
 	session = SessionLocal()
 	try:
-		# Recupera il record specifico in base all'ID
+		# Costruisce la query di ricerca del record
 		record = session.query(model).filter_by(id=record_id).one_or_none()
+
 		if record is None:
-			lb_log.error(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
-			return
+			raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
+
+		if if_not_selected and record.selected:
+			raise ValueError(f"Record con ID {record_id} è in uso nella tabella '{table_name}'.")
 
 		# Elimina il record
 		session.delete(record)
 		session.commit()
 	except Exception as e:
+		raise e
 		session.rollback()
-		lb_log.error(f"Errore durante l'eliminazione del record: {e}")
 	finally:
 		session.close()
+
+required_columns = {
+	"vehicle": {"plate": str, "name": str},
+	"social_reason": {"name": str, "cell": int, "cfpiva": str},
+	"material": {"name": str}
+}
+
+required_dtos = {
+	"vehicle": VehicleDTO,
+	"social_reason": SocialReasonDTO,
+	"material": MaterialDTO
+}

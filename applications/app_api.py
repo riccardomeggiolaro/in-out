@@ -45,7 +45,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 import pandas as pd
 import numpy as np
-from libs.lb_database import required_columns, load_records_into_db
+from libs.lb_database import required_columns, required_dtos, load_records_into_db, add_data, update_data, delete_data, VehicleDTO, SocialReasonDTO, MaterialDTO
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -211,6 +211,110 @@ def mainprg():
 	global templates
 	global thread_ssh_tunnel
 
+	@app.post("/anagrafic/{anagrafic}")
+	async def addAnagrafic(anagrafic: str, body: Union[VehicleDTO, SocialReasonDTO, MaterialDTO]):
+		if anagrafic not in required_columns:
+			return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+
+		# Definizione delle colonne richieste
+		required_dto = required_dtos[anagrafic]
+
+		if not isinstance(body, required_dto):
+			return HTTPException(status_code=400, detail=f"Invalid body for {anagrafic}")
+
+		try:
+			add_data(anagrafic, body.dict())
+		except e:
+			return e
+
+		return {"message": "Data added successfully"}
+
+	@app.patch("/anagrafic/{anagrafic}/{id}")
+	async def setAnagrafic(anagrafic: str, id: int, body: Union[VehicleDTO, SocialReasonDTO, MaterialDTO]):
+		if anagrafic not in required_columns:
+			return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+
+		# Definizione delle colonne richieste
+		required_dto = required_dtos[anagrafic]
+
+		if not isinstance(body, required_dto):
+			return HTTPException(status_code=400, detail=f"Invalid body for {anagrafic}")
+
+		try:
+			update_data(anagrafic, id, body.dict(), True)
+		except Exception as e:
+			return HTTPException(status_code=400, detail=f"{e}")
+
+		return {"message": "Data updated successfully"}
+
+	@app.delete("/anagrafic/{anagrafic}/{id}")
+	async def deleteAnagrafic(anagrafic: str, id: int):
+		if anagrafic not in required_columns:
+			return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+
+		try:
+			delete_data(anagrafic, id, True)
+		except Exception as e:
+			return HTTPException(status_code=400, detail=f"{e}")
+		return {"message": "Data deleted successfully"}
+
+	@app.post("/upload-file/{anagrafic}")
+	async def upload_file(anagrafic: str, file: UploadFile = File(...)):
+		# Verifica l'estensione del file
+		if file.content_type not in ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
+			return HTTPException(status_code=400, detail="File type not supported")
+
+		try:
+			# Leggi il file in base al tipo di contenuto
+			if file.content_type == "text/csv":
+				df = pd.read_csv(file.file)
+			elif file.content_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+				df = pd.read_excel(file.file)
+
+			# Rimuovi le colonne senza titolo (solitamente con nome 'Unnamed') e verifica che non ci siano
+			df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
+			if anagrafic not in required_columns:
+				return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+
+			# Definizione delle colonne richieste
+			required_column = required_columns[anagrafic]
+
+			allowed_columns = set(required_column.keys())
+
+			# Verifica se ci sono colonne non previste
+			if not set(df.columns).issubset(allowed_columns):
+				unexpected_columns = set(df.columns) - allowed_columns
+				return HTTPException(status_code=400, detail=f"Unexpected columns found: {', '.join(unexpected_columns)}")
+
+			# Aggiungi le colonne mancanti con valore None e verifica i tipi delle colonne esistenti
+			for column, expected_type in required_column.items():
+				if column not in df.columns:
+					df[column] = None  # Colonna assente nel file, aggiunta con valori null
+				else:
+					# Verifica il tipo di dati della colonna esistente e consenti celle vuote
+					if not df[column].map(lambda x: pd.isna(x) or isinstance(x, expected_type)).all():
+						return HTTPException(status_code=400, detail=f"Column '{column}' must be of type {expected_type} if present")
+
+			# Sostituisci valori NaN, Inf e -Inf con None
+			df = df.replace([np.nan, np.inf, -np.inf], None)
+
+		except Exception as e:
+			# Log dell'errore e risposta HTTP 500
+			lb_log.error(f"Error reading file: {e}")
+			raise HTTPException(status_code=500, detail="Error reading file") from e
+
+		# Converti i dati in JSON
+		data = df.to_dict(orient="records")
+
+		try:
+			# Salva i dati nel database
+			length = load_records_into_db(anagrafic, data)
+
+			return {"message": f"{length} records loaded successfully"}
+		except Exception as e:
+			return HTTPException(status_code=400, detail=f"{e}")
+
 	@app.get("/list_serial_ports")
 	async def ListSerialPorts():
 		status, data = lb_system.list_serial_port()
@@ -357,60 +461,6 @@ def mainprg():
 			"data_in_execution": data,
 			"status": status
 		}
-
-	@app.post("/upload-file/{anagrafic}")
-	async def upload_file(anagrafic: str, file: UploadFile = File(...)):
-		# Verifica l'estensione del file
-		if file.content_type not in ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
-			return HTTPException(status_code=400, detail="File type not supported")
-
-		try:
-			# Leggi il file in base al tipo di contenuto
-			if file.content_type == "text/csv":
-				df = pd.read_csv(file.file)
-			elif file.content_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-				df = pd.read_excel(file.file)
-
-			# Rimuovi le colonne senza titolo (solitamente con nome 'Unnamed') e verifica che non ci siano
-			df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-
-			if anagrafic not in required_columns:
-				return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
-
-			# Definizione delle colonne richieste
-			required_column = required_columns[anagrafic]
-
-			allowed_columns = set(required_column.keys())
-
-			# Verifica se ci sono colonne non previste
-			if not set(df.columns).issubset(allowed_columns):
-				unexpected_columns = set(df.columns) - allowed_columns
-				return HTTPException(status_code=400, detail=f"Unexpected columns found: {', '.join(unexpected_columns)}")
-
-			# Aggiungi le colonne mancanti con valore None e verifica i tipi delle colonne esistenti
-			for column, expected_type in required_column.items():
-				if column not in df.columns:
-					df[column] = None  # Colonna assente nel file, aggiunta con valori null
-				else:
-					# Verifica il tipo di dati della colonna esistente e consenti celle vuote
-					if not df[column].map(lambda x: pd.isna(x) or isinstance(x, expected_type)).all():
-						return HTTPException(status_code=400, detail=f"Column '{column}' must be of type {expected_type} if present")
-
-			# Sostituisci valori NaN, Inf e -Inf con None
-			df = df.replace([np.nan, np.inf, -np.inf], None)
-
-		except Exception as e:
-			# Log dell'errore e risposta HTTP 500
-			lb_log.error(f"Error reading file: {e}")
-			raise HTTPException(status_code=500, detail="Error reading file") from e
-
-		# Converti i dati in JSON
-		data = df.to_dict(orient="records")
-
-		# Salva i dati nel database
-		length = load_records_into_db(anagrafic, data)
-
-		return {"message": f"{length} records loaded successfully"}
 
 	@app.get("/all/config_weigher")
 	async def GetConfigWeighers():
