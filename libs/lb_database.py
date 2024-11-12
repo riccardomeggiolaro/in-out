@@ -148,16 +148,14 @@ def load_records_into_db(table_name: str, records: List[object]):
 		
 		# Esegui il commit delle modifiche
 		session.commit()
+		session.close()
 
 		return len(records)
 	
 	except Exception as e:
-		raise e
 		session.rollback()  # Rollback in caso di errore
-
-	finally:
-		# Chiusura della sessione
 		session.close()
+		raise e
 
 def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=False):
 	"""Ottiene un record specifico da una tabella tramite l'ID e imposta 'selected' a True.
@@ -194,16 +192,16 @@ def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=Fa
 		if set_selected:
 			record.selected = True
 		session.commit()
+		session.close()
 
 		# Converte il record in un dizionario
 		record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
 		return record_dict
 
 	except Exception as e:
-		raise e
 		session.rollback()  # Ripristina eventuali modifiche in caso di errore
-	finally:
 		session.close()
+		raise e
 
 def filter_data(table_name, filters=None):
 	"""Esegue una ricerca filtrata su una tabella specifica e restituisce una lista di risultati.
@@ -249,6 +247,9 @@ def filter_data(table_name, filters=None):
 
 		# Esegue la query e converte i risultati in una lista di dizionari
 		results = query.all()
+
+		session.close()
+
 		result_list = [
 			{column.name: getattr(record, column.name) for column in model.__table__.columns}
 			for record in results
@@ -256,9 +257,8 @@ def filter_data(table_name, filters=None):
 		return result_list
 
 	except Exception as e:
-		raise e
-	finally:
 		session.close()
+		raise e
 
 def add_data(table_name, data):
 	"""Aggiunge un record a una tabella specificata dinamicamente.
@@ -282,11 +282,11 @@ def add_data(table_name, data):
 		record = model(**data)
 		session.add(record)
 		session.commit()
-	except Exception as e:
-		raise e
-		session.rollback()
-	finally:
 		session.close()
+	except Exception as e:
+		session.rollback()
+		session.close()
+		raise e
 
 def update_data(table_name, record_id, updated_data, if_not_selected=False):
 	"""Aggiorna un record specifico in una tabella.
@@ -321,11 +321,11 @@ def update_data(table_name, record_id, updated_data, if_not_selected=False):
 				setattr(record, key, value)
 
 		session.commit()
-	except Exception as e:
-		raise e
-		session.rollback()
-	finally:
 		session.close()
+	except Exception as e:
+		session.rollback()
+		session.close()
+		raise e
 
 def delete_data(table_name, record_id, if_not_selected=False):
 	"""Elimina un record specifico da una tabella.
@@ -355,11 +355,52 @@ def delete_data(table_name, record_id, if_not_selected=False):
 		# Elimina il record
 		session.delete(record)
 		session.commit()
-	except Exception as e:
-		raise e
-		session.rollback()
-	finally:
 		session.close()
+	except Exception as e:
+		session.rollback()
+		session.close()
+		raise e
+
+def delete_all_data(table_name, if_not_selected=False):
+	"""Elimina tutti i record da una tabella, con un'opzione per escludere quelli selezionati.
+
+	Args:
+		table_name (str): Il nome della tabella da cui eliminare i record.
+		if_not_selected (bool): Se True, elimina solo i record non selezionati.
+	"""
+	# Verifica che il modello esista nel dizionario dei modelli
+	model = table_models.get(table_name.lower())
+	if not model:
+		raise ValueError(f"Tabella '{table_name}' non trovata.")
+
+	# Crea una sessione e verifica i record
+	session = SessionLocal()
+
+	try:
+		# Verifica che non ci siano record con selected=True
+		if session.query(model).filter_by(selected=True).count() > 0:
+			raise ValueError("Non è possibile eliminare i record: ci sono record attualmente in uso.")
+
+		# Costruisce la query per selezionare i record da eliminare
+		query = session.query(model)
+		
+		# Aggiunge la condizione per eliminare solo i record non selezionati, se richiesto
+		if if_not_selected:
+			query = query.filter_by(selected=False)
+		
+		# Elimina tutti i record trovati in una sola operazione
+		deleted_count = query.delete(synchronize_session=False)
+		
+		# Conferma le modifiche nel database
+		session.commit()
+		session.close()
+
+		return deleted_count  # Restituisce il numero di record eliminati per informazione
+		
+	except Exception as e:
+		session.rollback()
+		session.close()
+		raise e
 
 required_columns = {
 	"vehicle": {"plate": str, "name": str},

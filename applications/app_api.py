@@ -45,7 +45,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 import pandas as pd
 import numpy as np
-from libs.lb_database import required_columns, required_dtos, load_records_into_db, add_data, update_data, delete_data, VehicleDTO, SocialReasonDTO, MaterialDTO
+from libs.lb_database import required_columns, required_dtos, load_records_into_db, add_data, update_data, delete_data, delete_all_data, VehicleDTO, SocialReasonDTO, MaterialDTO
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -257,6 +257,16 @@ def mainprg():
 		except Exception as e:
 			return HTTPException(status_code=400, detail=f"{e}")
 		return {"message": "Data deleted successfully"}
+
+	@app.delete("/all/anagrafic/{anagrafic}")
+	async def deleteAllAnagrafic(anagrafic: str):
+		if anagrafic not in required_columns:
+			return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+		try:
+			length = delete_all_data(anagrafic, True)
+			return {"message": f"records deleted successfully"}
+		except Exception as e:
+			return HTTPException(status_code=400, detail=f"{e}")
 
 	@app.post("/upload-file/{anagrafic}")
 	async def upload_file(anagrafic: str, file: UploadFile = File(...)):
