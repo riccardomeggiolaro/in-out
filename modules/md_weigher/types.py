@@ -43,6 +43,18 @@ class DataInExecution(BaseModel):
 						sub_value = None
 					setattr(current_attr, sub_key, sub_value)
 
+	def deleteAttribute(self):
+		# Per ogni chiave dei dati correnti
+		for key, attr in vars(self).items():
+			# Ottiene l'id corrente dell'oggetto inerente alla chiave
+			current_attr_id = getattr(attr, 'id')
+			# Se l'id corrente non é None allora setta selected False dell'id sul database
+			if current_attr_id is not None:
+				update_data(key, current_attr_id, {"selected": False})
+			# Resetta tutti gli attributi dell'oggetto corrente a None
+			for sub_key, sub_value in vars(attr).items():
+				setattr(attr, sub_key, None)
+
 class Realtime(BaseModel):
 	status: str
 	type: str
