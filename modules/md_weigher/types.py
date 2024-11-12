@@ -13,23 +13,32 @@ class DataInExecution(BaseModel):
 	material: MaterialDTO
 
 	def setAttribute(self, source):
+		# Per ogni chiave dei nuovi dati passati controlla se è un oggetto o None
 		for key, value in vars(source).items():
+			# Se è un oggetto va avanti
 			if isinstance(value, object) and value is not None:
+
 				current_attr = getattr(self, key)
-			
 				current_id = getattr(current_attr, 'id')
-				h = getattr(source, 'id')
-				if hasattr(current_attr, 'id') and isinstance(current_id, int):
-					# Verifica se `source` ha qualsiasi altro attributo diverso da `id`				
-					if any(sub_key != 'id' for sub_key in vars(source).keys()):
-						# Se ci sono altri attributi, resetta tutti gli attributi di `self` a None, tranne `id`
-						for attr in vars(current_attr):
-							setattr(current_attr, attr, None)
-						if len(vars(current_attr)) > 1:
-							current_id = getattr(current_attr, 'id')
-							update_data(key, current_id, {"selected": False})
+				source_value_id = getattr(value, 'id')
+				# Verifica se `source` ha qualsiasi altro attributo diverso da `id`
+				other_source_values = any(sub_key != 'id' for sub_key in vars(source).keys())
+
+				# Preparazione dei dati correnti prima di aggiungere le modifiche
+				# Serve per gestire il cambio di selected sul database nel caso fosse in uso una anagrafica del database
+				# Se l'id corrente è un numero
+				if isinstance(current_id, int):
+					# Controlla se é stato passato un nuovo id e se oltre a quello sono stati passati altri valori
+					if source_value_id is None and other_source_values:
+						# Se ci sono altri attributi, resetta tutti gli attributi correnti a None
+						for sub_key, sub_value in vars(current_attr).items():
+							setattr(current_attr, sub_key, None)
+					# Setta l'id corrente nel database a selected False siccome è stato cambiato passando l'id, o altri attributi o entrambi
+					update_data(key, current_id, {"selected": False})
+
+				# Modifica dei valori
 				for sub_key, sub_value in vars(value).items():
-					# Se il valore è un tipo primitivo, log e aggiornamento diretto
+					# Se il valore è un tipo primitivo, aggiorna il nuovo valore
 					if sub_value in ["undefined", -1]:
 						sub_value = None
 					setattr(current_attr, sub_key, sub_value)
