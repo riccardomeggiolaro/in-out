@@ -26,7 +26,7 @@ from modules.md_weigher.types import DataInExecution, Weight  # noqa: E402
 from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataInExecutionDTO  # noqa: E402
 from modules.md_weigher.types import Configuration
 from libs.lb_system import SerialPort, Tcp, Connection  # noqa: E402
-from typing import Optional, Union  # noqa: E402
+from typing import Optional, Union, Dict  # noqa: E402
 from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
 from pydantic import BaseModel, validator
 import threading
@@ -45,7 +45,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 import pandas as pd
 import numpy as np
-from libs.lb_database import required_columns, required_dtos, load_records_into_db, add_data, update_data, delete_data, delete_all_data, VehicleDTO, SocialReasonDTO, MaterialDTO
+from libs.lb_database import required_columns, required_dtos, filter_data, load_records_into_db, add_data, update_data, delete_data, delete_all_data, VehicleDTO, SocialReasonDTO, MaterialDTO
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -176,7 +176,7 @@ class InstanceNameDTO(BaseModel):
 	name: str
 
 class InstanceNameNodeDTO(InstanceNameDTO):
-    node: Optional[str] = None
+	node: Optional[str] = None
 
 class NodeConnectionManager:
 	def __init__(self):
@@ -201,6 +201,12 @@ def get_query_params_name_node(params: InstanceNameNodeDTO = Depends()):
 	return params
 # ==============================================================
 
+async def get_query_params(request: Request) -> Dict[str, Union[str, int]]:
+	"""
+	Converts URL query parameters into a dictionary
+	"""
+	return dict(request.query_params)
+
 # ==== MAINPRGLOOP =============================================
 # funzione che si connette a redis, setta i moduli e imposta le callback da richiamare dentro i moduli
 def mainprg():
@@ -210,6 +216,17 @@ def mainprg():
 	global base_dir_templates
 	global templates
 	global thread_ssh_tunnel
+
+	@app.get("/list/anagrafic/{anagrafic}")
+	async def getListAnagrafic(anagrafic: str, query_params: Dict[str, Union[str, int]] = Depends(get_query_params)):
+		if anagrafic not in required_columns:
+			return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+		try:
+			lb_log.warning(query_params)
+			data = filter_data(anagrafic, query_params)
+			return data
+		except Exception as e:
+			return HTTPException(status_code=400, detail=f"{e}")
 
 	@app.post("/anagrafic/{anagrafic}")
 	async def addAnagrafic(anagrafic: str, body: Union[VehicleDTO, SocialReasonDTO, MaterialDTO]):
@@ -492,7 +509,7 @@ def mainprg():
 			conn_to_check_without_timeout = {key: value for key, value in conn_to_check.items() if key != "timeout"}
 			conn_without_timeout = {key: value for key, value in instance_data["connection"].items() if key != "timeout"}
 			if configuration.name == instance_name:
-    				return HTTPException(status_code=400, detail='Name just exist')
+					return HTTPException(status_code=400, detail='Name just exist')
 			if conn_to_check_without_timeout == conn_without_timeout:
 				return HTTPException(status_code=400, detail='Connection just exist')
 		instance = {
@@ -522,7 +539,7 @@ def mainprg():
 	async def GetConfigWeigherNodes(instance: InstanceNameDTO = Depends(get_query_params_name)):
 		responses = WEIGHERS[instance.name]["module"].getNodes()
 		response = {
-      		"instance_name": instance.name,
+	  		"instance_name": instance.name,
 			"nodes": responses
 		}
 		return response
@@ -602,7 +619,7 @@ def mainprg():
 		if conn:
 			return {
 				"instance": instance,
-       			"connection": conn,
+	   			"connection": conn,
 				"time_between_actions": time_between_actions
 			}
 		raise HTTPException(status_code=404, detail='Not found')
@@ -674,13 +691,13 @@ def mainprg():
 					elif status == 201:
 						message = "Protocollo pesa non valido"
 					await WEIGHERS[instance.name]["node_sockets"][instance.node].manager_realtime.broadcast({
-         				"status":"--",
-             			"type":"--",
-                		"net_weight": message,
-                  		"gross_weight":"--",
-                    	"tare":"--",
-                     	"unite_measure": str(status)
-                    })
+		 				"status":"--",
+			 			"type":"--",
+						"net_weight": message,
+				  		"gross_weight":"--",
+						"tare":"--",
+					 	"unite_measure": str(status)
+					})
 			else:
 				WEIGHERS[instance.name]["module"].setModope(instance.node, "OK")
 				break
@@ -732,7 +749,7 @@ def start():
 def stop():
 	global WEIGHERS
 	global ssh_client
-    
+	
 	for weigher in WEIGHERS:  # Per ogni modulo
 		lb_log.info("..killing weigher configuration: %s" % weigher)  # Logga un messaggio informativo
 		asyncio.run(deleteInstanceWeigher(weigher))
@@ -751,7 +768,7 @@ def stop():
 
 # ==== INIT ====================================================
 # funzione che dichiara tutte le globali
-def init():    
+def init():	
 	lb_log.info("init")
 	global app
 	global rfid

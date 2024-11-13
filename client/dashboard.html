@@ -555,6 +555,20 @@
         .highlight {
             background-color: yellow; /* Colore di evidenziazione */
         }
+
+        .selected {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .list-item {
+            cursor: pointer;
+            padding: 8px;
+            margin: 2px;
+            border-radius: 4px;
+        }
+        .list-item:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <!-- Rest of your HTML remains unchanged -->
@@ -570,38 +584,36 @@
             <div class="display-wrapper">
                 <div class="item anagrafic">
                     <div>
-                        <h2 style="text-align: left;">VEICOLO</h3>
-                        <p style="text-align: left;">TARGA:</p>
-                        <p style="text-align: left;">NOME:</p>
-                        <hr>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Veicolo</h2>
+                        <p style="text-align: left; margin-top: 0px;">Descrizione:</p>
+                        <input id="currentDescriptionVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myDescriptionVehicleInput', '', 'name', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'myDescriptionVehicleInput')" >
+                        <p style="text-align: left; margin-top: 0px;">Targa:</p>
+                        <input id="currentPlateVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myPlateInput', '', 'plate', ['name'], 'platePopup', 'suggestionsListPlateVehicle'); openPopup('platePopup', 'myPlateInput')" >
+                        <br>
                     </div>
 
                     <div>
-                        <h2 style="text-align: left;">CLIENTE</h2>
-                        <p style="text-align: left;">DESCRIZIONE:</p>
-                        <p style="text-align: left;">CFPIVA:</p>
-                        <p style="text-align: left;">CELL:</p>
-                        <hr>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Cliente</h2>
+                        <input id="currentNameSocialReasonCustomer" type="text"name="plate" onclick="showSuggestions('social_reason', 'nameSocialReasonCustomerInput', '', 'name', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer'); openPopup('nameSocialReasonCustomerPopup', 'nameSocialReasonCustomerInput')" >
+                        <br>
                     </div>
 
                     <div>
-                        <h2 style="text-align: left;">FORNITORE</h2>
-                        <p style="text-align: left;">DESCRIZIONE:</p>
-                        <p style="text-align: left;">CFPIVA:</p>
-                        <p style="text-align: left;">CELL:</p>
-                        <hr>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Fornitore</h2>
+                        <input id="currentNameSocialReasonSupplier" type="text"name="plate" onclick="showSuggestions('social_reason', 'nameSocialReasonSupplierInput', '', 'name', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier'); openPopup('nameSocialReasonSupplierPopup', 'nameSocialReasonSupplierInput')" >
+                        <br>
                     </div>
 
                     <div>
-                        <h2 style="text-align: left;">MATERIALE</h2>
-                        <p style="text-align: left;">DESCRIZIONE:</p>
-                        <hr>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Materiale</h2>
+                        <input id="currentMaterial" type="text"name="plate" onclick="showSuggestions('material', 'myMaterialInput', '', 'name', [], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myMaterialInput')" >
+                        <br>
                     </div>
 
                     <div>
-                        <h2 style="text-align: left;">NOTE</h2>
-                        <p style="text-align: left;">DESCRIZIONE:</p>
-                        <hr>
+                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Note</h2>
+                        <input id="currentNote" type="text" name="plate" onclick="openPopup('notePopup')" >
+                        <br>
                     </div>
                 </div>
                 <div class="display item">
@@ -664,8 +676,8 @@
 
         <div id="descriptionVehiclePopup" class="popup">
             <div class="popup-content">
-                <h2>DESCRIZIONE:</h2>
-                <input type="text" id="myDescriptionVehicleInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionsVehicle, 'myDescriptionVehicleInput', this.value, 'description', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <h2>Descrizione:</h2>
+                <input type="text" id="myDescriptionVehicleInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'myDescriptionVehicleInput', this.value, 'name', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
                 <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -677,7 +689,7 @@
         <div id="platePopup" class="popup">
             <div class="popup-content">
                 <h2>Targa:</h2>
-                <input type="text" id="myPlateInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionsVehicle, 'myPlateInput', this.value, 'plate', ['description'], 'platePopup', 'suggestionsListPlateVehicle');">
+                <input type="text" id="myPlateInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'myPlateInput', this.value, 'plate', ['description'], 'platePopup', 'suggestionsListPlateVehicle');">
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -686,11 +698,11 @@
             </div>
         </div>
 
-        <div id="nameSocialReasonPopup" class="popup">
+        <div id="nameSocialReasonCustomerPopup" class="popup">
             <div class="popup-content">
                 <h2>Nome:</h2>
-                <input type="text" id="nameSocialReasonInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionSocialReason, 'nameSocialReasonInput', this.value, 'name', ['description'], 'nameSocialReasonPopup', 'suggestionsListNameSocialReason', 'type', isCustomerSupplier);">
-                <ul id="suggestionsListNameSocialReason" class="suggestions-list"></ul>
+                <input type="text" id="nameSocialReasonCustomerInput" autocomplete="off" class="input" oninput="showSuggestions('social_reason', 'nameSocialReasonCustomerInput', this.value, 'name', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer');">
+                <ul id="suggestionsListNameSocialReasonCustomer" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button class="p-tare-button" onclick="">OK</button>
@@ -698,11 +710,11 @@
             </div>
         </div>
 
-        <div id="descriptionSocialReasonPopup" class="popup">
+        <div id="nameSocialReasonSupplierPopup" class="popup">
             <div class="popup-content">
-                <h2>DESCRIZIONE:</h2>
-                <input type="text" id="myDescriptionSocialReasonInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionSocialReason, 'myDescriptionSocialReasonInput', this.value, 'description', ['name'], 'descriptionSocialReasonPopup', 'suggestionsListDescriptionSocialReason', 'type', isCustomerSupplier);">
-                <ul id="suggestionsListDescriptionSocialReason" class="suggestions-list"></ul>
+                <h2>Nome:</h2>
+                <input type="text" id="nameSocialReasonSupplierInput" autocomplete="off" class="input" oninput="showSuggestions('social_reason', 'nameSocialReasonSupplierInput', this.value, 'name', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier');">
+                <ul id="suggestionsListNameSocialReasonSupplier" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button class="p-tare-button" onclick="">OK</button>
@@ -713,7 +725,7 @@
         <div id="materialPopup" class="popup">
             <div class="popup-content">
                 <h2>Materiale:</h2>
-                <input type="text" id="myMaterialInput" autocomplete="off" class="input" oninput="showSuggestions(suggestionMaterials, 'myMaterialInput', this.value, 'material', [], 'materialPopup', 'suggestionsListMaterial');">
+                <input type="text" id="myMaterialInput" autocomplete="off" class="input" oninput="showSuggestions('material', 'myMaterialInput', this.value, 'material', [], 'materialPopup', 'suggestionsListMaterial');">
                 <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -736,161 +748,92 @@
 
     <script>
         let currentPopup;
+        let currentInput;
 
         let connected;
 
-        let isCustomerSupplier = 'customer';
+        let selectedIdVehicle;
+        let selectedIdCustomer;
+        let selectedIdSupplier;
+        let selectedIdMaterial;
 
-        const suggestionsVehicle = [
-            {
-                "description": "ccccccccccccc",
-                "plate": "ABC123" 
-            },
-            {
-                "description": "",
-                "plate": "XYZ456" 
-            }, 
-            {
-                "description": "",
-                "plate": "LMN789", 
-            },
-            {
-                "description": "",
-                "plate": "ABC123" 
-            },
-            {
-                "description": "",
-                "plate": "XYZ456" 
-            }, 
-            {
-                "description": "",
-                "plate": "LMN789", 
-            },
-            {
-                "description": "",
-                "plate": "ABC123" 
-            },
-            {
-                "description": "",
-                "plate": "XYZ456" 
-            }, 
-            {
-                "description": "",
-                "plate": "LMN789", 
-            } 
-        ]; // Esempi di suggerimenti
-
-        const suggestionSocialReason = [
-            {
-                "name": "Riccardo",
-                "description": "Baron Srl",
-                "type": "customer"
-            },            
-            {
-                "name": "Lorenzo",
-                "description": "Cavallino",
-                "type": "supplier"
-            },            
-            {
-                "name": "Sofia",
-                "description": "Easy Group" ,
-                "type": "customer"
-            },            
-            {
-                "name": "Riccardo",
-                "description": "Baron Srl",
-                "type": "supplier"
-            },            
-            {
-                "name": "Lorenzo",
-                "description": "Cavallino",
-                "type": "customer"
-            },            
-            {
-                "name": "Sofia",
-                "description": "Easy Group",
-                "type": "supplier"
-            },            
-            {
-                "name": "Riccardo",
-                "description": "Baron Srl",
-                "type": "supplier"
-            },            
-            {
-                "name": "Lorenzo",
-                "description": "Cavallino",
-                "type": "customer"
-            },            
-            {
-                "name": "Sofia",
-                "description": "Easy Group",
-                "type": "supplier"
-            },            
-        ]
-
-        const suggestionMaterials = [
-            {
-                "material": "Ferro"
-            },
-            {
-                "material": "Alluminio"
-            },
-            {
-                "material": "Legno"
-            },
-            {
-                "material": "Ferro"
-            },
-            {
-                "material": "Alluminio"
-            },
-            {
-                "material": "Legno"
-            },
-            {
-                "material": "Ferro"
-            },
-            {
-                "material": "Alluminio"
-            },
-            {
-                "material": "Legno"
+        function scrollToSelectedItem() {
+            const selectedItem = document.querySelector('.selected');
+            if (selectedItem) {
+                selectedItem.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'start'
+                });
             }
-        ]
+        }
 
-        function showSuggestions(list, inputHtml, inputValue, filter, data, popup, showList, condition = null, valueCondition = null) {
-            console.log(condition, valueCondition)
-
+        async function showSuggestions(name_list, inputHtml, inputValue, filter, data, popup, showList, condition = null, valueCondition = null) {
             const suggestionsList = document.getElementById(showList);
             suggestionsList.innerHTML = ""; // Pulisce la lista precedente
 
-            const filteredSuggestions = list.filter(suggestion => {
-                if (condition && suggestion[condition] === valueCondition) return suggestion[filter].toLowerCase().includes(inputValue.toLowerCase());
-                else if (!condition) return suggestion[filter].toLowerCase().includes(inputValue.toLowerCase());
+            suggestionsList.addEventListener('click', (e) => {
+                // Rimuovi la classe selected da tutti gli elementi
+                suggestionsList.querySelectorAll('li').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                
+                // Aggiungi la classe selected all'elemento cliccato
+                e.target.classList.add('selected');
+                
+                // Opzionale: salva l'ID dell'elemento selezionato
+                if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') selectedIdVehicle = e.target.dataset.id;
+                else if (showList === 'suggestionsListNameSocialReasonCustomer') selectedIdCustomer = e.target.dataset.id;
+                else if (name_list === 'suggestionsListNameSocialReasonSupplier') selectedIdSupplier = e.target.dataset.id;
+                else if (name_list === 'suggestionsListMaterial') selectedIdMaterial = e.target.dataset.id;
+
+                closePopup();
             });
 
-            filteredSuggestions.forEach(suggestion => {
+            // Eseguire una chiamata HTTP per ottenere la lista
+            const response = await fetch(`http://localhost:8000/list/anagrafic/${name_list}?${filter}=${inputValue}`)
+            .then(response => response.json())
+            .catch(error => console.error(error)); // Sostituisci con l'URL del tuo endpoint
+
+            response.forEach(suggestion => {
                 const li = document.createElement("li");
+
+                console.log(inputValue);
+
                 let text = highlightText(suggestion, inputValue, filter);
-                data.forEach(key => {
-                    if (suggestion[key]) text += `  -   ${suggestion[key]}`;
-                })
+                for (const [key, value] of Object.entries(suggestion)) {
+                    if (value && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
+                }
                 li.innerHTML = text; // Evidenzia il testo
-                li.onclick = () => selectSuggestion(suggestion, filter, inputHtml, showList, popup);
+                li.dataset.id = suggestion.id
+
+                let currentId;
+
+                if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') currentId = selectedIdVehicle;
+                else if (showList === 'suggestionsListNameSocialReasonCustomer') currentId = selectedIdCustomer;
+                else if (name_list === 'suggestionsListNameSocialReasonSupplier') currentId = selectedIdSupplier;
+                else if (name_list === 'suggestionsListMaterial') currentId = selectedIdMaterial;
+
+                if (suggestion.id == currentId) {
+                    li.classList.add('selected');
+                }
+
                 suggestionsList.appendChild(li);
             });
+
+            const selected = suggestionsList.querySelector('.selected');
+            if (selected) {
+                selected.scrollIntoView({
+                    behavior: 'instant',
+                    block: 'nearest',
+                    inline: 'start'
+                });
+            }
         }
 
         function highlightText(suggestion, input, filter) {
             const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
             return suggestion[filter].replace(regex, `<span class="highlight">$1</span>`);
-        }
-
-        function selectSuggestion(suggestion, filter, inputHtml, showList, popup) {
-            document.getElementById(inputHtml).value = suggestion[filter];
-            document.getElementById(showList).innerHTML = ""; // Pulisce la lista dopo la selezione
-            console.log(popup)
-            closePopup(popup);
         }
 
         function changeContent(type, value) {
@@ -978,8 +921,9 @@
             }, 5000); // Durata in millisecondi
         }
 
-        function openPopup(name) {
+        function openPopup(name, input) {
             currentPopup = name;
+            currentInput = input;
             const popup = document.getElementById(name);
             const popupContent = popup.querySelector(".popup-content");
             popup.style.display = "flex"; // Mostra il popup
@@ -992,6 +936,9 @@
             const popup = document.getElementById(currentPopup);
             const popupContent = popup.querySelector(".popup-content");
             
+            const input = document.getElementById(currentInput);
+            input.value = "";
+
             // Rimuovi la classe per nascondere
             popupContent.classList.remove("show");
             
@@ -1107,6 +1054,17 @@
                 document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
                 document.getElementById('uniteMisure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
                 document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
+            } else if (obj.vehicle) {
+                if (obj.vehicle.id) selectedIdVehicle = obj.vehicle.id;
+                if (obj.customer.id) selectedIdCustomer = obj.customer.id;
+                if (obj.supplier.id) selectedIdSupplier = obj.supplier.id;
+                if (obj.material.id) selectedIdMaterial = obj.material.id;
+                document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
+                document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
+                document.querySelector('#currentNameSocialReasonCustomer').value = obj.customer.name ? obj.customer.name : '';
+                document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
+                document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
+                document.querySelector('#currentNote').value = obj.note ? obj.note : '';
             }
         }
 

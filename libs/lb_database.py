@@ -191,11 +191,13 @@ def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=Fa
 		# Imposta l'attributo 'selected' a True e salva la modifica
 		if set_selected:
 			record.selected = True
-		session.commit()
-		session.close()
 
 		# Converte il record in un dizionario
 		record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
+
+		session.commit()
+		session.close()
+
 		return record_dict
 
 	except Exception as e:
@@ -228,18 +230,10 @@ def filter_data(table_name, filters=None):
 		if filters:
 			for column, value in filters.items():
 				if hasattr(model, column):
-					if value[0] == "==":
-						query = query.filter(getattr(model, column) == value[1])
-					elif value[0] == ">":
-						query = query.filter(getattr(model, column) > value[1])
-					elif value[0] == ">=":
-						query = query.filter(getattr(model, column) >= value[1])
-					elif value[0] == "<":
-						query = query.filter(getattr(model, column) < value[1])
-					elif value[0] == "<=":
-						query = query.filter(getattr(model, column) <= value[1])
-					elif value[0] == "like":
-						query = query.filter(getattr(model, column).like(f'%{value[1]}%'))
+					if type(value) == str:
+						query = query.filter(getattr(model, column).like(f'%{value}%'))
+					elif type(value) == int:
+						query = query.filter(getattr(model, column) == value)
 					else:
 						raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
 				else:
