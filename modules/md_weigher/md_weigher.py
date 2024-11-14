@@ -88,6 +88,7 @@ class WeigherInstance:
 		self.time_between_actions = configuration.time_between_actions
 		for node in configuration.nodes:
 			node_dict = node.dict()
+			lb_log.warning(terminalsClasses[node.terminal])
 			n = terminalsClasses[node.terminal](
        			self_config=self, 
           		max_weight=node.max_weight, 
@@ -97,7 +98,8 @@ class WeigherInstance:
                	diagnostic_has_priority_than_realtime=node.diagnostic_has_priority_than_realtime,
                 node=node.node, 
                 terminal=node.terminal,
-                run=node.run
+                run=node.run,
+				data_in_execution=node.data_in_execution
             )
 			n.initialize()
 			self.nodes.append(n)

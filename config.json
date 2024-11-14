@@ -1,7 +1,6 @@
 {
     "app_api": {
         "port": 8000,
-        "ssh_client": null,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -12,6 +11,7 @@
             "module": "rfidserialrfid",
             "setup": {}
         },
+        "ssh_client": null,
         "weighers": {
             "1": {
                 "connection": {
@@ -21,6 +21,30 @@
                 },
                 "nodes": [
                     {
+                        "data_in_execution": {
+                            "customer": {
+                                "cell": null,
+                                "cfpiva": null,
+                                "id": null,
+                                "name": null
+                            },
+                            "material": {
+                                "id": null,
+                                "name": null
+                            },
+                            "note": "eeeee",
+                            "supplier": {
+                                "cell": null,
+                                "cfpiva": null,
+                                "id": null,
+                                "name": null
+                            },
+                            "vehicle": {
+                                "id": null,
+                                "name": null,
+                                "plate": null
+                            }
+                        },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
                         "maintaine_session_realtime_after_command": true,

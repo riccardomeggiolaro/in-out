@@ -7,16 +7,21 @@ import libs.lb_log as lb_log
 from libs.lb_database import update_data
 
 class DataInExecution(BaseModel):
-	customer: SocialReasonDTO
-	supplier: SocialReasonDTO
-	vehicle: VehicleDTO
-	material: MaterialDTO
+	customer: SocialReasonDTO = SocialReasonDTO(**{})
+	supplier: SocialReasonDTO = SocialReasonDTO(**{})
+	vehicle: VehicleDTO = VehicleDTO(**{})
+	material: MaterialDTO = MaterialDTO(**{})
+	note: Union[str, None] = None
 
 	def setAttribute(self, source):
 		# Per ogni chiave dei nuovi dati passati controlla se è un oggetto o None
 		for key, value in vars(source).items():
-			# Se è un oggetto va avanti
-			if isinstance(value, object) and value is not None:
+
+			lb_log.warning(f"key: {key}, value: {value}")
+
+			if isinstance(value, str):
+				setattr(self, key, value)
+			elif isinstance(value, object) and value is not None:
 
 				current_attr = getattr(self, key)
 				current_id = getattr(current_attr, 'id')
@@ -86,14 +91,15 @@ class Weight(BaseModel):
 	data_assigned: Optional[Union[DataInExecution, int]] = None
 
 class SetupWeigher(CustomBaseModel):
-	max_weight: int
-	min_weight: int
-	division: int
-	maintaine_session_realtime_after_command: bool
-	diagnostic_has_priority_than_realtime: bool
-	node: Optional[str] = None
-	terminal: str
-	run: bool
+    max_weight: int
+    min_weight: int
+    division: int
+    maintaine_session_realtime_after_command: bool
+    diagnostic_has_priority_than_realtime: bool
+    node: Optional[str] = None
+    terminal: str
+    run: bool
+    data_in_execution: DataInExecution
 
 class Configuration(CustomBaseModel):
 	nodes: Optional[List[SetupWeigher]] = []

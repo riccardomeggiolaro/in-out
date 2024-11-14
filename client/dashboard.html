@@ -612,7 +612,7 @@
 
                     <div>
                         <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Note</h2>
-                        <input id="currentNote" type="text" name="plate" onclick="openPopup('notePopup')" >
+                        <input id="currentNote" type="text" name="plate" onclick="openPopup('notePopup', 'myNoteInput')" >
                         <br>
                     </div>
                 </div>
@@ -740,7 +740,7 @@
                 <input type="text" id="myNoteInput" autocomplete="off" class="input">
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('note', 'note', myNoteInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('note', '', myNoteInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -786,17 +786,25 @@
         }
 
         function setDataInExecutionOnCLick(anagrafic, key, value) {
+            let requestBody;
+            if (key) {
+                requestBody = JSON.stringify({
+                    [anagrafic]: {
+                        [key]: value
+                    }
+                })
+            } else {
+                requestBody = JSON.stringify({
+                    [anagrafic]: value
+                })
+            }
             closePopup();
             fetch(`http://localhost:8000/set/data_in_execution?name=1`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    [anagrafic]: {
-                        [key]: value
-                    }
-                })
+                body: requestBody
             })
             .then(res => res.json())
             .catch(error => console.error('Errore nella fetch:', error));

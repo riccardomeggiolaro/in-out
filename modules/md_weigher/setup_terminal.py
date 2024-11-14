@@ -1,5 +1,5 @@
 from modules.md_weigher.types import Realtime, Diagnostic, Weight, DataInExecution
-from modules.md_weigher.dto import SetupWeigherDTO
+from modules.md_weigher.dto import SetupWeigherDTO, DataInExecutionDTO
 from libs.lb_system import Connection
 import libs.lb_log as lb_log
 from libs.lb_utils import checkCallbackFormat, callCallback
@@ -57,7 +57,7 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data_in_execution):
 		# Chiama il costruttore della classe base
 		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run)
 
@@ -89,12 +89,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			},
 			"data_assigned": None
 		})
-		self.data_in_execution: DataInExecution = DataInExecution(**{
-			"customer": SocialReasonDTO(**{}),
-			"supplier": SocialReasonDTO(**{}),
-			"vehicle": VehicleDTO(**{}),
-			"material": MaterialDTO(**{})
-		})
+		self.data_in_execution = DataInExecution(**data_in_execution.dict())
 		self.ok_value: str = ""
 		self.modope: str = ""
 		self.modope_to_execute: str = ""
@@ -146,6 +141,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		return self.getSetup()
 
 	def getDataInExecution(self):
+		lb_log.warning(self.data_in_execution)
 		return self.data_in_execution.dict()
 
 	def setDataInExecution(self, data: DataInExecution):
@@ -249,9 +245,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run):
-    		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run)
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data_in_execution):
+		# Chiama il costruttore della classe base
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data_in_execution)
 
 	########################
 	# functions to overwrite

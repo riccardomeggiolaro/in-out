@@ -475,6 +475,10 @@ def mainprg():
 	@app.patch("/set/data_in_execution")
 	async def SetDataInExecution(data_in_execution: DataInExecutionDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == instance.node]
+		index_node_found = lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].index(node_found[0])
+		lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found]["data_in_execution"] = data
+		lb_config.saveconfig()
 		return {
 			"instance": instance,
 			"data_in_execution": data,
@@ -484,6 +488,10 @@ def mainprg():
 	@app.delete("/delete/data_in_execution")
 	async def DeleteDataInExecution(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, data = WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node)
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == instance.node]
+		index_node_found = lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].index(node_found[0])
+		lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found]["data_in_execution"] = data
+		lb_config.saveconfig()
 		return {
 			"instance": instance,
 			"data_in_execution": data,

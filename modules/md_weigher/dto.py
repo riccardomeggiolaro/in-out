@@ -11,6 +11,7 @@ class DataInExecutionDTO(CustomBaseModel):
 	supplier: Optional[SocialReasonDTO] = None
 	vehicle: Optional[VehicleDTO] = None
 	material: Optional[MaterialDTO] = None
+	note: Optional[str] = None
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	max_weight: Optional[int] = None
