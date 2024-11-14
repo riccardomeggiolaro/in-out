@@ -354,6 +354,7 @@ def mainprg():
 	@app.get("/start/realtime")
 	async def StartRealtime(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="REALTIME")
+
 		return {
 			"instance": instance,
 			"command_executed": {

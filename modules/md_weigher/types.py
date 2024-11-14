@@ -38,10 +38,11 @@ class DataInExecution(BaseModel):
 
 				# Modifica dei valori
 				for sub_key, sub_value in vars(value).items():
-					# Se il valore è un tipo primitivo, aggiorna il nuovo valore
-					if sub_value in ["undefined", -1]:
-						sub_value = None
-					setattr(current_attr, sub_key, sub_value)
+					if sub_value is not None or current_id is not None:
+						# Se il valore è un tipo primitivo, aggiorna il nuovo valore
+						if sub_value in ["", "undefined", -1]:
+							sub_value = None
+						setattr(current_attr, sub_key, sub_value)
 
 	def deleteAttribute(self):
 		# Per ogni chiave dei dati correnti

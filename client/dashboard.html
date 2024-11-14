@@ -681,7 +681,7 @@
                 <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'name', myDescriptionVehicleInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -693,7 +693,7 @@
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', myPlateInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -705,7 +705,7 @@
                 <ul id="suggestionsListNameSocialReasonCustomer" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('customer', 'name', nameSocialReasonCustomerInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -717,7 +717,7 @@
                 <ul id="suggestionsListNameSocialReasonSupplier" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('supplier', 'name', nameSocialReasonSupplierInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -729,7 +729,7 @@
                 <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('material', 'name', myMaterialInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -740,7 +740,7 @@
                 <input type="text" id="myNoteInput" autocomplete="off" class="input">
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('note', 'note', myNoteInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -757,6 +757,23 @@
         let selectedIdSupplier;
         let selectedIdMaterial;
 
+        fetch('http://localhost:8000/data_in_execution?name=1')
+        .then(res => res.json())
+        .then(data => {
+            const obj = data["data_in_execution"];
+            if (obj.vehicle.id) selectedIdVehicle = obj.vehicle.id;
+            if (obj.customer.id) selectedIdCustomer = obj.customer.id;
+            if (obj.supplier.id) selectedIdSupplier = obj.supplier.id;
+            if (obj.material.id) selectedIdMaterial = obj.material.id;
+            document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
+            document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
+            document.querySelector('#currentNameSocialReasonCustomer').value = obj.customer.name ? obj.customer.name : '';
+            document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
+            document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
+            document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
+        })
+        .catch(error => console.error('Errore nella fetch:', error));
+
         function scrollToSelectedItem() {
             const selectedItem = document.querySelector('.selected');
             if (selectedItem) {
@@ -768,57 +785,91 @@
             }
         }
 
+        function setDataInExecutionOnCLick(anagrafic, key, value) {
+            closePopup();
+            fetch(`http://localhost:8000/set/data_in_execution?name=1`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    [anagrafic]: {
+                        [key]: value
+                    }
+                })
+            })
+            .then(res => res.json())
+            .catch(error => console.error('Errore nella fetch:', error));
+        }
+
         async function showSuggestions(name_list, inputHtml, inputValue, filter, data, popup, showList, condition = null, valueCondition = null) {
             const suggestionsList = document.getElementById(showList);
             suggestionsList.innerHTML = ""; // Pulisce la lista precedente
 
-            suggestionsList.addEventListener('click', (e) => {
-                // Rimuovi la classe selected da tutti gli elementi
-                suggestionsList.querySelectorAll('li').forEach(item => {
-                    item.classList.remove('selected');
-                });
-                
-                // Aggiungi la classe selected all'elemento cliccato
-                e.target.classList.add('selected');
-                
-                // Opzionale: salva l'ID dell'elemento selezionato
-                if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') selectedIdVehicle = e.target.dataset.id;
-                else if (showList === 'suggestionsListNameSocialReasonCustomer') selectedIdCustomer = e.target.dataset.id;
-                else if (name_list === 'suggestionsListNameSocialReasonSupplier') selectedIdSupplier = e.target.dataset.id;
-                else if (name_list === 'suggestionsListMaterial') selectedIdMaterial = e.target.dataset.id;
+            let currentId;
+            let anagrafic_to_set;
 
-                closePopup();
-            });
+            // Opzionale: salva l'ID dell'elemento selezionato
+            if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') {
+                currentId = selectedIdVehicle;
+                anagrafic_to_set = 'vehicle';
+            } else if (showList === 'suggestionsListNameSocialReasonCustomer') {
+                currentId = selectedIdCustomer;
+                anagrafic_to_set = 'customer';
+            } else if (name_list === 'suggestionsListNameSocialReasonSupplier') {
+                currentId = selectedIdSupplier;
+                anagrafic_to_set = 'supplier';
+            } else if (name_list === 'suggestionsListMaterial') {
+                currentId = selectedIdMaterial;
+                anagrafic_to_set = 'material';
+            }
+
+            console.log(currentId)
+            console.log(anagrafic_to_set)
+
+            let url = `http://localhost:8000/list/anagrafic/${name_list}`;
+
+            if (inputValue) url += `?${filter}=${inputValue}`;
 
             // Eseguire una chiamata HTTP per ottenere la lista
-            const response = await fetch(`http://localhost:8000/list/anagrafic/${name_list}?${filter}=${inputValue}`)
+            const response = await fetch(url)
             .then(response => response.json())
             .catch(error => console.error(error)); // Sostituisci con l'URL del tuo endpoint
 
             response.forEach(suggestion => {
-                const li = document.createElement("li");
+                if (suggestion.selected !== true || suggestion.id === currentId) {
+                    const li = document.createElement("li");
 
-                console.log(inputValue);
+                    li.onclick = () => {
+                        closePopup();
+                        fetch(`http://localhost:8000/set/data_in_execution?name=1`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                [anagrafic_to_set]: {
+                                    id: parseInt(suggestion.id)
+                                }
+                            })
+                        })
+                        .then(res => res.json())
+                        .catch(error => console.error(error));
+                    };
 
-                let text = highlightText(suggestion, inputValue, filter);
-                for (const [key, value] of Object.entries(suggestion)) {
-                    if (value && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
+                    let text = highlightText(suggestion, inputValue, filter);
+                    for (const [key, value] of Object.entries(suggestion)) {
+                        if (value && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
+                    }
+                    li.innerHTML = text; // Evidenzia il testo
+                    li.dataset.id = suggestion.id
+
+                    if (suggestion.id == currentId) {
+                        li.classList.add('selected');
+                    }
+
+                    suggestionsList.appendChild(li);                    
                 }
-                li.innerHTML = text; // Evidenzia il testo
-                li.dataset.id = suggestion.id
-
-                let currentId;
-
-                if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') currentId = selectedIdVehicle;
-                else if (showList === 'suggestionsListNameSocialReasonCustomer') currentId = selectedIdCustomer;
-                else if (name_list === 'suggestionsListNameSocialReasonSupplier') currentId = selectedIdSupplier;
-                else if (name_list === 'suggestionsListMaterial') currentId = selectedIdMaterial;
-
-                if (suggestion.id == currentId) {
-                    li.classList.add('selected');
-                }
-
-                suggestionsList.appendChild(li);
             });
 
             const selected = suggestionsList.querySelector('.selected');
@@ -833,7 +884,7 @@
 
         function highlightText(suggestion, input, filter) {
             const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
-            return suggestion[filter].replace(regex, `<span class="highlight">$1</span>`);
+            return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
         }
 
         function changeContent(type, value) {
