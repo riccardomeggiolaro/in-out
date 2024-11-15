@@ -38,12 +38,18 @@ class VehicleDTO(BaseModel):
 
 # Modello per la tabella SocialReason
 class SocialReason(Base):
-	__tablename__ = 'social_reason'
+	__abstract__ = True  # Indica che questa tabella non sarà creata direttamente
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
 	cell = Column(Integer)
 	cfpiva = Column(String)
 	selected = Column(Boolean, default=False)
+
+class Customer(SocialReason):
+	__tablename__ = 'customer'
+
+class Supplier(SocialReason):
+	__tablename__ = 'supplier'
 
 class SocialReasonDTO(BaseModel):
 	name: Optional[str] = None
@@ -51,23 +57,37 @@ class SocialReasonDTO(BaseModel):
 	cfpiva: Optional[str] = None
 	id: Optional[int] = None
 
+	@validator('cell', pre=True, always=True)
+	def check_cell(cls, v):
+		if v not in (None, -1):
+			if v < 0:
+				raise ValueError("Cell must be greater than or equal to 0")
+		return v
+
+class CustomerDTO(SocialReasonDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('social_reason', v, True)
+			data = get_data_by_id('customer', v, True)
 			if not data:
-				raise ValueError('Id not exist in social reason')
+				raise ValueError('Id not exist in customer')
 			else:
 				values['name'] = data.get('name')
 				values['cell'] = data.get('cell')
 				values['cfpiva'] = data.get('cfpiva')
 		return v
 
-	@validator('cell', pre=True, always=True)
-	def check_cell(cls, v):
+class SupplierDTO(SocialReasonDTO):
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
 		if v not in (None, -1):
-			if v < 0:
-				raise ValueError("Cell must be greater than or equal to 0")
+			data = get_data_by_id('supplier', v, True)
+			if not data:
+				raise ValueError('Id not exist in supplier')
+			else:
+				values['name'] = data.get('name')
+				values['cell'] = data.get('cell')
+				values['cfpiva'] = data.get('cfpiva')
 		return v
 
 # Modello per la tabella Material
@@ -114,7 +134,8 @@ class Weighing(Base):
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
 	'vehicle': Vehicle,
-	'social_reason': SocialReason,
+	'customer': Customer,
+	'supplier': Supplier,
 	'material': Material,
 	'weighing': Weighing,
 }
@@ -398,12 +419,14 @@ def delete_all_data(table_name, if_not_selected=False):
 
 required_columns = {
 	"vehicle": {"plate": str, "name": str},
-	"social_reason": {"name": str, "cell": int, "cfpiva": str},
+	"customer": {"name": str, "cell": int, "cfpiva": str},
+	"supplier": {"name": str, "cell": int, "cfpiva": str},
 	"material": {"name": str}
 }
 
 required_dtos = {
 	"vehicle": VehicleDTO,
-	"social_reason": SocialReasonDTO,
+	"customer": CustomerDTO,
+	"supplier": SupplierDTO,
 	"material": MaterialDTO
 }

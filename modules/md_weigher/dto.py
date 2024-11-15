@@ -4,11 +4,11 @@ from libs.lb_system import Connection, SerialPort, Tcp
 from libs.lb_utils import CustomBaseModel
 from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
-from libs.lb_database import SocialReasonDTO, VehicleDTO, MaterialDTO
+from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO
 
 class DataInExecutionDTO(CustomBaseModel):
-	customer: Optional[SocialReasonDTO] = None
-	supplier: Optional[SocialReasonDTO] = None
+	customer: Optional[CustomerDTO] = None
+	supplier: Optional[SupplierDTO] = None
 	vehicle: Optional[VehicleDTO] = None
 	material: Optional[MaterialDTO] = None
 	note: Optional[str] = None

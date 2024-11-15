@@ -2,13 +2,13 @@ from libs.lb_utils import CustomBaseModel
 from libs.lb_system import SerialPort, Tcp, Connection
 from typing import Optional, Union, List
 from pydantic import BaseModel
-from libs.lb_database import VehicleDTO, SocialReasonDTO, MaterialDTO
+from libs.lb_database import VehicleDTO, CustomerDTO, SupplierDTO, MaterialDTO
 import libs.lb_log as lb_log
 from libs.lb_database import update_data
 
 class DataInExecution(BaseModel):
-	customer: SocialReasonDTO = SocialReasonDTO(**{})
-	supplier: SocialReasonDTO = SocialReasonDTO(**{})
+	customer: CustomerDTO = CustomerDTO(**{})
+	supplier: SupplierDTO = SupplierDTO(**{})
 	vehicle: VehicleDTO = VehicleDTO(**{})
 	material: MaterialDTO = MaterialDTO(**{})
 	note: Union[str, None] = None
