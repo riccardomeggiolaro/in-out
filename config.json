@@ -26,23 +26,23 @@
                                 "cell": null,
                                 "cfpiva": null,
                                 "id": null,
-                                "name": "rtyjyrjryjyrejyj"
+                                "name": null
                             },
                             "material": {
                                 "id": null,
-                                "name": "yyjyjyjyjyjyjy"
+                                "name": null
                             },
-                            "note": "eeeee",
+                            "note": "",
                             "supplier": {
                                 "cell": null,
                                 "cfpiva": null,
                                 "id": null,
-                                "name": "eherthethf"
+                                "name": null
                             },
                             "vehicle": {
                                 "id": null,
-                                "name": "yrjtryjhfgn",
-                                "plate": "yjytrytrjtyhgj"
+                                "name": null,
+                                "plate": null
                             }
                         },
                         "diagnostic_has_priority_than_realtime": true,
