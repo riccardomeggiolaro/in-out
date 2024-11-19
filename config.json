@@ -16,7 +16,7 @@
             "1": {
                 "connection": {
                     "baudrate": 115200,
-                    "serial_port_name": "/dev/ttyS0",
+                    "serial_port_name": "/dev/ttyUSB0",
                     "timeout": 0.1
                 },
                 "nodes": [
@@ -32,7 +32,7 @@
                                 "id": null,
                                 "name": null
                             },
-                            "note": "",
+                            "note": null,
                             "supplier": {
                                 "cell": null,
                                 "cfpiva": null,

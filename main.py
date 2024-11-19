@@ -16,6 +16,7 @@ import modules.md_weigher.md_weigher as md_weigher
 # import modules.md_rfid as md_rfid
 import applications.app_api as app_api
 from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
+import libs.lb_database as lb_database
 # ==============================================================
 
 APPS = [app_api]
@@ -32,6 +33,9 @@ def mainprg():
 
 	# Carica thread per il logger in background.
 	thr_logger = createThread(lb_log.start)
+
+	# Inizializzazione del database
+	lb_database.init()
 
 	# Carica thread per le applicazioni esterne.
 	app_thr = {}

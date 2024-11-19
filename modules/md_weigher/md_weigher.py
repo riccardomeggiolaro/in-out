@@ -207,18 +207,18 @@ class WeigherInstance:
 			return status, data
 		return node_found
 
-	def setDataInExecution(self, node: Union[str, None], data_in_execution: DataInExecution):
+	def setDataInExecution(self, node: Union[str, None], data_in_execution: DataInExecution, call_callback):
 		node_found = [n for n in self.nodes if n.node == node]
 		if len(node_found) > 0:
-			data = node_found[0].setDataInExecution(data_in_execution)
+			data = node_found[0].setDataInExecution(data_in_execution, call_callback)
 			status = node_found[0].diagnostic.status
 			return status, data
 		return node_found
 
-	def deleteDataInExecution(self, node: Union[str, None]):
+	def deleteDataInExecution(self, node: Union[str, None], call_callback):
 		node_found = [n for n in self.nodes if n.node == node]
 		if len(node_found) > 0:
-			data = node_found[0].deleteDataInExecution()
+			data = node_found[0].deleteDataInExecution(call_callback)
 			status = node_found[0].diagnostic.status
 			return status, data
 		return node_found
@@ -228,7 +228,7 @@ class WeigherInstance:
 		if len(node_found) != 0:
 			return node_found[0].modope_to_execute
 
-	def setModope(self, node: Union[str, None], modope, presettare=0, data_assigned = None):
+	def setModope(self, node: Union[str, None], modope, presettare=0, data_assigned: Union[DataInExecution, int] = None):
 		node_found = [n for n in self.nodes if n.node == node]
 		status, status_modope, command_execute, error_message = None, None, False, None
 		if len(node_found) != 0:

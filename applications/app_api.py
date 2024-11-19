@@ -64,21 +64,38 @@ def Callback_Diagnostic(instance_name: str, instance_node: Union[str, None], dia
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 def Callback_Weighing(instance_name: str, instance_node: Union[str, None], last_pesata: Weight):
 	global WEIGHERS
-	time.sleep(1)
 	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(last_pesata.dict()))
- 
+	if last_pesata.data_assigned is not None and not isinstance(last_pesata.data_assigned, int) and last_pesata.weight_executed.executed:
+		status, data = WEIGHERS[instance_name]["module"].deleteDataInExecution(node=instance_node, call_callback=False)
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"] if n["node"] == instance_node]
+		index_node_found = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"].index(node_found[0])
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][index_node_found]["data_in_execution"] = data
+		lb_config.saveconfig()
+		asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data))
+
 def Callback_TarePTareZero(instance_name: str, instance_node: Union[str, None], ok_value: str):
 	global WEIGHERS
 	result = {"command_executend": ok_value}
 	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(result))
 
 def Callback_DataInExecution(instance_name: str, instance_node: Union[str, None], data_in_execution: DataInExecution):
-	global WEIGHERS
-	if asyncio.get_event_loop().is_running():
-		asyncio.create_task(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data_in_execution.dict()))	
-	else:
-		loop = asyncio.get_event_loop()
-		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data_in_execution.dict()))
+    global WEIGHERS
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # Se non c'è un loop corrente, creane uno per il thread
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    if loop.is_running():
+        asyncio.create_task(
+            WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data_in_execution.dict())
+        )
+    else:
+        loop.run_until_complete(
+            WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data_in_execution.dict())
+        )
 
 def Callback_ActionInExecution(instance_name: str, instance_node: Union[str, None], action_in_execution: str):
 	global WEIGHERS
@@ -90,9 +107,7 @@ def Callback_ActionInExecution(instance_name: str, instance_node: Union[str, Non
 		loop.run_until_complete(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(result))
 
 def Callback_Cardcode(cardcode: str):
-	result = {"cardcode": cardcode}
-	asyncio.run(manager_data_in_execution.broadcast(result))
-	lb_log.info(cardcode)
+	pass
 
 # Function to create a new instance of weigher module
 def createIstanceWeigher(name, configuration):
@@ -241,10 +256,9 @@ def mainprg():
 
 		try:
 			add_data(anagrafic, body.dict())
-		except e:
-			return e
-
-		return {"message": "Data added successfully"}
+			return {"message": "Data added successfully"}
+		except Exception as e:
+			return HTTPException(status_code=400, detail=f"{e}")
 
 	@app.patch("/anagrafic/{anagrafic}/{id}")
 	async def setAnagrafic(anagrafic: str, id: int, body: Union[VehicleDTO, SocialReasonDTO, MaterialDTO]):
@@ -393,7 +407,8 @@ def mainprg():
 
 	@app.get("/print")
 	async def Print(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=None)
+		data = DataInExecution(**{})
+		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -410,10 +425,8 @@ def mainprg():
 		if id is not None:
 			data = id
 		else:
-			data = WEIGHERS[instance.name]["module"].getDataInExecution(node=instance.node)
+			status, data = WEIGHERS[instance.name]["module"].getDataInExecution(node=instance.node)
 		status, status_modope, status_command, error_message = WEIGHERS[instance.name]["module"].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
-		if status_command:
-			WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -474,7 +487,7 @@ def mainprg():
 
 	@app.patch("/set/data_in_execution")
 	async def SetDataInExecution(data_in_execution: DataInExecutionDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution)
+		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution, call_callback=True)
 		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == instance.node]
 		index_node_found = lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].index(node_found[0])
 		lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found]["data_in_execution"] = data
@@ -487,7 +500,7 @@ def mainprg():
 
 	@app.delete("/delete/data_in_execution")
 	async def DeleteDataInExecution(instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, data = WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node)
+		status, data = WEIGHERS[instance.name]["module"].deleteDataInExecution(node=instance.node, call_callback=True)
 		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == instance.node]
 		index_node_found = lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].index(node_found[0])
 		lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found]["data_in_execution"] = data
@@ -817,8 +830,6 @@ def init():
 		ssh_client["local_port"] = lb_config.g_config["app_api"]["port"]
 		ssh_client = createThread(ssh_tunnel, (SshClientConnection(**ssh_client),))
 		startThread(ssh_client)
-
-	lb_database.init()
 
 	# rfid.setAction(cb_cardcode=Callback_Cardcode)
 

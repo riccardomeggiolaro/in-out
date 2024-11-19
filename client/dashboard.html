@@ -585,6 +585,15 @@
             border: 2px solid #1362b8;
             height: 30px;
         }
+        .list-in li:hover {
+            background-color: #e0e0e0;
+            cursor: pointer;
+        }
+        .list-in li.selected {
+            background-color: #1362b8;
+            color: white;
+            border: 2px solid #1362b8;
+        }
     </style>
 </head>
 <!-- Rest of your HTML remains unchanged -->
@@ -655,22 +664,22 @@
                 </div>
                 <div class="item ins">
                     <ul class="list-in">
-                       <li>VSVSVSV - P1</li> 
-                       <li>VSVSVSV - P1</li> 
-                       <li>VSVSVSV - P1</li> 
-                       <li>VSVSVSV - P1</li>
-                       <li>VSVSVSV - P1</li> 
-                       <li>VSVSVSV - P1</li> 
-                    </ul>
+                        <li data-id="1">VSVSVSV - P1</li>
+                        <li data-id="2">VSVSVSV - P1</li>
+                        <li data-id="3">VSVSVSV - P1</li>
+                        <li data-id="4">VSVSVSV - P1</li>
+                        <li data-id="5">VSVSVSV - P1</li>
+                        <li data-id="6">VSVSVSV - P1</li>
+                    </ul>                    
                 </div>
             </div>
             <div class="in-out">
-                <button class="item in" onclick="openPopup()">In</button>
+                <button class="item in" onclick="handlePesata()">In</button>
                 <div class="buttons item">
                     <button onclick="handleTara()">Tara</button>
                     <button onclick="handleZero()">Zero</button>
-                    <button onclick="openPopup('myPopup')">P Tara</button>
-                    <button onclick="handlePesata()">Stampa</button>
+                    <button onclick="openPopup('presetTare', 'myNumberInput')">P Tara</button>
+                    <button onclick="handleStampa()">Stampa</button>
                 </div>
                 <button class="item out" onclick="handlePesata()">Out</button>
             </div>            
@@ -678,7 +687,7 @@
 
         <div id="snackbar"></div>
 
-        <div id="myPopup" class="popup">
+        <div id="presetTare" class="popup">
             <div class="popup-content">
                 <h2>Preset Tara</h2>
                 <input type="number" placeholder="0" id="myNumberInput" autocomplete="off">
@@ -771,6 +780,25 @@
         let selectedIdCustomer;
         let selectedIdSupplier;
         let selectedIdMaterial;
+
+        let selectedIdWeight;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const items = document.querySelectorAll('.list-in li');
+
+            items.forEach(item => {
+                item.addEventListener('click', () => {
+                    // Rimuove la classe "selected" da tutti gli elementi
+                    items.forEach(el => el.classList.remove('selected'));
+
+                    // Aggiunge la classe "selected" all'elemento cliccato
+                    item.classList.add('selected');
+
+                    // Ottieni il data-id dell'elemento selezionato
+                    selectedIdWeight = item.getAttribute('data-id');
+                });
+            });
+        });
 
         fetch('http://192.168.0.64:8000/data_in_execution?name=1')
         .then(res => res.json())
@@ -1165,12 +1193,33 @@
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
-        async function handlePesata() {
+        async function handleStampa() {
             buttons.forEach(button => {
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
             });
             const r = await fetch(`${pathname}/print?name=1`)
+            .then(res => {
+                return res.json();
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+            if (r.command_executed.status_command == true) {
+                showSnackbar("Pesando...");
+            } else {
+                showSnackbar(r.command_executed.error_message);
+                buttons.forEach(button => {
+                    button.disabled = false;
+                    button.classList.remove("disabled-button"); // Aggi
+                });
+            }            
+        }
+
+        async function handlePesata() {
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.classList.add("disabled-button"); // Aggi
+            });
+            const r = await fetch(`${pathname}/weighing?name=1`)
             .then(res => {
                 return res.json();
             })

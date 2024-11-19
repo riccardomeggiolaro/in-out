@@ -2,24 +2,24 @@ from libs.lb_utils import CustomBaseModel
 from libs.lb_system import SerialPort, Tcp, Connection
 from typing import Optional, Union, List
 from pydantic import BaseModel
-from libs.lb_database import VehicleDTO, CustomerDTO, SupplierDTO, MaterialDTO
-import libs.lb_log as lb_log
+from libs.lb_database import VehicleDTOInit, CustomerDTOInit, SupplierDTOInit, MaterialDTOInit
 from libs.lb_database import update_data
+import libs.lb_log as lb_log
 
 class DataInExecution(BaseModel):
-	customer: CustomerDTO = CustomerDTO(**{})
-	supplier: SupplierDTO = SupplierDTO(**{})
-	vehicle: VehicleDTO = VehicleDTO(**{})
-	material: MaterialDTO = MaterialDTO(**{})
+	customer: CustomerDTOInit = CustomerDTOInit(**{})
+	supplier: SupplierDTOInit = SupplierDTOInit(**{})
+	vehicle: VehicleDTOInit = VehicleDTOInit(**{})
+	material: MaterialDTOInit = MaterialDTOInit(**{})
 	note: Union[str, None] = None
 
 	def setAttribute(self, source):
 		# Per ogni chiave dei nuovi dati passati controlla se è un oggetto o None
 		for key, value in vars(source).items():
 
-			lb_log.warning(f"key: {key}, value: {value}")
-
 			if isinstance(value, str):
+				if value in ["", "undefined", -1]:
+					value = None
 				setattr(self, key, value)
 			elif isinstance(value, object) and value is not None:
 
@@ -52,14 +52,19 @@ class DataInExecution(BaseModel):
 	def deleteAttribute(self):
 		# Per ogni chiave dei dati correnti
 		for key, attr in vars(self).items():
-			# Ottiene l'id corrente dell'oggetto inerente alla chiave
-			current_attr_id = getattr(attr, 'id')
-			# Se l'id corrente non é None allora setta selected False dell'id sul database
-			if current_attr_id is not None:
-				update_data(key, current_attr_id, {"selected": False})
-			# Resetta tutti gli attributi dell'oggetto corrente a None
-			for sub_key, sub_value in vars(attr).items():
-				setattr(attr, sub_key, None)
+			if isinstance(attr, str):
+				setattr(self, key, None)
+			elif isinstance(attr, object):
+				if hasattr(attr, 'id'):
+					# Ottiene l'id corrente dell'oggetto inerente alla chiave
+					current_attr_id = getattr(attr, 'id')
+					# Se l'id corrente non é None allora setta selected False dell'id sul database
+					if current_attr_id is not None:
+						update_data(key, current_attr_id, {"selected": False})
+				if hasattr(attr, '__dict__'):
+					# Resetta tutti gli attributi dell'oggetto corrente a None
+					for sub_key, sub_value in attr.__dict__.items():
+						setattr(attr, sub_key, None)
 
 class Realtime(BaseModel):
 	status: str
@@ -85,6 +90,7 @@ class WeightExecuted(BaseModel):
 	pid: str
 	bil: str
 	status: str
+	executed: bool
 
 class Weight(BaseModel):
 	weight_executed: WeightExecuted

@@ -85,7 +85,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"unite_misure": "",
 				"pid": "",
 				"bil": "",
-				"status": ""
+				"status": "",
+				"executed": False
 			},
 			"data_assigned": None
 		})
@@ -141,18 +142,19 @@ class __SetupWeigher(__SetupWeigherConnection):
 		return self.getSetup()
 
 	def getDataInExecution(self):
-		lb_log.warning(self.data_in_execution)
 		return self.data_in_execution.dict()
 
-	def setDataInExecution(self, data: DataInExecution):
+	def setDataInExecution(self, data: DataInExecution, call_callback):
 		# Chiama la funzione per aggiornare self.data_in_execution con i dati forniti
 		self.data_in_execution.setAttribute(data)
-		callCallback(self.callback_data_in_execution)
+		if call_callback:
+			callCallback(self.callback_data_in_execution)
 		return self.getDataInExecution()
 
-	def deleteDataInExecution(self):
+	def deleteDataInExecution(self, call_callback):
 		self.data_in_execution.deleteAttribute()
-		callCallback(self.callback_data_in_execution)
+		if call_callback:
+			callCallback(self.callback_data_in_execution)
 		return self.getDataInExecution()
 
 	def maintaineSessionRealtime(self):
@@ -230,7 +232,14 @@ class __SetupWeigher(__SetupWeigherConnection):
 					elif mod == "WEIGHING":
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
-							self.weight.data_assigned = data_assigned
+							data = None
+							if isinstance(data_assigned, DataInExecution):
+								pass
+							elif isinstance(data_assigned, int):
+								data = data_assigned
+							else:
+								data = self.data_in_execution
+							self.weight.data_assigned = data
 						else:
 							return 500, f"Il peso deve essere maggiore di {self.min_weight} kg" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire

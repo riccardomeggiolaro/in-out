@@ -2,7 +2,6 @@ import libs.lb_log as lb_log
 from libs.lb_utils import callCallback
 import re
 from modules.md_weigher.setup_terminal import Terminal
-from socket import socket
 
 class Dgt1(Terminal):
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data_in_execution):
@@ -182,6 +181,7 @@ class Dgt1(Terminal):
 						self.weight.weight_executed.pid = split_response[4]
 						self.weight.weight_executed.bil = split_response[1]
 						self.weight.weight_executed.status = split_response[0]
+						self.weight.weight_executed.executed = True
 						self.diagnostic.status = 200
 					# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
 					else:
@@ -195,6 +195,7 @@ class Dgt1(Terminal):
 					self.weight.weight_executed.pid = ""
 					self.weight.weight_executed.bil = ""
 					self.weight.weight_executed.status = ""
+					self.weight.weight_executed.executed = False
 					self.weight.data_assigned = None
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:

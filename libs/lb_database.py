@@ -16,11 +16,16 @@ class Vehicle(Base):
 	name = Column(String)
 	selected = Column(Boolean, default=False)
 
-class VehicleDTO(BaseModel):
+class ScheletonVehicleDTO(BaseModel):
 	plate: Optional[str] = None
 	name: Optional[str] = None
 	id: Optional[int] = None
 
+	class Config:
+		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
+		arbitrary_types_allowed = True
+
+class VehicleDTO(ScheletonVehicleDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
@@ -32,9 +37,17 @@ class VehicleDTO(BaseModel):
 				values['name'] = data.get('name')
 		return v
 
-	class Config:
-		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
-		arbitrary_types_allowed = True
+class VehicleDTOInit(ScheletonVehicleDTO):
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			data = get_data_by_id('vehicle', v, False, False)
+			if not data:
+				raise ValueError('Id not exist in vehicle')
+			else:
+				values['plate'] = data.get('plate')
+				values['name'] = data.get('name')
+		return v
 
 # Modello per la tabella SocialReason
 class SocialReason(Base):
@@ -68,7 +81,20 @@ class CustomerDTO(SocialReasonDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('customer', v, True)
+			data = get_data_by_id('customer', v, True, True)
+			if not data:
+				raise ValueError('Id not exist in customer')
+			else:
+				values['name'] = data.get('name')
+				values['cell'] = data.get('cell')
+				values['cfpiva'] = data.get('cfpiva')
+		return v
+
+class CustomerDTOInit(SocialReasonDTO):
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			data = get_data_by_id('customer', v, False, False)
 			if not data:
 				raise ValueError('Id not exist in customer')
 			else:
@@ -81,7 +107,20 @@ class SupplierDTO(SocialReasonDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('supplier', v, True)
+			data = get_data_by_id('supplier', v, True, True)
+			if not data:
+				raise ValueError('Id not exist in supplier')
+			else:
+				values['name'] = data.get('name')
+				values['cell'] = data.get('cell')
+				values['cfpiva'] = data.get('cfpiva')
+		return v
+
+class SupplierDTOInit(SocialReasonDTO):
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			data = get_data_by_id('supplier', v, False, False)
 			if not data:
 				raise ValueError('Id not exist in supplier')
 			else:
@@ -97,14 +136,26 @@ class Material(Base):
 	name = Column(String, index=True)
 	selected = Column(Boolean, index=True, default=False)
 
-class MaterialDTO(BaseModel):
+class ScheletonMaterialDTO(BaseModel):
 	name: Optional[str] = None
 	id: Optional[int] = None
 
+class MaterialDTO(ScheletonMaterialDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
-			data = get_data_by_id('material', v, True)
+			data = get_data_by_id('material', v, True, True)
+			if not data:
+				raise ValueError('Id not exist in material')
+			else:
+				values['name'] = data.get('name')
+		return v
+
+class MaterialDTOInit(ScheletonMaterialDTO):
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in [None, -1]:
+			data = get_data_by_id('material', v, False, False)
 			if not data:
 				raise ValueError('Id not exist in material')
 			else:
