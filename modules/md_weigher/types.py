@@ -66,6 +66,23 @@ class DataInExecution(BaseModel):
 					for sub_key, sub_value in attr.__dict__.items():
 						setattr(attr, sub_key, None)
 
+class IdSelected(BaseModel):
+	id: Optional[int] = None
+
+	def setAttribute(self, new_id):
+		if hasattr(self, 'id') and getattr(self, 'id') is not None:
+			update_data('weighing', id, {"selected": False})
+		setattr(self, 'id', new_id)
+	
+	def deleteAttribute(self):
+		if hasattr(self, 'id') and getattr(self, 'id') is not None:
+			update_data('weighing', id, {"selected": False})
+		setattr(self, 'id', None)
+
+class Data(BaseModel):
+	data_in_execution: DataInExecution
+	id_selected: IdSelected
+
 class Realtime(BaseModel):
 	status: str
 	type: str
@@ -97,15 +114,15 @@ class Weight(BaseModel):
 	data_assigned: Optional[Union[DataInExecution, int]] = None
 
 class SetupWeigher(CustomBaseModel):
-    max_weight: int
-    min_weight: int
-    division: int
-    maintaine_session_realtime_after_command: bool
-    diagnostic_has_priority_than_realtime: bool
-    node: Optional[str] = None
-    terminal: str
-    run: bool
-    data_in_execution: DataInExecution
+	max_weight: int
+	min_weight: int
+	division: int
+	maintaine_session_realtime_after_command: bool
+	diagnostic_has_priority_than_realtime: bool
+	node: Optional[str] = None
+	terminal: str
+	run: bool
+	data: Data
 
 class Configuration(CustomBaseModel):
 	nodes: Optional[List[SetupWeigher]] = []

@@ -21,28 +21,33 @@
                 },
                 "nodes": [
                     {
-                        "data_in_execution": {
-                            "customer": {
-                                "cell": null,
-                                "cfpiva": null,
-                                "id": null,
-                                "name": null
+                        "data": {
+                            "data_in_execution": {
+                                "customer": {
+                                    "cell": null,
+                                    "cfpiva": null,
+                                    "id": null,
+                                    "name": null
+                                },
+                                "material": {
+                                    "id": null,
+                                    "name": null
+                                },
+                                "note": null,
+                                "supplier": {
+                                    "cell": null,
+                                    "cfpiva": null,
+                                    "id": null,
+                                    "name": null
+                                },
+                                "vehicle": {
+                                    "id": null,
+                                    "name": null,
+                                    "plate": null
+                                }
                             },
-                            "material": {
-                                "id": null,
-                                "name": null
-                            },
-                            "note": null,
-                            "supplier": {
-                                "cell": null,
-                                "cfpiva": null,
-                                "id": null,
-                                "name": null
-                            },
-                            "vehicle": {
-                                "id": null,
-                                "name": null,
-                                "plate": null
+                            "id_selected": {
+                                "id": null
                             }
                         },
                         "diagnostic_has_priority_than_realtime": true,

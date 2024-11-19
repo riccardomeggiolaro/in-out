@@ -800,10 +800,10 @@
             });
         });
 
-        fetch('http://192.168.0.64:8000/data_in_execution?name=1')
+        fetch('http://192.168.0.64:8000/data?name=1')
         .then(res => res.json())
         .then(data => {
-            const obj = data["data_in_execution"];
+            const obj = data["data"]["data_in_execution"];
             if (obj.vehicle.id) selectedIdVehicle = obj.vehicle.id;
             if (obj.customer.id) selectedIdCustomer = obj.customer.id;
             if (obj.supplier.id) selectedIdSupplier = obj.supplier.id;
@@ -874,9 +874,6 @@
                 currentId = selectedIdMaterial;
                 anagrafic_to_set = 'material';
             }
-
-            console.log(currentId)
-            console.log(anagrafic_to_set)
 
             let url = `http://192.168.0.64:8000/list/anagrafic/${name_list}`;
 
@@ -1156,17 +1153,17 @@
                 document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
                 document.getElementById('uniteMisure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
                 document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
-            } else if (obj.vehicle) {
-                selectedIdVehicle = obj.vehicle.id;
-                selectedIdCustomer = obj.customer.id;
-                selectedIdSupplier = obj.supplier.id;
-                selectedIdMaterial = obj.material.id;
-                document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
-                document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-                document.querySelector('#currentNameSocialReasonCustomer').value = obj.customer.name ? obj.customer.name : '';
-                document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
-                document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
-                document.querySelector('#currentNote').value = obj.note ? obj.note : '';
+            } else if (obj.data_in_execution) {
+                selectedIdVehicle = obj.data_in_execution.vehicle.id;
+                selectedIdCustomer = obj.data_in_execution.customer.id;
+                selectedIdSupplier = obj.data_in_execution.supplier.id;
+                selectedIdMaterial = obj.data_in_execution.material.id;
+                document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.name ? obj.data_in_execution.vehicle.name : '';
+                document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
+                document.querySelector('#currentNameSocialReasonCustomer').value = obj.data_in_execution.customer.name ? obj.data_in_execution.customer.name : '';
+                document.querySelector('#currentNameSocialReasonSupplier').value = obj.data_in_execution.supplier.name ? obj.data_in_execution.supplier.name : '';
+                document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
+                document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
             }
         }
 

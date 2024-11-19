@@ -88,7 +88,6 @@ class WeigherInstance:
 		self.time_between_actions = configuration.time_between_actions
 		for node in configuration.nodes:
 			node_dict = node.dict()
-			lb_log.warning(terminalsClasses[node.terminal])
 			n = terminalsClasses[node.terminal](
        			self_config=self, 
           		max_weight=node.max_weight, 
@@ -99,7 +98,7 @@ class WeigherInstance:
                 node=node.node, 
                 terminal=node.terminal,
                 run=node.run,
-				data_in_execution=node.data_in_execution
+				data=node.data
             )
 			n.initialize()
 			self.nodes.append(n)
@@ -199,10 +198,10 @@ class WeigherInstance:
 		self.time_between_actions = time
 		return self.time_between_actions
 
-	def getDataInExecution(self, node: Union[str, None]):
+	def getData(self, node: Union[str, None]):
 		node_found = [n for n in self.nodes if n.node == node]
 		if len(node_found) > 0:
-			data = node_found[0].getDataInExecution()
+			data = node_found[0].getData()
 			status = node_found[0].diagnostic.status
 			return status, data
 		return node_found
@@ -219,6 +218,14 @@ class WeigherInstance:
 		node_found = [n for n in self.nodes if n.node == node]
 		if len(node_found) > 0:
 			data = node_found[0].deleteDataInExecution(call_callback)
+			status = node_found[0].diagnostic.status
+			return status, data
+		return node_found
+
+	def setIdSelected(self, node: Union[str, None], new_id: int, call_callback: bool):
+		node_found = [n for n in self.nodes if n.node == node]
+		if len(node_found) > 0:
+			data = node_found[0].setIdSelected(new_id, call_callback)
 			status = node_found[0].diagnostic.status
 			return status, data
 		return node_found
@@ -244,7 +251,7 @@ class WeigherInstance:
        	cb_diagnostic: Callable[[dict], any] = None, 
         cb_weighing: Callable[[dict], any] = None, 
         cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data_in_execution: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		global nodes
 		node_found = [n for n in self.nodes if n.node == node]
@@ -254,7 +261,7 @@ class WeigherInstance:
 				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_data_in_execution=cb_data_in_execution,
+				cb_data=cb_data,
 				cb_action_in_execution=cb_action_in_execution
 			)
 
@@ -264,7 +271,7 @@ class WeigherInstance:
      	cb_diagnostic: Callable[[dict], any] = None, 
       	cb_weighing: Callable[[dict], any] = None, 
        	cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data_in_execution: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		for weigher in self.nodes:
 			weigher.setAction(
@@ -272,7 +279,7 @@ class WeigherInstance:
           		cb_diagnostic=cb_diagnostic, 
             	cb_weighing=cb_weighing, 
              	cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_data_in_execution=cb_data_in_execution,
+				cb_data=cb_data,
 				cb_action_in_execution=cb_action_in_execution
     		)
 	# ==============================================================
