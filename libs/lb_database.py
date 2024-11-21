@@ -165,22 +165,27 @@ class MaterialDTOInit(ScheletonMaterialDTO):
 # Modello per la tabella Weighing
 class Weighing(Base):
 	__tablename__ = 'weighing'
-	id = Column(Integer, primary_key=True, index=True)
-	plate = Column(String)
-	vehicle = Column(String)
-	customer = Column(String)  # Utilizzo di Enum
-	customer_cell = Column(Integer)
-	customer_cfpiva = Column(String)
-	supplier = Column(String)
-	supplier_cell = Column(Integer)
-	supplier_cfpiva = Column(String)
-	material = Column(String)
-	weight1 = Column(Integer)
-	weight2 = Column(Integer)
-	net_weight = Column(Integer)
-	date = Column(DateTime, default=func.now())
-	card_code = Column(String)
-	card_number = Column(Integer)
+	id = Column(Integer, primary_key=True, index=True, nullable=False)
+	plate = Column(String, nullable=True)
+	vehicle = Column(String, nullable=True)
+	customer = Column(String, nullable=True)  # Utilizzo di Enum
+	customer_cell = Column(Integer, nullable=True)
+	customer_cfpiva = Column(String, nullable=True)
+	supplier = Column(String, nullable=True)
+	supplier_cell = Column(Integer, nullable=True)
+	supplier_cfpiva = Column(String, nullable=True)
+	material = Column(String, nullable=True)
+	note = Column(String, nullable=True)
+	weight1 = Column(Integer, nullable=True)
+	weight2 = Column(Integer, nullable=True)
+	net_weight = Column(Integer, nullable=True)
+	date = Column(DateTime, default=func.now(), nullable=False)
+	card_code = Column(String, nullable=True)
+	card_number = Column(Integer, nullable=True)
+	pid1 = Column(String, nullable=True)
+	pid2 = Column(String, nullable=True)
+	weigher = Column(String, nullable=True)
+	selected = Column(Boolean, index=True, default=False, nullable=False)
 
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
@@ -306,6 +311,8 @@ def filter_data(table_name, filters=None):
 						query = query.filter(getattr(model, column).like(f'%{value}%'))
 					elif type(value) == int:
 						query = query.filter(getattr(model, column) == value)
+					elif value == None:
+						query = query.filter(getattr(model, column).is_(None))
 					else:
 						raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
 				else:

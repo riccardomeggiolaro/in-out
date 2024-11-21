@@ -9,7 +9,7 @@ import select
 from libs.lb_database import VehicleDTO, SocialReasonDTO, MaterialDTO
 
 class __SetupWeigherConnection:
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, name):
 		self.self_config = self_config
 		self.max_weight = max_weight
 		self.min_weight = min_weight
@@ -19,6 +19,7 @@ class __SetupWeigherConnection:
 		self.node = node
 		self.terminal = terminal
 		self.run = run
+		self.name = name
 
 	def try_connection(self):
 		return self.self_config.connection.connection.try_connection()
@@ -57,9 +58,9 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run)
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, name)
 
 		self.pesa_real_time: Realtime = Realtime(**{
 			"status": "",
@@ -122,6 +123,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			},
 			"run": self.run,
    			"status": self.diagnostic.status,
+			"name": self.name
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
@@ -160,7 +162,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 	def setIdSelected(self, new_id: int, call_callback):
 		self.data.id_selected.setAttribute(new_id)
 		if call_callback:
-			call_callback(self.callback_data)
+			callCallback(self.callback_data)
 		return self.getData()
 
 	def maintaineSessionRealtime(self):
@@ -260,9 +262,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data)
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name)
 
 	########################
 	# functions to overwrite

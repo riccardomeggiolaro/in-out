@@ -70,13 +70,18 @@ class IdSelected(BaseModel):
 	id: Optional[int] = None
 
 	def setAttribute(self, new_id):
-		if hasattr(self, 'id') and getattr(self, 'id') is not None:
-			update_data('weighing', id, {"selected": False})
-		setattr(self, 'id', new_id)
+		if new_id is not None:
+			if new_id == -1:
+				new_id = None
+			if hasattr(self, 'id') and getattr(self, 'id') is not None:
+				current_id = getattr(self, 'id')
+				update_data('weighing', current_id, {"selected": False})
+			setattr(self, 'id', new_id)
 	
 	def deleteAttribute(self):
 		if hasattr(self, 'id') and getattr(self, 'id') is not None:
-			update_data('weighing', id, {"selected": False})
+			current_id = getattr(self, 'id')
+			update_data('weighing', current_id, {"selected": False})
 		setattr(self, 'id', None)
 
 class Data(BaseModel):
@@ -123,6 +128,7 @@ class SetupWeigher(CustomBaseModel):
 	terminal: str
 	run: bool
 	data: Data
+	name: str
 
 class Configuration(CustomBaseModel):
 	nodes: Optional[List[SetupWeigher]] = []

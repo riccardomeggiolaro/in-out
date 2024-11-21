@@ -573,7 +573,11 @@
             padding: 0px; 
             margin: 0px; 
             width: 100%;
-            max-width: 270px;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
         }
         .list-in li {
             background-color: #f0f0f0; 
@@ -584,6 +588,9 @@
             color: #1362b8;
             border: 2px solid #1362b8;
             height: 30px;
+            max-width: 270px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .list-in li:hover {
             background-color: #e0e0e0;
@@ -664,12 +671,6 @@
                 </div>
                 <div class="item ins">
                     <ul class="list-in">
-                        <li data-id="1">VSVSVSV - P1</li>
-                        <li data-id="2">VSVSVSV - P1</li>
-                        <li data-id="3">VSVSVSV - P1</li>
-                        <li data-id="4">VSVSVSV - P1</li>
-                        <li data-id="5">VSVSVSV - P1</li>
-                        <li data-id="6">VSVSVSV - P1</li>
                     </ul>                    
                 </div>
             </div>
@@ -681,7 +682,7 @@
                     <button onclick="openPopup('presetTare', 'myNumberInput')">P Tara</button>
                     <button onclick="handleStampa()">Stampa</button>
                 </div>
-                <button class="item out" onclick="handlePesata()">Out</button>
+                <button class="item out" onclick="handlePesata2()">Out</button>
             </div>            
         </div>
 
@@ -783,39 +784,111 @@
 
         let selectedIdWeight;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        const container = document.querySelector('.ins');
+        const listIn = document.querySelector('.list-in');
+
+        function updateStyle() {
+            console.log(listIn.scrollHeight, container.clientHeight);
+            // Confronta l'altezza della lista e del contenitore
+            if (listIn.scrollHeight > container.clientHeight) {
+                listIn.style.justifyContent = 'flex-start'; // Rimuovi il centraggio
+                console.log('there');
+            } else {
+                console.log('here');
+                listIn.style.justifyContent = 'center'; // Mantieni centrato
+            }
+        }
+
+        // Esegui il controllo al caricamento
+        updateStyle();
+
+        // Aggiorna lo stile quando la finestra viene ridimensionata
+        window.addEventListener('resize', updateStyle);
+
+        // Usa un MutationObserver per rilevare i cambiamenti nei contenuti
+        const observer = new MutationObserver(() => updateStyle());
+        observer.observe(listIn, { childList: true, subtree: true });
+
+        async function getData() {
+            await fetch('http://192.168.0.64:8000/data?name=1')
+            .then(res => res.json())
+            .then(data => {
+                const obj = data["data"]["data_in_execution"];
+                if (obj.vehicle.id) selectedIdVehicle = obj.vehicle.id;
+                if (obj.customer.id) selectedIdCustomer = obj.customer.id;
+                if (obj.supplier.id) selectedIdSupplier = obj.supplier.id;
+                if (obj.material.id) selectedIdMaterial = obj.material.id;
+                document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
+                document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
+                document.querySelector('#currentNameSocialReasonCustomer').value = obj.customer.name ? obj.customer.name : '';
+                document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
+                document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
+                document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
+                selectedIdWeight = data["data"]["id_selected"]["id"];
+                console.log(selectedIdWeight);
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+        }
+
+        async function populateListIn() {
+            const listIn = document.querySelector('.list-in');
             const items = document.querySelectorAll('.list-in li');
 
-            items.forEach(item => {
-                item.addEventListener('click', () => {
-                    // Rimuove la classe "selected" da tutti gli elementi
-                    items.forEach(el => el.classList.remove('selected'));
+            listIn.innerHTML = '';
 
-                    // Aggiunge la classe "selected" all'elemento cliccato
-                    item.classList.add('selected');
+            console.log(selectedIdWeight);
 
-                    // Ottieni il data-id dell'elemento selezionato
-                    selectedIdWeight = item.getAttribute('data-id');
-                });
-            });
+            await fetch('http://192.168.0.64:8000/weighings/in?name=1')
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
+                    li.textContent = `${item.plate || item.customer || item.supplier || item.id} - ${item.weigher}`;
+                    li.setAttribute('data-id', item.id);
+                    if (item.id == selectedIdWeight) li.classList.add('selected');
+                    li.addEventListener('click', async () => {
+                        let obj =  {
+                            data_in_execution: {                                    
+                            },
+                            id_selected: {
+                                id: item.id
+                            }
+                        }
+                        if (item.id == selectedIdWeight) obj.id_selected.id = -1;
+                        await fetch(`http://192.168.0.64:8000/set/data?name=1`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(obj)
+                        })
+                        .then(res => res.json())
+                        .catch(error => console.error(error));
+                    })
+                    listIn.appendChild(li);
+                })
+            })
+            .then(() => {
+                const selected = document.querySelector('.list-in li.selected');
+                console.log(selected);
+                if (selected) {
+                    selected.scrollIntoView({
+                        behavior: 'instant',
+                        block: 'nearest',
+                        inline: 'start'
+                    });
+                } else {
+                    console.log('Elemento selezionato non trovato.');
+                }
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await getData()
+            await populateListIn();
         });
-
-        fetch('http://192.168.0.64:8000/data?name=1')
-        .then(res => res.json())
-        .then(data => {
-            const obj = data["data"]["data_in_execution"];
-            if (obj.vehicle.id) selectedIdVehicle = obj.vehicle.id;
-            if (obj.customer.id) selectedIdCustomer = obj.customer.id;
-            if (obj.supplier.id) selectedIdSupplier = obj.supplier.id;
-            if (obj.material.id) selectedIdMaterial = obj.material.id;
-            document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
-            document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-            document.querySelector('#currentNameSocialReasonCustomer').value = obj.customer.name ? obj.customer.name : '';
-            document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
-            document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
-            document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
-        })
-        .catch(error => console.error('Errore nella fetch:', error));
 
         function scrollToSelectedItem() {
             const selectedItem = document.querySelector('.selected');
@@ -832,17 +905,21 @@
             let requestBody;
             if (key) {
                 requestBody = JSON.stringify({
-                    [anagrafic]: {
-                        [key]: value
+                    data_in_execution: {
+                        [anagrafic]: {
+                            [key]: value
+                        }
                     }
                 })
             } else {
                 requestBody = JSON.stringify({
-                    [anagrafic]: value
+                    data_in_execution: {
+                        [anagrafic]: value
+                    }
                 })
             }
             closePopup();
-            fetch(`http://192.168.0.64:8000/set/data_in_execution?name=1`, {
+            fetch(`http://192.168.0.64:8000/set/data?name=1`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1141,8 +1218,12 @@
                     });
                 }                    
             } else if (obj.weight_executed) {
-                if (obj.weight_executed.pid != "") showSnackbar("Pesata eseguita! Identificativo: " + obj.weight_executed.pid);
-                else showSnackbar("Pesata fallita!");
+                if (obj.weight_executed.pid != "") { 
+                    showSnackbar("Pesata eseguita! Identificativo: " + obj.weight_executed.pid);
+                    populateListIn();
+                } else { 
+                    showSnackbar("Pesata fallita!");
+                }
                 buttons.forEach(button => {
                     button.disabled = false;
                     button.classList.remove("disabled-button"); // Aggi
@@ -1164,6 +1245,21 @@
                 document.querySelector('#currentNameSocialReasonSupplier').value = obj.data_in_execution.supplier.name ? obj.data_in_execution.supplier.name : '';
                 document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
                 document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
+                if (obj.id_selected.id != selectedIdWeight) {
+                    console.log(selectedIdWeight);
+                    if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.remove('selected');
+                    selectedIdWeight = obj.id_selected.id;                    
+                    if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.add('selected');
+                    const selected = document.querySelector('.list-in li.selected');
+                    console.log(selected);
+                    if (selected) {
+                        selected.scrollIntoView({
+                            behavior: 'instant',
+                            block: 'nearest',
+                            inline: 'start'
+                        });
+                    }
+                }
             }
         }
 
@@ -1229,6 +1325,31 @@
                     button.disabled = false;
                     button.classList.remove("disabled-button"); // Aggi
                 });
+            }
+        }
+
+        async function handlePesata2() {
+            if (selectedIdWeight) {
+                buttons.forEach(button => {
+                    button.disabled = true;
+                    button.classList.add("disabled-button"); // Aggi
+                });
+                const r = await fetch(`${pathname}/weighing?name=1&id=${selectedIdWeight}`)
+                .then(res => {
+                    return res.json();
+                })
+                .catch(error => console.error('Errore nella fetch:', error));
+                if (r.command_executed.status_command == true) {
+                    showSnackbar("Pesando...");
+                } else {
+                    showSnackbar(r.command_executed.error_message);
+                    buttons.forEach(button => {
+                        button.disabled = false;
+                        button.classList.remove("disabled-button"); // Aggi
+                    });
+                }                
+            } else {
+                showSnackbar("Nessun peso selezionato");
             }
         }
 

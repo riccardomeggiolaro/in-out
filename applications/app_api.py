@@ -23,7 +23,7 @@ import psutil  # noqa: E402
 # import modules.md_rfid as rfid
 from modules.md_weigher.md_weigher import WeigherInstance   # noqa: E402
 from modules.md_weigher.types import DataInExecution, Weight, Data  # noqa: E402
-from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataInExecutionDTO  # noqa: E402
+from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataInExecutionDTO, DataDTO  # noqa: E402
 from modules.md_weigher.types import Configuration
 from libs.lb_system import SerialPort, Tcp, Connection  # noqa: E402
 from typing import Optional, Union, Dict  # noqa: E402
@@ -45,7 +45,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 import pandas as pd
 import numpy as np
-from libs.lb_database import required_columns, required_dtos, filter_data, load_records_into_db, add_data, update_data, delete_data, delete_all_data, VehicleDTO, SocialReasonDTO, MaterialDTO
+from libs.lb_database import required_columns, required_dtos, filter_data, load_records_into_db, add_data, update_data, delete_data, delete_all_data, get_data_by_id, VehicleDTO, SocialReasonDTO, MaterialDTO
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
@@ -64,14 +64,53 @@ def Callback_Diagnostic(instance_name: str, instance_node: Union[str, None], dia
 # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 def Callback_Weighing(instance_name: str, instance_node: Union[str, None], last_pesata: Weight):
 	global WEIGHERS
-	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(last_pesata.dict()))
 	if last_pesata.data_assigned is not None and not isinstance(last_pesata.data_assigned, int) and last_pesata.weight_executed.executed:
+		node = WEIGHERS[instance_name]["module"].getNode(instance_node)
+		obj = {
+			"plate": last_pesata.data_assigned.vehicle.plate,
+			"vehicle": last_pesata.data_assigned.vehicle.name,
+			"customer": last_pesata.data_assigned.customer.name, 
+			"customer_cell": last_pesata.data_assigned.customer.cell,
+			"customer_cfpiva": last_pesata.data_assigned.customer.cfpiva,
+			"supplier": last_pesata.data_assigned.supplier.name,
+			"supplier_cell": last_pesata.data_assigned.supplier.cell,
+			"supplier_cfpiva": last_pesata.data_assigned.supplier.cfpiva,
+			"material": last_pesata.data_assigned.material.name,
+			"note": last_pesata.data_assigned.note,
+			"weight1": last_pesata.weight_executed.gross_weight,
+			"weight2": None if last_pesata.weight_executed.tare == '0' else last_pesata.weight_executed.tare,
+			"net_weight": last_pesata.weight_executed.net_weight,
+			"card_code": None,
+			"card_number": None,
+			"pid1": None if last_pesata.weight_executed.tare != '0' else last_pesata.weight_executed.pid,
+			"pid2": None if last_pesata.weight_executed.tare == '0' else last_pesata.weight_executed.pid,
+			"weigher": node["name"]
+		}
+		add_data("weighing", obj)
 		status, data = WEIGHERS[instance_name]["module"].deleteDataInExecution(node=instance_node, call_callback=False)
 		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"] if n["node"] == instance_node]
 		index_node_found = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"].index(node_found[0])
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][index_node_found]["data"]["data_in_execution"] = data["data_in_execution"]
 		lb_config.saveconfig()
 		asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data))
+	elif isinstance(last_pesata.data_assigned, int) and last_pesata.weight_executed.executed:
+		data = get_data_by_id("weighing", last_pesata.data_assigned)
+		net_weight = data["weight1"] - int(last_pesata.weight_executed.gross_weight)
+		obj = {
+			"weight2": last_pesata.weight_executed.gross_weight,
+			"net_weight": net_weight,
+			"pid2": last_pesata.weight_executed.pid
+		}
+		update_data("weighing", last_pesata.data_assigned, obj)
+		status, data = WEIGHERS[instance_name]["module"].setIdSelected(node=instance_node, new_id=-1, call_callback=False)
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"] if n["node"] == instance_node]
+		index_node_found = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"].index(node_found[0])
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][index_node_found]["data"]["id_selected"] = {
+			"id": None
+		}
+		lb_config.saveconfig()
+		asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(data))
+	asyncio.run(WEIGHERS[instance_name]["node_sockets"][instance_node].manager_realtime.broadcast(last_pesata.dict()))
 
 def Callback_TarePTareZero(instance_name: str, instance_node: Union[str, None], ok_value: str):
 	global WEIGHERS
@@ -220,6 +259,14 @@ def mainprg():
 	global base_dir_templates
 	global templates
 	global thread_ssh_tunnel
+
+	@app.get("/weighings/in")
+	async def getWeighings():
+		try:
+			data = filter_data("weighing", { "pid2": None })
+			return data
+		except Exception as e:
+			return HTTPException(status_code=400, detail=f"{e}")
 
 	@app.get("/list/anagrafic/{anagrafic}")
 	async def getListAnagrafic(anagrafic: str, query_params: Dict[str, Union[str, int]] = Depends(get_query_params)):
@@ -474,12 +521,15 @@ def mainprg():
 			"status": status
 		}
 
-	@app.patch("/set/data_in_execution")
-	async def SetDataInExecution(data_in_execution: DataInExecutionDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+	@app.patch("/set/data")
+	async def SetDataInExecution(data_dto: DataDTO, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		data_in_execution = DataInExecution(**data_dto.data_in_execution.dict())
 		status, data = WEIGHERS[instance.name]["module"].setDataInExecution(node=instance.node, data_in_execution=data_in_execution, call_callback=True)
+		if data_dto.id_selected is not None:
+			status, data = WEIGHERS[instance.name]["module"].setIdSelected(node=instance.node, new_id=data_dto.id_selected.id, call_callback=True)
 		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"] if n["node"] == instance.node]
 		index_node_found = lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"].index(node_found[0])
-		lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found]["data"]["data_in_execution"] = data["data_in_execution"]
+		lb_config.g_config["app_api"]["weighers"][instance.name]["nodes"][index_node_found]["data"] = data
 		lb_config.saveconfig()
 		return {
 			"instance": instance,

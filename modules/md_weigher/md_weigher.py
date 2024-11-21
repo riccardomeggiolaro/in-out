@@ -98,7 +98,8 @@ class WeigherInstance:
                 node=node.node, 
                 terminal=node.terminal,
                 run=node.run,
-				data=node.data
+				data=node.data,
+				name=node.name
             )
 			n.initialize()
 			self.nodes.append(n)
