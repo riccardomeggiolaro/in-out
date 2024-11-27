@@ -68,5 +68,6 @@
     "log": {
         "max-size-mb": 10
     },
-    "name": "goldrake"
+    "name": "goldrake",
+    "printer_name": null
 }

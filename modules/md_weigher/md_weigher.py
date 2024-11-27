@@ -19,27 +19,111 @@ from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetu
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
+from libs.lb_utils import createThread, startThread, closeThread
+from modules.md_weigher.types import Configuration
 # ==============================================================
+
+name_module = "md_weigher"
 
 terminalsClasses["dgt1"] = Dgt1
 
+def init():
+	global module_weigher
+	lb_log.info("init")
+	module_weigher = WeigherModule()
+	lb_log.info("end")
+
+def start():
+	lb_log.info("start")
+	while lb_config.g_config.g_enabled:
+		time.sleep(1)
+	lb_log.info("end")
+
+class WeigherModule:
+	def __init__(self):
+
+		self.instances = {}
+
+		for name, configuration in lb_config.g_config["app_api"]["weighers"].items():
+			weigher_configuration = Configuration(**configuration)
+			instance = WeigherInstance(name, weigher_configuration)
+			self.instances[name] = instance
+		
+	def setApplicationCallback(
+		self, 
+		cb_realtime: Callable[[dict], any] = None, 
+		cb_diagnostic: Callable[[dict], any] = None, 
+		cb_weighing: Callable[[dict], any] = None, 
+		cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
+		for name, instance in self.instances.items():
+			instance.setAction(
+				cb_realtime=cb_realtime, 
+				cb_diagnostic=cb_diagnostic, 
+				cb_weighing=cb_weighing, 
+				cb_tare_ptare_zero=cb_tare_ptare_zero,
+				cb_data=cb_data,
+				cb_action_in_execution=cb_action_in_execution
+			)
+
 class WeigherInstance:
-	def __init__(self, name):
+	def __init__(
+		self, 
+		name,
+		configuration: ConfigurationDTO,
+		cb_realtime: Callable[[dict], any] = None, 
+	 	cb_diagnostic: Callable[[dict], any] = None, 
+	  	cb_weighing: Callable[[dict], any] = None, 
+	   	cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None
+		):
 		self.m_enabled = True
 		self.name = name
 		self.nodes = []
 		self.connection = ConfigConnection()
 		self.time_between_actions = 0
 
-	# ==== INIT ====================================================
-	# funzione che dichiara tutte le globali
-	def init(self):
-		lb_log.info("init")
+		lb_log.info("initialize")
+		# inizializzazione della conn
+		connected, message = False, None
+		self.connection.connection = configuration.connection
+		connected, message = self.connection.connection.try_connection()
+		self.time_between_actions = configuration.time_between_actions
+		for node in configuration.nodes:
+			node_dict = node.dict()
+			n = terminalsClasses[node.terminal](
+	   			self_config=self, 
+		  		max_weight=node.max_weight, 
+				min_weight=node.min_weight, 
+			 	division=node.division, 
+			  	maintaine_session_realtime_after_command=node.maintaine_session_realtime_after_command,
+			   	diagnostic_has_priority_than_realtime=node.diagnostic_has_priority_than_realtime,
+				node=node.node, 
+				terminal=node.terminal,
+				run=node.run,
+				data=node.data,
+				name=node.name
+			)
+			n.initialize()
+			self.nodes.append(n)
+			self.nodes[-1].setAction(
+	   			cb_realtime=cb_realtime, 
+		  		cb_diagnostic=cb_diagnostic, 
+				cb_weighing=cb_weighing, 
+			 	cb_tare_ptare_zero=cb_tare_ptare_zero,
+				cb_data=cb_data,
+				cb_action_in_execution=cb_action_in_execution
+			)
+			self.thread = createThread(self.start)
+			startThread(self.thread)
 	# ==============================================================
 
-	# ==== MAINPRGLOOP =============================================
+	# ==== START ===================================================
+	# funzione che fa partire il modulo
 	# funzione che scrive e legge in loop conn e in base alla stringa ricevuta esegue funzioni specifiche
-	def mainprg(self):
+	def start(self):
 		while self.m_enabled:
 			for node in self.nodes:
 				if node.run:
@@ -62,48 +146,16 @@ class WeigherInstance:
 								timeout = max(0, self.time_between_actions - time_execute)
 								time.sleep(timeout)
 							else:
+								# se la globale conn è di tipo conn ed è aperta la chiude
 								self.connection.connection.close()
-	# ==============================================================
-
-	# ==== START ===================================================
-	# funzione che fa partire il modulo
-	def start(self):
-		lb_log.info("start")
-		self.mainprg() # fa partire la funzione che scrive e legge la conn in loop
-		lb_log.info("end")
-		# se la globale conn è di tipo conn ed è aperta la chiude
+			if len(self.nodes) == 0:
+				time.sleep(1)
 	# ==============================================================
 
 	def stop(self):
 		self.m_enabled = False
-		result = self.connection.deleteConnection()
 
 	# ==== FUNZIONI RICHIAMABILI DA MODULI ESTERNI =================
-	def initialize(self, configuration: ConfigurationDTO):
-		lb_log.info("initialize")
-		# inizializzazione della conn
-		connected, message = False, None
-		self.connection.connection = configuration.connection
-		connected, message = self.connection.connection.try_connection()
-		self.time_between_actions = configuration.time_between_actions
-		for node in configuration.nodes:
-			node_dict = node.dict()
-			n = terminalsClasses[node.terminal](
-       			self_config=self, 
-          		max_weight=node.max_weight, 
-            	min_weight=node.min_weight, 
-             	division=node.division, 
-              	maintaine_session_realtime_after_command=node.maintaine_session_realtime_after_command,
-               	diagnostic_has_priority_than_realtime=node.diagnostic_has_priority_than_realtime,
-                node=node.node, 
-                terminal=node.terminal,
-                run=node.run,
-				data=node.data,
-				name=node.name
-            )
-			n.initialize()
-			self.nodes.append(n)
-		return connected, message # ritorno True o False in base se status della pesa è 200
 
 	def getConfig(self):
 		conn = self.connection.getConnection()
@@ -147,21 +199,39 @@ class WeigherInstance:
 			result = data[0].getSetup()
 		return result
 
-	def addNode(self, node: SetupWeigherDTO):
+	def addNode(
+		self, 
+		node: SetupWeigherDTO,
+	  	cb_realtime: Callable[[dict], any] = None, 
+	   	cb_diagnostic: Callable[[dict], any] = None, 
+		cb_weighing: Callable[[dict], any] = None, 
+		cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
 		n = terminalsClasses[node.terminal](
 				self_config=self, 
-          		max_weight=node.max_weight, 
-            	min_weight=node.min_weight, 
-             	division=node.division, 
-              	maintaine_session_realtime_after_command=node.maintaine_session_realtime_after_command,
-               	diagnostic_has_priority_than_realtime=node.diagnostic_has_priority_than_realtime,
-                node=node.node, 
-                terminal=node.terminal,
-                run=node.run
+		  		max_weight=node.max_weight, 
+				min_weight=node.min_weight, 
+			 	division=node.division, 
+			  	maintaine_session_realtime_after_command=node.maintaine_session_realtime_after_command,
+			   	diagnostic_has_priority_than_realtime=node.diagnostic_has_priority_than_realtime,
+				node=node.node, 
+				terminal=node.terminal,
+				run=node.run
 		)
 		if self.connection is not None:
 			n.initialize()
 		self.nodes.append(n)
+		node_found = [n for n in self.nodes if n.node == node]
+		if len(node_found) > 0:
+			node_found[0].setAction(
+				cb_realtime=cb_realtime,
+				cb_diagnostic=cb_diagnostic,
+				cb_weighing=cb_weighing,
+				cb_tare_ptare_zero=cb_tare_ptare_zero,
+				cb_data=cb_data,
+				cb_action_in_execution=cb_action_in_execution
+			)
 		return n.getSetup()
 
 	def setNode(self, node: Union[str, None], setup: ChangeSetupWeigherDTO = {}):
@@ -185,8 +255,8 @@ class WeigherInstance:
 
 	def deleteNodes(self):
 		response = False
-		e_weighers = [n for n in self.nodes if n.node]
-		if len(e_weighers) != 0:
+		e_weighers = [n for n in self.nodes]
+		if len(e_weighers) > 0:
 			for weigher in e_weighers:
 				self.nodes.remove(weigher)
 			response = True

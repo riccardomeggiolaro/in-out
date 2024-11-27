@@ -21,6 +21,8 @@ import libs.lb_database as lb_database
 
 APPS = [app_api]
 
+MODULES = [md_weigher]
+
 # ==== MAINPRGLOOP =============================================
 # Configura globale e lo stato del programma.
 # Carica moduli esterni e avvia i thread corrispondenti.
@@ -37,18 +39,31 @@ def mainprg():
 	# Inizializzazione del database
 	lb_database.init()
 
+	# Carica thread per i mdouli esterni.
+	modules_thr = {}
+	lb_log.info("loading mdoules...")
+	for modulepath in MODULES:
+		# Estrae informazioni sul modulo.
+		name_module = modulepath.name_module
+		lb_log.info("... " + name_module)
+		# Inizializza il modulo.
+		modulepath.init()  # Inizializzazione della applicazione
+		# Crea e avvia il thread della applicazione.
+		thread = createThread(modulepath.start)
+		modules_thr[name_module] = {"name_module": name_module, "module": modulepath, "thread": thread}
+
 	# Carica thread per le applicazioni esterne.
 	app_thr = {}
 	lb_log.info("loading applications...")
 	for apppath in APPS:
 		# Estrae informazioni sulla applicazione.
-		namefile = apppath.namefile
-		lb_log.info("... " + namefile)
+		name_app = apppath.name_app
+		lb_log.info("... " + name_app)
 		# Inizializza la applicazione.
 		apppath.init()  # Inizializzazione della applicazione
 		# Crea e avvia il thread della applicazione.
 		thread = createThread(apppath.start)
-		app_thr[namefile] = {"filename": namefile, "application": apppath, "thread": thread}
+		app_thr[name_app] = {"name_app": name_app, "application": apppath, "thread": thread}
 
 	while lb_config.g_enabled:
 		# === THREAD Livello 0:
