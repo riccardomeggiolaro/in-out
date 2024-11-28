@@ -810,7 +810,7 @@
         observer.observe(listIn, { childList: true, subtree: true });
 
         async function getData() {
-            await fetch('http://192.168.0.64:8000/data?name=1')
+            await fetch('http://192.168.0.64:8000/data_in_execution?name=1')
             .then(res => res.json())
             .then(data => {
                 const obj = data["data"]["data_in_execution"];
@@ -856,7 +856,7 @@
                             }
                         }
                         if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                        await fetch(`http://192.168.0.64:8000/set/data?name=1`, {
+                        await fetch(`http://192.168.0.64:8000/data_in_execution?name=1`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -919,7 +919,7 @@
                 })
             }
             closePopup();
-            fetch(`http://192.168.0.64:8000/set/data?name=1`, {
+            fetch(`http://192.168.0.64:8000/data_in_execution?name=1`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -967,7 +967,7 @@
 
                     li.onclick = () => {
                         closePopup();
-                        fetch(`http://192.168.0.64:8000/set/data_in_execution?name=1`, {
+                        fetch(`http://192.168.0.64:8000/data_in_execution?name=1`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'

@@ -6,7 +6,9 @@ import libs.lb_log as lb_log
 
 router = APIRouter()
 
-printer = HTMLPrinter(printer_name=lb_config.g_config["printer_name"])
+# printer = HTMLPrinter(printer_name=lb_config.g_config["printer_name"])
+
+printer = HTMLPrinter()
 
 @router.get("/test")
 async def printTest():
@@ -56,7 +58,7 @@ async def getPrinter():
 async def getLsitPrinters():
     return printer.get_list_printers()
 
-@router.patch("/{printer_name}")
+@router.patch("/set/{printer_name}")
 async def setPrinter(printer_name: str):
     try:
         status = printer.set_printer(printer_name=printer_name)

@@ -21,12 +21,12 @@ class IdSelectedDTO(CustomBaseModel):
 		if v not in [None, -1]:
 			data = get_data_by_id('weighing', v, True, True)
 			if not data:
-				raise ValueError('Id not exist in material')
+				raise ValueError('Id not exist in weighings')
 		return v
 
 class DataDTO(CustomBaseModel):
-	data_in_execution: Optional[DataInExecutionDTO]
-	id_selected: Optional[IdSelectedDTO] = None
+	data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})
+	id_selected: Optional[IdSelectedDTO] = IdSelectedDTO(**{})
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	max_weight: Optional[int] = None
