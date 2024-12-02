@@ -14,6 +14,8 @@ from serial import SerialException
 import socket
 from typing import Optional, Union
 import select
+import wmi
+import winreg
 # ==============================================================
 
 class Connection(BaseModel):
@@ -54,14 +56,15 @@ class SerialPort(Connection):
 	@validator('serial_port_name', pre=True, always=True)
 	def check_serial_port_name(cls, v):
 		exist, message = exist_serial_port(v)
-		if not exist:
-			raise ValueError(message)
-		usable, message = serial_port_not_just_in_use(v)
-		if not usable:
-			raise ValueError(message)
+		if exist is False:
+			raise ValueError("Serial port is not exist")
+		just_in_use, message = serial_port_is_just_in_use(v)
+		lb_log.error(f"Used: {just_in_use}")
+		if just_in_use:
+			raise ValueError("Serial port is just occupated")
 		enabled, message = enable_serial_port(v)
-		if not enabled:
-			raise ValueError(message)
+		# if not enabled:
+		# 	raise ValueError(message)
 		return v
 
 	@validator('timeout', pre=True, always=True)
@@ -145,6 +148,8 @@ class SerialPort(Connection):
 		except AttributeError as e:
 			pass
 		except TypeError as e:
+			pass
+		except SerialException as e:
 			pass
 		return status
 
@@ -322,13 +327,13 @@ def list_serial_port():
 		result, message = list_serial_port_windows()
 	return result, message
 
-def serial_port_not_just_in_use(port_name):
+def serial_port_is_just_in_use(port_name):
 	result = False
 	message = None
 	if is_linux():
-		result, message = serial_port_not_just_in_use_linux(port_name)
+		result, message = serial_port_is_just_in_use_linux(port_name)
 	elif is_windows():
-		result, message = serial_port_not_just_in_use_windows(port_name)
+		result, message = serial_port_is_just_in_use_windows(port_name)
 	return result, message
 
 def exist_serial_port(port_name):
@@ -389,51 +394,39 @@ def enable_serial_port_linux(port_name):
 
 def enable_serial_port_windows(port_name):
 	try:
-		import winreg
+		# Validate port name
+		if not isinstance(port_name, str):
+			return False, f"Invalid port name type: {type(port_name)}"
+		
+		# Validate port name format
+		if not port_name.startswith("COM") or not port_name[3:].isdigit():
+			return False, f"Invalid serial port format: {port_name}"
 
-		"""
-		Funzione per abilitare la porta seriale specificata in lettura e scrittura su Windows.
+		# Use subprocess to modify port permissions
+		try:
+			# Use icacls to grant full access to everyone
+			result = subprocess.run(
+				["icacls", port_name, "/grant", "Everyone:(OI)(CI)F"], 
+				capture_output=True, 
+				text=True, 
+				check=True
+			)
+		except subprocess.CalledProcessError as perm_error:
+			lb_log.error(perm_error)
+			lb_log.error(f"Permission modification failed: {perm_error}")
+			return False, f"Failed to modify port permissions: {perm_error.stderr}"
+		except FileNotFoundError as e:
+			lb_log.error(e)
+			lb_log.error("icacls command not found")
+			return False, "System utility icacls not found"
 
-		Args:
-			port_name: Nome della porta seriale (es. "COM1").
-		"""
+		# Log successful permission modification
+		lb_log.info(f"Serial port {port_name} enabled successfully")
+		return True, f"Serial port {port_name} enabled successfully"
 
-		# Controlla se la porta seriale è valida
-		if not port_name.startswith("COM"):
-			message = f"Errore: Porta seriale non valida: {port_name}"
-			return False, message
-
-		# Aprire la chiave del Registro di sistema
-		key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-							"SYSTEM\\CurrentControlSet\\Services\\Serial\\Parameters",
-							0, winreg.KEY_WRITE)
-
-		# Impostare il valore DWORD "PortName"
-		winreg.SetValueEx(key, "PortName", 0, winreg.REG_SZ, port_name)
-
-		# Impostare il valore DWORD "BaudRate" (opzionale)
-		winreg.SetValueEx(key, "BaudRate", 0, winreg.REG_DWORD, 9600)
-
-		# Impostare il valore DWORD "Parity" (opzionale)
-		winreg.SetValueEx(key, "Parity", 0, winreg.REG_DWORD, 0)
-
-		# Impostare il valore DWORD "DataBits" (opzionale)
-		winreg.SetValueEx(key, "DataBits", 0, winreg.REG_DWORD, 8)
-
-		# Impostare il valore DWORD "StopBits" (opzionale)
-		winreg.SetValueEx(key, "StopBits", 0, winreg.REG_DWORD, 1)
-
-		# Chiudere la chiave del Registro di sistema
-		winreg.CloseKey(key)
-
-		# Riavviare il servizio "Serial"
-		os.system("net stop Serial")
-		os.system("net start Serial")
-
-		message = f"Porta seriale {port_name} abilitata correttamente."
-		return True, message
 	except Exception as e:
-		return False, e
+		lb_log.error(f"Unexpected error enabling port {port_name}: {e}")
+		return False, f"Unexpected error enabling port: {str(e)}"
 
 def list_serial_port_linux():
 	try:
@@ -455,31 +448,49 @@ def list_serial_port_windows():
 	except Exception as e:
 		return False, e
 
-def serial_port_not_just_in_use_linux(port_name):
+def serial_port_is_just_in_use_linux(port_name):
 	"""
 	Checks if the specified serial port is in use using `fuser`.
 
 	Args:
-		port: The serial port to check (e.g., "/dev/ttyS0").
+		port_name: The serial port to check (e.g., "/dev/ttyS0").
 
 	Returns:
-		True if the port is in use, False otherwise.
+		(bool, str): Tuple where the first value is True if the port is in use,
+					 and the second value is the appropriate message.
 	"""
 	try:
 		# Execute fuser with options to check serial port usage
 		subprocess.run(["fuser", "-s", port_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-		# Non-zero return code from fuser indicates port usage
-		message = f"Port {port_name} is just in use"
-		return False, message
+		# If fuser does not raise an error, the port is in use
+		message = f"Port {port_name} is in use"
+		return True, message
 	except subprocess.CalledProcessError:
-		# Handle potential errors (e.g., fuser not found)
-		return True, None
+		# If fuser raises an exception, the port is not in use
+		message = f"Port {port_name} is not in use"
+		return False, message
+	except FileNotFoundError:
+		# Handle case where `fuser` is not available
+		message = "'fuser' command not found. Please install it to check port usage."
+		return False, message
 
-def serial_port_not_just_in_use_windows(port_name):
-	try:
-		return True, None
-	except Exception as e:
-		return False, e
+def serial_port_is_just_in_use_windows(port_name):
+    """
+    Funzione per verificare se una porta seriale è in uso utilizzando pyserial.
+    Tenta di aprire la porta in modalità esclusiva e gestisce eventuali errori.
+    """
+    try:
+        # Proviamo ad aprire la porta in modalità esclusiva per vedere se è in uso
+        with serial.Serial(port_name, timeout=1) as ser:
+            return False, f"Port {port_name} is available for use."  # Se non ci sono errori, la porta è disponibile
+    except serial.SerialException as e:
+        # Se la porta è in uso, solitamente si ottiene un errore di tipo SerialException
+        if 'could not open port' in str(e):
+            return True, f"Port {port_name} is currently in use or could not be opened: {e}"  # La porta è in uso
+        else:
+            return False, f"Error opening port {port_name}: {e}"  # Un altro tipo di errore, la porta potrebbe non essere disponibile
+    except Exception as e:
+        return False, f"Unexpected error while checking port {port_name}: {str(e)}"  # Gestiamo eventuali errori imprevisti
 
 def exist_serial_port_linux(port_name):
 	try:
@@ -492,8 +503,25 @@ def exist_serial_port_linux(port_name):
 		return False, e
 
 def exist_serial_port_windows(port_name):
-	try:
-		return True, None
-	except Exception as e:
-		return False, e
+    try:
+        # Percorso del registro che contiene le informazioni sulle porte COM
+        registry_path = r"HARDWARE\DEVICEMAP\SERIALCOMM"
+        
+        # Accede alla chiave del registro delle porte seriali
+        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, registry_path)
+
+        # Ottieni il numero di voci presenti nella chiave del registro
+        num_entries = winreg.QueryInfoKey(reg_key)[1]
+        
+        # Controlla se la porta cercata è presente nel registro
+        for i in range(num_entries):
+            entry_name, entry_value, _ = winreg.EnumValue(reg_key, i)
+            if entry_value == port_name:  # Verifica se il valore corrisponde al nome della porta
+                return True, None  # La porta esiste
+
+        # Se la porta non è trovata nel registro, restituisce False
+        return False, f"Port {port_name} does not exist."
+    
+    except Exception as e:
+        return False, f"Error checking serial port {port_name}: {str(e)}"
 # ==============================================================

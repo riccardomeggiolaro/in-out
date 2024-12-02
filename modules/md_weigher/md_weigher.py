@@ -6,20 +6,17 @@
 # ==============================================================
 
 # ==== LIBRERIE DA IMPORTARE ===================================
-import inspect
-__frame = inspect.currentframe()
-namefile = inspect.getfile(__frame).split("/")[-1].replace(".py", "")
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 from typing import Callable, Union
 import time
-from libs.lb_system import SerialPort, Tcp, Connection
+from libs.lb_system import SerialPort, Tcp
 from modules.md_weigher.types import DataInExecution
-from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO
+from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataDTO, ChangeSetupWeigherDTO
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
-from libs.lb_utils import createThread, startThread, closeThread
+from libs.lb_utils import createThread, startThread
 from modules.md_weigher.types import Configuration
 # ==============================================================
 
@@ -67,6 +64,126 @@ class WeigherModule:
 				cb_action_in_execution=cb_action_in_execution
 			)
 
+	def getAllInstance(self):
+		instances = {}
+		for name in self.instances:
+			instances[name] = self.instances[name].getInstance()
+		return instances
+
+	def getInstance(self, name):
+		instance = self.instances[name].getInstance()
+		return {
+			name: instance
+       	}
+
+	def createInstance(
+     	self,
+		configuration: ConfigurationDTO):
+		name = configuration.name
+		weigher_configuration = Configuration(**configuration.dict())
+		instance = WeigherInstance(name, weigher_configuration)
+		self.instances[name] = instance
+		instance_created = instance.getInstance()
+		lb_config.g_config["app_api"]["weighers"][configuration.name] = instance_created
+		lb_config.saveconfig()
+		instance_created["name"] = configuration.name
+		return instance_created
+
+	def deleteInstance(
+		self,
+		name):
+		self.instances[name].deleteInstance()
+		self.instances.pop(name)
+		lb_config.g_config["app_api"]["weighers"].pop(name)
+		lb_config.saveconfig()
+
+	def getAllInstanceNode(self, name):
+		return self.instances[name].getNodes()
+
+	def getInstanceNode(self, name, node):
+		instance = self.instances[name].getNode(node)
+		return {
+			name: instance
+       	}
+
+	def addInstanceNode(
+    	self, 
+     	name, 
+      	node: SetupWeigherDTO,
+	  	cb_realtime: Callable[[dict], any] = None, 
+	   	cb_diagnostic: Callable[[dict], any] = None, 
+		cb_weighing: Callable[[dict], any] = None, 
+		cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
+		node_created = self.instances[name].addNode(
+			node=node,
+			cb_realtime=cb_realtime,
+			cb_diagnostic=cb_diagnostic,
+			cb_weighing=cb_weighing,
+			cb_tare_ptare_zero=cb_tare_ptare_zero,
+			cb_data=cb_data,
+			cb_action_in_execution=cb_action_in_execution
+		)
+		del node_created["terminal_data"]
+		lb_config.g_config["app_api"]["weighers"][name]["nodes"].append(node_created)
+		lb_config.saveconfig()
+		return node_created
+
+	def setInstanceNode(
+		self,
+  		name,
+    	node,
+     	node_changed: ChangeSetupWeigherDTO,
+	  	cb_realtime: Callable[[dict], any] = None, 
+	   	cb_diagnostic: Callable[[dict], any] = None, 
+		cb_weighing: Callable[[dict], any] = None, 
+		cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
+		node_set = self.instances[name].setNode(
+      		node=node, 
+        	setup=node_changed,
+			cb_realtime=cb_realtime,
+			cb_diagnostic=cb_diagnostic,
+			cb_weighing=cb_weighing,
+			cb_tare_ptare_zero=cb_tare_ptare_zero,
+			cb_data=cb_data,
+			cb_action_in_execution=cb_action_in_execution
+		)
+		del node_set["terminal_data"]
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
+		index_node_found = lb_config.g_config["app_api"]["weighers"][name]["nodes"].index(node_found[0])
+		lb_config.g_config["app_api"]["weighers"][name]["nodes"][index_node_found] = node_set
+		lb_config.saveconfig()
+		return node_set
+
+	def deleteInstanceNode(
+		self,
+		name,
+		node):
+		node_removed = self.instances[name].deleteNode(node=node)
+		if node_removed:
+			node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
+			lb_config.g_config["app_api"]["weighers"][name]["nodes"].remove(node_found[0])
+			lb_config.saveconfig()
+		return node_removed
+
+	def setInstanceConnection(self, name, conn: Union[SerialPort, Tcp]):
+		conn_set = self.instance[name].setConnection(conn=conn)
+		lb_config.g_config["app_api"]["weighers"][name]["connection"] = conn
+		lb_config.saveconfig()
+		return conn_set
+
+	def deleteInstanceConnection(self, name):
+		conn = self.instances[name].deleteConnection()
+		lb_config.g_config["app_api"]["weighers"][name]["connection"] = {}
+		lb_config.saveconfig()
+		return conn
+
+	def setInstanceTimeBetweenActions(self, name, time_between_actions):
+		return self.instances[name].setTimeBetweenActions(time=time_between_actions)
+
 class WeigherInstance:
 	def __init__(
 		self, 
@@ -92,7 +209,6 @@ class WeigherInstance:
 		connected, message = self.connection.connection.try_connection()
 		self.time_between_actions = configuration.time_between_actions
 		for node in configuration.nodes:
-			node_dict = node.dict()
 			n = terminalsClasses[node.terminal](
 	   			self_config=self, 
 		  		max_weight=node.max_weight, 
@@ -108,16 +224,16 @@ class WeigherInstance:
 			)
 			n.initialize()
 			self.nodes.append(n)
-			self.nodes[-1].setAction(
-	   			cb_realtime=cb_realtime, 
-		  		cb_diagnostic=cb_diagnostic, 
-				cb_weighing=cb_weighing, 
-			 	cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_data=cb_data,
-				cb_action_in_execution=cb_action_in_execution
-			)
-			self.thread = createThread(self.start)
-			startThread(self.thread)
+		self.setAction(
+			cb_realtime=cb_realtime, 
+			cb_diagnostic=cb_diagnostic, 
+			cb_weighing=cb_weighing, 
+			cb_tare_ptare_zero=cb_tare_ptare_zero,
+			cb_data=cb_data,
+			cb_action_in_execution=cb_action_in_execution
+		)
+		self.thread = createThread(self.start)
+		startThread(self.thread)
 	# ==============================================================
 
 	# ==== START ===================================================
@@ -133,7 +249,7 @@ class WeigherInstance:
 					time_execute = time_end - time_start
 					timeout = max(0, self.time_between_actions - time_execute)
 					time.sleep(timeout)
-					lb_log.info(f"Node: {node.node}, Status: {status}, Command: {command}, Response; {response}, Error: {error}")
+					# lb_log.info(f"Node: {node.node}, Status: {status}, Command: {command}, Response; {response}, Error: {error}")
 					if node.diagnostic.status == 301:
 						self.connection.connection.close()
 						status, error_message = self.connection.connection.try_connection()
@@ -157,7 +273,7 @@ class WeigherInstance:
 
 	# ==== FUNZIONI RICHIAMABILI DA MODULI ESTERNI =================
 
-	def getConfig(self):
+	def getInstance(self):
 		conn = self.connection.getConnection()
 		nodes_dict = [n.getSetup() for n in self.nodes]
 		return {
@@ -166,24 +282,10 @@ class WeigherInstance:
 			"nodes": nodes_dict
 		}
 
-	def deleteConfig(self):
+	def deleteInstance(self):
 		self.connection.deleteConnection()
-		self.nodes = []
-		self.time_between_actions = 0
-		return self.getConfig()
-
-	def getConnection(self):
-		return self.connection.getConnection()
-
-	def setConnection(self, conn: Union[SerialPort, Tcp]):
-		self.deleteConnection()
-		conn = self.connection.setConnection(connection=conn)
-		for weigher in self.nodes:
-			weigher.initialize()
-		return conn
-
-	def deleteConnection(self):
-		return self.connection.deleteConnection()
+		self.deleteNodes()
+		self.stop()
 
 	def getNodes(self):
 		nodes_dict = []
@@ -217,7 +319,9 @@ class WeigherInstance:
 			   	diagnostic_has_priority_than_realtime=node.diagnostic_has_priority_than_realtime,
 				node=node.node, 
 				terminal=node.terminal,
-				run=node.run
+				run=node.run,
+				data=DataDTO(**{}),
+				name=node.name
 		)
 		if self.connection is not None:
 			n.initialize()
@@ -234,7 +338,16 @@ class WeigherInstance:
 			)
 		return n.getSetup()
 
-	def setNode(self, node: Union[str, None], setup: ChangeSetupWeigherDTO = {}):
+	def setNode(
+    	self, 
+     	node: Union[str, None], 
+      	setup: ChangeSetupWeigherDTO = {},
+	  	cb_realtime: Callable[[dict], any] = None, 
+	   	cb_diagnostic: Callable[[dict], any] = None, 
+		cb_weighing: Callable[[dict], any] = None, 
+		cb_tare_ptare_zero: Callable[[str], any] = None,
+		cb_data: Callable[[str], any] = None,
+		cb_action_in_execution: Callable[[str], any] = None):
 		node_found = [n for n in self.nodes if n.node == node]
 		result = None
 		if len(node_found) != 0:
@@ -242,7 +355,15 @@ class WeigherInstance:
 			if setup.terminal:
 				node_to_changed = SetupWeigherDTO(**result)
 				self.deleteNode(node_to_changed.node)
-				self.addNode(node_to_changed)
+				result = self.addNode(
+        			node=node_to_changed,
+					cb_realtime=cb_realtime,
+					cb_diagnostic=cb_diagnostic,
+					cb_weighing=cb_weighing,
+					cb_tare_ptare_zero=cb_tare_ptare_zero,
+					cb_data=cb_data,
+					cb_action_in_execution=cb_action_in_execution
+           		)
 		return result
 
 	def deleteNode(self, node: Union[str, None]):
@@ -258,9 +379,23 @@ class WeigherInstance:
 		e_weighers = [n for n in self.nodes]
 		if len(e_weighers) > 0:
 			for weigher in e_weighers:
+				self.deleteDataInExecution(weigher.node, True)
 				self.nodes.remove(weigher)
 			response = True
 		return response
+
+	def getConnection(self):
+		return self.connection.getConnection()
+
+	def setConnection(self, conn: Union[SerialPort, Tcp]):
+		self.deleteConnection()
+		conn = self.connection.setConnection(connection=conn)
+		for weigher in self.nodes:
+			weigher.initialize()
+		return conn
+
+	def deleteConnection(self):
+		return self.connection.deleteConnection()
 
 	def getTimeBetweenActions(self):
 		return self.time_between_actions

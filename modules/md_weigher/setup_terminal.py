@@ -123,7 +123,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			},
 			"run": self.run,
    			"status": self.diagnostic.status,
-			"name": self.name
+			"name": self.name,
+			"data": self.data.dict()
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
@@ -150,19 +151,19 @@ class __SetupWeigher(__SetupWeigherConnection):
 		# Chiama la funzione per aggiornare self.data.data_in_execution con i dati forniti
 		self.data.data_in_execution.setAttribute(data)
 		if call_callback:
-			callCallback(self.callback_data)
+			callCallback(self.callback_data_in_execution)
 		return self.getData()
 
 	def deleteDataInExecution(self, call_callback):
 		self.data.data_in_execution.deleteAttribute()
 		if call_callback:
-			callCallback(self.callback_data)
+			callCallback(self.callback_data_in_execution)
 		return self.getData()
 
 	def setIdSelected(self, new_id: int, call_callback):
 		self.data.id_selected.setAttribute(new_id)
 		if call_callback:
-			callCallback(self.callback_data)
+			callCallback(self.callback_data_in_execution)
 		return self.getData()
 
 	def maintaineSessionRealtime(self):

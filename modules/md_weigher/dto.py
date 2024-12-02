@@ -1,10 +1,11 @@
-from pydantic import validator
+from pydantic import validator, BaseModel
 from typing import Optional, Union, List
 from libs.lb_system import Connection, SerialPort, Tcp
 from libs.lb_utils import CustomBaseModel
 from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id
+from pydantic import ValidationError
 
 class DataInExecutionDTO(CustomBaseModel):
 	customer: Optional[CustomerDTO] = CustomerDTO(**{})
@@ -47,12 +48,11 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 
 	@validator('terminal', pre=True, always=True)
 	def check_terminal(cls, v):
-		print(terminalsClasses)
-		if v not in terminalsClasses:
+		if v is not None and v not in terminalsClasses:
 			raise ValueError("Terminal don't exist")
 		return v
 
-class SetupWeigherDTO(SetupWeigher):
+class SetupWeigherDTO(BaseModel):
 	max_weight: int
 	min_weight: int
 	division: int
@@ -74,14 +74,39 @@ class SetupWeigherDTO(SetupWeigher):
 		if v not in terminalsClasses:
 			raise ValueError("Terminal don't exist")
 		return v
- 
+
 class ConfigurationDTO(CustomBaseModel):
 	name: str
-	connection: Optional[Union[SerialPort, Tcp, Connection]] = Connection(**{})
+	connection: Optional[Union[SerialPort, Tcp, Connection]]
 	time_between_actions: Union[int, float]
  
 	@validator('connection', pre=True, always=True)
 	def check_connection(cls, v, values, **kwargs):
+		import libs.lb_log as lb_log
 		if v is None:
 			v = Connection(**{})
+		# Se è un dizionario, prova a crearlo come oggetto del tipo corretto
+		# Controlla se è un dizionario
+		if isinstance(v, dict):
+			if set(v.keys()) == {"serial_port_name", "baudrate", "timeout"}:
+				try:
+					# Prova a validare come SerialPort
+					v = SerialPort(**v)
+				except ValueError as e:
+					# Solleva una nuova ValidationError con il messaggio originale
+					raise e
+			elif set(v.keys()) == {"ip", "port", "timeout"}:
+				try:
+					# Prova a validare come Tcp
+					v = Tcp(**v)
+				except ValueError as e:
+					raise e
+			else:
+				raise ValueError("Connessione non esistente")
+		return v
+
+	@validator('time_between_actions', pre=True, always=True)
+	def check_time_between_actions(cls, v, values, **kwargs):
+		if v <= 0:
+			raise ValueError('time_between_actions must to be grater than 0')
 		return v

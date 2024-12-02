@@ -14,11 +14,7 @@
         "ssh_client": null,
         "weighers": {
             "1": {
-                "connection": {
-                    "baudrate": 115200,
-                    "serial_port_name": "/dev/ttyUSB0",
-                    "timeout": 0.1
-                },
+                "connection": {},
                 "nodes": [
                     {
                         "data": {
@@ -58,6 +54,7 @@
                         "name": "P1",
                         "node": null,
                         "run": true,
+                        "status": 301,
                         "terminal": "dgt1"
                     }
                 ],

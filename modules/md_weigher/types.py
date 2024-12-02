@@ -4,7 +4,6 @@ from typing import Optional, Union, List
 from pydantic import BaseModel
 from libs.lb_database import VehicleDTOInit, CustomerDTOInit, SupplierDTOInit, MaterialDTOInit
 from libs.lb_database import update_data
-import libs.lb_log as lb_log
 
 class DataInExecution(BaseModel):
 	customer: CustomerDTOInit = CustomerDTOInit(**{})

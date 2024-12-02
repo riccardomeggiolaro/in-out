@@ -1,5 +1,4 @@
 import cups
-from weasyprint import HTML
 import tempfile
 import os
 from typing import Dict, List, Union

@@ -1,4 +1,4 @@
-from fastapi import Request, Depends
+from fastapi import Request, Depends, HTTPException
 from typing import Dict, Union
 from applications.utils.instance_weigher import InstanceNameDTO, InstanceNameNodeDTO
 import modules.md_weigher.md_weigher as md_weigher
