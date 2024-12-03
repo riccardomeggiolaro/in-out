@@ -18,6 +18,7 @@ from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
 from libs.lb_utils import createThread, startThread
 from modules.md_weigher.types import Configuration
+from fastapi import HTTPException
 # ==============================================================
 
 name_module = "md_weigher"
@@ -79,12 +80,16 @@ class WeigherModule:
 	def createInstance(
      	self,
 		configuration: ConfigurationDTO):
+		if configuration.name in self.getAllInstance():
+			raise HTTPException(status_code=400, detail="Name just exist")
 		name = configuration.name
 		weigher_configuration = Configuration(**configuration.dict())
 		instance = WeigherInstance(name, weigher_configuration)
 		self.instances[name] = instance
 		instance_created = instance.getInstance()
-		lb_config.g_config["app_api"]["weighers"][configuration.name] = instance_created
+		instance_to_save = instance_created.copy()
+		del instance_to_save["connection"]["connected"]
+		lb_config.g_config["app_api"]["weighers"][configuration.name] = instance_to_save
 		lb_config.saveconfig()
 		instance_created["name"] = configuration.name
 		return instance_created
@@ -102,22 +107,29 @@ class WeigherModule:
 
 	def getInstanceNode(self, name, node):
 		instance = self.instances[name].getNode(node)
-		return {
-			name: instance
-       	}
+		if instance:
+			return {
+				name: instance
+			}
+		else:
+			return None
 
 	def addInstanceNode(
     	self, 
      	name, 
-      	node: SetupWeigherDTO,
+      	setup: SetupWeigherDTO,
 	  	cb_realtime: Callable[[dict], any] = None, 
 	   	cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_data: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
+		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
+			raise HTTPException(status_code=400, detail='Node just exist')
+		if any(setup.name == current_node["name"] for current_node in self.getAllInstanceNode(name=name)):
+			raise HTTPException(status_code=400, detail='Name just exist')
 		node_created = self.instances[name].addNode(
-			node=node,
+			setup=setup,
 			cb_realtime=cb_realtime,
 			cb_diagnostic=cb_diagnostic,
 			cb_weighing=cb_weighing,
@@ -134,16 +146,20 @@ class WeigherModule:
 		self,
   		name,
     	node,
-     	node_changed: ChangeSetupWeigherDTO,
+     	setup: ChangeSetupWeigherDTO,
 	  	cb_realtime: Callable[[dict], any] = None, 
 	   	cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_data: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
+		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
+			raise HTTPException(status_code=400, detail='Node just exist')
+		if any(setup.name == current_node["name"] for current_node in self.getAllInstanceNode(name=name)):
+			raise HTTPException(status_code=400, detail='Name just exist')
 		node_set = self.instances[name].setNode(
       		node=node, 
-        	setup=node_changed,
+        	setup=setup,
 			cb_realtime=cb_realtime,
 			cb_diagnostic=cb_diagnostic,
 			cb_weighing=cb_weighing,
@@ -163,26 +179,37 @@ class WeigherModule:
 		name,
 		node):
 		node_removed = self.instances[name].deleteNode(node=node)
-		if node_removed:
-			node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
-			lb_config.g_config["app_api"]["weighers"][name]["nodes"].remove(node_found[0])
-			lb_config.saveconfig()
-		return node_removed
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
+		lb_config.g_config["app_api"]["weighers"][name]["nodes"].remove(node_found[0])
+		lb_config.saveconfig()
 
 	def setInstanceConnection(self, name, conn: Union[SerialPort, Tcp]):
-		conn_set = self.instance[name].setConnection(conn=conn)
-		lb_config.g_config["app_api"]["weighers"][name]["connection"] = conn
+		conn_set = self.instances[name].setConnection(conn=conn)
+		conn_to_save = conn_set.copy()
+		del conn_to_save["connected"]
+		lb_config.g_config["app_api"]["weighers"][name]["connection"] = conn_to_save
 		lb_config.saveconfig()
 		return conn_set
 
 	def deleteInstanceConnection(self, name):
-		conn = self.instances[name].deleteConnection()
-		lb_config.g_config["app_api"]["weighers"][name]["connection"] = {}
+		conn_deleted = self.instances[name].deleteConnection()
+		conn_to_save = conn_deleted.copy()
+		del conn_to_save["connected"]
+		lb_config.g_config["app_api"]["weighers"][name]["connection"] = conn_to_save
 		lb_config.saveconfig()
-		return conn
+		return conn_deleted
 
 	def setInstanceTimeBetweenActions(self, name, time_between_actions):
-		return self.instances[name].setTimeBetweenActions(time=time_between_actions)
+		time = self.instances[name].setTimeBetweenActions(time=time_between_actions)
+		lb_config.g_config["app_api"]["weighers"][name]["time_between_actions"] = time
+		lb_config.saveconfig()
+		return time
+
+	def getModope(self, name, node: Union[str, None]):
+		return self.instances[name].getModope(node=node)
+
+	def setModope(self, name, node: Union[str, None], modope, presettare=0, data_assigned: Union[DataInExecution, int] = None):
+		return self.instances[name].setModope(node=node, modope=modope, presettare=presettare, data_assigned=data_assigned)
 
 class WeigherInstance:
 	def __init__(
@@ -249,7 +276,7 @@ class WeigherInstance:
 					time_execute = time_end - time_start
 					timeout = max(0, self.time_between_actions - time_execute)
 					time.sleep(timeout)
-					# lb_log.info(f"Node: {node.node}, Status: {status}, Command: {command}, Response; {response}, Error: {error}")
+					lb_log.info(f"Node: {node.node}, Status: {status}, Command: {command}, Response; {response}, Error: {error}")
 					if node.diagnostic.status == 301:
 						self.connection.connection.close()
 						status, error_message = self.connection.connection.try_connection()
@@ -303,30 +330,30 @@ class WeigherInstance:
 
 	def addNode(
 		self, 
-		node: SetupWeigherDTO,
+		setup: SetupWeigherDTO,
 	  	cb_realtime: Callable[[dict], any] = None, 
 	   	cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_data: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
-		n = terminalsClasses[node.terminal](
-				self_config=self, 
-		  		max_weight=node.max_weight, 
-				min_weight=node.min_weight, 
-			 	division=node.division, 
-			  	maintaine_session_realtime_after_command=node.maintaine_session_realtime_after_command,
-			   	diagnostic_has_priority_than_realtime=node.diagnostic_has_priority_than_realtime,
-				node=node.node, 
-				terminal=node.terminal,
-				run=node.run,
-				data=DataDTO(**{}),
-				name=node.name
+		n = terminalsClasses[setup.terminal](
+			self_config=self, 
+			max_weight=setup.max_weight, 
+			min_weight=setup.min_weight, 
+			division=setup.division, 
+			maintaine_session_realtime_after_command=setup.maintaine_session_realtime_after_command,
+			diagnostic_has_priority_than_realtime=setup.diagnostic_has_priority_than_realtime,
+			node=setup.node, 
+			terminal=setup.terminal,
+			run=setup.run,
+			data=DataDTO(**{}),
+			name=setup.name
 		)
 		if self.connection is not None:
 			n.initialize()
 		self.nodes.append(n)
-		node_found = [n for n in self.nodes if n.node == node]
+		node_found = [n for n in self.nodes if n.node == setup.node]
 		if len(node_found) > 0:
 			node_found[0].setAction(
 				cb_realtime=cb_realtime,

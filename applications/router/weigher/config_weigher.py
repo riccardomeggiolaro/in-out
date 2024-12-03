@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from applications.router.weigher.callback_weigher import CallbackWeigher
 import libs.lb_config as lb_config
 from applications.utils.instance_weigher import InstanceNameDTO, InstanceNameNodeDTO
-from applications.utils.utils import get_query_params_name, get_query_params_name_node
+from applications.utils.utils import get_query_params_name, get_query_params_name_node, validate_time
 import modules.md_weigher.md_weigher as md_weigher
 from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetupWeigherDTO
 from typing import Union
@@ -33,25 +33,22 @@ class ConfigWeigher(CallbackWeigher):
         return md_weigher.module_weigher.getInstance(instance.name)
 
     async def CreateInstance(self, configuration: ConfigurationDTO):
-        if configuration.name in md_weigher.module_weigher.getAllInstance():
-            return HTTPException(status_code=400, detail="Name just exist")
-        return md_weigher.module_weigher.createInstance(configuration=configuration)
+        response = md_weigher.module_weigher.createInstance(configuration=configuration)
+        self.addInstanceSocket(configuration.name)
+        return response
 
     async def DeleteInstance(self, instance: InstanceNameDTO = Depends(get_query_params_name)):
         md_weigher.module_weigher.deleteInstance(instance.name)
+        self.deleteInstanceSocket(instance.name)
+        return { "deleted": True }
 
     async def GetInstanceNode(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-        response = md_weigher.module_weigher.getInstanceNode(name=instance.name, node=instance.node)
-        if not response:
-            raise HTTPException(status_code=404, detail='Not found')
-        return response
+        return md_weigher.module_weigher.getInstanceNode(name=instance.name, node=instance.node)
 
-    async def AddInstanceNode(self, node: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
-        if any(node.node == current_node["node"] for current_node in md_weigher.module_weigher.getAllInstanceNode(name=instance.name)):
-            raise HTTPException(status_code=400, detail='Node just exist')
-        return md_weigher.module_weigher.addInstanceNode(
-            name=instance.name, 
-            node=node,
+    async def AddInstanceNode(self, setup: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
+        response = md_weigher.module_weigher.addInstanceNode(
+            name=instance.name,
+            setup=setup,
             cb_realtime=self.Callback_Realtime, 
             cb_diagnostic=self.Callback_Diagnostic,
             cb_weighing=self.Callback_Weighing,
@@ -59,14 +56,14 @@ class ConfigWeigher(CallbackWeigher):
             cb_data=self.Callback_Data,
             cb_action_in_execution=self.Callback_ActionInExecution
         )
+        self.addInstanceNodeSocket(instance.name, setup.node)
+        return response
 
     async def SetInstanceNode(self, setup: ChangeSetupWeigherDTO = {}, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-        if any(setup.node == current_node["node"] for current_node in md_weigher.module_weigher.getAllInstanceNode(name=instance.name)):
-            raise HTTPException(status_code=400, detail='Node just exist')
         response = md_weigher.module_weigher.setInstanceNode(
             name=instance.name,
             node=instance.node, 
-            node_changed=setup,
+            setup=setup,
             cb_realtime=self.Callback_Realtime, 
             cb_diagnostic=self.Callback_Diagnostic,
             cb_weighing=self.Callback_Weighing,
@@ -74,19 +71,15 @@ class ConfigWeigher(CallbackWeigher):
             cb_data=self.Callback_Data,
             cb_action_in_execution=self.Callback_ActionInExecution
         )
-        if response:
-            return response
-        else:
-            raise HTTPException(status_code=404, detail='Not found')
+        if setup.node != "undefined":
+            self.deleteInstanceNodeSocket(instance.name, instance.node)
+            self.addInstanceNodeSocket(instance.name, setup.node)
+        return response
 
     async def DeleteInstanceNode(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-        node_removed = md_weigher.module_weigher.instances[instance.name].deleteNode(instance.node)
-        if node_removed:
-            return {
-                "removed": node_removed
-            }
-        else:
-            raise HTTPException(status_code=404, detail='Not found')
+        md_weigher.module_weigher.deleteInstanceNode(name=instance.name, node=instance.node)
+        self.deleteInstanceNodeSocket(instance.name, instance.node)
+        return { "deleted": True }
 
     async def SetInstanceConnection(self, connection: Union[SerialPort, Tcp], instance: InstanceNameDTO = Depends(get_query_params_name)):
         return md_weigher.module_weigher.setInstanceConnection(name=instance.name, conn=connection)
@@ -94,32 +87,6 @@ class ConfigWeigher(CallbackWeigher):
     async def DeleteInstanceConnection(self, instance: InstanceNameDTO = Depends(get_query_params_name)):
         return md_weigher.module_weigher.deleteInstanceConnection(name=instance.name)
 
-    async def SetInstanceTimeBetweenActions(self, time: Union[int, float], instance: InstanceNameDTO = Depends(get_query_params_name)):
-        if time <= 0:
-            return {
-                "message": "Time must be greater than 0"
-            }
-        result = md_weigher.module_weigher.instances[instance.name].setTimeBetweenActions(time=time)
-        connection = md_weigher.module_weigher.instances[instance.name].getConnection()
-        lb_config.g_config["app_api"]["weighers"][instance.name]["time_between_actions"] = result
-        lb_config.saveconfig()
-        return {
-            "instance": instance,
-            "connection": connection,
-            "time_between_actions": result
-        }
-
-        async def deleteInstanceWeigher(self, name):
-            deleted = False
-        
-            if name in self.weighers_sockets:
-                for node in self.weighers_sockets[name]:
-                    await self.weighers_sockets[name][node].manager_realtime.broadcast("Weigher instance deleted")
-                    self.weighers_sockets[name][node].manager_realtime.disconnect_all()
-                    await self.weighers_sockets[name][node].manager_diagnostic.broadcast("Weigher instance deleted")
-                    self.weighers_sockets[name][node].manager_diagnostic.disconnect_all()
-                    await self.weighers_sockets[name][node].manager_execution.broadcast("Weigher instance deleted")
-                    self.weighers_sockets[name][node].manager_execution.disconnect_all()
-                self.weighers_sockets[name].stop()
-                deleted = True
-            return deleted
+    async def SetInstanceTimeBetweenActions(self, time: Union[int, float] = Depends(validate_time), instance: InstanceNameDTO = Depends(get_query_params_name)):
+        new_time_set = md_weigher.module_weigher.setInstanceTimeBetweenActions(name=instance.name, time_between_actions=time)
+        return { "time_between_actions": new_time_set }

@@ -23,6 +23,8 @@ from applications.router.generic import GenericRouter
 from applications.router.printer import PrinterRouter
 from applications.router.anagrafic import AnagraficRouter
 from applications.router.weigher.router import WeigherRouter
+from applications.router.data_in_execution import DataInExecutionRouter
+from applications.router.historic_data import HistoricDataRouter
 from typing import Optional
 from pathlib import Path
 import os
@@ -126,10 +128,16 @@ def init():
 	generic_router = GenericRouter()
 	anagrafic_router = AnagraficRouter()
 	weigher_router = WeigherRouter()
+	data_in_execution_router = DataInExecutionRouter()
+	historic_data_router = HistoricDataRouter()
 
 	app.include_router(anagrafic_router.router, prefix="/anagrafic", tags=["anagrafic"])
 
 	app.include_router(weigher_router.router)
+
+	app.include_router(data_in_execution_router.router, prefix="/data_in_execution", tags=["data in execution"])
+
+	app.include_router(historic_data_router.router, prefix="/historic_data", tags=["historic data"])
 
 	app.include_router(generic_router.router, prefix="/generic", tags=["generic"])
 

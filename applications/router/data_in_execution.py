@@ -6,7 +6,7 @@ from applications.utils.utils import get_query_params_name_node
 from modules.md_weigher.dto import DataDTO
 from modules.md_weigher.types import DataInExecution as DataInExecutionType
 
-class DataInExecution:
+class DataInExecutionRouter:
     def __init__(self):
         self.router = APIRouter()
     

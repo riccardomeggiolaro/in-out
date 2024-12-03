@@ -11,14 +11,20 @@ async def get_query_params(request: Request) -> Dict[str, Union[str, int]]:
 	return dict(request.query_params)
 
 def get_query_params_name(params: InstanceNameDTO = Depends()):
-	if params.name not in md_weigher.module_weigher.instances:
+	if params.name not in md_weigher.module_weigher.getAllInstance():
 		raise HTTPException(status_code=404, detail='Name instance does not exist')
 	return params
 
 def get_query_params_name_node(params: InstanceNameNodeDTO = Depends()):
-	lb_log.warning(params)
-	if params.name not in md_weigher.module_weigher.instances:
+	if params.name not in md_weigher.module_weigher.getAllInstance():
 		raise HTTPException(status_code=404, detail='Name instance does not exist')
-	if md_weigher.module_weigher.instances[params.name].getNode(params.node) is None:
+	n = md_weigher.module_weigher.getInstanceNode(name=params.name, node=params.node)
+	if md_weigher.module_weigher.getInstanceNode(name=params.name, node=params.node) is None:
 		raise HTTPException(status_code=404, detail='Node not exist')
 	return params
+
+# Funzione di validazione per time
+async def validate_time(time: Union[int, float]) -> Union[int, float]:
+    if time <= 0:
+        raise HTTPException(status_code=400, detail="Time must be greater than 0")
+    return time

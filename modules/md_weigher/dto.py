@@ -1,11 +1,10 @@
-from pydantic import validator, BaseModel
+from pydantic import validator, BaseModel, ValidationError, root_validator
 from typing import Optional, Union, List
 from libs.lb_system import Connection, SerialPort, Tcp
 from libs.lb_utils import CustomBaseModel
 from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id
-from pydantic import ValidationError
 
 class DataInExecutionDTO(CustomBaseModel):
 	customer: Optional[CustomerDTO] = CustomerDTO(**{})
@@ -35,10 +34,17 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	division: Optional[int] = None
 	maintaine_session_realtime_after_command: Optional[bool] = None
 	diagnostic_has_priority_than_realtime: Optional[bool] = None
-	node: Optional[Union[str, None]] = "undefined"
+	node: Optional[Union[str]] = "undefined"
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
 	name: Optional[str] = None
+
+	@root_validator(pre=True)
+	def set_node_default(cls, values):
+		# Check if 'node' is not provided, then set it to "undefined"
+		if 'node' not in values:
+			values['node'] = "undefined"
+		return values
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):

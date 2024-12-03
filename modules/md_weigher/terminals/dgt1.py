@@ -141,9 +141,14 @@ class Dgt1(Terminal):
 					# Se formato stringa del peso in tempo reale non corretto, manda a video errore
 					else:
 						self.diagnostic.status = 201
+						self.pesa_real_time.type = ""
+						self.pesa_real_time.net_weight = ""
+						self.pesa_real_time.gross_weight = ""
+						self.pesa_real_time.tare = ""
+						self.pesa_real_time.unite_measure = ""
+						self.diagnostic.vl = ""
+						self.diagnostic.rz = ""
 						lb_log.error(f"Received string format does not comply with the REALTIME function: {response}")
-					self.diagnostic.vl = ""
-					self.diagnostic.rz = ""
 					callCallback(self.callback_realtime) # chiamo callback
 				######### Se in esecuzione la diagnostica ###########################################################################
 				elif self.modope == "DIAGNOSTICS":
@@ -160,13 +165,13 @@ class Dgt1(Terminal):
 						pass
 						self.diagnostic.status = 201
 						lb_log.error(f"Received string format does not comply with the DIAGNOSTICS function: {response}")
+					callCallback(self.callback_diagnostics) # chiamo callback
 					self.pesa_real_time.status = "D"
 					self.pesa_real_time.type = ""
 					self.pesa_real_time.net_weight = ""
 					self.pesa_real_time.gross_weight = ""
 					self.pesa_real_time.tare = ""
 					self.pesa_real_time.unite_measure = ""
-					callCallback(self.callback_diagnostics) # chiamo callback
 				######### Se in esecuzione pesata pid ###############################################################################
 				elif self.modope == "WEIGHING":
 					# Controlla formato stringa pesata pid, se corretta aggiorna oggetto

@@ -8,7 +8,7 @@ import asyncio
 import libs.lb_log as lb_log
 from applications.router.weigher.config_weigher import ConfigWeigher
 
-class Weigher(ConfigWeigher):
+class CommandWeigher(ConfigWeigher):
 	def __init__(self):
 		super().__init__()
 
@@ -26,7 +26,7 @@ class Weigher(ConfigWeigher):
 		self.router_action_weigher.add_api_websocket_route('/realtime', self.websocket_endpoint)
 
 	async def StartRealtime(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="REALTIME")
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="REALTIME")
 
 		return {
 			"instance": instance,
@@ -39,7 +39,7 @@ class Weigher(ConfigWeigher):
 		}
 
 	async def StartDiagnostics(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="DIAGNOSTICS")
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="DIAGNOSTICS")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -51,7 +51,7 @@ class Weigher(ConfigWeigher):
 		}
 
 	async def StopAllCommand(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="OK")
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="OK")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -64,7 +64,7 @@ class Weigher(ConfigWeigher):
 
 	async def Print(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		data = DataInExecution(**{})
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="WEIGHING", data_assigned=data)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -81,7 +81,7 @@ class Weigher(ConfigWeigher):
 			data = id
 		else:
 			status, data = md_weigher.module_weigher.instances[instance.name].getData(node=instance.node)
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="WEIGHING", data_assigned=data)
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="WEIGHING", data_assigned=data)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -93,7 +93,7 @@ class Weigher(ConfigWeigher):
 		}
 
 	async def Tare(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="TARE")
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="TARE")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -105,7 +105,7 @@ class Weigher(ConfigWeigher):
 		}
 
 	async def PresetTare(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node), tare: Optional[int] = 0):
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="PRESETTARE", presettare=tare)
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="PRESETTARE", presettare=tare)
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -117,7 +117,7 @@ class Weigher(ConfigWeigher):
 		}
 
 	async def Zero(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		status, status_modope, status_command, error_message = md_weigher.module_weigher.instances[instance.name].setModope(node=instance.node, modope="ZERO")
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="ZERO")
 		return {
 			"instance": instance,
 			"command_executed": {
@@ -130,40 +130,39 @@ class Weigher(ConfigWeigher):
 
 	async def websocket_endpoint(self, websocket: WebSocket, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		await self.weighers_sockets[instance.name][instance.node].manager_realtime.connect(websocket)
-		while True:
-			try:
-				if len(self.weighers_sockets[instance.name][instance.node].manager_realtime.active_connections) > 0:
-					status = md_weigher.module_weigher.instances[instance.name].getNode(instance.node)["status"]
-					if status == 200:
-						modope_in_execution = md_weigher.module_weigher.instances[instance.name].getModope(instance.node)
-						if modope_in_execution in ["OK", "DIAGNOSTICS"]:
-							if modope_in_execution == "DIAGNOSTICS":
-								await self.weighers_sockets[instance.name][instance.node].manager_realtime.broadcast({
-									"status":"--",
-									"type":"--",
-									"net_weight": "Diagnostica in corso",
-									"gross_weight":"--",
-									"tare":"--",
-									"unite_measure": "--"
-								})
-							md_weigher.module_weigher.instances[instance.name].setModope(instance.node, "REALTIME")
-					else:
-						message = "Pesa scollegata"
-						if status == 301:
-							message = "Connessione non settata"
-						elif status == 201:
-							message = "Protocollo pesa non valido"
-						await self.weighers_sockets[instance.name][instance.node].manager_realtime.broadcast({
-							"status":"--",
-							"type":"--",
-							"net_weight": message,
-							"gross_weight":"--",
-							"tare":"--",
-							"unite_measure": str(status)
-						})
+		while instance.name in self.weighers_sockets and instance.node in self.weighers_sockets[instance.name]:
+			if websocket not in self.weighers_sockets[instance.name][instance.node].manager_realtime.active_connections:
+				break
+			if len(self.weighers_sockets[instance.name][instance.node].manager_realtime.active_connections) > 0:
+				status = md_weigher.module_weigher.getInstanceNode(name=instance.name, node=instance.node)[instance.name]["status"]
+				if status == 200:
+					modope_in_execution = md_weigher.module_weigher.getModope(name=instance.name, node=instance.node)
+					if modope_in_execution in ["OK", "DIAGNOSTICS"]:
+						if modope_in_execution == "DIAGNOSTICS":
+							await self.weighers_sockets[instance.name][instance.node].manager_realtime.broadcast({
+								"status":"--",
+								"type":"--",
+								"net_weight": "Diagnostica in corso",
+								"gross_weight":"--",
+								"tare":"--",
+								"unite_measure": "--"
+							})
+						md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="REALTIME")
 				else:
-					md_weigher.module_weigher.instances[instance.name].setModope(instance.node, "OK")
-					break
-				await asyncio.sleep(1)
-			except Exception as e:
-				lb_log.error(e)
+					message = "Pesa scollegata"
+					if status == 301:
+						message = "Connessione non settata"
+					elif status == 201:
+						message = "Protocollo pesa non valido"
+					await self.weighers_sockets[instance.name][instance.node].manager_realtime.broadcast({
+						"status":"--",
+						"type":"--",
+						"net_weight": message,
+						"gross_weight":"--",
+						"tare":"--",
+						"unite_measure": str(status)
+					})
+			else:
+				md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="OK")
+				break
+			await asyncio.sleep(1)

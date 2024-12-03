@@ -14,8 +14,12 @@ from serial import SerialException
 import socket
 from typing import Optional, Union
 import select
-import wmi
-import winreg
+try:
+	import winreg
+	import wmi
+except ImportError:
+	winreg = None
+	wmi = None
 # ==============================================================
 
 class Connection(BaseModel):
@@ -59,7 +63,6 @@ class SerialPort(Connection):
 		if exist is False:
 			raise ValueError("Serial port is not exist")
 		just_in_use, message = serial_port_is_just_in_use(v)
-		lb_log.error(f"Used: {just_in_use}")
 		if just_in_use:
 			raise ValueError("Serial port is just occupated")
 		enabled, message = enable_serial_port(v)
@@ -300,7 +303,6 @@ class ConfigConnection():
 		self.connection = connection
 		self.connection.try_connection()
 		conn = self.getConnection()
-		del conn["connected"]
 		return conn
 
 	def deleteConnection(self):
