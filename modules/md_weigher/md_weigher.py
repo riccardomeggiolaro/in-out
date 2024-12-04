@@ -12,7 +12,7 @@ from typing import Callable, Union
 import time
 from libs.lb_system import SerialPort, Tcp
 from modules.md_weigher.types import DataInExecution
-from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataDTO, ChangeSetupWeigherDTO
+from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataDTO, ChangeSetupWeigherDTO, DataDTO
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
@@ -210,6 +210,28 @@ class WeigherModule:
 
 	def setModope(self, name, node: Union[str, None], modope, presettare=0, data_assigned: Union[DataInExecution, int] = None):
 		return self.instances[name].setModope(node=node, modope=modope, presettare=presettare, data_assigned=data_assigned)
+
+	def getData(self, name, node: Union[str, None]):
+		return self.instances[name].getData(node=node)
+
+	def setData(self, name, node: Union[str, None], data_dto: DataDTO, call_callback):
+		data_in_execution = DataInExecution(**data_dto.data_in_execution.dict())
+		status, data_set = self.instances[name].setDataInExecution(node=node, data_in_execution=data_in_execution, call_callback=call_callback)
+		if data_dto.id_selected.id is not None:
+			status, data_set = self.instances[name].setIdSelected(node=node, new_id=data_dto.id_selected.id, call_callback=call_callback)
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
+		index_node_found = lb_config.g_config["app_api"]["weighers"][name]["nodes"].index(node_found[0])
+		lb_config.g_config["app_api"]["weighers"][name]["nodes"][index_node_found]["data"] = data_set
+		lb_config.saveconfig()
+		return status, data_set
+
+	def deleteData(self, name, node: Union[str, None], call_callback):
+		status, data = self.instances[name].deleteData(node=node, call_callback=call_callback)
+		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
+		index_node_found = lb_config.g_config["app_api"]["weighers"][name]["nodes"].index(node_found[0])
+		lb_config.g_config["app_api"]["weighers"][name]["nodes"][index_node_found]["data"] = data
+		lb_config.saveconfig()
+		return status, data
 
 class WeigherInstance:
 	def __init__(
@@ -459,6 +481,14 @@ class WeigherInstance:
 		node_found = [n for n in self.nodes if n.node == node]
 		if len(node_found) > 0:
 			data = node_found[0].setIdSelected(new_id, call_callback)
+			status = node_found[0].diagnostic.status
+			return status, data
+		return node_found
+
+	def deleteData(self, node: Union[str, None], call_callback: bool):
+		node_found = [n for n in self.nodes if n.node == node]
+		if len(node_found) > 0:
+			data = node_found[0].deleteData(call_callback=call_callback)
 			status = node_found[0].diagnostic.status
 			return status, data
 		return node_found

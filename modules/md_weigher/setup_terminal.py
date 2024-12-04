@@ -166,6 +166,19 @@ class __SetupWeigher(__SetupWeigherConnection):
 			callCallback(self.callback_data_in_execution)
 		return self.getData()
 
+	def deleteIdSelected(self, call_callback):
+		self.data.id_selected.deleteAttribute()
+		if call_callback:
+			callCallback(self.callback_data_in_execution)
+		return self.getData()
+
+	def deleteData(self, call_callback):
+		self.data.data_in_execution.deleteAttribute()
+		self.data.id_selected.deleteAttribute()
+		if call_callback:
+			callCallback(self.callback_data_in_execution)
+		return self.getData()
+
 	def maintaineSessionRealtime(self):
 		if self.maintaine_session_realtime_after_command:
 			self.modope_to_execute = "REALTIME"
