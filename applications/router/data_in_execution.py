@@ -15,7 +15,7 @@ class DataInExecutionRouter:
         self.router.add_api_route('/data_in_execution', self.DeleteDataInExecution, methods=['DELETE'])
     
     async def GetDataInExecution(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-        status, data = md_weigher.module_weigher.instances[instance.name].getData(node=instance.node)
+        status, data = md_weigher.module_weigher.getData(name=instance.name, node=instance.node)
         return {
             "instance": instance,
             "data": data,

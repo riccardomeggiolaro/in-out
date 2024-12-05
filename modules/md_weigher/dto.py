@@ -5,6 +5,7 @@ from libs.lb_utils import CustomBaseModel
 from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id
+from pydantic import root_validator
 
 class DataInExecutionDTO(CustomBaseModel):
 	customer: Optional[CustomerDTO] = CustomerDTO(**{})
@@ -12,6 +13,16 @@ class DataInExecutionDTO(CustomBaseModel):
 	vehicle: Optional[VehicleDTO] = VehicleDTO(**{})
 	material: Optional[MaterialDTO] = MaterialDTO(**{})
 	note: Optional[str] = None
+
+	@root_validator(pre=True)
+	def check_only_one_attribute_set(cls, values):
+		# Contiamo quanti dei 5 attributi opzionali sono impostati
+		non_null_values = sum(1 for key, value in values.items() if value is not None)
+
+		if non_null_values > 1:
+			raise ValueError("Solo uno dei seguenti attributi deve essere presente: customer, supplier, vehicle, material, note.")
+
+		return values
 
 class IdSelectedDTO(CustomBaseModel):
 	id: Optional[int] = None
@@ -24,9 +35,19 @@ class IdSelectedDTO(CustomBaseModel):
 				raise ValueError('Id not exist in weighings')
 		return v
 
-class DataDTO(CustomBaseModel):
-	data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})
-	id_selected: Optional[IdSelectedDTO] = IdSelectedDTO(**{})
+class DataDTO(BaseModel):
+    data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})
+    id_selected: Optional[IdSelectedDTO] = IdSelectedDTO(**{})
+
+    @root_validator(pre=True)
+    def check_only_one_of_data_in_execution_or_id_selected(cls, values):
+        # Controlla quanti dei due campi sono impostati
+        non_null_values = sum(1 for key, value in values.items() if value is not None)
+        
+        if non_null_values > 1:
+            raise ValueError("Solo uno dei seguenti attributi deve essere presente: data_in_execution, id_selected.")
+        
+        return values
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	max_weight: Optional[int] = None

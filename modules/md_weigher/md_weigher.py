@@ -12,7 +12,7 @@ from typing import Callable, Union
 import time
 from libs.lb_system import SerialPort, Tcp
 from modules.md_weigher.types import DataInExecution
-from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataDTO, ChangeSetupWeigherDTO, DataDTO
+from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetupWeigherDTO, DataDTO, ChangeSetupWeigherDTO
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
