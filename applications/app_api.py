@@ -30,7 +30,7 @@ from typing import Optional
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
-from applications.utils.Instance_auth import AuthMiddleware
+from applications.middleware.auth import AuthMiddleware
 # ==============================================================
 
 name_app = "app_api"

@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends
 import libs.lb_config as lb_config
 import modules.md_weigher.md_weigher as md_weigher
-from applications.utils.instance_weigher import InstanceNameNodeDTO
-from applications.utils.utils import get_query_params_name_node
+from applications.utils.utils_weigher import InstanceNameNodeDTO, get_query_params_name_node
 from modules.md_weigher.dto import DataDTO
 from modules.md_weigher.types import DataInExecution as DataInExecutionType
 

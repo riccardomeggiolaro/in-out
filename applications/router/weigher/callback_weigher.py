@@ -1,6 +1,6 @@
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
-from applications.utils.instance_weigher import NodeConnectionManager
+from applications.utils.utils_weigher import NodeConnectionManager
 from typing import Union
 from modules.md_weigher.types import Realtime, Weight, Data
 import libs.lb_config as lb_config
@@ -35,8 +35,6 @@ class CallbackWeigher:
             self.weighers_sockets[instance_name][node].manager_realtime = None
             self.weighers_sockets[instance_name][node].manager_diagnostic.disconnect_all()
             self.weighers_sockets[instance_name][node].manager_diagnostic = None
-            self.weighers_sockets[instance_name][node].manager_execution.disconnect_all()
-            self.weighers_sockets[instance_name][node].manager_execution = None
         self.weighers_sockets.pop(instance_name)
 
     def addInstanceNodeSocket(self, instance_name: str, instance_node: str):
@@ -45,6 +43,8 @@ class CallbackWeigher:
     def deleteInstanceNodeSocket(self, instance_name: str, instance_node: str):
         self.weighers_sockets[instance_name][instance_node].manager_realtime.disconnect_all()
         self.weighers_sockets[instance_name][instance_node].manager_realtime = None
+        self.weighers_sockets[instance_name][instance_node].manager_diagnostic.disconnect_all()
+        self.weighers_sockets[instance_name][instance_node].manager_diagnostic = None
         self.weighers_sockets[instance_name].pop(instance_node)
 
     # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================

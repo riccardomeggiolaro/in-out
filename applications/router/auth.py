@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from libs.lb_database import filter_data, add_data, update_data, delete_data, get_data_by_id, UserDTO, LoginDTO
-from applications.utils.Instance_auth import TokenData
+from applications.utils.utils_auth import TokenData
 from typing import Callable
 from datetime import datetime, timedelta
 import jwt

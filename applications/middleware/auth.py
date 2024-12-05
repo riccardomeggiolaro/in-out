@@ -2,14 +2,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Callable
-import jwt
 import traceback
-from datetime import datetime, timedelta
-from pydantic import BaseModel
-
-class TokenData(BaseModel):
-    sub: str 
-    exp: datetime
+from applications.utils.utils_auth import TokenData
+import jwt
+from datetime import datetime
 
 class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, secret_key: str):
@@ -43,7 +39,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             if scheme.lower() != "bearer":
                 return JSONResponse(
                     status_code=401, 
-                    content={"detail": "Invalid authentication scheme"}
+                    content={"detail": "Invalid authentication scheme, expected 'Bearer'"}
                 )
 
             # Decode token
@@ -75,9 +71,3 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 status_code=500, 
                 content={"detail": "Internal authentication error"}
             )
-
-def create_access_token(data: dict, secret_key: str, expires_delta: timedelta = timedelta(hours=1)):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, secret_key, algorithm="HS256")
