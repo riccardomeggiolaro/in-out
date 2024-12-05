@@ -8,6 +8,44 @@ from pydantic import BaseModel, validator
 Base = declarative_base()
 SessionLocal = None
 
+# Modello per la tabella User
+class User(Base):
+	__tablename__ = 'user'
+	id = Column(Integer, primary_key=True, index=True)
+	username = Column(String)
+	password = Column(String)
+	selected = Column(Boolean, default=False)
+	level = Column(Integer)
+
+class UserDTO(BaseModel):
+    username: str
+    password: str
+    description: str
+    level: int
+    
+    @validator('username', pre=True, always=True)
+    def check_username(cls, v):
+        data = get_data_by_attribute('user', 'username', v)
+        if data:
+            raise ValueError('Username already exists')
+        return v
+
+    @validator('password', pre=True, always=True)
+    def check_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        return v
+
+    @validator('level', pre=True, always=True)
+    def check_level(cls, v):
+        if v not in [1, 2]:
+            raise ValueError('Level must be 1 or 2')
+        return v
+
+class LoginDTO(BaseModel):
+	username: str
+	password: str
+
 # Modello per la tabella Vehicle
 class Vehicle(Base):
 	__tablename__ = 'vehicle'
@@ -282,6 +320,61 @@ def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=Fa
 		session.rollback()  # Ripristina eventuali modifiche in caso di errore
 		session.close()
 		raise e
+
+def get_data_by_attribute(table_name, attribute_name, attribute_value, if_not_selected=False, set_selected=False):
+    """Ottiene un record specifico da una tabella tramite un attributo e imposta 'selected' a True.
+
+    Args:
+        table_name (str): Il nome della tabella da cui ottenere il record.
+        attribute_name (str): Il nome dell'attributo da usare per la ricerca.
+        attribute_value (any): Il valore dell'attributo da cercare.
+        if_not_selected (bool): Se True, solleva un errore se il record è già selezionato.
+        set_selected (bool): Se True, imposta 'selected' a True prima di restituire il record.
+
+    Returns:
+        dict: Un dizionario con i dati del record aggiornato, o None se il record non è trovato.
+    """
+
+    global SessionLocal
+
+    # Verifica che il modello esista nel dizionario dei modelli
+    model = table_models.get(table_name.lower())
+    if not model:
+        raise ValueError(f"Tabella '{table_name}' non trovata.")
+
+    # Verifica che l'attributo esista nel modello
+    if not hasattr(model, attribute_name):
+        raise ValueError(f"Attributo '{attribute_name}' non trovato nella tabella '{table_name}'.")
+
+    # Crea una sessione e cerca il record
+    session = SessionLocal()
+    try:
+        # Recupera il record specifico in base all'attributo
+        record = session.query(model).filter(getattr(model, attribute_name) == attribute_value).one_or_none()
+
+        if record is None:
+            raise ValueError(f"Record con {attribute_name} = {attribute_value} non trovato nella tabella '{table_name}'.")
+
+        # Aggiunge una condizione alla query se if_not_selected è True
+        if if_not_selected and record.selected:
+            raise ValueError(f"Record con {attribute_name} = {attribute_value} già in uso nella tabella '{table_name}'.")
+
+        # Imposta l'attributo 'selected' a True e salva la modifica
+        if set_selected:
+            record.selected = True
+
+        # Converte il record in un dizionario
+        record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
+
+        session.commit()
+        session.close()
+
+        return record_dict
+
+    except Exception as e:
+        session.rollback()  # Ripristina eventuali modifiche in caso di errore
+        session.close()
+        raise e
 
 def filter_data(table_name, filters=None):
 	"""Esegue una ricerca filtrata su una tabella specifica e restituisce una lista di risultati.

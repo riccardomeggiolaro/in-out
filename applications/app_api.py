@@ -11,7 +11,7 @@
 # ==== LIBRERIE DA IMPORTARE ===================================
 import libs.lb_log as lb_log  # noqa: E402
 import libs.lb_config as lb_config  # noqa: E402
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import HTMLResponse, RedirectResponse
 import uvicorn  # noqa: E402
@@ -25,10 +25,12 @@ from applications.router.anagrafic import AnagraficRouter
 from applications.router.weigher.router import WeigherRouter
 from applications.router.data_in_execution import DataInExecutionRouter
 from applications.router.historic_data import HistoricDataRouter
+from applications.router.auth import AuthRouter
 from typing import Optional
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
+from applications.utils.Instance_auth import AuthMiddleware
 # ==============================================================
 
 name_app = "app_api"
@@ -125,11 +127,15 @@ def init():
 		allow_headers=["*"],
 	)
 
+	# Aggiungi il middleware al tuo FastAPI
+	app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
+
 	generic_router = GenericRouter()
 	anagrafic_router = AnagraficRouter()
 	weigher_router = WeigherRouter()
 	data_in_execution_router = DataInExecutionRouter()
 	historic_data_router = HistoricDataRouter()
+	auth_router = AuthRouter()
 
 	app.include_router(anagrafic_router.router, prefix="/anagrafic", tags=["anagrafic"])
 
@@ -140,6 +146,8 @@ def init():
 	app.include_router(historic_data_router.router, prefix="/historic_data", tags=["historic data"])
 
 	app.include_router(generic_router.router, prefix="/generic", tags=["generic"])
+
+	app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 
 	ssh_client = None
 	if lb_config.g_config["app_api"]["ssh_client"]:
