@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Request
-from libs.lb_database import filter_data, add_data, update_data, delete_data, get_data_by_id, UserDTO, LoginDTO
-from applications.utils.utils_auth import TokenData
+from libs.lb_database import filter_data, add_data, update_data, delete_data, get_data_by_id, get_data_by_attribute, UserDTO
+from applications.utils.utils_auth import TokenData, LoginDTO, SetUserDTO
 from typing import Callable
 from datetime import datetime, timedelta
 import jwt
+from applications.utils.utils_auth import hash_password
 
 class AuthRouter(APIRouter):
     def __init__(self):
@@ -17,27 +18,33 @@ class AuthRouter(APIRouter):
         self.router.add_api_route('/users/{id}', self.delete_user_by_id, methods=['DELETE'])
 
     def login(self, login_dto: LoginDTO):
-        # Qui puoi aggiungere la logica di autenticazione dell'utente (ad esempio, controllo su DB)
-        if username == "testuser" and password == "password123":  # Esempio statico
-            access_token = create_access_token(data={"sub": username})
-            return {"access_token": access_token}
-        else:
+        user = get_data_by_attribute("user", "username", login_dto.username)
+        if not user:
             raise HTTPException(status_code=401, detail="Credenziali errate")
+        hashed_password = hash_password(login_dto.password)
+        if user.password != hashed_password:
+            raise HTTPException(status_code=401, detail="Credenziali errate")
+        access_token = create_access_token(data={"sub": username})
+        return {"access_token": access_token}
     
     def register(self, request: Request, register_dto: UserDTO):
-        pass
+        hashed_password = hash_password(register_dto.password)
+        register_dto.password = hashed_password
+        if register_dto.level > request.state.user.level:
+            raise HTTPException(status_code=401, detail="You are not authorized to perform this action, you are not an admin")
+        return add_data("user", register_dto.dict())
     
     def me(self, request: Request):
-        pass
+        return request.state.user
 
-    def set_me(self, request: Request):
-        pass
+    def set_me(self, request: Request, set_user_dto: SetUserDTO):
+        return update_data("user", request.state.user.id, set_user_dto.dict())
     
     def get_users(self, request: Request):
-        pass
+        return filter_data("user", {"level": request.state.user.level})
     
     def get_user_by_id(self, request: Request, id: int):
-        pass
+        return get_data_by_id("user", id)
     
     def delete_user_by_id(self, request: Request, id: int):
-        pass
+        return delete_data("user", id)

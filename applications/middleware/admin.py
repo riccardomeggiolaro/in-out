@@ -8,10 +8,8 @@ import jwt
 from datetime import datetime
 
 class AdminMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, secret_key: str):
+    def __init__(self):
         super().__init__(app)
-        self.secret_key = secret_key
-        self.algorithm = "HS256"
 
     async def dispatch(self, request: Request, call_next: Callable):
         try:

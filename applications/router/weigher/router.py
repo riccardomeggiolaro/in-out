@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from applications.router.weigher.weigher import CommandWeigher
+from applications.router.weigher.command_weigher import CommandWeigher
 
 class WeigherRouter:
 	def __init__(self):
