@@ -1,8 +1,9 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, Boolean, event
 from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from typing import Optional, List
 from pydantic import BaseModel, validator
+from applications.utils.utils_auth import hash_password
 
 # Connessione al database
 Base = declarative_base()
@@ -14,8 +15,9 @@ class User(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	username = Column(String)
 	password = Column(String)
-	selected = Column(Boolean, default=False)
 	level = Column(Integer)
+	printert_name = Column(String, nullable=True)
+	description = Column(String)
 
 class UserDTO(BaseModel):
     username: str
@@ -42,10 +44,6 @@ class UserDTO(BaseModel):
         if v not in [1, 2]:
             raise ValueError('Level must be 1 or 2')
         return v
-
-class LoginDTO(BaseModel):
-	username: str
-	password: str
 
 # Modello per la tabella Vehicle
 class Vehicle(Base):

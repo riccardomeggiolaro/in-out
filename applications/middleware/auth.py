@@ -15,7 +15,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable):
         # Skip authentication for specific routes
-        if request.url.path in ["/login", "/login.html", "/docs", "/openapi.json"]:
+        if request.url.path in ["/login", "/login.html", "/auth/login", "/docs", "/openapi.json"]:
             return await call_next(request)
 
         try:
