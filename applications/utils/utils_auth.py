@@ -1,6 +1,11 @@
 import jwt
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from typing import Optional
+
+class SetUserDTO(BaseModel):
+    descripotion: Optional[str] = None
+    printer_name: Optional[str] = None
 
 class TokenData(BaseModel):
     sub: str 

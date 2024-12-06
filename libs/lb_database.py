@@ -22,6 +22,7 @@ class UserDTO(BaseModel):
     password: str
     description: str
     level: int
+    printer_name: str
     
     @validator('username', pre=True, always=True)
     def check_username(cls, v):

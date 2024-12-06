@@ -1,22 +1,10 @@
-# ==============================================================
-# = App......: main					   =
-# = Description.: Applicazione			   =
-# = Author......: Riccardo Meggiolaro				   =
-# = Last rev....: 0.0002					   =
-# -------------------------------------------------------------=
-# 0.0002 : Implementato....
-# 0.0001 : Creazione della applicazione
-# ==============================================================
-
-# ==== LIBRERIE DA IMPORTARE ===================================
-import libs.lb_log as lb_log  # noqa: E402
-import libs.lb_config as lb_config  # noqa: E402
+import libs.lb_log as lb_log
+import libs.lb_config as lb_config
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
-import uvicorn  # noqa: E402
-import psutil  # noqa: E402
-# import modules.md_rfid as rfid
+import uvicorn
+import psutil
 from libs.lb_utils import createThread, startThread, closeThread
 from libs.lb_ssh import ssh_tunnel, SshClientConnection
 from applications.router.generic import GenericRouter
@@ -35,14 +23,7 @@ from applications.middleware.auth import AuthMiddleware
 
 name_app = "app_api"
 
-def Callback_Cardcode(cardcode: str):
-	pass
 # ==============================================================
-
-from pydantic import BaseModel
-
-class Plate(BaseModel):
-	plate: str
 
 # ==== MAINPRGLOOP =============================================
 # funzione che si connette a redis, setta i moduli e imposta le callback da richiamare dentro i moduli
@@ -75,12 +56,6 @@ def mainprg():
 
 		# Se il file non esiste, fai un redirect alla home
 		return RedirectResponse(url="/")
-
-	@app.post("/video/camera/current_plate")
-	async def G(plate: Plate):
-		lb_config.g_config["app_api"]["current_plate"] = plate.plate
-		lb_config.saveconfig()
-		return {"plate": plate.plate}
 
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================
@@ -138,8 +113,8 @@ def init():
 		allow_headers=["*"],
 	)
 
-	# # Aggiungi il middleware al tuo FastAPI
-	# app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
+	# Aggiungi il middleware al tuo FastAPI
+	app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
 
 	generic_router = GenericRouter()
 	anagrafic_router = AnagraficRouter()
@@ -160,23 +135,9 @@ def init():
 
 	app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 
-	ssh_client = None
-	if lb_config.g_config["app_api"]["ssh_client"]:
-		ssh_client = lb_config.g_config["app_api"]["ssh_client"]
-		ssh_client["local_port"] = lb_config.g_config["app_api"]["port"]
-		ssh_client = createThread(ssh_tunnel, (SshClientConnection(**ssh_client),))
-		startThread(ssh_client)
-
-	# rfid.setAction(cb_cardcode=Callback_Cardcode)
-
-	# if lb_config.g_config["app_api"]["rfid"]["connection"] != None:
-	# 	config = (**lb_config.g_config["app_api"]["rfid"])
-	# 	setup = i# ==============================================================
-# = App......: main					   =
-# = Description.: Applicazione			   =
-# = Author......: Riccardo Meggiolaro				   =
-# = Last rev....: 0.0002					   =
-# -------------------------------------------------------------=
-# 0.0002 : Implementato....
-# 0.0001 : Creazione della applicazione
-# ==============================================================
+	# ssh_client = None
+	# if lb_config.g_config["app_api"]["ssh_client"]:
+	# 	ssh_client = lb_config.g_config["app_api"]["ssh_client"]
+	# 	ssh_client["local_port"] = lb_config.g_config["app_api"]["port"]
+	# 	ssh_client = createThread(ssh_tunnel, (SshClientConnection(**ssh_client),))
+	# 	startThread(ssh_client)
