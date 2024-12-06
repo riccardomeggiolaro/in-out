@@ -1,6 +1,6 @@
 {
-    "secret_key": "newfoiwnfwoijfnijbnib",
     "app_api": {
+        "current_plate": "FG561BF",
         "port": 8000,
         "rfid": {
             "connection": {
@@ -67,9 +67,11 @@
             }
         }
     },
+    "current_plate": null,
     "log": {
         "max-size-mb": 10
     },
     "name": "goldrake",
-    "printer_name": null
+    "printer_name": null,
+    "secret_key": "newfoiwnfwoijfnijbnib"
 }

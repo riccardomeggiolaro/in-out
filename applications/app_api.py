@@ -39,6 +39,11 @@ def Callback_Cardcode(cardcode: str):
 	pass
 # ==============================================================
 
+from pydantic import BaseModel
+
+class Plate(BaseModel):
+	plate: str
+
 # ==== MAINPRGLOOP =============================================
 # funzione che si connette a redis, setta i moduli e imposta le callback da richiamare dentro i moduli
 def mainprg():
@@ -70,6 +75,12 @@ def mainprg():
 
 		# Se il file non esiste, fai un redirect alla home
 		return RedirectResponse(url="/")
+
+	@app.post("/video/camera/current_plate")
+	async def G(plate: Plate):
+		lb_config.g_config["app_api"]["current_plate"] = plate.plate
+		lb_config.saveconfig()
+		return {"plate": plate.plate}
 
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================
@@ -127,8 +138,8 @@ def init():
 		allow_headers=["*"],
 	)
 
-	# Aggiungi il middleware al tuo FastAPI
-	app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
+	# # Aggiungi il middleware al tuo FastAPI
+	# app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
 
 	generic_router = GenericRouter()
 	anagrafic_router = AnagraficRouter()

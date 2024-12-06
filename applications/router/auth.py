@@ -24,20 +24,20 @@ class AuthRouter(APIRouter):
         else:
             raise HTTPException(status_code=401, detail="Credenziali errate")
     
-    def register(self, register_dto: UserDTO):
+    def register(self, request: Request, register_dto: UserDTO):
         pass
     
-    def me(self):
+    def me(self, request: Request):
         pass
 
-    def set_me(self):
+    def set_me(self, request: Request):
         pass
     
-    def get_users(self):
+    def get_users(self, request: Request):
         pass
     
-    def get_user_by_id(self, id: int):
+    def get_user_by_id(self, request: Request, id: int):
         pass
     
-    def delete_user_by_id(self, id: int):
+    def delete_user_by_id(self, request: Request, id: int):
         pass
