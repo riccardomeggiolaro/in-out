@@ -127,9 +127,6 @@ def init():
 
 	app = FastAPI()
 
-	# app.mount("/_app", StaticFiles(directory=f"{base_dir_templates}/_app"), name="_app")
-	# app.mount("/assets", StaticFiles(directory=f"{base_dir_templates}/assets"), name="assets")
-
 	app.add_middleware(
 		CORSMiddleware, 
 		allow_origins=["*"],
@@ -138,8 +135,8 @@ def init():
 		allow_headers=["*"],
 	)
 
-	# # Aggiungi il middleware al tuo FastAPI
-	# app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
+	# Aggiungi il middleware al tuo FastAPI
+	app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
 
 	generic_router = GenericRouter()
 	anagrafic_router = AnagraficRouter()

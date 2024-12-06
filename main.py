@@ -36,9 +36,6 @@ def mainprg():
 	# Carica thread per il logger in background.
 	thr_logger = createThread(lb_log.start)
 
-	# Inizializzazione del database
-	lb_database.init()
-
 	# Carica thread per i mdouli esterni.
 	modules_thr = {}
 	lb_log.info("loading mdoules...")

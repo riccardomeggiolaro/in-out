@@ -6,7 +6,8 @@ from pydantic import BaseModel, validator
 
 # Connessione al database
 Base = declarative_base()
-SessionLocal = None
+engine = create_engine(f'sqlite:///{os.getcwd()}/database.db', echo=True)
+SessionLocal = sessionmaker(bind=engine)
 
 # Modello per la tabella User
 class User(Base):
@@ -234,14 +235,6 @@ table_models = {
 	'material': Material,
 	'weighing': Weighing,
 }
-
-def init():
-	global SessionLocal
-
-	engine = create_engine(f'sqlite:///{os.getcwd()}/database.db', echo=True)
-	SessionLocal = sessionmaker(bind=engine)
-	# Creazione delle tabelle
-	Base.metadata.create_all(engine)
 
 # Funzione per caricare l'array di record nel database
 def load_records_into_db(table_name: str, records: List[object]):
@@ -582,3 +575,6 @@ required_dtos = {
 	"supplier": SupplierDTO,
 	"material": MaterialDTO
 }
+
+# Creazione delle tabelle
+Base.metadata.create_all(engine)
