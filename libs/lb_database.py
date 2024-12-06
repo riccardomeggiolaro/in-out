@@ -1,13 +1,13 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, Boolean, event
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from typing import Optional, List
 from pydantic import BaseModel, validator
-from applications.utils.utils_auth import hash_password
 
 # Connessione al database
 Base = declarative_base()
-SessionLocal = None
+engine = create_engine(f'sqlite:///{os.getcwd()}/database.db', echo=True)
+SessionLocal = sessionmaker(bind=engine)
 
 # Modello per la tabella User
 class User(Base):
@@ -15,16 +15,14 @@ class User(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	username = Column(String)
 	password = Column(String)
+	selected = Column(Boolean, default=False)
 	level = Column(Integer)
-	printert_name = Column(String, nullable=True)
-	description = Column(String)
 
 class UserDTO(BaseModel):
     username: str
     password: str
     description: str
     level: int
-    printer_name: str
     
     @validator('username', pre=True, always=True)
     def check_username(cls, v):
@@ -44,6 +42,10 @@ class UserDTO(BaseModel):
         if v not in [1, 2]:
             raise ValueError('Level must be 1 or 2')
         return v
+
+class LoginDTO(BaseModel):
+	username: str
+	password: str
 
 # Modello per la tabella Vehicle
 class Vehicle(Base):
@@ -233,14 +235,6 @@ table_models = {
 	'material': Material,
 	'weighing': Weighing,
 }
-
-def init():
-	global SessionLocal
-
-	engine = create_engine(f'sqlite:///{os.getcwd()}/database.db', echo=True)
-	SessionLocal = sessionmaker(bind=engine)
-	# Creazione delle tabelle
-	Base.metadata.create_all(engine)
 
 # Funzione per caricare l'array di record nel database
 def load_records_into_db(table_name: str, records: List[object]):
@@ -581,3 +575,6 @@ required_dtos = {
 	"supplier": SupplierDTO,
 	"material": MaterialDTO
 }
+
+# Creazione delle tabelle
+Base.metadata.create_all(engine)
