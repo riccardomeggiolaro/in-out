@@ -16,12 +16,15 @@ class User(Base):
 	username = Column(String)
 	password = Column(String)
 	level = Column(Integer)
+	description = Column(String)
+	printer_name = COlumn(String, nullable=True)
 
 class UserDTO(BaseModel):
     username: str
     password: str
-    description: str
     level: int
+    description: str
+    printer_name: Optional[str] = None
     
     @validator('username', pre=True, always=True)
     def check_username(cls, v):
