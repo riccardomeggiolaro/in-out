@@ -1,14 +1,11 @@
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 import uvicorn
 import psutil
-from libs.lb_utils import createThread, startThread, closeThread
-from libs.lb_ssh import ssh_tunnel, SshClientConnection
 from applications.router.generic import GenericRouter
-from applications.router.printer import PrinterRouter
 from applications.router.anagrafic import AnagraficRouter
 from applications.router.weigher.router import WeigherRouter
 from applications.router.data_in_execution import DataInExecutionRouter

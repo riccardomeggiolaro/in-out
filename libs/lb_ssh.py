@@ -5,7 +5,6 @@ import select
 import time
 from pydantic import BaseModel
 import libs.lb_log as lb_log
-import queue
 
 class SshClientConnection(BaseModel):
     server: str

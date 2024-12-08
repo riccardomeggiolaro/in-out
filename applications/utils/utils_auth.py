@@ -10,7 +10,7 @@ class LoginDTO(BaseModel):
 	password: str
 
 class SetUserDTO(BaseModel):
-    descripotion: Optional[str] = None
+    description: Optional[str] = None
     printer_name: Optional[str] = None
 
 class TokenData(BaseModel):
@@ -24,14 +24,15 @@ def create_access_token(data: dict, secret_key: str, expires_delta: timedelta = 
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, secret_key, algorithm="HS256")
 
-def hash_password(password: str) -> str:
+def hash_password(password: str):
     # Convert password to bytes and generate salt
     password_bytes = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    
+
+    salt = "$2b$12$PAHE4kh6lnXo3w9SF9tj7O".encode('utf-8')
+
     # Hash the password with the generated salt
     hashed_password = bcrypt.hashpw(password_bytes, salt)
-    
+
     return hashed_password.decode('utf-8')
 
 def update_password_daily():

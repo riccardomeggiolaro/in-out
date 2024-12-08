@@ -1,9 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from libs.lb_database import filter_data, add_data, update_data, delete_data, get_data_by_id, get_data_by_attribute, UserDTO
-from applications.utils.utils_auth import TokenData, LoginDTO, SetUserDTO
-from typing import Callable
-from datetime import datetime, timedelta
-import jwt
+from applications.utils.utils_auth import LoginDTO, SetUserDTO
 from applications.utils.utils_auth import hash_password
 
 class AuthRouter(APIRouter):
@@ -18,14 +15,15 @@ class AuthRouter(APIRouter):
         self.router.add_api_route('/users/{id}', self.delete_user_by_id, methods=['DELETE'])
 
     def login(self, login_dto: LoginDTO):
-        user = get_data_by_attribute("user", "username", login_dto.username)
-        if not user:
-            raise HTTPException(status_code=401, detail="Credenziali errate")
-        hashed_password = hash_password(login_dto.password)
-        if user.password != hashed_password:
-            raise HTTPException(status_code=401, detail="Credenziali errate")
-        access_token = create_access_token(data={"sub": username})
-        return {"access_token": access_token}
+        try:
+            user = get_data_by_attribute("user", "username", login_dto.username)
+
+            if user["password"] == hash_password(login_dto.password):
+                return user
+
+            return HTTPException(status_code=404, detail="Username or passwrdo is not valid")
+        except Exception:
+            return HTTPException(status_code=404, detail="Username or passwrdo is not valid")
     
     def register(self, request: Request, register_dto: UserDTO):
         hashed_password = hash_password(register_dto.password)

@@ -63,7 +63,7 @@
                         "terminal": "dgt1"
                     }
                 ],
-                "time_between_actions": 0.1
+                "time_between_actions": 1
             }
         }
     },
