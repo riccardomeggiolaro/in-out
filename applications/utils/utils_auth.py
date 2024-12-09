@@ -28,6 +28,15 @@ class SetUserDTO(BaseModel):
 			return hash_password(v)
 		return v
 
+	@validator('printer_name', pre=True, always=True)
+	def check_printer_name(cls, v):
+		if v is not None:
+			if v in printer.get_list_printers_name():
+				return v
+			else:
+				raise ValueError('Printer name is not configurated')
+		return v
+
 class TokenData(BaseModel):
 	id: int
 	username: str

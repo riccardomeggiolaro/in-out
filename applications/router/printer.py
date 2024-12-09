@@ -1,24 +1,21 @@
 from fastapi import APIRouter, HTTPException, Request
-from libs.lb_printer import HTMLPrinter
+from libs.lb_printer import printer
 import libs.lb_database as lb_database
 import libs.lb_config as lb_config
 
 class PrinterRouter:
     def __init__(self):
         self.router = APIRouter()
-        self.printer = HTMLPrinter()
 
         self.router.add_api_route('/test', self.printTest)
         self.router.add_api_route('/print/{weighing_id}', self.printWeighingId)
         self.router.add_api_route('/info', self.getPrinter)
         self.router.add_api_route('/list/printer', self.getListPrinters)
-        self.router.add_api_route('/set/{printer_name}', self.setPrinter)
         self.router.add_api_route('/list/job', self.getJobs)
         self.router.add_api_route('/job/{job_id}', self.deleteJob)
         self.router.add_api_route('/jobs', self.deleteJobs)
 
     async def printTest(self, request: Request):
-        return request.state.user
         try:
             html = """
                 <!DOCTYPE html>
@@ -32,7 +29,7 @@ class PrinterRouter:
                     </body>
                 </html>
             """
-            id, m1, m2 = self.printer.print_html(html)
+            id, m1, m2 = printer.print_html(html, request.state.user.printer_name)
             return {
                 "id": id,
                 "message_one": m1,
@@ -41,13 +38,13 @@ class PrinterRouter:
         except Exception as e:
             return HTTPException(status_code=400, detail=f"{e}")
 
-    async def printWeighingId(self, weighing_id: int):
+    async def printWeighingId(self, request: Request, weighing_id: int):
         try:
             weight = lb_database.get_data_by_id('weighing', weighing_id)
             html = f"""
                 <h1>{weight["pid2"]}</h1>
             """
-            id, m1, m2 = self.printer.print_html(html)
+            id, m1, m2 = printer.print_html(html)
             return {
                 "id": id,
                 "message_one": m1,
@@ -56,35 +53,26 @@ class PrinterRouter:
         except Exception as e:
             return HTTPException(status_code=400, detail=f"{e}")
 
-    async def getPrinter(self):
-        return self.get_detailed_status()
+    async def getPrinter(self, request: Request):
+        return printer.get_detailed_status(request.state.user.printer_name)
 
     async def getListPrinters(self):
-        return self.printer.get_list_printers()
+        return printer.get_list_printers()
 
-    async def setPrinter(self, printer_name: str):
+    async def getJobs(self, request: Request):
+        return printer.get_active_jobs(request.state.user.printer_name)
+
+    async def deleteJob(self, request: Request, job_id: int):
         try:
-            status = self.printer.set_printer(printer_name=printer_name)
-            lb_config.g_config["router_api"]["printer_name"] = printer_name
-            lb_config.saveconfig()
-            return status
-        except Exception as e:
-            return HTTPException(status_code=400, detail=f"{e}")
-
-    async def getJobs(self):
-        return self.printer.get_active_jobs()
-
-    async def deleteJob(self, job_id: int):
-        try:
-            self.printer.cancel_job(job_id)
+            printer.cancel_job(request.state.user.printer_name, job_id)
             return {
-                "message": "Job id deleted"
+                "message": f"Job with id {job_id} was deleted successfully from printer {request.state.user.printer_name}"
             }
         except Exception as e:
             return HTTPException(status_code=400, detail=f"{e}")
 
-    async def deleteJobs(self):
-        self.printer.cancel_jobs()
+    async def deleteJobs(self, request: Request):
+        deleted = printer.cancel_all_jobs(request.state.user.printer_name)
         return {
-            "message": "All job deleted"
+            "message": f"Deleted {deleted} jobs successfully from printer {request.state.user.printer_name}"
         }

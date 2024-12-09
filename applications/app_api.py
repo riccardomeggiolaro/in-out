@@ -125,7 +125,7 @@ def init():
 
 	app.include_router(data_in_execution_router.router, prefix="/data_in_execution", tags=["data in execution"])
 
-	app.include_router(printer_router, prefix="/printer", tags=["printer"])
+	app.include_router(printer_router.router, prefix="/printer", tags=["printer"])
 
 	app.include_router(historic_data_router.router, prefix="/historic_data", tags=["historic data"])
 

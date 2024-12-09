@@ -4,6 +4,7 @@ import os
 from typing import Optional, List
 from pydantic import BaseModel, validator
 from applications.utils.utils_auth import hash_password
+from libs.lb_printer import printer
 
 # Connessione al database
 Base = declarative_base()
@@ -41,6 +42,16 @@ class UserDTO(BaseModel):
 		if len(v) < 8:
 			raise ValueError('Password must be at least 8 characters long')
 		return hash_password(v)
+
+	@validator('printer_name', pre=True, always=True)
+	def check_printer_name(cls, v):
+		if v is not None:
+			if v in printer.get_list_printers_name():
+				return v
+			else:
+				raise ValueError('Printer name is not configurated')
+		else:
+			return printer.get_printer_default()
 
 class LoginDTO(BaseModel):
 	username: str
