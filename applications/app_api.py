@@ -11,6 +11,7 @@ from applications.router.weigher.router import WeigherRouter
 from applications.router.data_in_execution import DataInExecutionRouter
 from applications.router.historic_data import HistoricDataRouter
 from applications.router.auth import AuthRouter
+from applications.router.printer import PrinterRouter
 from typing import Optional
 from pathlib import Path
 import os
@@ -108,7 +109,7 @@ def init():
 	)
 
 	# Aggiungi il middleware al tuo FastAPI
-	app.add_middleware(AuthMiddleware, secret_key=lb_config.g_config["secret_key"])
+	app.add_middleware(AuthMiddleware)
 
 	generic_router = GenericRouter()
 	anagrafic_router = AnagraficRouter()
@@ -116,12 +117,15 @@ def init():
 	data_in_execution_router = DataInExecutionRouter()
 	historic_data_router = HistoricDataRouter()
 	auth_router = AuthRouter()
-
-	app.include_router(anagrafic_router.router, prefix="/anagrafic", tags=["anagrafic"])
+	printer_router = PrinterRouter()
 
 	app.include_router(weigher_router.router)
 
+	app.include_router(anagrafic_router.router, prefix="/anagrafic", tags=["anagrafic"])
+
 	app.include_router(data_in_execution_router.router, prefix="/data_in_execution", tags=["data in execution"])
+
+	app.include_router(printer_router, prefix="/printer", tags=["printer"])
 
 	app.include_router(historic_data_router.router, prefix="/historic_data", tags=["historic data"])
 

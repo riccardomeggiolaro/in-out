@@ -1,7 +1,7 @@
 import cups
 import tempfile
 import os
-from typing import Dict, List, Union
+from typing import List
 import libs.lb_log as lb_log
 import datetime as dt
 
@@ -26,10 +26,7 @@ class HTMLPrinter:
             self.printer_name = self.conn.getDefault()
             self.mode = 0
 
-    def get_printer_state_description(self, state: int) -> str:
-        """
-        Converte il codice dello stato della stampante in una descrizione leggibile.
-        """
+    def get_printer_state_description(self, state: int):
         states = {
             3: "Pronta",
             4: "In elaborazione",
@@ -37,10 +34,7 @@ class HTMLPrinter:
         }
         return states.get(state, f"Stato sconosciuto ({state})")
 
-    def interpret_state_reasons(self, reasons: List[str]) -> List[str]:
-        """
-        Interpreta le ragioni dello stato della stampante in modo leggibile.
-        """
+    def interpret_state_reasons(self, reasons: List[str]):
         reason_descriptions = {
             'marker-supply-low-warning': 'Livello inchiostro basso',
             'marker-supply-empty-warning': 'Cartuccia vuota',
@@ -57,10 +51,7 @@ class HTMLPrinter:
         
         return [reason_descriptions.get(reason, reason) for reason in reasons]
 
-    def get_detailed_status(self) -> Dict[str, Union[str, List[str]]]:
-        """
-        Ottiene uno stato dettagliato e leggibile della stampante.
-        """
+    def get_detailed_status(self):
         status = self.get_printer_status()
         
         detailed_status = {
@@ -75,10 +66,7 @@ class HTMLPrinter:
         
         return detailed_status
 
-    def get_printer_status(self) -> Dict:
-        """
-        Ottiene lo stato della stampante.
-        """
+    def get_printer_status(self):
         printers = self.conn.getPrinters()
         return printers.get(self.printer_name, {})
 
@@ -105,16 +93,7 @@ class HTMLPrinter:
 
         return detaileds_status
 
-    def set_printer(self, printer_name: str) -> bool:
-        """
-        Imposta una stampante come predefinita.
-        
-        Args:
-            printer_name (str): Il nome della stampante da impostare come predefinita.
-        
-        Returns:
-            bool: True se l'operazione ha avuto successo, False altrimenti.
-        """
+    def set_printer(self, printer_name: str):
         # Ottieni l'elenco delle stampanti disponibili
         printers = self.conn.getPrinters()
 
@@ -131,15 +110,6 @@ class HTMLPrinter:
             raise ValueError(f"Errore nell'impostare la stampante come predefinita: {e}")
 
     def print_html(self, html_content):
-        """
-        Stampa una stringa HTML utilizzando CUPS.
-        Se la stampante è offline, il lavoro rimarrà in coda fino a quando non sarà disponibile.
-
-        Args:
-            html_content (str): Il contenuto HTML da stampare.
-            printer_name (str): Nome della stampante. Se None, utilizza la stampante predefinita.
-        """
-
         job_id = None
         message1 = None
         message2 = None
@@ -168,29 +138,11 @@ class HTMLPrinter:
 
         return job_id, message1, message2
 
-    def get_job_status(self, job_id: int) -> Dict:
-        """
-        Ottiene lo stato di un lavoro di stampa specifico.
-        
-        Args:
-            job_id (int): ID del lavoro di stampa
-            
-        Returns:
-            dict: Informazioni sul lavoro di stampa o None se non trovato
-        """
+    def get_job_status(self, job_id: int):
         jobs = self.conn.getJobs()
         return jobs.get(job_id)
 
     def cancel_job(self, job_id: int):
-        """
-        Annulla un lavoro di stampa specifico.
-        
-        Args:
-            job_id (int): ID del lavoro di stampa da annullare
-            
-        Returns:
-            bool: True se l'annullamento è riuscito, False altrimenti
-        """
         try:
             self.conn.cancelJob(job_id)
         except cups.IPPError as e:
@@ -201,16 +153,10 @@ class HTMLPrinter:
         for job in jobs:
             try:
                 self.cancel_job(job["id"])
-            except:
-                pass
+            except Exception as e:
+                lb_log.error(e)
 
-    def get_active_jobs(self) -> Dict:
-        """
-        Ottiene tutti i lavori di stampa attivi.
-        
-        Returns:
-            dict: Dizionario dei lavori di stampa attivi
-        """
+    def get_active_jobs(self):
         jobs = self.conn.getJobs(which_jobs='not-completed')
         detaileds_job = []
         for job in jobs:
@@ -218,10 +164,7 @@ class HTMLPrinter:
             detaileds_job.append(detailed_job)
         return detaileds_job
 
-    def get_job_state_description(self, state: int) -> str:
-        """
-        Converte il codice dello stato del lavoro in una descrizione leggibile.
-        """
+    def get_job_state_description(self, state: int):
         states = {
             3: "Pending",
             4: "In attesa di essere elaborato",
@@ -233,16 +176,7 @@ class HTMLPrinter:
         }
         return states.get(state, f"Stato sconosciuto ({state})")
 
-    def get_detailed_job_info(self, job_id: int) -> Dict:
-        """
-        Ottiene informazioni dettagliate su un lavoro di stampa specifico.
-        
-        Args:
-            job_id (int): ID del lavoro di stampa
-            
-        Returns:
-            dict: Informazioni dettagliate sul lavoro o None se non trovato
-        """
+    def get_detailed_job_info(self, job_id: int):
         try:
             job_attrs = self.conn.getJobAttributes(job_id)
             lb_log.warning(job_attrs)

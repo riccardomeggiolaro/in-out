@@ -1,16 +1,17 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Callable
 import traceback
 from applications.utils.utils_auth import TokenData
 import jwt
-from datetime import datetime
+from datetime import datetime, timezone
+import libs.lb_config as lb_config
 
 class AuthMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, secret_key: str):
+    def __init__(self, app):
         super().__init__(app)
-        self.secret_key = secret_key
+        self.secret_key = lb_config.g_config["secret_key"]
         self.algorithm = "HS256"
 
     async def dispatch(self, request: Request, call_next: Callable):
@@ -44,10 +45,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
             # Decode token
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+
             token_data = TokenData(**payload)
 
-            # Check token expiration
-            if token_data.exp < datetime.utcnow():
+            if token_data.exp < datetime.now(timezone.utc):
                 return JSONResponse(
                     status_code=401, 
                     content={"detail": "Token expired"}

@@ -3,6 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from typing import Optional, List
 from pydantic import BaseModel, validator
+from applications.utils.utils_auth import hash_password
 
 # Connessione al database
 Base = declarative_base()
@@ -27,7 +28,7 @@ class UserDTO(BaseModel):
 	level: int
 	description: str
 	printer_name: Optional[str] = None
-	
+
 	@validator('username', pre=True, always=True)
 	def check_username(cls, v):
 		data = get_data_by_attribute('user', 'username', v)
@@ -39,13 +40,7 @@ class UserDTO(BaseModel):
 	def check_password(cls, v):
 		if len(v) < 8:
 			raise ValueError('Password must be at least 8 characters long')
-		return v
-
-	@validator('level', pre=True, always=True)
-	def check_level(cls, v):
-		if v not in [1, 2]:
-			raise ValueError('Level must be 1 or 2')
-		return v
+		return hash_password(v)
 
 class LoginDTO(BaseModel):
 	username: str
@@ -348,19 +343,15 @@ def get_data_by_attribute(table_name, attribute_name, attribute_value, if_not_se
 		# Recupera il record specifico in base all'attributo
 		record = session.query(model).filter(getattr(model, attribute_name) == attribute_value).one_or_none()
 
-		if record is None:
-			raise ValueError(f"Record con {attribute_name} = {attribute_value} non trovato nella tabella '{table_name}'.")
-
-		# Aggiunge una condizione alla query se if_not_selected è True
-		if if_not_selected and record.selected:
-			raise ValueError(f"Record con {attribute_name} = {attribute_value} già in uso nella tabella '{table_name}'.")
-
 		# Imposta l'attributo 'selected' a True e salva la modifica
 		if set_selected:
 			record.selected = True
 
-		# Converte il record in un dizionario
-		record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
+		record_dict = None
+
+		if record:
+			# Converte il record in un dizionario
+			record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
 
 		session.commit()
 		session.close()
@@ -445,7 +436,9 @@ def add_data(table_name, data):
 		record = model(**data)
 		session.add(record)
 		session.commit()
+		session.refresh(record)
 		session.close()
+		return record
 	except Exception as e:
 		session.rollback()
 		session.close()
@@ -484,7 +477,9 @@ def update_data(table_name, record_id, updated_data, if_not_selected=False):
 				setattr(record, key, value)
 
 		session.commit()
+		session.refresh(record)
 		session.close()
+		return record
 	except Exception as e:
 		session.rollback()
 		session.close()

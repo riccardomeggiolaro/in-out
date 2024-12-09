@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from libs.lb_printer import HTMLPrinter
 import libs.lb_database as lb_database
 import libs.lb_config as lb_config
@@ -17,7 +17,8 @@ class PrinterRouter:
         self.router.add_api_route('/job/{job_id}', self.deleteJob)
         self.router.add_api_route('/jobs', self.deleteJobs)
 
-    async def printTest(self):
+    async def printTest(self, request: Request):
+        return request.state.user
         try:
             html = """
                 <!DOCTYPE html>
