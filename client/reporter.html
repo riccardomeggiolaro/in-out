@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt Designer</title>
+    <script src="./fabric.min.js"></script>
+    <script src="./jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="./style.css"></link>
+</head>
+<body>
+    <div id="toolbar">
+        <select id="format-select">
+            <option value="A4" selected>A4</option>
+            <option value="A5">A5</option>
+            <option value="A6">A6</option>
+            <option value="A7">A7</option>
+            <option value="A8">A8</option>
+        </select>
+        
+        <div id="tool-buttons">
+            <button onclick="setTool('text')">Testo</button>
+            <button onclick="setTool('rectWithText')">Rettangolo</button>
+            <button onclick="setTool('table')">Tabella</button>
+            <button onclick="setTool('line')">Linea</button>
+        </div>
+        
+        <button onclick="deleteSelected()" style="background-color: #ff4444; color: white;">Elimina</button>
+        <button onclick="exportToPDF()">Esporta PDF</button>
+        
+        <label class="grid-toggle">
+            <input type="checkbox" id="grid-toggle" onchange="toggleGrid()"> 
+            Mostra Griglia
+        </label>
+
+        <label class="midline-toggle">
+            <input type="checkbox" id="midline-toggle" onchange="toggleMidlines()">
+            Mostra Linee Centrali
+        </label>
+
+        <label class="margin-toggle">
+            <input type="checkbox" id="margin-toggle" onchange="toggleMargins()">
+            Mostra margini
+        </label>
+
+        <div id="text-controls" style="display:none;">
+            <label for="font-size-text">
+                Font size
+                <input name="font-size-text" type="number" id="font-size-text" value="16" min="8" max="72" onchange="updateFontSizeText()">
+            </label>
+            <label for="font-family-text">
+                Font family
+                <select name="font-family-text" id="font-family-text" onchange="updateFontFamilyText()">
+                    <option value="Arial">Arial</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Tahoma">Tahoma</option>
+                    <option value="Trebuchet MS">Trebuchet MS</option>
+                    <option value="Comic Sans MS">Comic Sans MS</option>
+                </select>
+            </label>
+            <label for="text-align">
+                Allineamento
+                <select name="text-align" id="text-align" onchange="updateAlignText()">
+                    <option value="left">Sinistra</option>
+                    <option value="right">Destra</option>
+                    <option value="center">Centro</option>
+                </select>
+            </label>
+        </div>
+
+        <div id="rectangle-controls" style="display:none;">
+            <label for="fill-color">
+                Sfondo
+                <input type="color" name="fill-color" id="fill-color" value="#ffffff" onchange="updateObjectStyle()">
+            </label>
+            <label for="stroke-color">
+                Colore bordi
+                <input type="color" name="stroke-color" id="stroke-color" value="#000000" onchange="updateObjectStyle()">
+            </label>
+            <label for="stroke-width">
+                Spessore bordi
+                <input type="number" name="stroke-width" id="stroke-width" value="1" min="0" max="10" onchange="updateObjectStyle()">
+            </label>
+        </div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="./check-canvas-height.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>

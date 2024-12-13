@@ -20,10 +20,16 @@ class HTMLPrinter:
     def __init__(self):
         self.conn = cups.Connection()
 
-    def close_connection(self):
-        # Explicitly delete the connection object to clean up
-        del self.conn
-        print("CUPS connection closed.")
+    def check_subsystem_connection(self):
+        try:
+            # Tentiamo di connetterci a CUPS senza cercare le stampanti
+            return True if self.conn.getPrinters() else False  # Chiamata che verifica la connessione
+        except cups.IPPError as e:
+            # Gestisce errori relativi al server CUPS
+            return f"Errore CUPS: {e}"
+        except Exception as e:
+            # Gestisce altre eccezioni generiche
+            return f"Errore nella connessione a CUPS: {str(e)}"
 
     def get_printer_state_description(self, state: int):
         states = {
@@ -51,10 +57,12 @@ class HTMLPrinter:
         return [reason_descriptions.get(reason, reason) for reason in reasons]
 
     def get_detailed_status(self, printer_name: str):
-        status = self.get_printer_status()
-        
-        detailed_status = {
+        status = self.get_printer_status(printer_name=printer_name)
+
+        return {
+            'stampante': printer_name,
             'nome': printer_name if status.get('printer-info') else 'Sconosciuto',
+            'printer-uri': status.get('printer-uri-supported', 'Sconosciuto'),
             'stato': self.get_printer_state_description(status.get('printer-state')),
             'messaggi': self.interpret_state_reasons(status.get('printer-state-reasons', [])),
             'modello': status.get('printer-make-and-model', 'Sconosciuto'),
@@ -62,144 +70,93 @@ class HTMLPrinter:
             'uri_dispositivo': status.get('device-uri', 'Sconosciuto')
         }
         
-        return detailed_status
-
-    def get_printer_status(self, printer_name: str):
-        printers = self.conn.getPrinters()
-        return printers.get(printer_name, {})
-
-    def get_list_printers(self):
-        # Verifica se la stampante esiste
-        printers = self.conn.getPrinters()
-
-        detaileds_status = []
-
-        for printer in printers:
-            status = printers.get(printer, {})
-
-            detailed_status = {
-                'nome': printer,
-                'stato': self.get_printer_state_description(status.get('printer-state')),
-                'messaggi': self.interpret_state_reasons(status.get('printer-state-reasons', [])),
-                'modello': status.get('printer-make-and-model', 'Sconosciuto'),
-                'condivisa': 'Sì' if status.get('printer-is-shared') else 'No',
-                'uri_dispositivo': status.get('device-uri', 'Sconosciuto')
-            }
-
-            detaileds_status.append(detailed_status)
-
-        return detaileds_status
-
     def get_list_printers_name(self):
         return [printer['nome'] for printer in self.get_list_printers()]
 
+    def get_printer_status(self, printer_name: str):
+        try:
+            printers = self.conn.getPrinters()
+            return printers.get(printer_name, {})
+        except Exception as e:
+            lb_log.error(f"Errore nella gestione delle stampanti: {e}")
+            return {}
+
+    def get_list_printers(self):
+        try:
+            # Verifica se la stampante esiste
+            printers = self.conn.getPrinters()
+
+            detaileds_status = []
+
+            for printer in printers:
+                status = printers.get(printer, {})
+
+                detailed_status = {
+                    'nome': printer,
+                    'stato': self.get_printer_state_description(status.get('printer-state')),
+                    'messaggi': self.interpret_state_reasons(status.get('printer-state-reasons', [])),
+                    'modello': status.get('printer-make-and-model', 'Sconosciuto'),
+                    'condivisa': 'Sì' if status.get('printer-is-shared') else 'No',
+                    'uri_dispositivo': status.get('device-uri', 'Sconosciuto')
+                }
+
+                detaileds_status.append(detailed_status)
+
+            return detaileds_status
+        except Exception as e:
+            lb_log.error(f"Errore nella gestione delle stampanti: {e}")
+            return []
+
     def get_printer_default(self):
-        return self.conn.getDefault()
+        try:
+            return self.conn.getDefault()
+        except Exception as e:
+            lb_log.error(f"Errore nella ricerca della stampante predefinita: {e}")
+            return None
 
     def print_html(self, html_content, printer_name: str):
         job_id = None
         message1 = None
         message2 = None
 
-        # Controlla lo stato della stampante
-        printers = self.conn.getPrinters()
-        printer_status = printers.get(printer_name, {}).get('printer-state', None)
+        # Gestione del caso in cui printer_name è None
+        if not printer_name:
+            message1 = "Stampante non specificata."
+            message2 = "Stampa non inviata."
+        else:
+            # Controlla se la stampante è presente nella lista delle stampanti
+            try:
+                printers = self.conn.getPrinters()
+                if printer_name not in printers:
+                    message1 = f"Stampante '{printer_name}' non trovata."
+                    message2 = "Stampa non inviata."
+                else:
+                    # Controlla lo stato della stampante
+                    printer_status = printers[printer_name].get('printer-state', None)
 
-        if printer_status == cups.IPP_PRINTER_STOPPED:
-            message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline. La stampa rimarrà in coda."
+                    # Gestione stampante offline
+                    if printer_status == cups.IPP_PRINTER_STOPPED:
+                        message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline. La stampa rimarrà in coda."
 
-        # Crea un file temporaneo per il contenuto HTML
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
-            temp_file.write(html_content.encode('utf-8'))
-            temp_file_path = temp_file.name
+                    # Crea un file temporaneo per il contenuto HTML
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                        temp_file.write(html_content.encode('utf-8'))
+                        temp_file_path = temp_file.name
 
-        # Invia il file HTML alla stampante
-        try:
-            job_id = self.conn.printFile(printer_name, temp_file_path, "HTML Print Job", {})
-            message2 = f"Stampa inviata alla stampante '{printer_name}' con successo. La stampa rimarrà in coda se la stampante è offline."
-        except Exception as e:
-            raise ValueError(f"Errore durante la stampa: {e}")
-        finally:
-            # Rimuovi il file temporaneo
-            os.unlink(temp_file_path)
+                    # Invia il file HTML alla stampante
+                    try:
+                        job_id = self.conn.printFile(printer_name, temp_file_path, "HTML Print Job", {})
+                        message2 = f"Stampa inviata alla stampante '{printer_name}' con successo. La stampa rimarrà in coda se la stampante è offline."
+                    except Exception as e:
+                        message2 = f"Errore durante la stampa: {e}"
+                    finally:
+                        # Rimuovi il file temporaneo
+                        os.unlink(temp_file_path)
+
+            except Exception as e:
+                message1 = f"Errore nella gestione delle stampanti: {e}"
+                message2 = "Stampa non inviata."
 
         return job_id, message1, message2
-
-    def get_job_status(self, job_id: int):
-        jobs = self.conn.getJobs()
-        return jobs.get(job_id)
-
-    def cancel_job(self, printer_name: str, job_id: int):
-        try:
-            # Ottieni le informazioni sul lavoro di stampa
-            job_attributes = self.conn.getJobAttributes(job_id)
-            
-            # Verifica se la stampante associata al lavoro corrisponde a quella passata
-            if job_attributes['printer-name'] == printer_name:
-                self.conn.cancelJob(job_id)
-            else:
-                raise ValueError(f"Il lavoro {job_id} non appartiene alla stampante {printer_name}.")
-        
-        except cups.IPPError as e:
-            raise ValueError(f"Errore nell'annullamento del lavoro {job_id}: {str(e)}")
-        except KeyError:
-            raise ValueError(f"Impossibile ottenere le informazioni sul lavoro {job_id}.")
-
-    def cancel_all_jobs(self, printer_name: str):
-        try:
-            # Ottieni tutti i lavori di stampa
-            jobs = self.conn.getJobs()
-            
-            # Filtra i lavori che appartengono alla stampante specificata
-            jobs_to_cancel = [job_id for job_id, job_info in jobs.items() if job_info['printer-name'] == printer_name]
-            
-            # Annulla tutti i lavori associati alla stampante
-            for job_id in jobs_to_cancel:
-                self.conn.cancelJob(job_id)
-
-            return len(jobs_to_cancel)
-        except cups.IPPError as e:
-            raise ValueError(f"Errore nell'annullamento dei lavori per la stampante {printer_name}: {str(e)}")
-
-    def get_active_jobs(self, printer_name: str):
-        jobs = self.conn.getJobs(which_jobs='not-completed')
-        detaileds_job = []
-        for job in jobs:
-            detailed_job = self.get_detailed_job_info(job)
-            if detailed_job["printer_name"] == printer_name:
-                detaileds_job.append(detailed_job)
-        return detaileds_job
-
-    def get_job_state_description(self, state: int):
-        states = {
-            3: "Pending",
-            4: "In attesa di essere elaborato",
-            5: "In elaborazione",
-            6: "Fermato",
-            7: "Annullato",
-            8: "Abortito",
-            9: "Completato"
-        }
-        return states.get(state, f"Stato sconosciuto ({state})")
-
-    def get_detailed_job_info(self, job_id: int):
-        try:
-            job_attrs = self.conn.getJobAttributes(job_id)
-            lb_log.warning(job_attrs)
-
-            # Extract the printer name from the job attributes
-            printer_name = job_attrs.get('printer', 'Unknown Printer')
-
-            return {
-                'id': job_id,
-                'stato': self.get_job_state_description(job_attrs.get('job-state', 0)),
-                'dimensione': f"{job_attrs.get('job-k-octets', 0)} KB",
-                'pagine': job_attrs.get('job-impressions-completed', 'Sconosciuto'),
-                'priorità': job_attrs.get('job-priority', 50),
-                'ora_creazione': dt.datetime.fromtimestamp(job_attrs.get('time-at-creation', 0)),
-                'printer_name': printer_name
-            }
-        except cups.IPPError:
-            return None
     
 printer = HTMLPrinter()
