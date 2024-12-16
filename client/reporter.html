@@ -20,7 +20,6 @@
         <div id="tool-buttons">
             <button onclick="setTool('text')">Testo</button>
             <button onclick="setTool('rectWithText')">Rettangolo</button>
-            <button onclick="setTool('table')">Tabella</button>
             <button onclick="setTool('line')">Linea</button>
         </div>
         
@@ -45,11 +44,11 @@
         <div id="text-controls" style="display:none;">
             <label for="font-size-text">
                 Font size
-                <input name="font-size-text" type="number" id="font-size-text" value="16" min="8" max="72" onchange="updateFontSizeText()">
+                <input name="font-size-text" type="number" id="font-size-text" value="16" min="8" max="72" onchange="updateText()">
             </label>
             <label for="font-family-text">
                 Font family
-                <select name="font-family-text" id="font-family-text" onchange="updateFontFamilyText()">
+                <select name="font-family-text" id="font-family-text" onchange="updateText()">
                     <option value="Arial">Arial</option>
                     <option value="Verdana">Verdana</option>
                     <option value="Times New Roman">Times New Roman</option>
@@ -60,9 +59,9 @@
                     <option value="Comic Sans MS">Comic Sans MS</option>
                 </select>
             </label>
-            <label for="text-align">
+            <label for="align-text">
                 Allineamento
-                <select name="text-align" id="text-align" onchange="updateAlignText()">
+                <select name="align-text" id="align-text" onchange="updateText()">
                     <option value="left">Sinistra</option>
                     <option value="right">Destra</option>
                     <option value="center">Centro</option>
@@ -71,17 +70,28 @@
         </div>
 
         <div id="rectangle-controls" style="display:none;">
-            <label for="fill-color">
+            <label for="fill-color-rect">
                 Sfondo
-                <input type="color" name="fill-color" id="fill-color" value="#ffffff" onchange="updateObjectStyle()">
+                <input type="color" name="fill-color-rect" id="fill-color-rect" value="#ffffff" onchange="updateRectWithText()">
             </label>
-            <label for="stroke-color">
+            <label for="stroke-color-rect">
                 Colore bordi
-                <input type="color" name="stroke-color" id="stroke-color" value="#000000" onchange="updateObjectStyle()">
+                <input type="color" name="stroke-color-rect" id="stroke-color-rect" value="#000000" onchange="updateRectWithText()">
             </label>
-            <label for="stroke-width">
+            <label for="stroke-width-rect">
                 Spessore bordi
-                <input type="number" name="stroke-width" id="stroke-width" value="1" min="0" max="10" onchange="updateObjectStyle()">
+                <input type="number" name="stroke-width-rect" id="stroke-width-rect" value="1" min="0" max="10" onchange="updateRectWithText()">
+            </label>
+        </div>
+
+        <div id="line-controls" style="display:none;">
+            <label for="color-line">
+                Colore
+                <input type="color" name="color-line" id="color-line" value="#ffffff" onchange="updateLine()">
+            </label>
+            <label for="stroke-width-line">
+                Spessore
+                <input type="number" name="stroke-width-line" id="stroke-width-line" value="1" min="0" max="10" onchange="updateLine()">
             </label>
         </div>
     </div>

@@ -346,6 +346,7 @@ const paperSizes = {
 
 let canvas;
 let gridLayer;
+let grid = 20;
 let midlineLayer;
 let marginLayer;
 let currentTool = 'text';
@@ -484,7 +485,7 @@ function toggleMidlines() {
     }
 }
 
-function createGrid(width, height, gridSize = 10) {
+function createGrid(width, height, gridSize = 20) {
     if (gridLayer) {
         canvas.remove(gridLayer);
     }
@@ -566,6 +567,18 @@ function initCanvas(format) {
     canvas.on('selection:created', showControls);
     canvas.on('selection:updated', showControls);
     canvas.on('selection:cleared', hideControls);
+
+    canvas.on('object:moving', function(options) {
+        if (gridLayer) {
+            if (Math.round(options.target.left / grid * 4) % 4 == 0 &&
+                Math.round(options.target.top / grid * 4) % 4 == 0) {
+                options.target.set({
+                    left: Math.round(options.target.left / grid) * grid,
+                    top: Math.round(options.target.top / grid) * grid
+                }).setCoords();
+            }
+        }
+    });
 }
 
 function colorNameToHex(color) {
@@ -600,29 +613,39 @@ function showControls(e) {
 
     const activeObj = canvas.getActiveObject();
     const textControls = document.getElementById('text-controls');
-    const styleControls = document.getElementById('rectangle-controls');
+    const rectWithTextControls = document.getElementById('rectangle-controls');
+    const lineControls = document.getElementById('line-controls');
 
     // Nascondi tutti i controlli di default
     textControls.style.display = 'none';
-    styleControls.style.display = 'none';
+    rectWithTextControls.style.display = 'none';
+    lineControls.style.display = 'none';    
 
     // Controlla che activeObj esista prima di accedere al suo tipo
     if (activeObj && activeObj.type === 'textbox') {
         textControls.style.display = 'flex';
         
         document.getElementById('font-size-text').value = activeObj.fontSize;
-        document.getElementById('text-align').value = activeObj.textAlign;
+        document.getElementById('align-text').value = activeObj.textAlign;
         document.getElementById('font-family-text').value = activeObj.fontFamily;
     } else if (activeObj && activeObj.type === 'rectWithText') {
-        styleControls.style.display = 'flex';
+        rectWithTextControls.style.display = 'flex';
         
         // Converti i colori in formato hex
         const fillColor = activeObj.fill ? colorNameToHex(activeObj.fill) : '#ffffff';
         const strokeColor = activeObj.stroke ? colorNameToHex(activeObj.stroke) : '#000000';
         
-        document.getElementById('fill-color').value = fillColor;
-        document.getElementById('stroke-color').value = strokeColor;
-        document.getElementById('stroke-width').value = activeObj.strokeWidth || 1;
+        document.getElementById('fill-color-rect').value = fillColor;
+        document.getElementById('stroke-color-rect').value = strokeColor;
+        document.getElementById('stroke-width-rect').value = activeObj.strokeWidth || 1;
+    } else if (activeObj && activeObj.type === 'line') {
+        lineControls.style.display = 'flex';
+        
+        // Converti i colori in formato hex
+        const strokeColor = activeObj.stroke ? colorNameToHex(activeObj.stroke) : '#000000';
+        
+        document.getElementById('color-line').value = strokeColor;
+        document.getElementById('stroke-width-line').value = activeObj.strokeWidth || 1;
     }
 }
 
@@ -631,6 +654,7 @@ function hideControls() {
 
     document.getElementById('text-controls').style.display = 'none';
     document.getElementById('rectangle-controls').style.display = 'none';
+    document.getElementById('line-controls').style.display = 'none';
 }
 
 function setTool(tool) {
@@ -694,13 +718,28 @@ function addRectangle() {
 function addLine() {
     const line = new fabric.Line([0, 200, 200, 200], {
         stroke: 'black',
-        strokeWidth: 2,
         selectable: true,
         evented: true,
-        hasControls: true
+        hasControls: true,
+        strokeWidth: 1,
+        noScaleCache: false,
+        strokeUniform: true
     });
     canvas.add(line);
     canvas.setActiveObject(line);
+    // Personalizza i controlli per avere solo quello per la larghezza
+    line.setControlsVisibility({
+        tl: false, // Non mostrare il controllo in alto a sinistra
+        tr: false, // Non mostrare il controllo in alto a destra
+        bl: false, // Non mostrare il controllo in basso a sinistra
+        br: false, // Non mostrare il controllo in basso a destra
+        mt: false, // Non mostrare il controllo al centro in alto
+        mb: false, // Non mostrare il controllo al centro in basso
+        ml: true, // Non mostrare il controllo a sinistra
+        mr: true,  // Mostra solo il controllo a destra per la larghezza
+    });
+    // Imposta il controllo di ridimensionamento orizzontale per la larghezza
+    line.set({ lockScalingY: true }); // Blocca la scalabilità verticale
 }
 
 const rectOptions = {
@@ -728,38 +767,6 @@ function addRectangleText() {
     canvas.setActiveObject(rectText);
 }
 
-function addTable() {
-    // Create a table with 3 rows and 3 columns
-    var table = new fabric.Table({
-        rows: 3,
-        columns: 3,
-        cellWidth: 100,
-        cellHeight: 50,
-        stroke: 'blue',
-        fill: '#f0f0f0'
-    });
-    // Add the table to the canvas
-    canvas.add(table);
-
-    // Set text in specific cells
-    table.setText(0, 0, 'Header 1')
-        .setText(0, 1, 'Header 2')
-        .setText(0, 2, 'Header 3')
-        .setText(1, 0, 'Data 1')
-        .setText(1, 1, 'Data 2')
-        .setText(1, 2, 'Data 3');
-
-    // Update cell style
-    table.updateCellStyle(0, 0, { 
-        fill: 'lightblue',
-        stroke: 'darkblue'
-    });
-
-    // Add a new row
-    table.addRow();
-    table.setText(3, 0, 'New Row Data 1');
-}
-
 function deleteSelected() {
     const activeObject = canvas.getActiveObject();
     
@@ -783,9 +790,15 @@ function deleteSelected() {
     }
 }
 
-function updateFontSizeText() {
+function updateText() {
     const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === 'textbox') {
+        activeObject.set({
+            fontSize: parseInt(document.getElementById('font-size-text').value),
+            fontFamily: document.getElementById('font-family-text').value,
+            textAlign: document.getElementById('align-text').value
+        });
+        canvas.requestRenderAll(); // Metodo più affidabile per aggiornare il canvas
         // Trova il contenitore RectWithText se esiste
         const parentRectWithText = canvas.getObjects().find(obj => 
             obj.type === 'rectWithText' && 
@@ -795,40 +808,27 @@ function updateFontSizeText() {
             // Emetti manualmente l'evento 'changed' per il testo
             activeObject.fire('changed');
         }
-        activeObject.set({
-            fontSize: parseInt(document.getElementById('font-size-text').value)
-        });
-        canvas.requestRenderAll(); // Metodo più affidabile per aggiornare il canvas
     }
 }
 
-function updateFontFamilyText() {
-    const activeObj = canvas.getActiveObject();
-    if (activeObj && activeObj.type === 'textbox') {
-        activeObj.set({
-            fontFamily: document.getElementById('font-family-text').value
-        });
-        canvas.requestRenderAll();
-    }
-}
-
-function updateAlignText() {
-    const activeObj = canvas.getActiveObject();
-    if (activeObj && activeObj.type === 'textbox') {
-        activeObj.set({
-            textAlign: document.getElementById('text-align').value
-        });
-        canvas.requestRenderAll();
-    }
-}
-
-function updateObjectStyle() {
+function updateRectWithText() {
     const activeObj = canvas.getActiveObject();
     if (activeObj && activeObj.type === 'rectWithText') {
         activeObj.set({
-            fill: document.getElementById('fill-color').value,
-            stroke: document.getElementById('stroke-color').value,
-            strokeWidth: parseInt(document.getElementById('stroke-width').value)
+            fill: document.getElementById('fill-color-rect').value,
+            stroke: document.getElementById('stroke-color-rect').value,
+            strokeWidth: parseInt(document.getElementById('stroke-width-rect').value)
+        });
+        canvas.requestRenderAll();
+    }
+}
+
+function updateLine() {
+    const activeObj = canvas.getActiveObject();
+    if (activeObj && activeObj.type === 'line') {
+        activeObj.set({
+            stroke: document.getElementById('color-line').value,
+            strokeWidth: parseInt(document.getElementById('stroke-width-line').value)
         });
         canvas.requestRenderAll();
     }
@@ -899,7 +899,6 @@ document.getElementById('tool-buttons').addEventListener('click', (e) => {
             addLine();
             break;
         default:
-            addTable();
             break;
     }
 });
