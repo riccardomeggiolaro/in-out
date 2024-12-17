@@ -5,6 +5,7 @@
     <title>Receipt Designer</title>
     <script src="./javascript/fabric.min.js"></script>
     <script src="./javascript/jspdf.umd.min.js"></script>
+    <script type="module" src="./javascript/reporter.js"></script>
     <link rel="stylesheet" href="./css/reporter.css"></link>
 </head>
 <body>
@@ -59,14 +60,35 @@
                     <option value="Comic Sans MS">Comic Sans MS</option>
                 </select>
             </label>
-            <label for="align-text">
+            <label for="database-data-text">
+                Database
+                <select name="database-data-text" id="database-data-text" onchange="updateText()">
+                    <option value="[pid1]">PID 1</option>
+                    <option value="[pid2]">PID 2</option>
+                    <option value="[date1]">Data 1</option>
+                    <option value="[date2]">Data ora 2</option>
+                    <option value="[weight1]">Peso 1</option>
+                    <option value="[weight2]">Peso 2</option>
+                    <option value="[net_weight]">Peso netto</option>
+                    <option value="[gross_weight]">Data lordo</option>
+                    <option value="[tare]">Tara</option>
+                    <option value="[customer]">Cliente</option>
+                    <option value="[supplier]">Fornitore</option>
+                    <option value="[vehicle]">Veicolo</option>
+                    <option value="[plate]">Targa</option>
+                    <option value="[card_code]">Codice carta</option>
+                    <option value="[card_number]">Numero carta</option>
+                    <option value="[material]">Materiale</option>
+                </select>
+            </label>
+            <!-- <label for="align-text">
                 Allineamento
                 <select name="align-text" id="align-text" onchange="updateText()">
                     <option value="left">Sinistra</option>
                     <option value="right">Destra</option>
                     <option value="center">Centro</option>
                 </select>
-            </label>
+            </label> -->
         </div>
 
         <div id="rectangle-controls" style="display:none;">
@@ -99,7 +121,5 @@
     <div id="canvas-container">
         <canvas id="canvas"></canvas>
     </div>
-
-    <script src="./javascript/reporter.js"></script>
 </body>
 </html>

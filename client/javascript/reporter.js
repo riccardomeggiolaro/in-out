@@ -1,3 +1,6 @@
+import { initAligningGuidelines } from './guide-lines.js';
+import { initCenteringGuidelines } from './centering-guide-lines.js';
+
 fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
     type: 'rectWithText',
     text: null,
@@ -34,7 +37,7 @@ fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
         });
 
         // Create the text
-        this.text = new fabric.Textbox(text, {
+        this.text = new fabric.IText(text, {
             ...textOptions,
             selectable: false,
             evented: false,
@@ -139,172 +142,16 @@ fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
                 });
             }
         });
-    }
-});
+    },
 
-fabric.Table = fabric.util.createClass(fabric.Group, {
-    type: 'table',
-
-    initialize: function(options) {
-        // Default options
-        const defaults = {
-            rows: 3,
-            columns: 3,
-            cellWidth: 100,
-            cellHeight: 50,
-            strokeWidth: 1,
-            stroke: 'black',
-            fill: 'white',
-            textOptions: {
-                fontSize: 14,
-                fill: 'black',
-                textAlign: 'center'
-            }
-        };
-
-        // Merge provided options with defaults
-        const mergedOptions = { ...defaults, ...options };
-
-        // Prepare to store cells and text objects
-        this.cells = [];
-        this.texts = [];
-
-        // Create table cells and text
-        const tableObjects = this._createTableObjects(mergedOptions);
-
-        // Call the group constructor
-        this.callSuper('initialize', tableObjects, {
-            subTargetCheck: true,
-            ...mergedOptions
+    // Metodo per clonare correttamente l'oggetto personalizzato
+    clone: function(callback) {
+        var clonedRect = new fabric.RectWithText(this.toObject(), this.text.toObject(), this.text.text);
+        clonedRect.set({
+            left: this.left + 10,  // Spostamento per evitare sovrapposizioni
+            top: this.top + 10
         });
-    },
-
-    _createTableObjects: function(options) {
-        const tableObjects = [];
-
-        for (let row = 0; row < options.rows; row++) {
-            this.cells[row] = [];
-            this.texts[row] = [];
-
-            for (let col = 0; col < options.columns; col++) {
-                // Create cell rectangle
-                const cell = new fabric.Rect({
-                    width: options.cellWidth,
-                    height: options.cellHeight,
-                    stroke: options.stroke,
-                    strokeWidth: options.strokeWidth,
-                    fill: options.fill,
-                    left: col * options.cellWidth,
-                    top: row * options.cellHeight,
-                    selectable: false,
-                    evented: false
-                });
-
-                // Create text for the cell
-                const text = new fabric.Textbox('', {
-                    ...options.textOptions,
-                    width: options.cellWidth,
-                    left: col * options.cellWidth,
-                    top: row * options.cellHeight,
-                    selectable: true,
-                    evented: true
-                });
-
-                // Store references to cells and texts
-                this.cells[row][col] = cell;
-                this.texts[row][col] = text;
-
-                // Add cell and text to table objects
-                tableObjects.push(cell);
-                tableObjects.push(text);
-            }
-        }
-
-        return tableObjects;
-    },
-
-    // Method to set text in a specific cell
-    setText: function(row, col, value) {
-        if (this.texts[row] && this.texts[row][col]) {
-            this.texts[row][col].set('text', value);
-            this.canvas && this.canvas.renderAll();
-        }
-        return this;
-    },
-
-    // Method to get text from a specific cell
-    getText: function(row, col) {
-        return this.texts[row] && this.texts[row][col] 
-            ? this.texts[row][col].text 
-            : null;
-    },
-
-    // Method to update cell styles
-    updateCellStyle: function(row, col, styleOptions) {
-        if (this.cells[row] && this.cells[row][col]) {
-            this.cells[row][col].set(styleOptions);
-            this.canvas && this.canvas.renderAll();
-        }
-        return this;
-    },
-
-    // Method to add a new row
-    addRow: function(options = {}) {
-        const newRowIndex = this.cells.length;
-        const colCount = this.cells[0].length;
-        
-        const defaultOptions = {
-            cellWidth: this.cells[0][0].width,
-            cellHeight: this.cells[0][0].height,
-            stroke: this.cells[0][0].stroke,
-            strokeWidth: this.cells[0][0].strokeWidth,
-            fill: this.cells[0][0].fill,
-            textOptions: {
-                fontSize: 14,
-                fill: 'black',
-                textAlign: 'center'
-            }
-        };
-
-        const mergedOptions = { ...defaultOptions, ...options };
-
-        // Create new row cells and texts
-        for (let col = 0; col < colCount; col++) {
-            // Create cell rectangle
-            const cell = new fabric.Rect({
-                width: mergedOptions.cellWidth,
-                height: mergedOptions.cellHeight,
-                stroke: mergedOptions.stroke,
-                strokeWidth: mergedOptions.strokeWidth,
-                fill: mergedOptions.fill,
-                left: col * mergedOptions.cellWidth,
-                top: newRowIndex * mergedOptions.cellHeight,
-                selectable: false,
-                evented: false
-            });
-
-            // Create text for the cell
-            const text = new fabric.Textbox('', {
-                ...mergedOptions.textOptions,
-                width: mergedOptions.cellWidth,
-                left: col * mergedOptions.cellWidth,
-                top: newRowIndex * mergedOptions.cellHeight,
-                selectable: true,
-                evented: true
-            });
-
-            // Add to table group
-            this.addWithUpdate(cell);
-            this.addWithUpdate(text);
-
-            // Store references
-            if (!this.cells[newRowIndex]) this.cells[newRowIndex] = [];
-            if (!this.texts[newRowIndex]) this.texts[newRowIndex] = [];
-            this.cells[newRowIndex][col] = cell;
-            this.texts[newRowIndex][col] = text;
-        }
-
-        return this;
+        callback(clonedRect);
     }
 });
 
@@ -426,7 +273,7 @@ function createMargins(width, height, margins) {
     };
 }
 
-function toggleMargins() {
+export function toggleMargins() {
     const marginToggle = document.getElementById('margin-toggle');
     const size = paperSizes[formatSelect.value];
 
@@ -473,7 +320,7 @@ function createMidlines(width, height) {
     midlineLayer.sendToBack();
 }
 
-function toggleMidlines() {
+export function toggleMidlines() {
     const midlineToggle = document.getElementById('midline-toggle');
     const size = paperSizes[formatSelect.value];
 
@@ -521,7 +368,7 @@ function createGrid(width, height, gridSize = 20) {
     gridLayer.sendToBack();
 }
 
-function toggleGrid() {
+export function toggleGrid() {
     const gridToggle = document.getElementById('grid-toggle');
     if (gridToggle.checked) {
         const size = paperSizes[formatSelect.value];
@@ -567,18 +414,8 @@ function initCanvas(format) {
     canvas.on('selection:created', showControls);
     canvas.on('selection:updated', showControls);
     canvas.on('selection:cleared', hideControls);
-
-    canvas.on('object:moving', function(options) {
-        if (gridLayer) {
-            if (Math.round(options.target.left / grid * 4) % 4 == 0 &&
-                Math.round(options.target.top / grid * 4) % 4 == 0) {
-                options.target.set({
-                    left: Math.round(options.target.left / grid) * grid,
-                    top: Math.round(options.target.top / grid) * grid
-                }).setCoords();
-            }
-        }
-    });
+    initAligningGuidelines(canvas);
+    initCenteringGuidelines(canvas);
 }
 
 function colorNameToHex(color) {
@@ -621,13 +458,18 @@ function showControls(e) {
     rectWithTextControls.style.display = 'none';
     lineControls.style.display = 'none';    
 
+    console.log(activeObj.type);
+
     // Controlla che activeObj esista prima di accedere al suo tipo
-    if (activeObj && activeObj.type === 'textbox') {
+    if (activeObj && activeObj.type === 'i-text') {
         textControls.style.display = 'flex';
         
         document.getElementById('font-size-text').value = activeObj.fontSize;
-        document.getElementById('align-text').value = activeObj.textAlign;
+        // document.getElementById('align-text').value = activeObj.textAlign;
         document.getElementById('font-family-text').value = activeObj.fontFamily;
+        try {
+            document.getElementById('database-data-text').value = activeObj.text;
+        } catch {}
     } else if (activeObj && activeObj.type === 'rectWithText') {
         rectWithTextControls.style.display = 'flex';
         
@@ -657,7 +499,7 @@ function hideControls() {
     document.getElementById('line-controls').style.display = 'none';
 }
 
-function setTool(tool) {
+export function setTool(tool) {
     document.querySelectorAll('#tool-buttons button').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -675,7 +517,7 @@ formatSelect.addEventListener('change', (e) => {
 });
 
 function addText() {
-    const text = new fabric.Textbox('Testo', {
+    const text = new fabric.IText('Testo', {
         left: 50,
         top: 50,
         fontSize: 30,
@@ -684,33 +526,6 @@ function addText() {
         transparentCorners: false,
         hasControls: true,     // Mostra i controlli di ridimensionamento
     });
-    canvas.add(text);
-    canvas.setActiveObject(text);
-}
-
-function addRectangle() {
-    const rect = new fabric.Rect({
-        left: 50,
-        top: 50,
-        fill: 'transparent',
-        stroke: 'black',
-        width: 100,
-        height: 50
-    });
-    canvas.add(rect);
-    // Aggiungi un oggetto di tipo testo sopra il rettangolo
-    const text = new fabric.Textbox('Testo', {
-        left: rect.left,
-        top: rect.top + rect.height / 3.5,
-        width: rect.width,
-        height: rect.height,
-        fontSize: 18,
-        textAlign: 'center',
-        fill: 'black',
-        editable: true // Permette la modifica del testo
-    });
-
-    // Aggiungi il testo alla tela
     canvas.add(text);
     canvas.setActiveObject(text);
 }
@@ -767,36 +582,42 @@ function addRectangleText() {
     canvas.setActiveObject(rectText);
 }
 
-function deleteSelected() {
-    const activeObject = canvas.getActiveObject();
-    
-    if (activeObject) {
-        // Trova il contenitore RectWithText se esiste
-        const parentRectWithText = canvas.getObjects().find(obj => 
-            obj.type === 'rectWithText' && 
-            (obj === activeObject || obj.text === activeObject)
-        );
-        
-        // Se è un oggetto RectWithText, rimuovi l'intero contenitore
-        if (parentRectWithText) {
-            canvas.remove(parentRectWithText);
-            canvas.remove(parentRectWithText.text);
-            canvas.discardActiveObject();
-        } else {
-            // Altrimenti procedi con la rimozione normale
-            canvas.remove(activeObject);
-            canvas.discardActiveObject();
-        }
+export function deleteSelected() {
+    const activeObjects = canvas.getActiveObjects();  // Ottieni tutti gli oggetti selezionati
+
+    if (activeObjects.length > 0) {
+        // Itera su ogni oggetto selezionato
+        activeObjects.forEach(activeObject => {
+            // Trova il contenitore RectWithText se esiste
+            const parentRectWithText = canvas.getObjects().find(obj => 
+                obj.type === 'rectWithText' && 
+                (obj === activeObject || obj.text === activeObject)
+            );
+            
+            // Se è un oggetto RectWithText, rimuovi l'intero contenitore
+            if (parentRectWithText) {
+                canvas.remove(parentRectWithText);
+                canvas.remove(parentRectWithText.text);
+            } else {
+                // Altrimenti procedi con la rimozione normale
+                canvas.remove(activeObject);
+            }
+        });
+
+        // Deselect all objects after removal
+        canvas.discardActiveObject();
+        canvas.renderAll();  // Rende il canvas di nuovo aggiornato dopo le modifiche
     }
 }
 
-function updateText() {
+export function updateText() {
     const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'textbox') {
+    if (activeObject && activeObject.type === 'i-text') {
         activeObject.set({
             fontSize: parseInt(document.getElementById('font-size-text').value),
             fontFamily: document.getElementById('font-family-text').value,
-            textAlign: document.getElementById('align-text').value
+            // textAlign: document.getElementById('align-text').value
+            text: document.getElementById('database-data-text').value
         });
         canvas.requestRenderAll(); // Metodo più affidabile per aggiornare il canvas
         // Trova il contenitore RectWithText se esiste
@@ -811,7 +632,7 @@ function updateText() {
     }
 }
 
-function updateRectWithText() {
+export function updateRectWithText() {
     const activeObj = canvas.getActiveObject();
     if (activeObj && activeObj.type === 'rectWithText') {
         activeObj.set({
@@ -823,7 +644,7 @@ function updateRectWithText() {
     }
 }
 
-function updateLine() {
+export function updateLine() {
     const activeObj = canvas.getActiveObject();
     if (activeObj && activeObj.type === 'line') {
         activeObj.set({
@@ -834,7 +655,7 @@ function updateLine() {
     }
 }
 
-function exportToPDF() {
+export function exportToPDF() {
     const format = formatSelect.value;
     const size = paperSizes[format];
 
@@ -901,4 +722,51 @@ document.getElementById('tool-buttons').addEventListener('click', (e) => {
         default:
             break;
     }
+});
+
+// If you want to make these globally accessible for HTML inline events
+window.setTool = setTool;
+window.deleteSelected = deleteSelected;
+window.exportToPDF = exportToPDF;
+window.toggleGrid = toggleGrid;
+window.toggleMidlines = toggleMidlines;
+window.toggleMargins = toggleMargins;
+window.updateText = updateText;
+window.updateRectWithText = updateRectWithText;
+window.updateLine = updateLine;
+
+// Dichiarazione della variabile per memorizzare l'oggetto copiato
+var copiedObject = null; // Dichiarata all'esterno per renderla globale
+
+// Aggiungi un event listener per la tastiera (per intercettare Ctrl+C e Ctrl+V)
+document.addEventListener('keydown', function(event) {
+  // Verifica se Ctrl (o Cmd) è premuto insieme alla lettera 'C' (per copia)
+  if (event.ctrlKey && event.key === 'c') {
+    var activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      copiedObject = activeObject; // Clona l'oggetto selezionato
+      console.log("Oggetto copiato!");
+      console.log(copiedObject);
+    }
+  }
+
+// Verifica se Ctrl (o Cmd) è premuto insieme alla lettera 'V' (per incolla)
+if (event.ctrlKey && event.key === 'v') {
+    if (copiedObject) {
+      // Usa il metodo clone() di Fabric.js per clonare l'oggetto
+      copiedObject.clone(function(cloned) {
+        // Posiziona l'oggetto copiato vicino all'oggetto originale
+        cloned.set({
+          left: copiedObject.left + 10,
+          top: copiedObject.top + 10
+        });
+  
+        // Aggiungi l'oggetto clonata alla tela
+        canvas.add(cloned);
+        canvas.setActiveObject(cloned);
+        canvas.renderAll();
+        console.log("Oggetto incollato!");
+      });
+    }
+  }  
 });

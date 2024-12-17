@@ -16,7 +16,6 @@ body {
     flex-grow: 1;
     display: flex;
     justify-content: center;
-    align-items: center;
     background-color: #e0e0e0;
     overflow: auto;
     margin-top: 10px;
