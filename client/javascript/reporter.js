@@ -155,6 +155,198 @@ fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
     }
 });
 
+fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
+    type: 'imageContainer',
+    text: null,
+    image: null,
+    
+    initialize: function (rectOptions, textOptions, text, image) {
+        this.callSuper('initialize', rectOptions);
+
+        this.on('scaling', () => {
+            // Calcola la larghezza e l'altezza effettiva del rettangolo
+            const currentWidth = this.width * this.scaleX;  // Larghezza attuale del rettangolo
+            const currentHeight = this.height * this.scaleY;  // Altezza attuale del rettangolo
+
+            if (this.text) {
+                if (this.text.width >= currentWidth) {
+                    // Modifica la scala del testo in base alle dimensioni del rettangolo
+                    this.text.set({
+                        scaleX: currentWidth / this.text.width,  // Calcola il fattore di scala per la larghezza
+                    });
+            
+                    // Applica le nuove dimensioni e la scala
+                    this.canvas.renderAll();
+                }
+                if (this.text.height >= currentHeight) {
+                    // Modifica la scala del testo in base alle dimensioni del rettangolo
+                    this.text.set({
+                        scaleY: currentHeight / this.text.height,  // Calcola il fattore di scala per l'altezza
+                    });
+            
+                    // Applica le nuove dimensioni e la scala
+                    this.canvas.renderAll();
+                }
+            }
+
+            // Se l'immagine esiste, ridimensiona correttamente
+            if (this.image) {
+                // Modifica la scala dell'immagine in base alle dimensioni del rettangolo
+                this.image.set({
+                    scaleX: currentWidth / this.image.width,  // Calcola il fattore di scala per la larghezza
+                    scaleY: currentHeight / this.image.height,  // Calcola il fattore di scala per l'altezza
+                });
+        
+                // Applica le nuove dimensioni e la scala
+                this.canvas.renderAll();
+            }
+        });                   
+        
+        // Create the text
+        this.text = new fabric.IText(text, {
+            ...textOptions,
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+        
+        // Create the image
+        this.image = new fabric.Image(image, {
+            ...textOptions,
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+        
+        // Improved centering function
+        const centerText = () => {
+            if (!this.canvas) return;
+            
+            if (this.text) {
+                const center = this.getCenterPoint();
+                this.text.set({
+                    left: center.x,
+                    top: center.y,
+                    originX: 'center',
+                    originY: 'center',
+                });
+            }
+            
+            if (this.image) {
+                const center = this.getCenterPoint();
+                this.image.set({
+                    left: center.x,
+                    top: center.y,
+                    originX: 'center',
+                    originY: 'center',
+                });
+            }
+        };
+        
+        // Event handlers to keep text synchronized
+        const syncTextPosition = () => {
+            centerText();
+        };
+        
+        // Add event listeners
+        this.on('moving', syncTextPosition);
+        this.on('rotating', syncTextPosition);
+        this.on('scaling', syncTextPosition);
+        this.on('resizing', syncTextPosition);
+        
+        // Add and remove text from canvas
+        this.on('added', () => {
+            this.canvas.add(this.text);
+            if (this.image) {
+                this.canvas.add(this.image);
+            }
+            centerText();
+        });
+        
+        // Double-click event for image loading
+        this.on('mousedblclick', () => {
+            this._onDoubleClick();
+        });
+
+        // Gestisci la selezione dell'intero contenitore
+        if (this.image) {
+            this.image.on('mousedown', (opt) => {
+                // Deseleziona l'immagine e seleziona il contenitore
+                opt.target.canvas.discardActiveObject();
+                opt.target.canvas.setActiveObject(this);
+                opt.target.canvas.renderAll();
+            });
+        }
+    },
+    
+    _onDoubleClick: function() {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            const currentWidth = this.width * this.scaleX;  // Larghezza attuale del rettangolo
+            const currentHeight = this.height * this.scaleY;  // Altezza attuale del rettangolo
+            reader.onload = (event) => {
+                fabric.Image.fromURL(event.target.result, (img) => {
+                    // Remove previous image if it exists
+                    if (this.image) {
+                        this.canvas.remove(this.image);
+                    }
+                    
+                    // Imposta la scala dell'immagine in base alle dimensioni del rettangolo
+                    img.set({
+                        scaleX: currentWidth / img.width,  // Calcola il fattore di scala per la larghezza
+                        scaleY: currentHeight / img.height,  // Calcola il fattore di scala per l'altezza
+                    });
+    
+                    // Set image position to center of container
+                    img.set({
+                        left: this.left + currentWidth / 2,
+                        top: this.top + currentHeight / 2,
+                        originX: 'center',
+                        originY: 'center',
+                        selectable: false,
+                        evented: false,
+                        hasControls: false,
+                        hasBorders: false
+                    });
+                    
+                    // Store the image as object property
+                    this.image = img;
+
+                    console.log(this.image.getSrc());
+                    
+                    // Add image to canvas
+                    this.canvas.add(img);
+    
+                    // Aggiungi gestore di selezione per la nuova immagine
+                    this.image.on('mousedown', (opt) => {
+                        // Deseleziona l'immagine e seleziona il contenitore
+                        opt.target.canvas.discardActiveObject();
+                        opt.target.canvas.setActiveObject(this);
+                        opt.target.canvas.renderAll();
+                    });
+                    
+                    this.canvas.renderAll();
+                });
+            };
+            reader.readAsDataURL(file);
+        };
+        fileInput.click();
+    },
+
+    clone: function(callback) {
+        // Creazione di un nuovo oggetto ImageContainer con le stesse proprietà
+        var clonedRect = new fabric.ImageContainer(this.toObject(), this.text.toObject(), this.text.text, this.image.getSrc());  // Passiamo 'null' invece di 'this.image'
+        
+        callback(clonedRect);
+    }    
+});
+
 const paperSizes = {
     A4: { 
         width: 595.28, 
@@ -273,7 +465,7 @@ function createMargins(width, height, margins) {
     };
 }
 
-export function toggleMargins() {
+function toggleMargins() {
     const marginToggle = document.getElementById('margin-toggle');
     const size = paperSizes[formatSelect.value];
 
@@ -320,7 +512,7 @@ function createMidlines(width, height) {
     midlineLayer.sendToBack();
 }
 
-export function toggleMidlines() {
+function toggleMidlines() {
     const midlineToggle = document.getElementById('midline-toggle');
     const size = paperSizes[formatSelect.value];
 
@@ -368,7 +560,7 @@ function createGrid(width, height, gridSize = 20) {
     gridLayer.sendToBack();
 }
 
-export function toggleGrid() {
+function toggleGrid() {
     const gridToggle = document.getElementById('grid-toggle');
     if (gridToggle.checked) {
         const size = paperSizes[formatSelect.value];
@@ -452,13 +644,15 @@ function showControls(e) {
     const textControls = document.getElementById('text-controls');
     const rectWithTextControls = document.getElementById('rectangle-controls');
     const lineControls = document.getElementById('line-controls');
+    const imageControls = document.getElementById('image-controls');
+
+    console.log(activeObj);
 
     // Nascondi tutti i controlli di default
     textControls.style.display = 'none';
     rectWithTextControls.style.display = 'none';
     lineControls.style.display = 'none';    
-
-    console.log(activeObj.type);
+    imageControls.style.display = 'none';
 
     // Controlla che activeObj esista prima di accedere al suo tipo
     if (activeObj && activeObj.type === 'i-text') {
@@ -470,9 +664,14 @@ function showControls(e) {
         try {
             document.getElementById('database-data-text').value = activeObj.text;
         } catch {}
-    } else if (activeObj && activeObj.type === 'rectWithText') {
+    } else if (activeObj && activeObj.type === 'rectWithText' || activeObj.type === 'imageContainer') {
         rectWithTextControls.style.display = 'flex';
         
+        if (activeObj.type === 'imageContainer') {
+            imageControls.style.display = 'flex';
+            document.getElementById('cam').value = activeObj.text.text;
+        }
+
         // Converti i colori in formato hex
         const fillColor = activeObj.fill ? colorNameToHex(activeObj.fill) : '#ffffff';
         const strokeColor = activeObj.stroke ? colorNameToHex(activeObj.stroke) : '#000000';
@@ -488,6 +687,8 @@ function showControls(e) {
         
         document.getElementById('color-line').value = strokeColor;
         document.getElementById('stroke-width-line').value = activeObj.strokeWidth || 1;
+    } else if (activeObj && activeObj.type === 'rect') {
+        imageControls.style.display = 'flex';
     }
 }
 
@@ -499,7 +700,7 @@ function hideControls() {
     document.getElementById('line-controls').style.display = 'none';
 }
 
-export function setTool(tool) {
+function setTool(tool) {
     document.querySelectorAll('#tool-buttons button').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -582,7 +783,30 @@ function addRectangleText() {
     canvas.setActiveObject(rectText);
 }
 
-export function deleteSelected() {
+function addImage() {
+    const imageContainer = new fabric.ImageContainer({
+            width: 200,
+            height: 200,
+            fill: '#C0BFBC', // Light gray semi-transparent background
+            stroke: 'black',
+            strokeWidth: 2,
+            selectable: true,
+            noScaleCache: false,
+            strokeUniform: true
+        },
+        {
+            fontSize: 12,
+            fill: 'black'
+        },
+        'Doppio click per aggiungere un\'immagine',
+        null
+    );
+    // Add to canvas
+    canvas.add(imageContainer);
+    canvas.setActiveObject(imageContainer);
+}
+
+function deleteSelected() {
     const activeObjects = canvas.getActiveObjects();  // Ottieni tutti gli oggetti selezionati
 
     if (activeObjects.length > 0) {
@@ -594,10 +818,19 @@ export function deleteSelected() {
                 (obj === activeObject || obj.text === activeObject)
             );
             
+            const parentImageContainer = canvas.getObjects().find(obj => 
+                obj.type === 'imageContainer' && 
+                (obj === activeObject || obj.text === activeObject)
+            );
+
             // Se è un oggetto RectWithText, rimuovi l'intero contenitore
             if (parentRectWithText) {
                 canvas.remove(parentRectWithText);
                 canvas.remove(parentRectWithText.text);
+            } else if (parentImageContainer) {
+                canvas.remove(parentImageContainer);
+                canvas.remove(parentImageContainer.text);
+                canvas.remove(parentImageContainer.image);
             } else {
                 // Altrimenti procedi con la rimozione normale
                 canvas.remove(activeObject);
@@ -610,7 +843,7 @@ export function deleteSelected() {
     }
 }
 
-export function updateText() {
+function updateText() {
     const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === 'i-text') {
         activeObject.set({
@@ -632,9 +865,9 @@ export function updateText() {
     }
 }
 
-export function updateRectWithText() {
+function updateRect() {
     const activeObj = canvas.getActiveObject();
-    if (activeObj && activeObj.type === 'rectWithText') {
+    if (activeObj && activeObj.type === 'rectWithText' || activeObj.type === 'imageContainer') {
         activeObj.set({
             fill: document.getElementById('fill-color-rect').value,
             stroke: document.getElementById('stroke-color-rect').value,
@@ -644,7 +877,7 @@ export function updateRectWithText() {
     }
 }
 
-export function updateLine() {
+function updateLine() {
     const activeObj = canvas.getActiveObject();
     if (activeObj && activeObj.type === 'line') {
         activeObj.set({
@@ -655,7 +888,17 @@ export function updateLine() {
     }
 }
 
-export function exportToPDF() {
+function updateImage() {
+    const activeObj = canvas.getActiveObject();
+    if (activeObj && activeObj.type === 'imageContainer') {
+        activeObj.text.set({
+            text: document.getElementById('cam').value
+        });
+        canvas.requestRenderAll();
+    }
+}
+
+function exportToPDF() {
     const format = formatSelect.value;
     const size = paperSizes[format];
 
@@ -719,6 +962,9 @@ document.getElementById('tool-buttons').addEventListener('click', (e) => {
         case 'Linea':
             addLine();
             break;
+        case 'Immagine':
+            addImage();
+            break;
         default:
             break;
     }
@@ -732,8 +978,9 @@ window.toggleGrid = toggleGrid;
 window.toggleMidlines = toggleMidlines;
 window.toggleMargins = toggleMargins;
 window.updateText = updateText;
-window.updateRectWithText = updateRectWithText;
+window.updateRect = updateRect;
 window.updateLine = updateLine;
+window.updateImage = updateImage;
 
 // Dichiarazione della variabile per memorizzare l'oggetto copiato
 var copiedObject = null; // Dichiarata all'esterno per renderla globale

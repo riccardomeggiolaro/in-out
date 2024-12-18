@@ -22,6 +22,7 @@
             <button onclick="setTool('text')">Testo</button>
             <button onclick="setTool('rectWithText')">Rettangolo</button>
             <button onclick="setTool('line')">Linea</button>
+            <button onclick="setTool('image')">Immagine</button>
         </div>
         
         <button onclick="deleteSelected()" style="background-color: #ff4444; color: white;">Elimina</button>
@@ -94,15 +95,15 @@
         <div id="rectangle-controls" style="display:none;">
             <label for="fill-color-rect">
                 Sfondo
-                <input type="color" name="fill-color-rect" id="fill-color-rect" value="#ffffff" onchange="updateRectWithText()">
+                <input type="color" name="fill-color-rect" id="fill-color-rect" value="#ffffff" onchange="updateRect()">
             </label>
             <label for="stroke-color-rect">
                 Colore bordi
-                <input type="color" name="stroke-color-rect" id="stroke-color-rect" value="#000000" onchange="updateRectWithText()">
+                <input type="color" name="stroke-color-rect" id="stroke-color-rect" value="#000000" onchange="updateRect()">
             </label>
             <label for="stroke-width-rect">
                 Spessore bordi
-                <input type="number" name="stroke-width-rect" id="stroke-width-rect" value="1" min="0" max="10" onchange="updateRectWithText()">
+                <input type="number" name="stroke-width-rect" id="stroke-width-rect" value="1" min="0" max="10" onchange="updateRect()">
             </label>
         </div>
 
@@ -114,6 +115,17 @@
             <label for="stroke-width-line">
                 Spessore
                 <input type="number" name="stroke-width-line" id="stroke-width-line" value="1" min="0" max="10" onchange="updateLine()">
+            </label>
+        </div>
+
+        <div id="image-controls" style="display:none;">
+            <label for="cam">
+                <select name="cam" id="cam" onchange="updateImage()">
+                    <option value="[CAM 1]">CAM 1</option>
+                    <option value="[CAM 2]">CAM 2</option>
+                    <option value="[CAM 3]">CAM 3</option>
+                    <option value="[CAM 4]">CAM 4</option>
+                </select>
             </label>
         </div>
     </div>
