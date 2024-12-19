@@ -1,545 +1,59 @@
-import { initAligningGuidelines } from './guide-lines.js';
-import { initCenteringGuidelines } from './centering-guide-lines.js';
-
-fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
-    type: 'rectWithText',
-    text: null,
-
-    initialize: function (rectOptions, textOptions, text) {
-        // Call the rectangle constructor
-        this.callSuper('initialize', rectOptions);
-
-        // Listener per il ridimensionamento
-        this.on('scaling', function() {
-            // Larghezza minima basata sulla larghezza del testo
-            const minWidth = this.text.width;
-            
-            // Altezza minima basata sull'altezza del testo
-            const minHeight = this.text.height;
-
-            // Calcola le dimensioni attuali
-            const currentWidth = this.width * this.scaleX;
-            const currentHeight = this.height * this.scaleY;
-
-            // Gestisci la larghezza minima
-            if (currentWidth < minWidth) {
-                this.set({
-                    scaleX: minWidth / this.width
-                });
-            }
-
-            // Gestisci l'altezza minima
-            if (currentHeight < minHeight) {
-                this.set({
-                    scaleY: minHeight / this.height
-                });
-            }
-        });
-
-        // Create the text
-        this.text = new fabric.IText(text, {
-            ...textOptions,
-            selectable: false,
-            evented: false,
-            hasControls: false,
-            hasBorders: false,
-            isContained: true  // Add this flag to identify contained text
-        });
-
-        // Improved centering function
-        const centerText = () => {
-            if (!this.canvas) return;
-
-            // Calculate the center of the rectangle
-            const center = this.getCenterPoint();
-
-            // Update text position and properties
-            this.text.set({
-                left: center.x,
-                top: center.y,
-                originX: 'center',
-                originY: 'center',
-            });
-        };
-
-        // Event handlers to keep text synchronized
-        const syncTextPosition = () => {
-            centerText();
-        };
-
-        // Add event listeners
-        this.on('moving', syncTextPosition);
-        this.on('rotating', syncTextPosition);
-        this.on('scaling', syncTextPosition);
-        this.on('resizing', syncTextPosition);
-
-        // Add and remove text from canvas
-        this.on('added', () => {
-            this.canvas.add(this.text);
-            centerText();
-        });
-
-        // Handle text editing
-        this.on('mousedown:before', () => {
-            this._prevObjectStacking = this.canvas.preserveObjectStacking;
-            this.canvas.preserveObjectStacking = true;
-        });
-
-        this.on('mousedblclick', () => {
-            console.log(this.deletedText);
-            if (this.deletedText) return;
-            this.text.selectable = true;
-            this.text.evented = true;
-            this.canvas.setActiveObject(this.text);
-            this.text.enterEditing();
-            this.selectable = false;
-        });
-
-        this.on('deselected', () => {
-            this.canvas.preserveObjectStacking = this._prevObjectStacking;
-        });
-
-        this.text.on('editing:exited', () => {
-            this.text.selectable = false;
-            this.text.evented = false;
-            this.selectable = true;
-        });
-
-        // Aggiungi un listener per rilevare quando il testo viene eliminato
-        this.text.on('deleted', () => {
-            this.deletedText = true;
-        });
-
-        // Listener per l'editing del testo 
-        this.text.on('changed', () => {
-            const width = this.width * this.scaleX;
-            const height = this.height * this.scaleY;
-            if (this.text.width >= width) {
-                this.set({
-                    width: this.text.width / this.scaleX
-                })
-            }
-            if (this.text.height >= height) {
-                this.set({
-                    height: this.text.height / this.scaleY
-                })
-            }
-            // Quando finisce l'editing, ricalcola la larghezza 
-            this.text.set({ 
-                width: null, // Forza ricalcolo larghezza
-                height: null // Forza ricalcolo altezza
-            }); 
-            this.text.initDimensions();
-            // Ricalcola dimensioni 
-            // Centra nuovamente il testo 
-            const center = this.getCenterPoint(); 
-            this.text.set({ left: center.x, top: center.y, originX: 'center', originY: 'center' }); 
-        });
-
-        this.text.on('editing:exited', () => {
-            if (/^\s*$/.test(this.text.text)) {
-                this.text.set({
-                    text: ''
-                });
-            }
-        });
-    },
-
-    // Metodo per clonare correttamente l'oggetto personalizzato
-    clone: function(callback) {
-        var clonedRect = new fabric.RectWithText(this.toObject(), this.text.toObject(), this.text.text);
-        clonedRect.set({
-            left: this.left + 10,  // Spostamento per evitare sovrapposizioni
-            top: this.top + 10
-        });
-        callback(clonedRect);
-    },
-
-    toObject: function(propertiesToInclude) {
-        return fabric.util.object.extend(this.callSuper('toObject', propertiesToInclude), {
-        text: this.text.toObject(),
-        textContent: this.text.text
-        });
-    },
-
-    _render: function(ctx) {
-        this.callSuper('_render', ctx);
-        if (this.text) {
-        this.text.set({
-            left: this.left + (this.width * this.scaleX) / 2,
-            top: this.top + (this.height * this.scaleY) / 2,
-            originX: 'center',
-            originY: 'center'
-        });
-        this.text.setCoords();
-        }
-    }
-});
-
-// FromObject implementation
-fabric.RectWithText.fromObject = function(object, callback) {
-    const rectOptions = fabric.util.object.clone(object);
-    delete rectOptions.text;
-    delete rectOptions.textContent;
-  
-    const textOptions = object.text;
-    const instance = new fabric.RectWithText(rectOptions, textOptions, object.textContent);
-    
-    if (callback) {
-      callback(instance);
-    }
-    return instance;
-};
-
-fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
-    type: 'imageContainer',
-    text: null,
-    image: null,
-    
-    initialize: function (rectOptions, textOptions, text, image) {
-        this.callSuper('initialize', rectOptions);
-
-        this.on('scaling', () => {
-            // Calcola la larghezza e l'altezza effettiva del rettangolo
-            const currentWidth = this.width * this.scaleX;  // Larghezza attuale del rettangolo
-            const currentHeight = this.height * this.scaleY;  // Altezza attuale del rettangolo
-
-            if (this.text) {
-                if (this.text.width >= currentWidth) {
-                    // Modifica la scala del testo in base alle dimensioni del rettangolo
-                    this.text.set({
-                        scaleX: currentWidth / this.text.width,  // Calcola il fattore di scala per la larghezza
-                    });
-            
-                    // Applica le nuove dimensioni e la scala
-                    this.canvas.renderAll();
-                }
-                if (this.text.height >= currentHeight) {
-                    // Modifica la scala del testo in base alle dimensioni del rettangolo
-                    this.text.set({
-                        scaleY: currentHeight / this.text.height,  // Calcola il fattore di scala per l'altezza
-                    });
-            
-                    // Applica le nuove dimensioni e la scala
-                    this.canvas.renderAll();
-                }
-            }
-
-            // Se l'immagine esiste, ridimensiona correttamente
-            if (this.image) {
-                // Modifica la scala dell'immagine in base alle dimensioni del rettangolo
-                this.image.set({
-                    scaleX: currentWidth / this.image.width,  // Calcola il fattore di scala per la larghezza
-                    scaleY: currentHeight / this.image.height,  // Calcola il fattore di scala per l'altezza
-                });
-        
-                // Applica le nuove dimensioni e la scala
-                this.canvas.renderAll();
-            }
-        });                   
-        
-        // Create the text
-        this.text = new fabric.IText(text, {
-            ...textOptions,
-            selectable: false,
-            evented: false,
-            hasControls: false,
-            hasBorders: false,
-            isContained: true
-        });
-        
-        this.image = new fabric.Image(image, {
-            ...textOptions,
-            selectable: false,
-            evented: false,
-            hasControls: false,
-            hasBorders: false,
-            isContained: true
-        })
-
-        // Improved centering function
-        const centerText = () => {
-            if (!this.canvas) return;
-            
-            if (this.text) {
-                const center = this.getCenterPoint();
-                this.text.set({
-                    left: center.x,
-                    top: center.y,
-                    originX: 'center',
-                    originY: 'center',
-                });
-            }
-            
-            if (this.image) {
-                const center = this.getCenterPoint();
-                this.image.set({
-                    left: center.x,
-                    top: center.y,
-                    originX: 'center',
-                    originY: 'center',
-                });
-            }
-        };
-        
-        // Event handlers to keep text synchronized
-        const syncTextPosition = () => {
-            centerText();
-        };
-        
-        // Add event listeners
-        this.on('moving', syncTextPosition);
-        this.on('rotating', syncTextPosition);
-        this.on('scaling', syncTextPosition);
-        this.on('resizing', syncTextPosition);
-        
-        // Add and remove text from canvas
-        this.on('added', () => {
-            this.canvas.add(this.text);
-            if (this.image) {
-                this.canvas.add(this.image);
-            }
-            centerText();
-        });
-        
-        // Double-click event for image loading
-        this.on('mousedblclick', () => {
-            this._onDoubleClick();
-        });
-
-        this.text.on('changed', () => {
-            console.log(this.text.text);
-            // Remove previous image if it exists
-            if (this.image) {
-                this.canvas.remove(this.image);
-                this.canvas.renderAll();
-            }
-        });
-
-        // Gestisci la selezione dell'intero contenitore
-        if (this.image) {
-            this.image.on('mousedown', (opt) => {
-                // Deseleziona l'immagine e seleziona il contenitore
-                opt.target.canvas.discardActiveObject();
-                opt.target.canvas.setActiveObject(this);
-                opt.target.canvas.renderAll();
-            });
-        }
-    },
-    
-    _onDoubleClick: function() {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            const currentWidth = this.width * this.scaleX;  // Larghezza attuale del rettangolo
-            const currentHeight = this.height * this.scaleY;  // Altezza attuale del rettangolo
-            reader.onload = (event) => {
-                fabric.Image.fromURL(event.target.result, (img) => {
-                    if (this.text) {
-                        this.text.text = '';
-                    }
-
-                    // Remove previous image if it exists
-                    if (this.image) {
-                        this.canvas.remove(this.image);
-                    }
-                    
-                    // Imposta la scala dell'immagine in base alle dimensioni del rettangolo
-                    img.set({
-                        scaleX: currentWidth / img.width,  // Calcola il fattore di scala per la larghezza
-                        scaleY: currentHeight / img.height,  // Calcola il fattore di scala per l'altezza
-                    });
-    
-                    // Set image position to center of container
-                    img.set({
-                        left: this.left + currentWidth / 2,
-                        top: this.top + currentHeight / 2,
-                        originX: 'center',
-                        originY: 'center',
-                        selectable: false,
-                        evented: false,
-                        hasControls: false,
-                        hasBorders: false,
-                        isContained: true
-                    });
-                    
-                    // Store the image as object property
-                    this.image = img;
-
-                    console.log(this.image.getSrc());
-                    
-                    // Add image to canvas
-                    this.canvas.add(img);
-    
-                    // Aggiungi gestore di selezione per la nuova immagine
-                    this.image.on('mousedown', (opt) => {
-                        // Deseleziona l'immagine e seleziona il contenitore
-                        opt.target.canvas.discardActiveObject();
-                        opt.target.canvas.setActiveObject(this);
-                        opt.target.canvas.renderAll();
-                    });
-                    
-                    this.canvas.renderAll();
-                });
-            };
-            reader.readAsDataURL(file);
-        };
-        fileInput.click();
-    },
-
-    clone: function(callback) {
-        const self = this;
-        // Get the original image source
-        const imageSource = this.image ? this.image.getSrc() : null;
-        
-        // Create new container with same properties
-        const clonedContainer = new fabric.ImageContainer(
-            this.toObject(),
-            this.text.toObject(),
-            this.text.text,
-            imageSource
-        );
-        
-        // Make sure the image is loaded before calling callback
-        if (imageSource) {
-            fabric.Image.fromURL(imageSource, function(img) {
-                clonedContainer.image = img;
-                clonedContainer.image.set({
-                    scaleX: self.image.scaleX,
-                    scaleY: self.image.scaleY,
-                    left: self.image.left,
-                    top: self.image.top,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: false,
-                    evented: false,
-                    hasControls: false,
-                    hasBorders: false,
-                    isContained: true
-                });
-                
-                if (callback) callback(clonedContainer);
-            });
-        } else {
-            if (callback) callback(clonedContainer);
-        }
-    },
-
-    toObject: function(propertiesToInclude) {
-        return fabric.util.object.extend(this.callSuper('toObject', propertiesToInclude), {
-            text: this.text.toObject(),
-            textContent: this.text.text,
-            image: this.image ? {
-                src: this.image.getSrc(),
-                scaleX: this.image.scaleX,
-                scaleY: this.image.scaleY
-            } : null
-        });
-    },
-
-    // FromObject implementation
-    fromObject: function(object, callback) {
-        const rectOptions = fabric.util.object.clone(object);
-        delete rectOptions.text;
-        delete rectOptions.textContent;
-        delete rectOptions.image;
-
-        const textOptions = object.text;
-        const imageSource = object.image ? object.image.src : null;
-        
-        const instance = new fabric.ImageContainer(
-            rectOptions, 
-            textOptions, 
-            object.textContent,
-            imageSource
-        );
-
-        if (object.image) {
-            fabric.Image.fromURL(imageSource, function(img) {
-                instance.image = img;
-                instance.image.set({
-                    scaleX: object.image.scaleX,
-                    scaleY: object.image.scaleY,
-                    originX: 'center',
-                    originY: 'center',
-                    selectable: false,
-                    evented: false,
-                    hasControls: false,
-                    hasBorders: false,
-                    isContained: true
-                });
-                
-                if (callback) callback(instance);
-            });
-        } else {
-            if (callback) callback(instance);
-        }
-        
-        return instance;
-    }
-});
-
-// Assign fromObject to the class
-fabric.ImageContainer.fromObject = function(object, callback) {
-    return fabric.ImageContainer.prototype.fromObject(object, callback);
-};
-
-const paperSizes = {
-    A4: { 
-        width: 595.28, 
-        height: 841.89, 
-        dpi: 300,
-        margins: {
-            top: 25,   // 25 points to px
-            bottom: 25,  // 25 points to px
-            left: 31.75,   // 31.75 points to px
-            right: 31.75   // 31.75 points to px
-        }
-    },
-    A5: { 
-        width: 419.53, 
-        height: 595.28, 
-        dpi: 300,
-        margins: {
-            top: 25.4,    // 25.4 points to px
-            bottom: 25.4,   // 25.4 points to px
-            left: 31.75,   // 31.75 points to px
-            right: 31.75   // 31.75 points to px
-        }
-    },
-    A8: { 
-        width: 209.76, 
-        height: 297.64, 
-        dpi: 300,
-        margins: {
-            top: 25.4,    // 25.4 points to px
-            bottom: 25.4,   // 25.4 points to px
-            left: 31.75,   // 31.75 points to px
-            right: 31.75   // 31.75 points to px
-        }
-    }
-};
+import { initAligningGuidelines } from './reporter/guide-lines.js';
+import { initCenteringGuidelines } from './reporter/centering-guide-lines.js';
+import { paperSizes } from './reporter/paperSize.js';
+import './reporter/rectWithText.js';
+import './reporter/imageContainer.js';
 
 let canvas;
 let gridLayer;
-let grid = 20;
 let midlineLayer;
 let marginLayer;
-let currentTool = 'text';
+let copiedObject = null;
 const formatSelect = document.getElementById('format-select');
-const canvasElement = document.getElementById('canvas');
+
+function initCanvas(format) {
+    if (canvas) {
+        canvas.dispose();
+    }
+
+    const size = paperSizes[format];
+    
+    canvas = new fabric.Canvas('canvas', {
+        backgroundColor: 'white',
+        selection: true,
+        preserveObjectStacking: true,
+        width: size.width,
+        height: size.height
+    });
+
+    // Verifica se la griglia deve essere mostrata
+    const gridToggle = document.getElementById('grid-toggle');
+    if (gridToggle && gridToggle.checked) {
+        createGrid(size.width, size.height);
+    }
+
+    // Verifica se i midlines devono essere mostrati
+    const midlineToggle = document.getElementById('midline-toggle');
+    if (midlineToggle && midlineToggle.checked) {
+        createMidlines(size.width, size.height);
+    }
+
+    const marginToggle = document.getElementById('margin-toggle');
+    if (marginToggle && marginToggle.checked) {
+        createMargins(size.width, size.height, size.margins);
+    }
+
+    canvas.on('selection:created', showControls);
+    canvas.on('selection:updated', showControls);
+    canvas.on('selection:cleared', hideControls);
+    initAligningGuidelines(canvas);
+    initCenteringGuidelines(canvas);
+}
 
 function createMargins(width, height, margins) {
-    const size = paperSizes[formatSelect.value];
-
     if (marginLayer) {
         canvas.remove(marginLayer);
     }
-
-    console.log(width)
 
     marginLayer = new fabric.Group([], {
         width: width,
@@ -711,45 +225,6 @@ function toggleGrid() {
     }
 }
 
-function initCanvas(format) {
-    if (canvas) {
-        canvas.dispose();
-    }
-
-    const size = paperSizes[format];
-    
-    canvas = new fabric.Canvas('canvas', {
-        backgroundColor: 'white',
-        selection: true,
-        preserveObjectStacking: true,
-        width: size.width,
-        height: size.height
-    });
-
-    // Verifica se la griglia deve essere mostrata
-    const gridToggle = document.getElementById('grid-toggle');
-    if (gridToggle && gridToggle.checked) {
-        createGrid(size.width, size.height);
-    }
-
-    // Verifica se i midlines devono essere mostrati
-    const midlineToggle = document.getElementById('midline-toggle');
-    if (midlineToggle && midlineToggle.checked) {
-        createMidlines(size.width, size.height);
-    }
-
-    const marginToggle = document.getElementById('margin-toggle');
-    if (marginToggle && marginToggle.checked) {
-        createMargins(size.width, size.height, size.margins);
-    }
-
-    canvas.on('selection:created', showControls);
-    canvas.on('selection:updated', showControls);
-    canvas.on('selection:cleared', hideControls);
-    initAligningGuidelines(canvas);
-    initCenteringGuidelines(canvas);
-}
-
 function colorNameToHex(color) {
     // Crea un elemento temporaneo per utilizzare la conversione del colore del browser
     const tempElement = document.createElement('div');
@@ -778,15 +253,11 @@ function colorNameToHex(color) {
 }
 
 function showControls(e) {
-    console.log("show");
-
     const activeObj = canvas.getActiveObject();
     const textControls = document.getElementById('text-controls');
     const rectWithTextControls = document.getElementById('rectangle-controls');
     const lineControls = document.getElementById('line-controls');
     const imageControls = document.getElementById('image-controls');
-
-    console.log(activeObj);
 
     // Nascondi tutti i controlli di default
     textControls.style.display = 'none';
@@ -833,8 +304,6 @@ function showControls(e) {
 }
 
 function hideControls() {
-    console.log("hide")
-
     document.getElementById('text-controls').style.display = 'none';
     document.getElementById('rectangle-controls').style.display = 'none';
     document.getElementById('line-controls').style.display = 'none';
@@ -846,16 +315,7 @@ function setTool(tool) {
     });
     
     event.target.classList.add('active');
-    
-    currentTool = tool;
-    console.log("set")
 }
-
-initCanvas('A4');
-
-formatSelect.addEventListener('change', (e) => {
-    initCanvas(e.target.value);
-});
 
 function addText() {
     const text = new fabric.IText('Testo', {
@@ -877,7 +337,7 @@ function addLine() {
         selectable: true,
         evented: true,
         hasControls: true,
-        strokeWidth: 1,
+        strokeWidth: 2,
         noScaleCache: false,
         strokeUniform: true
     });
@@ -898,27 +358,26 @@ function addLine() {
     line.set({ lockScalingY: true }); // Blocca la scalabilità verticale
 }
 
-const rectOptions = {
-    left: 10,
-    top: 10,
-    width: 200,
-    height: 75,
-    fill: '#ffffff',
-    stroke: 'black',
-    strokeWidth: 1,
-    noScaleCache: false,
-    strokeUniform: true
-}
-
-const textOptions = {
-    fill: 'black',
-    fontSize: 30,
-    selectable: true,
-    textAlign: 'center'
-}
-
 function addRectangleText() {
-    const rectText = new fabric.RectWithText(rectOptions, textOptions, '');
+    const rectText = new fabric.RectWithText(
+        {
+            left: 10,
+            top: 10,
+            width: 200,
+            height: 75,
+            fill: '#FFFFFF',
+            stroke: 'black',
+            strokeWidth: 1,
+            noScaleCache: false,
+            strokeUniform: true
+        },
+        {
+            fill: 'black',
+            fontSize: 30,
+            selectable: true,
+            textAlign: 'center'
+        }, 
+        '');
     canvas.add(rectText);
     canvas.setActiveObject(rectText);
 }
@@ -927,9 +386,9 @@ function addImage() {
     const imageContainer = new fabric.ImageContainer({
             width: 200,
             height: 200,
-            fill: '#C0BFBC', // Light gray semi-transparent background
+            fill: '#DEDDDA', // Light gray semi-transparent background
             stroke: 'black',
-            strokeWidth: 2,
+            strokeWidth: 1,
             selectable: true,
             noScaleCache: false,
             strokeUniform: true
@@ -986,11 +445,12 @@ function deleteSelected() {
 function updateText() {
     const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === 'i-text') {
+        const databaseDataText = document.getElementById('database-data-text').value;
         activeObject.set({
             fontSize: parseInt(document.getElementById('font-size-text').value),
             fontFamily: document.getElementById('font-family-text').value,
             // textAlign: document.getElementById('align-text').value
-            text: document.getElementById('database-data-text').value
+            text: databaseDataText ? databaseDataText : activeObject.text
         });
         canvas.requestRenderAll(); // Metodo più affidabile per aggiornare il canvas
         // Trova il contenitore RectWithText se esiste
@@ -1042,172 +502,178 @@ function updateImage() {
 
 // Modified Import function that handles custom objects
 function importCanvas() {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = '.json';
-  
-  fileInput.onchange = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
     
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      try {
-        const jsonData = JSON.parse(event.target.result);
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
         
-        canvas.clear();
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const jsonData = JSON.parse(event.target.result);
+                
+                canvas.clear();
 
-        const reviver = function(obj, instance) {
-          if (instance) {
-            if (instance.type === 'rectWithText' && instance.text) {
-              instance.text.canvas = canvas;
-              instance.text.isContained = true;  // Ensure flag is set on import
-              canvas.add(instance.text);
-            } else if (instance.type === 'imageContainer' && instance.text) {
-              instance.text.canvas = canvas;
-              instance.text.isContained = true;  // Ensure flag is set on import
-              canvas.add(instance.text);
+                const reviver = function(obj, instance) {
+                    if (instance) {
+                        if (instance.type === 'rectWithText' && instance.text) {
+                            instance.text.canvas = canvas;
+                            instance.text.isContained = true;  // Ensure flag is set on import
+                            canvas.add(instance.text);
+                        } else if (instance.type === 'imageContainer' && instance.text) {
+                            instance.text.canvas = canvas;
+                            instance.text.isContained = true;  // Ensure flag is set on import
+                            canvas.add(instance.text);
+                        }
+                    }
+                };
+
+                canvas.loadFromJSON(jsonData, function() {
+                    if (gridLayer) {
+                        canvas.add(gridLayer);
+                        gridLayer.sendToBack();
+                    }
+                    if (marginLayer) {
+                        canvas.add(marginLayer);
+                        marginLayer.sendToBack();
+                    }
+                    if (midlineLayer) {
+                        canvas.add(midlineLayer);
+                        midlineLayer.sendToBack();
+                    }
+
+                    canvas.renderAll();
+                }, reviver);
+            
+            } catch (error) {
+                console.error('Error importing canvas:', error);
+                alert('Error importing canvas. Please check if the file is valid.');
             }
-          }
         };
-
-        canvas.loadFromJSON(jsonData, function() {
-          if (gridLayer) {
-            canvas.add(gridLayer);
-            gridLayer.sendToBack();
-          }
-          if (marginLayer) {
-            canvas.add(marginLayer);
-            marginLayer.sendToBack();
-          }
-          if (midlineLayer) {
-            canvas.add(midlineLayer);
-            midlineLayer.sendToBack();
-          }
-
-          canvas.renderAll();
-        }, reviver);
-        
-      } catch (error) {
-        console.error('Error importing canvas:', error);
-        alert('Error importing canvas. Please check if the file is valid.');
-      }
-    };
     
-    reader.readAsText(file);
-  };
+        reader.readAsText(file);
+    };
   
-  fileInput.click();
+    fileInput.click();
 }
 
 // Modified Export function that filters out contained text objects
 function exportCanvas() {
-  if (midlineLayer) {
-    canvas.remove(midlineLayer);
-  }
-  if (gridLayer) {
-    canvas.remove(gridLayer);
-  }
-  if (marginLayer) {
-    canvas.remove(marginLayer);
-  }
-
-  try {
-    // Create a custom toJSON function that filters out contained text
-    const customToJSON = (function(originalFn) {
-      return function(propertiesToInclude) {
-        const objects = this.getObjects();
-        
-        // Temporarily remove contained text objects
-        const containedTexts = objects.filter(obj => obj.isContained);
-        containedTexts.forEach(text => this.remove(text));
-        
-        // Get JSON without contained text objects
-        const json = originalFn.call(this, propertiesToInclude);
-        
-        // Restore contained text objects
-        containedTexts.forEach(text => this.add(text));
-        
-        return json;
-      };
-    })(canvas.toJSON);
-
-    // Temporarily replace toJSON method
-    const originalToJSON = canvas.toJSON;
-    canvas.toJSON = customToJSON;
-
-    // Export the canvas
-    const json = canvas.toJSON([
-      'selectable', 
-      'hasControls', 
-      'hasBorders', 
-      'id', 
-      'name', 
-      'editable', 
-      'customType',
-      'type',
-      'isContained'  // Include this property in the export
-    ]);
-
-    // Restore original toJSON method
-    canvas.toJSON = originalToJSON;
-
-    // Create and trigger download
-    const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'canvas_export.json';
-    link.click();
-    URL.revokeObjectURL(link.href);
-  } finally {
-    // Restore layers
     if (midlineLayer) {
-      canvas.add(midlineLayer);
-      midlineLayer.sendToBack();
+        canvas.remove(midlineLayer);
     }
     if (gridLayer) {
-      canvas.add(gridLayer);
-      gridLayer.sendToBack();
+        canvas.remove(gridLayer);
     }
     if (marginLayer) {
-      canvas.add(marginLayer);
-      marginLayer.sendToBack();
+        canvas.remove(marginLayer);
     }
-  }
+
+    try {
+        // Create a custom toJSON function that filters out contained text
+        const customToJSON = (function(originalFn) {
+            return function(propertiesToInclude) {
+                const objects = this.getObjects();
+                
+                // Temporarily remove contained text objects
+                const containedTexts = objects.filter(obj => obj.isContained);
+                containedTexts.forEach(text => this.remove(text));
+                
+                // Get JSON without contained text objects
+                const json = originalFn.call(this, propertiesToInclude);
+                
+                // Restore contained text objects
+                containedTexts.forEach(text => this.add(text));
+                
+                return json;
+            };
+        })(canvas.toJSON);
+
+        // Temporarily replace toJSON method
+        const originalToJSON = canvas.toJSON;
+        canvas.toJSON = customToJSON;
+
+        // Export the canvas
+        const json = canvas.toJSON([
+            'selectable', 
+            'hasControls', 
+            'hasBorders', 
+            'id', 
+            'name', 
+            'editable', 
+            'customType',
+            'type',
+            'isContained'  // Include this property in the export
+        ]);
+
+        // Restore original toJSON method
+        canvas.toJSON = originalToJSON;
+
+        // Create and trigger download
+        const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'canvas_export.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    } catch (error) {
+        console.error('Error exporting canvas:', error);
+    } finally {
+        // Restore layers
+        if (midlineLayer) {
+            canvas.add(midlineLayer);
+            midlineLayer.sendToBack();
+        }
+        if (gridLayer) {
+            canvas.add(gridLayer);
+            gridLayer.sendToBack();
+        }
+        if (marginLayer) {
+            canvas.add(marginLayer);
+            marginLayer.sendToBack();
+        }
+    }
 }
 
 // Optional: Save canvas state to localStorage
 function saveCanvasState() {
-  try {
-    const json = canvas.toJSON([
-      'selectable', 
-      'hasControls', 
-      'hasBorders', 
-      'id', 
-      'name', 
-      'editable', 
-      'customType',
-      'type'
-    ]);
-    localStorage.setItem('canvasState', JSON.stringify(json));
-  } catch (error) {
-    console.error('Error saving canvas state:', error);
-  }
+    try {
+        const json = canvas.toJSON([
+            'selectable', 
+            'hasControls', 
+            'hasBorders', 
+            'id', 
+            'name', 
+            'editable', 
+            'customType',
+            'type'
+        ]);
+        localStorage.setItem('canvasState', JSON.stringify(json));
+    } catch (error) {
+        console.error('Error saving canvas state:', error);
+    }
 }
 
 // Optional: Load canvas state from localStorage
 function loadCanvasState() {
-  try {
-    const savedState = localStorage.getItem('canvasState');
-    if (savedState) {
-      canvas.loadFromJSON(JSON.parse(savedState), function() {
-        canvas.renderAll();
-      });
+    try {
+        const savedState = localStorage.getItem('canvasState');
+        if (savedState) {
+            canvas.loadFromJSON(JSON.parse(savedState), function() {
+                canvas.renderAll();
+            });
+        }
+    } catch (error) {
+        console.error('Error loading canvas state:', error);
     }
-  } catch (error) {
-    console.error('Error loading canvas state:', error);
-  }
 }
+
+formatSelect.addEventListener('change', (e) => {
+    initCanvas(e.target.value);
+});
 
 document.getElementById('tool-buttons').addEventListener('click', (e) => {
     switch(e.target.innerText) {
@@ -1228,6 +694,38 @@ document.getElementById('tool-buttons').addEventListener('click', (e) => {
     }
 });
 
+// Aggiungi un event listener per la tastiera (per intercettare Ctrl+C e Ctrl+V)
+document.addEventListener('keydown', function(event) {
+    // Verifica se Ctrl (o Cmd) è premuto insieme alla lettera 'C' (per copia)
+    if (event.ctrlKey && event.key === 'c') {
+        let activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            copiedObject = activeObject; // Clona l'oggetto selezionato
+        }
+    }
+
+    // Verifica se Ctrl (o Cmd) è premuto insieme alla lettera 'V' (per incolla)
+    if (event.ctrlKey && event.key === 'v') {
+        if (copiedObject) {
+            // Usa il metodo clone() di Fabric.js per clonare l'oggetto
+            copiedObject.clone(function(cloned) {
+                // Posiziona l'oggetto copiato vicino all'oggetto originale
+                cloned.set({
+                    left: copiedObject.left + 10,
+                    top: copiedObject.top + 10
+                });
+        
+                // Aggiungi l'oggetto clonata alla tela
+                canvas.add(cloned);
+                canvas.setActiveObject(cloned);
+                canvas.renderAll();
+            });
+        }
+    }  
+});
+
+initCanvas('A4');
+
 // If you want to make these globally accessible for HTML inline events
 window.setTool = setTool;
 window.deleteSelected = deleteSelected;
@@ -1240,39 +738,3 @@ window.updateText = updateText;
 window.updateRect = updateRect;
 window.updateLine = updateLine;
 window.updateImage = updateImage;
-
-// Dichiarazione della variabile per memorizzare l'oggetto copiato
-var copiedObject = null; // Dichiarata all'esterno per renderla globale
-
-// Aggiungi un event listener per la tastiera (per intercettare Ctrl+C e Ctrl+V)
-document.addEventListener('keydown', function(event) {
-  // Verifica se Ctrl (o Cmd) è premuto insieme alla lettera 'C' (per copia)
-  if (event.ctrlKey && event.key === 'c') {
-    var activeObject = canvas.getActiveObject();
-    if (activeObject) {
-      copiedObject = activeObject; // Clona l'oggetto selezionato
-      console.log("Oggetto copiato!");
-      console.log(copiedObject);
-    }
-  }
-
-// Verifica se Ctrl (o Cmd) è premuto insieme alla lettera 'V' (per incolla)
-if (event.ctrlKey && event.key === 'v') {
-    if (copiedObject) {
-      // Usa il metodo clone() di Fabric.js per clonare l'oggetto
-      copiedObject.clone(function(cloned) {
-        // Posiziona l'oggetto copiato vicino all'oggetto originale
-        cloned.set({
-          left: copiedObject.left + 10,
-          top: copiedObject.top + 10
-        });
-  
-        // Aggiungi l'oggetto clonata alla tela
-        canvas.add(cloned);
-        canvas.setActiveObject(cloned);
-        canvas.renderAll();
-        console.log("Oggetto incollato!");
-      });
-    }
-  }  
-});
