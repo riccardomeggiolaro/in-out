@@ -42,7 +42,8 @@ fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
             selectable: false,
             evented: false,
             hasControls: false,
-            hasBorders: false
+            hasBorders: false,
+            isContained: true  // Add this flag to identify contained text
         });
 
         // Improved centering function
@@ -152,8 +153,43 @@ fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
             top: this.top + 10
         });
         callback(clonedRect);
+    },
+
+    toObject: function(propertiesToInclude) {
+        return fabric.util.object.extend(this.callSuper('toObject', propertiesToInclude), {
+        text: this.text.toObject(),
+        textContent: this.text.text
+        });
+    },
+
+    _render: function(ctx) {
+        this.callSuper('_render', ctx);
+        if (this.text) {
+        this.text.set({
+            left: this.left + (this.width * this.scaleX) / 2,
+            top: this.top + (this.height * this.scaleY) / 2,
+            originX: 'center',
+            originY: 'center'
+        });
+        this.text.setCoords();
+        }
     }
 });
+
+// FromObject implementation
+fabric.RectWithText.fromObject = function(object, callback) {
+    const rectOptions = fabric.util.object.clone(object);
+    delete rectOptions.text;
+    delete rectOptions.textContent;
+  
+    const textOptions = object.text;
+    const instance = new fabric.RectWithText(rectOptions, textOptions, object.textContent);
+    
+    if (callback) {
+      callback(instance);
+    }
+    return instance;
+};
 
 fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
     type: 'imageContainer',
@@ -208,18 +244,19 @@ fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
             selectable: false,
             evented: false,
             hasControls: false,
-            hasBorders: false
+            hasBorders: false,
+            isContained: true
         });
         
-        // Create the image
         this.image = new fabric.Image(image, {
             ...textOptions,
             selectable: false,
             evented: false,
             hasControls: false,
-            hasBorders: false
-        });
-        
+            hasBorders: false,
+            isContained: true
+        })
+
         // Improved centering function
         const centerText = () => {
             if (!this.canvas) return;
@@ -270,6 +307,15 @@ fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
             this._onDoubleClick();
         });
 
+        this.text.on('changed', () => {
+            console.log(this.text.text);
+            // Remove previous image if it exists
+            if (this.image) {
+                this.canvas.remove(this.image);
+                this.canvas.renderAll();
+            }
+        });
+
         // Gestisci la selezione dell'intero contenitore
         if (this.image) {
             this.image.on('mousedown', (opt) => {
@@ -292,6 +338,10 @@ fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
             const currentHeight = this.height * this.scaleY;  // Altezza attuale del rettangolo
             reader.onload = (event) => {
                 fabric.Image.fromURL(event.target.result, (img) => {
+                    if (this.text) {
+                        this.text.text = '';
+                    }
+
                     // Remove previous image if it exists
                     if (this.image) {
                         this.canvas.remove(this.image);
@@ -312,7 +362,8 @@ fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
                         selectable: false,
                         evented: false,
                         hasControls: false,
-                        hasBorders: false
+                        hasBorders: false,
+                        isContained: true
                     });
                     
                     // Store the image as object property
@@ -340,12 +391,101 @@ fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
     },
 
     clone: function(callback) {
-        // Creazione di un nuovo oggetto ImageContainer con le stesse proprietà
-        var clonedRect = new fabric.ImageContainer(this.toObject(), this.text.toObject(), this.text.text, this.image.getSrc());  // Passiamo 'null' invece di 'this.image'
+        const self = this;
+        // Get the original image source
+        const imageSource = this.image ? this.image.getSrc() : null;
         
-        callback(clonedRect);
-    }    
+        // Create new container with same properties
+        const clonedContainer = new fabric.ImageContainer(
+            this.toObject(),
+            this.text.toObject(),
+            this.text.text,
+            imageSource
+        );
+        
+        // Make sure the image is loaded before calling callback
+        if (imageSource) {
+            fabric.Image.fromURL(imageSource, function(img) {
+                clonedContainer.image = img;
+                clonedContainer.image.set({
+                    scaleX: self.image.scaleX,
+                    scaleY: self.image.scaleY,
+                    left: self.image.left,
+                    top: self.image.top,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false,
+                    evented: false,
+                    hasControls: false,
+                    hasBorders: false,
+                    isContained: true
+                });
+                
+                if (callback) callback(clonedContainer);
+            });
+        } else {
+            if (callback) callback(clonedContainer);
+        }
+    },
+
+    toObject: function(propertiesToInclude) {
+        return fabric.util.object.extend(this.callSuper('toObject', propertiesToInclude), {
+            text: this.text.toObject(),
+            textContent: this.text.text,
+            image: this.image ? {
+                src: this.image.getSrc(),
+                scaleX: this.image.scaleX,
+                scaleY: this.image.scaleY
+            } : null
+        });
+    },
+
+    // FromObject implementation
+    fromObject: function(object, callback) {
+        const rectOptions = fabric.util.object.clone(object);
+        delete rectOptions.text;
+        delete rectOptions.textContent;
+        delete rectOptions.image;
+
+        const textOptions = object.text;
+        const imageSource = object.image ? object.image.src : null;
+        
+        const instance = new fabric.ImageContainer(
+            rectOptions, 
+            textOptions, 
+            object.textContent,
+            imageSource
+        );
+
+        if (object.image) {
+            fabric.Image.fromURL(imageSource, function(img) {
+                instance.image = img;
+                instance.image.set({
+                    scaleX: object.image.scaleX,
+                    scaleY: object.image.scaleY,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: false,
+                    evented: false,
+                    hasControls: false,
+                    hasBorders: false,
+                    isContained: true
+                });
+                
+                if (callback) callback(instance);
+            });
+        } else {
+            if (callback) callback(instance);
+        }
+        
+        return instance;
+    }
 });
+
+// Assign fromObject to the class
+fabric.ImageContainer.fromObject = function(object, callback) {
+    return fabric.ImageContainer.prototype.fromObject(object, callback);
+};
 
 const paperSizes = {
     A4: { 
@@ -895,60 +1035,178 @@ function updateImage() {
             text: document.getElementById('cam').value
         });
         canvas.requestRenderAll();
+        // Emetti manualmente l'evento 'changed' per il testo
+        activeObj.text.fire('changed');
     }
 }
 
-function exportToPDF() {
-    const format = formatSelect.value;
-    const size = paperSizes[format];
-
-    if (midlineLayer) {
-        canvas.remove(midlineLayer);
-    }
-
-    // Rimuovi la griglia temporaneamente
-    if (gridLayer) {
-        canvas.remove(gridLayer);
-    }
-
-    if (marginLayer) {
-        canvas.remove(marginLayer);
-    }
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-        unit: 'px',
-        format: [size.width, size.height],
-        orientation: size.width > size.height ? 'l' : 'p'
-    });
-
-    // Esporta con alta qualità
-    const imgData = canvas.toDataURL({ 
-        format: 'png', 
-        quality: 1, 
-    });
-
-    pdf.addImage(imgData, 'PNG', 0, 0, size.width, size.height, '', 'FAST');
+// Modified Import function that handles custom objects
+function importCanvas() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.json';
+  
+  fileInput.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
     
-    // Ripristina la griglia
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      try {
+        const jsonData = JSON.parse(event.target.result);
+        
+        canvas.clear();
+
+        const reviver = function(obj, instance) {
+          if (instance) {
+            if (instance.type === 'rectWithText' && instance.text) {
+              instance.text.canvas = canvas;
+              instance.text.isContained = true;  // Ensure flag is set on import
+              canvas.add(instance.text);
+            } else if (instance.type === 'imageContainer' && instance.text) {
+              instance.text.canvas = canvas;
+              instance.text.isContained = true;  // Ensure flag is set on import
+              canvas.add(instance.text);
+            }
+          }
+        };
+
+        canvas.loadFromJSON(jsonData, function() {
+          if (gridLayer) {
+            canvas.add(gridLayer);
+            gridLayer.sendToBack();
+          }
+          if (marginLayer) {
+            canvas.add(marginLayer);
+            marginLayer.sendToBack();
+          }
+          if (midlineLayer) {
+            canvas.add(midlineLayer);
+            midlineLayer.sendToBack();
+          }
+
+          canvas.renderAll();
+        }, reviver);
+        
+      } catch (error) {
+        console.error('Error importing canvas:', error);
+        alert('Error importing canvas. Please check if the file is valid.');
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+  
+  fileInput.click();
+}
+
+// Modified Export function that filters out contained text objects
+function exportCanvas() {
+  if (midlineLayer) {
+    canvas.remove(midlineLayer);
+  }
+  if (gridLayer) {
+    canvas.remove(gridLayer);
+  }
+  if (marginLayer) {
+    canvas.remove(marginLayer);
+  }
+
+  try {
+    // Create a custom toJSON function that filters out contained text
+    const customToJSON = (function(originalFn) {
+      return function(propertiesToInclude) {
+        const objects = this.getObjects();
+        
+        // Temporarily remove contained text objects
+        const containedTexts = objects.filter(obj => obj.isContained);
+        containedTexts.forEach(text => this.remove(text));
+        
+        // Get JSON without contained text objects
+        const json = originalFn.call(this, propertiesToInclude);
+        
+        // Restore contained text objects
+        containedTexts.forEach(text => this.add(text));
+        
+        return json;
+      };
+    })(canvas.toJSON);
+
+    // Temporarily replace toJSON method
+    const originalToJSON = canvas.toJSON;
+    canvas.toJSON = customToJSON;
+
+    // Export the canvas
+    const json = canvas.toJSON([
+      'selectable', 
+      'hasControls', 
+      'hasBorders', 
+      'id', 
+      'name', 
+      'editable', 
+      'customType',
+      'type',
+      'isContained'  // Include this property in the export
+    ]);
+
+    // Restore original toJSON method
+    canvas.toJSON = originalToJSON;
+
+    // Create and trigger download
+    const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'canvas_export.json';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  } finally {
+    // Restore layers
     if (midlineLayer) {
-        canvas.add(midlineLayer);
-        midlineLayer.sendToBack();
+      canvas.add(midlineLayer);
+      midlineLayer.sendToBack();
     }
-
-    // Ripristina la griglia
     if (gridLayer) {
-        canvas.add(gridLayer);
-        gridLayer.sendToBack();
+      canvas.add(gridLayer);
+      gridLayer.sendToBack();
     }
-
-    // Ripristina i margini
     if (marginLayer) {
-        canvas.add(marginLayer);
-        marginLayer.sendToBack();
+      canvas.add(marginLayer);
+      marginLayer.sendToBack();
     }
+  }
+}
 
-    pdf.save(`receipt_${format}.pdf`);
+// Optional: Save canvas state to localStorage
+function saveCanvasState() {
+  try {
+    const json = canvas.toJSON([
+      'selectable', 
+      'hasControls', 
+      'hasBorders', 
+      'id', 
+      'name', 
+      'editable', 
+      'customType',
+      'type'
+    ]);
+    localStorage.setItem('canvasState', JSON.stringify(json));
+  } catch (error) {
+    console.error('Error saving canvas state:', error);
+  }
+}
+
+// Optional: Load canvas state from localStorage
+function loadCanvasState() {
+  try {
+    const savedState = localStorage.getItem('canvasState');
+    if (savedState) {
+      canvas.loadFromJSON(JSON.parse(savedState), function() {
+        canvas.renderAll();
+      });
+    }
+  } catch (error) {
+    console.error('Error loading canvas state:', error);
+  }
 }
 
 document.getElementById('tool-buttons').addEventListener('click', (e) => {
@@ -973,7 +1231,8 @@ document.getElementById('tool-buttons').addEventListener('click', (e) => {
 // If you want to make these globally accessible for HTML inline events
 window.setTool = setTool;
 window.deleteSelected = deleteSelected;
-window.exportToPDF = exportToPDF;
+window.exportCanvas = exportCanvas;
+window.importCanvas = importCanvas;
 window.toggleGrid = toggleGrid;
 window.toggleMidlines = toggleMidlines;
 window.toggleMargins = toggleMargins;
