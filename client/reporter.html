@@ -53,7 +53,7 @@
             </label>
             <label for="font-family-text">
                 Font family
-                <select name="font-family-text" id="font-family-text" onchange="updateText()">
+                <select name="font-family-text" id="font-family-text" onchange="updateText(); this.blur();">
                     <option value="Arial">Arial</option>
                     <option value="Verdana">Verdana</option>
                     <option value="Times New Roman">Times New Roman</option>
@@ -66,7 +66,7 @@
             </label>
             <label for="database-data-text">
                 Database
-                <select name="database-data-text" id="database-data-text" onchange="updateText()">
+                <select name="database-data-text" id="database-data-text" onchange="updateText(); this.blur();">
                     <option value="[pid1]">PID 1</option>
                     <option value="[pid2]">PID 2</option>
                     <option value="[date1]">Data 1</option>
@@ -123,7 +123,7 @@
 
         <div id="image-controls" style="display:none;">
             <label for="cam">
-                <select name="cam" id="cam" onchange="updateImage()">
+                <select name="cam" id="cam" onchange="updateImage(); this.blur();">
                     <option value="[CAM 1]">CAM 1</option>
                     <option value="[CAM 2]">CAM 2</option>
                     <option value="[CAM 3]">CAM 3</option>

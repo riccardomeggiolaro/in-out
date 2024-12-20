@@ -354,6 +354,13 @@ function addText() {
 
     canvas.add(text);
     canvas.setActiveObject(text);
+
+    // // Attiva immediatamente la modalità di editing
+    // text.enterEditing();
+    
+    // // Sposta il cursore alla fine del testo
+    // text.setSelectionStart(text.text.length);
+    // text.setSelectionEnd(text.text.length);
 }
 
 function addLine() {
@@ -468,6 +475,7 @@ function deleteSelected() {
 }
 
 function updateText() {
+    console.log("jefjs")
     const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === 'i-text') {
         const databaseDataText = document.getElementById('database-data-text').value;
