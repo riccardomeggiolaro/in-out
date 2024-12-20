@@ -3,6 +3,7 @@ import { initCenteringGuidelines } from './reporter/centering-guide-lines.js';
 import { paperSizes } from './reporter/paperSize.js';
 import './reporter/rectWithText.js';
 import './reporter/imageContainer.js';
+import './reporter/textWithPadding.js';
 
 let canvas;
 let gridLayer;
@@ -10,37 +11,42 @@ let midlineLayer;
 let marginLayer;
 let copiedObject = null;
 const formatSelect = document.getElementById('format-select');
+const gridToggle = document.getElementById('grid-toggle');
+const midlineToggle = document.getElementById('midline-toggle');
+const marginToggle = document.getElementById('margin-toggle');
 
 function initCanvas(format) {
+    formatSelect.value = format;
+
     if (canvas) {
         canvas.dispose();
     }
-
     const size = paperSizes[format];
-    
+
+    // Applica il fattore di scala alle dimensioni
+    const scaledWidth = size.width * size.scale;
+    const scaledHeight = size.height * size.scale;
+
     canvas = new fabric.Canvas('canvas', {
         backgroundColor: 'white',
         selection: true,
         preserveObjectStacking: true,
-        width: size.width,
-        height: size.height
+        width: scaledWidth,
+        height: scaledHeight
     });
 
     // Verifica se la griglia deve essere mostrata
-    const gridToggle = document.getElementById('grid-toggle');
     if (gridToggle && gridToggle.checked) {
-        createGrid(size.width, size.height);
+        createGrid(scaledWidth, scaledHeight);
     }
 
     // Verifica se i midlines devono essere mostrati
-    const midlineToggle = document.getElementById('midline-toggle');
     if (midlineToggle && midlineToggle.checked) {
-        createMidlines(size.width, size.height);
+        createMidlines(scaledWidth, scaledHeight);
     }
 
-    const marginToggle = document.getElementById('margin-toggle');
     if (marginToggle && marginToggle.checked) {
-        createMargins(size.width, size.height, size.margins);
+        createMargins(scaledWidth, scaledHeight, size.margins);
     }
 
     canvas.on('selection:created', showControls);
@@ -123,11 +129,15 @@ function toggleMargins() {
     const marginToggle = document.getElementById('margin-toggle');
     const size = paperSizes[formatSelect.value];
 
+    // Applica il fattore di scala alle dimensioni
+    const scaledWidth = size.width * size.scale;
+    const scaledHeight = size.height * size.scale;
+
     if (marginToggle.checked) {
-        createMargins(size.width, size.height, size.margins);
-    } else if (marginToggle) {
+        createMargins(scaledWidth, scaledHeight, size.margins);
+    } else {
         canvas.remove(marginLayer);
-        marginToggle = null;
+        marginLayer = null;
     }
 }
 
@@ -170,9 +180,13 @@ function toggleMidlines() {
     const midlineToggle = document.getElementById('midline-toggle');
     const size = paperSizes[formatSelect.value];
 
+    // Applica il fattore di scala alle dimensioni
+    const scaledWidth = size.width * size.scale;
+    const scaledHeight = size.height * size.scale;
+
     if (midlineToggle.checked) {
-        createMidlines(size.width, size.height);
-    } else if (midlineLayer) {
+        createMidlines(scaledWidth, scaledHeight);
+    } else {
         canvas.remove(midlineLayer);
         midlineLayer = null;
     }
@@ -216,10 +230,16 @@ function createGrid(width, height, gridSize = 20) {
 
 function toggleGrid() {
     const gridToggle = document.getElementById('grid-toggle');
+
+    const size = paperSizes[formatSelect.value];
+
+    // Applica il fattore di scala alle dimensioni
+    const scaledWidth = size.width * size.scale;
+    const scaledHeight = size.height * size.scale;
+
     if (gridToggle.checked) {
-        const size = paperSizes[formatSelect.value];
-        createGrid(size.width, size.height);
-    } else if (gridLayer) {
+        createGrid(scaledWidth, scaledHeight);
+    } else {
         canvas.remove(gridLayer);
         gridLayer = null;
     }
@@ -307,6 +327,7 @@ function hideControls() {
     document.getElementById('text-controls').style.display = 'none';
     document.getElementById('rectangle-controls').style.display = 'none';
     document.getElementById('line-controls').style.display = 'none';
+    document.getElementById('image-controls').style.display = 'none';
 }
 
 function setTool(tool) {
@@ -323,10 +344,14 @@ function addText() {
         top: 50,
         fontSize: 30,
         fill: 'black',
-        cornerSize: 12,
         transparentCorners: false,
         hasControls: true,     // Mostra i controlli di ridimensionamento
     });
+
+    text.on('scaling', function() {
+        text.setCoords();
+    });
+
     canvas.add(text);
     canvas.setActiveObject(text);
 }
@@ -515,7 +540,7 @@ function importCanvas() {
             try {
                 const jsonData = JSON.parse(event.target.result);
                 
-                canvas.clear();
+                initCanvas(jsonData.formatPaper);
 
                 const reviver = function(obj, instance) {
                     if (instance) {
@@ -531,7 +556,7 @@ function importCanvas() {
                     }
                 };
 
-                canvas.loadFromJSON(jsonData, function() {
+                canvas.loadFromJSON(jsonData.canvasData, function() {
                     if (gridLayer) {
                         canvas.add(gridLayer);
                         gridLayer.sendToBack();
@@ -577,17 +602,13 @@ function exportCanvas() {
         const customToJSON = (function(originalFn) {
             return function(propertiesToInclude) {
                 const objects = this.getObjects();
-                
                 // Temporarily remove contained text objects
                 const containedTexts = objects.filter(obj => obj.isContained);
                 containedTexts.forEach(text => this.remove(text));
-                
                 // Get JSON without contained text objects
                 const json = originalFn.call(this, propertiesToInclude);
-                
                 // Restore contained text objects
                 containedTexts.forEach(text => this.add(text));
-                
                 return json;
             };
         })(canvas.toJSON);
@@ -596,29 +617,33 @@ function exportCanvas() {
         const originalToJSON = canvas.toJSON;
         canvas.toJSON = customToJSON;
 
-        // Export the canvas
-        const json = canvas.toJSON([
-            'selectable', 
-            'hasControls', 
-            'hasBorders', 
-            'id', 
-            'name', 
-            'editable', 
-            'customType',
-            'type',
-            'isContained'  // Include this property in the export
-        ]);
+        // Create configuration object including canvas dimensions
+        const configuration = {
+            formatPaper: formatSelect.value,
+            canvasData: canvas.toJSON([
+                'selectable',
+                'hasControls',
+                'hasBorders',
+                'id',
+                'name',
+                'editable',
+                'customType',
+                'type',
+                'isContained'
+            ])
+        };
 
         // Restore original toJSON method
         canvas.toJSON = originalToJSON;
 
         // Create and trigger download
-        const blob = new Blob([JSON.stringify(json)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(configuration)], { type: 'application/json' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'canvas_export.json';
         link.click();
         URL.revokeObjectURL(link.href);
+
     } catch (error) {
         console.error('Error exporting canvas:', error);
     } finally {
@@ -724,7 +749,7 @@ document.addEventListener('keydown', function(event) {
     }  
 });
 
-initCanvas('A4');
+initCanvas(formatSelect.value);
 
 // If you want to make these globally accessible for HTML inline events
 window.setTool = setTool;

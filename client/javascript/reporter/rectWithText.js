@@ -40,6 +40,7 @@ fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
             evented: false,
             hasControls: false,
             hasBorders: false,
+            scaleToWidth: false,
             isContained: true  // Add this flag to identify contained text
         });
 

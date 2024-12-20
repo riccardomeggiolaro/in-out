@@ -60,6 +60,7 @@ fabric.ImageContainer = fabric.util.createClass(fabric.Rect, {
             evented: false,
             hasControls: false,
             hasBorders: false,
+            scaleToWidth: false,
             isContained: true
         });
         
