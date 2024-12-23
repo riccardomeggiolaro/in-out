@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -91,30 +91,33 @@
 <body>
     <form onsubmit="handleLogin(event)">
         <h2>Login</h2>
-        <input type="text" name="username" placeholder="Username" oninput="checkInputs()">
-        <input type="password" name="password" placeholder="Password" oninput="checkInputs()">
+        <input type="text" name="username" placeholder="Username" oninput="checkInputs()" autocomplete="off">
+        <input type="password" name="password" placeholder="Password" oninput="checkInputs()" autocomplete="off">
         <button type="submit" disabled>Login</button>
     </form>
     <img src="https://on.baron.it/tecnico/pesi/LOGO_BARONPESI.png" alt="">
 
     <script>
-        fetch('/auth/me', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.username) {
-                window.location.href = '/dashboard';
-            } else {
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetch('/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.username) {
+                    window.location.href = '/dashboard';
+                } else {
+                    localStorage.removeItem('token');
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
                 localStorage.removeItem('token');
-            }
-        })
-        .catch(error => {
-            alert('Error: ' + error);
-            localStorage.removeItem('token');
-        })
+            })
+        }
 
         function handleLogin(event) {
             event.preventDefault(); // Evita il refresh della pagina

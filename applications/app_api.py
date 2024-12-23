@@ -3,6 +3,7 @@ import libs.lb_config as lb_config
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import psutil
 from applications.router.generic import GenericRouter
@@ -95,7 +96,7 @@ def init():
 	global templates
 
 	# Usa Path per una gestione più sicura dei percorsi
-	base_dir_templates = Path(os.getcwd()) / "client"
+	base_dir_templates = Path(os.getcwd()) / "applications" / "static"
 	templates = Jinja2Templates(directory=str(base_dir_templates))
 
 	app = FastAPI()
@@ -132,6 +133,9 @@ def init():
 	app.include_router(generic_router.router, prefix="/generic", tags=["generic"])
 
 	app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
+
+	# Monta la cartella 'static' nella rotta '/static'
+	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 	# ssh_client = None
 	# if lb_config.g_config["app_api"]["ssh_client"]:

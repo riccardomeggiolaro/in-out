@@ -15,8 +15,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.algorithm = "HS256"
 
     async def dispatch(self, request: Request, call_next: Callable):
+        pages = ["/login", "/login.html", "/dashboard", "/dashb", "/dashboard-mobile", "/reporter", "/reporter.html", "/dashboard.html", "/auth/login", "/docs", "/openapi.json"]
+        
         # Skip authentication for specific routes
-        if request.url.path in ["/login", "/login.html", "/dashboard", "/dashboard.html", "/auth/login", "/docs", "/openapi.json"]:
+        if request.url.path in pages or request.url.path.startswith("/static"):
             return await call_next(request)
 
         try:
