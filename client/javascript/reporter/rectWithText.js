@@ -129,24 +129,10 @@ fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
                     height: this.text.height / this.scaleY
                 })
             }
-            // Quando finisce l'editing, ricalcola la larghezza 
-            this.text.set({ 
-                width: null, // Forza ricalcolo larghezza
-                height: null // Forza ricalcolo altezza
-            }); 
-            this.text.initDimensions();
             // Ricalcola dimensioni 
             // Centra nuovamente il testo 
             const center = this.getCenterPoint(); 
-            this.text.set({ left: center.x, top: center.y, originX: 'center', originY: 'center' }); 
-        });
-
-        this.text.on('editing:exited', () => {
-            if (/^\s*$/.test(this.text.text)) {
-                this.text.set({
-                    text: ''
-                });
-            }
+            this.text.set({ left: center.x, top: center.y, originX: 'center', originY: 'center' });
         });
     },
 

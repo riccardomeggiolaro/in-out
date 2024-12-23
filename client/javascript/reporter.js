@@ -348,10 +348,6 @@ function addText() {
         hasControls: true,     // Mostra i controlli di ridimensionamento
     });
 
-    text.on('scaling', function() {
-        text.setCoords();
-    });
-
     canvas.add(text);
     canvas.setActiveObject(text);
 
@@ -475,17 +471,15 @@ function deleteSelected() {
 }
 
 function updateText() {
-    console.log("jefjs")
     const activeObject = canvas.getActiveObject();
     if (activeObject && activeObject.type === 'i-text') {
         const databaseDataText = document.getElementById('database-data-text').value;
-        activeObject.set({
+        let data = {
             fontSize: parseInt(document.getElementById('font-size-text').value),
             fontFamily: document.getElementById('font-family-text').value,
-            // textAlign: document.getElementById('align-text').value
-            text: databaseDataText ? databaseDataText : activeObject.text
-        });
-        canvas.requestRenderAll(); // Metodo più affidabile per aggiornare il canvas
+            text: databaseDataText || activeObject.text
+        };
+        activeObject.set(data);
         // Trova il contenitore RectWithText se esiste
         const parentRectWithText = canvas.getObjects().find(obj => 
             obj.type === 'rectWithText' && 
@@ -495,6 +489,11 @@ function updateText() {
             // Emetti manualmente l'evento 'changed' per il testo
             activeObject.fire('changed');
         }
+        canvas.discardActiveObject();
+
+        // Riseleziona immediatamente l'oggetto
+        canvas.setActiveObject(activeObject);
+        canvas.requestRenderAll();
     }
 }
 

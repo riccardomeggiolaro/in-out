@@ -6,6 +6,32 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Ciao</h1>
+    
+    <script>
+        fetch('/auth/me', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            localStorage.removeItem('token');
+            fetch('/login', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.body.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
 </body>
 </html>

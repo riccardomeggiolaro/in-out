@@ -1,1 +1,160 @@
-<h1>Ciao</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            box-sizing: border-box; /* Impostazione per una gestione migliore dei margini e del padding */
+            height: 100%; /* Garantire che l'altezza della pagina si estenda completamente */
+        }
+
+        /* Aggiungi un universale per applicare box-sizing a tutti gli elementi */
+        *,
+        *::before,
+        *::after {
+            box-sizing: inherit;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: cornflowerblue;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        form {
+            width: 300px;
+            max-width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Ombra al form */
+            transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+        }
+        input {
+            position: relative;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
+            transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+        }
+        input:focus {
+            box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra più intensa quando è in focus */
+            outline: none;
+        }
+        button {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            background-color: cornflowerblue;
+            color: #fff;
+            cursor: pointer;
+            width: 100%;
+            opacity: 0.6; /* Inizialmente disabilitato */
+            pointer-events: none; /* Disabilita il click */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ombra del pulsante */
+            transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+        }
+        button:disabled {
+            opacity: 0.6; /* Disabilitato */
+            pointer-events: none; /* Disabilita il click */
+        }
+        button:hover {
+            box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra piu' intensa al passaggio del mouse */
+        }
+        button:enabled {
+            opacity: 1; /* Quando abilitato, aumenta l'opacità */
+            pointer-events: auto; /* Abilita il click */
+        }
+        img {
+            width: 200px;
+            max-width: 90%;
+            position: absolute;
+            bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <form onsubmit="handleLogin(event)">
+        <h2>Login</h2>
+        <input type="text" name="username" placeholder="Username" oninput="checkInputs()">
+        <input type="password" name="password" placeholder="Password" oninput="checkInputs()">
+        <button type="submit" disabled>Login</button>
+    </form>
+    <img src="https://on.baron.it/tecnico/pesi/LOGO_BARONPESI.png" alt="">
+
+    <script>
+        fetch('/auth/me', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.username) {
+                window.location.href = '/dashboard';
+            } else {
+                localStorage.removeItem('token');
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error);
+            localStorage.removeItem('token');
+        })
+
+        function handleLogin(event) {
+            event.preventDefault(); // Evita il refresh della pagina
+
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    localStorage.setItem('token', data.access_token);
+                    window.location.href = '/dashboard';
+                } else {
+                    alert('Invalid username or password');
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+                console.error('Error:', error);
+            });
+        }
+
+        // Funzione per abilitare/disabilitare il pulsante
+        function checkInputs() {
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            const loginButton = document.querySelector('button[type="submit"]');
+
+            if (username && password) {
+                loginButton.disabled = false; // Abilita il pulsante
+            } else {
+                loginButton.disabled = true; // Disabilita il pulsante
+            }
+        }
+    </script>
+</body>
+</html>

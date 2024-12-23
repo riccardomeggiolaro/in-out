@@ -16,7 +16,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable):
         # Skip authentication for specific routes
-        if request.url.path in ["/login", "/login.html", "/auth/login", "/docs", "/openapi.json"]:
+        if request.url.path in ["/login", "/login.html", "/dashboard", "/dashboard.html", "/auth/login", "/docs", "/openapi.json"]:
             return await call_next(request)
 
         try:
@@ -31,7 +31,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             # Extract token
             try:
                 scheme, token = auth_header.split()
-            except ValueError:
+            except ValueError as e:
                 return JSONResponse(
                     status_code=401, 
                     content={"detail": "Invalid Authorization header"}
