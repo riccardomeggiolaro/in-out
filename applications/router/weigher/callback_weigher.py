@@ -22,7 +22,7 @@ class CallbackWeigher:
             cb_diagnostic=self.Callback_Diagnostic, 
             cb_weighing=self.Callback_Weighing, 
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
-            cb_data=self.Callback_Data,
+            cb_data_in_execution=self.Callback_DataInExecution,
             cb_action_in_execution=self.Callback_ActionInExecution
         )
 
@@ -158,7 +158,7 @@ class CallbackWeigher:
         except Exception as e:
             pass
 
-    def Callback_Data(self, instance_name: str, instance_node: Union[str, None], data: Data):
+    def Callback_DataInExecution(self, instance_name: str, instance_node: Union[str, None], data: Data):
         try:
             if asyncio.get_event_loop().is_running():
                 asyncio.create_task(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(data.dict()))

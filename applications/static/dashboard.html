@@ -130,8 +130,6 @@
             border: 1px solid #dee2e6;
             border-radius: 8px;
             margin: 3px;
-            padding-top: auto;
-            padding-bottom: auto;
             position: relative;
             font-size: 3rem;
         }
@@ -618,27 +616,27 @@
                     <div>
                         <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Veicolo</h2>
                         <p style="text-align: left; margin-top: 0px;">Descrizione:</p>
-                        <input id="currentDescriptionVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myDescriptionVehicleInput', '', 'name', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'myDescriptionVehicleInput')" >
+                        <input id="currentDescriptionVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myDescriptionVehicleInput', 'name', '', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'myDescriptionVehicleInput')" >
                         <p style="text-align: left; margin-top: 0px;">Targa:</p>
-                        <input id="currentPlateVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myPlateInput', '', 'plate', ['name'], 'platePopup', 'suggestionsListPlateVehicle'); openPopup('platePopup', 'myPlateInput')" >
+                        <input id="currentPlateVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myPlateInput', 'plate', '', ['name'], 'platePopup', 'suggestionsListPlateVehicle'); openPopup('platePopup', 'myPlateInput')" >
                         <br>
                     </div>
 
                     <div>
                         <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Cliente</h2>
-                        <input id="currentNameSocialReasonCustomer" type="text"name="plate" onclick="showSuggestions('customer', 'nameSocialReasonCustomerInput', '', 'name', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer'); openPopup('nameSocialReasonCustomerPopup', 'nameSocialReasonCustomerInput')" >
+                        <input id="currentNameSocialReasonCustomer" type="text"name="plate" onclick="showSuggestions('customer', 'nameSocialReasonCustomerInput', 'name', '', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer'); openPopup('nameSocialReasonCustomerPopup', 'nameSocialReasonCustomerInput')" >
                         <br>
                     </div>
 
                     <div>
                         <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Fornitore</h2>
-                        <input id="currentNameSocialReasonSupplier" type="text"name="plate" onclick="showSuggestions('supplier', 'nameSocialReasonSupplierInput', '', 'name', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier'); openPopup('nameSocialReasonSupplierPopup', 'nameSocialReasonSupplierInput')" >
+                        <input id="currentNameSocialReasonSupplier" type="text"name="plate" onclick="showSuggestions('supplier', 'nameSocialReasonSupplierInput', 'name', '', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier'); openPopup('nameSocialReasonSupplierPopup', 'nameSocialReasonSupplierInput')" >
                         <br>
                     </div>
 
                     <div>
                         <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Materiale</h2>
-                        <input id="currentMaterial" type="text"name="plate" onclick="showSuggestions('material', 'myMaterialInput', '', 'name', [], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myMaterialInput')" >
+                        <input id="currentMaterial" type="text"name="plate" onclick="showSuggestions('material', 'myMaterialInput', 'name', '', [], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myMaterialInput')" >
                         <br>
                     </div>
 
@@ -702,7 +700,7 @@
         <div id="descriptionVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Descrizione:</h2>
-                <input type="text" id="myDescriptionVehicleInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'myDescriptionVehicleInput', this.value, 'name', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <input type="text" id="myDescriptionVehicleInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'myDescriptionVehicleInput', 'name', this.value, ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
                 <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -714,7 +712,7 @@
         <div id="platePopup" class="popup">
             <div class="popup-content">
                 <h2>Targa:</h2>
-                <input type="text" id="myPlateInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'myPlateInput', this.value, 'plate', ['description'], 'platePopup', 'suggestionsListPlateVehicle');">
+                <input type="text" id="myPlateInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'myPlateInput', 'plate', this.value, ['description'], 'platePopup', 'suggestionsListPlateVehicle');">
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -726,7 +724,7 @@
         <div id="nameSocialReasonCustomerPopup" class="popup">
             <div class="popup-content">
                 <h2>Nome:</h2>
-                <input type="text" id="nameSocialReasonCustomerInput" autocomplete="off" class="input" oninput="showSuggestions('customer', 'nameSocialReasonCustomerInput', this.value, 'name', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer');">
+                <input type="text" id="nameSocialReasonCustomerInput" autocomplete="off" class="input" oninput="showSuggestions('customer', 'nameSocialReasonCustomerInput', 'name', this.value, ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer');">
                 <ul id="suggestionsListNameSocialReasonCustomer" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -738,7 +736,7 @@
         <div id="nameSocialReasonSupplierPopup" class="popup">
             <div class="popup-content">
                 <h2>Nome:</h2>
-                <input type="text" id="nameSocialReasonSupplierInput" autocomplete="off" class="input" oninput="showSuggestions('supplier', 'nameSocialReasonSupplierInput', this.value, 'name', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier');">
+                <input type="text" id="nameSocialReasonSupplierInput" autocomplete="off" class="input" oninput="showSuggestions('supplier', 'nameSocialReasonSupplierInput', 'name', this.value, ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier');">
                 <ul id="suggestionsListNameSocialReasonSupplier" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -750,7 +748,7 @@
         <div id="materialPopup" class="popup">
             <div class="popup-content">
                 <h2>Materiale:</h2>
-                <input type="text" id="myMaterialInput" autocomplete="off" class="input" oninput="showSuggestions('material', 'myMaterialInput', this.value, 'material', [], 'materialPopup', 'suggestionsListMaterial');">
+                <input type="text" id="myMaterialInput" autocomplete="off" class="input" oninput="showSuggestions('material', 'myMaterialInput', 'name', this.value, [], 'materialPopup', 'suggestionsListMaterial');">
                 <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -793,8 +791,6 @@
             // Confronta l'altezza della lista e del contenitore
             if (listIn.scrollHeight > container.clientHeight) {
                 listIn.style.justifyContent = 'flex-start'; // Rimuovi il centraggio
-            } else {
-                console.log('here');
             }
         }
 
@@ -824,7 +820,6 @@
                 document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
                 document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
                 selectedIdWeight = data["data"]["id_selected"]["id"];
-                console.log(selectedIdWeight);
             })
             .catch(error => console.error('Errore nella fetch:', error));
         }
@@ -835,9 +830,7 @@
 
             listIn.innerHTML = '';
 
-            console.log(selectedIdWeight);
-
-            await fetch('/weighings/in?name=1')
+            await fetch('/historic_data/weighings/in?name=1')
             .then(res => res.json())
             .then(data => {
                 data.forEach(item => {
@@ -870,15 +863,12 @@
             })
             .then(() => {
                 const selected = document.querySelector('.list-in li.selected');
-                console.log(selected);
                 if (selected) {
                     selected.scrollIntoView({
                         behavior: 'instant',
                         block: 'nearest',
                         inline: 'start'
                     });
-                } else {
-                    console.log('Elemento selezionato non trovato.');
                 }
             })
             .catch(error => console.error('Errore nella fetch:', error));
@@ -929,7 +919,7 @@
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
-        async function showSuggestions(name_list, inputHtml, inputValue, filter, data, popup, showList, condition = null, valueCondition = null) {
+        async function showSuggestions(name_list, inputHtml, filter, inputValue, data, popup, showList, condition = null, valueCondition = null) {
             const suggestionsList = document.getElementById(showList);
             suggestionsList.innerHTML = ""; // Pulisce la lista precedente
 
@@ -951,7 +941,7 @@
                 anagrafic_to_set = 'material';
             }
 
-            let url = `/list/anagrafic/${name_list}`;
+            let url = `/anagrafic/list/${name_list}`;
 
             if (inputValue) url += `?${filter}=${inputValue}`;
 
@@ -1173,10 +1163,7 @@
             })
 
             _data.addEventListener('error', () => {
-                if (isRefreshing) {
-                    console.log("WebSocket closed due to refresh");
-                } else {
-                    console.error("WebSocket error. Trying to reconnect...");
+                if (!isRefreshing) {
                     document.querySelector('.loading').style.display = 'flex';
                     document.querySelector('.container').style.display = 'none';
                     attemptReconnect();
@@ -1184,10 +1171,7 @@
             });
 
             _data.addEventListener('close', () => {
-                if (isRefreshing) {
-                    console.log("WebSocket closed due to refresh");
-                } else {
-                    console.warn("WebSocket closed. Trying to reconnect...");
+                if (!isRefreshing) {
                     document.querySelector('.loading').style.display = 'flex';
                     document.querySelector('.container').style.display = 'none';
                     attemptReconnect();
@@ -1198,7 +1182,6 @@
         function attemptReconnect() {
             clearTimeout(reconnectTimeout);
             reconnectTimeout = setTimeout(() => {
-                console.log("Attempting to reconnect...");
                 connectWebSocket('command_weigher/realtime?name=1', updateUIRealtime);
             }, 3000);
         }
@@ -1263,13 +1246,13 @@
         }
 
         async function handleTara() {
-            await fetch(`${pathname}/tare?name=1`)
+            await fetch(`${pathname}/command_weigher/tare?name=1`)
             .then(res => res.json())
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
         async function handleZero() {
-            await fetch(`${pathname}/zero?name=1`)
+            await fetch(`${pathname}/command_weigher/zero?name=1`)
             .then(res => res.json())
             .catch(error => console.error('Errore nella fetch:', error));
         }
@@ -1277,7 +1260,7 @@
         async function handlePTara() {
             let preset_tare = 0;
             if (myNumberInput.value) preset_tare = myNumberInput.value;
-            await fetch(`${pathname}/presettare?name=1&tare=${preset_tare}`)
+            await fetch(`${pathname}/command_weigher/preset_tare?name=1&tare=${preset_tare}`)
             .then(res => {
                 closePopup();
                 return res.json();
@@ -1290,7 +1273,7 @@
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
             });
-            const r = await fetch(`${pathname}/print?name=1`)
+            const r = await fetch(`${pathname}/command_weigher/print?name=1`)
             .then(res => {
                 return res.json();
             })
@@ -1311,7 +1294,7 @@
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
             });
-            const r = await fetch(`${pathname}/weighing?name=1`)
+            const r = await fetch(`${pathname}/command_weigher/weighing?name=1`)
             .then(res => {
                 return res.json();
             })
@@ -1333,7 +1316,7 @@
                     button.disabled = true;
                     button.classList.add("disabled-button"); // Aggi
                 });
-                const r = await fetch(`${pathname}/weighing?name=1&id=${selectedIdWeight}`)
+                const r = await fetch(`${pathname}/command_weigher/weighing?name=1&id=${selectedIdWeight}`)
                 .then(res => {
                     return res.json();
                 })

@@ -53,7 +53,7 @@ class WeigherModule:
 		cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		for name, instance in self.instances.items():
 			instance.setAction(
@@ -61,7 +61,7 @@ class WeigherModule:
 				cb_diagnostic=cb_diagnostic, 
 				cb_weighing=cb_weighing, 
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_data=cb_data,
+				cb_data_in_execution=cb_data_in_execution,
 				cb_action_in_execution=cb_action_in_execution
 			)
 
@@ -122,7 +122,7 @@ class WeigherModule:
 	   	cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
 			raise HTTPException(status_code=400, detail='Node just exist')
@@ -134,7 +134,7 @@ class WeigherModule:
 			cb_diagnostic=cb_diagnostic,
 			cb_weighing=cb_weighing,
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
-			cb_data=cb_data,
+			cb_data_in_execution=cb_data_in_execution,
 			cb_action_in_execution=cb_action_in_execution
 		)
 		del node_created["terminal_data"]
@@ -242,7 +242,7 @@ class WeigherInstance:
 	 	cb_diagnostic: Callable[[dict], any] = None, 
 	  	cb_weighing: Callable[[dict], any] = None, 
 	   	cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None
 		):
 		self.m_enabled = True
@@ -278,7 +278,7 @@ class WeigherInstance:
 			cb_diagnostic=cb_diagnostic, 
 			cb_weighing=cb_weighing, 
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
-			cb_data=cb_data,
+			cb_data_in_execution=cb_data_in_execution,
 			cb_action_in_execution=cb_action_in_execution
 		)
 		self.thread = createThread(self.start)
@@ -357,7 +357,7 @@ class WeigherInstance:
 	   	cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		n = terminalsClasses[setup.terminal](
 			self_config=self, 
@@ -382,7 +382,7 @@ class WeigherInstance:
 				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_data=cb_data,
+				cb_data_in_execution=cb_data_in_execution,
 				cb_action_in_execution=cb_action_in_execution
 			)
 		return n.getSetup()
@@ -395,7 +395,7 @@ class WeigherInstance:
 	   	cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		node_found = [n for n in self.nodes if n.node == node]
 		result = None
@@ -410,7 +410,7 @@ class WeigherInstance:
 					cb_diagnostic=cb_diagnostic,
 					cb_weighing=cb_weighing,
 					cb_tare_ptare_zero=cb_tare_ptare_zero,
-					cb_data=cb_data,
+					cb_data_in_execution=cb_data_in_execution,
 					cb_action_in_execution=cb_action_in_execution
            		)
 		return result
@@ -514,7 +514,7 @@ class WeigherInstance:
        	cb_diagnostic: Callable[[dict], any] = None, 
         cb_weighing: Callable[[dict], any] = None, 
         cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		global nodes
 		node_found = [n for n in self.nodes if n.node == node]
@@ -524,7 +524,7 @@ class WeigherInstance:
 				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_data=cb_data,
+				cb_data_in_execution=cb_data_in_execution,
 				cb_action_in_execution=cb_action_in_execution
 			)
 
@@ -534,7 +534,7 @@ class WeigherInstance:
      	cb_diagnostic: Callable[[dict], any] = None, 
       	cb_weighing: Callable[[dict], any] = None, 
        	cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		for weigher in self.nodes:
 			weigher.setAction(
@@ -542,7 +542,7 @@ class WeigherInstance:
           		cb_diagnostic=cb_diagnostic, 
             	cb_weighing=cb_weighing, 
              	cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_data=cb_data,
+				cb_data_in_execution=cb_data_in_execution,
 				cb_action_in_execution=cb_action_in_execution
     		)
 	# ==============================================================

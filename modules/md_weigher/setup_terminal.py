@@ -188,7 +188,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
-  		cb_data: Callable[[dict], any] = None,
+  		cb_data_in_execution: Callable[[dict], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		check_cb_realtime = checkCallbackFormat(cb_realtime) # controllo se la funzione cb_realtime è richiamabile
 		if check_cb_realtime: # se è richiamabile assegna alla globale callback_realtime la funzione passata come parametro
@@ -202,9 +202,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		check_cb_tare_ptare_zero = checkCallbackFormat(cb_tare_ptare_zero) # controllo se la funzione cb_tare_ptare_zero è richiamabile
 		if check_cb_tare_ptare_zero: # se è richiamabile assegna alla globale callback_tare_ptare_zero la funzione passata come parametro
 			self.callback_tare_ptare_zero = lambda: cb_tare_ptare_zero(self.self_config.name, self.node, self.ok_value)
-		check_cb_data = checkCallbackFormat(cb_data)
-		if check_cb_data:
-			self.callback_data = lambda: cb_data(self.self_config.name, self.node, self.data)
+		check_cb_data_in_execution = checkCallbackFormat(cb_data_in_execution)
+		if check_cb_data_in_execution:
+			self.callback_data_in_execution = lambda: cb_data_in_execution(self.self_config.name, self.node, self.data)
 		check_cb_action_in_execution = checkCallbackFormat(cb_action_in_execution)
 		if check_cb_action_in_execution:
 			self.callback_action_in_execution = lambda: cb_action_in_execution(self.self_config.name, self.node, self.modope_to_execute)

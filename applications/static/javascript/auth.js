@@ -8,9 +8,7 @@ function auth() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.username) {
-            console.log(data);
-        } else {
+        if (!data.username) {
             localStorage.removeItem('token');
             window.location.href = '/login';
         }
