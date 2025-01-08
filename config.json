@@ -57,10 +57,107 @@
                         "max_weight": 50000,
                         "min_weight": 20,
                         "name": "P1",
-                        "node": null,
+                        "node": "01",
                         "run": true,
-                        "status": 200,
-                        "terminal": "dgt1"
+                        "status": 301,
+                        "terminal": "dgt1",
+                        "terminal_data": {
+                            "firmware": null,
+                            "model_name": null,
+                            "serial_number": null
+                        }
+                    },
+                    {
+                        "data": {
+                            "data_in_execution": {
+                                "customer": {
+                                    "cell": null,
+                                    "cfpiva": null,
+                                    "id": null,
+                                    "name": null
+                                },
+                                "material": {
+                                    "id": null,
+                                    "name": null
+                                },
+                                "note": null,
+                                "supplier": {
+                                    "cell": null,
+                                    "cfpiva": null,
+                                    "id": null,
+                                    "name": null
+                                },
+                                "vehicle": {
+                                    "id": null,
+                                    "name": null,
+                                    "plate": null
+                                }
+                            },
+                            "id_selected": {
+                                "id": null
+                            }
+                        },
+                        "diagnostic_has_priority_than_realtime": true,
+                        "division": 1,
+                        "maintaine_session_realtime_after_command": true,
+                        "max_weight": 50000,
+                        "min_weight": 20,
+                        "name": "P2",
+                        "node": "02",
+                        "run": true,
+                        "status": 301,
+                        "terminal": "dgt1",
+                        "terminal_data": {
+                            "firmware": null,
+                            "model_name": null,
+                            "serial_number": null
+                        }
+                    },
+                    {
+                        "data": {
+                            "data_in_execution": {
+                                "customer": {
+                                    "cell": null,
+                                    "cfpiva": null,
+                                    "id": null,
+                                    "name": null
+                                },
+                                "material": {
+                                    "id": null,
+                                    "name": null
+                                },
+                                "note": null,
+                                "supplier": {
+                                    "cell": null,
+                                    "cfpiva": null,
+                                    "id": null,
+                                    "name": null
+                                },
+                                "vehicle": {
+                                    "id": null,
+                                    "name": null,
+                                    "plate": null
+                                }
+                            },
+                            "id_selected": {
+                                "id": null
+                            }
+                        },
+                        "diagnostic_has_priority_than_realtime": true,
+                        "division": 1,
+                        "maintaine_session_realtime_after_command": true,
+                        "max_weight": 50000,
+                        "min_weight": 20,
+                        "name": "P3",
+                        "node": "03",
+                        "run": true,
+                        "status": 301,
+                        "terminal": "dgt1",
+                        "terminal_data": {
+                            "firmware": null,
+                            "model_name": null,
+                            "serial_number": null
+                        }
                     }
                 ],
                 "time_between_actions": 1

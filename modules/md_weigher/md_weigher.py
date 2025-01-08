@@ -151,12 +151,12 @@ class WeigherModule:
 	   	cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_data: Callable[[str], any] = None,
+		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
 		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
-			raise HTTPException(status_code=400, detail='Node just exist')
+			raise HTTPException(status_code=400, detail=[{"type": "value_error", "loc": ["", "node"], "msg": "Nodo già esistente", "input": setup.node, "ctx": {"error":{}}}])
 		if any(setup.name == current_node["name"] for current_node in self.getAllInstanceNode(name=name)):
-			raise HTTPException(status_code=400, detail='Name just exist')
+			raise HTTPException(status_code=400, detail=[{"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}}])
 		node_set = self.instances[name].setNode(
       		node=node, 
         	setup=setup,
@@ -164,10 +164,10 @@ class WeigherModule:
 			cb_diagnostic=cb_diagnostic,
 			cb_weighing=cb_weighing,
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
-			cb_data=cb_data,
+			cb_data_in_execution=cb_data_in_execution,
 			cb_action_in_execution=cb_action_in_execution
 		)
-		del node_set["terminal_data"]
+		lb_log.warning(node_set)
 		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
 		index_node_found = lb_config.g_config["app_api"]["weighers"][name]["nodes"].index(node_found[0])
 		lb_config.g_config["app_api"]["weighers"][name]["nodes"][index_node_found] = node_set
