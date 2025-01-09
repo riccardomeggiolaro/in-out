@@ -53,7 +53,7 @@ class ConfigWeigher(CallbackWeigher):
             cb_diagnostic=self.Callback_Diagnostic,
             cb_weighing=self.Callback_Weighing,
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
-            cb_data=self.Callback_Data,
+            cb_data_in_execution=self.Callback_DataInExecution,
             cb_action_in_execution=self.Callback_ActionInExecution
         )
         self.addInstanceNodeSocket(instance.name, setup.node)

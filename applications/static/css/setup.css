@@ -70,19 +70,16 @@ input {
 }
 
 button {
-    margin: 5px 0px;
     padding: 5px 10px;
     cursor: pointer;
+    border: none;
+    border-radius: 3px;
+    padding: 5px 15px;
 }
 
 .h4-input {
     font-size: 1.2em;
     font-weight: bold;
-}
-
-button {
-    border: none;
-    border-radius: 3px;
 }
 
 .delete-btn {
@@ -123,21 +120,37 @@ button {
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.modal-buttons {
+.container-buttons {
     display: flex;
+    gap: 5px;
+    margin: 10px 0px;
+}
+
+.right {
     justify-content: flex-end;
-    margin-top: 20px;
 }
 
-.modal-cancel-button {
-    margin-right: 10px; 
-    padding: 5px 15px;
+.left {
+    justify-content: flex-start;
 }
 
-.modal-confirm-button {
-    padding: 5px 15px; 
-    background-color: #dc3545; 
-    color: white; 
-    border: none; 
+.red-button {
+    background-color: #dc3545;
+    color: #ddd;
+}
+
+input:invalid {
+    border: 2px solid #dc3545;
+}
+
+input:valid {
+    border: 2px solid black;
+}
+
+.instance {
+    border: 1px solid #ddd;
     border-radius: 3px;
+    padding: 10px;
+    background-color: whitesmoke;
+    width: 100%;
 }

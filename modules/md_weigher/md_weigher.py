@@ -124,10 +124,13 @@ class WeigherModule:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
-		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
-			raise HTTPException(status_code=400, detail='Node just exist')
+		details = []
 		if any(setup.name == current_node["name"] for current_node in self.getAllInstanceNode(name=name)):
-			raise HTTPException(status_code=400, detail='Name just exist')
+			details.append({"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}})
+		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
+			details.append({"type": "value_error", "loc": ["", "node"], "msg": "Nodo già esistente", "input": setup.node, "ctx": {"error":{}}})
+		if details:
+			raise HTTPException(status_code=400, detail=details)
 		node_created = self.instances[name].addNode(
 			setup=setup,
 			cb_realtime=cb_realtime,
@@ -137,9 +140,11 @@ class WeigherModule:
 			cb_data_in_execution=cb_data_in_execution,
 			cb_action_in_execution=cb_action_in_execution
 		)
+		terminal_data = node_created["terminal_data"]
 		del node_created["terminal_data"]
 		lb_config.g_config["app_api"]["weighers"][name]["nodes"].append(node_created)
 		lb_config.saveconfig()
+		node_created["terminal_data"] = terminal_data
 		return node_created
 
 	def setInstanceNode(
@@ -153,10 +158,13 @@ class WeigherModule:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_data_in_execution: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None):
-		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
-			raise HTTPException(status_code=400, detail=[{"type": "value_error", "loc": ["", "node"], "msg": "Nodo già esistente", "input": setup.node, "ctx": {"error":{}}}])
+		details = []
 		if any(setup.name == current_node["name"] for current_node in self.getAllInstanceNode(name=name)):
-			raise HTTPException(status_code=400, detail=[{"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}}])
+			details.append({"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}})
+		if any(setup.node == current_node["node"] for current_node in self.getAllInstanceNode(name=name)):
+			details.append({"type": "value_error", "loc": ["", "node"], "msg": "Nodo già esistente", "input": setup.node, "ctx": {"error":{}}})
+		if details:
+			raise HTTPException(status_code=400, detail=details)
 		node_set = self.instances[name].setNode(
       		node=node, 
         	setup=setup,

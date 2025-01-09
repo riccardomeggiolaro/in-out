@@ -142,7 +142,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.node = setup.node
 		if setup.run is not None:
 			self.run = setup.run
-		if setup.name != "undefined":
+		if setup.name is not None:
 			self.name = setup.name
 		return self.getSetup()
 

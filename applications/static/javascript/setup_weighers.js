@@ -1,89 +1,133 @@
 const weighers_config = document.getElementById('weighers_config');
 
-// Creo il contenitore principale del modal usando createElement
-const modal = document.createElement('div');
-modal.id = 'modalDeleteWeigher';
-modal.classList.toggle('modal');
-
-// Aggiungo il contenuto del modal tramite innerHTML
-modal.innerHTML = `
-    <div class="modal-content">
-        <h3>Conferma eliminazione</h3>
-        <p>Sei sicuro di voler eliminare la configurazione della pesa?</p>
-        <div class="modal-buttons">
-            <button id="modalDeleteWeigherCancel" class="modal-cancel-button">Annulla</button>
-            <button id="modalDeleteWeigherConfirm" class="modal-confirm-button">Elimina</button>
-        </div>
-    </div>
-`;
-
-const addModal = document.createElement('div');
-addModal.id = 'modalAddWeigher';
-addModal.classList.toggle('modal');
-
-addModal.innerHTML = `
-    <div class="modal-content">
-        <h3>Configura pesa</h3>
-        <div>
-                    Nome:<br>
-                    <input type="text" name="name" value="" class="h4-input"><br>
-                    Nodo:<br>
-                    <input type="text" name="node" value=""><br>
-                    Peso massimo:<br>
-                    <input type="number" name="max_weight" value=""><br>
-                    Peso minimo:<br><input type="number" name="min_weight" value=""><br>
-                    Divisione:<br>
-                    <input type="number" name="division" value=""><br>
-                    Terminale:<br>
-                    <input type="text" name="terminal" value=""><br>
-                    Mantieni sessione realtime dopo comando: <input type="checkbox" name="maintaine_session_realtime_after_command"}><br>
-                    Diagnostica prioritaria sul realtime: <input type="checkbox" name="diagnostic_has_priority_than_realtime"}><br>
-                    In esecuzione: <input type="checkbox" name="run"><br>                    
-        </div>
-        <div class="modal-buttons">
-            <button id="modalAddWeigherCancel" class="modal-cancel-button">Annulla</button>
-            <button id="modalAddWeigherConfirm" class="modal-confirm-button">Elimina</button>
-        </div>
-    </div>
-`;
-
-// Aggiungo il modal al body
-document.body.appendChild(modal);
-document.body.appendChild(addModal);
-
-// Recupero i riferimenti ai pulsanti per aggiungere gli event listeners (se necessario)
-const modalCancel = modal.querySelector('#modalDeleteWeigherCancel');
-const modalConfirm = modal.querySelector('#modalDeleteWeigherConfirm');
-
-const modalCancelAdd = addModal.querySelector('#modalAddWeigherCancel');
-const modalCobnfirmAdd = addModal.querySelector('#modalAddWeigherConfirm');
-
 fetch('/config_weigher/all/instance')
 .then(res => res.json())
 .then(data => {
     for (let key in data) {
         const div = document.createElement('div');
-        div.classList.toggle('div_config');
-        const h3 = document.createElement('h3');
+        const addWeigherModal = document.createElement('div');
         const ul = document.createElement('ul');
-        h3.style.border = '1px solid #ddd';
-        h3.style.borderRadius = '3px';
-        h3.style.padding = '10px';
-        h3.style.backgroundColor = 'whitesmoke';
-        h3.style.width = '100%';
-        h3.textContent = `Istanza: ${key}`;
-        const addButton = document.createElement('button');
-        addButton.textContent = 'Configura pesa';
 
-        addButton.addEventListener('click', () => {
-            addModal.style.display = 'block';
+        div.classList.toggle('div_config');
+        div.innerHTML = `
+            <h3 class="instance">Istanza ${key}</h3>
+            <button class="addWeigher">Configura pesa</button>
+        `;
+
+        addWeigherModal.classList.toggle('modal');
+        
+        addWeigherModal.innerHTML = `
+            <div class="modal-content">
+                <h3>Configura pesa</h3>
+                <form class="content" oninput="document.querySelector('#modalAddWeigherConfirm').disabled = !this.checkValidity()">
+                </form>
+                <div class="errors"></div>
+                <div class="container-buttons">
+                    <button id="modalAddWeigherCancel" class="modal-cancel-button">Annulla</button>
+                    <button id="modalAddWeigherConfirm" class="modal-confirm-button" disabled>Salva</button>
+                </div>
+            </div>
+        `;
+
+        const errorAddWeigher = addWeigherModal.querySelector('.errors');
+
+        const populateAddContent = () => {
+            addWeigherModal.querySelector('.content').innerHTML = 
+                `Nome:<br>
+                <input type="text" name="name" value="" required><br>
+                Nodo: (facoltativo)<br>
+                <input type="text" name="node" value=""><br>
+                Peso massimo:<br>
+                <input type="number" name="max_weight" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                Peso minimo:<br>
+                <input type="number" name="min_weight" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                Divisione:<br>
+                <input type="number" name="division" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                Terminale:<br>
+                <select name="terminal" required>
+                    <option value="dgt1" selected>dgt1</option>
+                </select><br>
+                Mantieni sessione realtime dopo comando: <input type="checkbox" name="maintaine_session_realtime_after_command" checked><br>
+                Diagnostica prioritaria sul realtime: <input type="checkbox" name="diagnostic_has_priority_than_realtime" checked><br>
+                In esecuzione: <input type="checkbox" name="run" checked><br>`;
+        
+            // Aggiungi validazione in tempo reale per gli input
+            const inputs = addWeigherModal.querySelectorAll('input[required]');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    // Verifica se il campo è valido o meno
+                    if (input.value.trim() === "") {
+                        input.setCustomValidity('Questo campo è obbligatorio');
+                    } else {
+                        input.setCustomValidity('');
+                    }
+        
+                    // Forza il controllo di validità del campo
+                    input.reportValidity();
+                });
+            });
+
+            addWeigherModal.querySelector('.errors').innerHTML = '';
+            addWeigherModal.querySelector('#modalAddWeigherConfirm').disabled = true;
+        }        
+        
+        populateAddContent();
+
+        addWeigherModal.querySelector('#modalAddWeigherCancel').addEventListener('click', () => {
+            addWeigherModal.style.display = 'none';
+            populateAddContent();
         });
 
-        modalCancelAdd.addEventListener('click', () => {
-            addModal.style.display = 'none';
-        });
+        addWeigherModal.querySelector('#modalAddWeigherConfirm').addEventListener('click', () => {
+            let data = {};
+                
+            const inputs = addWeigherModal.querySelectorAll('input');
+            inputs.forEach(input => {
+                let currentValue;
+                
+                if (input.type === 'checkbox') {
+                    currentValue = input.checked;
+                } else if (input.type === 'number') {
+                    currentValue = parseInt(input.value);
+                } else {
+                    currentValue = input.value !== '' ? input.value : null;
+                }
 
-        for (let weigher of data[key]['nodes']) {
+                data[input.name] = currentValue;
+            });
+
+            const selections = addWeigherModal.querySelectorAll('select');
+            selections.forEach(selection => {
+                data[selection.name] = selection.value;
+            })
+
+            fetch(`/config_weigher/instance/node?name=${key}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(response => {
+                if ('node' in response) {
+                    addWeigher(response);
+                    addWeigherModal.querySelector('.content').innerHTML = '';
+                    populateAddContent();
+                    addWeigherModal.style.display = 'none';
+                } else if ("detail" in response) {
+                    errorAddWeigher.innerHTML = '';
+                    const errors = document.createElement('div');
+                    response.detail.forEach(error => {
+                        errors.innerHTML += `${error.msg}<br>`;
+                    })
+                    errorAddWeigher.appendChild(errors);
+                }
+            })
+            .catch(error => {console.error(error)})
+        })
+
+        const addWeigher = (weigher) => {
             const li = document.createElement('li');
             
             const viewMode = document.createElement('div');
@@ -92,8 +136,10 @@ fetch('/config_weigher/all/instance')
 
             viewMode.innerHTML = `
                 <div class="content"></div>
-                <button class="delete-btn">Elimina</button>
-                <button class="edit-btn">Modifica</button>
+                <div class="container-buttons">
+                    <button class="delete-btn">Elimina</button>
+                    <button class="edit-btn">Modifica</button>
+                </div>
             `;
 
             const populateViewContent = (data) => {
@@ -117,69 +163,38 @@ fetch('/config_weigher/all/instance')
             populateViewContent(weigher);
 
             editMode.innerHTML = `
-                <div class="content"></div>
-                <button class="cancel-btn">Annulla</button>
-                <button class="save-btn">Salva</button><br>
+                <form class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
+                </form>
+                <div class="container-buttons">                
+                    <button class="cancel-btn">Annulla</button>
+                    <button class="save-btn">Salva</button><br>
+                </div>
                 <div class="errors"></div>
             `;
 
             const populateEditContent = (data) => {
                 editMode.querySelector('.content').innerHTML = `
-                    <input type="text" name="name" value="${data.name}" class="h4-input"><br>
+                    <input type="text" name="name" value="${data.name}" class="h4-input" required><br>
                     Nodo: <input type="text" name="node" value="${data.node ? data.node : ''}"><br>
-                    Peso massimo: <input type="number" name="max_weight" value="${data.max_weight}"><br>
-                    Peso minimo: <input type="number" name="min_weight" value="${data.min_weight}"><br>
-                    Divisione: <input type="number" name="division" value="${data.division}"><br>
-                    Mantieni sessione realtime dopo comando: <input type="checkbox" name="maintaine_session_realtime_after_command" ${data.maintaine_session_realtime_after_command ? 'checked' : ''}><br>
-                    Diagnostica prioritaria sul realtime: <input type="checkbox" name="diagnostic_has_priority_than_realtime" ${data.diagnostic_has_priority_than_realtime ? 'checked' : ''}><br>
-                    Terminale: <input type="text" name="terminal" value="${data.terminal || 'dgt1'}"><br>
-                    In esecuzione: <input type="checkbox" name="run" ${data.run ? 'checked' : ''}><br>                    
+                    Peso massimo: <input type="number" name="max_weight" value="${data.max_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                    Peso minimo: <input type="number" name="min_weight" value="${data.min_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                    Divisione: <input type="number" name="division" value="${data.division}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                    Mantieni sessione realtime dopo comando: <input type="checkbox" name="maintaine_session_realtime_after_command" ${data.maintaine_session_realtime_after_command ? 'checked' : ''} required><br>
+                    Diagnostica prioritaria sul realtime: <input type="checkbox" name="diagnostic_has_priority_than_realtime" ${data.diagnostic_has_priority_than_realtime ? 'checked' : ''} required><br>
+                    Terminale:<br>
+                    <select name="terminal" required>
+                        <option value="dgt1" ${data.terminal === "dgt1" ? 'selected': ''}>dgt1</option>
+                        </select><br>
+                    In esecuzione: <input type="checkbox" name="run" ${data.run ? 'checked' : ''} required><br>
                 `;
             }
 
             populateEditContent(weigher);
 
-            const errorDiv = editMode.querySelector('.errors');
+            const errorEditWeigher = editMode.querySelector('.errors');
 
             viewMode.querySelector('.delete-btn').addEventListener('click', () => {
-                modal.style.display = 'block';
-                
-                // Rimuovo eventuali vecchi listener
-                const newModalConfirm = modalConfirm.cloneNode(true);
-                const newModalCancel = modalCancel.cloneNode(true);
-                modalConfirm.parentNode.replaceChild(newModalConfirm, modalConfirm);
-                modalCancel.parentNode.replaceChild(newModalCancel, modalCancel);
-
-                // Aggiungo i nuovi listener
-                newModalConfirm.addEventListener('click', () => {
-                    let url_delete = `/config_weigher/instance/node?name=${key}`;
-                    if (weigher.node) url_delete += `&node=${weigher.node}`;
-                    
-                    fetch(url_delete, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(response => {
-                        if (response.deleted) {
-                            li.remove();
-                        } else {
-                            alert('Errore durante l\'eliminazione');
-                        }
-                        modal.style.display = 'none';
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Errore durante l\'eliminazione');
-                        modal.style.display = 'none';
-                    });
-                });
-
-                newModalCancel.addEventListener('click', () => {
-                    modal.style.display = 'none';
-                });
+                deleteWeigherModal.style.display = 'block';
             });
 
             viewMode.querySelector('.edit-btn').addEventListener('click', () => {
@@ -189,7 +204,7 @@ fetch('/config_weigher/all/instance')
 
             editMode.querySelector('.cancel-btn').addEventListener('click', () => {
                 populateEditContent(weigher);
-                errorDiv.innerHTML = '';
+                errorEditWeigher.innerHTML = '';
                 viewMode.style.display = 'block';
                 editMode.style.display = 'none';
             });
@@ -215,6 +230,16 @@ fetch('/config_weigher/all/instance')
                     }
                 });
 
+                const selections = editMode.querySelectorAll('select');
+                selections.forEach(selection => {
+                    const originalValue = weigher[selection.name];
+                    const currentValue = selection.value;
+
+                    if (currentValue !== originalValue) {
+                        changedData[selection.name] = currentValue;
+                    }
+                });
+
                 if (Object.keys(changedData).length > 0) {
                     let url_patch = `/config_weigher/instance/node?name=${key}`;
                     if (weigher.node) url_patch += `&node=${weigher.node}`;
@@ -232,16 +257,16 @@ fetch('/config_weigher/all/instance')
 
                             populateViewContent(response);
 
-                            errorDiv.innerHTML = '';
+                            errorEditWeigher.innerHTML = '';
                             viewMode.style.display = 'block';
                             editMode.style.display = 'none';
                         } else if ("detail" in response) {
-                            errorDiv.innerHTML = '';
+                            errorEditWeigher.innerHTML = '';
                             const errors = document.createElement('div');
                             response.detail.forEach(error => {
-                                errors.textContent += `${error.msg}\n`;
+                                errors.innerHTML += `${error.msg}<br>`;
                             })
-                            errorDiv.appendChild(errors);
+                            errorEditWeigher.appendChild(errors);
                         }
                     })
                     .catch(error => {
@@ -249,29 +274,85 @@ fetch('/config_weigher/all/instance')
                         alert(`Errore durante il salvataggio delle modifiche: ${error}`);
                     });
                 } else {
-                    errorDiv.innerHTML = '';
+                    errorEditWeigher.innerHTML = '';
                     viewMode.style.display = 'block';
                     editMode.style.display = 'none';
                 }
             });
 
+            const deleteWeigherModal = document.createElement('div');
+
+            deleteWeigherModal.classList.toggle('modal');
+
+            // Aggiungo il contenuto del modal tramite innerHTML
+            deleteWeigherModal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Conferma eliminazione</h3>
+                    <p>Sei sicuro di voler eliminare la configurazione della pesa?</p>
+                    <div class="container-buttons right">
+                        <button class="modalDeleteWeigherCancel">Annulla</button>
+                        <button class="modalDeleteWeigherConfirm delete-btn">Conferma</button>
+                    </div>
+                </div>
+            `;
+    
+            deleteWeigherModal.querySelector('.modalDeleteWeigherCancel').addEventListener('click', () => {
+                deleteWeigherModal.style.display = 'none';
+            });
+
+            deleteWeigherModal.querySelector('.modalDeleteWeigherConfirm').addEventListener('click', () => {
+                let delete_url = `/config_weigher/instance/node?name=${key}`;
+                if (weigher.node !== null) {
+                    delete_url += `&node=${weigher.node}`;
+                }
+                fetch(delete_url, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(response => {
+                    if (response.deleted) {
+                        li.remove();
+                    }
+                })
+                .catch(error => {
+                    alert(`Errore durante l'eliminazione della pesa ${error}`);
+                })
+                .finally(_ => {
+                    deleteWeigherModal.style.display = 'none';
+                })
+            });
+
             li.appendChild(editMode);
             li.appendChild(viewMode);
+            li.appendChild(deleteWeigherModal);
             ul.appendChild(li);
+
+            // Chiudi il modal se si clicca fuori
+            window.addEventListener('click', (event) => {
+                if (event.target === deleteWeigherModal) {
+                    deleteWeigherModal.style.display = 'none';
+                }
+            });
         }
 
-        div.appendChild(h3);
-        div.appendChild(addButton);
+        for (let weigher of data[key]['nodes']) {
+            addWeigher(weigher);
+        }
+
+        div.querySelector('.addWeigher').addEventListener('click', () => {
+            addWeigherModal.style.display = 'block';
+        });
+
+        div.appendChild(addWeigherModal);
         div.appendChild(ul);
         weighers_config.appendChild(div);
-    }
-});
 
-// Chiudi il modal se si clicca fuori
-window.addEventListener('click', (event) => {
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    } else if (event.target === addModal) {
-        addModal.style.display = 'none';
+        // Chiudi il modal se si clicca fuori
+        window.addEventListener('click', (event) => {
+            if (event.target === addWeigher) {
+                addWeigher.style.display = 'none';
+                populateAddContent();
+            }
+        });
     }
 });
