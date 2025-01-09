@@ -71,7 +71,7 @@
     "log": {
         "max-size-mb": 10
     },
-    "name": "goldrake",
+    "name": "in-out",
     "printer_name": null,
     "secret_key": "newfoiwnfwoijfnijbnib"
 }

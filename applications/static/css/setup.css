@@ -91,6 +91,9 @@ button {
     border: 1px solid #ddd;
     padding: 10px;
     border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .errors {
@@ -137,6 +140,14 @@ button {
 .red-button {
     background-color: #dc3545;
     color: #ddd;
+}
+
+.width-50-px {
+    width: 50px;
+}
+
+.width-fit-content {
+    width: fit-content;
 }
 
 input:invalid {

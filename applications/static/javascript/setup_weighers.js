@@ -11,7 +11,10 @@ fetch('/config_weigher/all/instance')
         div.classList.toggle('div_config');
         div.innerHTML = `
             <h3 class="instance">Istanza ${key}</h3>
-            <button class="addWeigher">Configura pesa</button>
+            <div>
+                Esegui azione ogni: <input type="number" class="timeBetweenActions width-50-px" value="${data[key].time_between_actions}"> secondi
+            </div>
+            <button class="addWeigher width-fit-content">Configura pesa</button>
         `;
 
         addWeigherModal.classList.toggle('modal');
@@ -349,8 +352,8 @@ fetch('/config_weigher/all/instance')
 
         // Chiudi il modal se si clicca fuori
         window.addEventListener('click', (event) => {
-            if (event.target === addWeigher) {
-                addWeigher.style.display = 'none';
+            if (event.target === addWeigherModal) {
+                addWeigherModal.style.display = 'none';
                 populateAddContent();
             }
         });
