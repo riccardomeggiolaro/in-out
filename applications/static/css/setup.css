@@ -21,10 +21,6 @@ ul {
     margin: 0;
     padding: 0;
 }
-li {
-    cursor: pointer;
-    padding: 15px;
-}
 .setup-menu {
     background-color: #f0f0f0;
     width: 200px;
@@ -59,9 +55,10 @@ li {
 .arrow.up {
     transform: rotate(-135deg);
 }
-.config li {
+.borders {
     border: 1px solid #ddd;
     border-radius: 5px;
+    padding: 15px;
 }
 
 input {

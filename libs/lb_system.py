@@ -41,7 +41,7 @@ class Connection(BaseModel):
 	def is_open(self):
 		return False
 
-class SerialPort(Connection):
+class SerialPortWithoutControls(Connection):
 	baudrate: int = 19200
 	serial_port_name: str
 	timeout: float = 1
@@ -50,31 +50,6 @@ class SerialPort(Connection):
 
 	class Config:
 		arbitrary_types_allowed = True
-
-	@validator('baudrate', pre=True, always=True)
-	def check_baudrate(cls, v):
-		if v in [9600, 19200, 115200]:
-			return v
-		raise ValueError('Baudrate not valid')
-
-	@validator('serial_port_name', pre=True, always=True)
-	def check_serial_port_name(cls, v):
-		exist, message = exist_serial_port(v)
-		if exist is False:
-			raise ValueError("Serial port is not exist")
-		just_in_use, message = serial_port_is_just_in_use(v)
-		if just_in_use:
-			raise ValueError("Serial port is just occupated")
-		enabled, message = enable_serial_port(v)
-		# if not enabled:
-		# 	raise ValueError(message)
-		return v
-
-	@validator('timeout', pre=True, always=True)
-	def check_timeout(cls, v):
-		if v > 0:
-			return v
-		raise("Timeout must to be bigger than 0")
 
 	def is_open(self):
 		status = False
@@ -167,38 +142,41 @@ class SerialPort(Connection):
 			pass
 		return message
 
-class Tcp(Connection):
-	ip: str
-	port: int
-	timeout: float
- 
-	conn: Optional[socket.socket] = None
-
-	class Config:
-		arbitrary_types_allowed = True
-
-	@validator('port', pre=True, always=True)
-	def check_positive(cls, v):
-		if v is not None and v < 1:
-			raise ValueError('Value must be greater than or equal to 1')
-		return v
-	
-	@validator('ip', pre=True, always=True)
-	def check_format(cls, v):
-		parts = v.split(".")
-		if len(parts) == 4:
-			for p in parts:
-				if not p.isdigit():
-					raise ValueError('Ip must contains only number and')
+class SerialPort(SerialPortWithoutControls):
+	@validator('baudrate', pre=True, always=True)
+	def check_baudrate(cls, v):
+		if v in [9600, 19200, 115200]:
 			return v
-		else:
-			raise ValueError('Ip no valid')
+		raise ValueError('Baudrate not valid')
+
+	@validator('serial_port_name', pre=True, always=True)
+	def check_serial_port_name(cls, v):
+		exist, message = exist_serial_port(v)
+		if exist is False:
+			raise ValueError("Serial port is not exist")
+		just_in_use, message = serial_port_is_just_in_use(v)
+		if just_in_use:
+			raise ValueError("Serial port is just occupated")
+		enabled, message = enable_serial_port(v)
+		# if not enabled:
+		# 	raise ValueError(message)
+		return v
 
 	@validator('timeout', pre=True, always=True)
 	def check_timeout(cls, v):
 		if v > 0:
 			return v
 		raise("Timeout must to be bigger than 0")
+
+class TcpWithoutControls(Connection):
+	ip: str
+	port: int
+	timeout: float
+
+	conn: Optional[socket.socket] = None
+
+	class Config:
+		arbitrary_types_allowed = True
 
 	def is_open(self):
 		try:
@@ -287,6 +265,30 @@ class Tcp(Connection):
 		except AttributeError as e:
 			pass
 		return message
+
+class Tcp(TcpWithoutControls):
+	@validator('port', pre=True, always=True)
+	def check_positive(cls, v):
+		if v is not None and v < 1:
+			raise ValueError('Value must be greater than or equal to 1')
+		return v
+	
+	@validator('ip', pre=True, always=True)
+	def check_format(cls, v):
+		parts = v.split(".")
+		if len(parts) == 4:
+			for p in parts:
+				if not p.isdigit():
+					raise ValueError('Ip must contains only number and')
+			return v
+		else:
+			raise ValueError('Ip no valid')
+
+	@validator('timeout', pre=True, always=True)
+	def check_timeout(cls, v):
+		if v > 0:
+			return v
+		raise("Timeout must to be bigger than 0")
 
 class ConfigConnection():
 	connection: Union[SerialPort, Tcp, Connection] = Connection(**{})

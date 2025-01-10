@@ -17,7 +17,7 @@ from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
 from libs.lb_utils import createThread, startThread
-from modules.md_weigher.types import Configuration
+from modules.md_weigher.types import Configuration, ConfigurationWithoutControls
 from fastapi import HTTPException
 # ==============================================================
 
@@ -43,7 +43,7 @@ class WeigherModule:
 		self.instances = {}
 
 		for name, configuration in lb_config.g_config["app_api"]["weighers"].items():
-			weigher_configuration = Configuration(**configuration)
+			weigher_configuration = ConfigurationWithoutControls(**configuration)
 			instance = WeigherInstance(name, weigher_configuration)
 			self.instances[name] = instance
 		

@@ -1,5 +1,5 @@
 from libs.lb_utils import CustomBaseModel
-from libs.lb_system import SerialPort, Tcp, Connection
+from libs.lb_system import SerialPort, Tcp, Connection, SerialPortWithoutControls, TcpWithoutControls
 from typing import Optional, Union, List
 from pydantic import BaseModel
 from libs.lb_database import VehicleDTOInit, CustomerDTOInit, SupplierDTOInit, MaterialDTOInit
@@ -132,4 +132,9 @@ class SetupWeigher(CustomBaseModel):
 class Configuration(CustomBaseModel):
 	nodes: Optional[List[SetupWeigher]] = []
 	connection: Optional[Union[SerialPort, Tcp, Connection]] = Connection(**{})
+	time_between_actions: Union[int, float]
+ 
+class ConfigurationWithoutControls(CustomBaseModel):
+	nodes: Optional[List[SetupWeigher]] = []
+	connection: Optional[Union[SerialPortWithoutControls, TcpWithoutControls, Connection]] = Connection(**{})
 	time_between_actions: Union[int, float]
