@@ -191,6 +191,12 @@ class WeigherModule:
 		lb_config.g_config["app_api"]["weighers"][name]["nodes"].remove(node_found[0])
 		lb_config.saveconfig()
 
+	def getInstanceConnection(self, name, delete_connected: bool = False):
+		connection = self.instances[name].getConnection()
+		if delete_connected:
+			del connection["connected"]
+		return connection
+
 	def setInstanceConnection(self, name, conn: Union[SerialPort, Tcp]):
 		conn_set = self.instances[name].setConnection(conn=conn)
 		conn_to_save = conn_set.copy()

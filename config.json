@@ -16,7 +16,7 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "baudrate": 115200,
+                    "baudrate": 9600,
                     "serial_port_name": "/dev/ttyUSB0",
                     "timeout": 0.1
                 },
@@ -63,7 +63,7 @@
                         "terminal": "dgt1"
                     }
                 ],
-                "time_between_actions": 1
+                "time_between_actions": 0.9
             }
         }
     },

@@ -162,11 +162,12 @@ class SerialPort(SerialPortWithoutControls):
 		# 	raise ValueError(message)
 		return v
 
-	@validator('timeout', pre=True, always=True)
+	@validator('timeout', pre=False, always=True)
 	def check_timeout(cls, v):
 		if v > 0:
+			lb_log.warning(f"Timeout: {v}")
 			return v
-		raise("Timeout must to be bigger than 0")
+		raise ValueError("Timeout must to be bigger than 0")
 
 class TcpWithoutControls(Connection):
 	ip: str
@@ -284,7 +285,7 @@ class Tcp(TcpWithoutControls):
 		else:
 			raise ValueError('Ip no valid')
 
-	@validator('timeout', pre=True, always=True)
+	@validator('timeout', pre=False, always=True)
 	def check_timeout(cls, v):
 		if v > 0:
 			return v

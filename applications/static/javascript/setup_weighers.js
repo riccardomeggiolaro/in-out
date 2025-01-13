@@ -53,6 +53,57 @@ fetch('/generic/list_serial_ports')
                 <button class="addWeigher width-fit-content">Configura pesa</button>
             `;
 
+            const deleteConnectionModal = document.createElement('div');
+
+            deleteConnectionModal.classList.toggle('modal');
+
+            // Aggiungo il contenuto del modal tramite innerHTML
+            deleteConnectionModal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Conferma eliminazione</h3>
+                    <p>Sei sicuro di voler eliminare la connessione?</p>
+                    <div class="container-buttons right">
+                        <button class="cancel-btn">Annulla</button>
+                        <button class="confirm-btn delete-btn">Conferma</button>
+                    </div>
+                </div>
+            `;
+
+            deleteConnectionModal.querySelector('.cancel-btn').addEventListener('click', () => {
+                deleteConnectionModal.style.display = 'none';
+            });
+
+            deleteConnectionModal.querySelector('.confirm-btn').addEventListener('click', () => {
+                deleteConnectionModal.style.display = 'none';
+                fetch(`/config_weigher/instance/connection?name=${key}`, {
+                    method: 'DELETE',
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.deleted) {
+                        containerButtons.querySelector('.delete-btn').style.display = 'none';
+                        containerButtons.querySelector('.edit-btn').textContent = 'Aggiungi connessione';
+                        viewModeSerial.style.display = 'none';
+                        viewModeTcp.style.display = 'none';
+                        populateEditSerial({"connection": {}});
+                        populateEditTcp({"connection": {}});
+                    } else if (!("deleted" in data)) {
+                        alert(`Errore durante l\'eliminazione della connessione: ${data}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`Errore durante l\'eliminazione della connessione: ${error}`);
+                });
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === deleteConnectionModal) {
+                    deleteConnectionModal.style.display = 'none';
+                }
+            });
+
+            ul.appendChild(deleteConnectionModal);
+
             const containerConnection = div.querySelector('.containerConnection');
             const typeConnection = containerConnection.querySelector('.type-connection');
             const radioSerial = containerConnection.querySelector('.serial');
@@ -63,7 +114,7 @@ fetch('/generic/list_serial_ports')
 
             typeConnection.style.display = 'none';
 
-            const viewModeSerial = document.createElement('form');
+            const viewModeSerial = document.createElement('div');
             viewModeSerial.classList.toggle('content');
 
             const populateViewSerial = (data) => {
@@ -77,22 +128,28 @@ fetch('/generic/list_serial_ports')
             populateViewSerial(data[key]);
 
             const editModeSerial = document.createElement('form');
+            editModeSerial.oninput = () => {
+                editModeSerial.querySelector('.save-btn').disabled = !editModeSerial.checkValidity();
+            }
             editModeSerial.classList.toggle('content');
             editModeSerial.style.display = 'none';
 
             const populateEditSerial = (data) => {
                 editModeSerial.innerHTML = `
                     <label for="serial_port_name">Porta seriale:</label>
-                    <select name="serial_port_name" class="selectSerialPort width-50-px">
+                    <select name="serial_port_name" class="selectSerialPort width-50-px" required>
                     </select><br>
                     <label for="baudrate">Baudrate:</label>
-                    <input type="number" min="9600" max="115200" step="9600" name="baudrate" class="width-50-px" value="${data.connection.baudrate ? data.connection.baudrate : ''}"><br>
+                    <input type="number" min="9600" max="115200" step="9600" name="baudrate" class="width-50-px" value="${data.connection.baudrate ? data.connection.baudrate : ''}" required><br>
                     <label for="timeout">Timeout:</label>
-                    <input type="number" min="0" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}"><br>
+                    <input type="number" min="0" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}" required><br>
+                    <div class="container-buttons">
+                        <button class="cancel-btn">Annulla</button>
+                        <button class="save-btn">Salva</button>
+                    </div>
                 `;
 
                 for (let port of list_serial_ports) {
-                    console.log(port);
                     const option = document.createElement('option');
                     option.value = port;
                     option.innerHTML = port;
@@ -101,6 +158,70 @@ fetch('/generic/list_serial_ports')
                     }
                     editModeSerial.querySelector('.selectSerialPort').appendChild(option);
                 }
+
+                editModeSerial.querySelector('.cancel-btn').addEventListener('click', (event) => {
+                    event.preventDefault();
+                    typeConnection.style.display = 'none';
+                    editModeSerial.style.display = 'none';
+                    editModeTcp.style.display = 'none';
+                    containerButtons.style.display = 'flex';
+                    radioSerial.checked = false;
+                    if (!("ip" in data.connection)) {
+                        radioSerial.checked = true;
+                        if ("serial_port_name" in data.connection) {
+                            populateEditTcp({"connection": {}});
+                            viewModeSerial.style.display = 'block';
+                        }
+                    } else {
+                        radioTcp.checked = true;
+                        viewModeTcp.style.display = 'block';
+                    }
+                });
+
+                editModeSerial.querySelector('.save-btn').addEventListener('click', (event) => {
+                    event.preventDefault();
+                    fetch(`/config_weigher/instance/connection?name=${key}`, {
+                        method: 'DELETE',
+                    })
+                    .then(res => res.json())
+                    .then(_ => {
+                        fetch(`/config_weigher/instance/connection?name=${key}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                serial_port_name: editModeSerial.querySelector('select[name="serial_port_name"]').value,
+                                baudrate: Number(editModeSerial.querySelector('input[name="baudrate"]').value),
+                                timeout: Number(editModeSerial.querySelector('input[name="timeout"]').value)
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if ('connected' in data) {
+                                typeConnection.style.display = 'none';
+                                editModeSerial.style.display = 'none';
+                                editModeTcp.style.display = 'none';
+                                containerButtons.style.display = 'flex';
+                                containerButtons.querySelector('.delete-btn').style.display = 'block';
+                                containerButtons.querySelector('.edit-btn').textContent = 'Modifica';
+                                viewModeSerial.style.display = 'block';
+                                populateEditSerial({"connection": data});
+                                populateViewSerial({"connection": data});
+                                populateEditTcp({"connection": {}});
+                                if ("ip" in data) {
+                                    viewModeTcp.style.display = 'block';
+                                } else {
+                                    viewModeSerial.style.display = 'block';
+                                }
+                            } else {
+                                alert(`Errore durante la modifica della connessione: ${data}`);}
+                        })
+                        .catch(error => {
+                            alert(`Errore durante la modifica della connessione: ${error}`);
+                        })
+                    })
+                });
             }
 
             populateEditSerial(data[key]);
@@ -108,7 +229,7 @@ fetch('/generic/list_serial_ports')
             contentSerial.appendChild(viewModeSerial);
             contentSerial.appendChild(editModeSerial);
 
-            const viewModeTcp = document.createElement('form');
+            const viewModeTcp = document.createElement('div');
             viewModeTcp.classList.toggle('content');
 
             const populateViewTcp = (data) => {
@@ -122,18 +243,83 @@ fetch('/generic/list_serial_ports')
             populateViewTcp(data[key]);
 
             const editModeTcp = document.createElement('form');
+            editModeTcp.oninput = () => {
+                editModeTcp.querySelector('.save-btn').disabled = !editModeTcp.checkValidity();
+            }
             editModeTcp.classList.toggle('content');
             editModeTcp.style.display = 'none';
 
             const populateEditTcp = (data) => {
                 editModeTcp.innerHTML = `
                     <label for="ip">Indirizzo IP:</label>
-                    <input type="text" name="ip" class="width-50-px" value="${data.connection.ip ? data.connection.ip : ''}"><br>
+                    <input type="text" name="ip" class="width-50-px" value="${data.connection.ip ? data.connection.ip : ''}" required><br>
                     <label for="port">Porta:</label>
-                    <input type="number" min="1" max="65535" step="1" name="port" class="width-50-px" value="${data.connection.port ? data.connection.port : ''}"><br>
+                    <input type="number" min="1" max="65535" step="1" name="port" class="width-50-px" value="${data.connection.port ? data.connection.port : ''}" required><br>
                     <label for="timeout">Timeout:</label>
-                    <input type="number" min="0" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}"><br>
+                    <input type="number" min="0" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}" required><br>
+                    <div class="container-buttons">
+                        <button class="cancel-btn">Annulla</button>
+                        <button class="save-btn" ${'ip' in data.connection ? '' : 'disabled'}>Salva</button>
+                    </div>
                 `;
+
+                editModeTcp.querySelector('.cancel-btn').addEventListener('click', (event) => {
+                    event.preventDefault();
+                    typeConnection.style.display = 'none';
+                    editModeSerial.style.display = 'none';
+                    editModeTcp.style.display = 'none';
+                    containerButtons.style.display = 'flex';
+                    radioTcp.checked = false;
+                    if (!("ip" in data.connection)) {
+                        radioSerial.checked = true;
+                        if ("serial_port_name" in data.connection) {
+                            viewModeSerial.style.display = 'block';
+                        }
+                    } else {
+                        radioTcp.checked = true;
+                        viewModeTcp.style.display = 'block';
+                    }
+                });
+
+                editModeTcp.querySelector('.save-btn').addEventListener('click', (event) => {
+                    event.preventDefault();
+                    fetch(`/config_weigher/instance/connection?name=${key}`, {
+                        method: 'DELETE',
+                    })
+                    .then(res => res.json())
+                    .then(_ => {
+                        fetch(`/config_weigher/instance/connection?name=${key}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                ip: editModeTcp.querySelector('input[name="ip"]').value,
+                                port: Number(editModeTcp.querySelector('input[name="port"]').value),
+                                timeout: Number(editModeTcp.querySelector('input[name="timeout"]').value)
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if ('connected' in data) {
+                                typeConnection.style.display = 'none';
+                                editModeSerial.style.display = 'none';
+                                editModeTcp.style.display = 'none';
+                                containerButtons.style.display = 'flex';
+                                containerButtons.querySelector('.delete-btn').style.display = 'block';
+                                containerButtons.querySelector('.edit-btn').textContent = 'Modifica';
+                                viewModeTcp.style.display = 'block';
+                                populateEditTcp({"connection": data});
+                                populateViewTcp({"connection": data});
+                                populateEditSerial({"connection": {}});
+                            } else {
+                                alert(`Errore durante la modifica della connessione: ${data}`);}
+                        })
+                        .catch(error => {
+                            alert(`Errore durante la modifica della connessione: ${error}`);
+                        })
+                    })
+                });
             }
 
             populateEditTcp(data[key]);
@@ -145,33 +331,53 @@ fetch('/generic/list_serial_ports')
             contentTcp.style.display = 'none';
 
             containerButtons.querySelector('.delete-btn').addEventListener('click', () => {
+                deleteConnectionModal.style.display = 'block';
             });
 
             containerButtons.querySelector('.edit-btn').addEventListener('click', () => {
                 typeConnection.style.display = 'block';
                 containerButtons.style.display = 'none';
-                viewModeSerial.style.display = 'none';
-                viewModeTcp.style.display = 'none';
-                editModeSerial.style.display = 'block';
-                editModeTcp.style.display = 'block';
+                if (viewModeSerial.style.display == 'block') {
+                    radioSerial.checked = true;
+                    viewModeSerial.style.display = 'none';
+                    editModeSerial.style.display = 'block';
+                } else if (viewModeTcp.style.display == 'block') {
+                    radioTcp.checked = true;
+                    viewModeTcp.style.display = 'none';
+                    editModeTcp.style.display = 'block';
+                } else {
+                    radioSerial.checked = true;
+                    editModeSerial.style.display = 'block';
+                }
             });
+
+            contentSerial.style.display = 'block';
+            contentTcp.style.display = 'block';
 
             if ('serial_port_name' in data[key].connection) {
                 radioSerial.checked = true;
-                contentSerial.style.display = 'block';
+                viewModeSerial.style.display = 'block';
+                viewModeTcp.style.display = 'none';
             } else if ('ip' in data[key].connection) {
                 radioTcp.checked = true;
-                contentTcp.style.display = 'block';
+                viewModeTcp.style.display = 'block';
+                viewModeSerial.style.display = 'none';
+            } else {
+                containerButtons.querySelector('.delete-btn').style.display = 'none';
+                containerButtons.querySelector('.edit-btn').textContent = 'Aggiungi connessione';
+                radioSerial.checked = true;
+                viewModeSerial.style.display = 'none';
+                viewModeTcp.style.display = 'none';
             }
 
             radioSerial.addEventListener('click', () => {
-                contentSerial.style.display = 'block';
-                contentTcp.style.display = 'none';
+                editModeSerial.style.display = 'block';
+                editModeTcp.style.display = 'none';
             });
 
             radioTcp.addEventListener('click', () => {
-                contentSerial.style.display = 'none';
-                contentTcp.style.display = 'block';
+                editModeTcp.style.display = 'block';
+                editModeSerial.style.display = 'none';
             });
 
             const containerTimeBetweenActions = div.querySelector('.containerTimeBetweenActions');

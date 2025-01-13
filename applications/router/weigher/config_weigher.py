@@ -85,7 +85,11 @@ class ConfigWeigher(CallbackWeigher):
         return md_weigher.module_weigher.setInstanceConnection(name=instance.name, conn=connection)
 
     async def DeleteInstanceConnection(self, instance: InstanceNameDTO = Depends(get_query_params_name)):
-        return md_weigher.module_weigher.deleteInstanceConnection(name=instance.name)
+        connection = md_weigher.module_weigher.getInstanceConnection(name=instance.name, delete_connected=True)
+        if not connection:
+            return { "deleted": False }
+        md_weigher.module_weigher.deleteInstanceConnection(name=instance.name)
+        return { "deleted": True }
 
     async def SetInstanceTimeBetweenActions(self, time: Union[int, float] = Depends(validate_time), instance: InstanceNameDTO = Depends(get_query_params_name)):
         new_time_set = md_weigher.module_weigher.setInstanceTimeBetweenActions(name=instance.name, time_between_actions=time)
