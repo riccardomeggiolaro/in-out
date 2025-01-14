@@ -140,14 +140,19 @@ fetch('/generic/list_serial_ports')
                     <select name="serial_port_name" class="selectSerialPort width-50-px" required>
                     </select><br>
                     <label for="baudrate">Baudrate:</label>
-                    <input type="number" min="9600" max="115200" step="9600" name="baudrate" class="width-50-px" value="${data.connection.baudrate ? data.connection.baudrate : ''}" required><br>
+                    <select name="baudrate" class="selectBaudrate width-50-px" required>
+                        <option value="9600">9600</option>
+                        <option value="115200">115200</option>
+                    </select><br>
                     <label for="timeout">Timeout:</label>
-                    <input type="number" min="0" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}" required><br>
+                    <input type="number" min="0.1" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}" required><br>
                     <div class="container-buttons">
                         <button class="cancel-btn">Annulla</button>
                         <button class="save-btn">Salva</button>
                     </div>
                 `;
+
+                editModeSerial.oninput();
 
                 for (let port of list_serial_ports) {
                     const option = document.createElement('option');
@@ -192,7 +197,7 @@ fetch('/generic/list_serial_ports')
                             },
                             body: JSON.stringify({
                                 serial_port_name: editModeSerial.querySelector('select[name="serial_port_name"]').value,
-                                baudrate: Number(editModeSerial.querySelector('input[name="baudrate"]').value),
+                                baudrate: Number(editModeSerial.querySelector('select[name="baudrate"]').value),
                                 timeout: Number(editModeSerial.querySelector('input[name="timeout"]').value)
                             })
                         })
@@ -208,7 +213,7 @@ fetch('/generic/list_serial_ports')
                                 viewModeSerial.style.display = 'block';
                                 populateEditSerial({"connection": data});
                                 populateViewSerial({"connection": data});
-                                populateEditTcp({"connection": {}});
+                                populateEditTcp({"connection": data});
                                 if ("ip" in data) {
                                     viewModeTcp.style.display = 'block';
                                 } else {
@@ -254,14 +259,16 @@ fetch('/generic/list_serial_ports')
                     <label for="ip">Indirizzo IP:</label>
                     <input type="text" name="ip" class="width-50-px" value="${data.connection.ip ? data.connection.ip : ''}" required><br>
                     <label for="port">Porta:</label>
-                    <input type="number" min="1" max="65535" step="1" name="port" class="width-50-px" value="${data.connection.port ? data.connection.port : ''}" required><br>
+                    <input type="number" min="1" max="65535" step="1" name="port" class="width-50-px" value="${data.connection.port ? data.connection.port : ''}" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
                     <label for="timeout">Timeout:</label>
-                    <input type="number" min="0" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}" required><br>
+                    <input type="number" min="0.1" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
                     <div class="container-buttons">
                         <button class="cancel-btn">Annulla</button>
-                        <button class="save-btn" ${'ip' in data.connection ? '' : 'disabled'}>Salva</button>
+                        <button class="save-btn">Salva</button>
                     </div>
                 `;
+
+                editModeTcp.oninput();
 
                 editModeTcp.querySelector('.cancel-btn').addEventListener('click', (event) => {
                     event.preventDefault();
@@ -311,7 +318,7 @@ fetch('/generic/list_serial_ports')
                                 viewModeTcp.style.display = 'block';
                                 populateEditTcp({"connection": data});
                                 populateViewTcp({"connection": data});
-                                populateEditSerial({"connection": {}});
+                                populateEditSerial({"connection": data});
                             } else {
                                 alert(`Errore durante la modifica della connessione: ${data}`);}
                         })

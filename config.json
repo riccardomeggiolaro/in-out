@@ -16,8 +16,8 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "baudrate": 9600,
-                    "serial_port_name": "/dev/ttyUSB0",
+                    "ip": "192.168.0.68",
+                    "port": 8000,
                     "timeout": 0.1
                 },
                 "nodes": [
