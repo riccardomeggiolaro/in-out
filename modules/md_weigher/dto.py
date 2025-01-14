@@ -109,7 +109,6 @@ class ConfigurationDTO(CustomBaseModel):
  
 	@validator('connection', pre=True, always=True)
 	def check_connection(cls, v, values, **kwargs):
-		import libs.lb_log as lb_log
 		if v is None:
 			v = Connection(**{})
 		# Se è un dizionario, prova a crearlo come oggetto del tipo corretto
@@ -129,7 +128,7 @@ class ConfigurationDTO(CustomBaseModel):
 				except ValueError as e:
 					raise e
 			else:
-				raise ValueError("Connessione non esistente")
+				v = Connection(**{})
 		return v
 
 	@validator('time_between_actions', pre=True, always=True)

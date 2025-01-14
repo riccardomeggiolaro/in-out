@@ -2,6 +2,27 @@ const weighers_config = document.getElementById('weighers_config');
 
 let list_serial_ports = [];
 
+let deleteButtonContent = 'Elimina';
+fetch('/static/content/delete.svg')
+.then(res => res.text())
+.then(data => {
+    deleteButtonContent = data;
+});
+
+let editButtonContent = 'Modifica';
+fetch('/static/content/edit.svg')
+.then(res => res.text())
+.then(data => {
+    editButtonContent = data;
+});
+
+let addButtonContent = 'Aggiungi';
+fetch('/static/content/add.svg')
+.then(res => res.text())
+.then(data => {
+    addButtonContent = data;
+});
+
 fetch('/generic/list_serial_ports')
 .then(res => res.json())
 .then(data => {
@@ -11,18 +32,23 @@ fetch('/generic/list_serial_ports')
     fetch('/config_weigher/all/instance')
     .then(res => res.json())
     .then(data => {
-        for (let key in data) {
+        const createInstance = (key, data) => {
             const div = document.createElement('div');
             const addWeigherModal = document.createElement('div');
             const ul = document.createElement('ul');
 
-            let currentTimeBetweenActions = data[key].time_between_actions;
+            let currentTimeBetweenActions = data.time_between_actions;
 
             div.classList.toggle('div_config');
             div.innerHTML = `
-                <h3 class="instance">Istanza ${key}</h3>
+                <h3 class="borders">
+                    <button class="delete-instance width-fit-content delete-btn">${deleteButtonContent}</button>
+                    &nbsp;
+                    <p>Istanza: ${key}</p>
+                </h3>
                 <div class="containerConnection">
                     <div class="borders">
+                        <h3>Connessione</h4>
                         <div class="type-connection">
                             <input type="radio" name="connection" value="serial" class="serial"> Seriale &nbsp
                             <input type="radio" name="connection" value="tcp" class="tcp"> Tcp
@@ -34,8 +60,8 @@ fetch('/generic/list_serial_ports')
 
                         </div>
                         <div class="container-buttons">
-                            <button class="delete-btn">Elimina</button>
-                            <button class="edit-btn">Modifica</button>
+                            <button class="delete-btn">${deleteButtonContent}</button>
+                            <button class="edit-btn">${editButtonContent}</button>
                         </div>
                     </div>
                 </div>
@@ -52,6 +78,49 @@ fetch('/generic/list_serial_ports')
                 </div>
                 <button class="addWeigher width-fit-content">Configura pesa</button>
             `;
+
+            const deleteInstanceModal = document.createElement('div');
+
+            deleteInstanceModal.classList.toggle('modal');
+
+            // Aggiungo il contenuto del modal tramite innerHTML
+            deleteInstanceModal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Conferma eliminazione</h3>
+                    <p>Sei sicuro di voler eliminare l'istanza?</p>
+                    <div class="container-buttons right">
+                        <button class="cancel-btn">Annulla</button>
+                        <button class="confirm-btn delete-btn">Conferma</button>
+                    </div>
+                </div>
+            `;
+
+            deleteInstanceModal.querySelector('.cancel-btn').addEventListener('click', () => {
+                deleteInstanceModal.style.display = 'none';
+            });
+
+            deleteInstanceModal.querySelector('.confirm-btn').addEventListener('click', () => {
+                deleteInstanceModal.style.display = 'none';
+                fetch(`/config_weigher/instance?name=${key}`, {
+                    method: 'DELETE',
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.deleted) {
+                        div.remove();
+                    }
+                });
+            });
+
+            div.querySelector('.delete-instance').addEventListener('click', () => {
+                deleteInstanceModal.style.display = 'block';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === deleteInstanceModal) {
+                    deleteInstanceModal.style.display = 'none';
+                }
+            });
 
             const deleteConnectionModal = document.createElement('div');
 
@@ -82,7 +151,6 @@ fetch('/generic/list_serial_ports')
                 .then(data => {
                     if (data.deleted) {
                         containerButtons.querySelector('.delete-btn').style.display = 'none';
-                        containerButtons.querySelector('.edit-btn').textContent = 'Aggiungi connessione';
                         viewModeSerial.style.display = 'none';
                         viewModeTcp.style.display = 'none';
                         populateEditSerial({"connection": {}});
@@ -125,7 +193,7 @@ fetch('/generic/list_serial_ports')
                 `;
             }
 
-            populateViewSerial(data[key]);
+            populateViewSerial(data);
 
             const editModeSerial = document.createElement('form');
             editModeSerial.oninput = () => {
@@ -141,28 +209,33 @@ fetch('/generic/list_serial_ports')
                     </select><br>
                     <label for="baudrate">Baudrate:</label>
                     <select name="baudrate" class="selectBaudrate width-50-px" required>
-                        <option value="9600">9600</option>
-                        <option value="115200">115200</option>
+                        <option value="9600" ${data.connection.baudrate === 9600 ? 'selected': ''}>9600</option>
+                        <option value="14400" ${data.connection.baudrate === 14400 ? 'selected' : ''}>14400</option>
+                        <option value="19200" ${data.connection.baudrate === 19200 ? 'selected' : ''}>19200</option>
+                        <option value="38400" ${data.connection.baudrate === 38400 ? 'selected' : ''}>38400</option>
+                        <option value="57600" ${data.connection.baudrate === 57600 ? 'selected' : ''}>57600</option>
+                        <option value="115200" ${data.connection.baudrate === 115200 ? 'selected' : ''}>115200</option>
                     </select><br>
                     <label for="timeout">Timeout:</label>
                     <input type="number" min="0.1" max="10" step="0.1" name="timeout" class="width-50-px" value="${data.connection.timeout ? data.connection.timeout : ''}" required><br>
+                    <div class="errors"></div>
                     <div class="container-buttons">
                         <button class="cancel-btn">Annulla</button>
                         <button class="save-btn">Salva</button>
                     </div>
                 `;
 
-                editModeSerial.oninput();
-
                 for (let port of list_serial_ports) {
                     const option = document.createElement('option');
-                    option.value = port;
-                    option.innerHTML = port;
-                    if ("serial_port_name" in data.connection && data.connection.serial_port_name == port) {
+                    option.value = port.port;
+                    option.innerHTML = port.port;
+                    if ("serial_port_name" in data.connection && data.connection.serial_port_name == port.port) {
                         option.selected = true;
                     }
                     editModeSerial.querySelector('.selectSerialPort').appendChild(option);
                 }
+
+                editModeSerial.oninput();
 
                 editModeSerial.querySelector('.cancel-btn').addEventListener('click', (event) => {
                     event.preventDefault();
@@ -174,7 +247,6 @@ fetch('/generic/list_serial_ports')
                     if (!("ip" in data.connection)) {
                         radioSerial.checked = true;
                         if ("serial_port_name" in data.connection) {
-                            populateEditTcp({"connection": {}});
                             viewModeSerial.style.display = 'block';
                         }
                     } else {
@@ -185,6 +257,7 @@ fetch('/generic/list_serial_ports')
 
                 editModeSerial.querySelector('.save-btn').addEventListener('click', (event) => {
                     event.preventDefault();
+                    editModeSerial.querySelector('.errors').innerHTML = '';
                     fetch(`/config_weigher/instance/connection?name=${key}`, {
                         method: 'DELETE',
                     })
@@ -209,7 +282,7 @@ fetch('/generic/list_serial_ports')
                                 editModeTcp.style.display = 'none';
                                 containerButtons.style.display = 'flex';
                                 containerButtons.querySelector('.delete-btn').style.display = 'block';
-                                containerButtons.querySelector('.edit-btn').textContent = 'Modifica';
+                                containerButtons.querySelector('.edit-btn').innerHTML = editButtonContent;
                                 viewModeSerial.style.display = 'block';
                                 populateEditSerial({"connection": data});
                                 populateViewSerial({"connection": data});
@@ -219,8 +292,16 @@ fetch('/generic/list_serial_ports')
                                 } else {
                                     viewModeSerial.style.display = 'block';
                                 }
+                            } else if ('detail' in data) {
+                                data.detail.forEach(error => {
+                                    if (error.loc.includes('SerialPort')) {
+                                        const message = error.msg.replace('Value error, ', '');
+                                        editModeSerial.querySelector('.errors').innerHTML += `${message}<br>`;
+                                    }
+                                })
                             } else {
-                                alert(`Errore durante la modifica della connessione: ${data}`);}
+                                alert(`Errore durante la modifica della connessione: ${data}`);
+                            }
                         })
                         .catch(error => {
                             alert(`Errore durante la modifica della connessione: ${error}`);
@@ -229,7 +310,7 @@ fetch('/generic/list_serial_ports')
                 });
             }
 
-            populateEditSerial(data[key]);
+            populateEditSerial(data);
 
             contentSerial.appendChild(viewModeSerial);
             contentSerial.appendChild(editModeSerial);
@@ -245,7 +326,7 @@ fetch('/generic/list_serial_ports')
                 `;
             }
 
-            populateViewTcp(data[key]);
+            populateViewTcp(data);
 
             const editModeTcp = document.createElement('form');
             editModeTcp.oninput = () => {
@@ -314,7 +395,6 @@ fetch('/generic/list_serial_ports')
                                 editModeTcp.style.display = 'none';
                                 containerButtons.style.display = 'flex';
                                 containerButtons.querySelector('.delete-btn').style.display = 'block';
-                                containerButtons.querySelector('.edit-btn').textContent = 'Modifica';
                                 viewModeTcp.style.display = 'block';
                                 populateEditTcp({"connection": data});
                                 populateViewTcp({"connection": data});
@@ -329,7 +409,7 @@ fetch('/generic/list_serial_ports')
                 });
             }
 
-            populateEditTcp(data[key]);
+            populateEditTcp(data);
 
             contentTcp.appendChild(viewModeTcp);
             contentTcp.appendChild(editModeTcp);
@@ -361,17 +441,16 @@ fetch('/generic/list_serial_ports')
             contentSerial.style.display = 'block';
             contentTcp.style.display = 'block';
 
-            if ('serial_port_name' in data[key].connection) {
+            if ('serial_port_name' in data.connection) {
                 radioSerial.checked = true;
                 viewModeSerial.style.display = 'block';
                 viewModeTcp.style.display = 'none';
-            } else if ('ip' in data[key].connection) {
+            } else if ('ip' in data.connection) {
                 radioTcp.checked = true;
                 viewModeTcp.style.display = 'block';
                 viewModeSerial.style.display = 'none';
             } else {
                 containerButtons.querySelector('.delete-btn').style.display = 'none';
-                containerButtons.querySelector('.edit-btn').textContent = 'Aggiungi connessione';
                 radioSerial.checked = true;
                 viewModeSerial.style.display = 'none';
                 viewModeTcp.style.display = 'none';
@@ -439,7 +518,7 @@ fetch('/generic/list_serial_ports')
             
             addWeigherModal.innerHTML = `
                 <div class="modal-content">
-                    <h3>Configura pesa</h3>
+                    <h3>Aggiungi pesa</h3>
                     <form class="content" oninput="document.querySelector('#modalAddWeigherConfirm').disabled = !this.checkValidity()">
                     </form>
                     <div class="errors"></div>
@@ -558,8 +637,8 @@ fetch('/generic/list_serial_ports')
                 viewMode.innerHTML = `
                     <div class="content"></div>
                     <div class="container-buttons">
-                        <button class="delete-btn">Elimina</button>
-                        <button class="edit-btn">Modifica</button>
+                        <button class="delete-btn">${deleteButtonContent}</button>
+                        <button class="edit-btn">${editButtonContent}</button>
                     </div>
                 `;
 
@@ -574,10 +653,6 @@ fetch('/generic/list_serial_ports')
                         Diagnostica prioritaria sul realtime: ${data.diagnostic_has_priority_than_realtime}<br>
                         Terminale: ${data.terminal}<br>
                         In esecuzione: ${data.run}<br>
-                        Stato: ${data.status}<br>
-                        Firmware: ${data.terminal_data.firmware ? data.terminal_data.firmware : ''}<br>
-                        Nome modello: ${data.terminal_data.model_name ? data.terminal_data.model_name : ''}<br>
-                        Numero seriale: ${data.terminal_data.serial_number ? data.terminal_data.serial_number : ''}<br>
                     `;
                 }
 
@@ -756,7 +831,7 @@ fetch('/generic/list_serial_ports')
                 });
             }
 
-            for (let weigher of data[key]['nodes']) {
+            for (let weigher of data['nodes']) {
                 addWeigher(weigher);
             }
 
@@ -764,6 +839,8 @@ fetch('/generic/list_serial_ports')
                 addWeigherModal.style.display = 'block';
             });
 
+            div.appendChild(deleteInstanceModal);
+            div.appendChild(deleteConnectionModal);
             div.appendChild(addWeigherModal);
             div.appendChild(ul);
             weighers_config.appendChild(div);
@@ -775,6 +852,90 @@ fetch('/generic/list_serial_ports')
                     populateAddContent();
                 }
             });
+        }
+
+        const addInstance = document.createElement('button');
+        addInstance.classList.toggle('container-buttons');
+        addInstance.textContent = 'Aggiungi istanza';
+        const addInstanceModal = document.createElement('div');
+        addInstanceModal.classList.toggle('modal');
+
+        const populateInstanceModal = () => {
+            addInstanceModal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Aggiungi istanza</h3>
+                    <form class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
+                        <label for="name">Nome:</label><br>
+                        <input type="text" name="name" required>
+                    </form>
+                    <div class="errors"></div>
+                    <div class="container-buttons">                
+                        <button class="cancel-btn">Annulla</button>
+                        <button class="save-btn" disabled>Salva</button><br>
+                    </div>
+                </div>
+            `;
+
+            addInstanceModal.querySelector('.cancel-btn').addEventListener('click', () => {
+                addInstanceModal.style.display = 'none';
+                addInstanceModal.querySelector('input[type="text"]').value = '';
+                addInstanceModal.querySelector('.errors').innerHTML = '';
+            })
+
+            addInstanceModal.querySelector('.save-btn').addEventListener('click', () => {
+                const errorsDiv = addInstanceModal.querySelector('.errors');
+                const name = addInstanceModal.querySelector('input[type="text"]').value;
+                fetch(`/config_weigher/instance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        connection: {},
+                        time_between_actions: 1
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    errorsDiv.innerHTML = '';
+                    if ("detail" in data) {
+                        data.detail.forEach(error => {
+                            errorsDiv.innerHTML += `${error.msg}<br>`;
+                        });
+                    } else {
+                        createInstance(name, data);
+                        addInstanceModal.style.display = 'none';
+                        addInstanceModal.querySelector('input[type="text"]').value = '';
+                        addInstanceModal.querySelector('.errors').innerHTML = '';
+                    }
+                })
+                .catch(error => {
+                    alert(`Errore durante l'eliminazione della pesa ${error}`);
+                })
+            })
+
+            window.addEventListener('click', (event) => {
+                if (event.target === addInstanceModal) {
+                    addInstanceModal.style.display = 'none';
+                    addInstanceModal.querySelector('input[type="text"]').value = '';
+                    addInstanceModal.querySelector('.errors').innerHTML = '';
+                }
+            })
+        }
+
+        populateInstanceModal();
+
+        addInstance.addEventListener('click', () => {
+            addInstanceModal.style.display = 'block';
+            addInstanceModal.querySelector('.save-btn').disabled = true;
+        });
+
+        weighers_config.appendChild(addInstance);
+        weighers_config.appendChild(addInstanceModal);
+
+        for (let key in data) {
+            createInstance(key, data[key]);
         }
     });
 });

@@ -16,7 +16,7 @@ class ConfigWeigher(CallbackWeigher):
     
         self.router_config_weigher.add_api_route('/all/instance', self.GetAllInstance, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance', self.GetInstance, methods=['GET'])
-        self.router_config_weigher.add_api_route('/instance', self.CreateInstance, methods=['POST'])
+        self.router_config_weigher.add_api_route('/instance', self.AddInstance, methods=['POST'])
         self.router_config_weigher.add_api_route('/instance', self.DeleteInstance, methods=['DELETE'])
         self.router_config_weigher.add_api_route('/instance/node', self.GetInstanceNode, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance/node', self.AddInstanceNode, methods=['POST'])
@@ -32,7 +32,7 @@ class ConfigWeigher(CallbackWeigher):
     async def GetInstance(self, instance: InstanceNameDTO = Depends(get_query_params_name)):
         return md_weigher.module_weigher.getInstance(instance.name)
 
-    async def CreateInstance(self, configuration: ConfigurationDTO):
+    async def AddInstance(self, configuration: ConfigurationDTO):
         response = md_weigher.module_weigher.createInstance(configuration=configuration)
         self.addInstanceSocket(configuration.name)
         return response

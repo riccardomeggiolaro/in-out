@@ -80,8 +80,11 @@ class WeigherModule:
 	def createInstance(
      	self,
 		configuration: ConfigurationDTO):
+		details = []
 		if configuration.name in self.getAllInstance():
-			raise HTTPException(status_code=400, detail="Name just exist")
+			details.append({"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": configuration.name, "ctx": {"error":{}}})
+		if details:
+			raise HTTPException(status_code=400, detail=details)
 		name = configuration.name
 		weigher_configuration = Configuration(**configuration.dict())
 		instance = WeigherInstance(name, weigher_configuration)

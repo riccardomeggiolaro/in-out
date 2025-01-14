@@ -433,12 +433,24 @@ def enable_serial_port_windows(port_name):
 		lb_log.error(f"Unexpected error enabling port {port_name}: {e}")
 		return False, f"Unexpected error enabling port: {str(e)}"
 
+
+def is_port_in_use(port):
+    """Controlla se la porta seriale è già in uso."""
+    try:
+        # Tenta di aprire la porta per vedere se è in uso
+        s = serial.Serial(port)
+        s.close()
+        return False  # Porta disponibile
+    except serial.SerialException:
+        return True  # Porta in uso
+
 def list_serial_port_linux():
 	try:
 		ports = serial.tools.list_ports.comports()
 		serial_ports = []
 		for port, desc, hwid in sorted(ports):
-			serial_ports.append(port)
+			using = is_port_in_use(port)
+			serial_ports.append({"port": port, "using": using})
 		return True, serial_ports
 	except Exception as e:
 		return False, e
@@ -448,7 +460,8 @@ def list_serial_port_windows():
 		ports = serial.tools.list_ports.comports()
 		serial_ports = []
 		for port, desc, hwid in sorted(ports):
-			serial_ports.append(port)
+			using = is_port_in_use(port)
+			serial_ports.append({"port": port, "using": using})
 		return True, serial_ports
 	except Exception as e:
 		return False, e

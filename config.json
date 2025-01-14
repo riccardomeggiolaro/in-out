@@ -13,59 +13,7 @@
             "setup": {}
         },
         "ssh_client": null,
-        "weighers": {
-            "1": {
-                "connection": {
-                    "ip": "192.168.0.68",
-                    "port": 8000,
-                    "timeout": 0.1
-                },
-                "nodes": [
-                    {
-                        "data": {
-                            "data_in_execution": {
-                                "customer": {
-                                    "cell": null,
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "name": null
-                                },
-                                "material": {
-                                    "id": null,
-                                    "name": null
-                                },
-                                "note": null,
-                                "supplier": {
-                                    "cell": null,
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "name": null
-                                },
-                                "vehicle": {
-                                    "id": null,
-                                    "name": null,
-                                    "plate": null
-                                }
-                            },
-                            "id_selected": {
-                                "id": null
-                            }
-                        },
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "maintaine_session_realtime_after_command": true,
-                        "max_weight": 50000,
-                        "min_weight": 20000,
-                        "name": "P1",
-                        "node": null,
-                        "run": true,
-                        "status": 305,
-                        "terminal": "dgt1"
-                    }
-                ],
-                "time_between_actions": 0.9
-            }
-        }
+        "weighers": {}
     },
     "current_plate": null,
     "log": {
