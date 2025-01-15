@@ -9,25 +9,24 @@
 <body>
     <div id="navbar-container"></div>
     <div id="setup">
-        <div class="setup-menu">
+        <div id="setup-menu">
             <ul>
-                <li>PESE</li>
+                <li id="weighers">PESE</li>
                 <hr>
-                <li>
-                    <div class="menu-item" onclick="toggleSubmenu(this)">
-                        CONNESSIONI
-                        <i class="arrow"></i>
-                    </div>
-                    <ul class="submenu">
-                        <li>SSH</li>
-                        <li>VPN</li>
-                    </ul>
-                </li>
+                <li id="users">UTENTI</li>
+                <hr>
+                <li id="ssh">SSH</li>
             </ul>
         </div>
-        <div class="config">
+        <div id="config">
             <div id="weighers_config">
                 <h3>PESE</h3>
+            </div>
+            <div id="users_config">
+                <h3>UTENTI</h3>
+            </div>
+            <div id="ssh_config">
+                <h3>SSH</h3>
             </div>
         </div>
     </div>
@@ -35,5 +34,35 @@
     <script src="/static/javascript/interceptor.js"></script>
     <script src="/static/javascript/navbar.js"></script>
     <script src="/static/javascript/setup_weighers.js"></script>
+    <script src="/static/javascript/setup_users.js"></script>
+    <script>
+        const weighersConfig = document.querySelector('#weighers_config');
+        const usersConfig = document.querySelector('#users_config');
+        const sshConfig = document.querySelector('#ssh_config');
+        const liWeighers = document.querySelector('#weighers');
+        const liUsers = document.querySelector('#users');
+        const liSsh = document.querySelector('#ssh');
+
+        usersConfig.style.display = 'none';
+        sshConfig.style.display = 'none';
+
+        liWeighers.addEventListener('click', () => {
+            weighersConfig.style.display = 'block';
+            usersConfig.style.display = 'none';
+            sshConfig.style.display = 'none';
+        })
+
+        liUsers.addEventListener('click', () => {
+            usersConfig.style.display = 'block';
+            weighersConfig.style.display = 'none';
+            sshConfig.style.display = 'none';
+        })
+
+        liSsh.addEventListener('click', () => {
+            sshConfig.style.display = 'block';
+            weighersConfig.style.display = 'none';
+            usersConfig.style.display = 'none';
+        })
+    </script>
 </body>
 </html>

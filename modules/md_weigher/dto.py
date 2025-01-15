@@ -83,11 +83,11 @@ class SetupWeigherDTO(BaseModel):
 	max_weight: int
 	min_weight: int
 	division: int
-	maintaine_session_realtime_after_command: bool
-	diagnostic_has_priority_than_realtime: bool
+	maintaine_session_realtime_after_command: Optional[bool] = True
+	diagnostic_has_priority_than_realtime: Optional[bool] = True
 	node: Optional[Union[str, None]] = None
 	terminal: str
-	run: bool
+	run: Optional[bool] = True
 	name: str
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
