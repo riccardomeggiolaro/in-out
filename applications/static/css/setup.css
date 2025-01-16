@@ -117,7 +117,7 @@ li {
 .container-buttons {
     display: flex;
     gap: 5px;
-    margin: 10px 0px;
+    margin: 10px 0px 0px 0px;
 }
 
 .right {

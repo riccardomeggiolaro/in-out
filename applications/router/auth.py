@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, status
 from libs.lb_database import filter_data, add_data, update_data, delete_data, get_data_by_id, get_data_by_attribute, UserDTO
-from applications.utils.utils_auth import LoginDTO, SetUserDTO, create_access_token
+from applications.utils.utils_auth import LoginDTO, SetUserPasswordDTO, create_access_token
 from applications.middleware.admin import is_admin
 
 class AuthRouter(APIRouter):
@@ -12,7 +12,7 @@ class AuthRouter(APIRouter):
         self.router.add_api_route('/me', self.set_me, methods=['PATCH'])
         self.router.add_api_route('/users', self.get_users, methods=['GET'], dependencies=[Depends(is_admin)])
         self.router.add_api_route('/user/{id}', self.get_user_by_id, methods=['GET'], dependencies=[Depends(is_admin)])
-        self.router.add_api_route('/user/{id}', self.set_user_by_id, methods=['PATCH'], dependencies=[Depends(is_admin)])
+        self.router.add_api_route('/user/password/{id}', self.set_user_password_by_id, methods=['PATCH'], dependencies=[Depends(is_admin)])
         self.router.add_api_route('/user/{id}', self.delete_user_by_id, methods=['DELETE'], dependencies=[Depends(is_admin)])
 
     def login(self, login_dto: LoginDTO):
@@ -26,7 +26,7 @@ class AuthRouter(APIRouter):
             raise HTTPException()
         except Exception:
             # Gestisce eventuali errori imprevisti (come la mancanza dell'utente)
-            return HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"
             )
@@ -45,7 +45,7 @@ class AuthRouter(APIRouter):
     def me(self, request: Request):
         return request.state.user
 
-    def set_me(self, request: Request, set_dto: SetUserDTO):
+    def set_me(self, request: Request, set_dto: SetUserPasswordDTO):
         return update_data("user", request.state.user.id, set_dto.dict())
     
     def get_users(self, request: Request):
@@ -54,7 +54,7 @@ class AuthRouter(APIRouter):
     def get_user_by_id(self, request: Request, id: int):
         return get_data_by_id("user", id)
     
-    def set_user_by_id(self, request: Request, id: int, set_dto: SetUserDTO):
+    def set_user_password_by_id(self, request: Request, id: int, set_password_dto: SetUserPasswordDTO):
         try:
             user = get_data_by_id("user", id)
             if user and user["level"] >= request.state.user.level:
@@ -66,9 +66,9 @@ class AuthRouter(APIRouter):
                         f"but you're trying to delete a user with access level {user['level']}."
                     )
                 )
-            return update_data("user", id, set_dto.dict())
+            return update_data("user", id, set_password_dto.dict())
         except Exception as e:
-            return HTTPException(
+            raise HTTPException(
                 status_code=404,
                 detail=str(e)
             )
@@ -78,7 +78,7 @@ class AuthRouter(APIRouter):
             user = get_data_by_id("user", id)
             if user:
                 if user["id"] == request.state.user.id:
-                    return HTTPException(
+                    raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=(
                             f"You cannot delete your self. "
@@ -87,7 +87,7 @@ class AuthRouter(APIRouter):
                         )
                     )
                 if user["level"] >= request.state.user.level:
-                    return HTTPException(
+                    raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail=(
                             f"You cannot delete a user with a higher or equal access level than your own. "
@@ -96,8 +96,13 @@ class AuthRouter(APIRouter):
                         )
                     )
             return delete_data("user", id)
-        except Exception as e:
-            return HTTPException(
+        except HTTPException as e:
+            raise HTTPException(
+                status_code=e.status_code,
+                detail=str(e)
+            )
+        except ValueError as e:
+            raise HTTPException(
                 status_code=404,
                 detail=str(e)
             )

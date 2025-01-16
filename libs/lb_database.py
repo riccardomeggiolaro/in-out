@@ -35,6 +35,8 @@ class UserDTO(BaseModel):
 		data = get_data_by_attribute('user', 'username', v)
 		if data:
 			raise ValueError('Username already exists')
+		if len(v) < 3:
+			raise ValueError('Username must be at least 3 characters long')
 		return v
 
 	@validator('password', pre=True, always=True)
@@ -50,8 +52,7 @@ class UserDTO(BaseModel):
 				return v
 			else:
 				raise ValueError('Printer name is not configurated')
-		else:
-			return printer.get_printer_default()
+		return v
 
 class LoginDTO(BaseModel):
 	username: str

@@ -20,54 +20,7 @@
                     "serial_port_name": "/dev/ttyUSB0",
                     "timeout": 0.1
                 },
-                "nodes": [
-                    {
-                        "data": {
-                            "data_in_execution": {
-                                "customer": {
-                                    "cell": null,
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "name": null
-                                },
-                                "material": {
-                                    "id": null,
-                                    "name": null
-                                },
-                                "note": null,
-                                "supplier": {
-                                    "cell": null,
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "name": "rthrthrtrtrt"
-                                },
-                                "vehicle": {
-                                    "id": null,
-                                    "name": "dbghtrtr",
-                                    "plate": null
-                                }
-                            },
-                            "id_selected": {
-                                "id": null
-                            }
-                        },
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "maintaine_session_realtime_after_command": true,
-                        "max_weight": 50000,
-                        "min_weight": 200,
-                        "name": "P1",
-                        "node": null,
-                        "run": true,
-                        "status": 201,
-                        "terminal": "dgt1",
-                        "terminal_data": {
-                            "firmware": null,
-                            "model_name": null,
-                            "serial_number": null
-                        }
-                    }
-                ],
+                "nodes": [],
                 "time_between_actions": 0.1
             }
         }

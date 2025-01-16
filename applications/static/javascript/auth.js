@@ -1,3 +1,5 @@
+export let dataUser = {};
+
 function auth() {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = '/login';
@@ -11,6 +13,8 @@ function auth() {
         if (!data.username) {
             localStorage.removeItem('token');
             window.location.href = '/login';
+        } else {
+            dataUser = data;
         }
     })
     .catch(error => {
