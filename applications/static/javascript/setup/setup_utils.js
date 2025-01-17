@@ -28,6 +28,13 @@ await fetch('/static/content/recovery_password.svg')
     recoveryPasswordButtonContent = data;
 });
 
+export let printerButtonContent = 'Stampante';
+await fetch('/static/content/printer.svg')
+.then(res => res.text())
+.then(data => {
+    printerButtonContent = data;
+});
+
 await fetch('/generic/list_serial_ports')
 .then(res => res.json())
 .then(data => {

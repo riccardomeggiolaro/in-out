@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, status
 from libs.lb_database import filter_data, add_data, update_data, delete_data, get_data_by_id, get_data_by_attribute, UserDTO
-from applications.utils.utils_auth import LoginDTO, SetUserPasswordDTO, create_access_token
+from applications.utils.utils_auth import LoginDTO, SetUserDTO, create_access_token
 from applications.middleware.admin import is_admin
 
 class AuthRouter(APIRouter):
@@ -12,7 +12,7 @@ class AuthRouter(APIRouter):
         self.router.add_api_route('/me', self.set_me, methods=['PATCH'])
         self.router.add_api_route('/users', self.get_users, methods=['GET'], dependencies=[Depends(is_admin)])
         self.router.add_api_route('/user/{id}', self.get_user_by_id, methods=['GET'], dependencies=[Depends(is_admin)])
-        self.router.add_api_route('/user/password/{id}', self.set_user_password_by_id, methods=['PATCH'], dependencies=[Depends(is_admin)])
+        self.router.add_api_route('/user/{id}', self.set_user_by_id, methods=['PATCH'], dependencies=[Depends(is_admin)])
         self.router.add_api_route('/user/{id}', self.delete_user_by_id, methods=['DELETE'], dependencies=[Depends(is_admin)])
 
     def login(self, login_dto: LoginDTO):
@@ -45,7 +45,7 @@ class AuthRouter(APIRouter):
     def me(self, request: Request):
         return request.state.user
 
-    def set_me(self, request: Request, set_dto: SetUserPasswordDTO):
+    def set_me(self, request: Request, set_dto: SetUserDTO):
         return update_data("user", request.state.user.id, set_dto.dict())
     
     def get_users(self, request: Request):
@@ -54,7 +54,7 @@ class AuthRouter(APIRouter):
     def get_user_by_id(self, request: Request, id: int):
         return get_data_by_id("user", id)
     
-    def set_user_password_by_id(self, request: Request, id: int, set_password_dto: SetUserPasswordDTO):
+    def set_user_by_id(self, request: Request, id: int, set_password_dto: SetUserDTO):
         try:
             user = get_data_by_id("user", id)
             if user and user["level"] >= request.state.user.level:

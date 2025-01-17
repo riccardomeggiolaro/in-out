@@ -1,4 +1,4 @@
-import { dataUser } from '/static/javascript/auth.js';
+import { dataUser } from '../auth.js';
 import { deleteButtonContent, recoveryPasswordButtonContent, list_printer_names } from "./setup_utils.js";
 
 const users_config = document.getElementById('users_config');
@@ -48,10 +48,7 @@ setTimeout(() => {
                 Password: (Min 8 caratteri)<br>
                 <input type="password" name="password" value="" minlength="8" required><br>
                 Livello:<br>
-                <select name="level" required>
-                    <option value="1">Utente</option>
-                    <option value="2">Amministratore</option>
-                </select><br>
+                <select name="level" required></select><br>
                 Descrizione:<br>
                 <input type="text" name="description" value="" required><br>
                 Stampante associata:<br>
@@ -60,6 +57,18 @@ setTimeout(() => {
                 </select><br>
             `;
             errorAddUser.innerHTML = '';
+
+            const levelSelect = addUserForm.querySelector('select[name="level"]');
+            const option1 = document.createElement('option');
+            option1.value = 1;
+            option1.textContent = 'Utente';
+            const option2 = document.createElement('option');
+            option2.value = 2;
+            option2.textContent = 'Amministratore';
+            levelSelect.appendChild(option1);
+            if (dataUser.level > 2) {
+                levelSelect.appendChild(option2);
+            }
 
             const printerSelect = addUserForm.querySelector('select[name="printer_name"]');
             list_printer_names.forEach(printer => {
@@ -154,7 +163,7 @@ setTimeout(() => {
                 <p>Stampante associata: ${data.printer_name ? data.printer_name : ''}</p>
             `;
 
-            if (data.username !== dataUser.username) {
+            if (data.username !== dataUser.username && data.level < dataUser.level) {
                 li.innerHTML += `
                     <div class="container-buttons">
                         <button class="delete-btn">${deleteButtonContent}</button>
@@ -253,7 +262,7 @@ setTimeout(() => {
                 })
 
                 saveEditBtn.addEventListener('click', () => {
-                    fetch(`/auth/user/password/${data.id}`, {
+                    fetch(`/auth/user/${data.id}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json'

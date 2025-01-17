@@ -1,9 +1,9 @@
-import { initAligningGuidelines } from './reporter/guide-lines.js';
-import { initCenteringGuidelines } from './reporter/centering-guide-lines.js';
-import { paperSizes } from './reporter/paperSize.js';
-import './reporter/rectWithText.js';
-import './reporter/imageContainer.js';
-import './reporter/textWithPadding.js';
+import { initAligningGuidelines } from './guide-lines.js';
+import { initCenteringGuidelines } from './centering-guide-lines.js';
+import { paperSizes } from './paperSize.js';
+import './rectWithText.js';
+import './imageContainer.js';
+import './textWithPadding.js';
 
 let canvas;
 let gridLayer;

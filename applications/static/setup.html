@@ -15,53 +15,72 @@
                 <hr>
                 <li id="users">UTENTI</li>
                 <hr>
-                <li id="ssh">SSH</li>
+                <li id="ssh" style="display: none;">SSH</li>
+                <hr style="display: none;">
+                <li id="profile">PROFILO</li>
             </ul>
         </div>
         <div id="config">
             <div id="weighers_config">
                 <h3>PESE</h3>
             </div>
+            <div id="ssh_config">
+                <h3>SSH</h3>
+            </div>
             <div id="users_config">
                 <h3>UTENTI</h3>
             </div>
-            <div id="ssh_config">
-                <h3>SSH</h3>
+            <div id="profile_config">
+                <h3>PROFILO</h3>
             </div>
         </div>
     </div>
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
     <script src="/static/javascript/navbar.js"></script>
-    <script type="module" src="/static/javascript/setup_utils.js"></script>
-    <script type="module" src="/static/javascript/setup_weighers.js"></script>
-    <script type="module" src="/static/javascript/setup_users.js"></script>
+    <script type="module" src="/static/javascript/setup/setup_utils.js"></script>
+    <script type="module" src="/static/javascript/setup/setup_weighers.js"></script>
+    <script type="module" src="/static/javascript/setup/setup_users.js"></script>
+    <script type="module" src="/static/javascript/setup/setup_profile.js"></script>
     <script>
         const weighersConfig = document.querySelector('#weighers_config');
         const usersConfig = document.querySelector('#users_config');
         const sshConfig = document.querySelector('#ssh_config');
+        const profile = document.querySelector('#profile_config');
         const liWeighers = document.querySelector('#weighers');
         const liUsers = document.querySelector('#users');
         const liSsh = document.querySelector('#ssh');
+        const liProfile = document.querySelector('#profile');
 
-        usersConfig.style.display = 'none';
         sshConfig.style.display = 'none';
+        usersConfig.style.display = 'none';
+        profile.style.display = 'none';
 
         liWeighers.addEventListener('click', () => {
             weighersConfig.style.display = 'block';
+            sshConfig.style.display = 'none';
             usersConfig.style.display = 'none';
-            sshConfig.style.display = 'none';
-        })
-
-        liUsers.addEventListener('click', () => {
-            usersConfig.style.display = 'block';
-            weighersConfig.style.display = 'none';
-            sshConfig.style.display = 'none';
+            profile.style.display = 'none';
         })
 
         liSsh.addEventListener('click', () => {
             sshConfig.style.display = 'block';
             weighersConfig.style.display = 'none';
+            usersConfig.style.display = 'none';
+            profile.style.display = 'none';
+        })
+        
+        liUsers.addEventListener('click', () => {
+            usersConfig.style.display = 'block';
+            sshConfig.style.display = 'none';
+            weighersConfig.style.display = 'none';
+            profile.style.display = 'none';
+        })
+
+        liProfile.addEventListener('click', () => {
+            profile.style.display = 'block';
+            weighersConfig.style.display = 'none';
+            sshConfig.style.display = 'none';
             usersConfig.style.display = 'none';
         })
     </script>

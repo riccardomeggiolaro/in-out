@@ -1,9 +1,9 @@
 export let dataUser = {};
 
-function auth() {
+async function auth() {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = '/login';
-    fetch('/auth/me', {
+    await fetch('/auth/me', {
         headers: {
             'Authorization': `Bearer ${token}`
         }
@@ -22,4 +22,4 @@ function auth() {
     })
 }
 
-auth();
+await auth();

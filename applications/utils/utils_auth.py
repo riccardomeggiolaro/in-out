@@ -6,6 +6,7 @@ import bcrypt
 from apscheduler.schedulers.blocking import BlockingScheduler
 import libs.lb_config as lb_config
 from pydantic import validator
+from libs.lb_printer import printer
 
 class LoginDTO(BaseModel):
 	username: str   
@@ -15,8 +16,9 @@ class LoginDTO(BaseModel):
 	def check_password(cls, v):
 		return hash_password(v)
 
-class SetUserPasswordDTO(BaseModel):
-	password: str
+class SetUserDTO(BaseModel):
+	password: Optional[str] = None
+	printer_name: Optional[str] = None
 	
 	@validator('password', pre=True, always=True)
 	def check_password(cls, v):
@@ -24,6 +26,15 @@ class SetUserPasswordDTO(BaseModel):
 			raise ValueError('Password must be at least 8 characters long')
 		if v:
 			return hash_password(v)
+		return v
+
+	@validator('printer_name', pre=True, always=True)
+	def check_printer_name(cls, v):
+		if v is not None:
+			if v in printer.get_list_printers_name():
+				return v
+			else:
+				raise ValueError('Printer name is not configurated')
 		return v
 
 class TokenData(BaseModel):
