@@ -136,10 +136,10 @@ class ImageCaptured(BaseModel):
 class Weight(BaseModel):
 	weight_executed: WeightExecuted
 	data_assigned: Optional[DataInExecution] = None
-	image1: ImageCaptured
-	image2: ImageCaptured
-	image3: ImageCaptured
-	image4: ImageCaptured
+	image1: Optional[ImageCaptured] = None
+	image2: Optional[ImageCaptured] = None
+	image3: Optional[ImageCaptured]	= None
+	image4: Optional[ImageCaptured]	= None
 
 class SetupWeigher(CustomBaseModel):
 	max_weight: int

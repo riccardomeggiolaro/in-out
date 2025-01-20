@@ -40,16 +40,6 @@ class DataDTO(BaseModel):
     data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})
     id_selected: Optional[IdSelectedDTO] = IdSelectedDTO(**{})
 
-    @root_validator(pre=True)
-    def check_only_one_of_data_in_execution_or_id_selected(cls, values):
-        # Controlla quanti dei due campi sono impostati
-        non_null_values = sum(1 for key, value in values.items() if value is not None)
-        
-        if non_null_values > 1:
-            raise ValueError("Solo uno dei seguenti attributi deve essere presente: data_in_execution, id_selected.")
-        
-        return values
-
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	max_weight: Optional[int] = None
 	min_weight: Optional[int] = None

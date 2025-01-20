@@ -6,6 +6,7 @@ from modules.md_weigher.types import Realtime, Weight, Data
 import libs.lb_config as lb_config
 from libs.lb_database import add_data, get_data_by_id, update_data
 import datetime as dt
+import libs.lb_log as lb_log
 
 class CallbackWeigher:
     def __init__(self):
@@ -98,6 +99,7 @@ class CallbackWeigher:
                 lb_config.saveconfig()
                 asyncio.run(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(data))
             elif isinstance(last_pesata.data_assigned, int) and last_pesata.weight_executed.executed:
+                lb_log.warning("2")
                 data = get_data_by_id("weighing", last_pesata.data_assigned)
                 net_weight = data["weight1"] - int(last_pesata.weight_executed.gross_weight)
                 obj = {
@@ -140,16 +142,13 @@ class CallbackWeigher:
                     "weigher": node["name"]
                 }
                 add_data("weighing", obj)
-            # if last_pesata.weight_executed.executed:
-            # 	html = f"""
-            # 		<h1>PESATA ESEGUITA</h1>
-            # 		<p>PID: {last_pesata.weight_executed.pid}</p>
-            # 		<p>PESO: {last_pesata.weight_executed.gross_weight}</p>
-            # 	"""
-            # 	printer.print_html(html)
+            del last_pesata.image1
+            del last_pesata.image2
+            del last_pesata.image3
+            del last_pesata.image4
             asyncio.run(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(last_pesata.dict()))
         except Exception as e:
-            pass
+            lb_log.error(e)
 
     def Callback_TarePTareZero(self, instance_name: str, instance_node: Union[str, None], ok_value: str):
         try:

@@ -90,10 +90,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"executed": False
 			},
 			"data_assigned": None,
-			"image1": ImageCaptured(**{}),
-			"image2": ImageCaptured(**{}),
-			"image3": ImageCaptured(**{}),
-			"image4": ImageCaptured(**{})
+			"image1": None,
+			"image2": None,
+			"image3": None,
+			"image4": None
 		})
 		self.cam1 = Cam(**cam1.dict()) if cam1 else None
 		self.cam2 = Cam(**cam2.dict()) if cam2 else None

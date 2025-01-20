@@ -35,8 +35,8 @@ def capture_camera_image(camera_url, username, password):
         status = f'error: {str(e)}'
     finally:
         return {
-            "date_capture": date_capture,
-            "image_data": image_data,
-            "file_size": file_size,
+            "date": date_capture,
+            "image": image_data,
+            "size": file_size,
             "status": status
         }

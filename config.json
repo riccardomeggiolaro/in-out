@@ -12,11 +12,12 @@
             "setup": {}
         },
         "ssh_reverse_tunneling": {
-            "server": "on.baron.it",
-            "user": "root",
+            "forwarding_port": 80,
+            "local_port": 8000,
             "password": "318101",
+            "server": "on.baron.it",
             "ssh_port": 10022,
-            "forwarding_port": 80
+            "user": "root"
         },
         "weighers": {
             "1": {
@@ -27,6 +28,15 @@
                 },
                 "nodes": [
                     {
+                        "cam1": {
+                            "ip": "http://192.168.0.230/ISAPI/Streaming/channels/1/picture",
+                            "model": "hikvision",
+                            "password": "Baronpesi2023",
+                            "username": "admin"
+                        },
+                        "cam2": null,
+                        "cam3": null,
+                        "cam4": null,
                         "data": {
                             "data_in_execution": {
                                 "customer": {
@@ -62,13 +72,15 @@
                         "max_weight": 50000,
                         "min_weight": 200,
                         "name": "P1",
-                        "node": "01",
+                        "node": null,
                         "run": true,
+                        "status": 305,
                         "terminal": "dgt1",
-                        "cam1": null,
-                        "cam2": null,
-                        "cam3": null,
-                        "cam4": null
+                        "terminal_data": {
+                            "firmware": null,
+                            "model_name": null,
+                            "serial_number": null
+                        }
                     }
                 ],
                 "time_between_actions": 0.1
