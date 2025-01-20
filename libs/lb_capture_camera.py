@@ -2,6 +2,10 @@ import requests
 from requests.auth import HTTPDigestAuth
 from datetime import datetime
 
+models = [
+    "hikvision"
+]
+
 def capture_camera_image(camera_url, username, password):
     date_capture = None
     image_data = None

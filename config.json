@@ -1,6 +1,5 @@
 {
     "app_api": {
-        "current_plate": "FG561BF",
         "port": 8000,
         "rfid": {
             "connection": {
@@ -12,7 +11,13 @@
             "module": "rfidserialrfid",
             "setup": {}
         },
-        "ssh_client": null,
+        "ssh_reverse_tunneling": {
+            "server": "on.baron.it",
+            "user": "root",
+            "password": "318101",
+            "ssh_port": 10022,
+            "forwarding_port": 80
+        },
         "weighers": {
             "1": {
                 "connection": {
@@ -59,15 +64,17 @@
                         "name": "P1",
                         "node": "01",
                         "run": true,
-                        "status": 305,
-                        "terminal": "dgt1"
+                        "terminal": "dgt1",
+                        "cam1": null,
+                        "cam2": null,
+                        "cam3": null,
+                        "cam4": null
                     }
                 ],
                 "time_between_actions": 0.1
             }
         }
     },
-    "current_plate": null,
     "log": {
         "max-size-mb": 10
     },

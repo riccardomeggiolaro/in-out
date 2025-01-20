@@ -805,7 +805,7 @@
         observer.observe(listIn, { childList: true, subtree: true });
 
         async function getData() {
-            await fetch('/data_in_execution/data_in_execution?name=1')
+            await fetch('/data_in_execution/data_in_execution?name=1&node=01')
             .then(res => res.json())
             .then(data => {
                 const obj = data["data"]["data_in_execution"];
@@ -830,7 +830,7 @@
 
             listIn.innerHTML = '';
 
-            await fetch('/historic_data/weighings/in?name=1')
+            await fetch('/historic_data/weighings/in?name=1&node=01')
             .then(res => res.json())
             .then(data => {
                 data.forEach(item => {
@@ -848,7 +848,7 @@
                             }
                         }
                         if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                        await fetch(`/data_in_execution/data_in_execution?name=1`, {
+                        await fetch(`/data_in_execution/data_in_execution?name=1&node=01`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -908,7 +908,7 @@
                 })
             }
             closePopup();
-            fetch(`/data_in_execution/data_in_execution?name=1`, {
+            fetch(`/data_in_execution/data_in_execution?name=1&node=01`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -956,7 +956,7 @@
 
                     li.onclick = () => {
                         closePopup();
-                        fetch(`/data_in_execution/data_in_execution?name=1`, {
+                        fetch(`/data_in_execution/data_in_execution?name=1&node=01`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -1182,7 +1182,7 @@
         function attemptReconnect() {
             clearTimeout(reconnectTimeout);
             reconnectTimeout = setTimeout(() => {
-                connectWebSocket('command_weigher/realtime?name=1', updateUIRealtime);
+                connectWebSocket('command_weigher/realtime?name=1&node=01', updateUIRealtime);
             }, 3000);
         }
 
@@ -1246,13 +1246,13 @@
         }
 
         async function handleTara() {
-            await fetch(`${pathname}/command_weigher/tare?name=1`)
+            await fetch(`${pathname}/command_weigher/tare?name=1&node=01`)
             .then(res => res.json())
             .catch(error => console.error('Errore nella fetch:', error));
         }
 
         async function handleZero() {
-            await fetch(`${pathname}/command_weigher/zero?name=1`)
+            await fetch(`${pathname}/command_weigher/zero?name=1&node=01`)
             .then(res => res.json())
             .catch(error => console.error('Errore nella fetch:', error));
         }
@@ -1260,7 +1260,7 @@
         async function handlePTara() {
             let preset_tare = 0;
             if (myNumberInput.value) preset_tare = myNumberInput.value;
-            await fetch(`${pathname}/command_weigher/preset_tare?name=1&tare=${preset_tare}`)
+            await fetch(`${pathname}/command_weigher/preset_tare?name=1&node=01&tare=${preset_tare}`)
             .then(res => {
                 closePopup();
                 return res.json();
@@ -1273,7 +1273,7 @@
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
             });
-            const r = await fetch(`${pathname}/command_weigher/print?name=1`)
+            const r = await fetch(`${pathname}/command_weigher/print?name=1&node=01`)
             .then(res => {
                 return res.json();
             })
@@ -1294,7 +1294,7 @@
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
             });
-            const r = await fetch(`${pathname}/command_weigher/weighing?name=1`)
+            const r = await fetch(`${pathname}/command_weigher/weighing?name=1&node=01`)
             .then(res => {
                 return res.json();
             })
@@ -1316,7 +1316,7 @@
                     button.disabled = true;
                     button.classList.add("disabled-button"); // Aggi
                 });
-                const r = await fetch(`${pathname}/command_weigher/weighing?name=1&id=${selectedIdWeight}`)
+                const r = await fetch(`${pathname}/command_weigher/weighing?name=1&node=01&id=${selectedIdWeight}`)
                 .then(res => {
                     return res.json();
                 })
@@ -1336,7 +1336,7 @@
         }
 
         // Inizializza la connessione WebSocket al caricamento della pagina
-        connectWebSocket('command_weigher/realtime?name=1', updateUIRealtime);
+        connectWebSocket('command_weigher/realtime?name=1&node=01', updateUIRealtime);
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from modules.md_weigher.types import Realtime, Diagnostic, Weight, DataInExecution, Data
+from modules.md_weigher.types import Realtime, Diagnostic, Weight, DataInExecution, Data, ImageCaptured, Cam
 from modules.md_weigher.dto import SetupWeigherDTO, DataInExecutionDTO
 from libs.lb_system import Connection
 import libs.lb_log as lb_log
@@ -58,7 +58,7 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
+	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
 		# Chiama il costruttore della classe base
 		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, name)
 
@@ -89,8 +89,16 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"status": "",
 				"executed": False
 			},
-			"data_assigned": None
+			"data_assigned": None,
+			"image1": ImageCaptured(**{}),
+			"image2": ImageCaptured(**{}),
+			"image3": ImageCaptured(**{}),
+			"image4": ImageCaptured(**{})
 		})
+		self.cam1 = Cam(**cam1.dict()) if cam1 else None
+		self.cam2 = Cam(**cam2.dict()) if cam2 else None
+		self.cam3 = Cam(**cam3.dict()) if cam3 else None
+		self.cam4 = Cam(**cam4.dict()) if cam4 else None
 		self.data = Data(**data.dict())
 		self.ok_value: str = ""
 		self.modope: str = ""
@@ -124,7 +132,11 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"run": self.run,
    			"status": self.diagnostic.status,
 			"name": self.name,
-			"data": self.data.dict()
+			"data": self.data.dict(),
+			"cam1": self.cam1.dict() if self.cam1 else None,
+			"cam2": self.cam2.dict() if self.cam2 else None,
+			"cam3": self.cam3.dict() if self.cam3 else None,
+			"cam4": self.cam4.dict() if self.cam4 else None
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
@@ -144,6 +156,26 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.run = setup.run
 		if setup.name is not None:
 			self.name = setup.name
+		if setup.cam1 is not None:
+			if isinstance(setup.cam1, dict):
+				setup.cam1 = None
+			else:
+				self.cam1 = setup.cam1
+		if setup.cam2 is not None:
+			if isinstance(setup.cam2, dict):
+				setup.cam2 = None
+			else:
+				self.cam2 = setup.cam2
+		if setup.cam3 is not None:
+			if isinstance(setup.cam3, dict):
+				setup.cam3 = None
+			else:
+				self.cam3 = setup.cam3
+		if setup.cam4 is not None:
+			if isinstance(setup.cam4, dict):
+				setup.cam4 = None
+			else:
+				self.cam4 = setup.cam4
 		return self.getSetup()
 
 	def getData(self):
@@ -278,9 +310,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
+	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name)
+		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name)
 
 	########################
 	# functions to overwrite

@@ -286,7 +286,11 @@ class WeigherInstance:
 				terminal=node.terminal,
 				run=node.run,
 				data=node.data,
-				name=node.name
+				name=node.name,
+				cam1=node.cam1,
+				cam2=node.cam2,
+				cam3=node.cam3,
+				cam4=node.cam4
 			)
 			n.initialize()
 			self.nodes.append(n)
@@ -387,7 +391,11 @@ class WeigherInstance:
 			terminal=setup.terminal,
 			run=setup.run,
 			data=DataDTO(**{}),
-			name=setup.name
+			name=setup.name,
+			cam1=setup.cam1,
+			cam2=setup.cam2,
+			cam3=setup.cam3,
+			cam4=setup.cam4
 		)
 		if self.connection is not None:
 			n.initialize()

@@ -14,6 +14,7 @@ import libs.lb_config as lb_config  # Importa il modulo per la configurazione
 import libs.lb_log as lb_log  # Importa il modulo per il logger
 import modules.md_weigher.md_weigher as md_weigher
 # import modules.md_rfid as md_rfid
+import modules.md_tunnel_connections.md_tunnel_connections as md_tunnel_connections
 import applications.app_api as app_api
 from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
 import libs.lb_database as lb_database
@@ -21,7 +22,7 @@ import libs.lb_database as lb_database
 
 APPS = [app_api]
 
-MODULES = [md_weigher]
+MODULES = [md_weigher, md_tunnel_connections]
 
 # ==== MAINPRGLOOP =============================================
 # Configura globale e lo stato del programma.

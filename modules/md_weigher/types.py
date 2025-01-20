@@ -1,9 +1,11 @@
 from libs.lb_utils import CustomBaseModel
 from libs.lb_system import SerialPort, Tcp, Connection, SerialPortWithoutControls, TcpWithoutControls
 from typing import Optional, Union, List
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from libs.lb_database import VehicleDTOInit, CustomerDTOInit, SupplierDTOInit, MaterialDTOInit
 from libs.lb_database import update_data
+from datetime import datetime
+from libs.lb_capture_camera import models
 
 class DataInExecution(BaseModel):
 	customer: CustomerDTOInit = CustomerDTOInit(**{})
@@ -103,6 +105,18 @@ class Diagnostic(CustomBaseModel):
 	vl: str
 	rz: str
 
+class Cam(BaseModel):
+	ip: str
+	username: str
+	password: str
+	model: str
+
+	@validator('model', pre=True, always=True)
+	def check_model(cls, v):
+		if v not in models:
+			raise ValueError("Video camera is not valid")
+		return v
+
 class WeightExecuted(BaseModel):
 	net_weight: str
 	gross_weight: str
@@ -113,9 +127,19 @@ class WeightExecuted(BaseModel):
 	status: str
 	executed: bool
 
+class ImageCaptured(BaseModel):
+    date: Optional[datetime] = None
+    image: Optional[bytes] = None
+    size: Optional[float] = None
+    status: Optional[str] = None
+
 class Weight(BaseModel):
 	weight_executed: WeightExecuted
-	data_assigned: Optional[Union[DataInExecution, int]] = None
+	data_assigned: Optional[DataInExecution] = None
+	image1: ImageCaptured
+	image2: ImageCaptured
+	image3: ImageCaptured
+	image4: ImageCaptured
 
 class SetupWeigher(CustomBaseModel):
 	max_weight: int
@@ -128,6 +152,10 @@ class SetupWeigher(CustomBaseModel):
 	run: bool
 	data: Data
 	name: str
+	cam1: Optional[Cam] = None
+	cam2: Optional[Cam] = None
+	cam3: Optional[Cam] = None
+	cam4: Optional[Cam] = None
 
 class Configuration(CustomBaseModel):
 	nodes: Optional[List[SetupWeigher]] = []

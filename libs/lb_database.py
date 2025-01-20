@@ -1,16 +1,17 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy.ext.declarative import declarative_base
 import os
 from typing import Optional, List
 from pydantic import BaseModel, validator
 from applications.utils.utils_auth import hash_password
 from libs.lb_printer import printer
+from datetime import datetime
 
 # Connessione al database
 Base = declarative_base()
 cwd = os.getcwd()
 engine = create_engine(f"sqlite:///{cwd}/database.db", echo=True)
-Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(bind=engine)
 
 # Modello per la tabella User
@@ -212,6 +213,20 @@ class MaterialDTOInit(ScheletonMaterialDTO):
 				values['name'] = data.get('name')
 		return v
 
+class ImageCaptured(Base):
+	__tablename__ = 'image_captured'
+	id = Column(Integer, primary_key=True, index=True)
+	date = Column(DateTime, nullable=True)
+	image = Column(BLOB, nullable=True)
+	size = Column(Float, nullable=True)
+	status = Column(String, nullable=True)
+
+class ScheletonImageCapturedDTO(BaseModel):
+	date: Optional[datetime] = None
+	image: Optional[bytes] = None
+	size: Optional[float] = None
+	status: Optional[str] = None
+
 # Modello per la tabella Weighing
 class Weighing(Base):
 	__tablename__ = 'weighing'
@@ -237,6 +252,16 @@ class Weighing(Base):
 	pid2 = Column(String, nullable=True)
 	weigher = Column(String, nullable=True)
 	selected = Column(Boolean, index=True, default=False, nullable=False)
+	# Foreign Key references
+	image_captured1_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	image_captured2_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	image_captured3_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	image_captured4_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	# Relationships for easy access to related images
+	image_captured1 = relationship("ImageCaptured", foreign_keys=[image_captured1_id])
+	image_captured2 = relationship("ImageCaptured", foreign_keys=[image_captured2_id])
+	image_captured3 = relationship("ImageCaptured", foreign_keys=[image_captured3_id])
+	image_captured4 = relationship("ImageCaptured", foreign_keys=[image_captured4_id])
 
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
@@ -585,3 +610,5 @@ required_dtos = {
 	"supplier": SupplierDTO,
 	"material": MaterialDTO
 }
+
+Base.metadata.create_all(engine)

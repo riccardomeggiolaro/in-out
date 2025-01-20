@@ -6,6 +6,7 @@ from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id
 from pydantic import root_validator
+from modules.md_weigher.types import Cam
 
 class DataInExecutionDTO(CustomBaseModel):
 	customer: Optional[CustomerDTO] = CustomerDTO(**{})
@@ -59,6 +60,10 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
 	name: Optional[str] = None
+	cam1: Optional[Union[Cam, dict]] = None
+	cam2: Optional[Union[Cam, dict]] = None
+	cam3: Optional[Union[Cam, dict]] = None
+	cam4: Optional[Union[Cam, dict]] = None
 
 	@root_validator(pre=True)
 	def set_node_default(cls, values):
@@ -89,6 +94,10 @@ class SetupWeigherDTO(BaseModel):
 	terminal: str
 	run: Optional[bool] = True
 	name: str
+	cam1: Optional[Cam] = None
+	cam2: Optional[Cam] = None
+	cam3: Optional[Cam] = None
+	cam4: Optional[Cam] = None
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):

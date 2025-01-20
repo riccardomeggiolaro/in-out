@@ -3,16 +3,8 @@ import socket
 import threading
 import select
 import time
-from pydantic import BaseModel
 import libs.lb_log as lb_log
-
-class SshClientConnection(BaseModel):
-    server: str
-    user: str
-    password: str
-    ssh_port: int
-    forwarding_port: int
-    local_port: int
+from modules.md_tunnel_connections.dto import SshClientConnectionDTO
 
 def handler(chan, local_port, should_reconnect, active_connections):
     sock = socket.socket()
@@ -136,7 +128,7 @@ def monitor_connection(client: paramiko.SSHClient, should_reconnect):
             break
         time.sleep(1)
 
-def ssh_tunnel(connection: SshClientConnection):
+def ssh_tunnel(connection: SshClientConnectionDTO):
     retry_delay = 1
     max_retry_delay = 30
     
@@ -153,7 +145,7 @@ def ssh_tunnel(connection: SshClientConnection):
                 password=connection.password,
                 allow_agent=False,
                 look_for_keys=False,
-                timeout=30,
+                timeout=5,
                 banner_timeout=30
             )
             
