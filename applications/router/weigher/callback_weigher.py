@@ -91,6 +91,22 @@ class CallbackWeigher:
                     "pid2": None if last_pesata.weight_executed.tare == '0' else last_pesata.weight_executed.pid,
                     "weigher": node["name"]
                 }
+                if last_pesata.image1 is not None:
+                    image1 = add_data("image_captured", last_pesata.image1.dict())
+                    obj["in_image_captured1_id"] = image1.id                  
+                    del last_pesata.image1
+                if last_pesata.image2 is not None:
+                    image2 = add_data("image_captured", last_pesata.image2.dict())
+                    obj["in_image_captured2_id"] = image2.id
+                    del last_pesata.image2
+                if last_pesata.image3 is not None:
+                    image3 = add_data("image_captured", last_pesata.image3.dict())
+                    obj["in_image_captured3_id"] = image3.id
+                    del last_pesata.image3
+                if last_pesata.image4 is not None:
+                    image4 = add_data("image_captured", last_pesata.image4.dict())
+                    obj["in_image_captured4_id"] = image4.id
+                    del last_pesata.image4
                 add_data("weighing", obj)
                 status, data = md_weigher.module_weigher.instances[instance_name].deleteDataInExecution(node=instance_node, call_callback=False)
                 node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"] if n["node"] == instance_node]
@@ -108,6 +124,22 @@ class CallbackWeigher:
                     "date2": dt.datetime.now(),
                     "pid2": last_pesata.weight_executed.pid
                 }
+                if last_pesata.image1 is not None:
+                    image1 = add_data("image_captured", last_pesata.image1.dict())
+                    obj["out_image_captured2_id"] = image1.id
+                    del last_pesata.image1
+                if last_pesata.image2 is not None:
+                    image2 = add_data("image_captured", last_pesata.image2.dict())
+                    obj["out_image_captured2_id"] = image2.id
+                    del last_pesata.image2
+                if last_pesata.image3 is not None:
+                    image3 = add_data("image_captured", last_pesata.image3.dict())
+                    obj["out_image_captured3_id"] = image3.id
+                    del last_pesata.image3
+                if last_pesata.image4 is not None:
+                    image4 = add_data("image_captured", last_pesata.image4.dict())
+                    obj["out_image_captured4_id"] = image4.id
+                    del last_pesata.image4
                 update_data("weighing", last_pesata.data_assigned, obj)
                 status, data = md_weigher.module_weigher.instances[instance_name].setIdSelected(node=instance_node, new_id=-1, call_callback=False)
                 node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"] if n["node"] == instance_node]
@@ -141,11 +173,23 @@ class CallbackWeigher:
                     "pid2": last_pesata.weight_executed.pid,
                     "weigher": node["name"]
                 }
+                if last_pesata.image1 is not None:
+                    image1 = add_data("image_captured", last_pesata.image1.dict())
+                    obj["out_image_captured1_id"] = image1.id
+                    del last_pesata.image1
+                if last_pesata.image2 is not None:
+                    image2 = add_data("image_captured", last_pesata.image2.dict())
+                    obj["out_image_captured2_id"] = image2.id
+                    del last_pesata.image2
+                if last_pesata.image3 is not None:
+                    image3 = add_data("image_captured", last_pesata.image3.dict())
+                    obj["out_image_captured3_id"] = image3.id
+                    del last_pesata.image3
+                if last_pesata.image4 is not None:
+                    image4 = add_data("image_captured", last_pesata.image4.dict())
+                    obj["out_image_captured4_id"] = image4.id
+                    del last_pesata.image4
                 add_data("weighing", obj)
-            del last_pesata.image1
-            del last_pesata.image2
-            del last_pesata.image3
-            del last_pesata.image4
             asyncio.run(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(last_pesata.dict()))
         except Exception as e:
             lb_log.error(e)

@@ -253,15 +253,23 @@ class Weighing(Base):
 	weigher = Column(String, nullable=True)
 	selected = Column(Boolean, index=True, default=False, nullable=False)
 	# Foreign Key references
-	image_captured1_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	image_captured2_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	image_captured3_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	image_captured4_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	in_image_captured1_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	in_image_captured2_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	in_image_captured3_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	in_image_captured4_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	out_image_captured1_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	out_image_captured2_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	out_image_captured3_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
+	out_image_captured4_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
 	# Relationships for easy access to related images
-	image_captured1 = relationship("ImageCaptured", foreign_keys=[image_captured1_id])
-	image_captured2 = relationship("ImageCaptured", foreign_keys=[image_captured2_id])
-	image_captured3 = relationship("ImageCaptured", foreign_keys=[image_captured3_id])
-	image_captured4 = relationship("ImageCaptured", foreign_keys=[image_captured4_id])
+	in_image_captured1 = relationship("ImageCaptured", foreign_keys=[in_image_captured1_id])
+	in_image_captured2 = relationship("ImageCaptured", foreign_keys=[in_image_captured2_id])
+	in_image_captured3 = relationship("ImageCaptured", foreign_keys=[in_image_captured3_id])
+	in_image_captured4 = relationship("ImageCaptured", foreign_keys=[in_image_captured4_id])
+	out_image_captured1 = relationship("ImageCaptured", foreign_keys=[out_image_captured1_id])
+	out_image_captured2 = relationship("ImageCaptured", foreign_keys=[out_image_captured2_id])
+	out_image_captured3 = relationship("ImageCaptured", foreign_keys=[out_image_captured3_id])
+	out_image_captured4 = relationship("ImageCaptured", foreign_keys=[out_image_captured4_id])
 
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
@@ -270,7 +278,8 @@ table_models = {
 	'supplier': Supplier,
 	'material': Material,
 	'weighing': Weighing,
-	'user': User
+	'user': User,
+	'image_captured': ImageCaptured
 }
 
 # Funzione per caricare l'array di record nel database
