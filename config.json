@@ -29,8 +29,7 @@
                 "nodes": [
                     {
                         "cam1": {
-                            "ip": "http://192.168.0.230/ISAPI/Streaming/channels/1/picture",
-                            "model": "hikvision",
+                            "camera_url": "http://192.168.0.230/ISAPI/Streaming/channels/1/picture",
                             "password": "Baronpesi2023",
                             "username": "admin"
                         },

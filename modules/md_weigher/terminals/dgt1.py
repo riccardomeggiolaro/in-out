@@ -190,16 +190,16 @@ class Dgt1(Terminal):
 						self.weight.weight_executed.status = split_response[0]
 						self.weight.weight_executed.executed = True
 						if self.cam1:
-							image_capture1 = capture_camera_image(self.cam1.ip, self.cam1.username, self.cam1.password)
+							image_capture1 = capture_camera_image(self.cam1.camera_url, self.cam1.username, self.cam1.password)
 							self.weight.image1 = ImageCaptured(**image_capture1)
 						if self.cam2:
-							image_capture2 = capture_camera_image(self.cam2.ip, self.cam2.username, self.cam2.password)
+							image_capture2 = capture_camera_image(self.cam2.camera_url, self.cam2.username, self.cam2.password)
 							self.weight.image2 = ImageCaptured(**image_capture2)
 						if self.cam3:
-							image_capture3 = capture_camera_image(self.cam3.ip, self.cam3.username, self.cam3.password)
+							image_capture3 = capture_camera_image(self.cam3.camera_url, self.cam3.username, self.cam3.password)
 							self.weight.image3 = ImageCaptured(**image_capture3)
 						if self.cam4:
-							image_capture4 = capture_camera_image(self.cam4.ip, self.cam4.username, self.cam4.password)
+							image_capture4 = capture_camera_image(self.cam4.camera_url, self.cam4.username, self.cam4.password)
 							self.weight.image4 = ImageCaptured(**image_capture4)
 						self.diagnostic.status = 200
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None

@@ -5,7 +5,6 @@ from pydantic import BaseModel, validator
 from libs.lb_database import VehicleDTOInit, CustomerDTOInit, SupplierDTOInit, MaterialDTOInit
 from libs.lb_database import update_data
 from datetime import datetime
-from libs.lb_capture_camera import models
 
 class DataInExecution(BaseModel):
 	customer: CustomerDTOInit = CustomerDTOInit(**{})
@@ -106,16 +105,9 @@ class Diagnostic(CustomBaseModel):
 	rz: str
 
 class Cam(BaseModel):
-	ip: str
+	camera_url: str
 	username: str
 	password: str
-	model: str
-
-	@validator('model', pre=True, always=True)
-	def check_model(cls, v):
-		if v not in models:
-			raise ValueError("Video camera is not valid")
-		return v
 
 class WeightExecuted(BaseModel):
 	net_weight: str
