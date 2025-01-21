@@ -3,7 +3,8 @@ from applications.utils.utils_weigher import InstanceNameNodeDTO, get_query_para
 from applications.utils.utils import validate_time
 import modules.md_weigher.md_weigher as md_weigher
 from modules.md_weigher.types import DataInExecution
-from typing import Optional
+from modules.md_weigher.dto import IdWeighingDTO, PlateWeighingDTO
+from typing import Optional, Union
 import asyncio
 import libs.lb_log as lb_log
 from applications.router.weigher.config_weigher import ConfigWeigher
@@ -18,7 +19,7 @@ class CommandWeigher(ConfigWeigher):
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostics, methods=['GET'])
 		self.router_action_weigher.add_api_route('/stop_all_command', self.StopAllCommand, methods=['GET'])
 		self.router_action_weigher.add_api_route('/print', self.Print, methods=['GET'])
-		self.router_action_weigher.add_api_route('/weighing', self.Weighing, methods=['GET'])
+		self.router_action_weigher.add_api_route('/weighing', self.Weighing, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/preset_tare', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
@@ -75,10 +76,14 @@ class CommandWeigher(ConfigWeigher):
 			}
 		}
 
-	async def Weighing(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node), id: Optional[int] = None):
+	async def Weighing(self, data: Union[IdWeighingDTO, PlateWeighingDTO], instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		data = None
-		if id is not None:
-			data = id
+		lb_log.warning(data)
+		if data is not None:
+			if "id" in data:
+				data = data.id
+			elif "plate" in data:
+				data = data.plate
 		else:
 			status, data = md_weigher.module_weigher.instances[instance.name].getData(node=instance.node)
 		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="WEIGHING", data_assigned=data)

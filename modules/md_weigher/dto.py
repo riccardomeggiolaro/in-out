@@ -135,3 +135,9 @@ class ConfigurationDTO(CustomBaseModel):
 		if v <= 0:
 			raise ValueError('time_between_actions must to be grater than 0')
 		return v
+
+class IdWeighingDTO(BaseModel):
+	id: int
+
+class PlateWeighingDTO(BaseModel):
+	plate: str

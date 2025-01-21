@@ -157,23 +157,23 @@ class __SetupWeigher(__SetupWeigherConnection):
 		if setup.name is not None:
 			self.name = setup.name
 		if setup.cam1 is not None:
-			if isinstance(setup.cam1, dict):
-				setup.cam1 = None
+			if setup.cam1 == {}:
+				self.cam1 = None
 			else:
 				self.cam1 = setup.cam1
 		if setup.cam2 is not None:
-			if isinstance(setup.cam2, dict):
-				setup.cam2 = None
+			if setup.cam2 == {}:
+				self.cam2 = None
 			else:
 				self.cam2 = setup.cam2
 		if setup.cam3 is not None:
-			if isinstance(setup.cam3, dict):
-				setup.cam3 = None
+			if setup.cam3 == {}:
+				self.cam3 = None
 			else:
 				self.cam3 = setup.cam3
 		if setup.cam4 is not None:
-			if isinstance(setup.cam4, dict):
-				setup.cam4 = None
+			if setup.cam4 == {}:
+				self.cam4 = None
 			else:
 				self.cam4 = setup.cam4
 		return self.getSetup()

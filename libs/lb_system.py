@@ -435,22 +435,41 @@ def enable_serial_port_windows(port_name):
 
 
 def is_port_in_use(port):
-    """Controlla se la porta seriale è già in uso."""
-    try:
-        # Tenta di aprire la porta per vedere se è in uso
-        s = serial.Serial(port)
-        s.close()
-        return False  # Porta disponibile
-    except serial.SerialException:
-        return True  # Porta in uso
+    if os.name == 'nt':  # Windows
+        try:
+            port_handle = open(port, 'w')
+            port_handle.close()
+            return False  # non in uso
+        except PermissionError:  # se non possiamo accedere in scrittura, è in uso
+            return True
+    else:  # Linux
+        try:
+            # Usa lsof per vedere se qualche processo sta usando la porta
+            cmd = ['lsof', port]
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            return True  # se lsof trova qualcosa, la porta è in uso
+        except subprocess.CalledProcessError:  # se lsof non trova nulla
+            return False
+        except FileNotFoundError:  # se lsof non è installato
+            try:
+                # Fallback: prova ad accedere al device in scrittura
+                port_handle = open(port, 'w')
+                port_handle.close()
+                return False
+            except PermissionError:
+                return True
 
 def list_serial_port_linux():
 	try:
 		ports = serial.tools.list_ports.comports()
 		serial_ports = []
-		for port, desc, hwid in sorted(ports):
-			using = is_port_in_use(port)
-			serial_ports.append({"port": port, "using": using})
+        # Itera su ogni porta trovata
+		for port_info in sorted(ports):	
+			port_data = {
+                "port": port_info.device,
+                "using": is_port_in_use(port_info.device)
+            }
+			serial_ports.append(port_data)
 		return True, serial_ports
 	except Exception as e:
 		return False, e
@@ -459,9 +478,13 @@ def list_serial_port_windows():
 	try:
 		ports = serial.tools.list_ports.comports()
 		serial_ports = []
-		for port, desc, hwid in sorted(ports):
-			using = is_port_in_use(port)
-			serial_ports.append({"port": port, "using": using})
+        # Itera su ogni porta trovata
+		for port_info in sorted(ports):
+			port_data = {
+                "port": port_info.device,
+                "using": is_port_in_use(port_info.device)
+            }
+			serial_ports.append(port_data)
 		return True, serial_ports
 	except Exception as e:
 		return False, e

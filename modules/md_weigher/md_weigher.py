@@ -144,10 +144,13 @@ class WeigherModule:
 			cb_action_in_execution=cb_action_in_execution
 		)
 		terminal_data = node_created["terminal_data"]
+		status = node_created["status"]
 		del node_created["terminal_data"]
+		del node_created["status"]
 		lb_config.g_config["app_api"]["weighers"][name]["nodes"].append(node_created)
 		lb_config.saveconfig()
 		node_created["terminal_data"] = terminal_data
+		node_created["status"] = status
 		return node_created
 
 	def setInstanceNode(
@@ -181,8 +184,14 @@ class WeigherModule:
 		lb_log.warning(node_set)
 		node_found = [n for n in lb_config.g_config["app_api"]["weighers"][name]["nodes"] if n["node"] == node]
 		index_node_found = lb_config.g_config["app_api"]["weighers"][name]["nodes"].index(node_found[0])
+		terminal_data = node_set["terminal_data"]
+		status = node_set["status"]
+		del node_set["terminal_data"]
+		del node_set["status"]
 		lb_config.g_config["app_api"]["weighers"][name]["nodes"][index_node_found] = node_set
 		lb_config.saveconfig()
+		node_set["terminal_data"] = terminal_data
+		node_set["status"] = status
 		return node_set
 
 	def deleteInstanceNode(
@@ -334,6 +343,8 @@ class WeigherInstance:
 							else:
 								# se la globale conn è di tipo conn ed è aperta la chiude
 								self.connection.connection.close()
+					elif node.diagnostic.status in [305, 201]:
+						node.initialize()
 			if len(self.nodes) == 0:
 				time.sleep(1)
 	# ==============================================================

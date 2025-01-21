@@ -22,17 +22,13 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "baudrate": 115200,
+                    "baudrate": 19200,
                     "serial_port_name": "/dev/ttyUSB0",
-                    "timeout": 0.1
+                    "timeout": 0.3
                 },
                 "nodes": [
                     {
-                        "cam1": {
-                            "camera_url": "http://192.168.0.230/ISAPI/Streaming/channels/1/picture",
-                            "password": "Baronpesi2023",
-                            "username": "admin"
-                        },
+                        "cam1": null,
                         "cam2": null,
                         "cam3": null,
                         "cam4": null,
@@ -62,7 +58,7 @@
                                 }
                             },
                             "id_selected": {
-                                "id": null
+                                "id": 30
                             }
                         },
                         "diagnostic_has_priority_than_realtime": true,
@@ -73,16 +69,10 @@
                         "name": "P1",
                         "node": null,
                         "run": true,
-                        "status": 305,
-                        "terminal": "dgt1",
-                        "terminal_data": {
-                            "firmware": null,
-                            "model_name": null,
-                            "serial_number": null
-                        }
+                        "terminal": "dgt1"
                     }
                 ],
-                "time_between_actions": 0.1
+                "time_between_actions": 0.3
             }
         }
     },
