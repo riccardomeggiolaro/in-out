@@ -1,48 +1,30 @@
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base
-import os
+import serial
+import time
 
-def add_default_user():
-    # Get current working directory and create database connection
-    cwd = os.getcwd()
-    engine = create_engine(f"sqlite:///{cwd}/database.db", echo=True)
-    
-    # Create session
-    Session = sessionmaker(bind=engine)
-    session = Session()
+# Impostazioni della connessione seriale
+baudrate = 19200
+serial_port_name = "/dev/ttyUSB0"
+timeout = 1  # Timeout di 1 secondo
 
-    Base = declarative_base()
+# Connessione alla porta seriale
+ser = serial.Serial(serial_port_name, baudrate, timeout=timeout)
 
-    class User(Base):
-        __tablename__ = "user"
-        id = Column(Integer, primary_key=True)
-        username = Column(String, nullable=False)
-        password = Column(String, nullable=False)
-        level = Column(Integer, nullable=False)
-        description = Column(String, nullable=True)
-        printer_name = Column(String, nullable=True)
-    
-    try:
-        # Create new user with the provided hashed password
-        new_user = User(
-            username="admin",  # Change this to desired username
-            password="$2b$12$PAHE4kh6lnXo3w9SF9tj7O14rIF.3343ED20YlZCtLsaoPFYevvTO",
-            level=1,  # Set appropriate level
-            description="Administrator",  # Set appropriate description
-            printer_name=None
-        )
-        
-        # Add and commit the new user
-        session.add(new_user)
-        session.commit()
-        print("User added successfully")
-        
-    except Exception as e:
-        session.rollback()
-        print(f"Error adding user: {str(e)}")
-        
-    finally:
-        session.close()
+# Verifica se la porta seriale è aperta
+if ser.is_open:
+    print(f"Connessione aperta alla porta {serial_port_name}")
+else:
+    print(f"Impossibile aprire la porta {serial_port_name}")
+    exit()
 
-if __name__ == "__main__":
-    add_default_user()
+# Invia il comando "R" seguito da CRLF
+ser.write(b'OUTP10000\r\n')
+
+# Pausa per assicurarsi che il comando venga inviato
+time.sleep(1)
+
+# Leggi la risposta dalla porta seriale (opzionale)
+response = ser.readline()
+print(f"Risposta ricevuta: {response}")
+
+# Chiudi la connessione seriale
+ser.close()

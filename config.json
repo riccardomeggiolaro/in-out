@@ -58,7 +58,7 @@
                                 }
                             },
                             "id_selected": {
-                                "id": 30
+                                "id": null
                             }
                         },
                         "diagnostic_has_priority_than_realtime": true,
@@ -69,7 +69,7 @@
                         "name": "P1",
                         "node": null,
                         "run": true,
-                        "terminal": "dgt1"
+                        "terminal": "egt-af03"
                     }
                 ],
                 "time_between_actions": 0.3

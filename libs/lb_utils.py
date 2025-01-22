@@ -69,3 +69,18 @@ class GracefulKiller:
 		# Imposta un flag nella configurazione globale per indicare la terminazione controllata.
 		lb_config.g_enabled = False
 # ==============================================================
+
+def sum_number(num1, num2):
+    # Funzione per determinare se un numero ha decimali
+    def convert(numero):
+        if '.' in numero or ',' in numero:
+            return float(numero)  # Se ci sono decimali, lo converte in float
+        else:
+            return int(numero)  # Se non ci sono decimali, lo converte in int
+
+    # Converto i numeri
+    num1 = convert(num1)
+    num2 = convert(num2)
+    
+    # Ritorno la somma dei numeri
+    return num1 + num2

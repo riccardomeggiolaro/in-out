@@ -16,6 +16,7 @@ from modules.md_weigher.dto import SetupWeigherDTO, ConfigurationDTO, ChangeSetu
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
+from modules.md_weigher.terminals.egtaf03 import EgtAf03
 from libs.lb_utils import createThread, startThread
 from modules.md_weigher.types import Configuration, ConfigurationWithoutControls
 from fastapi import HTTPException
@@ -24,6 +25,7 @@ from fastapi import HTTPException
 name_module = "md_weigher"
 
 terminalsClasses["dgt1"] = Dgt1
+terminalsClasses["egt-af03"] = EgtAf03
 
 def init():
 	global module_weigher
@@ -234,7 +236,7 @@ class WeigherModule:
 	def getModope(self, name, node: Union[str, None]):
 		return self.instances[name].getModope(node=node)
 
-	def setModope(self, name, node: Union[str, None], modope, presettare=0, data_assigned: Union[DataInExecution, int] = None):
+	def setModope(self, name, node: Union[str, None], modope, presettare=0, data_assigned: Union[DataInExecution, int, str] = None):
 		return self.instances[name].setModope(node=node, modope=modope, presettare=presettare, data_assigned=data_assigned)
 
 	def getData(self, name, node: Union[str, None]):

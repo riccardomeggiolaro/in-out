@@ -76,16 +76,12 @@ class CommandWeigher(ConfigWeigher):
 			}
 		}
 
-	async def Weighing(self, data: Union[IdWeighingDTO, PlateWeighingDTO], instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		data = None
-		lb_log.warning(data)
-		if data is not None:
-			if "id" in data:
-				data = data.id
-			elif "plate" in data:
-				data = data.plate
+	async def Weighing(self, body: Optional[Union[IdWeighingDTO, PlateWeighingDTO]] = None, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		if body is not None:
+			data = body
 		else:
-			status, data = md_weigher.module_weigher.instances[instance.name].getData(node=instance.node)
+			status, data = md_weigher.module_weigher.getData(name=instance.name, node=instance.node)
+		lb_log.warning(data)
 		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="WEIGHING", data_assigned=data)
 		return {
 			"instance": instance,

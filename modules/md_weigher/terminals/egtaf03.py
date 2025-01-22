@@ -4,8 +4,9 @@ import re
 from modules.md_weigher.setup_terminal import Terminal
 from libs.lb_capture_camera import capture_camera_image
 from modules.md_weigher.types import ImageCaptured
+from libs.lb_utils import sum_number
 
-class Dgt1(Terminal):
+class EgtAf03(Terminal):
 	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
 		# Chiama il costruttore della classe base
 		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name)
@@ -21,7 +22,7 @@ class Dgt1(Terminal):
 				self.valore_alterno = 0 # imposto valore uguale a 0
 			self.valore_alterno = self.valore_alterno + 1 # incremento di 1 il valore alterno
 		elif self.modope == "REALTIME":
-			self.write("RALL")
+			self.write("REXT")
 		elif self.modope == "OK":
 			self.write("DINT2710")
 		elif self.modope == "WEIGHING":
@@ -129,16 +130,17 @@ class Dgt1(Terminal):
 				######### Se in esecuzione peso in tempo reale ######################################################################
 				if self.modope == "REALTIME":
 					# Controlla formato stringa del peso in tempo reale, se corretta aggiorna oggetto e chiama callback
-					if length_split_response == 10 and length_response == 63:
-						nw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
-						gw = (re.sub('[KkGg\x00\n]', '', split_response[3]).lstrip())
-						t = (re.sub('[KkGg\x00\n]', '', split_response[4]).lstrip())
-						self.pesa_real_time.status = split_response[0]
+					if length_split_response == 7 and length_response == 53:
+						nw = split_response[2].lstrip()
+						tare_without_pt = re.sub('[PT]', '', split_response[3]).lstrip()
+						gw = str(sum_number(nw, tare_without_pt))
+						t = split_response[3].lstrip()
+						self.pesa_real_time.status = split_response[1]
 						self.pesa_real_time.type = "GS" if t == "0" else "NT"
 						self.pesa_real_time.net_weight = nw
 						self.pesa_real_time.gross_weight = gw
 						self.pesa_real_time.tare = t
-						self.pesa_real_time.unite_measure = split_response[2][-2:]
+						self.pesa_real_time.unite_measure = split_response[6]
 						self.diagnostic.status = 200
 					# Se formato stringa del peso in tempo reale non corretto, manda a video errore
 					else:

@@ -88,6 +88,9 @@ class Data(BaseModel):
 	data_in_execution: DataInExecution
 	id_selected: IdSelected
 
+class PlateWeighing(BaseModel):
+	plate: str
+
 class Realtime(BaseModel):
 	status: str
 	type: str

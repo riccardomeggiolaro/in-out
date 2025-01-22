@@ -587,6 +587,7 @@ fetch('/config_weigher/all/instance')
                 Terminale:<br>
                 <select name="terminal" required>
                     <option value="dgt1" selected>dgt1</option>
+                    <option value="egt-af03">egt-af03</option>
                 </select><br>
                 In esecuzione: <input type="checkbox" name="run" checked><br>`;
         
@@ -701,7 +702,8 @@ fetch('/config_weigher/all/instance')
                     Terminale:<br>
                     <select name="terminal" required>
                         <option value="dgt1" ${data.terminal === "dgt1" ? 'selected': ''}>dgt1</option>
-                        </select><br>
+                        <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected': ''}>egt-af03</option>
+                    </select><br>
                     In esecuzione: <input type="checkbox" name="run" ${data.run ? 'checked' : ''} required><br>
                 `;
             }

@@ -244,7 +244,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.callback_action_in_execution = lambda: cb_action_in_execution(self.self_config.name, self.node, self.modope_to_execute)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int] = None):
+	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int, str] = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
