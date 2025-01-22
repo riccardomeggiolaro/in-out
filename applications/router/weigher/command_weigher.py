@@ -3,7 +3,7 @@ from applications.utils.utils_weigher import InstanceNameNodeDTO, get_query_para
 from applications.utils.utils import validate_time
 import modules.md_weigher.md_weigher as md_weigher
 from modules.md_weigher.types import DataInExecution
-from modules.md_weigher.dto import IdWeighingDTO, PlateWeighingDTO
+from modules.md_weigher.dto import IdSelectedDTO, WeighingDataDTO
 from typing import Optional, Union
 import asyncio
 import libs.lb_log as lb_log
@@ -76,12 +76,14 @@ class CommandWeigher(ConfigWeigher):
 			}
 		}
 
-	async def Weighing(self, body: Optional[Union[IdWeighingDTO, PlateWeighingDTO]] = None, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
-		if body is not None:
-			data = body
-		else:
-			status, data = md_weigher.module_weigher.getData(name=instance.name, node=instance.node)
-		lb_log.warning(data)
+	async def Weighing(self, body: WeighingDataDTO, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		data = None
+		if body.id_selected is not None:
+			data = body.id_selected
+		elif body.plate is not None:
+			data = body.plate
+		elif body.data_in_execution is not None:
+			data = body.data_in_execution
 		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="WEIGHING", data_assigned=data)
 		return {
 			"instance": instance,

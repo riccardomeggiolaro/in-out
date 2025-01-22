@@ -288,14 +288,11 @@ class __SetupWeigher(__SetupWeigherConnection):
 					elif mod == "WEIGHING":
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
-							data = None
-							if isinstance(data_assigned, DataInExecution):
-								pass
-							elif isinstance(data_assigned, int):
-								data = data_assigned
-							else:
-								data = self.data.data_in_execution
-							self.weight.data_assigned = data
+							if isinstance(data_assigned, DataInExecution) and data_assigned != self.data.data_in_execution:
+								return 500, "I dati in esecuzione passati non corrispondono ai dati in esecuzione attuali"
+							elif isinstance(data_assigned, int) and data_assigned != self.data.id_selected.id:
+								return 500, f"L'id passato '{data_assigned}' non corrisponde all'id selezionato '{self.data.id_selected.id}'"
+							self.weight.data_assigned = data_assigned
 						else:
 							return 500, f"Il peso deve essere maggiore di {self.min_weight} kg" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire

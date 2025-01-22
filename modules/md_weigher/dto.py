@@ -6,7 +6,7 @@ from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id
 from pydantic import root_validator
-from modules.md_weigher.types import Cam
+from modules.md_weigher.types import Cam, DataInExecution
 
 class DataInExecutionDTO(CustomBaseModel):
 	customer: Optional[CustomerDTO] = CustomerDTO(**{})
@@ -39,6 +39,21 @@ class IdSelectedDTO(CustomBaseModel):
 class DataDTO(BaseModel):
     data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})
     id_selected: Optional[IdSelectedDTO] = IdSelectedDTO(**{})
+
+class WeighingDataDTO(CustomBaseModel):
+	id_selected: Optional[int] = None
+	plate: Optional[str] = None
+	data_in_execution: Optional[DataInExecution] = None
+
+	@root_validator(pre=True)
+	def check_only_one_attribute_set(cls, values):
+		# Contiamo quanti dei 5 attributi opzionali sono impostati
+		non_null_values = sum(1 for key, value in values.items() if value is not None)
+
+		if non_null_values > 1:
+			raise ValueError("Solo uno dei seguenti attributi deve essere presente: id o plate.")
+
+		return values
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	max_weight: Optional[int] = None
@@ -135,9 +150,3 @@ class ConfigurationDTO(CustomBaseModel):
 		if v <= 0:
 			raise ValueError('time_between_actions must to be grater than 0')
 		return v
-
-class IdWeighingDTO(BaseModel):
-	id: int
-
-class PlateWeighingDTO(BaseModel):
-	plate: str
