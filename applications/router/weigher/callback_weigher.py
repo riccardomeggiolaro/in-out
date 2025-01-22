@@ -7,6 +7,7 @@ import libs.lb_config as lb_config
 from libs.lb_database import add_data, get_data_by_id, update_data
 import datetime as dt
 import libs.lb_log as lb_log
+from modules.md_weigher.types import DataInExecution
 
 class CallbackWeigher:
     def __init__(self):
@@ -67,7 +68,7 @@ class CallbackWeigher:
     def Callback_Weighing(self, instance_name: str, instance_node: Union[str, None], last_pesata: Weight):
         try:
             # global printer
-            if last_pesata.data_assigned is not None and not isinstance(last_pesata.data_assigned, int) and last_pesata.weight_executed.executed:
+            if isinstance(last_pesata.data_assigned, DataInExecution) and last_pesata.weight_executed.executed:
                 node = md_weigher.module_weigher.instances[instance_name].getNode(instance_node)
                 obj = {
                     "plate": last_pesata.data_assigned.vehicle.plate,

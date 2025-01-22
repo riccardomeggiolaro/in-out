@@ -288,8 +288,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 					elif mod == "WEIGHING":
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
+							#controllo che i dati in esecuzione passati corrispondano ai dati in esecuzione attuali
 							if isinstance(data_assigned, DataInExecution) and data_assigned != self.data.data_in_execution:
 								return 500, "I dati in esecuzione passati non corrispondono ai dati in esecuzione attuali"
+							# controllo che l'id passato corrisponda all'id selezionato
 							elif isinstance(data_assigned, int) and data_assigned != self.data.id_selected.id:
 								return 500, f"L'id passato '{data_assigned}' non corrisponde all'id selezionato '{self.data.id_selected.id}'"
 							self.weight.data_assigned = data_assigned
