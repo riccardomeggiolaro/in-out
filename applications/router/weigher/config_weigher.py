@@ -57,6 +57,8 @@ class ConfigWeigher(CallbackWeigher):
             cb_action_in_execution=self.Callback_ActionInExecution,
             cb_rele=self.Callback_Rele
         )
+        import libs.lb_log as lb_log
+        lb_log.warning(f"AddInstanceNode: {response}")
         self.addInstanceNodeSocket(instance.name, setup.node)
         return response
 

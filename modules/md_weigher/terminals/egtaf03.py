@@ -84,7 +84,7 @@ class EgtAf03(Terminal):
 			if self.diagnostic.firmware and self.diagnostic.model_name and self.diagnostic.serial_number:
 				self.diagnostic.status = 200 # imposto status della pesa a 200 per indicare che è accesa
 				if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-					self.setModope("OK")
+					self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 				lb_log.info("------------------------------------------------------")
 				lb_log.info("INITIALIZATION")
 				lb_log.info("INFOSTART: " + "Accensione con successo")
@@ -99,21 +99,21 @@ class EgtAf03(Terminal):
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK")
+				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except BrokenPipeError as e:
 			self.diagnostic.status = 305
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK")
+				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except ValueError as e:
 			self.diagnostic.status = 201
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK")
+				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 
 	def initialize(self):
 		self.initialize_content()
@@ -300,9 +300,9 @@ class EgtAf03(Terminal):
 				callCallback(self.callback_realtime) # chiamo callback
 				self.pesa_real_time.status = ""
 			error = "Not connection set"
-			self.setModope("OK")
+			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except BrokenPipeError as e:
 			error = "Node not receivable"
 			self.diagnostic.status = 305
-			self.setModope("OK")
+			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		return self.diagnostic.status, self.modope, response, error

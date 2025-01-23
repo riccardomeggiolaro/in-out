@@ -83,7 +83,7 @@ class Dgt1(Terminal):
 			if self.diagnostic.firmware and self.diagnostic.model_name and self.diagnostic.serial_number:
 				self.diagnostic.status = 200 # imposto status della pesa a 200 per indicare che è accesa
 				if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-					self.setModope("OK")
+					self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 				lb_log.info("------------------------------------------------------")
 				lb_log.info("INITIALIZATION")
 				lb_log.info("INFOSTART: " + "Accensione con successo")
@@ -98,21 +98,21 @@ class Dgt1(Terminal):
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK")
+				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except BrokenPipeError as e:
 			self.diagnostic.status = 305
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK")
+				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except ValueError as e:
 			self.diagnostic.status = 201
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
 			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK")
+				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 
 	def initialize(self):
 		self.initialize_content()
@@ -299,9 +299,9 @@ class Dgt1(Terminal):
 				callCallback(self.callback_rele)
 				self.port_rele = None
 			error = "Not connection set"
-			self.setModope("OK")
+			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else selfsetModope("REALTIME")
 		except BrokenPipeError as e:
 			error = "Node not receivable"
 			self.diagnostic.status = 305
-			self.setModope("OK")
+			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		return self.diagnostic.status, self.modope, response, error

@@ -127,6 +127,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"division": self.division,
 			"maintaine_session_realtime_after_command": self.maintaine_session_realtime_after_command,
 			"diagnostic_has_priority_than_realtime": self.diagnostic_has_priority_than_realtime,
+			"always_execute_realtime_in_undeground": self.always_execute_realtime_in_undeground,
 			"terminal": self.terminal,
 			"terminal_data": {
 				"firmware": self.diagnostic.firmware,

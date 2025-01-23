@@ -1,30 +1,16 @@
-import serial
-import time
+import sqlite3
 
-# Impostazioni della connessione seriale
-baudrate = 19200
-serial_port_name = "/dev/ttyUSB0"
-timeout = 1  # Timeout di 1 secondo
+# Connessione al database (se non esiste, verrà creato)
+conn = sqlite3.connect('database.db')
 
-# Connessione alla porta seriale
-ser = serial.Serial(serial_port_name, baudrate, timeout=timeout)
+# Creazione di un cursore
+cursor = conn.cursor()
 
-# Verifica se la porta seriale è aperta
-if ser.is_open:
-    print(f"Connessione aperta alla porta {serial_port_name}")
-else:
-    print(f"Impossibile aprire la porta {serial_port_name}")
-    exit()
+# Esegui la query per eliminare tutti i record dalla tabella
+cursor.execute("DELETE FROM weighing")
 
-# Invia il comando "R" seguito da CRLF
-ser.write(b'OUTP10000\r\n')
+# Commit per applicare le modifiche
+conn.commit()
 
-# Pausa per assicurarsi che il comando venga inviato
-time.sleep(1)
-
-# Leggi la risposta dalla porta seriale (opzionale)
-response = ser.readline()
-print(f"Risposta ricevuta: {response}")
-
-# Chiudi la connessione seriale
-ser.close()
+# Chiudere la connessione
+conn.close()

@@ -28,6 +28,7 @@
                 },
                 "nodes": [
                     {
+                        "always_execute_realtime_in_undeground": true,
                         "cam1": null,
                         "cam2": null,
                         "cam3": null,
