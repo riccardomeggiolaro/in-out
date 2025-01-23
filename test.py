@@ -1,16 +1,26 @@
 import sqlite3
 
-# Connessione al database (se non esiste, verrà creato)
 conn = sqlite3.connect('database.db')
 
-# Creazione di un cursore
 cursor = conn.cursor()
 
-# Esegui la query per eliminare tutti i record dalla tabella
 cursor.execute("DELETE FROM weighing")
 
-# Commit per applicare le modifiche
+
+cursor.execute("DELETE FROM image_captured")
+
+
+cursor.execute("DELETE FROM customer")
+
+
+cursor.execute("DELETE FROM material")
+
+
+cursor.execute("DELETE FROM supplier")
+
+
+cursor.execute("DELETE FROM vehicle")
+
 conn.commit()
 
-# Chiudere la connessione
 conn.close()
