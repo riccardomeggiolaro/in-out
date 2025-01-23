@@ -142,6 +142,7 @@ class SetupWeigher(CustomBaseModel):
 	division: int
 	maintaine_session_realtime_after_command: bool
 	diagnostic_has_priority_than_realtime: bool
+	always_execute_realtime_in_undeground: bool
 	node: Optional[str] = None
 	terminal: str
 	run: bool

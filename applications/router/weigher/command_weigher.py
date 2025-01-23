@@ -23,6 +23,8 @@ class CommandWeigher(ConfigWeigher):
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/preset_tare', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
+		self.router_action_weigher.add_api_route('/open_rele', self.OpenRele, methods=['GET'])
+		self.router_action_weigher.add_api_route('/close_rele', self.CloseRele,methods=['GET'])
 
 		self.router_action_weigher.add_api_websocket_route('/realtime', self.websocket_endpoint)
 
@@ -121,6 +123,31 @@ class CommandWeigher(ConfigWeigher):
 
 	async def Zero(self, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
 		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="ZERO")
+		return {
+			"instance": instance,
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
+		}
+  
+	async def OpenRele(self, port_rele: str, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="OPENRELE", port_rele=port_rele)
+		lb_log.warning(port_rele)
+		return {
+			"instance": instance,
+			"command_executed": {
+				"status": status,
+				"status_modope": status_modope,
+				"status_command": status_command,
+				"error_message": error_message
+			}
+		}
+  
+	async def CloseRele(self, port_rele: str, instance: InstanceNameNodeDTO = Depends(get_query_params_name_node)):
+		status, status_modope, status_command, error_message = md_weigher.module_weigher.setModope(name=instance.name, node=instance.node, modope="CLOSERELE", port_rele=port_rele)
 		return {
 			"instance": instance,
 			"command_executed": {

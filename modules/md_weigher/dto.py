@@ -61,6 +61,7 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	division: Optional[int] = None
 	maintaine_session_realtime_after_command: Optional[bool] = None
 	diagnostic_has_priority_than_realtime: Optional[bool] = None
+	always_execute_realtime_in_undeground: Optional[bool] = None
 	node: Optional[Union[str]] = "undefined"
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
@@ -95,6 +96,7 @@ class SetupWeigherDTO(BaseModel):
 	division: int
 	maintaine_session_realtime_after_command: Optional[bool] = True
 	diagnostic_has_priority_than_realtime: Optional[bool] = True
+	always_execute_realtime_in_undeground: Optional[bool] = True
 	node: Optional[Union[str, None]] = None
 	terminal: str
 	run: Optional[bool] = True

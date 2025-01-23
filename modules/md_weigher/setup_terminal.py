@@ -9,17 +9,19 @@ import select
 from libs.lb_database import VehicleDTO, SocialReasonDTO, MaterialDTO
 
 class __SetupWeigherConnection:
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, name):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, name, list_port_rele):
 		self.self_config = self_config
 		self.max_weight = max_weight
 		self.min_weight = min_weight
 		self.division = division
 		self.maintaine_session_realtime_after_command = maintaine_session_realtime_after_command
 		self.diagnostic_has_priority_than_realtime = diagnostic_has_priority_than_realtime
+		self.always_execute_realtime_in_undeground = always_execute_realtime_in_undeground
 		self.node = node
 		self.terminal = terminal
 		self.run = run
 		self.name = name
+		self.list_port_rele = list_port_rele
 
 	def try_connection(self):
 		return self.self_config.connection.connection.try_connection()
@@ -58,9 +60,9 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
+	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name, list_port_rele):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, name)
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, name, list_port_rele)
 
 		self.pesa_real_time: Realtime = Realtime(**{
 			"status": "",
@@ -105,6 +107,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.modope_to_execute: str = ""
 		self.valore_alterno: int = 1
 		self.preset_tare: int = 0
+		self.port_rele: int = None
 		self.just_send_message_failed_reconnection: bool = False
 		self.callback_realtime: str = ""
 		self.callback_diagnostics: str = ""
@@ -112,6 +115,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_tare_ptare_zero: str = ""
 		self.callback_data_in_execution: str = ""
 		self.callback_action_in_execution: str = ""
+		self.callback_rele: str = ""
 		self.commands = ["VER", "SN", "OK"]
 		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING"]
 
@@ -132,6 +136,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"run": self.run,
    			"status": self.diagnostic.status,
 			"name": self.name,
+			"list_port_rele": self.list_port_rele,
+			"port_rele": self.port_rele,
 			"data": self.data.dict(),
 			"cam1": self.cam1.dict() if self.cam1 else None,
 			"cam2": self.cam2.dict() if self.cam2 else None,
@@ -223,7 +229,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 		cb_weighing: Callable[[dict], any] = None, 
 		cb_tare_ptare_zero: Callable[[str], any] = None,
   		cb_data_in_execution: Callable[[dict], any] = None,
-		cb_action_in_execution: Callable[[str], any] = None):
+		cb_action_in_execution: Callable[[str], any] = None,
+	    cb_rele: Callable[[str], any] = None):
 		check_cb_realtime = checkCallbackFormat(cb_realtime) # controllo se la funzione cb_realtime è richiamabile
 		if check_cb_realtime: # se è richiamabile assegna alla globale callback_realtime la funzione passata come parametro
 			self.callback_realtime = lambda: cb_realtime(self.self_config.name, self.node, self.pesa_real_time)
@@ -242,9 +249,12 @@ class __SetupWeigher(__SetupWeigherConnection):
 		check_cb_action_in_execution = checkCallbackFormat(cb_action_in_execution)
 		if check_cb_action_in_execution:
 			self.callback_action_in_execution = lambda: cb_action_in_execution(self.self_config.name, self.node, self.modope_to_execute)
+		check_cb_rele = checkCallbackFormat(cb_rele)
+		if check_cb_rele:
+			self.callback_rele = lambda: cb_rele(self.self_config.name, self.node, self.port_rele)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int, str] = None):
+	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int, str] = None, port_rele: int = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
@@ -265,6 +275,26 @@ class __SetupWeigher(__SetupWeigherConnection):
 				return 400, "Diagnostica in esecuzione"
 			self.modope_to_execute = mod # se non si è verificata nessuna delle condizioni imposto REALTIME come comando da eseguire
 			return 100, None # ritorno il successo
+		if mod == "OPENRELE":
+			keys_port_rele = list(self.list_port_rele.keys())
+			if port_rele is None:
+				return 500, "Need port rele"
+			elif port_rele not in keys_port_rele:
+				return 500, f"Port Rele {port_rele} is not set in {keys_port_rele}"
+			self.modope_to_execute = mod
+			self.port_rele = (port_rele, self.list_port_rele[port_rele])
+			callCallback(self.callback_action_in_execution)
+			return 100, None
+		if mod == "CLOSERELE":
+			keys_port_rele = list(self.list_port_rele.keys())
+			if port_rele is None:
+				return 500, "Need port rele"
+			elif port_rele not in keys_port_rele:
+				return 500, f"Port Rele {port_rele} is not set in {keys_port_rele}"
+			self.modope_to_execute = mod
+			self.port_rele = (port_rele, self.list_port_rele[port_rele])
+			callCallback(self.callback_action_in_execution)
+			return 100, None
 		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING")
 		elif mod in self.direct_commands:
 			# controllo se il comando attualmente in esecuzione in loop è DIAGNOSTICS e se si ritorno errore
@@ -309,9 +339,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
+	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name)
+		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name)
 
 	########################
 	# functions to overwrite

@@ -7,9 +7,9 @@ from modules.md_weigher.types import ImageCaptured
 from libs.lb_utils import sum_number
 
 class EgtAf03(Terminal):
-	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name):
+	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, node, terminal, run, data, name)
+		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name, {"1": 0, "2": 0, "3": 0, "4": 0})
     
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
@@ -42,6 +42,14 @@ class EgtAf03(Terminal):
 			self.write("ZERO")
 			self.modope_to_execute = "OK" # setto modope_to_execute a stringa vuota per evitare che la stessa funzione venga eseguita anche nel prossimo ciclo
 			self.maintaineSessionRealtime() # eseguo la funzione che si occupa di mantenere la sessione del peso in tempo reale in base a come la ho settata
+		elif self.modope == "OPENRELE":
+			key, value = self.port_rele
+			self.write("OUTP" + str(key) + "0001")
+			self.maintaineSessionRealtime()
+		elif self.modope == "CLOSERELE":
+			key, value = self.port_rele
+			self.write("OUTP" + str(key) + "0000")
+			self.maintaineSessionRealtime()
 		elif self.modope == "VER":
 			self.write("VER")
 			self.modope_to_execute = "OK" # setto modope_to_execute a stringa vuota per evitare che la stessa funzione venga eseguita anche nel prossimo ciclo
@@ -237,6 +245,23 @@ class EgtAf03(Terminal):
 					# Se formato stringa non valido setto ok_value a None
 					else:
 						self.diagnostic.status = 201
+				elif self.modope in ["OPENRELE", "CLOSERELE"]:
+					# Controlla formato stringa, se corretto aggiorna ok_value
+					if length_response == 2 and response == "OK":
+						self.diagnostic.status = 200
+						if self.modope == "OPENRELE":
+							key, value = self.port_rele
+							self.port_rele = (key, 1)
+							self.list_port_rele[key] = 1
+						elif self.modope == "CLOSERELE":
+							key,value = self.port_rele
+							self.port_rele = (key, 0)
+							self.list_port_rele[key] = 0
+					# Se formato stringa non valido setto ok_value a None
+					else:
+						self.diagnostic.status = 201
+					callCallback(self.callback_rele)
+					self.port_rele = None
 			elif self.diagnostic.status == 305:
 				self.initialize_content()
 		except TimeoutError as e:
@@ -258,6 +283,9 @@ class EgtAf03(Terminal):
 			self.weight.weight_executed.status = ""
 			self.weight.data_assigned = None
 			self.ok_value = ""
+			# Impostare tutti i valori a 0 usando una funzione ternaria (in realtà non cambia molto rispetto a un normale ciclo)
+			self.list_port_rele = {k: (0 if v == 1 else v) for k, v in self.list_port_rele.items()}
+			self.port_rele = None
 			self.diagnostic.status = 301
 			if self.modope == "WEIGHING":
 				self.weight.status = self.diagnostic.status

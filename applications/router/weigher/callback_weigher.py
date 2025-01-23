@@ -197,7 +197,7 @@ class CallbackWeigher:
 
     def Callback_TarePTareZero(self, instance_name: str, instance_node: Union[str, None], ok_value: str):
         try:
-            result = {"command_executend": ok_value}
+            result = {"command_executed": ok_value}
             asyncio.run(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(result))
         except Exception as e:
             pass
@@ -215,6 +215,18 @@ class CallbackWeigher:
     def Callback_ActionInExecution(self, instance_name: str, instance_node: Union[str, None], action_in_execution: str):
         try:
             result = {"command_in_executing": action_in_execution}
+            if asyncio.get_event_loop().is_running():
+                asyncio.create_task(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(result))
+            else:
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(result))
+        except Exception as e:
+            pass
+        
+    def Callback_Rele(self, instance_name: str, instance_node: Union[str, None], port_rele: tuple):
+        try:
+            key, value = port_rele
+            result = {"rele": key, "status": value}
             if asyncio.get_event_loop().is_running():
                 asyncio.create_task(self.weighers_sockets[instance_name][instance_node].manager_realtime.broadcast(result))
             else:

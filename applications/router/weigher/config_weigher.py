@@ -54,7 +54,8 @@ class ConfigWeigher(CallbackWeigher):
             cb_weighing=self.Callback_Weighing,
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_data_in_execution=self.Callback_DataInExecution,
-            cb_action_in_execution=self.Callback_ActionInExecution
+            cb_action_in_execution=self.Callback_ActionInExecution,
+            cb_rele=self.Callback_Rele
         )
         self.addInstanceNodeSocket(instance.name, setup.node)
         return response
@@ -69,7 +70,8 @@ class ConfigWeigher(CallbackWeigher):
             cb_weighing=self.Callback_Weighing,
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_data_in_execution=self.Callback_DataInExecution,
-            cb_action_in_execution=self.Callback_ActionInExecution
+            cb_action_in_execution=self.Callback_ActionInExecution,
+            cb_rele=self.Callback_Rele
         )
         if setup.node != "undefined":
             self.deleteInstanceNodeSocket(instance.name, instance.node)
