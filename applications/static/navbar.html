@@ -1,5 +1,5 @@
 <style>
-    .container {
+    .container-navbar {
         position: absolute;
         right: 0;
         top: 30px;
@@ -13,7 +13,7 @@
         z-index: 1000;
     }
 
-    .arrow-container {
+    .arrow-container-navbar {
         border: solid black;
         border-width: 0 2px 2px 0;
         padding: 10px;
@@ -22,11 +22,11 @@
         transition: transform 0.3s;
     }
 
-    .arrow-container.up {
+    .arrow-container-navbar.up {
         transform: rotate(-45deg);
     }
 
-    .overlay {
+    .overlay-navbar {
         position: fixed;
         top: 0;
         left: 0;
@@ -39,12 +39,12 @@
         z-index: 998;
     }
 
-    .overlay.active {
+    .overlay-navbar.active {
         opacity: 1;
         visibility: visible;
     }
 
-    .side-menu {
+    .side-menu-navbar {
         position: fixed;
         top: 0;
         right: -300px;
@@ -55,47 +55,54 @@
         border-left: 1px solid #333;
         padding: 20px;
         z-index: 999;
+        box-sizing: border-box;
     }
 
-    .side-menu.active {
+    .side-menu-navbar.active {
         right: 0;
     }
 
-    .side-menu h2 {
+    .side-menu-navbar h2 {
         margin-bottom: 20px;
     }
 
-    .side-menu ul {
+    .side-menu-navbar ul {
         list-style: none;
     }
 
-    .side-menu li {
+    .side-menu-navbar li {
         padding: 10px 0;
         border-bottom: 1px solid #ddd;
     }
 
-    a {
+    .ul-navbar {
+        margin: 0;
+        padding: 0;
+    }
+
+    .li-navbar {
+        margin: 10px;
+    }
+    
+    .a-navbar {
         text-decoration: none;
         color: black;
     }
     
-    .active-link {
+    .active-link-navbar {
         color: #1362b8;
     }
-    li {
-        margin: 10px;
-    }
 </style>
-<div class="overlay" onclick="removeMenu(this)">
+<div class="overlay-navbar" onclick="removeMenu(this)">
 </div>
 
-<div class="container" onclick="toggleMenu(this)">
-    <div class="arrow-container"></div>
+<div class="container-navbar" onclick="toggleMenu(this)">
+    <div class="arrow-container-navbar"></div>
 </div>
 
-<div class="side-menu">
-    <ul>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/setup">Impostazioni</a></li>
+<div class="side-menu-navbar">
+    <ul class="ul-navbar">
+        <li class="li-navbar"><a class="a-navbar" href="/dashboard">Dashboard</a></li>
+        <li class="li-navbar"><a class="a-navbar" href="/setup">Impostazioni</a></li>
     </ul>
 </div>
