@@ -7,7 +7,7 @@ import libs.lb_config as lb_config
 from libs.lb_database import add_data, get_data_by_id, update_data
 import datetime as dt
 import libs.lb_log as lb_log
-from applications.router.weigher.types import Data
+from applications.router.weigher.types import Data, DataInExecution, IdSelected
 
 class CallbackWeigher:
     def __init__(self):
@@ -62,24 +62,17 @@ class CallbackWeigher:
     # ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
     # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
     def Callback_Realtime(self, instance_name: str, weigher_name: Union[str, None], pesa_real_time: Realtime):
-        try:
-            asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
-        except Exception as e:
-            pass
+        asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
 
     # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
     def Callback_Diagnostic(self, instance_name: str, weigher_name: Union[str, None], diagnostic: dict):
-        try:
-            asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(diagnostic))
-        except Exception as e:
-            pass
+        asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(diagnostic))
 
     # Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
     def Callback_Weighing(self, instance_name: str, weigher_name: Union[str, None], last_pesata: Weight):
-        try:
-            # global printer
-            if isinstance(last_pesata.data_assigned, DataInExecution) and last_pesata.weight_executed.executed:
-                node = md_weigher.module_weigher.instances[instance_name].getNode(weigher_name)
+        if last_pesata.weight_executed.executed:
+            if isinstance(last_pesata.data_assigned, DataInExecution):
+                node = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance_name,weigher_name=weigher_name)
                 obj = {
                     "plate": last_pesata.data_assigned.vehicle.plate,
                     "vehicle": last_pesata.data_assigned.vehicle.name,
@@ -100,7 +93,7 @@ class CallbackWeigher:
                     "card_number": None,
                     "pid1": None if last_pesata.weight_executed.tare != '0' else last_pesata.weight_executed.pid,
                     "pid2": None if last_pesata.weight_executed.tare == '0' else last_pesata.weight_executed.pid,
-                    "weigher": node["name"]
+                    "weigher": weigher_name
                 }
                 if last_pesata.image1 is not None:
                     image1 = add_data("image_captured", last_pesata.image1.dict())
@@ -119,10 +112,9 @@ class CallbackWeigher:
                     obj["in_image_captured4_id"] = image4.id
                     del last_pesata.image4
                 add_data("weighing", obj)
-                status, data = md_weigher.module_weigher.instances[instance_name].deleteDataInExecution(node=weigher_name, call_callback=False)
-                node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"] if n["node"] == weigher_name]
-                index_node_found = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"].index(node_found[0])
-                lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][index_node_found]["data"]["data_in_execution"] = data["data_in_execution"]
+                self.weighers_data[instance_name][weigher_name]["data"].data_in_execution.deleteAttribute()
+                data = self.weighers_data[instance_name][weigher_name]["data"].dict()
+                lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"] = data["data_in_execution"]
                 lb_config.saveconfig()
                 asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(data))
             elif isinstance(last_pesata.data_assigned, int) and last_pesata.weight_executed.executed:
@@ -152,12 +144,9 @@ class CallbackWeigher:
                     obj["out_image_captured4_id"] = image4.id
                     del last_pesata.image4
                 update_data("weighing", last_pesata.data_assigned, obj)
-                status, data = md_weigher.module_weigher.instances[instance_name].setIdSelected(node=weigher_name, new_id=-1, call_callback=False)
-                node_found = [n for n in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"] if n["node"] == weigher_name]
-                index_node_found = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"].index(node_found[0])
-                lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][index_node_found]["data"]["id_selected"] = {
-                    "id": None
-                }
+                self.weighers_data[instance_name][weigher_name]["data"].id_selected.setAttribute(-1)
+                data = self.weighers_data[instance_name][weigher_name]["data"].dict()
+                lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"] = data["id_selected"]
                 lb_config.saveconfig()
                 asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(data))
             elif last_pesata.data_assigned is None and last_pesata.weight_executed.executed:
@@ -182,7 +171,7 @@ class CallbackWeigher:
                     "card_number": None,
                     "pid1": None,
                     "pid2": last_pesata.weight_executed.pid,
-                    "weigher": node["name"]
+                    "weigher": weigher_name
                 }
                 if last_pesata.image1 is not None:
                     image1 = add_data("image_captured", last_pesata.image1.dict())
@@ -201,36 +190,25 @@ class CallbackWeigher:
                     obj["out_image_captured4_id"] = image4.id
                     del last_pesata.image4
                 add_data("weighing", obj)
-            asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(last_pesata.dict()))
-        except Exception as e:
-            lb_log.error(e)
+        asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(last_pesata.dict()))
 
     def Callback_TarePTareZero(self, instance_name: str, weigher_name: Union[str, None], ok_value: str):
-        try:
-            result = {"command_executed": ok_value}
-            asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
-        except Exception as e:
-            pass
+        result = {"command_executed": ok_value}
+        asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 
     def Callback_ActionInExecution(self, instance_name: str, weigher_name: Union[str, None], action_in_execution: str):
-        try:
-            result = {"command_in_executing": action_in_execution}
-            if asyncio.get_event_loop().is_running():
-                asyncio.create_task(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
-            else:
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
-        except Exception as e:
-            pass
+        result = {"command_in_executing": action_in_execution}
+        if asyncio.get_event_loop().is_running():
+            asyncio.create_task(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+        else:
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
         
     def Callback_Rele(self, instance_name: str, weigher_name: Union[str, None], port_rele: tuple):
-        try:
-            key, value = port_rele
-            result = {"rele": key, "status": value}
-            if asyncio.get_event_loop().is_running():
-                asyncio.create_task(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
-            else:
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
-        except Exception as e:
-            pass
+        key, value = port_rele
+        result = {"rele": key, "status": value}
+        if asyncio.get_event_loop().is_running():
+            asyncio.create_task(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+        else:
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))

@@ -23,7 +23,10 @@ class DataInExecutionRouter(ConfigWeigher):
     async def SetDataInExecution(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         self.weighers_data[instance.instance_name][instance.weigher_name]["data"].data_in_execution.setAttribute(data_dto.data_in_execution)
         if data_dto.id_selected is not None:
-            self.weighers_data[instance.instance_name][instance.weigher_name]["data"].id_selected.setAttribute(data_dto.id_selected.id)
+            try:
+                self.weighers_data[instance.instance_name][instance.weigher_name]["data"].id_selected.setAttribute(data_dto.id_selected.id)
+            except Exception as e:
+                return e
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"] = self.weighers_data[instance.instance_name][instance.weigher_name]["data"].dict()
         lb_config.saveconfig()
         await self.BroadcastDataChanged(instance_name=instance.instance_name, weigher_name=instance.weigher_name)

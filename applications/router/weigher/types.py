@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from libs.lb_database import CustomerDTOInit, SupplierDTOInit, VehicleDTOInit,MaterialDTOInit
+from libs.lb_database import CustomerDTOInit, SupplierDTOInit, VehicleDTOInit, MaterialDTOInit, update_data
 from typing import Union, Optional
 
 class DataInExecution(BaseModel):

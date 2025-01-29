@@ -1,5 +1,5 @@
 from libs.lb_utils import CustomBaseModel
-from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO
+from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id
 from typing import Optional
 from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
