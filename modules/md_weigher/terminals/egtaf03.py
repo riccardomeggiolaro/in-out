@@ -7,9 +7,9 @@ from modules.md_weigher.types import ImageCaptured
 from libs.lb_utils import sum_number
 
 class EgtAf03(Terminal):
-	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name):
+	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name, {"1": 0, "2": 0, "3": 0, "4": 0})
+		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, {"1": 0, "2": 0, "3": 0, "4": 0})
     
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
@@ -45,17 +45,17 @@ class EgtAf03(Terminal):
 		elif self.modope == "OPENRELE":
 			key, value = self.port_rele
 			self.write("OUTP" + str(key) + "0001")
+			self.modope_to_execute = "OK"
 			self.maintaineSessionRealtime()
 		elif self.modope == "CLOSERELE":
 			key, value = self.port_rele
 			self.write("OUTP" + str(key) + "0000")
+			self.modope_to_execute = "OK"
 			self.maintaineSessionRealtime()
 		elif self.modope == "VER":
 			self.write("VER")
-			self.modope_to_execute = "OK" # setto modope_to_execute a stringa vuota per evitare che la stessa funzione venga eseguita anche nel prossimo ciclo
 		elif self.modope == "SN":
 			self.write("SN")
-			self.modope_to_execute = "OK" # setto modope_to_execute a stringa vuota per evitare che la stessa funzione venga eseguita anche nel prossimo ciclo
 		return self.modope
 
 	def initialize_content(self):
@@ -98,22 +98,16 @@ class EgtAf03(Terminal):
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
-			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except BrokenPipeError as e:
 			self.diagnostic.status = 305
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
-			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except ValueError as e:
 			self.diagnostic.status = 201
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
-			if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
-				self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 
 	def initialize(self):
 		self.initialize_content()

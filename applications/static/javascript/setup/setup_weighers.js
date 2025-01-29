@@ -60,7 +60,8 @@ fetch('/config_weigher/all/instance')
                         errorsDiv.innerHTML += `${error.msg}<br>`;
                     });
                 } else {
-                    createInstance(name, data);
+                    const key = Object.keys(data)[0];
+                    createInstance(key, data[key]);
                     addInstanceModal.style.display = 'none';
                     addInstanceModal.querySelector('input[type="text"]').value = '';
                     addInstanceModal.querySelector('.errors').innerHTML = '';
@@ -132,7 +133,7 @@ fetch('/config_weigher/all/instance')
 
         deleteInstanceModal.querySelector('.confirm-btn').addEventListener('click', () => {
             deleteInstanceModal.style.display = 'none';
-            fetch(`/config_weigher/instance?name=${key}`, {
+            fetch(`/config_weigher/instance?instance_name=${key}`, {
                 method: 'DELETE',
             })
             .then(res => res.json())
@@ -187,7 +188,7 @@ fetch('/config_weigher/all/instance')
 
         deleteConnectionModal.querySelector('.confirm-btn').addEventListener('click', () => {
             deleteConnectionModal.style.display = 'none';
-            fetch(`/config_weigher/instance/connection?name=${key}`, {
+            fetch(`/config_weigher/instance/connection?instance_name=${key}`, {
                 method: 'DELETE',
             })
             .then(res => res.json())
@@ -306,14 +307,15 @@ fetch('/config_weigher/all/instance')
             editModeSerial.querySelector('.save-btn').addEventListener('click', (event) => {
                 event.preventDefault();
                 editModeSerial.querySelector('.errors').innerHTML = '';
-                fetch(`/config_weigher/instance/connection?name=${key}`, {
+                fetch(`/config_weigher/instance/connection?instance_name=${key}`, {
                     method: 'DELETE',
                 })
                 .then(res => res.json())
                 .then(res => {
+                    console.log(res)
                     const newTimeBetweenActions = Number(editModeSerial.querySelector('input[name="time_between_actions"]').value);
                     if (newTimeBetweenActions != currentTimeBetweenActions) {
-                        fetch(`/config_weigher/instance/time_between_actions/${newTimeBetweenActions}?name=${key}`, {
+                        fetch(`/config_weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -326,7 +328,7 @@ fetch('/config_weigher/all/instance')
                     return res;
                 })
                 .then(_ => {
-                    fetch(`/config_weigher/instance/connection?name=${key}`, {
+                    fetch(`/config_weigher/instance/connection?instance_name=${key}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json'
@@ -437,14 +439,14 @@ fetch('/config_weigher/all/instance')
 
             editModeTcp.querySelector('.save-btn').addEventListener('click', (event) => {
                 event.preventDefault();
-                fetch(`/config_weigher/instance/connection?name=${key}`, {
+                fetch(`/config_weigher/instance/connection?instance_name=${key}`, {
                     method: 'DELETE',
                 })
                 .then(res => res.json())
                 .then(res => {
                     const newTimeBetweenActions = Number(editModeTcp.querySelector('input[name="time_between_actions"]').value);
                     if (newTimeBetweenActions != currentTimeBetweenActions) {
-                        fetch(`/config_weigher/instance/time_between_actions/${newTimeBetweenActions}?name=${key}`, {
+                        fetch(`/config_weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -457,7 +459,7 @@ fetch('/config_weigher/all/instance')
                     return res;
                 })
                 .then(_ => {
-                    fetch(`/config_weigher/instance/connection?name=${key}`, {
+                    fetch(`/config_weigher/instance/connection?instance_name=${key}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json'
@@ -624,7 +626,7 @@ fetch('/config_weigher/all/instance')
                 data[selection.name] = selection.value;
             })
 
-            fetch(`/config_weigher/instance/node?name=${key}`, {
+            fetch(`/config_weigher/instance/node?instance_name=${key}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -633,8 +635,13 @@ fetch('/config_weigher/all/instance')
             })
             .then(response => response.json())
             .then(response => {
-                if ('node' in response) {
-                    addWeigher(response);
+                if (data['name'] in response) {
+                    const key = Object.keys(response)[0];
+                    const weigher_data = {
+                        name: key,
+                        ...response[key]
+                    };
+                    addWeigher(weigher_data);
                     addWeigherModal.querySelector('.content').innerHTML = '';
                     populateAddContent();
                     addWeigherModal.style.display = 'none';
@@ -760,8 +767,8 @@ fetch('/config_weigher/all/instance')
                 });
 
                 if (Object.keys(changedData).length > 0) {
-                    let url_patch = `/config_weigher/instance/node?name=${key}`;
-                    if (weigher.node) url_patch += `&node=${weigher.node}`;
+                    let url_patch = `/config_weigher/instance/node?instance_name=${key}`;
+                    if (weigher.name) url_patch += `&weigher_name=${weigher.name}`;
                     fetch(url_patch, {
                         method: 'PATCH',
                         headers: {
@@ -771,10 +778,16 @@ fetch('/config_weigher/all/instance')
                     })
                     .then(res => res.json())
                     .then(response => {
-                        if ('node' in response) {
-                            Object.assign(weigher, response);
+                        const name = Object.keys(response)[0];
+                        const response_formatted = {
+                            name: name,
+                            ...response[name]
+                        };
+                        if ('node' in response_formatted) {
 
-                            populateViewContent(response);
+                            Object.assign(weigher, response_formatted);
+
+                            populateViewContent(response_formatted);
 
                             errorEditWeigher.innerHTML = '';
                             viewMode.style.display = 'block';
@@ -820,9 +833,10 @@ fetch('/config_weigher/all/instance')
             });
 
             deleteWeigherModal.querySelector('.modalDeleteWeigherConfirm').addEventListener('click', () => {
-                let delete_url = `/config_weigher/instance/node?name=${key}`;
-                if (weigher.node !== null) {
-                    delete_url += `&node=${weigher.node}`;
+                console.log(weigher)
+                let delete_url = `/config_weigher/instance/node?instance_name=${key}`;
+                if (weigher.name !== null) {
+                    delete_url += `&weigher_name=${weigher.name}`;
                 }
                 fetch(delete_url, {
                     method: 'DELETE'
@@ -831,6 +845,7 @@ fetch('/config_weigher/all/instance')
                 .then(response => {
                     if (response.deleted) {
                         li.remove();
+                        br.remove();
                     }
                 })
                 .catch(error => {
@@ -857,8 +872,12 @@ fetch('/config_weigher/all/instance')
             });
         }
 
-        for (let weigher of data['nodes']) {
-            addWeigher(weigher);
+        for (let [name, weigher] of Object.entries(data['nodes'])) {
+            const weigher_data = {
+                name,
+                ...weigher
+            };
+            addWeigher(weigher_data);
         }
 
         div.querySelector('.addWeigher').addEventListener('click', () => {

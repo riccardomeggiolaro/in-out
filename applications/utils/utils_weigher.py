@@ -5,10 +5,10 @@ from fastapi import Depends, HTTPException
 import modules.md_weigher.md_weigher as md_weigher
 
 class InstanceNameDTO(BaseModel):
-	name: str
+	instance_name: str
 
-class InstanceNameNodeDTO(InstanceNameDTO):
-	node: Optional[str] = None
+class InstanceNameWeigherDTO(InstanceNameDTO):
+	weigher_name: Optional[str] = None
 
 class NodeConnectionManager:
 	def __init__(self):
@@ -16,14 +16,13 @@ class NodeConnectionManager:
 		self.manager_diagnostic = ConnectionManager()
 
 def get_query_params_name(params: InstanceNameDTO = Depends()):
-	if params.name not in md_weigher.module_weigher.getAllInstance():
+	if params.instance_name not in md_weigher.module_weigher.getAllInstance():
 		raise HTTPException(status_code=404, detail='Name instance does not exist')
 	return params
 
-def get_query_params_name_node(params: InstanceNameNodeDTO = Depends()):
-	if params.name not in md_weigher.module_weigher.getAllInstance():
+def get_query_params_name_node(params: InstanceNameWeigherDTO = Depends()):
+	if params.instance_name not in md_weigher.module_weigher.getAllInstance():
 		raise HTTPException(status_code=404, detail='Name instance does not exist')
-	n = md_weigher.module_weigher.getInstanceNode(name=params.name, node=params.node)
-	if md_weigher.module_weigher.getInstanceNode(name=params.name, node=params.node) is None:
-		raise HTTPException(status_code=404, detail='Node not exist')
+	if params.weigher_name not in md_weigher.module_weigher.getAllInstanceWeigher(instance_name=params.instance_name):
+		raise HTTPException(status_code=404, detail='Name weigher not exist')
 	return params

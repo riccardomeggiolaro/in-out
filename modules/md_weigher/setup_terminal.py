@@ -1,15 +1,14 @@
-from modules.md_weigher.types import Realtime, Diagnostic, Weight, DataInExecution, Data, ImageCaptured, Cam
-from modules.md_weigher.dto import SetupWeigherDTO, DataInExecutionDTO
+from modules.md_weigher.types import Realtime, Diagnostic, Weight, ImageCaptured, Cam
+from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
 import libs.lb_log as lb_log
 from libs.lb_utils import checkCallbackFormat, callCallback
 from pydantic import BaseModel
-from typing import Optional, Callable, Union
+from typing import Optional, Callable, Union, Any
 import select
-from libs.lb_database import VehicleDTO, SocialReasonDTO, MaterialDTO
 
 class __SetupWeigherConnection:
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, name, list_port_rele):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, list_port_rele):
 		self.self_config = self_config
 		self.max_weight = max_weight
 		self.min_weight = min_weight
@@ -20,7 +19,6 @@ class __SetupWeigherConnection:
 		self.node = node
 		self.terminal = terminal
 		self.run = run
-		self.name = name
 		self.list_port_rele = list_port_rele
 
 	def try_connection(self):
@@ -60,9 +58,9 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name, list_port_rele):
+	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, list_port_rele):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, name, list_port_rele)
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, list_port_rele)
 
 		self.pesa_real_time: Realtime = Realtime(**{
 			"status": "",
@@ -101,7 +99,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.cam2 = Cam(**cam2.dict()) if cam2 else None
 		self.cam3 = Cam(**cam3.dict()) if cam3 else None
 		self.cam4 = Cam(**cam4.dict()) if cam4 else None
-		self.data = Data(**data.dict())
+		# self.data = Data(**data.dict())
 		self.ok_value: str = ""
 		self.modope: str = ""
 		self.modope_to_execute: str = ""
@@ -136,10 +134,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			},
 			"run": self.run,
    			"status": self.diagnostic.status,
-			"name": self.name,
 			"list_port_rele": self.list_port_rele,
 			"port_rele": self.port_rele,
-			"data": self.data.dict(),
 			"cam1": self.cam1.dict() if self.cam1 else None,
 			"cam2": self.cam2.dict() if self.cam2 else None,
 			"cam3": self.cam3.dict() if self.cam3 else None,
@@ -161,8 +157,6 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.node = setup.node
 		if setup.run is not None:
 			self.run = setup.run
-		if setup.name is not None:
-			self.name = setup.name
 		if setup.cam1 is not None:
 			if setup.cam1 == {}:
 				self.cam1 = None
@@ -185,46 +179,12 @@ class __SetupWeigher(__SetupWeigherConnection):
 				self.cam4 = setup.cam4
 		return self.getSetup()
 
-	def getData(self):
-		return self.data.dict()
-
-	def setDataInExecution(self, data: DataInExecution, call_callback):
-		# Chiama la funzione per aggiornare self.data.data_in_execution con i dati forniti
-		self.data.data_in_execution.setAttribute(data)
-		if call_callback:
-			callCallback(self.callback_data_in_execution)
-		return self.getData()
-
-	def deleteDataInExecution(self, call_callback):
-		self.data.data_in_execution.deleteAttribute()
-		if call_callback:
-			callCallback(self.callback_data_in_execution)
-		return self.getData()
-
-	def setIdSelected(self, new_id: int, call_callback):
-		self.data.id_selected.setAttribute(new_id)
-		if call_callback:
-			callCallback(self.callback_data_in_execution)
-		return self.getData()
-
-	def deleteIdSelected(self, call_callback):
-		self.data.id_selected.deleteAttribute()
-		if call_callback:
-			callCallback(self.callback_data_in_execution)
-		return self.getData()
-
-	def deleteData(self, call_callback):
-		self.data.data_in_execution.deleteAttribute()
-		self.data.id_selected.deleteAttribute()
-		if call_callback:
-			callCallback(self.callback_data_in_execution)
-		return self.getData()
-
 	def maintaineSessionRealtime(self):
 		if self.maintaine_session_realtime_after_command:
 			self.modope_to_execute = "REALTIME"
 
 	def setAction(self,
+		weigher_name: str,
 		cb_realtime: Callable[[dict], any] = None, 
 		cb_diagnostic: Callable[[dict], any] = None, 
 		cb_weighing: Callable[[dict], any] = None, 
@@ -234,28 +194,28 @@ class __SetupWeigher(__SetupWeigherConnection):
 	    cb_rele: Callable[[str], any] = None):
 		check_cb_realtime = checkCallbackFormat(cb_realtime) # controllo se la funzione cb_realtime è richiamabile
 		if check_cb_realtime: # se è richiamabile assegna alla globale callback_realtime la funzione passata come parametro
-			self.callback_realtime = lambda: cb_realtime(self.self_config.name, self.node, self.pesa_real_time)
+			self.callback_realtime = lambda: cb_realtime(self.self_config.name, weigher_name, self.pesa_real_time)
 		check_cb_diagnostic = checkCallbackFormat(cb_diagnostic) # controllo se la funzione cb_diagnostic è richiamabile
 		if check_cb_diagnostic: # se è richiamabile assegna alla globale callback_diagnostics la funzione passata come parametro
-			self.callback_diagnostics = lambda: cb_diagnostic(self.self_config.name, self.node, self.diagnostic)
+			self.callback_diagnostics = lambda: cb_diagnostic(self.self_config.name, weigher_name, self.diagnostic)
 		check_cb_weighing = checkCallbackFormat(cb_weighing) # controllo se la funzione cb_weighing è richiamabile
 		if check_cb_weighing: # se è richiamabile assegna alla globale callback_weighing la funzione passata come parametro
-			self.callback_weighing = lambda: cb_weighing(self.self_config.name, self.node, self.weight)
+			self.callback_weighing = lambda: cb_weighing(self.self_config.name, weigher_name, self.weight)
 		check_cb_tare_ptare_zero = checkCallbackFormat(cb_tare_ptare_zero) # controllo se la funzione cb_tare_ptare_zero è richiamabile
 		if check_cb_tare_ptare_zero: # se è richiamabile assegna alla globale callback_tare_ptare_zero la funzione passata come parametro
-			self.callback_tare_ptare_zero = lambda: cb_tare_ptare_zero(self.self_config.name, self.node, self.ok_value)
+			self.callback_tare_ptare_zero = lambda: cb_tare_ptare_zero(self.self_config.name, weigher_name, self.ok_value)
 		check_cb_data_in_execution = checkCallbackFormat(cb_data_in_execution)
 		if check_cb_data_in_execution:
-			self.callback_data_in_execution = lambda: cb_data_in_execution(self.self_config.name, self.node, self.data)
+			self.callback_data_in_execution = lambda: cb_data_in_execution(self.self_config.name, weigher_name, self.data)
 		check_cb_action_in_execution = checkCallbackFormat(cb_action_in_execution)
 		if check_cb_action_in_execution:
-			self.callback_action_in_execution = lambda: cb_action_in_execution(self.self_config.name, self.node, self.modope_to_execute)
+			self.callback_action_in_execution = lambda: cb_action_in_execution(self.self_config.name, weigher_name, self.modope_to_execute)
 		check_cb_rele = checkCallbackFormat(cb_rele)
 		if check_cb_rele:
-			self.callback_rele = lambda: cb_rele(self.self_config.name, self.node, self.port_rele)
+			self.callback_rele = lambda: cb_rele(self.self_config.name, weigher_name, self.port_rele)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[DataInExecution, int, str] = None, port_rele: int = None):
+	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[Any] = None, port_rele: int = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
@@ -319,12 +279,6 @@ class __SetupWeigher(__SetupWeigherConnection):
 					elif mod == "WEIGHING":
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
-							#controllo che i dati in esecuzione passati corrispondano ai dati in esecuzione attuali
-							if isinstance(data_assigned, DataInExecution) and data_assigned != self.data.data_in_execution:
-								return 500, "I dati in esecuzione passati non corrispondono ai dati in esecuzione attuali"
-							# controllo che l'id passato corrisponda all'id selezionato
-							elif isinstance(data_assigned, int) and data_assigned != self.data.id_selected.id:
-								return 500, f"L'id passato '{data_assigned}' non corrisponde all'id selezionato '{self.data.id_selected.id}'"
 							self.weight.data_assigned = data_assigned
 						else:
 							return 500, f"Il peso deve essere maggiore di {self.min_weight} kg" # ritorno errore se il peso non era valido
@@ -340,9 +294,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name):
+	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, data, name)
+		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run)
 
 	########################
 	# functions to overwrite

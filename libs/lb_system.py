@@ -165,7 +165,6 @@ class SerialPort(SerialPortWithoutControls):
 	@validator('timeout', pre=False, always=True)
 	def check_timeout(cls, v):
 		if v > 0:
-			lb_log.warning(f"Timeout: {v}")
 			return v
 		raise ValueError("Timeout must to be bigger than 0")
 

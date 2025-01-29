@@ -53,9 +53,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Esegui il controllo al caricamento
     updateStyle();
     selectedIdWeigher = document.querySelector('.list-weigher').value;
-    console.log(selectedIdWeigher);
     // Inizializza la connessione WebSocket al caricamento della pagina
-    connectWebSocket('command_weigher/realtime?name=1', updateUIRealtime);
+    connectWebSocket('command_weigher/realtime?instance_name=1&weigher_name=P1', updateUIRealtime);
     await getData()
     await populateListIn();
 });
@@ -89,11 +88,11 @@ function updateStyle() {
 }
 
 async function getData() {
-    await fetch('/data_in_execution/data_in_execution?name=1')
+    await fetch('/data_in_execution/data_in_execution?instance_name=1&weigher_name=P1')
     .then(res => res.json())
     .then(data => {
-        dataInExecution = data["data"]["data_in_execution"];
-        const obj = data["data"]["data_in_execution"];
+        dataInExecution = data["data_in_execution"];
+        const obj = data["data_in_execution"];
         if (obj.vehicle.id) selectedIdVehicle = obj.vehicle.id;
         if (obj.customer.id) selectedIdCustomer = obj.customer.id;
         if (obj.supplier.id) selectedIdSupplier = obj.supplier.id;
@@ -104,7 +103,7 @@ async function getData() {
         document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
         document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
-        selectedIdWeight = data["data"]["id_selected"]["id"];
+        selectedIdWeight = data["id_selected"]["id"];
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -115,7 +114,7 @@ async function populateListIn() {
 
     listIn.innerHTML = '';
 
-    await fetch('/historic_data/weighings/in?name=1')
+    await fetch('/historic_data/weighings/in?instance_name=1&weigher_name=P1')
     .then(res => res.json())
     .then(data => {
         data.forEach(item => {
@@ -133,7 +132,7 @@ async function populateListIn() {
                     }
                 }
                 if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                await fetch(`/data_in_execution/data_in_execution?name=1`, {
+                await fetch(`/data_in_execution/data_in_execution?instance_name=1&weigher_name=P1`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -188,7 +187,7 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
         })
     }
     closePopup();
-    fetch(`/data_in_execution/data_in_execution?name=1`, {
+    fetch(`/data_in_execution/data_in_execution?instance_name=1&weigher_name=P1`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -236,7 +235,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
 
             li.onclick = () => {
                 closePopup();
-                fetch(`/data_in_execution/data_in_execution?name=1`, {
+                fetch(`/data_in_execution/data_in_execution?instance_name=1&weigher_name=P1`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -398,7 +397,7 @@ function connectWebSocket(path, exe) {
 function attemptReconnect() {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = setTimeout(() => {
-        connectWebSocket('command_weigher/realtime?name=1', updateUIRealtime);
+        connectWebSocket('command_weigher/realtime?instance_name=1&weigher_name=P1', updateUIRealtime);
     }, 3000);
 }
 
@@ -463,13 +462,13 @@ function updateUIRealtime(e) {
 }
 
 async function handleTara() {
-    await fetch(`${pathname}/command_weigher/tare?name=1`)
+    await fetch(`${pathname}/command_weigher/tare?instance_name=1&weigher_name=P1`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
 }
 
 async function handleZero() {
-    await fetch(`${pathname}/command_weigher/zero?name=1`)
+    await fetch(`${pathname}/command_weigher/zero?instance_name=1&weigher_name=P1`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -477,7 +476,7 @@ async function handleZero() {
 async function handlePTara() {
     let preset_tare = 0;
     if (myNumberInput.value) preset_tare = myNumberInput.value;
-    await fetch(`${pathname}/command_weigher/preset_tare?name=1&tare=${preset_tare}`)
+    await fetch(`${pathname}/command_weigher/preset_tare?instance_name=1&weigher_name=P1&tare=${preset_tare}`)
     .then(res => {
         closePopup();
         return res.json();
@@ -490,7 +489,7 @@ async function handleStampa() {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    const r = await fetch(`${pathname}/command_weigher/weighing?name=1`, {
+    const r = await fetch(`${pathname}/command_weigher/weighing?instance_name=1&weigher_name=P1`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -501,10 +500,10 @@ async function handleStampa() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.command_executed.status_command == true) {
+    if (r.command_details.command_executed == true) {
         showSnackbar("Pesando...");
     } else {
-        showSnackbar(r.command_executed.error_message);
+        showSnackbar(r.command_details.error_message);
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -517,8 +516,7 @@ async function handlePesata() {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    data
-    const r = await fetch(`${pathname}/command_weigher/weighing?name=1`,
+    const r = await fetch(`${pathname}/command_weigher/weighing?instance_name=1&weigher_name=P1`,
         {
             method: 'POST',
             headers: {
@@ -533,10 +531,10 @@ async function handlePesata() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.command_executed.status_command == true) {
+    if (r.command_details.command_executed == true) {
         showSnackbar("Pesando...");
     } else {
-        showSnackbar(r.command_executed.error_message);
+        showSnackbar(r.command_details.error_message);
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -550,7 +548,7 @@ async function handlePesata2() {
             button.disabled = true;
             button.classList.add("disabled-button"); // Aggi
         });
-        const r = await fetch(`${pathname}/command_weigher/weighing?name=1`, {
+        const r = await fetch(`${pathname}/command_weigher/weighing?instance_name=1&weigher_name=P1`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -563,10 +561,10 @@ async function handlePesata2() {
             return res.json();
         })
         .catch(error => console.error('Errore nella fetch:', error));
-        if (r.command_executed.status_command == true) {
+        if (r.command_details.command_executed == true) {
             showSnackbar("Pesando...");
         } else {
-            showSnackbar(r.command_executed.error_message);
+            showSnackbar(r.command_details.error_message);
             buttons.forEach(button => {
                 button.disabled = false;
                 button.classList.remove("disabled-button"); // Aggi

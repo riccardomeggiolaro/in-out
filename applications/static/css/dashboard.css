@@ -388,9 +388,28 @@ button:active {
         justify-content: center;
     }
 
-    .anagrafic,
+    .anagrafic, .ins {
+        width: 100%;
+        height: 100vh;
+        transition: right 0.3s ease-in-out;
+        position: absolute;
+        top: 0;
+    }
+
+    .anagrafic {
+        left: 100%;
+    }
+
+    .anagrafic.active {
+        left: auto;
+    }
+
     .ins {
-        display: none;
+        right: 100%;
+    }
+
+    .ins.active {
+        left: auto;
     }
 
     .weight {
