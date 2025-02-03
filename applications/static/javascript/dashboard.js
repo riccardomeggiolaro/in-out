@@ -16,8 +16,6 @@ let selectedIdMaterial;
 let selectedIdWeight;
 let dataInExecution;
 
-let selectedIdWeigher;
-
 let isRefreshing = false;
 
 let pathname = '';
@@ -42,21 +40,55 @@ let data = {
 let _data;
 let reconnectTimeout;
 
+let url = new URL(window.location.href);
+let currentWeigherPath = null;
+
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
 const container = document.querySelector('.ins');
 const listIn = document.querySelector('.list-in');
+const selectedIdWeigher = document.querySelector('.list-weigher');
 // Usa un MutationObserver per rilevare i cambiamenti nei contenuti
 const observer = new MutationObserver(() => updateStyle());
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Esegui il controllo al caricamento
     updateStyle();
-    selectedIdWeigher = document.querySelector('.list-weigher').value;
-    // Inizializza la connessione WebSocket al caricamento della pagina
-    connectWebSocket('command_weigher/realtime?instance_name=1&weigher_name=P1', updateUIRealtime);
-    await getData()
+    fetch('/config_weigher/all/instance')
+    .then(res => res.json())
+    .then(res => {
+        const currentWeigherPath = localStorage.getItem('currentWeigherPath');
+        let selected = false;
+        for (let instance in res) {
+            for (let weigher in res[instance]["nodes"]) {
+                const option = document.createElement('option');
+                option.value = `?instance_name=${instance}&weigher_name=${weigher}`;
+                option.innerText = `${weigher}`;
+                if (option.value === currentWeigherPath) {
+                    option.selected = true
+                    selected = true;
+                };
+                selectedIdWeigher.appendChild(option);
+            }
+        }
+        if (selected === false) selectedIdWeigher.selectedIndex = 0;
+        // Innesca l'evento 'change' manualmente
+        selectedIdWeigher.dispatchEvent(new Event('change'));
+    })
     await populateListIn();
+});
+
+selectedIdWeigher.addEventListener('change', (event) => {
+    currentWeigherPath = event.target.value;
+    if (currentWeigherPath) {
+        closeWebSocket();
+        document.getElementById('netWeight').innerText = "N/A";
+        document.getElementById('uniteMisure').innerText = "N/A";
+        document.getElementById('tare').innerText = "N/A";
+        document.getElementById('status').innerText = "N/A";
+        connectWebSocket(`command_weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+        getData(currentWeigherPath);
+        localStorage.setItem('currentWeigherPath', currentWeigherPath);
+    }
 });
 
 // Aggiorna lo stile quando la finestra viene ridimensionata
@@ -87,12 +119,17 @@ function updateStyle() {
     }
 }
 
-async function getData() {
-    await fetch('/data_in_execution/data_in_execution?instance_name=1&weigher_name=P1')
-    .then(res => res.json())
-    .then(data => {
-        dataInExecution = data["data_in_execution"];
-        const obj = data["data_in_execution"];
+async function getData(path) {
+    await fetch(`/data_in_execution/data_in_execution${path}`)
+    .then(res => {
+        if (res.status === 404) {
+            alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
+        }
+        return res.json();
+    })
+    .then(res => {
+        dataInExecution = res["data_in_execution"];
+        const obj = res["data_in_execution"];
         if (obj.vehicle.id) selectedIdVehicle = obj.vehicle.id;
         if (obj.customer.id) selectedIdCustomer = obj.customer.id;
         if (obj.supplier.id) selectedIdSupplier = obj.supplier.id;
@@ -103,7 +140,7 @@ async function getData() {
         document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
         document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
-        selectedIdWeight = data["id_selected"]["id"];
+        selectedIdWeight = res["id_selected"]["id"];
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -114,7 +151,7 @@ async function populateListIn() {
 
     listIn.innerHTML = '';
 
-    await fetch('/historic_data/weighings/in?instance_name=1&weigher_name=P1')
+    await fetch('/historic_data/weighings/in')
     .then(res => res.json())
     .then(data => {
         data.forEach(item => {
@@ -379,26 +416,39 @@ function connectWebSocket(path, exe) {
         exe(e);
     });
 
-    _data.addEventListener('open', () => {})
+    _data.addEventListener('open', () => {
+        enableAllElements();
+    })
 
     _data.addEventListener('error', () => {
         if (!isRefreshing) {
-            attemptReconnect();
+            attemptReconnect(path);
+            disableAllElements();
         }
     });
 
     _data.addEventListener('close', () => {
         if (!isRefreshing) {
-            attemptReconnect();
+            attemptReconnect(path);
+            disableAllElements();
         }
     });
 }
 
-function attemptReconnect() {
-    clearTimeout(reconnectTimeout);
+function attemptReconnect(path) {
+    closeWebSocket();
     reconnectTimeout = setTimeout(() => {
-        connectWebSocket('command_weigher/realtime?instance_name=1&weigher_name=P1', updateUIRealtime);
+        connectWebSocket(path, updateUIRealtime);
     }, 3000);
+}
+
+function closeWebSocket() {
+    clearTimeout(reconnectTimeout);
+    if (_data) {
+        _data.close(); // Chiude la connessione WebSocket
+        _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
+        console.log('Connessione WebSocket chiusa');
+    }
 }
 
 function updateUIRealtime(e) {
@@ -573,4 +623,24 @@ async function handlePesata2() {
     } else {
         showSnackbar("Nessun peso selezionato");
     }
+}
+
+function disableAllElements() {
+    // Seleziona tutti i pulsanti e gli input (inclusi select, textarea, ecc.)
+    const buttonsAndInputs = document.querySelectorAll('button, input, textarea, [role="button"]');
+
+    // Disabilita ogni elemento trovato
+    buttonsAndInputs.forEach(element => {
+        element.disabled = true;
+    });
+}
+
+function enableAllElements() {
+    // Seleziona tutti i pulsanti e gli input
+    const buttonsAndInputs = document.querySelectorAll('button, input, textarea, [role="button"]');
+
+    // Abilita ogni elemento trovato
+    buttonsAndInputs.forEach(element => {
+        element.disabled = false;
+    });
 }

@@ -246,11 +246,7 @@ class WeigherInstance:
 				always_execute_realtime_in_undeground=value.always_execute_realtime_in_undeground,
 				node=value.node, 
 				terminal=value.terminal,
-				run=value.run,
-				cam1=value.cam1,
-				cam2=value.cam2,
-				cam3=value.cam3,
-				cam4=value.cam4
+				run=value.run
 			)
 			n.initialize()
 			self.nodes[key] = n			
@@ -338,7 +334,6 @@ class WeigherInstance:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
 		cb_rele: Callable[[str], any] = None):
-		lb_log.warning(setup.name)
 		n = terminalsClasses[setup.terminal](
 			self_config=self, 
 			max_weight=setup.max_weight, 
@@ -349,11 +344,7 @@ class WeigherInstance:
 			always_execute_realtime_in_undeground=setup.always_execute_realtime_in_undeground,
 			node=setup.node, 
 			terminal=setup.terminal,
-			run=setup.run,
-			cam1=setup.cam1,
-			cam2=setup.cam2,
-			cam3=setup.cam3,
-			cam4=setup.cam4
+			run=setup.run
 		)
 		# per non far partire l'errore di modifica durante l'iterazione
 		nodes_copy = self.nodes.copy()
@@ -385,7 +376,6 @@ class WeigherInstance:
 			result["name"] = setup.name if setup.name != "undefined" else name
 			result["terminal"] = setup.terminal if setup.terminal else result["terminal"]
 			weigher_to_change = SetupWeigherDTO(**result)
-			lb_log.warning(weigher_to_change.terminal)
 			self.deleteNode(name=name)
 			result = self.addNode(
 				setup=weigher_to_change,

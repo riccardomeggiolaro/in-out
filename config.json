@@ -29,10 +29,6 @@
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
-                        "cam1": null,
-                        "cam2": null,
-                        "cam3": null,
-                        "cam4": null,
                         "data": {
                             "data_in_execution": {
                                 "customer": {
@@ -87,6 +83,5 @@
         "max-size-mb": 10
     },
     "name": "in-out",
-    "printer_name": null,
     "secret_key": "newfoiwnfwoijfnijbnib"
 }

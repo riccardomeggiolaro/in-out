@@ -1,4 +1,4 @@
-from modules.md_weigher.types import Realtime, Diagnostic, Weight, ImageCaptured, Cam
+from modules.md_weigher.types import Realtime, Diagnostic, Weight
 from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
 import libs.lb_log as lb_log
@@ -58,7 +58,7 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, list_port_rele):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, list_port_rele):
 		# Chiama il costruttore della classe base
 		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, list_port_rele)
 
@@ -89,17 +89,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"status": "",
 				"executed": False
 			},
-			"data_assigned": None,
-			"image1": None,
-			"image2": None,
-			"image3": None,
-			"image4": None
+			"data_assigned": None
 		})
-		self.cam1 = Cam(**cam1.dict()) if cam1 else None
-		self.cam2 = Cam(**cam2.dict()) if cam2 else None
-		self.cam3 = Cam(**cam3.dict()) if cam3 else None
-		self.cam4 = Cam(**cam4.dict()) if cam4 else None
-		# self.data = Data(**data.dict())
 		self.ok_value: str = ""
 		self.modope: str = ""
 		self.modope_to_execute: str = ""
@@ -135,11 +126,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"run": self.run,
    			"status": self.diagnostic.status,
 			"list_port_rele": self.list_port_rele,
-			"port_rele": self.port_rele,
-			"cam1": self.cam1.dict() if self.cam1 else None,
-			"cam2": self.cam2.dict() if self.cam2 else None,
-			"cam3": self.cam3.dict() if self.cam3 else None,
-			"cam4": self.cam4.dict() if self.cam4 else None
+			"port_rele": self.port_rele
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
@@ -157,26 +144,6 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.node = setup.node
 		if setup.run is not None:
 			self.run = setup.run
-		if setup.cam1 is not None:
-			if setup.cam1 == {}:
-				self.cam1 = None
-			else:
-				self.cam1 = setup.cam1
-		if setup.cam2 is not None:
-			if setup.cam2 == {}:
-				self.cam2 = None
-			else:
-				self.cam2 = setup.cam2
-		if setup.cam3 is not None:
-			if setup.cam3 == {}:
-				self.cam3 = None
-			else:
-				self.cam3 = setup.cam3
-		if setup.cam4 is not None:
-			if setup.cam4 == {}:
-				self.cam4 = None
-			else:
-				self.cam4 = setup.cam4
 		return self.getSetup()
 
 	def maintaineSessionRealtime(self):
@@ -294,9 +261,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run)
+		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run)
 
 	########################
 	# functions to overwrite

@@ -100,7 +100,7 @@ input {
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 1.1rem;
-    max-width: 300px;
+    max-width: fit-content;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
     transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
     max-width: -moz-available;
@@ -653,4 +653,8 @@ button {
     .in-out button {
         flex: 1 1 calc(50% - 10px); /* Quando lo schermo è più piccolo, i bottoni occupano metà riga */
     }
+}
+
+*:disabled {
+    opacity: 0.5;
 }

@@ -47,6 +47,11 @@ class WeighingDataDTO(CustomBaseModel):
 		non_null_values = sum(1 for key, value in values.items() if value is not None)
 
 		if non_null_values > 1:
-			raise ValueError("Solo uno dei seguenti attributi deve essere presente: id o plate.")
+			raise ValueError("Solo uno dei seguenti attributi deve essere presente: id, plate o data in execution.")
 
 		return values
+
+class CamDTO(BaseModel):
+	camera_url: str
+	username: str
+	password: str

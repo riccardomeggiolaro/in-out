@@ -5,7 +5,6 @@ from libs.lb_utils import CustomBaseModel
 from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 from pydantic import root_validator
-from modules.md_weigher.types import Cam
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	name: Optional[str] = "undefined"
@@ -18,10 +17,6 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	node: Optional[str] = "undefined"
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
-	cam1: Optional[Union[Cam, dict]] = None
-	cam2: Optional[Union[Cam, dict]] = None
-	cam3: Optional[Union[Cam, dict]] = None
-	cam4: Optional[Union[Cam, dict]] = None
 
 	@root_validator(pre=True)
 	def set_node_default(cls, values):
@@ -55,10 +50,6 @@ class SetupWeigherDTO(BaseModel):
 	node: Optional[Union[str, None]] = None
 	terminal: str
 	run: Optional[bool] = True
-	cam1: Optional[Cam] = None
-	cam2: Optional[Cam] = None
-	cam3: Optional[Cam] = None
-	cam4: Optional[Cam] = None
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):

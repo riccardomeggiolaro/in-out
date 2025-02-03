@@ -2,14 +2,12 @@ import libs.lb_log as lb_log
 from libs.lb_utils import callCallback
 import re
 from modules.md_weigher.setup_terminal import Terminal
-from libs.lb_capture_camera import capture_camera_image
-from modules.md_weigher.types import ImageCaptured
 from libs.lb_utils import sum_number
 
 class EgtAf03(Terminal):
-	def __init__(self, self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, cam1, cam2, cam3, cam4, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, {"1": 0, "2": 0, "3": 0, "4": 0})
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, {"1": 0, "2": 0, "3": 0, "4": 0})
     
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
@@ -190,18 +188,6 @@ class EgtAf03(Terminal):
 						self.weight.weight_executed.bil = split_response[1]
 						self.weight.weight_executed.status = split_response[0]
 						self.weight.weight_executed.executed = True
-						if self.cam1:
-							image_capture1 = capture_camera_image(self.cam1.camera_url, self.cam1.username, self.cam1.password)
-							self.weight.image1 = ImageCaptured(**image_capture1)
-						if self.cam2:
-							image_capture2 = capture_camera_image(self.cam2.camera_url, self.cam2.username, self.cam2.password)
-							self.weight.image2 = ImageCaptured(**image_capture2)
-						if self.cam3:
-							image_capture3 = capture_camera_image(self.cam3.camera_url, self.cam3.username, self.cam3.password)
-							self.weight.image3 = ImageCaptured(**image_capture3)
-						if self.cam4:
-							image_capture4 = capture_camera_image(self.cam4.camera_url, self.cam4.username, self.cam4.password)
-							self.weight.image4 = ImageCaptured(**image_capture4)
 						self.diagnostic.status = 200
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
 					else:
@@ -216,10 +202,6 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.status = ""
 					self.weight.weight_executed.executed = False
 					self.weight.data_assigned = None
-					self.weight.image1 = None
-					self.weight.image2 = None
-					self.weight.image3 = None
-					self.weight.image4 = None
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:
 					if self.modope == "TARE":
