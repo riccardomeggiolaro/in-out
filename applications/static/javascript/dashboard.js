@@ -73,8 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (selected === false) selectedIdWeigher.selectedIndex = 0;
         // Innesca l'evento 'change' manualmente
         selectedIdWeigher.dispatchEvent(new Event('change'));
-    })
-    await populateListIn();
+    });
 });
 
 selectedIdWeigher.addEventListener('change', (event) => {
@@ -86,8 +85,9 @@ selectedIdWeigher.addEventListener('change', (event) => {
         document.getElementById('tare').innerText = "N/A";
         document.getElementById('status').innerText = "N/A";
         connectWebSocket(`command_weigher/realtime${currentWeigherPath}`, updateUIRealtime);
-        getData(currentWeigherPath);
-        localStorage.setItem('currentWeigherPath', currentWeigherPath);
+        getData(currentWeigherPath)
+        .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
+        .then(() => populateListIn());
     }
 });
 
@@ -150,6 +150,8 @@ async function populateListIn() {
     const items = document.querySelectorAll('.list-in li');
 
     listIn.innerHTML = '';
+
+    console.log(selectedIdWeight)
 
     await fetch('/historic_data/weighings/in')
     .then(res => res.json())

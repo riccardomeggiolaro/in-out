@@ -1,140 +1,42 @@
 <!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <title>Receipt Designer</title>
-    <script src="/static/javascript/reporter/fabric.min.js"></script>
-    <script src="/static/javascript/reporter/fabric.umd.min.js"></script>
-    <script type="module" src="/static/javascript/reporter/reporter.js"></script>
-    <link rel="stylesheet" href="/static/css/reporter.css"></link>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+
+    <title>ARJS Report designer</title>
+    <meta name="description" content="ARJS Report designer" />
+    <meta name="author" content="GrapeCity" />
+
+    <link
+    rel="stylesheet"
+    href="https://cdn.mescius.com/activereportsjs/5.latest/styles/ar-js-ui.css"
+    type="text/css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.mescius.com/activereportsjs/5.latest/styles/ar-js-designer.css"
+    type="text/css"
+  />
+  <script src="https://cdn.mescius.com/activereportsjs/5.latest/dist/ar-js-core.js"></script>
+  <script src="https://cdn.mescius.com/activereportsjs/5.latest/dist/ar-js-designer.js"></script>
+  <style>
+    * {
+        margin: 0px;
+    }
+
+    #designer-host {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
 </head>
-<body>
-    <div id="toolbar">
-        <select id="format-select">
-            <option value="A4" selected>A4</option>
-            <option value="A5">A5</option>
-            <option value="A6">A6</option>
-            <option value="B4">B4 (ISO)</option>
-            <option value="B5">B5 (ISO)</option>
-            <option value="B6">B6 (ISO)</option>
-        </select>
-        
-        <div id="tool-buttons">
-            <button onclick="setTool('text')">Testo</button>
-            <button onclick="setTool('rectWithText')">Rettangolo</button>
-            <button onclick="setTool('line')">Linea</button>
-            <button onclick="setTool('image')">Immagine</button>
-        </div>
-        
-        <button onclick="deleteSelected()" style="background-color: #ff4444; color: white;">Elimina</button>
-        <!-- Aggiungi i pulsanti al tuo HTML -->
-        <button onclick="exportCanvas()">Esporta Canvas</button>
-        <button onclick="importCanvas()">Importa Canvas</button>
 
-        <label class="grid-toggle">
-            <input type="checkbox" id="grid-toggle" onchange="toggleGrid()"> 
-            Mostra Griglia
-        </label>
-
-        <label class="midline-toggle">
-            <input type="checkbox" id="midline-toggle" onchange="toggleMidlines()">
-            Mostra Linee Centrali
-        </label>
-
-        <label class="margin-toggle">
-            <input type="checkbox" id="margin-toggle" onchange="toggleMargins()">
-            Mostra margini
-        </label>
-
-        <div id="text-controls" style="display:none;">
-            <label for="font-size-text">
-                Font size
-                <input name="font-size-text" type="number" id="font-size-text" value="16" min="8" max="72" onchange="updateText()">
-            </label>
-            <label for="font-family-text">
-                Font family
-                <select name="font-family-text" id="font-family-text" onchange="updateText(); this.blur();">
-                    <option value="Arial">Arial</option>
-                    <option value="Verdana">Verdana</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Courier New">Courier New</option>
-                    <option value="Georgia">Georgia</option>
-                    <option value="Tahoma">Tahoma</option>
-                    <option value="Trebuchet MS">Trebuchet MS</option>
-                    <option value="Comic Sans MS">Comic Sans MS</option>
-                </select>
-            </label>
-            <label for="database-data-text">
-                Database
-                <select name="database-data-text" id="database-data-text" onchange="updateText(); this.blur();">
-                    <option value="[pid1]">PID 1</option>
-                    <option value="[pid2]">PID 2</option>
-                    <option value="[date1]">Data 1</option>
-                    <option value="[date2]">Data ora 2</option>
-                    <option value="[weight1]">Peso 1</option>
-                    <option value="[weight2]">Peso 2</option>
-                    <option value="[net_weight]">Peso netto</option>
-                    <option value="[gross_weight]">Data lordo</option>
-                    <option value="[tare]">Tara</option>
-                    <option value="[customer]">Cliente</option>
-                    <option value="[supplier]">Fornitore</option>
-                    <option value="[vehicle]">Veicolo</option>
-                    <option value="[plate]">Targa</option>
-                    <option value="[card_code]">Codice carta</option>
-                    <option value="[card_number]">Numero carta</option>
-                    <option value="[material]">Materiale</option>
-                </select>
-            </label>
-            <!-- <label for="align-text">
-                Allineamento
-                <select name="align-text" id="align-text" onchange="updateText()">
-                    <option value="left">Sinistra</option>
-                    <option value="right">Destra</option>
-                    <option value="center">Centro</option>
-                </select>
-            </label> -->
-        </div>
-
-        <div id="rectangle-controls" style="display:none;">
-            <label for="fill-color-rect">
-                Sfondo
-                <input type="color" name="fill-color-rect" id="fill-color-rect" value="#ffffff" onchange="updateRect()">
-            </label>
-            <label for="stroke-color-rect">
-                Colore bordi
-                <input type="color" name="stroke-color-rect" id="stroke-color-rect" value="#000000" onchange="updateRect()">
-            </label>
-            <label for="stroke-width-rect">
-                Spessore bordi
-                <input type="number" name="stroke-width-rect" id="stroke-width-rect" value="1" min="0" max="10" onchange="updateRect()">
-            </label>
-        </div>
-
-        <div id="line-controls" style="display:none;">
-            <label for="color-line">
-                Colore
-                <input type="color" name="color-line" id="color-line" value="#ffffff" onchange="updateLine()">
-            </label>
-            <label for="stroke-width-line">
-                Spessore
-                <input type="number" name="stroke-width-line" id="stroke-width-line" value="1" min="0" max="10" onchange="updateLine()">
-            </label>
-        </div>
-
-        <div id="image-controls" style="display:none;">
-            <label for="cam">
-                <select name="cam" id="cam" onchange="updateImage(); this.blur();">
-                    <option value="[CAM 1]">CAM 1</option>
-                    <option value="[CAM 2]">CAM 2</option>
-                    <option value="[CAM 3]">CAM 3</option>
-                    <option value="[CAM 4]">CAM 4</option>
-                </select>
-            </label>
-        </div>
-    </div>
-
-    <div id="canvas-container">
-        <canvas id="canvas"></canvas>
-    </div>
-</body>
+  <body>
+    <div id="designer-host"></div>
+  </body>
+  <script>
+        var designer = new MESCIUS.ActiveReportsJS.ReportDesigner.Designer("#designer-host");
+        designer.setReport({id: "/static/content/report.rdlx-json", displayName: "my report"});
+    </script>
 </html>
