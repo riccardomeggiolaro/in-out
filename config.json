@@ -23,12 +23,15 @@
             "1": {
                 "connection": {
                     "baudrate": 19200,
-                    "serial_port_name": "/dev/ttyUSB0",
+                    "serial_port_name": "/dev/ttyUSB1",
                     "timeout": 0.3
                 },
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
+                        "cams": {
+                            "1": ""
+                        },
                         "data": {
                             "data_in_execution": {
                                 "customer": {
@@ -60,6 +63,44 @@
                         },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
+                        "events": {
+                            "realtime": {
+                                "over_min": {
+                                    "set_rele": [
+                                        {
+                                            "1": 1
+                                        }
+                                    ],
+                                    "take_photo": []
+                                },
+                                "under_min": {
+                                    "set_rele": [
+                                        {
+                                            "1": 0
+                                        }
+                                    ],
+                                    "take_photo": []
+                                }
+                            },
+                            "weighing": {
+                                "weight1": {
+                                    "set_rele": [
+                                        {
+                                            "1": 0
+                                        }
+                                    ],
+                                    "take_photo": []
+                                },
+                                "weight2": {
+                                    "set_rele": [
+                                        {
+                                            "1": 0
+                                        }
+                                    ],
+                                    "take_photo": []
+                                }
+                            }
+                        },
                         "list_port_rele": {
                             "1": 0,
                             "2": 0,
@@ -69,6 +110,7 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_weight": 50000,
                         "min_weight": 200,
+                        "need_take_of_weight_before_weighing": true,
                         "node": null,
                         "port_rele": null,
                         "run": true,

@@ -103,8 +103,8 @@ class ConfigWeigher(CallbackWeigher):
 
     async def DeleteInstanceWeigher(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         response = md_weigher.module_weigher.deleteInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-        self.weighers_data[instance.instance_name][instance.weigher_name]["data"].data_in_execution.deleteAttribute()
-        self.weighers_data[instance.instance_name][instance.weigher_name]["data"].id_selected.deleteAttribute()
+        self.deleteDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+        self.deleteIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
         self.deleteInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
         del lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]
         lb_config.saveconfig()

@@ -4,9 +4,9 @@ import re
 from modules.md_weigher.setup_terminal import Terminal
 
 class Dgt1(Terminal):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, node, terminal, run, {"1": 0, "2": 0})
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run, {"1": 0, "2": 0})
     
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
@@ -140,6 +140,8 @@ class Dgt1(Terminal):
 						self.pesa_real_time.tare = t
 						self.pesa_real_time.unite_measure = split_response[2][-2:]
 						self.diagnostic.status = 200
+						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
+							self.take_of_weight = False
 					# Se formato stringa del peso in tempo reale non corretto, manda a video errore
 					else:
 						self.diagnostic.status = 201
@@ -187,6 +189,7 @@ class Dgt1(Terminal):
 						self.weight.weight_executed.status = split_response[0]
 						self.weight.weight_executed.executed = True
 						self.diagnostic.status = 200
+						self.take_of_weight = True if self.need_take_of_weight_before_weighing else False
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
 					else:
 						self.diagnostic.status = 201

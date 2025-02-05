@@ -48,6 +48,11 @@ const myNumberInput = document.getElementById("myNumberInput");
 const container = document.querySelector('.ins');
 const listIn = document.querySelector('.list-in');
 const selectedIdWeigher = document.querySelector('.list-weigher');
+const tareButton = document.getElementById('tareButton');
+const zeroButton = document.getElementById('zeroButton');
+const inButton = document.getElementById('inButton')
+const printButton = document.getElementById('printButton');
+const out = document.getElementById('outButton');
 // Usa un MutationObserver per rilevare i cambiamenti nei contenuti
 const observer = new MutationObserver(() => updateStyle());
 
@@ -483,6 +488,7 @@ function updateUIRealtime(e) {
         document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
         document.getElementById('uniteMisure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
         document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
+        inButton.disabled = data.tare != '0' ? true : false;
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;

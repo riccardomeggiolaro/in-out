@@ -1,42 +1,143 @@
 <!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Designer Scontrini con Formati</title>
+<link rel="stylesheet" href="https://unpkg.com/grapesjs/dist/css/grapes.min.css">
+<style>
+.page-format {
+margin: 20px;
+padding: 10px;
+background: #fff;
+box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
+/* Stili per i formati carta */
+.format-a4 { width: 210mm; min-height: 297mm; }
+.format-a5 { width: 148mm; min-height: 210mm; }
+.format-receipt { width: 80mm; min-height: 297mm; }
 
-    <title>ARJS Report designer</title>
-    <meta name="description" content="ARJS Report designer" />
-    <meta name="author" content="GrapeCity" />
-
-    <link
-    rel="stylesheet"
-    href="https://cdn.mescius.com/activereportsjs/5.latest/styles/ar-js-ui.css"
-    type="text/css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://cdn.mescius.com/activereportsjs/5.latest/styles/ar-js-designer.css"
-    type="text/css"
-  />
-  <script src="https://cdn.mescius.com/activereportsjs/5.latest/dist/ar-js-core.js"></script>
-  <script src="https://cdn.mescius.com/activereportsjs/5.latest/dist/ar-js-designer.js"></script>
-  <style>
-    * {
-        margin: 0px;
-    }
-
-    #designer-host {
-      width: 100%;
-      height: 100vh;
-    }
-  </style>
+/* Toolbar personalizzata */
+#format-selector {
+padding: 10px;
+background: #f5f5f5;
+border-bottom: 1px solid #ddd;
+}
+</style>
 </head>
+<body>
+<div id="format-selector">
+<select id="page-format">
+<option value="format-a4">A4 (210x297mm)</option>
+<option value="format-a5">A5 (148x210mm)</option>
+<option value="format-receipt">Scontrino (80x297mm)</option>
+</select>
+</div>
 
-  <body>
-    <div id="designer-host"></div>
-  </body>
-  <script>
-        var designer = new MESCIUS.ActiveReportsJS.ReportDesigner.Designer("#designer-host");
-        designer.setReport({id: "/static/content/report.rdlx-json", displayName: "my report"});
-    </script>
+<div id="gjs"></div>
+
+<script src="https://unpkg.com/grapesjs"></script>
+<script>
+const editor = grapesjs.init({
+container: '#gjs',
+height: 'auto',
+storageManager: false,
+blockManager: {
+appendTo: '#blocks',
+blocks: [
+{
+id: 'text',
+label: 'Testo',
+content: {
+type: 'text',
+content: 'Testo modificabile',
+style: { padding: '10px' }
+}
+},
+{
+id: 'rectangle',
+label: 'Rettangolo',
+content: {
+tagName: 'div',
+style: {
+width: '100px',
+height: '50px',
+border: '2px solid #000',
+background: '#fff'
+}
+}
+},
+{
+id: 'image',
+label: 'Spazio Immagine',
+content: {
+type: 'image',
+attributes: { alt: 'Placeholder' },
+style: { width: '100px', height: '100px', background: '#eee' }
+}
+},
+{
+id: 'table',
+label: 'Tabella',
+content: {
+type: 'table',
+components: [
+{
+type: 'table-row',
+components: [
+{ type: 'table-cell', components: 'Cell 1' },
+{ type: 'table-cell', components: 'Cell 2' }
+]
+}
+]
+}
+}
+]
+},
+styleManager: {
+sectors: [{
+name: 'Dimensioni',
+properties: [
+'width',
+'height',
+'padding',
+'margin'
+]
+}, {
+name: 'Stile',
+properties: [
+'background-color',
+'border',
+'font-size',
+'color'
+]
+}]
+}
+});
+
+// Gestione cambio formato pagina
+const formatSelector = document.getElementById('page-format');
+const canvas = editor.Canvas;
+function updatePageFormat() {
+const format = formatSelector.value;
+const container = canvas.getContainer();
+// Reset stili
+container.className = 'page-format';
+container.classList.add(format);
+// Aggiorna dimensioni canvas
+canvas.setWidth(container.offsetWidth);
+canvas.setHeight('auto');
+}
+
+formatSelector.addEventListener('change', updatePageFormat);
+updatePageFormat(); // Inizializza con formato predefinito
+
+// Configurazione upload immagini
+editor.AssetManager.add([
+// Esempi di immagini predefinite
+'https://via.placeholder.com/100'
+]);
+</script>
+</body>
 </html>

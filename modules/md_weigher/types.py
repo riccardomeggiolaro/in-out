@@ -44,6 +44,7 @@ class SetupWeigher(CustomBaseModel):
 	maintaine_session_realtime_after_command: bool
 	diagnostic_has_priority_than_realtime: bool
 	always_execute_realtime_in_undeground: bool
+	need_take_of_weight_before_weighing: bool
 	node: Optional[str] = None
 	terminal: str
 	run: bool

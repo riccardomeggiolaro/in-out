@@ -10,9 +10,29 @@ from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
 
 class CallbackWeigher(Functions):
+	def __init__(self):
+		super().__init__()
+  
+		self.switch_to_call = 0
+
 	# ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
 	def Callback_Realtime(self, instance_name: str, weigher_name: str, pesa_real_time: Realtime):
+		gross_weight = pesa_real_time.gross_weight
+		if self.switch_to_call == 0:
+			if float(gross_weight) <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"]:
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
+					key, value = next(iter(rele.items()))
+					modope = "CLOSERELE" if value == 0 else "OPENRELE"
+					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+				self.switch_to_call = 1
+		else:
+			if float(gross_weight) >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"]:
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]:
+					key, value = next(iter(rele.items()))
+					modope = "CLOSERELE" if value == 0 else "OPENRELE"
+					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+				self.switch_to_call = 0
 		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
@@ -93,6 +113,18 @@ class CallbackWeigher(Functions):
 				# 	image_capture = capture_camera_image(cam["camera_url"], cam["username"], cam["password"])
 				# 	image_saved = add_data("image_captured", image_capture)
 				add_data("weighing", obj)
+			if last_pesata.weight_executed.tare == '0':
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["weight1"]["set_rele"]:
+					key, value = next(iter(rele.items()))
+					modope = "CLOSERELE" if value == 0 else "OPENRELE"
+					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+					import libs.lb_log as lb_log
+					lb_log.warning(value)
+			else:
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weight2"]["weighing"]["set_rele"]:
+					key, value = next(iter(rele.items()))
+					modope = "CLOSERELE" if value == 0 else "OPENRELE"
+					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
 		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(last_pesata.dict()))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):

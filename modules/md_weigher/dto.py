@@ -14,6 +14,7 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	maintaine_session_realtime_after_command: Optional[bool] = None
 	diagnostic_has_priority_than_realtime: Optional[bool] = None
 	always_execute_realtime_in_undeground: Optional[bool] = None
+	need_take_of_weight_before_weighing: Optional[bool] = None
 	node: Optional[str] = "undefined"
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
@@ -47,6 +48,7 @@ class SetupWeigherDTO(BaseModel):
 	maintaine_session_realtime_after_command: Optional[bool] = True
 	diagnostic_has_priority_than_realtime: Optional[bool] = True
 	always_execute_realtime_in_undeground: Optional[bool] = True
+	need_take_of_weight_before_weighing: Optional[bool] = True
 	node: Optional[Union[str, None]] = None
 	terminal: str
 	run: Optional[bool] = True
