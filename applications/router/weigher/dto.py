@@ -27,7 +27,7 @@ class IdSelectedDTO(CustomBaseModel):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
-			data = get_data_by_id('weighing', v, True, True)
+			data = get_data_by_id('weighing', v)
 			if not data:
 				raise ValueError('Id not exist in weighings')
 		return v

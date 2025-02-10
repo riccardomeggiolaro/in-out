@@ -8,7 +8,7 @@ from typing import Optional, Callable, Union, Any
 import select
 
 class __SetupWeigherConnection:
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run, list_port_rele):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, list_port_rele):
 		self.self_config = self_config
 		self.max_weight = max_weight
 		self.min_weight = min_weight
@@ -17,11 +17,13 @@ class __SetupWeigherConnection:
 		self.diagnostic_has_priority_than_realtime = diagnostic_has_priority_than_realtime
 		self.always_execute_realtime_in_undeground = always_execute_realtime_in_undeground
 		self.need_take_of_weight_before_weighing = need_take_of_weight_before_weighing
+		self.need_take_of_weight_on_startup = need_take_of_weight_on_startup
 		self.node = node
 		self.terminal = terminal
 		self.run = run
 		self.list_port_rele = list_port_rele
-		self.take_of_weight = False
+		self.take_of_weight_on_startup = True if need_take_of_weight_on_startup else False
+		self.take_of_weight_before_weighing = False
 
 	def try_connection(self):
 		return self.self_config.connection.connection.try_connection()
@@ -60,9 +62,9 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run, list_port_rele):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, list_port_rele):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run, list_port_rele)
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, list_port_rele)
 
 		self.pesa_real_time: Realtime = Realtime(**{
 			"status": "",
@@ -127,7 +129,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"run": self.run,
    			"status": self.diagnostic.status,
 			"list_port_rele": self.list_port_rele,
-			"port_rele": self.port_rele
+			"port_rele": self.port_rele,
+			"need_take_of_weight_on_startup": self.need_take_of_weight_on_startup,
+			"need_take_of_weight_before_weighing": self.need_take_of_weight_before_weighing
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
@@ -145,6 +149,14 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.node = setup.node
 		if setup.run is not None:
 			self.run = setup.run
+		if setup.need_take_of_weight_on_startup is not None:
+			self.need_take_of_weight_on_startup = setup.need_take_of_weight_on_startup
+			if self.need_take_of_weight_on_startup is False:
+				self.take_of_weight_on_startup = False
+		if setup.need_take_of_weight_before_weighing is not None:
+			self.need_take_of_weight_before_weighing = setup.need_take_of_weight_before_weighing
+			if self.need_take_of_weight_before_weighing is False:
+				self.take_of_weight_before_weighing = False
 		return self.getSetup()
 
 	def maintaineSessionRealtime(self):
@@ -247,8 +259,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 					elif mod == "WEIGHING":
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
-							if self.take_of_weight is True:
-								return 500,	"Scaricare la pesa"
+							if self.take_of_weight_on_startup is True:
+								return 500,	"Scaricare la pesa dopo l'avvio del programma"
+							if self.take_of_weight_before_weighing is True:
+								return 500,	"Scaricare la pesa prima di eseguire nuova pesata"
 							if int(self.pesa_real_time.tare.replace("PT", "").strip()) > 0 and type(data_assigned) not in [str, int] and data_assigned is not None:
 								return 500, "La prima pesata non può essere effettuata con una tara impostata"
 							self.weight.data_assigned = data_assigned
@@ -266,9 +280,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			return 404, "Modope not exist"
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run)
+		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run)
 
 	########################
 	# functions to overwrite

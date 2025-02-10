@@ -22,7 +22,7 @@ class DataInExecutionRouter(ConfigWeigher):
 
 	async def SetDataInExecution(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
-		if data_dto.id_selected is not None:
+		if data_dto.id_selected.id is not None:
 			self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 

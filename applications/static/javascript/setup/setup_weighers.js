@@ -591,7 +591,9 @@ fetch('/config_weigher/all/instance')
                     <option value="dgt1" selected>dgt1</option>
                     <option value="egt-af03">egt-af03</option>
                 </select><br>
-                In esecuzione: <input type="checkbox" name="run" checked><br>`;
+                In esecuzione: <input type="checkbox" name="run" checked><br>
+                Scaricare la pesa dopo pesata effettuata: <input type="checkbox" name="need_take_of_weight_before_weighing" checked><br>
+                Scaricare la pesa dopo l'avvio del programma: <input type="checkbox" name="need_take_of_weight_on_startup" checked><br>`;
         
             errorAddWeigher.innerHTML = '';
         }        
@@ -684,6 +686,8 @@ fetch('/config_weigher/all/instance')
                     Divisione: ${data.division}<br>
                     Terminale: ${data.terminal}<br>
                     In esecuzione: ${data.run}<br>
+                    Scaricare la pesa dopo pesata effettuata: ${data.need_take_of_weight_before_weighing}<br>
+                    Scaricare la pesa dopo l'avvio del programma: ${data.need_take_of_weight_on_startup}<br>
                 `;
             }
 
@@ -712,6 +716,8 @@ fetch('/config_weigher/all/instance')
                         <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected': ''}>egt-af03</option>
                     </select><br>
                     In esecuzione: <input type="checkbox" name="run" ${data.run ? 'checked' : ''} required><br>
+                    Scaricare la pesa dopo pesata effettuata: <input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''} required><br>
+                    Scaricare la pesa dopo l'avvio del programma: <input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''} required<br>
                 `;
             }
 

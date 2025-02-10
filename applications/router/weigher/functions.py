@@ -27,7 +27,7 @@ class Functions:
 			cb_tare_ptare_zero=self.Callback_TarePTareZero,
 			cb_action_in_execution=self.Callback_ActionInExecution
 		)
-    
+	
 	def getData(self, instance_name: str, weigher_name: str):
 		return lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]
 
@@ -39,26 +39,13 @@ class Functions:
 					value = None
 				lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] = value
 			elif isinstance(value, object) and value is not None:
-				current_attr = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]
-				current_id = current_attr["id"]
-				source_value_id = getattr(value, 'id')
-				# Verifica se `source` ha qualsiasi altro attributo diverso da `id`
-				other_source_values = any(sub_key != 'id' for sub_key in vars(source).keys())
-				# Preparazione dei dati correnti prima di aggiungere le modifiche
-				# Serve per gestire il cambio di selected sul database nel caso fosse in uso una anagrafica del database
-				# Se l'id corrente è un numero
-				if isinstance(current_id, int):
-					# Controlla se é stato passato un nuovo id e se oltre a quello sono stati passati altri valori
-					if source_value_id is None and other_source_values:
-						# Se ci sono altri attributi, resetta tutti gli attributi correnti a None
-						for sub_key, sub_value in vars(current_attr).items():
-							lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key][sub_key] = None
-							lb_config.saveconfig()
-					# Setta l'id corrente nel database a selected False siccome è stato cambiato passando l'id, o altri attributi o entrambi
-					update_data(key, current_id, {"selected": False})
-				# Modifica dei valori
+				is_allow_none = False
+				is_passed_some_values = {sub_key: sub_value for sub_key, sub_value in vars(value).items() if sub_value is not None}
+				current_data_contains_id = True if "id" in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] and lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]["id"] is not None else False
+				if is_passed_some_values and current_data_contains_id:
+					is_allow_none = True
 				for sub_key, sub_value in vars(value).items():
-					if sub_value is not None or current_id is not None:
+					if sub_value is not None or is_allow_none:
 						# Se il valore è un tipo primitivo, aggiorna il nuovo valore
 						if sub_value in ["", "undefined", -1]:
 							sub_value = None
@@ -73,12 +60,6 @@ class Functions:
 				lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] = None
 				lb_config.saveconfig()
 			elif isinstance(attr, dict):
-				if hasattr(attr, "id"):
-					# Ottiene l'id corrente dell'oggetto inerente alla chiave
-					current_attr_id = lb_config.g_config["app_api"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]["id"]
-					# Se l'id corrente non é None allora setta selected False dell'id sul database
-					if current_attr_id is not None:
-						update_data(key, current_attr_id, {"selected": False})
 				# Resetta tutti gli attributi dell'oggetto corrente a None
 				for sub_key in attr:
 					lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key][sub_key] = None

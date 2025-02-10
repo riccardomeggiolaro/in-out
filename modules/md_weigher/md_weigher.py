@@ -245,6 +245,7 @@ class WeigherInstance:
 			   	diagnostic_has_priority_than_realtime=value.diagnostic_has_priority_than_realtime,
 				always_execute_realtime_in_undeground=value.always_execute_realtime_in_undeground,
 				need_take_of_weight_before_weighing=value.need_take_of_weight_before_weighing,
+				need_take_of_weight_on_startup=value.need_take_of_weight_on_startup,
 				node=value.node, 
 				terminal=value.terminal,
 				run=value.run
@@ -343,6 +344,8 @@ class WeigherInstance:
 			maintaine_session_realtime_after_command=setup.maintaine_session_realtime_after_command,
 			diagnostic_has_priority_than_realtime=setup.diagnostic_has_priority_than_realtime,
 			always_execute_realtime_in_undeground=setup.always_execute_realtime_in_undeground,
+   			need_take_of_weight_before_weighing=setup.need_take_of_weight_before_weighing,
+			need_take_of_weight_on_startup=setup.need_take_of_weight_on_startup,
 			node=setup.node, 
 			terminal=setup.terminal,
 			run=setup.run

@@ -5,9 +5,9 @@ from modules.md_weigher.setup_terminal import Terminal
 from libs.lb_utils import sum_number
 
 class EgtAf03(Terminal):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, node, terminal, run, {"1": 0, "2": 0, "3": 0, "4": 0})
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, {"1": 0, "2": 0, "3": 0, "4": 0})
     
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
@@ -143,7 +143,8 @@ class EgtAf03(Terminal):
 						self.pesa_real_time.unite_measure = split_response[6]
 						self.diagnostic.status = 200
 						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
-							self.take_of_weight = False
+							self.take_of_weight_on_startup = False
+							self.take_of_weight_before_weighing = False
 					# Se formato stringa del peso in tempo reale non corretto, manda a video errore
 					else:
 						self.diagnostic.status = 201
@@ -191,7 +192,7 @@ class EgtAf03(Terminal):
 						self.weight.weight_executed.status = split_response[0]
 						self.weight.weight_executed.executed = True
 						self.diagnostic.status = 200
-						self.take_of_weight = True if self.need_take_of_weight_before_weighing else False
+						self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
 					else:
 						self.diagnostic.status = 201

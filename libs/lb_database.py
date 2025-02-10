@@ -65,7 +65,6 @@ class Vehicle(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	plate = Column(String)
 	name = Column(String)
-	selected = Column(Boolean, default=False)
 
 class ScheletonVehicleDTO(BaseModel):
 	plate: Optional[str] = None
@@ -80,7 +79,7 @@ class VehicleDTO(ScheletonVehicleDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('vehicle', v, True, True)
+			data = get_data_by_id('vehicle', v)
 			if not data:
 				raise ValueError('Id not exist in vehicle')
 			else:
@@ -89,16 +88,7 @@ class VehicleDTO(ScheletonVehicleDTO):
 		return v
 
 class VehicleDTOInit(ScheletonVehicleDTO):
-	@validator('id', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v not in (None, -1):
-			data = get_data_by_id('vehicle', v, False, False)
-			if not data:
-				raise ValueError('Id not exist in vehicle')
-			else:
-				values['plate'] = data.get('plate')
-				values['name'] = data.get('name')
-		return v
+	pass
 
 # Modello per la tabella SocialReason
 class SocialReason(Base):
@@ -107,7 +97,6 @@ class SocialReason(Base):
 	name = Column(String)
 	cell = Column(Integer)
 	cfpiva = Column(String)
-	selected = Column(Boolean, default=False)
 
 class Customer(SocialReason):
 	__tablename__ = 'customer'
@@ -132,7 +121,7 @@ class CustomerDTO(SocialReasonDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('customer', v, True, True)
+			data = get_data_by_id('customer', v)
 			if not data:
 				raise ValueError('Id not exist in customer')
 			else:
@@ -142,50 +131,19 @@ class CustomerDTO(SocialReasonDTO):
 		return v
 
 class CustomerDTOInit(SocialReasonDTO):
-	@validator('id', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v not in (None, -1):
-			data = get_data_by_id('customer', v, False, False)
-			if not data:
-				raise ValueError('Id not exist in customer')
-			else:
-				values['name'] = data.get('name')
-				values['cell'] = data.get('cell')
-				values['cfpiva'] = data.get('cfpiva')
-		return v
+	pass
 
 class SupplierDTO(SocialReasonDTO):
-	@validator('id', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v not in (None, -1):
-			data = get_data_by_id('supplier', v, True, True)
-			if not data:
-				raise ValueError('Id not exist in supplier')
-			else:
-				values['name'] = data.get('name')
-				values['cell'] = data.get('cell')
-				values['cfpiva'] = data.get('cfpiva')
-		return v
+	pass
 
 class SupplierDTOInit(SocialReasonDTO):
-	@validator('id', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v not in (None, -1):
-			data = get_data_by_id('supplier', v, False, False)
-			if not data:
-				raise ValueError('Id not exist in supplier')
-			else:
-				values['name'] = data.get('name')
-				values['cell'] = data.get('cell')
-				values['cfpiva'] = data.get('cfpiva')
-		return v
+	pass
 
 # Modello per la tabella Material
 class Material(Base):
 	__tablename__ = 'material'
 	id = Column(Integer, primary_key=True, index=True) 
 	name = Column(String, index=True)
-	selected = Column(Boolean, index=True, default=False)
 
 class ScheletonMaterialDTO(BaseModel):
 	name: Optional[str] = None
@@ -195,7 +153,7 @@ class MaterialDTO(ScheletonMaterialDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
-			data = get_data_by_id('material', v, True, True)
+			data = get_data_by_id('material', v)
 			if not data:
 				raise ValueError('Id not exist in material')
 			else:
@@ -203,15 +161,7 @@ class MaterialDTO(ScheletonMaterialDTO):
 		return v
 
 class MaterialDTOInit(ScheletonMaterialDTO):
-	@validator('id', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v not in [None, -1]:
-			data = get_data_by_id('material', v, False, False)
-			if not data:
-				raise ValueError('Id not exist in material')
-			else:
-				values['name'] = data.get('name')
-		return v
+	pass
 
 class ImageCaptured(Base):
 	__tablename__ = 'image_captured'
@@ -312,7 +262,7 @@ def load_records_into_db(table_name: str, records: List[object]):
 		session.close()
 		raise e
 
-def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=False):
+def get_data_by_id(table_name, record_id):
 	"""Ottiene un record specifico da una tabella tramite l'ID e imposta 'selected' a True.
 
 	Args:
@@ -337,14 +287,6 @@ def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=Fa
 		if record is None:
 			raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
 
-		# Aggiunge una condizione alla query se if_is_selected è True
-		if if_not_selected and record.selected:
-			raise ValueError(f"Record con ID {record_id} già in uso nella tabella '{table_name}'.")
-
-		# Imposta l'attributo 'selected' a True e salva la modifica
-		if set_selected:
-			record.selected = True
-
 		# Converte il record in un dizionario
 		record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
 
@@ -358,7 +300,7 @@ def get_data_by_id(table_name, record_id, if_not_selected=False, set_selected=Fa
 		session.close()
 		raise e
 
-def get_data_by_attribute(table_name, attribute_name, attribute_value, if_not_selected=False, set_selected=False):
+def get_data_by_attribute(table_name, attribute_name, attribute_value):
 	"""Ottiene un record specifico da una tabella tramite un attributo e imposta 'selected' a True.
 
 	Args:
@@ -388,10 +330,6 @@ def get_data_by_attribute(table_name, attribute_name, attribute_value, if_not_se
 	try:
 		# Recupera il record specifico in base all'attributo
 		record = session.query(model).filter(getattr(model, attribute_name) == attribute_value).one_or_none()
-
-		# Imposta l'attributo 'selected' a True e salva la modifica
-		if set_selected:
-			record.selected = True
 
 		record_dict = None
 
@@ -490,7 +428,7 @@ def add_data(table_name, data):
 		session.close()
 		raise e
 
-def update_data(table_name, record_id, updated_data, if_not_selected=False):
+def update_data(table_name, record_id, updated_data):
 	"""Aggiorna un record specifico in una tabella.
 
 	Args:
@@ -513,10 +451,6 @@ def update_data(table_name, record_id, updated_data, if_not_selected=False):
 		if record is None:
 			raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
 
-		# Aggiunge una condizione alla query se if_is_selected è True
-		if if_not_selected and record.selected:
-			raise ValueError(f"Record con ID {record_id} è in uso nella tabella '{table_name}'.")
-
 		# Aggiorna i campi con i nuovi valori
 		for key, value in updated_data.items():
 			if hasattr(record, key) and value is not None:  # Verifica che il campo esista
@@ -531,7 +465,7 @@ def update_data(table_name, record_id, updated_data, if_not_selected=False):
 		session.close()
 		raise e
 
-def delete_data(table_name, record_id, if_not_selected=False):
+def delete_data(table_name, record_id):
 	"""Elimina un record specifico da una tabella.
 
 	Args:
@@ -553,9 +487,6 @@ def delete_data(table_name, record_id, if_not_selected=False):
 		if record is None:
 			raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
 
-		if if_not_selected and record.selected:
-			raise ValueError(f"Record con ID {record_id} è in uso nella tabella '{table_name}'.")
-
 		# Elimina il record
 		session.delete(record)
 		session.commit()
@@ -565,7 +496,7 @@ def delete_data(table_name, record_id, if_not_selected=False):
 		session.close()
 		raise e
 
-def delete_all_data(table_name, if_not_selected=False):
+def delete_all_data(table_name):
 	"""Elimina tutti i record da una tabella, con un'opzione per escludere quelli selezionati.
 
 	Args:
@@ -587,10 +518,6 @@ def delete_all_data(table_name, if_not_selected=False):
 
 		# Costruisce la query per selezionare i record da eliminare
 		query = session.query(model)
-		
-		# Aggiunge la condizione per eliminare solo i record non selezionati, se richiesto
-		if if_not_selected:
-			query = query.filter_by(selected=False)
 		
 		# Elimina tutti i record trovati in una sola operazione
 		deleted_count = query.delete(synchronize_session=False)

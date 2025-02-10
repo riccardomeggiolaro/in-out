@@ -7,7 +7,7 @@ import modules.md_weigher.md_weigher as md_weigher
 from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetupWeigherDTO
 from typing import Union
 from libs.lb_system import SerialPort, Tcp
-from applications.router.weigher.types import Data
+from applications.router.weigher.types import Data, Cam, SetCam, EventAction
 
 class ConfigWeigher(CallbackWeigher):
     def __init__(self):
@@ -69,6 +69,17 @@ class ConfigWeigher(CallbackWeigher):
         del weigher_created[setup.name]["terminal_data"]
         del weigher_created[setup.name]["status"]
         weigher_created[setup.name]["data"] = Data(**{}).dict()
+        weigher_created[setup.name]["cams"] = {}
+        weigher_created[setup.name]["events"] = {
+            "realtime": {
+                "over_min": EventAction(**{}).dict(),
+                "under_min": EventAction(**{}).dict()
+            },
+            "weighing": {
+                "weight1": EventAction(**{}).dict(),
+                "weight2": EventAction(**{}).dict()
+            }
+        }
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][setup.name] = weigher_created[setup.name]
         lb_config.saveconfig()
         return response

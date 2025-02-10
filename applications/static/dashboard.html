@@ -21,36 +21,25 @@
             <div class="display-wrapper">
                 <div class="item anagrafic">
                     <div>
-                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Veicolo</h2>
-                        <p style="text-align: left; margin-top: 0px;">Descrizione:</p>
-                        <input id="currentDescriptionVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myDescriptionVehicleInput', 'name', '', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'myDescriptionVehicleInput')" >
-                        <p style="text-align: left; margin-top: 0px;">Targa:</p>
-                        <input id="currentPlateVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myPlateInput', 'plate', '', ['name'], 'platePopup', 'suggestionsListPlateVehicle'); openPopup('platePopup', 'myPlateInput')" >
-                        <br>
+                        <input placeholder="Descrizione veicolo" id="currentDescriptionVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myDescriptionVehicleInput', 'name', '', ['plate'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'myDescriptionVehicleInput')" >
+                        <br><br>
+                        <input placeholder="Targa" id="currentPlateVehicle" type="text"name="plate" onclick="showSuggestions('vehicle', 'myPlateInput', 'plate', '', ['name'], 'platePopup', 'suggestionsListPlateVehicle'); openPopup('platePopup', 'myPlateInput')" >
                     </div>
 
                     <div>
-                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Cliente</h2>
-                        <input id="currentNameSocialReasonCustomer" type="text"name="plate" onclick="showSuggestions('customer', 'nameSocialReasonCustomerInput', 'name', '', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer'); openPopup('nameSocialReasonCustomerPopup', 'nameSocialReasonCustomerInput')" >
-                        <br>
+                        <input placeholder="Cliente" id="currentNameSocialReasonCustomer" type="text"name="plate" onclick="showSuggestions('customer', 'nameSocialReasonCustomerInput', 'name', '', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer'); openPopup('nameSocialReasonCustomerPopup', 'nameSocialReasonCustomerInput')" >
                     </div>
 
                     <div>
-                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Fornitore</h2>
-                        <input id="currentNameSocialReasonSupplier" type="text"name="plate" onclick="showSuggestions('supplier', 'nameSocialReasonSupplierInput', 'name', '', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier'); openPopup('nameSocialReasonSupplierPopup', 'nameSocialReasonSupplierInput')" >
-                        <br>
+                        <input placeholder="Fornitore" id="currentNameSocialReasonSupplier" type="text"name="plate" onclick="showSuggestions('supplier', 'nameSocialReasonSupplierInput', 'name', '', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier'); openPopup('nameSocialReasonSupplierPopup', 'nameSocialReasonSupplierInput')" >
                     </div>
 
                     <div>
-                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Materiale</h2>
-                        <input id="currentMaterial" type="text"name="plate" onclick="showSuggestions('material', 'myMaterialInput', 'name', '', [], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myMaterialInput')" >
-                        <br>
+                        <input placeholder="Materiale" id="currentMaterial" type="text"name="plate" onclick="showSuggestions('material', 'myMaterialInput', 'name', '', [], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myMaterialInput')" >
                     </div>
 
                     <div>
-                        <h2 style="text-align: left; margin-top: 0px; font-size: 1.3rem;">Note</h2>
-                        <input id="currentNote" type="text" name="plate" onclick="openPopup('notePopup', 'myNoteInput')" >
-                        <br>
+                        <input placeholder="Note" id="currentNote" type="text" name="plate" onclick="openPopup('notePopup', 'myNoteInput')" >
                     </div>
                 </div>
                 <div class="display item">
@@ -60,11 +49,12 @@
                             <div class="info-icon"><strong><em>i</em></strong></div>
                             <div class="tooltip">
                                 <h4>Dettagli terminale</h4>
-                                <p>Firmware: <strong>807</strong></p>
-                                <p>Model name: <strong>DGT1</strong></p>
-                                <p>Serial number: <strong>101214005</strong></p>
-                                <p>Portata massima: <strong>60000 kg</strong></p>
-                                <p>Divisione: <strong>1</strong></p>
+                                <p>Firmware: <strong id="firmware">807</strong></p>
+                                <p>Model name: <strong id="modelName">DGT1</strong></p>
+                                <p>Serial number: <strong id="serialNumber">101214005</strong></p>
+                                <p>Portata minima: <strong id="minWeight">60000 kg</strong></p>
+                                <p>Portata massima: <strong id="maxWeight">60000 kg</strong></p>
+                                <p>Divisione: <strong id="division">1</strong></p>
                             </div>
                         </div>
                         <p id="uniteMisure">--</p>
