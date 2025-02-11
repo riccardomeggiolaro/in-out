@@ -1,5 +1,5 @@
 from libs.lb_utils import CustomBaseModel
-from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id
+from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected
 from typing import Optional
 from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
@@ -27,9 +27,7 @@ class IdSelectedDTO(CustomBaseModel):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
-			data = get_data_by_id('weighing', v)
-			if not data:
-				raise ValueError('Id not exist in weighings')
+			get_data_by_id_if_is_selected('weighing', v)
 		return v
 
 class DataDTO(BaseModel):
