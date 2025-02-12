@@ -15,14 +15,6 @@ class IdSelected(BaseModel):
 class Data(BaseModel):
 	data_in_execution: DataInExecution = DataInExecution(**{})
 	id_selected: IdSelected = IdSelected(**{})
- 
-class Cam(BaseModel):
-    name: str
-    url: str
-    
-class SetCam(BaseModel):
-    name: Optional[str] = None
-    url: Optional[str] = None
     
 class EventAction(BaseModel):
     take_picture: List[int] = []

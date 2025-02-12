@@ -7,7 +7,7 @@ import modules.md_weigher.md_weigher as md_weigher
 from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetupWeigherDTO
 from typing import Union
 from libs.lb_system import SerialPort, Tcp
-from applications.router.weigher.types import Data, Cam, SetCam, EventAction
+from applications.router.weigher.types import Data, EventAction
 
 class ConfigWeigher(CallbackWeigher):
     def __init__(self):

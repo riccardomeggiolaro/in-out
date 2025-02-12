@@ -7,9 +7,9 @@ from applications.router.weigher.dto import IdSelectedDTO, WeighingDataDTO
 from typing import Optional, Union
 import asyncio
 import libs.lb_log as lb_log
-from applications.router.weigher.data_in_execution import DataInExecutionRouter
+from applications.router.weigher.cams import DataInExecutionRouter
 
-class CommandWeigher(DataInExecutionRouter):
+class CommandWeigherRouter(DataInExecutionRouter):
 	def __init__(self):
 		super().__init__()
 

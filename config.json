@@ -64,7 +64,12 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [],
+                                    "set_rele": [
+                                        {
+                                            "name": "1",
+                                            "status": 0
+                                        }
+                                    ],
                                     "take_picture": []
                                 },
                                 "under_min": {

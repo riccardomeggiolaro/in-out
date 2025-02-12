@@ -50,6 +50,34 @@ class WeighingDataDTO(CustomBaseModel):
 		return values
 
 class CamDTO(BaseModel):
-	camera_url: str
-	username: str
-	password: str
+    name: str
+    url: str
+    
+class SetCamDTO(BaseModel):
+    name: Optional[str] = None
+    url: Optional[str] = None
+
+class ReleDTO(BaseModel):
+    name: str
+    status: Optional[int] = 0
+    
+    @validator('status', pre=True, always=True)
+    def check_status(cls, v, values):
+        if v not in [0, 1]:
+            raise ValueError("Status must to be 1 or 2")
+        return v
+    
+class EVentDTO(BaseModel):
+    event: str
+    
+    @validator('event', pre=True, always=True)
+    def check_event(cls, v, values):
+        if v not in ["over_min", "under_min", "weight1", "weight2"]:
+            raise ValueError("Event not exist")
+        return v
+    
+class CamEventDTO(EVentDTO):
+    cam: str
+
+class ReleEventDTO(EVentDTO):
+	rele: ReleDTO
