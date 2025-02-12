@@ -21,8 +21,6 @@ cursor.execute("DELETE FROM supplier")
 
 cursor.execute("DELETE FROM vehicle")
 
-cursor.execute("INSERT INTO material (name) VALUES ('ferro')")
-
 conn.commit()
 
 conn.close()
