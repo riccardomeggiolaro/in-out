@@ -220,3 +220,33 @@ button:enabled {
 hr {
     color: white;
 }
+
+.releConfiguration {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ccc;
+    width: 150px;
+    padding: 0px 8px;
+    border-radius: 5px;
+    margin: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.3s ease;
+}
+
+.releConfiguration .delete-btn {
+    display: none;
+}
+
+.releConfiguration:hover {
+    box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra piu' intensa al passaggio del mouse */
+}
+
+.releConfiguration:hover .delete-btn {
+    display: block; /* Mostra il pulsante al passaggio del mouse */
+}
+
+.gray {
+    color: gray;
+}

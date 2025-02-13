@@ -30,7 +30,7 @@ class EventsRouter:
         lb_config.saveconfig()
         return lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][camEvent.event]["take_picture"]
 
-    async def DeleteCamEvent(self, camName: CamEventDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+    async def DeleteCamEvent(self, camEvent: CamEventDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         key = None
         if camEvent.event in ["over_min", "under_min"]:
             key = "realtime"
@@ -50,9 +50,10 @@ class EventsRouter:
             key = "realtime"
         elif releEvent.event in ["weight1", "weight2"]:
             key = "weighing"
-        if releEvent.rele.dict() in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"]:
+        rele_configuration = {releEvent.rele.name: releEvent.rele.status}
+        if rele_configuration in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"]:
             raise HTTPException(status_code=400, detail="Rele configuration just exist in the event")            
-        lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"].append(releEvent.rele.dict())
+        lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"].append(rele_configuration)
         lb_config.saveconfig()
         return lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"]
     
@@ -62,8 +63,9 @@ class EventsRouter:
             key = "realtime"
         elif releEvent.event in ["weight1", "weight2"]:
             key = "weighing"
-        if releEvent.rele.dict() in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"]:
-            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"].remove(releEvent.rele.dict())
+        rele_configuration = {releEvent.rele.name: releEvent.rele.status}
+        if rele_configuration in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"]:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"][key][releEvent.event]["set_rele"].remove(rele_configuration)
             lb_config.saveconfig()
             return { "deleted": True }
         raise HTTPException(status_code=404, detail="Rele configuration not exist in the event")

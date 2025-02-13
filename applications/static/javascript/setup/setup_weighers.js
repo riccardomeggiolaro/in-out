@@ -229,10 +229,8 @@ fetch('/config_weigher/all/instance')
 
         const populateViewSerial = (data) => {
             viewModeSerial.innerHTML = `
-                Porta seriale: ${data.connection.serial_port_name ? data.connection.serial_port_name : ''}<br>
-                Baudrate: ${data.connection.baudrate ? data.connection.baudrate : ''}<br>
-                Timeout: ${data.connection.timeout ? data.connection.timeout : ''}<br>
-                Esegui comando ogni: ${currentTimeBetweenActions} secondi
+                <h4>${data.connection.serial_port_name ? data.connection.serial_port_name : ''}</h4>
+                <p class="gray"><em>Baudrate: ${data.connection.baudrate ? data.connection.baudrate : ''} <strong>-</strong> Timeout: ${data.connection.timeout ? data.connection.timeout : ''} <strong>-</strong> Esegui comando ogni: ${currentTimeBetweenActions} secondi</em></p>
             `;
         }
 
@@ -385,9 +383,7 @@ fetch('/config_weigher/all/instance')
 
         const populateViewTcp = (data) => {
             viewModeTcp.innerHTML = `
-                Indirizzo IP: ${data.connection.ip ? data.connection.ip : ''}<br>
-                Porta: ${data.connection.port ? data.connection.port : ''}<br>
-                Timeout: ${data.connection.timeout ? data.connection.timeout : ''}<br>
+                <p>Indirizzo IP: ${data.connection.ip ? data.connection.ip : ''} <strong>-</strong> Porta: ${data.connection.port ? data.connection.port : ''} <strong>-</strong> Timeout: ${data.connection.timeout ? data.connection.timeout : ''}<br></p><br>
                 Esegui comando ogni: ${currentTimeBetweenActions} secondi
             `;
         }
@@ -679,15 +675,10 @@ fetch('/config_weigher/all/instance')
 
             const populateViewContent = (data) => {
                 viewMode.querySelector('.content').innerHTML = `
-                    <h4>${data.name}</h4>
-                    Nodo: ${data.node ? data.node : ''}<br>
-                    Peso massimo: ${data.max_weight}<br>
-                    Peso minimo: ${data.min_weight}<br>
-                    Divisione: ${data.division}<br>
-                    Terminale: ${data.terminal}<br>
-                    In esecuzione: ${data.run}<br>
-                    Scaricare la pesa dopo pesata effettuata: ${data.need_take_of_weight_before_weighing}<br>
-                    Scaricare la pesa dopo l'avvio del programma: ${data.need_take_of_weight_on_startup}<br>
+                    <h4>${data.name} <span class="gray">${data.terminal}</span></h4>
+                    <p class="gray"><em>Peso massimo: ${data.max_weight}</em> <strong>-</strong> <em>Peso minimo: ${data.min_weight}</em> <strong>-</strong> <em>Divisione: ${data.division}</em><br></p>
+                    <p class="gray"><em>Pesate multiple: ${data.need_take_of_weight_before_weighing ? 'Si' : 'No'}</em> <strong>-</strong> <em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em> <strong>-</strong> <em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
+                    <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
                 `;
             }
 
@@ -862,11 +853,146 @@ fetch('/config_weigher/all/instance')
                 })
             });
 
+            const eventWeigher = document.createElement('div');
+
+            const populateEventWeigher = () => {
+                let list_event_weigher = `/events/list?instance_name=${key}`;
+                if (weigher.name !== null) {
+                    list_event_weigher += `&weigher_name=${weigher.name}`;
+                }
+
+                const deleteItemModal = document.createElement('div');
+
+                deleteItemModal.classList.toggle('modal');
+
+                // Aggiungo il contenuto del modal tramite innerHTML
+                deleteItemModal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>Conferma eliminazione</h3>
+                        <p>Sei sicuro di voler eliminare l'azione?</p>
+                        <div class="container-buttons right">
+                            <button class="cancel-btn">Annulla</button>
+                            <button class="confirm-btn delete-btn">Conferma</button>
+                        </div>
+                    </div>
+                `;
+
+                weighers_config.appendChild(deleteItemModal);
+
+                // Chiudi il modal se si clicca fuori
+                window.addEventListener('click', (event) => {
+                    if (event.target === deleteItemModal) {
+                        deleteItemModal.style.display = 'none';
+                    }
+                });
+                
+                fetch(list_event_weigher)
+                .then(res => res.json())
+                .then(res => {
+                    // Realtime over_min events (modificato per oggetti, non array)
+                    const overMinEvents = res.realtime.over_min;
+                    const underMinEvents = res.realtime.under_min;
+                    const weight1Events = res.weighing.weight1;
+                    const weight2Events = res.weighing.weight2;
+
+                    const populateListEvent = (h4, events, event) => {
+                        const title = document.createElement('h4');
+                        const ulRele = document.createElement('ul');
+                        const ulCam = document.createElement('ul');
+
+                        title.innerText = h4;
+
+                        const deleteItemEvent = (item, event, name, list, li) => {
+                            deleteItemModal.style.display = 'block';
+
+                            deleteConnectionModal.querySelector('.cancel-btn').addEventListener('click', () => {
+                                deleteItemModal.style.display = 'none';
+                            });
+                    
+                            deleteItemModal.querySelector('.confirm-btn').addEventListener('click', () => {
+                                let delete_cam_event = `/events/${name}/delete?instance_name=${key}`;
+                                if (weigher.name !== null) {
+                                    delete_cam_event += `&weigher_name=${weigher.name}`;
+                                }
+                                fetch(delete_cam_event, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        [name]: item,
+                                        event
+                                    })
+                                })
+                                .then(res => res.json())
+                                .then(res => {
+                                    if (res.deleted) {
+                                        list.removeChild(li);
+                                        if (ulRele.childNodes.length === 0 && ulCam.childNodes.length === 0) {
+                                            eventWeigher.removeChild(title);
+                                            eventWeigher.removeChild(ulRele);
+                                            eventWeigher.removeChild(ulCam);                                        
+                                        }
+                                        deleteItemModal.style.display = 'none';
+                                    }
+                                })
+                            });
+                        }
+
+                        if (events.set_rele && Array.isArray(events.set_rele)) {
+                            events.set_rele.forEach(item => {
+                                const li = document.createElement('li');
+                                const [key, value] = Object.entries(item)[0];
+                                li.innerHTML = `
+                                    <div class="releConfiguration">
+                                        <p>${value === 0 ? 'Chiudi' : 'Apri'} relè ${key}</p>
+                                        <button class="delete-btn">${deleteButtonContent}</button>
+                                    </div>
+                                `;
+                                li.querySelector('button').addEventListener('click', () => deleteItemEvent({"name": key, "status": value}, event, 'rele', ulRele, li));
+                                ulRele.appendChild(li);
+                            });
+                        }
+
+                        if (events.take_picture && Array.isArray(events.take_picture)) {
+                            events.take_picture.forEach(item => {
+                                const li = document.createElement('li');
+                                li.innerHTML = `
+                                    <div class="releConfiguration">
+                                        <p>Foto con ${item}</p>
+                                        <button class="delete-btn">${deleteButtonContent}</button>
+                                    </div>
+                                `;
+                                li.querySelector('button').addEventListener('click', () => deleteItemEvent(item, event, 'cam', ulCam, li));
+                                ulCam.appendChild(li);
+                            });
+                        }
+
+                        if (ulRele.childNodes.length > 0 || ulCam.childNodes.length > 0) {
+                            eventWeigher.appendChild(title);
+                            eventWeigher.appendChild(ulRele);
+                            eventWeigher.appendChild(ulCam);
+                        }
+                    }
+
+                    populateListEvent('Peso sopra la soglia minima', overMinEvents, 'over_min');
+                    populateListEvent('Peso sotto la soglia minima', underMinEvents, 'under_min');
+                    populateListEvent('Dopo pesata 1 effettuata', weight1Events, 'weight1');
+                    populateListEvent('Dopo pesata 2 effettuata', weight2Events, 'weight2');
+                })
+                .catch(err => {
+                    console.error('Error fetching event data:', err);
+                });
+            }            
+
+            populateEventWeigher();
+
             const br = document.createElement('br');
 
             li.appendChild(editMode);
             li.appendChild(viewMode);
             li.appendChild(deleteWeigherModal);
+            li.appendChild(eventWeigher);
             ul.appendChild(li);
             ul.appendChild(br);
 

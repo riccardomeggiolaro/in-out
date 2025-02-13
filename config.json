@@ -66,11 +66,9 @@
                                 "over_min": {
                                     "set_rele": [
                                         {
-                                            "name": "1",
-                                            "status": 0
+                                            "1": 0
                                         }
-                                    ],
-                                    "take_picture": []
+                                    ]
                                 },
                                 "under_min": {
                                     "set_rele": [],
