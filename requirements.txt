@@ -5,3 +5,11 @@ fastapi[standard]
 uvicorn
 psutil==6.0.0
 jinja2
+paramiko
+sqlalchemy
+jwt
+apscheduler
+pycups
+python-dateutil
+pandas
+requests
