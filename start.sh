@@ -57,6 +57,7 @@ fi
 # Installa i requisiti solo se l'ambiente è nuovo o se mancano pacchetti
 if [ -f "requirements.txt" ] && { [ "$VENV_NUOVO" = true ] || ! pip freeze --quiet | grep -q -f requirements.txt; }; then
     echo "Installazione delle dipendenze da requirements.txt..."
+    pip cache purge
     pip install -r requirements.txt
 else
     echo "Tutte le dipendenze sono già installate, procedo..."

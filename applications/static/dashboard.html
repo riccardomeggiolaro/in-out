@@ -27,11 +27,11 @@
                     </div>
 
                     <div>
-                        <input placeholder="Cliente" id="currentNameSocialReasonCustomer" type="text"name="plate" onclick="showSuggestions('customer', 'nameSocialReasonCustomerInput', 'name', '', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer'); openPopup('nameSocialReasonCustomerPopup', 'nameSocialReasonCustomerInput')" >
+                        <input placeholder="Cliente" id="currentNameSocialReasonCustomer" type="text"name="plate" onclick="showSuggestions('social_reason', 'nameSocialReasonCustomerInput', 'name', '', ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer'); openPopup('nameSocialReasonCustomerPopup', 'nameSocialReasonCustomerInput')" >
                     </div>
 
                     <div>
-                        <input placeholder="Fornitore" id="currentNameSocialReasonSupplier" type="text"name="plate" onclick="showSuggestions('supplier', 'nameSocialReasonSupplierInput', 'name', '', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier'); openPopup('nameSocialReasonSupplierPopup', 'nameSocialReasonSupplierInput')" >
+                        <input placeholder="Fornitore" id="currentNameSocialReasonSupplier" type="text"name="plate" onclick="showSuggestions('social_reason', 'nameSocialReasonSupplierInput', 'name', '', ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier'); openPopup('nameSocialReasonSupplierPopup', 'nameSocialReasonSupplierInput')" >
                     </div>
 
                     <div>
@@ -121,7 +121,7 @@
         <div id="nameSocialReasonCustomerPopup" class="popup">
             <div class="popup-content">
                 <h2>Nome:</h2>
-                <input type="text" id="nameSocialReasonCustomerInput" autocomplete="off" class="input" oninput="showSuggestions('customer', 'nameSocialReasonCustomerInput', 'name', this.value, ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer');">
+                <input type="text" id="nameSocialReasonCustomerInput" autocomplete="off" class="input" oninput="showSuggestions('social_reason', 'nameSocialReasonCustomerInput', 'name', this.value, ['description'], 'nameSocialReasonCustomerPopup', 'suggestionsListNameSocialReasonCustomer');">
                 <ul id="suggestionsListNameSocialReasonCustomer" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -133,7 +133,7 @@
         <div id="nameSocialReasonSupplierPopup" class="popup">
             <div class="popup-content">
                 <h2>Nome:</h2>
-                <input type="text" id="nameSocialReasonSupplierInput" autocomplete="off" class="input" oninput="showSuggestions('supplier', 'nameSocialReasonSupplierInput', 'name', this.value, ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier');">
+                <input type="text" id="nameSocialReasonSupplierInput" autocomplete="off" class="input" oninput="showSuggestions('social_reason', 'nameSocialReasonSupplierInput', 'name', this.value, ['description'], 'nameSocialReasonSupplierPopup', 'suggestionsListNameSocialReasonSupplier');">
                 <ul id="suggestionsListNameSocialReasonSupplier" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>

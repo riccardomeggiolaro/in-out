@@ -24,7 +24,8 @@ class AuthRouter(APIRouter):
                 }
             # Se la password è errata, restituisci un errore generico
             raise HTTPException()
-        except Exception:
+        except Exception as e:
+            return e
             # Gestisce eventuali errori imprevisti (come la mancanza dell'utente)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

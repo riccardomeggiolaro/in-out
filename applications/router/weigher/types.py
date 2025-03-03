@@ -1,10 +1,10 @@
 from pydantic import BaseModel
-from libs.lb_database import CustomerDTOInit, SupplierDTOInit, VehicleDTOInit, MaterialDTOInit, update_data
+from libs.lb_database import SocialReasonDTOInit, VehicleDTOInit, MaterialDTOInit, update_data
 from typing import Union, Optional, List
 
 class DataInExecution(BaseModel):
-	customer: CustomerDTOInit = CustomerDTOInit(**{})
-	supplier: SupplierDTOInit = SupplierDTOInit(**{})
+	customer: SocialReasonDTOInit = SocialReasonDTOInit(**{})
+	supplier: SocialReasonDTOInit = SocialReasonDTOInit(**{})
 	vehicle: VehicleDTOInit = VehicleDTOInit(**{})
 	material: MaterialDTOInit = MaterialDTOInit(**{})
 	note: Union[str, None] = None

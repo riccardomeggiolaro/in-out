@@ -64,11 +64,7 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "1": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
                                     "set_rele": [],

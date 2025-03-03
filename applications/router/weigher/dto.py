@@ -1,12 +1,12 @@
 from libs.lb_utils import CustomBaseModel
-from libs.lb_database import CustomerDTO, SupplierDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected
+from libs.lb_database import SocialReasonDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected
 from typing import Optional
 from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
 
 class DataInExecutionDTO(CustomBaseModel):
-	customer: Optional[CustomerDTO] = CustomerDTO(**{})
-	supplier: Optional[SupplierDTO] = SupplierDTO(**{})
+	customer: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
+	supplier: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
 	vehicle: Optional[VehicleDTO] = VehicleDTO(**{})
 	material: Optional[MaterialDTO] = MaterialDTO(**{})
 	note: Optional[str] = None

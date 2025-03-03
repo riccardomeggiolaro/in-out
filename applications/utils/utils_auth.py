@@ -47,11 +47,15 @@ class TokenData(BaseModel):
 	exp: datetime
 
 def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=1)):
-	to_encode = data.copy()
-	expire = datetime.now(timezone.utc) + expires_delta
-	to_encode.update({"exp": expire})
-	
-	return jwt.encode(to_encode, lb_config.g_config["secret_key"], algorithm="HS256")
+	try:
+		to_encode = data.copy()
+		expire = datetime.now(timezone.utc) + expires_delta
+		to_encode.update({"exp": expire})
+		
+		return jwt.encode(to_encode, lb_config.g_config["secret_key"], algorithm="HS256")
+	except Exception as e:
+		print(e)
+		return e
 
 def hash_password(password: str):
 	# Convert password to bytes and generate salt

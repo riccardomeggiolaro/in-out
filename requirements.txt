@@ -7,7 +7,7 @@ psutil==6.0.0
 jinja2
 paramiko
 sqlalchemy
-jwt
+pyjwt
 apscheduler
 pycups
 python-dateutil

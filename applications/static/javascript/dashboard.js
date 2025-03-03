@@ -45,6 +45,13 @@ let currentWeigherPath = null;
 
 let instances = {};
 
+let firmwareValue;
+let modelNameValue;
+let serialNumberValue;
+let minWeightValue;
+let maxWeightValue;
+let divisionValue;
+
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
 const container = document.querySelector('.ins');
@@ -52,9 +59,10 @@ const listIn = document.querySelector('.list-in');
 const selectedIdWeigher = document.querySelector('.list-weigher');
 const tareButton = document.getElementById('tareButton');
 const zeroButton = document.getElementById('zeroButton');
+const presetTareButton = document.getElementById('pTareButton');
 const inButton = document.getElementById('inButton')
 const printButton = document.getElementById('printButton');
-const out = document.getElementById('outButton');
+const outButton = document.getElementById('outButton');
 const firmware = document.getElementById('firmware');
 const modelName = document.getElementById('modelName');
 const serialNumber = document.getElementById('serialNumber');
@@ -145,11 +153,17 @@ async function getInstanceWeigher(path) {
     .then(res => {
         const obj = Object.values(res)[0];
         firmware.textContent = obj.terminal_data.firmware;
+        firmwareValue = obj.terminal_data.firmware;
         modelName.textContent = obj.terminal_data.model_name;
+        modelNameValue = obj.terminal_data.model_name;
         serialNumber.textContent = obj.terminal_data.serial_number;
+        serialNumberValue = obj.terminal_data.serial_number;
         minWeight.textContent = obj.min_weight;
+        minWeightValue = obj.min_weight;
         maxWeight.textContent = obj.max_weight;
+        maxWeightValue = obj.max_weight;
         division.textContent = obj.division;
+        divisionValue = obj.division;
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -182,11 +196,8 @@ async function getData(path) {
 
 async function populateListIn() {
     const listIn = document.querySelector('.list-in');
-    const items = document.querySelectorAll('.list-in li');
 
     listIn.innerHTML = '';
-
-    console.log(selectedIdWeight)
 
     await fetch('/historic_data/weighings/in')
     .then(res => res.json())
@@ -287,10 +298,10 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
         anagrafic_to_set = 'vehicle';
     } else if (showList === 'suggestionsListNameSocialReasonCustomer') {
         currentId = selectedIdCustomer;
-        anagrafic_to_set = 'customer';
+        anagrafic_to_set = 'social_reason';
     } else if (name_list === 'suggestionsListNameSocialReasonSupplier') {
         currentId = selectedIdSupplier;
-        anagrafic_to_set = 'supplier';
+        anagrafic_to_set = 'social_reason';
     } else if (name_list === 'material') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
@@ -493,6 +504,10 @@ function closeWebSocket() {
     }
 }
 
+function isNumeric(value) {
+    return !isNaN(value) && value !== "";
+}
+
 function updateUIRealtime(e) {
     const obj = JSON.parse(e.data);
     if (obj.command_in_executing) {
@@ -523,7 +538,40 @@ function updateUIRealtime(e) {
         document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
         document.getElementById('uniteMisure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
         document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
-        inButton.disabled = data.tare != '0' ? true : false;
+        const numeric = isNumeric(data.gross_weight);
+        const gross_weight = Number(data.gross_weight);
+        const tare_weight = Number(data.tare);
+        if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data.status === "ST") {
+            if (tare_weight === 0 && selectedIdWeight === null) {
+                tareButton.disabled = false;
+                zeroButton.disabled = true;
+                presetTareButton.disabled = false;
+                inButton.disabled = false;
+                printButton.disabled = false;
+                outButton.disabled = false;
+            } else {
+                tareButton.disabled = false;
+                zeroButton.disabled = true;
+                presetTareButton.disabled = false;
+                inButton.disabled = true;
+                printButton.disabled = true;
+                outButton.disabled = false;
+            }
+        } else if (numeric && minWeightValue >= gross_weight) {
+            tareButton.disabled = true;
+            zeroButton.disabled = false;
+            presetTareButton.disabled = false;
+            inButton.disabled = true;
+            printButton.disabled = true;
+            outButton.disabled = true;
+        } else {
+            tareButton.disabled = true;
+            zeroButton.disabled = true;
+            presetTareButton.disabled = true;
+            inButton.disabled = true;
+            printButton.disabled = true;
+            outButton.disabled = true;
+        }
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
@@ -542,7 +590,6 @@ function updateUIRealtime(e) {
             selectedIdWeight = obj.id_selected.id;                    
             if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.add('selected');
             const selected = document.querySelector('.list-in li.selected');
-            console.log(selected);
             if (selected) {
                 selected.scrollIntoView({
                     behavior: 'instant',

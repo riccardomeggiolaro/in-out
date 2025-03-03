@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 import os
@@ -90,26 +90,28 @@ class VehicleDTO(ScheletonVehicleDTO):
 class VehicleDTOInit(ScheletonVehicleDTO):
 	pass
 
-# Modello per la tabella SocialReason
+SocialReasonTypeEnum = Enum('customer', 'supplier', name='social_reason_type')
+
 class SocialReason(Base):
-	__abstract__ = True  # Indica che questa tabella non sarà creata direttamente
+	__tablename__ = 'social_reason'
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
 	cell = Column(Integer)
 	cfpiva = Column(String)
+	type = Column(SocialReasonTypeEnum, nullable=True)
 
-class Customer(SocialReason):
-	__tablename__ = 'customer'
-
-class Supplier(SocialReason):
-	__tablename__ = 'supplier'
-
-class SocialReasonDTO(BaseModel):
+class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
 	cell: Optional[int] = None
 	cfpiva: Optional[str] = None
 	id: Optional[int] = None
+	type: Optional[SocialReasonTypeEnum] = None  # Aggiunto il tipo corretto
 
+	class Config:
+		use_enum_values = True  # Per restituire i valori delle enum come stringhe
+		arbitrary_types_allowed = True
+
+class SocialReasonDTO(ScheletonSocialReasonDTO):
 	@validator('cell', pre=True, always=True)
 	def check_cell(cls, v):
 		if v not in (None, -1):
@@ -117,7 +119,6 @@ class SocialReasonDTO(BaseModel):
 				raise ValueError("Cell must be greater than or equal to 0")
 		return v
 
-class CustomerDTO(SocialReasonDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
@@ -130,13 +131,7 @@ class CustomerDTO(SocialReasonDTO):
 				values['cfpiva'] = data.get('cfpiva')
 		return v
 
-class CustomerDTOInit(SocialReasonDTO):
-	pass
-
-class SupplierDTO(SocialReasonDTO):
-	pass
-
-class SupplierDTOInit(SocialReasonDTO):
+class SocialReasonDTOInit(ScheletonSocialReasonDTO):
 	pass
 
 # Modello per la tabella Material
@@ -224,8 +219,7 @@ class Weighing(Base):
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
 	'vehicle': Vehicle,
-	'customer': Customer,
-	'supplier': Supplier,
+	'social_reason': SocialReason,
 	'material': Material,
 	'weighing': Weighing,
 	'user': User,
@@ -578,15 +572,13 @@ def delete_all_data(table_name):
 
 required_columns = {
 	"vehicle": {"plate": str, "name": str},
-	"customer": {"name": str, "cell": int, "cfpiva": str},
-	"supplier": {"name": str, "cell": int, "cfpiva": str},
+	"social_reason": {"name": str, "cell": int, "cfpiva": str, "type": SocialReasonTypeEnum},
 	"material": {"name": str}
 }
 
 required_dtos = {
 	"vehicle": VehicleDTO,
-	"customer": CustomerDTO,
-	"supplier": SupplierDTO,
+	"social_reason": SocialReasonDTO,
 	"material": MaterialDTO
 }
 
