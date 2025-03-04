@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="it">
+    <head>
+        <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Ragioni sociali</title>
+        <meta name="description" content="About this app" />
+        <link rel="stylesheet" href="/static/css/anagrafics.css">
+        <style>
+            .table-container {
+                max-width: 800px;
+                margin: auto;
+                background: white;
+                margin-top: 10px;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+                position: relative;
+            }
+            .title {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 10px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+            th {
+                background-color: #1362b8;
+                color: white;
+            }
+            .register-button {
+                background-color: #1362b8;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            .popup {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+            }
+            .popup.active {
+                display: block;
+            }
+            .popup input {
+                width: 100%;
+                margin: 5px 0;
+                padding: 8px;
+            }
+            .popup button {
+                padding: 5px 10px;
+                margin-top: 10px;
+                cursor: pointer;
+            }
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            .overlay.active {
+                display: block;
+            }
+        </style>
+    </head>
+<body>
+    <div id="navbar-container"></div>
+
+    <div class="table-container">
+        <div class="title">
+            <h2>Ragioni Sociali</h2>
+            <button class="register-button" onclick="openPopup()">Registra</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Descrizione</th>
+                    <th>Cell</th>
+                    <th>CF/P.IVA</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Azienda Alfa</td>
+                    <td>+39 333 1234567</td>
+                    <td>12345678901</td>
+                </tr>
+                <tr>
+                    <td>Azienda Beta</td>
+                    <td>+39 334 9876543</td>
+                    <td>98765432109</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closePopup()"></div>
+    
+    <div class="popup" id="popup">
+        <h3>Nuova Ragione Sociale</h3>
+        <input type="text" id="descrizione" placeholder="Descrizione">
+        <input type="text" id="cell" placeholder="Cell">
+        <input type="text" id="cfpiva" placeholder="CF/P.IVA">
+        <button onclick="saveRagioneSociale()">Salva</button>
+        <button onclick="closePopup()">Annulla</button>
+    </div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script>
+        function openPopup() {
+            document.getElementById('popup').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+        
+        function closePopup() {
+            document.getElementById('popup').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+        
+        function saveRagioneSociale() {
+            const descrizione = document.getElementById('descrizione').value;
+            const cell = document.getElementById('cell').value;
+            const cfpiva = document.getElementById('cfpiva').value;
+            
+            if (descrizione && cell && cfpiva) {
+                const table = document.querySelector('tbody');
+                const newRow = `<tr><td>${descrizione}</td><td>${cell}</td><td>${cfpiva}</td></tr>`;
+                table.innerHTML += newRow;
+                closePopup();
+            } else {
+                alert("Tutti i campi sono obbligatori");
+            }
+        }
+    </script>
+</body>
+</html>

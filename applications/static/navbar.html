@@ -92,6 +92,35 @@
     .active-link-navbar {
         color: #1362b8;
     }
+
+    .dropdown-navbar {
+        display: none;
+        padding-left: 20px;
+    }
+
+    .dropdown-navbar.active {
+        display: block;
+    }
+
+    .arrow-dropdown-navbar {
+        display: inline-block;
+        border: solid black;
+        border-width: 0 2px 2px 0;
+        padding: 5px;
+        margin-left: 5px;
+        transform: rotate(45deg);
+        transition: transform 0.3s;
+    }
+
+    .arrow-dropdown-navbar.up {
+        transform: rotate(-135deg);
+    }
+
+    .li-last {
+        margin-bottom: 0px;
+        padding-bottom: 0px !important;
+        border-bottom: none !important;
+    }
 </style>
 <div class="overlay-navbar" onclick="removeMenu(this)">
 </div>
@@ -103,6 +132,15 @@
 <div class="side-menu-navbar">
     <ul class="ul-navbar">
         <li class="li-navbar"><a class="a-navbar" href="/dashboard">Dashboard</a></li>
+        <li class="li-navbar" onclick="toggleDropdown(event)">
+            <a class="a-navbar" href="#">Anagrafiche</a>
+            <span class="arrow-dropdown-navbar"></span>
+            <ul class="dropdown-navbar">
+                <li class="li-navbar"><a class="a-navbar" href="/social-reason">Ragioni sociali</a></li>
+                <li class="li-navbar"><a class="a-navbar" href="/vehicle">Veicoli</a></li>
+                <li class="li-navbar li-last"><a class="a-navbar" href="/material">Materiali</a></li>
+            </ul>
+        </li>
         <li class="li-navbar"><a class="a-navbar" href="/setup">Impostazioni</a></li>
     </ul>
 </div>

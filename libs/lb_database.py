@@ -90,25 +90,20 @@ class VehicleDTO(ScheletonVehicleDTO):
 class VehicleDTOInit(ScheletonVehicleDTO):
 	pass
 
-SocialReasonTypeEnum = Enum('customer', 'supplier', name='social_reason_type')
-
 class SocialReason(Base):
 	__tablename__ = 'social_reason'
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
 	cell = Column(Integer)
 	cfpiva = Column(String)
-	type = Column(SocialReasonTypeEnum, nullable=True)
 
 class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
 	cell: Optional[int] = None
 	cfpiva: Optional[str] = None
 	id: Optional[int] = None
-	type: Optional[SocialReasonTypeEnum] = None  # Aggiunto il tipo corretto
 
 	class Config:
-		use_enum_values = True  # Per restituire i valori delle enum come stringhe
 		arbitrary_types_allowed = True
 
 class SocialReasonDTO(ScheletonSocialReasonDTO):
@@ -156,6 +151,74 @@ class MaterialDTO(ScheletonMaterialDTO):
 		return v
 
 class MaterialDTOInit(ScheletonMaterialDTO):
+	pass
+
+class Booking(Base):
+    __tablename__ = 'booking'
+    id = Column(Integer, primary_key=True, index=True)
+    idSocialReason = Column(Integer, ForeignKey('social_reason.id'), nullable=False)
+    idVehicle = Column(Integer, ForeignKey('vehicle.id'), nullable=False)
+    idMaterial = Column(Integer, ForeignKey('material.id'), nullable=False)
+    weighings = Column(Integer, default=0, nullable=False)
+    date_created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relazioni
+    social_reason = relationship("SocialReason", back_populates="bookings")
+    vehicle = relationship("Vehicle", back_populates="bookings")
+    material = relationship("Material", back_populates="bookings")
+
+# Aggiungere le relazioni inverse alle altre classi
+SocialReason.bookings = relationship("Booking", back_populates="social_reason", cascade="all, delete")
+Vehicle.bookings = relationship("Booking", back_populates="vehicle", cascade="all, delete")
+Material.bookings = relationship("Booking", back_populates="material", cascade="all, delete")
+
+class ScheletonBookingDTO(BaseModel):
+    idSocialReason: Optional[int] = None
+    idVehicle: Optional[int] = None
+    idMaterial: Optional[int] = None
+    weighings: Optional[int] = None
+    id: Optional[int] = None
+    
+class BookingDTO(ScheletonBookingDTO):
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in [None, -1]:
+			data = get_data_by_id('booking', v)
+			if not data:
+				raise ValueError('Id not exist in booking')
+		return v
+
+	@validator('idSocialReason', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in [None, -1]:
+			data = get_data_by_id('social_reason', v)
+			if not data:
+				raise ValueError('Id not exist in social reason')
+		return v
+
+	@validator('idVehicle', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in [None, -1]:
+			data = get_data_by_id('vehicle', v)
+			if not data:
+				raise ValueError('Id not exist in vehicle')
+		return v
+
+	@validator('idMaterial', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in [None, -1]:
+			data = get_data_by_id('idMaterial', v)
+			if not data:
+				raise ValueError('Id not exist in material')
+		return v
+
+	@validator('weighings', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v <= 0:
+			raise ValueError('Weighings must to be greater than 0')
+		return v
+
+class BookingDTOInit(ScheletonBookingDTO):
 	pass
 
 class ImageCaptured(Base):
@@ -221,7 +284,8 @@ table_models = {
 	'vehicle': Vehicle,
 	'social_reason': SocialReason,
 	'material': Material,
-	'weighing': Weighing,
+	'booking': Booking,
+ 	'weighing': Weighing,
 	'user': User,
 	'image_captured': ImageCaptured
 }
@@ -572,14 +636,16 @@ def delete_all_data(table_name):
 
 required_columns = {
 	"vehicle": {"plate": str, "name": str},
-	"social_reason": {"name": str, "cell": int, "cfpiva": str, "type": SocialReasonTypeEnum},
-	"material": {"name": str}
+	"social_reason": {"name": str, "cell": int, "cfpiva": str},
+	"material": {"name": str},
+	"booking": {"idSocialReason": int, "idVehicle": int, "idMaterial": int, "weighings": int}
 }
 
 required_dtos = {
 	"vehicle": VehicleDTO,
 	"social_reason": SocialReasonDTO,
-	"material": MaterialDTO
+	"material": MaterialDTO,
+	"booking": BookingDTO
 }
 
 Base.metadata.create_all(engine)
