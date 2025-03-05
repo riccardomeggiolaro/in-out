@@ -12,21 +12,6 @@ function closePopup() {
     document.getElementById('save-btn').disabled = true;
 }
 
-function saveRagioneSociale() {
-    const descrizione = document.getElementById('descrizione').value;
-    const cell = document.getElementById('cell').value;
-    const cfpiva = document.getElementById('cfpiva').value;
-    
-    if (descrizione && cell && cfpiva) {
-        const table = document.querySelector('tbody');
-        const newRow = `<tr><td>${descrizione}</td><td>${cell}</td><td>${cfpiva}</td></tr>`;
-        table.innerHTML += newRow;
-        closePopup();
-    } else {
-        alert("Tutti i campi sono obbligatori");
-    }
-}
-
 function register() {
     // Seleziona il form tramite l'ID
     const form = document.getElementById("register");
