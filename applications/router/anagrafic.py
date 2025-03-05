@@ -17,13 +17,17 @@ class AnagraficRouter:
         self.router.add_api_route('/{anagrafic}', self.deleteAllAnagrafic, methods=['DELETE'])
         self.router.add_api_route('/upload-file/{anagrafic}', self.upload_file, methods=['POST'])
 
-    async def getListAnagrafic(self, anagrafic: str, query_params: Dict[str, Union[str, int]] = Depends(get_query_params)):
+    async def getListAnagrafic(self, anagrafic: str, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: int = None, offset: int = None):
         if anagrafic not in required_columns:
             return HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
         try:
-            lb_log.warning(query_params)
-            data = filter_data(anagrafic, query_params)
-            return data
+            del query_params["limit"]
+            del query_params["offset"]
+            data, total_rows = filter_data(anagrafic, query_params, limit, offset)
+            return {
+                "data": data,
+                "total_rows": total_rows
+            }
         except Exception as e:
             return HTTPException(status_code=400, detail=f"{e}")
 

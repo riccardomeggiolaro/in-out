@@ -94,12 +94,12 @@ class SocialReason(Base):
 	__tablename__ = 'social_reason'
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
-	cell = Column(Integer)
+	cell = Column(String)
 	cfpiva = Column(String)
 
 class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
-	cell: Optional[int] = None
+	cell: Optional[str] = None
 	cfpiva: Optional[str] = None
 	id: Optional[int] = None
 
@@ -109,9 +109,8 @@ class ScheletonSocialReasonDTO(BaseModel):
 class SocialReasonDTO(ScheletonSocialReasonDTO):
 	@validator('cell', pre=True, always=True)
 	def check_cell(cls, v):
-		if v not in (None, -1):
-			if v < 0:
-				raise ValueError("Cell must be greater than or equal to 0")
+		if v and not v.isdigit():
+			raise ValueError("Cell must be greater than or equal to 0")
 		return v
 
 	@validator('id', pre=True, always=True)
@@ -448,56 +447,80 @@ def get_data_by_attribute(table_name, attribute_name, attribute_value):
 		session.close()
 		raise e
 
-def filter_data(table_name, filters=None):
-	"""Esegue una ricerca filtrata su una tabella specifica e restituisce una lista di risultati.
+def filter_data(table_name, filters=None, limit=None, offset=None):
+    """Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione.
 
-	Args:
-		table_name (str): Il nome della tabella su cui eseguire la ricerca.
-		filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
+    Args:
+        table_name (str): Il nome della tabella su cui eseguire la ricerca.
+        filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
+        limit (int): Numero massimo di righe da visualizzare. Default è None.
+        offset (int): Numero di righe da saltare. Default è None.
 
-	Returns:
-		list: Lista di dizionari contenenti i risultati della ricerca, o lista vuota se nessun risultato.
-	"""
-	# Verifica che il modello esista nel dizionario dei modelli
-	model = table_models.get(table_name.lower())
-	if not model:
-		raise ValueError(f"Tabella '{table_name}' non trovata.")
+    Returns:
+        tuple: Una tupla contenente:
+            - una lista di dizionari contenenti i risultati della ricerca,
+            - il numero totale di righe nella tabella.
+    """
+    # Verifica che il modello esista nel dizionario dei modelli
+    model = table_models.get(table_name.lower())
+    if not model:
+        raise ValueError(f"Tabella '{table_name}' non trovata.")
 
-	# Crea una sessione e costruisce la query
-	session = SessionLocal()
-	try:
-		# Inizia la query sulla tabella specificata
-		query = session.query(model)
-		
-		# Aggiunge i filtri, se specificati
-		if filters:
-			for column, value in filters.items():
-				if hasattr(model, column):
-					if type(value) == str:
-						query = query.filter(getattr(model, column).like(f'%{value}%'))
-					elif type(value) == int:
-						query = query.filter(getattr(model, column) == value)
-					elif value == None:
-						query = query.filter(getattr(model, column).is_(None))
-					else:
-						raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
-				else:
-					raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
+    # Crea una sessione e costruisce la query
+    session = SessionLocal()
+    try:
+        # Inizia la query sulla tabella specificata
+        query = session.query(model)
 
-		# Esegue la query e converte i risultati in una lista di dizionari
-		results = query.all()
+        # Aggiunge i filtri, se specificati
+        if filters:
+            for column, value in filters.items():
+                if hasattr(model, column):
+                    if type(value) == str:
+                        query = query.filter(getattr(model, column).like(f'%{value}%'))
+                    elif type(value) == int:
+                        query = query.filter(getattr(model, column) == value)
+                    elif value is None:
+                        query = query.filter(getattr(model, column).is_(None))
+                    else:
+                        raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
+                else:
+                    raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
 
-		session.close()
+        # Esegui una query separata per ottenere il numero totale di righe
+        total_rows_query = session.query(model)
+        if filters:
+            for column, value in filters.items():
+                if hasattr(model, column):
+                    if type(value) == str:
+                        total_rows_query = total_rows_query.filter(getattr(model, column).like(f'%{value}%'))
+                    elif type(value) == int:
+                        total_rows_query = total_rows_query.filter(getattr(model, column) == value)
+                    elif value is None:
+                        total_rows_query = total_rows_query.filter(getattr(model, column).is_(None))
+        total_rows = total_rows_query.count()
 
-		result_list = [
-			{column.name: getattr(record, column.name) for column in model.__table__.columns}
-			for record in results
-		]
-		return result_list
+        # Applica la paginazione se limit e offset sono specificati
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
 
-	except Exception as e:
-		session.close()
-		raise e
+        # Esegue la query e converte i risultati in una lista di dizionari
+        results = query.all()
+
+        session.close()
+
+        result_list = [
+            {column.name: getattr(record, column.name) for column in model.__table__.columns}
+            for record in results
+        ]
+        
+        return result_list, total_rows
+
+    except Exception as e:
+        session.close()
+        raise e
 
 def add_data(table_name, data):
 	"""Aggiunge un record a una tabella specificata dinamicamente.
@@ -636,7 +659,7 @@ def delete_all_data(table_name):
 
 required_columns = {
 	"vehicle": {"plate": str, "name": str},
-	"social_reason": {"name": str, "cell": int, "cfpiva": str},
+	"social_reason": {"name": str, "cell": str, "cfpiva": str},
 	"material": {"name": str},
 	"booking": {"idSocialReason": int, "idVehicle": int, "idMaterial": int, "weighings": int}
 }
