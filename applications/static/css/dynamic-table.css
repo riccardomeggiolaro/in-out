@@ -22,8 +22,14 @@ body {
     align-items: center;
 }
 table {
-    width: 100%;
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: collapse;
+}
+table td:last-child, 
+table th:last-child {
+  white-space: nowrap; /* Evita il wrapping del testo */
+  width: 1px;
+  max-width: 64px; /* Evita che la colonna si espanda */
 }
 th, td {
     padding: 10px;
@@ -148,4 +154,8 @@ form div {
 
 .right {
     justify-content: flex-end;
+}
+
+td button {
+    padding: 0px 8px !important;
 }

@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Ragioni sociali</title>
         <meta name="description" content="About this app" />
-        <link rel="stylesheet" href="/static/css/social-reason.css">
+        <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
     </head>
 <body>
@@ -17,21 +17,22 @@
     <div class="table-container">
         <div class="title">
             <h2>Ragioni Sociali</h2>
-            <button class="register-button" onclick="openPopup()">Registra</button>
+            <button class="register-button" onclick="addRow()">Registra</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>Descrizione</th>
+                    <th>Nome</th>
                     <th>Cell</th>
                     <th>CF/P.IVA</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" style="text-align: center;">
+                    <td colspan="4" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -49,34 +50,72 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopup()"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup'])"></div>
     
-    <div id="popup" class="modal-content popup">
+    <div id="add-popup" class="modal-content popup">
         <h3>Nuova ragione sociale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
-            Descrizione:<br>
-            <input type="text" id="input-description" required><br>
+            Nome:<br>
+            <input type="text" id="name" required><br>
             Cell: (Opzionale)<br>
-            <input type="text" id="input-cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="input-cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
             <br>            
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopup()">Annulla</button>
-            <button id="save-btn" class="save-btn" onclick="register()" disabled>Salva</button><br>
+            <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
+            <button id="save-btn" class="save-btn" disabled>Salva</button><br>
+        </div>
+    </div>
+
+    <div id="edit-popup" class="modal-content popup">
+        <h3>Modifica ragione sociale:</h3>
+        <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
+            Nome:<br>
+            <input type="text" id="name" required><br>
+            Cell: (Opzionale)<br>
+            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            CF/.P.IVA: (Opzionale)<br>
+            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <br>            
+        </form>
+        <div class="errors"></div>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
+            <button id="save-btn" class="edit-save-btn">Salva</button><br>
+        </div>
+    </div>
+
+    <div id="delete-popup" class="modal-content popup">
+        <h3>Elimina ragione sociale:</h3>
+        <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
+        <p><b>Cell:</b> <u><em><span id="cell"></span></em></u></p>
+        <p><b>CF/P.IVA:<b> <ul><em><span id="cfpiva"></span></em></ul></p>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+            <button id="save-btn" class="delete-save-btn">Elimina</button><br>
         </div>
     </div>
 
     <!-- Snackbar -->
-    <div id="snackbar">Creazione riuscita!</div>
+    <div id="snackbar"></div>
 
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
     <script src="/static/javascript/navbar.js"></script>
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
-    <script src="/static/javascript/social-reason.js"></script>
+    <script>
+        setTimeout(() => {
+            itemName = 'Ragione sociale';
+            listUrlPath = '/anagrafic/list/social_reason';
+            addUrlPath = '/anagrafic/social_reason';
+            setUrlPath = '/anagrafic/social_reason';
+            deleteUrlPath = '/anagrafic/social_reason';
+            updateTable();
+        }, 1000);
+    </script>
 </body>
 </html>

@@ -63,12 +63,12 @@ class LoginDTO(BaseModel):
 class Vehicle(Base):
 	__tablename__ = 'vehicle'
 	id = Column(Integer, primary_key=True, index=True)
-	plate = Column(String)
 	name = Column(String)
+	plate = Column(String)
 
 class ScheletonVehicleDTO(BaseModel):
-	plate: Optional[str] = None
 	name: Optional[str] = None
+	plate: Optional[str] = None
 	id: Optional[int] = None
 
 	class Config:
@@ -116,9 +116,9 @@ class SocialReasonDTO(ScheletonSocialReasonDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('customer', v)
+			data = get_data_by_id('social_reason', v)
 			if not data:
-				raise ValueError('Id not exist in customer')
+				raise ValueError('Id not exist in social reason')
 			else:
 				values['name'] = data.get('name')
 				values['cell'] = data.get('cell')
@@ -137,6 +137,10 @@ class Material(Base):
 class ScheletonMaterialDTO(BaseModel):
 	name: Optional[str] = None
 	id: Optional[int] = None
+
+	class Config:
+		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
+		arbitrary_types_allowed = True
 
 class MaterialDTO(ScheletonMaterialDTO):
 	@validator('id', pre=True, always=True)
@@ -461,6 +465,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None):
             - una lista di dizionari contenenti i risultati della ricerca,
             - il numero totale di righe nella tabella.
     """
+
     # Verifica che il modello esista nel dizionario dei modelli
     model = table_models.get(table_name.lower())
     if not model:
@@ -658,7 +663,7 @@ def delete_all_data(table_name):
 		raise e
 
 required_columns = {
-	"vehicle": {"plate": str, "name": str},
+	"vehicle": {"name": str, "plate": str},
 	"social_reason": {"name": str, "cell": str, "cfpiva": str},
 	"material": {"name": str},
 	"booking": {"idSocialReason": int, "idVehicle": int, "idMaterial": int, "weighings": int}

@@ -8,4 +8,8 @@ class HistoricDataRouter:
         self.router.add_api_route('/weighings/in', self.getWeighingsIn, methods=['GET'])
 
     async def getWeighingsIn(self):
-        return filter_data("weighing", { "pid2": None })
+        data, total_rows = filter_data("weighing", { "pid2": None })
+        return {
+            "data": data,
+            "total_rows": total_rows
+        }

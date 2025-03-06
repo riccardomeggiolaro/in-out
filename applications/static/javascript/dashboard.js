@@ -202,7 +202,7 @@ async function populateListIn() {
     await fetch('/historic_data/weighings/in')
     .then(res => res.json())
     .then(data => {
-        data.forEach(item => {
+        data.data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             li.textContent = `${item.plate || item.customer || item.supplier || item.id} - ${item.weigher}`;
@@ -256,6 +256,7 @@ function scrollToSelectedItem() {
 
 function setDataInExecutionOnCLick(anagrafic, key, value) {
     let requestBody;
+    console.log(anagrafic)
     if (key) {
         requestBody = JSON.stringify({
             data_in_execution: {
@@ -290,19 +291,17 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     let currentId;
     let anagrafic_to_set;
 
-    console.log(currentId)
-
     // Opzionale: salva l'ID dell'elemento selezionato
     if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') {
         currentId = selectedIdVehicle;
         anagrafic_to_set = 'vehicle';
     } else if (showList === 'suggestionsListNameSocialReasonCustomer') {
         currentId = selectedIdCustomer;
-        anagrafic_to_set = 'social_reason';
-    } else if (name_list === 'suggestionsListNameSocialReasonSupplier') {
+        anagrafic_to_set = 'customer';
+    } else if (showList === 'suggestionsListNameSocialReasonSupplier') {
         currentId = selectedIdSupplier;
-        anagrafic_to_set = 'social_reason';
-    } else if (name_list === 'material') {
+        anagrafic_to_set = 'supplier';
+    } else if (showList === 'material') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
     }
@@ -316,7 +315,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     .then(response => response.json())
     .catch(error => console.error(error)); // Sostituisci con l'URL del tuo endpoint
 
-    response.forEach(suggestion => {
+    response.data.forEach(suggestion => {
         if (suggestion.selected !== true || suggestion.id === currentId) {
             const li = document.createElement("li");
 

@@ -1,7 +1,8 @@
 const snackbar = document.getElementById("snackbar");
 let currentShowSnackbar = null;
 
-function showSnackbar(backgroundColor, color) {
+function showSnackbar(text, backgroundColor, color) {
+    snackbar.textContent = text;
     snackbar.style.backgroundColor = backgroundColor;
     snackbar.style.color = color;
     snackbar.style.animation = "none"; // Reset animazione
