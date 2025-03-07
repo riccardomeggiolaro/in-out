@@ -256,7 +256,6 @@ function scrollToSelectedItem() {
 
 function setDataInExecutionOnCLick(anagrafic, key, value) {
     let requestBody;
-    console.log(anagrafic)
     if (key) {
         requestBody = JSON.stringify({
             data_in_execution: {
@@ -301,7 +300,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     } else if (showList === 'suggestionsListNameSocialReasonSupplier') {
         currentId = selectedIdSupplier;
         anagrafic_to_set = 'supplier';
-    } else if (showList === 'material') {
+    } else if (showList === 'suggestionsListMaterial') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
     }
@@ -346,7 +345,6 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
             li.dataset.id = suggestion.id
 
             if (suggestion.id == currentId) {
-                console.log(suggestion.id, currentId)
                 li.classList.add('selected');
             }
 
@@ -372,7 +370,6 @@ function highlightText(suggestion, input, filter) {
 function changeContent(type, value) {
     document.getElementById('header').innerHTML = `${type} <span class="arrow">▼</span>`;
     isCustomerSupplier = value;
-    console.log(isCustomerSupplier)
 }
 
 function updateOnlineStatus() {
@@ -499,7 +496,6 @@ function closeWebSocket() {
     if (_data) {
         _data.close(); // Chiude la connessione WebSocket
         _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
-        console.log('Connessione WebSocket chiusa');
     }
 }
 
@@ -584,7 +580,6 @@ function updateUIRealtime(e) {
         document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         if (obj.id_selected.id != selectedIdWeight) {
-            console.log(selectedIdWeight);
             if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.remove('selected');
             selectedIdWeight = obj.id_selected.id;                    
             if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.add('selected');

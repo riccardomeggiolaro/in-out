@@ -1,4 +1,20 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship, joinedload
+from sqlalchemy.ext.declarative import declarative_base
+import os
+from typing import Optional, List
+from pydantic import BaseModel, validator
+from applications.utils.utils_auth import hash_password
+from libs.lb_printer import printer
+from datetime import datetime
+
+# Connessione al database
+Base = declarative_base()
+cwd = os.getcwd()
+engine = create_engine(f"sqlite:///{cwd}/database.db", echo=True)
+SessionLocal = sessionmaker(bind=engine)
+
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 import os
@@ -65,6 +81,7 @@ class Vehicle(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
 	plate = Column(String)
+	reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
 
 class ScheletonVehicleDTO(BaseModel):
 	name: Optional[str] = None
@@ -96,6 +113,15 @@ class SocialReason(Base):
 	name = Column(String)
 	cell = Column(String)
 	cfpiva = Column(String)
+	# Relazioni specifiche con foreign_keys specificati
+	customer_reservations = relationship("Reservation", 
+										foreign_keys="Reservation.idCustomer", 
+										back_populates="customer", 
+										cascade="all, delete")
+	supplier_reservations = relationship("Reservation", 
+										foreign_keys="Reservation.idSupplier", 
+										back_populates="supplier", 
+										cascade="all, delete")
 
 class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
@@ -133,6 +159,7 @@ class Material(Base):
 	__tablename__ = 'material'
 	id = Column(Integer, primary_key=True, index=True) 
 	name = Column(String, index=True)
+	reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
 
 class ScheletonMaterialDTO(BaseModel):
 	name: Optional[str] = None
@@ -156,43 +183,57 @@ class MaterialDTO(ScheletonMaterialDTO):
 class MaterialDTOInit(ScheletonMaterialDTO):
 	pass
 
-class Booking(Base):
-    __tablename__ = 'booking'
-    id = Column(Integer, primary_key=True, index=True)
-    idSocialReason = Column(Integer, ForeignKey('social_reason.id'), nullable=False)
-    idVehicle = Column(Integer, ForeignKey('vehicle.id'), nullable=False)
-    idMaterial = Column(Integer, ForeignKey('material.id'), nullable=False)
-    weighings = Column(Integer, default=0, nullable=False)
-    date_created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    
-    # Relazioni
-    social_reason = relationship("SocialReason", back_populates="bookings")
-    vehicle = relationship("Vehicle", back_populates="bookings")
-    material = relationship("Material", back_populates="bookings")
+class Reservation(Base):
+	__tablename__ = 'reservation'
+	id = Column(Integer, primary_key=True, index=True)
+	idCustomer = Column(Integer, ForeignKey('social_reason.id'))
+	idSupplier = Column(Integer, ForeignKey('social_reason.id'))
+	idVehicle = Column(Integer, ForeignKey('vehicle.id'))
+	idMaterial = Column(Integer, ForeignKey('material.id'))
+	number_weighings = Column(Integer, default=0, nullable=False)
+	date_created = Column(DateTime, default=datetime.utcnow)
+	note = Column(String)
+	selected = Column(Boolean, index=True, default=False)
+	
+	# Relazioni
+	customer = relationship("SocialReason", 
+							foreign_keys=[idCustomer], 
+							back_populates="customer_reservations")
+	supplier = relationship("SocialReason", 
+							foreign_keys=[idSupplier], 
+							back_populates="supplier_reservations")
+	vehicle = relationship("Vehicle", back_populates="reservations")
+	material = relationship("Material", back_populates="reservations")
+	weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
 
-# Aggiungere le relazioni inverse alle altre classi
-SocialReason.bookings = relationship("Booking", back_populates="social_reason", cascade="all, delete")
-Vehicle.bookings = relationship("Booking", back_populates="vehicle", cascade="all, delete")
-Material.bookings = relationship("Booking", back_populates="material", cascade="all, delete")
-
-class ScheletonBookingDTO(BaseModel):
-    idSocialReason: Optional[int] = None
-    idVehicle: Optional[int] = None
-    idMaterial: Optional[int] = None
-    weighings: Optional[int] = None
-    id: Optional[int] = None
-    
-class BookingDTO(ScheletonBookingDTO):
+class ScheletonReservationDTO(BaseModel):
+	idCustomer: Optional[int] = None
+	idSupplier: Optional[int] = None
+	idVehicle: Optional[int] = None
+	idMaterial: Optional[int] = None
+	number_weighings: Optional[int] = None
+	note: Optional[str] = None
+	id: Optional[int] = None
+	
+class ReservationDTO(ScheletonReservationDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
-			data = get_data_by_id('booking', v)
+			data = get_data_by_id('reservation', v)
 			if not data:
-				raise ValueError('Id not exist in booking')
+				raise ValueError('Id not exist in reservation')
 		return v
 
-	@validator('idSocialReason', pre=True, always=True)
-	def check_id(cls, v, values):
+	@validator('idCustomer', pre=True, always=True)
+	def check_customer_id(cls, v, values):
+		if v not in [None, -1]:
+			data = get_data_by_id('social_reason', v)
+			if not data:
+				raise ValueError('Id not exist in social reason')
+		return v
+
+	@validator('idSupplier', pre=True, always=True)
+	def check_supplier_id(cls, v, values):
 		if v not in [None, -1]:
 			data = get_data_by_id('social_reason', v)
 			if not data:
@@ -200,7 +241,7 @@ class BookingDTO(ScheletonBookingDTO):
 		return v
 
 	@validator('idVehicle', pre=True, always=True)
-	def check_id(cls, v, values):
+	def check_vehicle_id(cls, v, values):
 		if v not in [None, -1]:
 			data = get_data_by_id('vehicle', v)
 			if not data:
@@ -208,89 +249,43 @@ class BookingDTO(ScheletonBookingDTO):
 		return v
 
 	@validator('idMaterial', pre=True, always=True)
-	def check_id(cls, v, values):
+	def check_material_id(cls, v, values):
 		if v not in [None, -1]:
-			data = get_data_by_id('idMaterial', v)
+			data = get_data_by_id('material', v)
 			if not data:
 				raise ValueError('Id not exist in material')
 		return v
 
-	@validator('weighings', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v <= 0:
+	@validator('number_weighings', pre=True, always=True)
+	def check_weighings(cls, v, values):
+		if v is not None and v <= 0:
 			raise ValueError('Weighings must to be greater than 0')
 		return v
 
-class BookingDTOInit(ScheletonBookingDTO):
+class ReservationDTOInit(ScheletonReservationDTO):
 	pass
-
-class ImageCaptured(Base):
-	__tablename__ = 'image_captured'
-	id = Column(Integer, primary_key=True, index=True)
-	date = Column(DateTime, nullable=True)
-	image = Column(BLOB, nullable=True)
-	size = Column(Float, nullable=True)
-	status = Column(String, nullable=True)
-
-class ScheletonImageCapturedDTO(BaseModel):
-	date: Optional[datetime] = None
-	image: Optional[bytes] = None
-	size: Optional[float] = None
-	status: Optional[str] = None
 
 # Modello per la tabella Weighing
 class Weighing(Base):
 	__tablename__ = 'weighing'
 	id = Column(Integer, primary_key=True, index=True, nullable=False)
-	plate = Column(String, nullable=True)
-	vehicle = Column(String, nullable=True)
-	customer = Column(String, nullable=True)  # Utilizzo di Enum
-	customer_cell = Column(Integer, nullable=True)
-	customer_cfpiva = Column(String, nullable=True)
-	supplier = Column(String, nullable=True)
-	supplier_cell = Column(Integer, nullable=True)
-	supplier_cfpiva = Column(String, nullable=True)
-	material = Column(String, nullable=True)
-	note = Column(String, nullable=True)
-	weight1 = Column(Integer, nullable=True)
-	weight2 = Column(Integer, nullable=True)
-	net_weight = Column(Integer, nullable=True)
-	date1 = Column(DateTime, nullable=True)
-	date2 = Column(DateTime, nullable=True)
-	card_code = Column(String, nullable=True)
-	card_number = Column(Integer, nullable=True)
-	pid1 = Column(String, nullable=True)
-	pid2 = Column(String, nullable=True)
+	weight = Column(Integer, nullable=True)
+	date = Column(DateTime, nullable=True)
+	pid = Column(String, nullable=True)
 	weigher = Column(String, nullable=True)
-	selected = Column(Boolean, index=True, default=False, nullable=False)
-	# Foreign Key references
-	in_image_captured1_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	in_image_captured2_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	in_image_captured3_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	in_image_captured4_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	out_image_captured1_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	out_image_captured2_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	out_image_captured3_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	out_image_captured4_id = Column(Integer, ForeignKey('image_captured.id'), nullable=True)
-	# Relationships for easy access to related images
-	in_image_captured1 = relationship("ImageCaptured", foreign_keys=[in_image_captured1_id])
-	in_image_captured2 = relationship("ImageCaptured", foreign_keys=[in_image_captured2_id])
-	in_image_captured3 = relationship("ImageCaptured", foreign_keys=[in_image_captured3_id])
-	in_image_captured4 = relationship("ImageCaptured", foreign_keys=[in_image_captured4_id])
-	out_image_captured1 = relationship("ImageCaptured", foreign_keys=[out_image_captured1_id])
-	out_image_captured2 = relationship("ImageCaptured", foreign_keys=[out_image_captured2_id])
-	out_image_captured3 = relationship("ImageCaptured", foreign_keys=[out_image_captured3_id])
-	out_image_captured4 = relationship("ImageCaptured", foreign_keys=[out_image_captured4_id])
+	idReservation = Column(Integer, ForeignKey('reservation.id'), nullable=False)
+	
+	# Relazioni
+	reservation = relationship("Reservation", back_populates="weighings")
 
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
 	'vehicle': Vehicle,
 	'social_reason': SocialReason,
 	'material': Material,
-	'booking': Booking,
+	'reservation': Reservation,
  	'weighing': Weighing,
-	'user': User,
-	'image_captured': ImageCaptured
+	'user': User
 }
 
 # Funzione per caricare l'array di record nel database
@@ -451,81 +446,77 @@ def get_data_by_attribute(table_name, attribute_name, attribute_value):
 		session.close()
 		raise e
 
+from sqlalchemy.orm import joinedload
+
 def filter_data(table_name, filters=None, limit=None, offset=None):
-    """Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione.
+	"""Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione
+	e popola automaticamente le colonne di riferimenti con i dati delle tabelle correlate.
 
-    Args:
-        table_name (str): Il nome della tabella su cui eseguire la ricerca.
-        filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
-        limit (int): Numero massimo di righe da visualizzare. Default è None.
-        offset (int): Numero di righe da saltare. Default è None.
+	Args:
+		table_name (str): Il nome della tabella su cui eseguire la ricerca.
+		filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
+		limit (int): Numero massimo di righe da visualizzare. Default è None.
+		offset (int): Numero di righe da saltare. Default è None.
 
-    Returns:
-        tuple: Una tupla contenente:
-            - una lista di dizionari contenenti i risultati della ricerca,
-            - il numero totale di righe nella tabella.
-    """
+	Returns:
+		tuple: Una tupla contenente:
+			- una lista di dizionari contenenti i risultati della ricerca,
+			- il numero totale di righe nella tabella.
+	"""
 
-    # Verifica che il modello esista nel dizionario dei modelli
-    model = table_models.get(table_name.lower())
-    if not model:
-        raise ValueError(f"Tabella '{table_name}' non trovata.")
+	# Verifica che il modello esista nel dizionario dei modelli
+	model = table_models.get(table_name.lower())
+	if not model:
+		raise ValueError(f"Tabella '{table_name}' non trovata.")
 
-    # Crea una sessione e costruisce la query
-    session = SessionLocal()
-    try:
-        # Inizia la query sulla tabella specificata
-        query = session.query(model)
+	# Crea una sessione e costruisce la query
+	session = SessionLocal()
+	try:
+		# Inizia la query sulla tabella specificata
+		query = session.query(model)
 
-        # Aggiunge i filtri, se specificati
-        if filters:
-            for column, value in filters.items():
-                if hasattr(model, column):
-                    if type(value) == str:
-                        query = query.filter(getattr(model, column).like(f'%{value}%'))
-                    elif type(value) == int:
-                        query = query.filter(getattr(model, column) == value)
-                    elif value is None:
-                        query = query.filter(getattr(model, column).is_(None))
-                    else:
-                        raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
-                else:
-                    raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
+		import libs.lb_log as lb_log
 
-        # Esegui una query separata per ottenere il numero totale di righe
-        total_rows_query = session.query(model)
-        if filters:
-            for column, value in filters.items():
-                if hasattr(model, column):
-                    if type(value) == str:
-                        total_rows_query = total_rows_query.filter(getattr(model, column).like(f'%{value}%'))
-                    elif type(value) == int:
-                        total_rows_query = total_rows_query.filter(getattr(model, column) == value)
-                    elif value is None:
-                        total_rows_query = total_rows_query.filter(getattr(model, column).is_(None))
-        total_rows = total_rows_query.count()
+		# Aggiungi il caricamento delle relazioni per i campi che sono referenze (foreign key)
+		for relationship_name, relationship_obj in model.__mapper__.relationships.items():
+			# Verifica se la relazione esiste
+			if relationship_obj:
+				query = query.options(joinedload(relationship_obj))
 
-        # Applica la paginazione se limit e offset sono specificati
-        if limit is not None:
-            query = query.limit(limit)
-        if offset is not None:
-            query = query.offset(offset)
+		# Aggiungi i filtri, se specificati
+		if filters:
+			for column, value in filters.items():
+				if hasattr(model, column):
+					if type(value) == str:
+						query = query.filter(getattr(model, column).like(f'%{value}%'))
+					elif type(value) == int:
+						query = query.filter(getattr(model, column) == value)
+					elif value is None:
+						query = query.filter(getattr(model, column).is_(None))
+					else:
+						raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
+				else:
+					raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
 
-        # Esegue la query e converte i risultati in una lista di dizionari
-        results = query.all()
+		# Esegui una query separata per ottenere il numero totale di righe
+		total_rows = query.count()
 
-        session.close()
+		# Applica la paginazione se limit e offset sono specificati
+		if limit is not None:
+			query = query.limit(limit)
+		if offset is not None:
+			query = query.offset(offset)
 
-        result_list = [
-            {column.name: getattr(record, column.name) for column in model.__table__.columns}
-            for record in results
-        ]
-        
-        return result_list, total_rows
+		# Esegui la query per ottenere i risultati filtrati
+		results = query.all()
 
-    except Exception as e:
-        session.close()
-        raise e
+		session.close()
+
+		return results, total_rows
+
+	except Exception as e:
+		session.close()
+		raise e
 
 def add_data(table_name, data):
 	"""Aggiunge un record a una tabella specificata dinamicamente.
@@ -666,14 +657,14 @@ required_columns = {
 	"vehicle": {"name": str, "plate": str},
 	"social_reason": {"name": str, "cell": str, "cfpiva": str},
 	"material": {"name": str},
-	"booking": {"idSocialReason": int, "idVehicle": int, "idMaterial": int, "weighings": int}
+	"reservation": {"idCustomer": int, "idSupplier": int, "idVehicle": int, "idMaterial": int, "number_weighings": int, "note": str}
 }
 
 required_dtos = {
 	"vehicle": VehicleDTO,
 	"social_reason": SocialReasonDTO,
 	"material": MaterialDTO,
-	"booking": BookingDTO
+	"reservation": ReservationDTO
 }
 
 Base.metadata.create_all(engine)

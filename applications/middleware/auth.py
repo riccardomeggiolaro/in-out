@@ -38,6 +38,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/vehicle.html",
             "/material",
             "/material.html",
+            "/reservation",
+            "/reservation.html",
             "/navbar", 
             "/navbar.html", 
             "/auth/login", 

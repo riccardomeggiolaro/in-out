@@ -11,7 +11,7 @@ fetch('navbar.html')
         const link = li.querySelector('a');
         if (link && link.getAttribute('href') === currentPath) {
             link.classList.add('active-link-navbar');
-            if (link.href.includes("/social-reason", "/vehicle", "/material")) {
+            if (["/social-reason", "/vehicle", "/material"].includes(window.location.pathname)) {
                 document.querySelector('.arrow-dropdown-navbar').classList.toggle('up');
                 document.querySelector('.dropdown-navbar').classList.toggle('active');
             }

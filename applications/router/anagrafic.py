@@ -40,11 +40,13 @@ class AnagraficRouter:
         # Definizione delle colonne richieste
         required_dto = required_dtos[anagrafic]
 
-        if not isinstance(body, required_dto):
+        data_parsed = required_dto(**body.dict())
+
+        if not isinstance(data_parsed, required_dto):
             raise HTTPException(status_code=400, detail=f"Invalid body for {anagrafic}")
 
         try:
-            add_data(anagrafic, body.dict())
+            add_data(anagrafic, data_parsed.dict())
             return {"message": "Data added successfully"}
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
@@ -56,11 +58,13 @@ class AnagraficRouter:
         # Definizione delle colonne richieste
         required_dto = required_dtos[anagrafic]
 
-        if not isinstance(body, required_dto):
+        data_parsed = required_dto(**body.dict())
+
+        if not isinstance(data_parsed, required_dto):
             raise HTTPException(status_code=400, detail=f"Invalid body for {anagrafic}")
 
         try:
-            update_data(anagrafic, id, body.dict())
+            update_data(anagrafic, id, data_parsed.dict())
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
 

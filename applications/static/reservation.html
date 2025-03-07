@@ -4,7 +4,7 @@
         <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ragioni sociali</title>
+        <title>Prenotazioni</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -16,15 +16,16 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Ragioni Sociali</h2>
+            <h2>Prenotazioni</h2>
             <button class="register-button" onclick="addRow()">Registra</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th name="name">Nome</th>
-                    <th name="cell">Cell</th>
-                    <th name="cfpiva">CF/P.IVA</th>
+                    <th>Ragione Sociale</th>
+                    <th>Targa</th>
+                    <th>Numero pesate</th>
+                    <th>Pesate mancanti</th>
                     <th></th>
                 </tr>
             </thead>
@@ -32,7 +33,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4" style="text-align: center;">
+                    <td colspan="5" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -110,10 +111,10 @@
     <script>
         setTimeout(() => {
             itemName = 'Ragione sociale';
-            listUrlPath = '/anagrafic/list/social_reason';
-            addUrlPath = '/anagrafic/social_reason';
-            setUrlPath = '/anagrafic/social_reason';
-            deleteUrlPath = '/anagrafic/social_reason';
+            listUrlPath = '/anagrafic/list/reservation';
+            addUrlPath = '/anagrafic/reservation';
+            setUrlPath = '/anagrafic/reservation';
+            deleteUrlPath = '/anagrafic/reservation';
             updateTable();
         }, 1000);
     </script>

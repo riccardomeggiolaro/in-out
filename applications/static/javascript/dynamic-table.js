@@ -7,6 +7,14 @@ let addUrlPath = null;
 let setUrlPath = null;
 let deleteUrlPath = null;
 let currentId = null;
+const columns = {};
+
+document.querySelectorAll('thead th').forEach((th, index) => {
+    const columnName = th.attributes["name"];
+    if (columnName && columnName.value) {
+        columns[columnName.value] = index;
+    }
+});
 
 function updateTable() {
     const offset = (currentPage - 1) * rowsPerPage; // Calcola l'offset in base alla pagina
@@ -80,13 +88,12 @@ function populateTable(data) {
 
     data.forEach(item => {
         const row = document.createElement("tr");
+        Object.entries(columns).forEach(_ => row.insertCell());
 
         Object.entries(item).forEach(([key, value]) => {
             // Salta l'id
-            if (key !== "id") {
-                const cell = document.createElement("td");
-                cell.textContent = value;
-                row.appendChild(cell);
+            if (key in columns) {
+                row.cells[columns[key]].textContent = value;
             }
         });
 
