@@ -60,6 +60,8 @@ class AnagraficRouter:
 
         data_parsed = required_dto(**body.dict())
 
+        lb_log.warning(data_parsed)
+
         if not isinstance(data_parsed, required_dto):
             raise HTTPException(status_code=400, detail=f"Invalid body for {anagrafic}")
 

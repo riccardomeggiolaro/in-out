@@ -8,6 +8,7 @@ import datetime as dt
 from applications.router.weigher.types import DataInExecution
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
+from libs.lb_utils import has_values_besides_id
 
 class CallbackWeigher(Functions):
 	def __init__(self):
@@ -48,32 +49,46 @@ class CallbackWeigher(Functions):
 		if last_pesata.weight_executed.executed:
 			if isinstance(last_pesata.data_assigned, DataInExecution):
 				node = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance_name,weigher_name=weigher_name)
-				obj = {
-					"plate": last_pesata.data_assigned.vehicle.plate,
-					"vehicle": last_pesata.data_assigned.vehicle.name,
-					"customer": last_pesata.data_assigned.customer.name, 
-					"customer_cell": last_pesata.data_assigned.customer.cell,
-					"customer_cfpiva": last_pesata.data_assigned.customer.cfpiva,
-					"supplier": last_pesata.data_assigned.supplier.name,
-					"supplier_cell": last_pesata.data_assigned.supplier.cell,
-					"supplier_cfpiva": last_pesata.data_assigned.supplier.cfpiva,
-					"material": last_pesata.data_assigned.material.name,
+				weighing = {
+					"typeSocialReason": last_pesata.data_assigned.typeSocialReason,
+					"idSocialReason": last_pesata.data_assigned.social_reason.id,
+					"idVector": last_pesata.data_assigned.vector.id,
+					"idVehicle": last_pesata.data_assigned.vehicle.id,
+					"idMaterial": last_pesata.data_assigned.material.id,
 					"note": last_pesata.data_assigned.note,
 					"weight1": last_pesata.weight_executed.gross_weight,
 					"weight2": None if last_pesata.weight_executed.tare == '0' else last_pesata.weight_executed.tare,
 					"net_weight": last_pesata.weight_executed.net_weight,
 					"date1": None if last_pesata.weight_executed.tare != '0' else dt.datetime.now(),
 					"date2": None if last_pesata.weight_executed.tare == '0' else dt.datetime.now(),
-					"card_code": None,
-					"card_number": None,
 					"pid1": None if last_pesata.weight_executed.tare != '0' else last_pesata.weight_executed.pid,
 					"pid2": None if last_pesata.weight_executed.tare == '0' else last_pesata.weight_executed.pid,
 					"weigher": weigher_name
 				}
+				if not last_pesata.data_assigned.social_reason.id and has_values_besides_id(last_pesata.data_assigned.social_reason.dict()):
+					import libs.lb_log as lb_log
+					social_reason = add_data("social_reason", last_pesata.data_assigned.social_reason.dict())
+					lb_log.warning(social_reason)
+					weighing["idSocialReason"] = social_reason.id
+				if not last_pesata.data_assigned.vector.id and has_values_besides_id(last_pesata.data_assigned.vector.dict()):
+					vector = add_data("vector", last_pesata.data_assigned.vector.dict())
+					weighing["idVector"] = vector.id
+				if not last_pesata.data_assigned.vehicle.id and has_values_besides_id(last_pesata.data_assigned.vehicle.dict()):
+					vehicle = add_data("vehicle", last_pesata.data_assigned.vehicle.dict())
+					weighing["idVehicle"] = vehicle.id
+				if not last_pesata.data_assigned.material.id and has_values_besides_id(last_pesata.data_assigned.material.dict()):
+					material = add_data("material", last_pesata.data_assigned.material.dict())
+					weighing["idMaterial"] = material.id
+				# if last_pesata.data_assigned.social_reason.id:
+				# 	obj["idSocialReason"] = last_pesata.data_assigned.social_reason.id
+				# if last_pesata.data_assigned.vehicle.id:
+				# 	obj["idVehicle"] = last_pesata.data_assigned.vehicle.id
+				# if last_pesata.data_assigned.material.id:
+				# 	obj["idMaterial"] = last_pesata.data_assigned.material.id
 				# for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["cams"]:
 				#	 image_capture = capture_camera_image(cam["camera_url"], cam["username"], cam["password"])
 				#	 image_saved = add_data("image_captured", image_capture)
-				add_data("weighing", obj)
+				add_data("weighing", weighing)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 			elif isinstance(last_pesata.data_assigned, int) and last_pesata.weight_executed.executed:
 				data = get_data_by_id("weighing", last_pesata.data_assigned)
@@ -92,23 +107,17 @@ class CallbackWeigher(Functions):
 			elif last_pesata.data_assigned is None and last_pesata.weight_executed.executed:
 				node = md_weigher.module_weigher.instances[instance_name].getNode(weigher_name)
 				obj = {
-					"plate": None,
-					"vehicle": None,
-					"customer": None, 
-					"customer_cell": None,
-					"customer_cfpiva": None,
-					"supplier": None,
-					"supplier_cell": None,
-					"supplier_cfpiva": None,
-					"material": None,
+					"typeSocialReason": None,
+					"idSocialReason": None,
+					"idVector": None,
+					"idVehicle": None,
+					"idMaterial": None,
 					"note": None,
 					"weight1": last_pesata.weight_executed.gross_weight,
 					"weight2": None if last_pesata.weight_executed.tare == '0' else last_pesata.weight_executed.tare,
 					"net_weight": last_pesata.weight_executed.net_weight,
 					"date1": None,
 					"date2": dt.datetime.now(),
-					"card_code": None,
-					"card_number": None,
 					"pid1": None,
 					"pid2": last_pesata.weight_executed.pid,
 					"weigher": weigher_name

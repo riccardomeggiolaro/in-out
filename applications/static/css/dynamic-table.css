@@ -114,10 +114,16 @@ input:focus {
     box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra più intensa quando è in focus */
     outline: none;
 }
-
 input[type="checkbox"] {
     width: auto;
     max-width: none;
+}
+.popup select {
+    width: 100%;
+}
+.radio {
+    display: flex;
+    flex-direction: row;
 }
 form div {
     width: 20%;

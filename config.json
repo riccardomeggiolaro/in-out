@@ -32,21 +32,21 @@
                         "cams": {},
                         "data": {
                             "data_in_execution": {
-                                "customer": {
-                                    "cell": null,
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "name": null
-                                },
                                 "material": {
                                     "id": null,
                                     "name": null
                                 },
                                 "note": null,
-                                "supplier": {
+                                "social_reason": {
                                     "cell": null,
                                     "cfpiva": null,
                                     "id": null,
+                                    "name": null
+                                },
+                                "typeSocialReason": 0,
+                                "vector": {
+                                    "cell": null,
+                                    "cfpiva": null,
                                     "name": null
                                 },
                                 "vehicle": {

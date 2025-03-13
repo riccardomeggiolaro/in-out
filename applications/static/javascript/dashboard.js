@@ -9,8 +9,7 @@ let currentInput;
 let connected;
 
 let selectedIdVehicle;
-let selectedIdCustomer;
-let selectedIdSupplier;
+let selectedIdSocialReason;
 let selectedIdMaterial;
 
 let selectedIdWeight;
@@ -180,13 +179,11 @@ async function getData(path) {
         dataInExecution = res["data_in_execution"];
         const obj = res["data_in_execution"];
         selectedIdVehicle = obj.vehicle.id;
-        selectedIdCustomer = obj.customer.id;
-        selectedIdSupplier = obj.supplier.id;
+        selectedIdSocialReason = obj.social_reason.id;
         selectedIdMaterial = obj.material.id;
         document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-        document.querySelector('#currentNameSocialReasonCustomer').value = obj.customer.name ? obj.customer.name : '';
-        document.querySelector('#currentNameSocialReasonSupplier').value = obj.supplier.name ? obj.supplier.name : '';
+        document.querySelector('#currentNameSocialReason').value = obj.social_reason.name ? obj.social_reason.name : '';
         document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         selectedIdWeight = res["id_selected"]["id"];
@@ -205,7 +202,11 @@ async function populateListIn() {
         data.data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
-            li.textContent = `${item.plate || item.customer || item.supplier || item.id} - ${item.weigher}`;
+            let content = item.id;
+            if (item.vehicle) content = item.vehicle.name;
+            else if (item.social_reason) content = item.social_reason.name;
+            content += ` - ${item.weigher}`;
+            li.textContent = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');
             li.addEventListener('click', async () => {
@@ -294,12 +295,9 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') {
         currentId = selectedIdVehicle;
         anagrafic_to_set = 'vehicle';
-    } else if (showList === 'suggestionsListNameSocialReasonCustomer') {
-        currentId = selectedIdCustomer;
-        anagrafic_to_set = 'customer';
-    } else if (showList === 'suggestionsListNameSocialReasonSupplier') {
-        currentId = selectedIdSupplier;
-        anagrafic_to_set = 'supplier';
+    } else if (showList === 'suggestionsListNameSocialReason') {
+        currentId = selectedIdSocialReason;
+        anagrafic_to_set = 'social_reason';
     } else if (showList === 'suggestionsListMaterial') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
@@ -570,13 +568,11 @@ function updateUIRealtime(e) {
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
-        selectedIdCustomer = obj.data_in_execution.customer.id;
-        selectedIdSupplier = obj.data_in_execution.supplier.id;
+        selectedIdSocialReason = obj.data_in_execution.social_reason.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
         document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.name ? obj.data_in_execution.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
-        document.querySelector('#currentNameSocialReasonCustomer').value = obj.data_in_execution.customer.name ? obj.data_in_execution.customer.name : '';
-        document.querySelector('#currentNameSocialReasonSupplier').value = obj.data_in_execution.supplier.name ? obj.data_in_execution.supplier.name : '';
+        document.querySelector('#currentNameSocialReason').value = obj.data_in_execution.social_reason.name ? obj.data_in_execution.social_reason.name : '';
         document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         if (obj.id_selected.id != selectedIdWeight) {

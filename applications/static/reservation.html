@@ -8,6 +8,11 @@
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
+        <style>
+            .table-container {
+                max-width: 1100px;
+            }
+        </style>
     </head>
 <body>
     <div id="navbar-container"></div>
@@ -22,9 +27,11 @@
         <table>
             <thead>
                 <tr>
-                    <th>Ragione Sociale</th>
-                    <th>Targa</th>
-                    <th>Numero pesate</th>
+                    <th name="social_reason.name">Ragione Sociale</th>
+                    <th name="social_reason.cell">Cell</th>
+                    <th name="social_reason.cfpiva">CF/P.IVA</th>
+                    <th name="vehicle.plate">Targa</th>
+                    <th name="number_weighings">Numero pesate</th>
                     <th>Pesate mancanti</th>
                     <th></th>
                 </tr>
@@ -33,7 +40,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="5" style="text-align: center;">
+                    <td colspan="9" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -54,17 +61,19 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuova ragione sociale:</h3>
-        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
-            Nome:<br>
-            <input type="text" id="name" required><br>
-            Cell: (Opzionale)<br>
-            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
-            CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-            <br>            
+        <h3>Nuova prenotazione:</h3>
+        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #idSocialReason').value.trim() || document.querySelector('#add-popup #idVector').value.trim() || document.querySelector('#add-popup #idVehicle').value.trim() || document.querySelector('#add-popup #idMaterial').value.trim()) || !this.checkValidity())" autocomplete="off">
+            <div class="radio">
+                <input id="typeSocialReason" type="radio" name="option" value="0" checked>Cliente
+                <input id="typeSocialReason" type="radio" name="option" value="1">Fornitore
+            </div>
+            Ragione Sociale: (Opzionale)<br>
+            <select id="idSocialReason"></select><br>
+            Veicolo: (Opzionale)<br>
+            <select id="idVehicle"></select><br>
+            Numero pesate: (Min 2)<br>
+            <input id="number_weighings" type="number" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" min="2" required><br>
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
             <button id="save-btn" class="save-btn" disabled>Salva</button><br>
@@ -72,15 +81,16 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica ragione sociale:</h3>
-        <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
-            Nome:<br>
-            <input type="text" id="name" required><br>
-            Cell: (Opzionale)<br>
-            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
-            CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-            <br>            
+        <h3>Modifica prenotazione:</h3>
+        <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #idSocialReason').value.trim() || document.querySelector('#edit-popup #idVector').value.trim() || document.querySelector('#edit-popup #idVehicle').value.trim() || document.querySelector('#edit-popup #idMaterial').value.trim()) || !this.checkValidity())" autocomplete="off">
+            <div class="radio">
+                <input id="typeSocialReason" type="radio" name="option" value="0">Cliente
+                <input id="typeSocialReason" type="radio" name="option" value="1">Fornitore
+            </div>
+            Ragione Sociale: (Opzionale)<br>
+            <select id="idSocialReason"></select><br>
+            Veicolo: (Opzionale)<br>
+            <select id="idVehicle"></select><br>
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                
@@ -90,13 +100,16 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina ragione sociale:</h3>
-        <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
-        <p><b>Cell:</b> <u><em><span id="cell"></span></em></u></p>
-        <p><b>CF/P.IVA:<b> <ul><em><span id="cfpiva"></span></em></ul></p>
-        <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
-            <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+        <div id="delete">
+            <h3>Elimina ragione sociale:</h3>
+            <p><b>Tipo:</b> <u><em><span id="typeSocialReason"></span></em></u></p>
+            <p><b>Ragione Sociale:</b> <u><em><span id="social_reason.name"></span></em></u></p>
+            <p><b>Targa:</b> <u><em><span id="vehicle.plate"></span></em></u></p>
+            <p><b>Numero pesate:</b> <u><em><span id="number_weighings"></span></em></u></p>
+            <div class="container-buttons right">                
+                <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+                <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+            </div>
         </div>
     </div>
 
@@ -115,8 +128,90 @@
             addUrlPath = '/anagrafic/reservation';
             setUrlPath = '/anagrafic/reservation';
             deleteUrlPath = '/anagrafic/reservation';
+            callback_populate_select = populateForm;
             updateTable();
         }, 1000);
+
+        function populateForm(idForm, item={typeSocialReason: 0, idSocialReason: null, idVector: null, idVehicle: null, idMaterial: null}) {
+            if (idForm !== '#delete') {
+                populateTypeSocialReason(`${idForm} #typeSocialReason`, item.typeSocialReason);
+                populateSocialReason(`${idForm} #idSocialReason`, item.idSocialReason);
+                populateVector(`${idForm} #idVector`, item.idVector);
+                populateVehicle(`${idForm} #idVehicle`, item.idVehicle);
+                populateMaterial(`${idForm} #idMaterial`, item.idMaterial);
+            }
+        }
+
+        function populateTypeSocialReason(typeSocialReason, idSelected) {
+            const radioTypeSocialReason = document.querySelectorAll(typeSocialReason);
+            radioTypeSocialReason.forEach(radio => {
+                if (radio.value == idSelected) radio.checked = true;
+            })
+        }
+
+        function populateSocialReason(socialReason, idSelected) {
+            fetch('/anagrafic/list/social_reason')
+            .then(res => res.json())
+            .then(res => {
+                const idSocialReason = document.querySelector(socialReason);
+                idSocialReason.innerHTML = '';
+                res.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    idSocialReason.appendChild(option);             
+                });
+                idSocialReason.value = idSelected;
+            });
+        }
+
+        function populateVector(vector, idSelected) {
+            fetch('/anagrafic/list/social_reason')
+            .then(res => res.json())
+            .then(res => {
+                const idVector = document.querySelector(vector);
+                idVector.innerHTML = '';
+                res.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    idVector.appendChild(option);             
+                });
+                idVector.value = idSelected;
+            });
+        }
+
+        function populateVehicle(vehicle, idSelected) {
+            fetch('/anagrafic/list/vehicle')
+            .then(res => res.json())
+            .then(res => {
+                const idVehicle = document.querySelector(vehicle);
+                idVehicle.innerHTML = '';
+                res.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.plate;
+                    idVehicle.appendChild(option);
+                });
+                idVehicle.value = idSelected;
+            });
+        }
+
+        function populateMaterial(material, idSelected) {
+            fetch('/anagrafic/list/material')
+            .then(res => res.json())
+            .then(res => {
+                const idMaterial = document.querySelector(material);
+                idMaterial.innerHTML = '';
+                res.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    idMaterial.appendChild(option);
+                });
+                idMaterial.value = idSelected;
+            });
+        }
     </script>
 </body>
 </html>

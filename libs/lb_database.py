@@ -2,26 +2,11 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, joinedload
 from sqlalchemy.ext.declarative import declarative_base
 import os
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic import BaseModel, validator
 from applications.utils.utils_auth import hash_password
 from libs.lb_printer import printer
-from datetime import datetime
-
-# Connessione al database
-Base = declarative_base()
-cwd = os.getcwd()
-engine = create_engine(f"sqlite:///{cwd}/database.db", echo=True)
-SessionLocal = sessionmaker(bind=engine)
-
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from sqlalchemy.ext.declarative import declarative_base
-import os
-from typing import Optional, List
-from pydantic import BaseModel, validator
-from applications.utils.utils_auth import hash_password
-from libs.lb_printer import printer
+from libs.lb_utils import is_number
 from datetime import datetime
 
 # Connessione al database
@@ -81,7 +66,8 @@ class Vehicle(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
 	plate = Column(String)
-	reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
+
+	weighings = relationship("Weighing", back_populates="vehicle", cascade="all, delete")
 
 class ScheletonVehicleDTO(BaseModel):
 	name: Optional[str] = None
@@ -114,14 +100,14 @@ class SocialReason(Base):
 	cell = Column(String)
 	cfpiva = Column(String)
 	# Relazioni specifiche con foreign_keys specificati
-	customer_reservations = relationship("Reservation", 
-										foreign_keys="Reservation.idCustomer", 
-										back_populates="customer", 
-										cascade="all, delete")
-	supplier_reservations = relationship("Reservation", 
-										foreign_keys="Reservation.idSupplier", 
-										back_populates="supplier", 
-										cascade="all, delete")
+	social_reasons = relationship("Weighing", 
+		foreign_keys="Weighing.idSocialReason", 
+		back_populates="social_reason", 
+		cascade="all, delete")
+	vectors = relationship("Weighing", 
+		foreign_keys="Weighing.idVector", 
+		back_populates="vector", 
+		cascade="all, delete")
 
 class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
@@ -159,7 +145,7 @@ class Material(Base):
 	__tablename__ = 'material'
 	id = Column(Integer, primary_key=True, index=True) 
 	name = Column(String, index=True)
-	reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
+	weighings = relationship("Weighing", back_populates="material", cascade="all, delete")
 
 class ScheletonMaterialDTO(BaseModel):
 	name: Optional[str] = None
@@ -183,58 +169,100 @@ class MaterialDTO(ScheletonMaterialDTO):
 class MaterialDTOInit(ScheletonMaterialDTO):
 	pass
 
-class Reservation(Base):
-	__tablename__ = 'reservation'
+class Weighing(Base):
+	__tablename__ = 'weighing'
 	id = Column(Integer, primary_key=True, index=True)
-	idCustomer = Column(Integer, ForeignKey('social_reason.id'))
-	idSupplier = Column(Integer, ForeignKey('social_reason.id'))
+	typeSocialReason = Column(Integer, nullable=True)
+	idSocialReason = Column(Integer, ForeignKey('social_reason.id'))
+	idVector = Column(Integer, ForeignKey('social_reason.id'))
 	idVehicle = Column(Integer, ForeignKey('vehicle.id'))
 	idMaterial = Column(Integer, ForeignKey('material.id'))
 	number_weighings = Column(Integer, default=0, nullable=False)
 	date_created = Column(DateTime, default=datetime.utcnow)
 	note = Column(String)
+	weight1 = Column(Integer, nullable=True)
+	date1 = Column(DateTime, nullable=True)
+	pid1 = Column(String, nullable=True)
+	weight2 = Column(Integer, nullable=True)
+	date2 = Column(DateTime, nullable=True)
+	pid2 = Column(String, nullable=True)
+	net_weight = Column(Integer, nullable=True)
+	weigher = Column(String, nullable=True)
 	selected = Column(Boolean, index=True, default=False)
 	
 	# Relazioni
-	customer = relationship("SocialReason", 
-							foreign_keys=[idCustomer], 
-							back_populates="customer_reservations")
-	supplier = relationship("SocialReason", 
-							foreign_keys=[idSupplier], 
-							back_populates="supplier_reservations")
-	vehicle = relationship("Vehicle", back_populates="reservations")
-	material = relationship("Material", back_populates="reservations")
-	weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
+	social_reason = relationship("SocialReason", 
+							foreign_keys=[idSocialReason], 
+							back_populates="social_reasons")
+	vector = relationship("SocialReason", 
+							foreign_keys=[idVector], 
+							back_populates="vectors")
+	vehicle = relationship("Vehicle", back_populates="weighings")
+	material = relationship("Material", back_populates="weighings")
 
-class ScheletonReservationDTO(BaseModel):
-	idCustomer: Optional[int] = None
-	idSupplier: Optional[int] = None
-	idVehicle: Optional[int] = None
-	idMaterial: Optional[int] = None
-	number_weighings: Optional[int] = None
+class ScheletonWeighingDTO(BaseModel):
+	typeSocialReason: Optional[Union[int, str]] = None
+	idSocialReason: Optional[Union[int, str]] = None
+	idVector:Optional[Union[int, str]] = None
+	idVehicle: Optional[Union[int, str]] = None
+	idMaterial: Optional[Union[int, str]] = None
+	number_weighings: Optional[Union[int, str]] = None
 	note: Optional[str] = None
-	id: Optional[int] = None
+	id: Optional[Union[int, str]] = None
 	
-class ReservationDTO(ScheletonReservationDTO):
+class WeighingDTO(ScheletonWeighingDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
+		if type(v) == str:
+			if not v.isdigit():
+				raise ValueError("id must to a digit string or number")
+			else:
+				v = int(v)
 		if v not in [None, -1]:
+			if type(v) == str and v.isdigit():
+				v = int(v)
 			data = get_data_by_id('reservation', v)
 			if not data:
 				raise ValueError('Id not exist in reservation')
 		return v
 
-	@validator('idCustomer', pre=True, always=True)
+	@validator('typeSocialReason', pre=True, always=True)
+	def check_type_social_reason(cls, v, values):
+		if v is not None:
+			if type(v) == str:
+				if not is_number(v):
+					raise ValueError("Type social reason must to be a digit string or number")
+				else:
+					v = int(v)
+			if v not in [0, 1]:
+				raise ValueError("Type Social Reason must to be 1 for 'customer', 2 for 'supplier' or void if you don't want to be specic")
+		return v
+
+	@validator('idSocialReason', pre=True, always=True)
 	def check_customer_id(cls, v, values):
+		if type(v) == str:
+			if not v.isdigit():
+				raise ValueError("Social Reason must to a digit string or number")
+			else:
+				v = int(v)
 		if v not in [None, -1]:
+			if type(v) == str and v.isdigit():
+				v = int(v)
 			data = get_data_by_id('social_reason', v)
 			if not data:
 				raise ValueError('Id not exist in social reason')
 		return v
 
-	@validator('idSupplier', pre=True, always=True)
-	def check_supplier_id(cls, v, values):
+	@validator('idVector', pre=True, always=True)
+	def check_customer_id(cls, v, values):
+		if type(v) == str:
+			if not v.isdigit():
+				raise ValueError("Vector must to a digit string or number")
+			else:
+				v = int(v)
 		if v not in [None, -1]:
+			if type(v) == str and v.isdigit():
+				v = int(v)
 			data = get_data_by_id('social_reason', v)
 			if not data:
 				raise ValueError('Id not exist in social reason')
@@ -242,7 +270,14 @@ class ReservationDTO(ScheletonReservationDTO):
 
 	@validator('idVehicle', pre=True, always=True)
 	def check_vehicle_id(cls, v, values):
+		if type(v) == str:
+			if not v.isdigit():
+				raise ValueError("Vehicle must to a digit string or number")
+			else:
+				v = int(v)
 		if v not in [None, -1]:
+			if type(v) == str and v.isdigit():
+				v = int(v)
 			data = get_data_by_id('vehicle', v)
 			if not data:
 				raise ValueError('Id not exist in vehicle')
@@ -250,6 +285,11 @@ class ReservationDTO(ScheletonReservationDTO):
 
 	@validator('idMaterial', pre=True, always=True)
 	def check_material_id(cls, v, values):
+		if type(v) == str:
+			if not v.isdigit():
+				raise ValueError("Material must to a digit string or number")
+			else:
+				v = int(v)
 		if v not in [None, -1]:
 			data = get_data_by_id('material', v)
 			if not data:
@@ -258,32 +298,23 @@ class ReservationDTO(ScheletonReservationDTO):
 
 	@validator('number_weighings', pre=True, always=True)
 	def check_weighings(cls, v, values):
+		if type(v) == str:
+			if not v.isdigit():
+				raise ValueError("Number weighings must to a digit string or number")
+			else:
+				v = int(v)
 		if v is not None and v <= 0:
-			raise ValueError('Weighings must to be greater than 0')
+			raise ValueError('Number weighings must to be greater than 0')
 		return v
 
-class ReservationDTOInit(ScheletonReservationDTO):
+class WeighingDTOInit(ScheletonWeighingDTO):
 	pass
-
-# Modello per la tabella Weighing
-class Weighing(Base):
-	__tablename__ = 'weighing'
-	id = Column(Integer, primary_key=True, index=True, nullable=False)
-	weight = Column(Integer, nullable=True)
-	date = Column(DateTime, nullable=True)
-	pid = Column(String, nullable=True)
-	weigher = Column(String, nullable=True)
-	idReservation = Column(Integer, ForeignKey('reservation.id'), nullable=False)
-	
-	# Relazioni
-	reservation = relationship("Reservation", back_populates="weighings")
 
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
 	'vehicle': Vehicle,
 	'social_reason': SocialReason,
 	'material': Material,
-	'reservation': Reservation,
  	'weighing': Weighing,
 	'user': User
 }
@@ -446,77 +477,73 @@ def get_data_by_attribute(table_name, attribute_name, attribute_value):
 		session.close()
 		raise e
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 def filter_data(table_name, filters=None, limit=None, offset=None):
-	"""Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione
-	e popola automaticamente le colonne di riferimenti con i dati delle tabelle correlate.
-
-	Args:
-		table_name (str): Il nome della tabella su cui eseguire la ricerca.
-		filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
-		limit (int): Numero massimo di righe da visualizzare. Default è None.
-		offset (int): Numero di righe da saltare. Default è None.
-
-	Returns:
-		tuple: Una tupla contenente:
-			- una lista di dizionari contenenti i risultati della ricerca,
-			- il numero totale di righe nella tabella.
-	"""
-
-	# Verifica che il modello esista nel dizionario dei modelli
-	model = table_models.get(table_name.lower())
-	if not model:
-		raise ValueError(f"Tabella '{table_name}' non trovata.")
-
-	# Crea una sessione e costruisce la query
-	session = SessionLocal()
-	try:
-		# Inizia la query sulla tabella specificata
-		query = session.query(model)
-
-		import libs.lb_log as lb_log
-
-		# Aggiungi il caricamento delle relazioni per i campi che sono referenze (foreign key)
-		for relationship_name, relationship_obj in model.__mapper__.relationships.items():
-			# Verifica se la relazione esiste
-			if relationship_obj:
-				query = query.options(joinedload(relationship_obj))
-
-		# Aggiungi i filtri, se specificati
-		if filters:
-			for column, value in filters.items():
-				if hasattr(model, column):
-					if type(value) == str:
-						query = query.filter(getattr(model, column).like(f'%{value}%'))
-					elif type(value) == int:
-						query = query.filter(getattr(model, column) == value)
-					elif value is None:
-						query = query.filter(getattr(model, column).is_(None))
-					else:
-						raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
-				else:
-					raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
-
-		# Esegui una query separata per ottenere il numero totale di righe
-		total_rows = query.count()
-
-		# Applica la paginazione se limit e offset sono specificati
-		if limit is not None:
-			query = query.limit(limit)
-		if offset is not None:
-			query = query.offset(offset)
-
-		# Esegui la query per ottenere i risultati filtrati
-		results = query.all()
-
-		session.close()
-
-		return results, total_rows
-
-	except Exception as e:
-		session.close()
-		raise e
+    """Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione
+    e popola automaticamente le colonne di riferimenti con i dati delle tabelle correlate,
+    incluse tutte le relazioni annidate.
+    
+    Args:
+        table_name (str): Il nome della tabella su cui eseguire la ricerca.
+        filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
+        limit (int): Numero massimo di righe da visualizzare. Default è None.
+        offset (int): Numero di righe da saltare. Default è None.
+        
+    Returns:
+        tuple: Una tupla contenente:
+            - una lista di dizionari contenenti i risultati della ricerca,
+            - il numero totale di righe nella tabella.
+    """
+    # Verifica che il modello esista nel dizionario dei modelli
+    model = table_models.get(table_name.lower())
+    if not model:
+        raise ValueError(f"Tabella '{table_name}' non trovata.")
+    
+    # Crea una sessione e costruisce la query
+    session = SessionLocal()
+    try:
+        # Inizia la query sulla tabella specificata
+        query = session.query(model)
+        
+        # Carica tutte le relazioni dirette della tabella principale
+        for rel_name, rel_obj in model.__mapper__.relationships.items():
+            # Carica la relazione diretta e tutte le relazioni annidate
+            query = query.options(selectinload(getattr(model, rel_name)).selectinload('*'))
+        
+        # Aggiungi i filtri, se specificati
+        if filters:
+            for column, value in filters.items():
+                if hasattr(model, column):
+                    if type(value) == str:
+                        query = query.filter(getattr(model, column).like(f'%{value}%'))
+                    elif type(value) == int:
+                        query = query.filter(getattr(model, column) == value)
+                    elif value is None:
+                        query = query.filter(getattr(model, column).is_(None))
+                    else:
+                        raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
+                else:
+                    raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
+        
+        # Esegui una query separata per ottenere il numero totale di righe
+        total_rows = query.count()
+        
+        # Applica la paginazione se limit e offset sono specificati
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+        
+        # Esegui la query per ottenere i risultati filtrati
+        results = query.all()
+        
+        session.close()
+        return results, total_rows
+    
+    except Exception as e:
+        session.close()
+        raise e
 
 def add_data(table_name, data):
 	"""Aggiunge un record a una tabella specificata dinamicamente.
@@ -574,6 +601,8 @@ def update_data(table_name, record_id, updated_data):
 		# Aggiorna i campi con i nuovi valori
 		for key, value in updated_data.items():
 			if hasattr(record, key) and value is not None:  # Verifica che il campo esista
+				if "id" in key and value == -1:
+					value = None
 				setattr(record, key, value)
 
 		session.commit()
@@ -657,14 +686,12 @@ required_columns = {
 	"vehicle": {"name": str, "plate": str},
 	"social_reason": {"name": str, "cell": str, "cfpiva": str},
 	"material": {"name": str},
-	"reservation": {"idCustomer": int, "idSupplier": int, "idVehicle": int, "idMaterial": int, "number_weighings": int, "note": str}
 }
 
 required_dtos = {
 	"vehicle": VehicleDTO,
 	"social_reason": SocialReasonDTO,
 	"material": MaterialDTO,
-	"reservation": ReservationDTO
 }
 
 Base.metadata.create_all(engine)

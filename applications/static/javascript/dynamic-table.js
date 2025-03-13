@@ -6,6 +6,7 @@ let listUrlPath = null;
 let addUrlPath = null;
 let setUrlPath = null;
 let deleteUrlPath = null;
+let callback_populate_select = null;
 let currentId = null;
 const columns = {};
 
@@ -83,54 +84,79 @@ function changeRowsPerPage() {
 }
 
 function populateTable(data) {
-    const table = document.querySelector("tbody");
-    table.innerHTML = ""; // Pulisce la tabella esistente
-
-    data.forEach(item => {
-        const row = document.createElement("tr");
-        Object.entries(columns).forEach(_ => row.insertCell());
-
-        Object.entries(item).forEach(([key, value]) => {
-            // Salta l'id
-            if (key in columns) {
-                row.cells[columns[key]].textContent = value;
-            }
-        });
-
-        // Crea la cella per i pulsanti di azione
-        const actionsCell = document.createElement("td");
-        actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra
-
-        // Pulsante Modifica
-        const editButton = document.createElement("button");
-        editButton.style.visibility = 'hidden';
-        editButton.textContent = "✏️";
-        editButton.onclick = () => editRow(item);
-
-        // Pulsante Elimina
-        const deleteButton = document.createElement("button");
-        deleteButton.style.visibility = 'hidden';
-        deleteButton.textContent = "🗑️";
-        deleteButton.onclick = () => deleteRow(item);
-
-        actionsCell.appendChild(editButton);
-        actionsCell.appendChild(deleteButton);
-        row.appendChild(actionsCell);
-
-        // Mostra i pulsanti solo all'hover della riga
-        row.addEventListener("mouseenter", () => {
-            row.style.backgroundColor = 'whitesmoke';
-            editButton.style.visibility = 'inherit';
-            deleteButton.style.visibility = 'inherit';
-        });
-        row.addEventListener("mouseleave", () => {
-            row.style.backgroundColor = 'white';
-            editButton.style.visibility = 'hidden';
-            deleteButton.style.visibility = 'hidden';
-        });
-
-        table.appendChild(row);
+  const table = document.querySelector("tbody");
+  table.innerHTML = ""; // Pulisce la tabella esistente
+  
+  // Extract column names and positions from the headers
+  const columns = {};
+  const headers = document.querySelectorAll("thead th[name]");
+  headers.forEach((header, index) => {
+    if (header.getAttribute("name")) {
+      columns[header.getAttribute("name")] = index;
+    }
+  });
+  
+  data.forEach(item => {
+    const row = document.createElement("tr");
+    
+    // Create cells for each column
+    for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
+      row.insertCell();
+    }
+    
+    // Funzione ricorsiva per gestire oggetti annidati a qualsiasi livello
+    function populateNestedValues(obj, prefix = '') {
+      Object.entries(obj).forEach(([key, value]) => {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+        
+        if (fullKey in columns) {
+          row.cells[columns[fullKey]].textContent = value;
+        } 
+        // Gestione ricorsiva per gli oggetti annidati
+        else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          populateNestedValues(value, fullKey);
+        }
+      });
+    }
+    
+    // Applica la funzione ricorsiva sull'oggetto riga
+    populateNestedValues(item);
+    
+    // Crea la cella per i pulsanti di azione
+    const actionsCell = document.createElement("td");
+    actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra
+    
+    // Pulsante Modifica
+    const editButton = document.createElement("button");
+    editButton.style.visibility = 'hidden';
+    editButton.textContent = "✏️";
+    editButton.onclick = () => editRow(item);
+    
+    // Pulsante Elimina
+    const deleteButton = document.createElement("button");
+    deleteButton.style.visibility = 'hidden';
+    deleteButton.textContent = "🗑️";
+    deleteButton.onclick = () => deleteRow(item);
+    
+    actionsCell.appendChild(editButton);
+    actionsCell.appendChild(deleteButton);
+    row.appendChild(actionsCell);
+    
+    // Mostra i pulsanti solo all'hover della riga
+    row.addEventListener("mouseenter", () => {
+      row.style.backgroundColor = 'whitesmoke';
+      editButton.style.visibility = 'inherit';
+      deleteButton.style.visibility = 'inherit';
     });
+    
+    row.addEventListener("mouseleave", () => {
+      row.style.backgroundColor = 'white';
+      editButton.style.visibility = 'hidden';
+      deleteButton.style.visibility = 'hidden';
+    });
+    
+    table.appendChild(row);
+  });
 }
 
 function getFormData(form) {
@@ -146,7 +172,7 @@ function getFormData(form) {
                     formData[element.id] = element.value;
                 }
             } else {
-                formData[element.id] = element.value;
+                formData[element.id] = element.value !== "" ? element.value : null;
             }
         }
     }
@@ -183,6 +209,7 @@ addPopup.querySelector('#save-btn').addEventListener('click', () => {
 });
 
 function addRow() {
+    if (callback_populate_select) callback_populate_select('#register');
     document.getElementById('overlay').classList.add('active');
     addPopup.classList.add('active');
 }
@@ -214,6 +241,7 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
 
 // Funzioni segnaposto per modifica ed eliminazione
 function editRow(item) {
+    if (callback_populate_select) callback_populate_select('#edit', item);
     currentId = item.id;
     document.getElementById('overlay').classList.add('active');
     editPopup.classList.add('active');
@@ -251,12 +279,24 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
 })
 
 function deleteRow(item) {
+    if (callback_populate_select) callback_populate_select('#delete', item);
     currentId = item.id;
     document.getElementById('overlay').classList.add('active');
     deletePopup.classList.add('active');
     for (key in item) {
-        const span = deletePopup.querySelector(`#${key}`);
-        if (span) span.innerHTML = item[key];
+        let annidate_key = `#${key}`;
+        let annidate_value = item[key];
+        if (typeof annidate_value === 'object' && annidate_value !== null && !Array.isArray(annidate_value)) {
+            Object.entries(annidate_value).forEach(([sub_key, sub_value]) => {
+                annidate_key = `#${key}\\.${sub_key}`;
+                annidate_value = sub_value;
+                const span = deletePopup.querySelector(annidate_key);
+                if (span) span.innerHTML = annidate_value;
+            })
+        } else {
+            const span = deletePopup.querySelector(annidate_key);
+            if (span) span.innerHTML = annidate_value;
+        }
     }
 }
 
@@ -279,7 +319,7 @@ function closePopups(idPopups) {
         // Resetta i campi input
         const inputs = popup.querySelectorAll('input');
         inputs.forEach(input => {
-            input.value = '';
+            if (input.type !== 'radio') input.value = '';
         });
     });
 

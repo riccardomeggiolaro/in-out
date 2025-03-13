@@ -3,8 +3,9 @@ from libs.lb_database import SocialReasonDTOInit, VehicleDTOInit, MaterialDTOIni
 from typing import Union, Optional, List
 
 class DataInExecution(BaseModel):
-	customer: SocialReasonDTOInit = SocialReasonDTOInit(**{})
-	supplier: SocialReasonDTOInit = SocialReasonDTOInit(**{})
+	typeSocialReason: Optional[Union[int, str]] = None
+	social_reason: SocialReasonDTOInit = SocialReasonDTOInit(**{})
+	vector: SocialReasonDTOInit = SocialReasonDTOInit(**{})
 	vehicle: VehicleDTOInit = VehicleDTOInit(**{})
 	material: MaterialDTOInit = MaterialDTOInit(**{})
 	note: Union[str, None] = None

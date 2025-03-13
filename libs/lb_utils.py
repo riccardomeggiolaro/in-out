@@ -71,16 +71,45 @@ class GracefulKiller:
 # ==============================================================
 
 def sum_number(num1, num2):
-    # Funzione per determinare se un numero ha decimali
-    def convert(numero):
-        if '.' in numero or ',' in numero:
-            return float(numero)  # Se ci sono decimali, lo converte in float
-        else:
-            return int(numero)  # Se non ci sono decimali, lo converte in int
+	# Funzione per determinare se un numero ha decimali
+	def convert(numero):
+		if '.' in numero or ',' in numero:
+			return float(numero)  # Se ci sono decimali, lo converte in float
+		else:
+			return int(numero)  # Se non ci sono decimali, lo converte in int
 
-    # Converto i numeri
-    num1 = convert(num1)
-    num2 = convert(num2)
-    
-    # Ritorno la somma dei numeri
-    return num1 + num2
+	# Converto i numeri
+	num1 = convert(num1)
+	num2 = convert(num2)
+	
+	# Ritorno la somma dei numeri
+	return num1 + num2
+
+def is_number(s):
+	try:
+		float(s)  # Converte sia interi che numeri decimali
+		return True
+	except ValueError:
+		return False
+	
+def has_values_besides_id(dictionary):
+	"""
+	Verifica se un dizionario contiene almeno un campo con un valore (diverso da None, '', [], {}, 0)
+	oltre al campo 'id'.
+	
+	Restituisce True se c'è almeno un campo con valore significativo, False altrimenti.
+	"""
+	
+	lb_log.warning(dictionary)
+
+	for key, value in dictionary.items():
+		# Salta il campo 'id'
+		if key == 'id':
+			continue
+		
+		# Controlla se il valore è significativo (non vuoto/nullo)
+		if value is not None and value != '' and value != [] and value != {} and value != 0:
+			return True
+	
+	# Se arrivi qui, non ci sono campi con valori significativi oltre 'id'
+	return False

@@ -1,12 +1,12 @@
-from libs.lb_utils import CustomBaseModel
-from libs.lb_database import SocialReasonDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected
-from typing import Optional
+from libs.lb_utils import CustomBaseModel, is_number
+from libs.lb_database import SocialReasonDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected, update_data
+from typing import Optional, Union
 from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
 
 class DataInExecutionDTO(CustomBaseModel):
-	customer: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
-	supplier: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
+	typeSocialReason: Optional[Union[int, str]] = None
+	social_reason: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
 	vehicle: Optional[VehicleDTO] = VehicleDTO(**{})
 	material: Optional[MaterialDTO] = MaterialDTO(**{})
 	note: Optional[str] = None
@@ -21,13 +21,28 @@ class DataInExecutionDTO(CustomBaseModel):
 
 		return values
 
+	@validator('typeSocialReason', pre=True, always=True)
+	def check_type_social_reason(cls, v, values):
+		if v is not None:
+			if type(v) == str:
+				if not is_number(v):
+					raise ValueError("Type social reason must to be a digit string or number")
+				else:
+					v = int(v)
+			if v not in [0, 1]:
+				raise ValueError("Type Social Reason must to be 1 for 'customer', 2 for 'supplier' or void if you don't want to be specic")
+		return v
+
 class IdSelectedDTO(CustomBaseModel):
 	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
-			get_data_by_id_if_is_selected('weighing', v)
+			data = get_data_by_id_if_is_selected('weighing', v)
+			if data["pid2"] is not None:
+				update_data('weighing', v, { "selected": False })
+				raise ValueError("Can only pass weight not just closed")
 		return v
 
 class DataDTO(BaseModel):

@@ -54,11 +54,11 @@
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova veicolo:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #name').value.trim() || document.querySelector('#add-popup #plate').value.trim()) || !this.checkValidity())">
-            Nome (Opzionale):<br>
+            Descrizione: (Opzionale):<br>
             <input type="text" id="name"><br>
             Targa: (Opzionale)<br>
-            <input type="text" id="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()"><br>
-            <br>            
+            <input type="text" id="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()">
+            <br>    
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                
@@ -69,12 +69,11 @@
 
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica veicolo:</h3>
-        <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #name').value.trim() || document.querySelector('#edit-popup #plate').value.trim()) || !this.checkValidity())">
+        <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #name').value.trim() || document.querySelector('#edit-popup #plate').value.trim()) || !this.checkValidity())">
             Nome: (Opzionale)<br>
             <input type="text" id="name"><br>
             Targa: (Opzionale)<br>
             <input type="text" id="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()"><br>
-            <br>            
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                
@@ -84,12 +83,14 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina veicolo:</h3>
-        <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
-        <p><b>Targa:</b> <u><em><span id="plate"></span></em></u></p>
-        <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
-            <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+        <div id="delete">
+            <h3>Elimina veicolo:</h3>
+            <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
+            <p><b>Targa:</b> <u><em><span id="plate"></span></em></u></p>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+                <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+            </div>
         </div>
     </div>
 

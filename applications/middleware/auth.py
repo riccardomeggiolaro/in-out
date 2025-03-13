@@ -36,6 +36,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/social-reason.html",
             "/vehicle",
             "/vehicle.html",
+            "/transporter",
+            "/transporter.html",
             "/material",
             "/material.html",
             "/reservation",

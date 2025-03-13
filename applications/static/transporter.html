@@ -4,7 +4,7 @@
         <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Materiali</title>
+        <title>Trasportatori</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -16,7 +16,7 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Materiali</h2>
+            <h2>Trasportatori</h2>
             <button class="register-button" onclick="addRow()">Registra</button>
         </div>
         <table>
@@ -51,11 +51,10 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuova materiale:</h3>
+        <h3>Nuova trasportatore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             <input type="text" id="name" required><br>
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
             <button id="save-btn" class="save-btn" disabled>Salva</button><br>
@@ -63,11 +62,10 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica materiale:</h3>
+        <h3>Modifica trasportatore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             <input type="text" id="name" required><br>
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
             <button id="save-btn" class="edit-save-btn">Salva</button><br>
@@ -75,8 +73,8 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina materiale:</h3>
-        <p><u><em><span id="name"></span></em></u></p>
+        <h3>Elimina trasportatore:</h3>
+        <u><em><span id="name"></span></em></u>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
             <button id="save-btn" class="delete-save-btn">Elimina</button><br>
@@ -93,11 +91,11 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         setTimeout(() => {
-            itemName = 'Materiale';
-            listUrlPath = '/anagrafic/list/material';
-            addUrlPath = '/anagrafic/material';
-            setUrlPath = '/anagrafic/material';
-            deleteUrlPath = '/anagrafic/material';
+            itemName = 'Trasportatore';
+            listUrlPath = '/anagrafic/list/transporter';
+            addUrlPath = '/anagrafic/transporter';
+            setUrlPath = '/anagrafic/transporter';
+            deleteUrlPath = '/anagrafic/transporter';
             updateTable();
         }, 1000);
     </script>
