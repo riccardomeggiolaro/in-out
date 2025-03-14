@@ -34,6 +34,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/profile.html",
             "/social-reason", 
             "/social-reason.html",
+            "/vector",
+            "/vector.html",
             "/vehicle",
             "/vehicle.html",
             "/transporter",

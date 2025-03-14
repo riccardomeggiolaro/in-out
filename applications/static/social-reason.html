@@ -50,7 +50,7 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova ragione sociale:</h3>
@@ -92,10 +92,19 @@
         <h3>Elimina ragione sociale:</h3>
         <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
         <p><b>Cell:</b> <u><em><span id="cell"></span></em></u></p>
-        <p><b>CF/P.IVA:<b> <ul><em><span id="cfpiva"></span></em></ul></p>
+        <p><b>CF/P.IVA:</b> <u><em><span id="cfpiva"></span></em></u></p>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
             <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+        </div>
+    </div>
+
+    <div id="confirm-popup" class="modal-content popup">
+        <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+            <button id="save-btn" class="confirm-btn">Ok</button><br>
         </div>
     </div>
 

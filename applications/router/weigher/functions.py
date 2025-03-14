@@ -34,10 +34,11 @@ class Functions:
 	def setDataInExecution(self, instance_name: str, weigher_name: str, source: DataInExecutionDTO):
 		# Per ogni chiave dei nuovi dati passati controlla se è un oggetto o None
 		for key, value in vars(source).items():
-			if isinstance(value, str):
+			if isinstance(value, str) or isinstance(value, int):
 				if value in ["", "undefined", -1]:
 					value = None
 				lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] = value
+				lb_config.saveconfig()
 			elif isinstance(value, object) and value is not None:
 				is_allow_none = False
 				is_passed_some_values = {sub_key: sub_value for sub_key, sub_value in vars(value).items() if sub_value is not None}

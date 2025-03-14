@@ -9,7 +9,9 @@ let currentInput;
 let connected;
 
 let selectedIdVehicle;
+let selectedIdTypeSocialReason;
 let selectedIdSocialReason;
+let selectedIdVector;
 let selectedIdMaterial;
 
 let selectedIdWeight;
@@ -27,7 +29,7 @@ pathname = lastSlashIndex !== -1 ? pathname.substring(0, lastSlashIndex) : pathn
 
 let snackbarTimeout;
 
-let data = {
+let data_weight_realtime = {
     status: undefined,
     type: undefined,
     net_weight: undefined,
@@ -94,6 +96,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Innesca l'evento 'change' manualmente
         selectedIdWeigher.dispatchEvent(new Event('change'));
         instances = res;
+        if (selectedIdWeigher.children.length <= 1) {
+            selectedIdWeigher.style.visibility = 'hidden';
+        } 
     });
 });
 
@@ -179,11 +184,15 @@ async function getData(path) {
         dataInExecution = res["data_in_execution"];
         const obj = res["data_in_execution"];
         selectedIdVehicle = obj.vehicle.id;
+        selectedIdTypeSocialReason = obj.typeSocialReason;
         selectedIdSocialReason = obj.social_reason.id;
+        selectedIdVector = obj.vector.id;
         selectedIdMaterial = obj.material.id;
         document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
+        document.querySelector('#typeSocialReason').value = obj.typeSocialReason;
         document.querySelector('#currentNameSocialReason').value = obj.social_reason.name ? obj.social_reason.name : '';
+        document.querySelector('#currentNameVector').value = obj.vector.name ? obj.vector.name : '';
         document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         selectedIdWeight = res["id_selected"]["id"];
@@ -205,28 +214,32 @@ async function populateListIn() {
             let content = item.id;
             if (item.vehicle) content = item.vehicle.name;
             else if (item.social_reason) content = item.social_reason.name;
-            content += ` - ${item.weigher}`;
+            if (selectedIdWeigher.children.length > 1) {
+                content += ` - ${item.weigher}`;
+            }
             li.textContent = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');
             li.addEventListener('click', async () => {
-                let obj =  {
-                    data_in_execution: {                                    
-                    },
-                    id_selected: {
-                        id: item.id
+                if (data_weight_realtime.tare == 0) {
+                    let obj =  {
+                        data_in_execution: {                                    
+                        },
+                        id_selected: {
+                            id: item.id
+                        }
                     }
+                    if (item.id == selectedIdWeight) obj.id_selected.id = -1;
+                    await fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(obj)
+                    })
+                    .then(res => res.json())
+                    .catch(error => console.error(error));                    
                 }
-                if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                await fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(obj)
-                })
-                .then(res => res.json())
-                .catch(error => console.error(error));
             })
             listIn.appendChild(li);
         })
@@ -248,9 +261,9 @@ function scrollToSelectedItem() {
     const selectedItem = document.querySelector('.selected');
     if (selectedItem) {
         selectedItem.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'start'
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'start'
         });
     }
 }
@@ -272,7 +285,9 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
             }
         })
     }
-    closePopup();
+    try {
+        closePopup();
+    } catch (err) {}
     fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
         method: 'PATCH',
         headers: {
@@ -298,6 +313,9 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     } else if (showList === 'suggestionsListNameSocialReason') {
         currentId = selectedIdSocialReason;
         anagrafic_to_set = 'social_reason';
+    } else if (showList === 'suggestionsListNameVector') {
+        currentId = selectedIdVector;
+        anagrafic_to_set = 'vector';
     } else if (showList === 'suggestionsListMaterial') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
@@ -313,7 +331,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     .catch(error => console.error(error)); // Sostituisci con l'URL del tuo endpoint
 
     response.data.forEach(suggestion => {
-        if (suggestion.selected !== true || suggestion.id === currentId) {
+        if (suggestion[filter] && suggestion.selected !== true || suggestion.id === currentId) {
             const li = document.createElement("li");
 
             li.onclick = () => {
@@ -337,7 +355,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
 
             let text = highlightText(suggestion, inputValue, filter);
             for (const [key, value] of Object.entries(suggestion)) {
-                if (value && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
+                if (value && typeof(value) !== 'object' && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
             }
             li.innerHTML = text; // Evidenzia il testo
             li.dataset.id = suggestion.id
@@ -526,15 +544,15 @@ function updateUIRealtime(e) {
             button.classList.remove("disabled-button"); // Aggi
         });
     } else if (obj.tare) {
-        data = obj;
-        document.getElementById('tare').innerText = data.tare !== undefined ? data.tare : 'N/A';
-        document.getElementById('netWeight').innerText = data.net_weight !== undefined ? data.net_weight : "N/A";
-        document.getElementById('uniteMisure').innerText = data.unite_measure !== undefined ? data.unite_measure : 'N/A';
-        document.getElementById('status').innerText = data.status !== undefined ? data.status : 'N/A';
-        const numeric = isNumeric(data.gross_weight);
-        const gross_weight = Number(data.gross_weight);
-        const tare_weight = Number(data.tare);
-        if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data.status === "ST") {
+        data_weight_realtime = obj;
+        document.getElementById('tare').innerText = data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : 'N/A';
+        document.getElementById('netWeight').innerText = data_weight_realtime.net_weight !== undefined ? data_weight_realtime.net_weight : "N/A";
+        document.getElementById('uniteMisure').innerText = data_weight_realtime.unite_measure !== undefined ? data_weight_realtime.unite_measure : 'N/A';
+        document.getElementById('status').innerText = data_weight_realtime.status !== undefined ? data_weight_realtime.status : 'N/A';
+        const numeric = isNumeric(data_weight_realtime.gross_weight);
+        const gross_weight = Number(data_weight_realtime.gross_weight);
+        const tare_weight = Number(data_weight_realtime.tare);
+        if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
             if (tare_weight === 0 && selectedIdWeight === null) {
                 tareButton.disabled = false;
                 zeroButton.disabled = true;
@@ -542,12 +560,19 @@ function updateUIRealtime(e) {
                 inButton.disabled = false;
                 printButton.disabled = false;
                 outButton.disabled = false;
+            } else if (tare_weight === 0 && selectedIdWeight !== null) {
+                tareButton.disabled = true;
+                zeroButton.disabled = true;
+                presetTareButton.disabled = true;
+                inButton.disabled = true;
+                printButton.disabled = true;
+                outButton.disabled = false;
             } else {
                 tareButton.disabled = false;
                 zeroButton.disabled = true;
                 presetTareButton.disabled = false;
                 inButton.disabled = true;
-                printButton.disabled = true;
+                printButton.disabled = false;
                 outButton.disabled = false;
             }
         } else if (numeric && minWeightValue >= gross_weight) {
@@ -568,11 +593,15 @@ function updateUIRealtime(e) {
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
+        selectedIdTypeSocialReason = obj.data_in_execution.typeSocialReason;
         selectedIdSocialReason = obj.data_in_execution.social_reason.id;
+        selectedIdVector = obj.data_in_execution.vector.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
         document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.name ? obj.data_in_execution.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
+        document.querySelector('#typeSocialReason').selectedIndex = obj.data_in_execution.typeSocialReason;
         document.querySelector('#currentNameSocialReason').value = obj.data_in_execution.social_reason.name ? obj.data_in_execution.social_reason.name : '';
+        document.querySelector('#currentNameVector').value = obj.data_in_execution.vector.name ? obj.data_in_execution.vector.name : '';
         document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         if (obj.id_selected.id != selectedIdWeight) {
@@ -706,8 +735,8 @@ async function handlePesata2() {
 }
 
 function disableAllElements() {
-    // Seleziona tutti i pulsanti e gli input (inclusi select, textarea, ecc.)
-    const buttonsAndInputs = document.querySelectorAll('button, input, textarea, [role="button"]');
+    // Seleziona tutti i pulsanti e gli input
+    const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
 
     // Disabilita ogni elemento trovato
     buttonsAndInputs.forEach(element => {
@@ -717,7 +746,7 @@ function disableAllElements() {
 
 function enableAllElements() {
     // Seleziona tutti i pulsanti e gli input
-    const buttonsAndInputs = document.querySelectorAll('button, input, textarea, [role="button"]');
+    const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
 
     // Abilita ogni elemento trovato
     buttonsAndInputs.forEach(element => {

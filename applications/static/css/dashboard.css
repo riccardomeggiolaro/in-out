@@ -95,7 +95,8 @@ body {
     max-width: 99%;
 }
 
-input {
+input, 
+select {
     padding: 5px;
     border-radius: 5px;
     border: 1px solid #ccc;
@@ -106,9 +107,15 @@ input {
     max-width: -moz-available;
 }
 
-input:focus {
+input:focus, 
+select:focus {
     box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra più intensa quando è in focus */
     outline: none;
+}
+
+select {
+    width: 100%;
+    background-color: white;
 }
 
 .anagrafic div h2 {

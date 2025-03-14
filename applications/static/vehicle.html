@@ -49,7 +49,7 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova veicolo:</h3>
@@ -91,6 +91,15 @@
                 <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
                 <button id="save-btn" class="delete-save-btn">Elimina</button><br>
             </div>
+        </div>
+    </div>
+
+    <div id="confirm-popup" class="modal-content popup">
+        <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+            <button id="save-btn" class="confirm-btn">Ok</button><br>
         </div>
     </div>
 

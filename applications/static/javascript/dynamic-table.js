@@ -8,6 +8,7 @@ let setUrlPath = null;
 let deleteUrlPath = null;
 let callback_populate_select = null;
 let currentId = null;
+let confirm_exec_funct = null;
 const columns = {};
 
 document.querySelectorAll('thead th').forEach((th, index) => {
@@ -241,13 +242,26 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
 
 // Funzioni segnaposto per modifica ed eliminazione
 function editRow(item) {
-    if (callback_populate_select) callback_populate_select('#edit', item);
-    currentId = item.id;
-    document.getElementById('overlay').classList.add('active');
-    editPopup.classList.add('active');
-    for (let key in item) {
-        const keyInput = editPopup.querySelector(`#${key}`);
-        if (keyInput) keyInput.value = item[key];
+    const funct = () => {
+        if (callback_populate_select) callback_populate_select('#edit', item);
+        currentId = item.id;
+        document.getElementById('overlay').classList.add('active');
+        editPopup.classList.add('active');
+        for (let key in item) {
+            const keyInput = editPopup.querySelector(`#${key}`);
+            if (keyInput) keyInput.value = item[key];
+        }
+    }
+    if (item.weighings.length > 0) {
+        confirm_exec_funct = funct;
+        document.querySelector('#confirm-title').textContent = "Attenzione!";
+        document.querySelector('#confirm-content').innerHTML = `
+            Questa anagrafica è associata a delle pesate salvate.<br>
+            Apportando modifiche, verranno aggiornati anche i dati correlati alle pesate.
+        `;
+        openPopup('confirm-popup');
+    } else {
+        funct();
     }
 }
 
@@ -279,26 +293,48 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
 })
 
 function deleteRow(item) {
-    if (callback_populate_select) callback_populate_select('#delete', item);
-    currentId = item.id;
-    document.getElementById('overlay').classList.add('active');
-    deletePopup.classList.add('active');
-    for (key in item) {
-        let annidate_key = `#${key}`;
-        let annidate_value = item[key];
-        if (typeof annidate_value === 'object' && annidate_value !== null && !Array.isArray(annidate_value)) {
-            Object.entries(annidate_value).forEach(([sub_key, sub_value]) => {
-                annidate_key = `#${key}\\.${sub_key}`;
-                annidate_value = sub_value;
+    const funct = () => {
+        if (callback_populate_select) callback_populate_select('#delete', item);
+        currentId = item.id;
+        document.getElementById('overlay').classList.add('active');
+        deletePopup.classList.add('active');
+        for (key in item) {
+            let annidate_key = `#${key}`;
+            let annidate_value = item[key];
+            if (typeof annidate_value === 'object' && annidate_value !== null && !Array.isArray(annidate_value)) {
+                Object.entries(annidate_value).forEach(([sub_key, sub_value]) => {
+                    annidate_key = `#${key}\\.${sub_key}`;
+                    annidate_value = sub_value;
+                    const span = deletePopup.querySelector(annidate_key);
+                    if (span) span.innerHTML = annidate_value;
+                })
+            } else {
                 const span = deletePopup.querySelector(annidate_key);
                 if (span) span.innerHTML = annidate_value;
-            })
-        } else {
-            const span = deletePopup.querySelector(annidate_key);
-            if (span) span.innerHTML = annidate_value;
+            }
         }
     }
+    if (item.weighings.length > 0) {
+        document.querySelector('#confirm-title').textContent = "Attenzione!";
+        document.querySelector('#confirm-content').textContent = `Non è possibile eliminare questa anagrafica perchè è associata a delle pesate salvate.`;
+        openPopup('confirm-popup');
+    } else {
+        funct();
+    }
 }
+
+const confirmPopup = document.getElementById('confirm-popup');
+confirmPopup.querySelector('#save-btn').addEventListener('click', () => {
+    const clone_funct = confirm_exec_funct;
+    closePopups(['confirm-popup']);
+    if (typeof(clone_funct) === "function") {
+        clone_funct();
+    }
+})
+confirmPopup.querySelector('.cancel-btn').addEventListener('click', () => {
+    closePopups(['confirm-popup']);
+    confirm_exec_funct = null;
+})
 
 function openPopup(idPopup) {
     document.getElementById(idPopup).classList.add('active');
@@ -306,6 +342,7 @@ function openPopup(idPopup) {
 }
 
 function closePopups(idPopups) {
+    confirm_exec_funct = null;
     idPopups.forEach(idPopup => {
         const popup = document.getElementById(idPopup);
         if (popup) {

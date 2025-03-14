@@ -3,7 +3,7 @@ import asyncio
 from typing import Union
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
-from libs.lb_database import add_data, get_data_by_id, update_data
+from libs.lb_database import add_data, get_data_by_id, get_data_by_attributes, update_data
 import datetime as dt
 from applications.router.weigher.types import DataInExecution
 from libs.lb_capture_camera import capture_camera_image
@@ -66,19 +66,41 @@ class CallbackWeigher(Functions):
 					"weigher": weigher_name
 				}
 				if not last_pesata.data_assigned.social_reason.id and has_values_besides_id(last_pesata.data_assigned.social_reason.dict()):
-					import libs.lb_log as lb_log
-					social_reason = add_data("social_reason", last_pesata.data_assigned.social_reason.dict())
-					lb_log.warning(social_reason)
-					weighing["idSocialReason"] = social_reason.id
+					social_reason_without_id = last_pesata.data_assigned.social_reason.dict()
+					del social_reason_without_id["id"]
+					exist_social_reason = get_data_by_attributes("social_reason", social_reason_without_id)
+					if exist_social_reason:
+						weighing["idSocialReason"] = exist_social_reason["id"]
+					else:
+						social_reason = add_data("social_reason", last_pesata.data_assigned.social_reason.dict())
+						weighing["idSocialReason"] = social_reason.id
 				if not last_pesata.data_assigned.vector.id and has_values_besides_id(last_pesata.data_assigned.vector.dict()):
-					vector = add_data("vector", last_pesata.data_assigned.vector.dict())
-					weighing["idVector"] = vector.id
+					vector_without_id = last_pesata.data_assigned.vector.dict()
+					del vector_without_id["id"]
+					exist_vector = get_data_by_attributes("vector", vector_without_id)
+					if exist_vector:
+						weighing["idVector"] = exist_vector["id"]
+					else:
+						vector = add_data("vector", last_pesata.data_assigned.vector.dict())
+						weighing["idVector"] = vector.id
 				if not last_pesata.data_assigned.vehicle.id and has_values_besides_id(last_pesata.data_assigned.vehicle.dict()):
-					vehicle = add_data("vehicle", last_pesata.data_assigned.vehicle.dict())
-					weighing["idVehicle"] = vehicle.id
+					vehicle_without_id = last_pesata.data_assigned.vehicle.dict()
+					del vehicle_without_id["id"]
+					exist_vehicle = get_data_by_attributes("vehicle", vehicle_without_id)
+					if exist_vehicle:
+						weighing["idVehicle"] = exist_vehicle["id"]
+					else:
+						vehicle = add_data("vehicle", last_pesata.data_assigned.vehicle.dict())
+						weighing["idVehicle"] = vehicle.id
 				if not last_pesata.data_assigned.material.id and has_values_besides_id(last_pesata.data_assigned.material.dict()):
-					material = add_data("material", last_pesata.data_assigned.material.dict())
-					weighing["idMaterial"] = material.id
+					material_without_id = last_pesata.data_assigned.material.dict()
+					del material_without_id["id"]
+					exist_material = get_data_by_attributes("material", material_without_id)
+					if exist_material:
+						weighing["idMaterial"] = exist_material["id"]
+					else:
+						material = add_data("material", last_pesata.data_assigned.material.dict())
+						weighing["idMaterial"] = material.id
 				# if last_pesata.data_assigned.social_reason.id:
 				# 	obj["idSocialReason"] = last_pesata.data_assigned.social_reason.id
 				# if last_pesata.data_assigned.vehicle.id:
@@ -134,7 +156,7 @@ class CallbackWeigher(Functions):
 					import libs.lb_log as lb_log
 					lb_log.warning(value)
 			else:
-				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weight2"]["weighing"]["set_rele"]:
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["weight2"]["set_rele"]:
 					key, value = next(iter(rele.items()))
 					modope = "CLOSERELE" if value == 0 else "OPENRELE"
 					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)

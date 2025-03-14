@@ -1,12 +1,13 @@
 from libs.lb_utils import CustomBaseModel, is_number
-from libs.lb_database import SocialReasonDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected, update_data
+from libs.lb_database import SocialReasonDTO, VectorDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected, update_data
 from typing import Optional, Union
 from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
 
 class DataInExecutionDTO(CustomBaseModel):
-	typeSocialReason: Optional[Union[int, str]] = None
+	typeSocialReason: Optional[Union[int, str]] = 0
 	social_reason: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
+	vector: Optional[VectorDTO] = VectorDTO(**{})
 	vehicle: Optional[VehicleDTO] = VehicleDTO(**{})
 	material: Optional[MaterialDTO] = MaterialDTO(**{})
 	note: Optional[str] = None

@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship, joinedload
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship, joinedload, selectinload
 from sqlalchemy.ext.declarative import declarative_base
 import os
 from typing import Optional, List, Union
@@ -93,21 +93,16 @@ class VehicleDTO(ScheletonVehicleDTO):
 class VehicleDTOInit(ScheletonVehicleDTO):
 	pass
 
-class SocialReason(Base):
-	__tablename__ = 'social_reason'
+class CommonAttributes:
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
 	cell = Column(String)
 	cfpiva = Column(String)
-	# Relazioni specifiche con foreign_keys specificati
-	social_reasons = relationship("Weighing", 
-		foreign_keys="Weighing.idSocialReason", 
-		back_populates="social_reason", 
-		cascade="all, delete")
-	vectors = relationship("Weighing", 
-		foreign_keys="Weighing.idVector", 
-		back_populates="vector", 
-		cascade="all, delete")
+
+class SocialReason(Base, CommonAttributes):
+	__tablename__ = 'social_reason'
+	id = Column(Integer, primary_key=True, index=True)
+	weighings = relationship("Weighing", back_populates="social_reason", cascade="all, delete")
 
 class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
@@ -138,6 +133,42 @@ class SocialReasonDTO(ScheletonSocialReasonDTO):
 		return v
 
 class SocialReasonDTOInit(ScheletonSocialReasonDTO):
+	pass
+
+class Vector(Base, CommonAttributes):
+	__tablename__ = 'vector'
+	id = Column(Integer, primary_key=True, index=True)
+	weighings = relationship("Weighing", back_populates="vector", cascade="all, delete")
+
+class ScheletonVectorDTO(BaseModel):
+	name: Optional[str] = None
+	cell: Optional[str] = None
+	cfpiva: Optional[str] = None
+	id: Optional[int] = None
+
+	class Config:
+		arbitrary_types_allowed = True
+
+class VectorDTO(ScheletonVectorDTO):
+	@validator('cell', pre=True, always=True)
+	def check_cell(cls, v):
+		if v and not v.isdigit():
+			raise ValueError("Cell must be greater than or equal to 0")
+		return v
+
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			data = get_data_by_id('vector', v)
+			if not data:
+				raise ValueError('Id not exist in vector')
+			else:
+				values['name'] = data.get('name')
+				values['cell'] = data.get('cell')
+				values['cfpiva'] = data.get('cfpiva')
+		return v   
+
+class VectorDTOInit(ScheletonVectorDTO):
 	pass
 
 # Modello per la tabella Material
@@ -174,7 +205,7 @@ class Weighing(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	typeSocialReason = Column(Integer, nullable=True)
 	idSocialReason = Column(Integer, ForeignKey('social_reason.id'))
-	idVector = Column(Integer, ForeignKey('social_reason.id'))
+	idVector = Column(Integer, ForeignKey('vector.id'))
 	idVehicle = Column(Integer, ForeignKey('vehicle.id'))
 	idMaterial = Column(Integer, ForeignKey('material.id'))
 	number_weighings = Column(Integer, default=0, nullable=False)
@@ -191,12 +222,8 @@ class Weighing(Base):
 	selected = Column(Boolean, index=True, default=False)
 	
 	# Relazioni
-	social_reason = relationship("SocialReason", 
-							foreign_keys=[idSocialReason], 
-							back_populates="social_reasons")
-	vector = relationship("SocialReason", 
-							foreign_keys=[idVector], 
-							back_populates="vectors")
+	social_reason = relationship("SocialReason", back_populates="weighings")
+	vector = relationship("Vector", back_populates="weighings")
 	vehicle = relationship("Vehicle", back_populates="weighings")
 	material = relationship("Material", back_populates="weighings")
 
@@ -314,6 +341,7 @@ class WeighingDTOInit(ScheletonWeighingDTO):
 table_models = {
 	'vehicle': Vehicle,
 	'social_reason': SocialReason,
+	'vector': Vector,
 	'material': Material,
  	'weighing': Weighing,
 	'user': User
@@ -431,119 +459,176 @@ def get_data_by_id_if_is_selected(table_name, record_id):
 		raise e
 
 def get_data_by_attribute(table_name, attribute_name, attribute_value):
-	"""Ottiene un record specifico da una tabella tramite un attributo e imposta 'selected' a True.
-
-	Args:
-		table_name (str): Il nome della tabella da cui ottenere il record.
-		attribute_name (str): Il nome dell'attributo da usare per la ricerca.
-		attribute_value (any): Il valore dell'attributo da cercare.
-		if_not_selected (bool): Se True, solleva un errore se il record è già selezionato.
-		set_selected (bool): Se True, imposta 'selected' a True prima di restituire il record.
-
-	Returns:
-		dict: Un dizionario con i dati del record aggiornato, o None se il record non è trovato.
-	"""
-
-	global SessionLocal
-
-	# Verifica che il modello esista nel dizionario dei modelli
-	model = table_models.get(table_name.lower())
-	if not model:
-		raise ValueError(f"Tabella '{table_name}' non trovata.")
-
-	# Verifica che l'attributo esista nel modello
-	if not hasattr(model, attribute_name):
-		raise ValueError(f"Attributo '{attribute_name}' non trovato nella tabella '{table_name}'.")
-
-	# Crea una sessione e cerca il record
-	session = SessionLocal()
-	try:
-		# Recupera il record specifico in base all'attributo
-		record = session.query(model).filter(getattr(model, attribute_name) == attribute_value).one_or_none()
-
-		record_dict = None
-
-		if record:
-			# Converte il record in un dizionario
-			record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
-
-		session.commit()
-		session.close()
-
-		return record_dict
-
-	except Exception as e:
-		session.rollback()  # Ripristina eventuali modifiche in caso di errore
-		session.close()
-		raise e
-
-from sqlalchemy.orm import joinedload, selectinload
-
-def filter_data(table_name, filters=None, limit=None, offset=None):
-    """Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione
-    e popola automaticamente le colonne di riferimenti con i dati delle tabelle correlate,
-    incluse tutte le relazioni annidate.
+    """Ottiene un record specifico da una tabella tramite un attributo e imposta 'selected' a True.
+    La ricerca non è case sensitive per valori di tipo stringa.
     
     Args:
-        table_name (str): Il nome della tabella su cui eseguire la ricerca.
-        filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
-        limit (int): Numero massimo di righe da visualizzare. Default è None.
-        offset (int): Numero di righe da saltare. Default è None.
+        table_name (str): Il nome della tabella da cui ottenere il record.
+        attribute_name (str): Il nome dell'attributo da usare per la ricerca.
+        attribute_value (any): Il valore dell'attributo da cercare.
+        if_not_selected (bool): Se True, solleva un errore se il record è già selezionato.
+        set_selected (bool): Se True, imposta 'selected' a True prima di restituire il record.
         
     Returns:
-        tuple: Una tupla contenente:
-            - una lista di dizionari contenenti i risultati della ricerca,
-            - il numero totale di righe nella tabella.
+        dict: Un dizionario con i dati del record aggiornato, o None se il record non è trovato.
     """
+    global SessionLocal
+    # Verifica che il modello esista nel dizionario dei modelli
+    model = table_models.get(table_name.lower())
+    if not model:
+        raise ValueError(f"Tabella '{table_name}' non trovata.")
+        
+    # Verifica che l'attributo esista nel modello
+    if not hasattr(model, attribute_name):
+        raise ValueError(f"Attributo '{attribute_name}' non trovato nella tabella '{table_name}'.")
+        
+    # Crea una sessione e cerca il record
+    session = SessionLocal()
+    try:
+        # Recupera il record specifico in base all'attributo
+        query = session.query(model)
+        
+        # Usa func.lower() per rendere la ricerca case insensitive se il valore è una stringa
+        if isinstance(attribute_value, str):
+            from sqlalchemy import func
+            query = query.filter(func.lower(getattr(model, attribute_name)) == attribute_value.lower())
+        else:
+            query = query.filter(getattr(model, attribute_name) == attribute_value)
+            
+        record = query.one_or_none()
+        record_dict = None
+        
+        if record:
+            # Converte il record in un dizionario
+            record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
+            
+        session.commit()
+        session.close()
+        return record_dict
+        
+    except Exception as e:
+        session.rollback()  # Ripristina eventuali modifiche in caso di errore
+        session.close()
+        raise e
+
+def get_data_by_attributes(table_name, attributes_dict):
+    """Ottiene un record specifico da una tabella tramite più attributi.
+    La ricerca non è case sensitive per valori di tipo stringa.
+    
+    Args:
+        table_name (str): Il nome della tabella da cui ottenere il record.
+        attributes_dict (dict): Un dizionario di attributi e valori da usare per la ricerca.
+        
+    Returns:
+        dict: Un dizionario con i dati del record, o None se il record non è trovato.
+    """
+    global SessionLocal
+    
     # Verifica che il modello esista nel dizionario dei modelli
     model = table_models.get(table_name.lower())
     if not model:
         raise ValueError(f"Tabella '{table_name}' non trovata.")
     
-    # Crea una sessione e costruisce la query
+    # Verifica che tutti gli attributi esistano nel modello
+    for attribute_name in attributes_dict.keys():
+        if not hasattr(model, attribute_name):
+            raise ValueError(f"Attributo '{attribute_name}' non trovato nella tabella '{table_name}'.")
+    
+    # Crea una sessione e cerca il record
     session = SessionLocal()
     try:
-        # Inizia la query sulla tabella specificata
+        # Costruisce la query con tutti gli attributi forniti
         query = session.query(model)
+        for attribute_name, attribute_value in attributes_dict.items():
+            # Usa func.lower() per rendere la ricerca case insensitive se il valore è una stringa
+            if isinstance(attribute_value, str):
+                from sqlalchemy import func
+                query = query.filter(func.lower(getattr(model, attribute_name)) == attribute_value.lower())
+            else:
+                query = query.filter(getattr(model, attribute_name) == attribute_value)
         
-        # Carica tutte le relazioni dirette della tabella principale
-        for rel_name, rel_obj in model.__mapper__.relationships.items():
-            # Carica la relazione diretta e tutte le relazioni annidate
-            query = query.options(selectinload(getattr(model, rel_name)).selectinload('*'))
+        # Esegue la query
+        record = query.one_or_none()
+        record_dict = None
         
-        # Aggiungi i filtri, se specificati
-        if filters:
-            for column, value in filters.items():
-                if hasattr(model, column):
-                    if type(value) == str:
-                        query = query.filter(getattr(model, column).like(f'%{value}%'))
-                    elif type(value) == int:
-                        query = query.filter(getattr(model, column) == value)
-                    elif value is None:
-                        query = query.filter(getattr(model, column).is_(None))
-                    else:
-                        raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
-                else:
-                    raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
+        if record:
+            # Converte il record in un dizionario
+            record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
         
-        # Esegui una query separata per ottenere il numero totale di righe
-        total_rows = query.count()
-        
-        # Applica la paginazione se limit e offset sono specificati
-        if limit is not None:
-            query = query.limit(limit)
-        if offset is not None:
-            query = query.offset(offset)
-        
-        # Esegui la query per ottenere i risultati filtrati
-        results = query.all()
-        
+        session.commit()
         session.close()
-        return results, total_rows
+        return record_dict
     
     except Exception as e:
+        session.rollback()  # Ripristina eventuali modifiche in caso di errore
         session.close()
         raise e
+
+def filter_data(table_name, filters=None, limit=None, offset=None):
+	"""Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione
+	e popola automaticamente le colonne di riferimenti con i dati delle tabelle correlate,
+	incluse tutte le relazioni annidate.
+	
+	Args:
+		table_name (str): Il nome della tabella su cui eseguire la ricerca.
+		filters (dict): Dizionario di filtri (nome_colonna: valore) per la ricerca. Default è None.
+		limit (int): Numero massimo di righe da visualizzare. Default è None.
+		offset (int): Numero di righe da saltare. Default è None.
+		
+	Returns:
+		tuple: Una tupla contenente:
+			- una lista di dizionari contenenti i risultati della ricerca,
+			- il numero totale di righe nella tabella.
+	"""
+	# Verifica che il modello esista nel dizionario dei modelli
+	model = table_models.get(table_name.lower())
+	if not model:
+		raise ValueError(f"Tabella '{table_name}' non trovata.")
+	
+	# Crea una sessione e costruisce la query
+	session = SessionLocal()
+	try:
+		# Inizia la query sulla tabella specificata
+		query = session.query(model)
+		
+		# Carica tutte le relazioni dirette della tabella principale
+		for rel_name, rel_obj in model.__mapper__.relationships.items():
+			# Carica la relazione diretta e tutte le relazioni annidate
+			query = query.options(selectinload(getattr(model, rel_name)).selectinload('*'))
+		
+		# Aggiungi i filtri, se specificati
+		if filters:
+			for column, value in filters.items():
+				if hasattr(model, column):
+					if type(value) == str:
+						query = query.filter(getattr(model, column).like(f'%{value}%'))
+					elif type(value) == int:
+						query = query.filter(getattr(model, column) == value)
+					elif value is None:
+						query = query.filter(getattr(model, column).is_(None))
+					else:
+						raise ValueError(f"Operatore di ricerca '{value[0]}' non supportato.")
+				else:
+					raise ValueError(f"Colonna '{column}' non trovata nella tabella '{table_name}'.")
+		
+		# Esegui una query separata per ottenere il numero totale di righe
+		total_rows = query.count()
+		
+		# Applica la paginazione se limit e offset sono specificati
+		if limit is not None:
+			query = query.limit(limit)
+		if offset is not None:
+			query = query.offset(offset)
+		
+		# Esegui la query per ottenere i risultati filtrati
+		results = query.all()
+		
+		session.close()
+		return results, total_rows
+	
+	except Exception as e:
+		session.close()
+		raise e
 
 def add_data(table_name, data):
 	"""Aggiunge un record a una tabella specificata dinamicamente.
@@ -685,12 +770,14 @@ def delete_all_data(table_name):
 required_columns = {
 	"vehicle": {"name": str, "plate": str},
 	"social_reason": {"name": str, "cell": str, "cfpiva": str},
+	"vector": {"name": str, "cell": str, "cfpiva": str},
 	"material": {"name": str},
 }
 
 required_dtos = {
 	"vehicle": VehicleDTO,
 	"social_reason": SocialReasonDTO,
+	"vector": VectorDTO,
 	"material": MaterialDTO,
 }
 

@@ -4,7 +4,7 @@
         <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Trasportatori</title>
+        <title>Vettori</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -16,13 +16,15 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Trasportatori</h2>
+            <h2>Vettori</h2>
             <button class="register-button" onclick="addRow()">Registra</button>
         </div>
         <table>
             <thead>
                 <tr>
                     <th name="name">Nome</th>
+                    <th name="cell">Cell</th>
+                    <th name="cfpiva">CF/P.IVA</th>
                     <th></th>
                 </tr>
             </thead>
@@ -30,7 +32,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" style="text-align: center;">
+                    <td colspan="4" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -48,13 +50,20 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuova trasportatore:</h3>
+        <h3>Nuova ragione sociale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
+            Nome:<br>
             <input type="text" id="name" required><br>
+            Cell: (Opzionale)<br>
+            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            CF/.P.IVA: (Opzionale)<br>
+            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <br>            
         </form>
+        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
             <button id="save-btn" class="save-btn" disabled>Salva</button><br>
@@ -62,10 +71,17 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica trasportatore:</h3>
+        <h3>Modifica ragione sociale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
+            Nome:<br>
             <input type="text" id="name" required><br>
+            Cell: (Opzionale)<br>
+            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            CF/.P.IVA: (Opzionale)<br>
+            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <br>            
         </form>
+        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
             <button id="save-btn" class="edit-save-btn">Salva</button><br>
@@ -73,11 +89,22 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina trasportatore:</h3>
-        <u><em><span id="name"></span></em></u>
+        <h3>Elimina ragione sociale:</h3>
+        <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
+        <p><b>Cell:</b> <u><em><span id="cell"></span></em></u></p>
+        <p><b>CF/P.IVA:</b> <u><em><span id="cfpiva"></span></em></u></p>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
             <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+        </div>
+    </div>
+
+    <div id="confirm-popup" class="modal-content popup">
+        <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+            <button id="save-btn" class="confirm-btn">Ok</button><br>
         </div>
     </div>
 
@@ -91,11 +118,11 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         setTimeout(() => {
-            itemName = 'Trasportatore';
-            listUrlPath = '/anagrafic/list/transporter';
-            addUrlPath = '/anagrafic/transporter';
-            setUrlPath = '/anagrafic/transporter';
-            deleteUrlPath = '/anagrafic/transporter';
+            itemName = 'Ragione sociale';
+            listUrlPath = '/anagrafic/list/vector';
+            addUrlPath = '/anagrafic/vector';
+            setUrlPath = '/anagrafic/vector';
+            deleteUrlPath = '/anagrafic/vector';
             updateTable();
         }, 1000);
     </script>

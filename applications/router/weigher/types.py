@@ -1,11 +1,11 @@
 from pydantic import BaseModel
-from libs.lb_database import SocialReasonDTOInit, VehicleDTOInit, MaterialDTOInit, update_data
+from libs.lb_database import SocialReasonDTOInit, VectorDTOInit, VehicleDTOInit, MaterialDTOInit, update_data
 from typing import Union, Optional, List
 
 class DataInExecution(BaseModel):
-	typeSocialReason: Optional[Union[int, str]] = None
+	typeSocialReason: Optional[Union[int, str]] = 0
 	social_reason: SocialReasonDTOInit = SocialReasonDTOInit(**{})
-	vector: SocialReasonDTOInit = SocialReasonDTOInit(**{})
+	vector: VectorDTOInit = VectorDTOInit(**{})
 	vehicle: VehicleDTOInit = VehicleDTOInit(**{})
 	material: MaterialDTOInit = MaterialDTOInit(**{})
 	note: Union[str, None] = None
