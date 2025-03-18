@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, WebSocket
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 from applications.utils.utils import validate_time
+from applications.router.weigher.types import Data
 import modules.md_weigher.md_weigher as md_weigher
 from applications.router.weigher.dto import DataInExecution
 from applications.router.weigher.dto import IdSelectedDTO, WeighingDataDTO
@@ -8,6 +9,7 @@ from typing import Optional, Union
 import asyncio
 import libs.lb_log as lb_log
 from applications.router.weigher.cams import DataInExecutionRouter
+import libs.lb_config as lb_config
 
 class CommandWeigherRouter(DataInExecutionRouter):
 	def __init__(self):
@@ -19,7 +21,8 @@ class CommandWeigherRouter(DataInExecutionRouter):
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostics, methods=['GET'])
 		self.router_action_weigher.add_api_route('/stop_all_command', self.StopAllCommand, methods=['GET'])
 		self.router_action_weigher.add_api_route('/print', self.Print, methods=['GET'])
-		self.router_action_weigher.add_api_route('/weighing', self.Weighing, methods=['POST'])
+		self.router_action_weigher.add_api_route('/in', self.In, methods=['POST'])
+		self.router_action_weigher.add_api_route('/out', self.Out, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/preset_tare', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
@@ -63,8 +66,15 @@ class CommandWeigherRouter(DataInExecutionRouter):
 		}
 
 	async def Print(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		data = DataInExecution(**{})
-		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="WEIGHING", data_assigned=data)
+		status_modope, command_executed, error_message = 500, False, ""
+		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
+			error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
+		else:
+			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+				instance_name=instance.instance_name, 
+				weigher_name=instance.weigher_name, 
+				modope="PRINT", 
+	          	data_assigned=Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]))
 		return {
 			"instance": instance,
 			"command_details": {
@@ -74,15 +84,41 @@ class CommandWeigherRouter(DataInExecutionRouter):
 			}
 		}
 
-	async def Weighing(self, body: WeighingDataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		data = None
-		if body.id_selected is not None:
-			data = body.id_selected
-		elif body.plate is not None:
-			data = body.plate
-		elif body.data_in_execution is not None:
-			data = body.data_in_execution
-		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="WEIGHING", data_assigned=data)
+	async def In(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		status_modope, command_executed, error_message = 500, False, ""
+		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
+			error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
+		elif tare != "0":
+			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
+		else:
+			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+				instance_name=instance.instance_name, 
+				weigher_name=instance.weigher_name, 
+				modope="IN", 
+	          	data_assigned=Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]))
+		return {
+			"instance": instance,
+			"command_details": {
+				"status_modope": status_modope,
+				"command_executed": command_executed,
+				"error_message": error_message
+			}
+		}
+
+	async def Out(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		status_modope, command_executed, error_message = 500, False, ""
+		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"] and tare != "0":
+			error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
+		elif not lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"] and tare == "0":
+			error_message = "Nessun id impostato per effettuare l'uscita."
+		else:
+			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+				instance_name=instance.instance_name, 
+				weigher_name=instance.weigher_name, 
+				modope="OUT", 
+				data_assigned=Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]))
 		return {
 			"instance": instance,
 			"command_details": {

@@ -24,6 +24,7 @@ class User(Base):
 	level = Column(Integer)
 	description = Column(String)
 	printer_name = Column(String, nullable=True)
+	date_created = Column(DateTime, default=datetime.utcnow)
 
 class UserDTO(BaseModel):
 	username: str
@@ -66,12 +67,15 @@ class Vehicle(Base):
 	id = Column(Integer, primary_key=True, index=True)
 	name = Column(String)
 	plate = Column(String)
+	date_created = Column(DateTime, default=datetime.utcnow)
+	hidden = Column(Boolean, default=True, nullable=False)
 
 	weighings = relationship("Weighing", back_populates="vehicle", cascade="all, delete")
 
 class ScheletonVehicleDTO(BaseModel):
 	name: Optional[str] = None
 	plate: Optional[str] = None
+	hidden: Optional[bool] = None
 	id: Optional[int] = None
 
 	class Config:
@@ -98,6 +102,8 @@ class CommonAttributes:
 	name = Column(String)
 	cell = Column(String)
 	cfpiva = Column(String)
+	date_created = Column(DateTime, default=datetime.utcnow)
+	hidden = Column(Boolean, default=True, nullable=False)
 
 class SocialReason(Base, CommonAttributes):
 	__tablename__ = 'social_reason'
@@ -108,6 +114,7 @@ class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
 	cell: Optional[str] = None
 	cfpiva: Optional[str] = None
+	hidden: Optional[bool] = None
 	id: Optional[int] = None
 
 	class Config:
@@ -144,6 +151,7 @@ class ScheletonVectorDTO(BaseModel):
 	name: Optional[str] = None
 	cell: Optional[str] = None
 	cfpiva: Optional[str] = None
+	hidden: Optional[bool] = None
 	id: Optional[int] = None
 
 	class Config:
@@ -176,10 +184,13 @@ class Material(Base):
 	__tablename__ = 'material'
 	id = Column(Integer, primary_key=True, index=True) 
 	name = Column(String, index=True)
+	date_created = Column(DateTime, default=datetime.utcnow)
+	hidden = Column(Boolean, default=True, nullable=False)
 	weighings = relationship("Weighing", back_populates="material", cascade="all, delete")
 
 class ScheletonMaterialDTO(BaseModel):
 	name: Optional[str] = None
+	hidden: Optional[bool] = None
 	id: Optional[int] = None
 
 	class Config:
@@ -209,7 +220,6 @@ class Weighing(Base):
 	idVehicle = Column(Integer, ForeignKey('vehicle.id'))
 	idMaterial = Column(Integer, ForeignKey('material.id'))
 	number_weighings = Column(Integer, default=0, nullable=False)
-	date_created = Column(DateTime, default=datetime.utcnow)
 	note = Column(String)
 	weight1 = Column(Integer, nullable=True)
 	date1 = Column(DateTime, nullable=True)
@@ -220,6 +230,7 @@ class Weighing(Base):
 	net_weight = Column(Integer, nullable=True)
 	weigher = Column(String, nullable=True)
 	selected = Column(Boolean, index=True, default=False)
+	date_created = Column(DateTime, default=datetime.utcnow)
 	
 	# Relazioni
 	social_reason = relationship("SocialReason", back_populates="weighings")

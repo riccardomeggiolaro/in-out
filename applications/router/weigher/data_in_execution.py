@@ -6,6 +6,8 @@ from applications.router.weigher.dto import DataDTO, DataInExecutionDTO
 from applications.router.weigher.types import DataInExecution as DataInExecutionType, Data
 from applications.router.weigher.config_weigher import ConfigWeigher
 import asyncio
+from libs.lb_utils import check_values
+from libs.lb_database import get_data_by_id
 
 class DataInExecutionRouter(ConfigWeigher):
 	def __init__(self):
@@ -23,7 +25,12 @@ class DataInExecutionRouter(ConfigWeigher):
 	async def SetDataInExecution(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		if data_dto.id_selected.id is not None:
+			await self.DeleteDataInExecution(instance=instance)
 			self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)
+			if data_dto.id_selected.id != -1:
+				weighing = get_data_by_id("weighing", data_dto.id_selected.id)
+		else:
+			self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=None)
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
 	async def DeleteDataInExecution(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):

@@ -93,7 +93,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"status": "",
 				"executed": False
 			},
-			"data_assigned": None
+			"data_assigned": None,
+			"type_weighing": "" # PRINT, IN, OUT
 		})
 		self.ok_value: str = ""
 		self.modope: str = ""
@@ -109,7 +110,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_action_in_execution: str = ""
 		self.callback_rele: str = ""
 		self.commands = ["VER", "SN", "OK"]
-		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING", "CLOSERELE", "OPENRELE"]
+		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "PRINT", "IN", "OUT", "CLOSERELE", "OPENRELE"]
 
 	def getSetup(self):
 		return {
@@ -195,7 +196,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.callback_rele = lambda: cb_rele(self.self_config.name, weigher_name, self.port_rele)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: int = 0, data_assigned: Union[Any] = None, port_rele: int = None):
+	def setModope(self, mod: str, presettare: int = 0, data_assigned: Any = None, port_rele: int = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
@@ -236,9 +237,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.port_rele = (port_rele, self.list_port_rele[port_rele])
 			callCallback(self.callback_action_in_execution)
 			return 100, None
-		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING")
+		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "PRINT", "IN", "OUT")
 		elif mod in self.direct_commands:
-			# controllo se il comando attualmente in esecuzione in loop è DIAGNOSTICS e se si ritorno errore
+    			# controllo se il comando attualmente in esecuzione in loop è DIAGNOSTICS e se si ritorno errore
 			if self.modope == "DIAGNOSTICS":
 				return 400, "Diagnostica in esecuzione"
 			# controllo se c'è qualche comando diretto verso la pesa attualmente in esecuzione e se si ritorno errore
@@ -256,16 +257,17 @@ class __SetupWeigher(__SetupWeigherConnection):
 						else:
 							return 500, "La tara deve essere di almeno 0 kg" # ritorno errore se la presettare non era valida
 					# se passo WEIGHING
-					elif mod == "WEIGHING":
+					elif mod in ["PRINT", "IN", "OUT"]:
+						if data_assigned is None:
+							return 500, "Devono essere passati dei dati assieme al comando di pesatura"
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
 							if self.take_of_weight_on_startup is True:
 								return 500,	"Scaricare la pesa dopo l'avvio del programma"
 							if self.take_of_weight_before_weighing is True:
 								return 500,	"Scaricare la pesa prima di eseguire nuova pesata"
-							if int(self.pesa_real_time.tare.replace("PT", "").strip()) > 0 and type(data_assigned) not in [str, int] and data_assigned is not None:
-								return 500, "La prima pesata non può essere effettuata con una tara impostata"
 							self.weight.data_assigned = data_assigned
+							self.weight.type_weighing = mod
 						else:
 							return 500, f"Il peso deve essere maggiore di {self.min_weight} kg" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire

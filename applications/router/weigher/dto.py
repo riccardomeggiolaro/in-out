@@ -5,7 +5,7 @@ from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
 
 class DataInExecutionDTO(CustomBaseModel):
-	typeSocialReason: Optional[Union[int, str]] = 0
+	typeSocialReason: Optional[Union[int, str]] = None
 	social_reason: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
 	vector: Optional[VectorDTO] = VectorDTO(**{})
 	vehicle: Optional[VehicleDTO] = VehicleDTO(**{})

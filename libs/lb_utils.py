@@ -113,3 +113,21 @@ def has_values_besides_id(dictionary):
 	
 	# Se arrivi qui, non ci sono campi con valori significativi oltre 'id'
 	return False
+
+def check_values(obj):
+    """
+    Funzione che verifica se un oggetto (dizionario o DTO) ha almeno un valore diverso da "" o None,
+    considerando anche sotto-dizionari o sotto-DTO annidati.
+    """
+    if isinstance(obj, dict):  # Se l'oggetto è un dizionario (potrebbe essere un DTO)
+        for key, value in obj.items():
+            if isinstance(value, dict):  # Se il valore è un altro dizionario (sotto-dizionario)
+                if check_values(value):  # Chiamata ricorsiva per esplorare il sotto-dizionario
+                    return True
+            elif isinstance(value, object):  # Se il valore è un oggetto (potrebbe essere un DTO)
+                return value
+                if check_values(value.dict()):  # Se è un oggetto, controlla i suoi attributi come un dizionario
+                    return True
+            elif value != "" and value is not None:  # Se il valore non è "" o None
+                return True
+    return False

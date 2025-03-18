@@ -205,6 +205,9 @@ class WeigherModule:
 	def setInstanceTimeBetweenActions(self, instance_name, time_between_actions):
 		return self.instances[instance_name].setTimeBetweenActions(time=time_between_actions)
 
+	def getRealtime(self, instance_name, weigher_name: str):
+		return self.instances[instance_name].getRealtime(weigher_name=weigher_name)
+
 	def getModope(self, instance_name, weigher_name: str):
 		return self.instances[instance_name].getModope(weigher_name=weigher_name)
 
@@ -424,6 +427,9 @@ class WeigherInstance:
 	def setTimeBetweenActions(self, time: Union[int, float]):
 		self.time_between_actions = time
 		return self.time_between_actions
+
+	def getRealtime(self, weigher_name: str):
+		return self.nodes[weigher_name].pesa_real_time
 
 	def getModope(self, weigher_name: str):
 		return self.nodes[weigher_name].modope_to_execute

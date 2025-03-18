@@ -221,25 +221,23 @@ async function populateListIn() {
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');
             li.addEventListener('click', async () => {
-                if (data_weight_realtime.tare == 0) {
-                    let obj =  {
-                        data_in_execution: {                                    
-                        },
-                        id_selected: {
-                            id: item.id
-                        }
+                let obj =  {
+                    data_in_execution: {                                    
+                    },
+                    id_selected: {
+                        id: item.id
                     }
-                    if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                    await fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(obj)
-                    })
-                    .then(res => res.json())
-                    .catch(error => console.error(error));                    
                 }
+                if (item.id == selectedIdWeight) obj.id_selected.id = -1;
+                await fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(obj)
+                })
+                .then(res => res.json())
+                .catch(error => console.error(error));                    
             })
             listIn.appendChild(li);
         })
@@ -553,42 +551,42 @@ function updateUIRealtime(e) {
         const gross_weight = Number(data_weight_realtime.gross_weight);
         const tare_weight = Number(data_weight_realtime.tare);
         if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
-            if (tare_weight === 0 && selectedIdWeight === null) {
-                tareButton.disabled = false;
-                zeroButton.disabled = true;
-                presetTareButton.disabled = false;
-                inButton.disabled = false;
-                printButton.disabled = false;
-                outButton.disabled = false;
-            } else if (tare_weight === 0 && selectedIdWeight !== null) {
-                tareButton.disabled = true;
-                zeroButton.disabled = true;
-                presetTareButton.disabled = true;
-                inButton.disabled = true;
-                printButton.disabled = true;
-                outButton.disabled = false;
-            } else {
-                tareButton.disabled = false;
-                zeroButton.disabled = true;
-                presetTareButton.disabled = false;
-                inButton.disabled = true;
-                printButton.disabled = false;
-                outButton.disabled = false;
-            }
-        } else if (numeric && minWeightValue >= gross_weight) {
-            tareButton.disabled = true;
-            zeroButton.disabled = false;
-            presetTareButton.disabled = false;
-            inButton.disabled = true;
-            printButton.disabled = true;
-            outButton.disabled = true;
-        } else {
-            tareButton.disabled = true;
-            zeroButton.disabled = true;
-            presetTareButton.disabled = true;
-            inButton.disabled = true;
-            printButton.disabled = true;
-            outButton.disabled = true;
+        //     if (tare_weight === 0 && selectedIdWeight === null) {
+        //         tareButton.disabled = false;
+        //         zeroButton.disabled = true;
+        //         presetTareButton.disabled = false;
+        //         inButton.disabled = false;
+        //         printButton.disabled = false;
+        //         outButton.disabled = false;
+        //     } else if (tare_weight === 0 && selectedIdWeight !== null) {
+        //         tareButton.disabled = true;
+        //         zeroButton.disabled = true;
+        //         presetTareButton.disabled = true;
+        //         inButton.disabled = true;
+        //         printButton.disabled = true;
+        //         outButton.disabled = false;
+        //     } else {
+        //         tareButton.disabled = false;
+        //         zeroButton.disabled = true;
+        //         presetTareButton.disabled = false;
+        //         inButton.disabled = true;
+        //         printButton.disabled = false;
+        //         outButton.disabled = false;
+        //     }
+        // } else if (numeric && minWeightValue >= gross_weight) {
+        //     tareButton.disabled = true;
+        //     zeroButton.disabled = false;
+        //     presetTareButton.disabled = false;
+        //     inButton.disabled = true;
+        //     printButton.disabled = true;
+        //     outButton.disabled = true;
+        // } else {
+        //     tareButton.disabled = true;
+        //     zeroButton.disabled = true;
+        //     presetTareButton.disabled = true;
+        //     inButton.disabled = true;
+        //     printButton.disabled = true;
+        //     outButton.disabled = true;
         }
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
@@ -648,13 +646,7 @@ async function handleStampa() {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    const r = await fetch(`${pathname}/command_weigher/weighing${currentWeigherPath}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-    })
+    const r = await fetch(`${pathname}/command_weigher/print${currentWeigherPath}`)
     .then(res => {
         return res.json();
     })
@@ -675,7 +667,7 @@ async function handlePesata() {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    const r = await fetch(`${pathname}/command_weigher/weighing${currentWeigherPath}`,
+    const r = await fetch(`${pathname}/command_weigher/in${currentWeigherPath}`,
         {
             method: 'POST',
             headers: {
@@ -702,36 +694,32 @@ async function handlePesata() {
 }
 
 async function handlePesata2() {
-    if (selectedIdWeight) {
-        buttons.forEach(button => {
-            button.disabled = true;
-            button.classList.add("disabled-button"); // Aggi
-        });
-        const r = await fetch(`${pathname}/command_weigher/weighing${currentWeigherPath}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id_selected: selectedIdWeight
-            })
+    buttons.forEach(button => {
+        button.disabled = true;
+        button.classList.add("disabled-button"); // Aggi
+    });
+    const r = await fetch(`${pathname}/command_weigher/out${currentWeigherPath}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id_selected: selectedIdWeight
         })
-        .then(res => {
-            return res.json();
-        })
-        .catch(error => console.error('Errore nella fetch:', error));
-        if (r.command_details.command_executed == true) {
-            showSnackbar("Pesando...");
-        } else {
-            showSnackbar(r.command_details.error_message);
-            buttons.forEach(button => {
-                button.disabled = false;
-                button.classList.remove("disabled-button"); // Aggi
-            });
-        }                
+    })
+    .then(res => {
+        return res.json();
+    })
+    .catch(error => console.error('Errore nella fetch:', error));
+    if (r.command_details.command_executed == true) {
+        showSnackbar("Pesando...");
     } else {
-        showSnackbar("Nessun peso selezionato");
-    }
+        showSnackbar(r.command_details.error_message);
+        buttons.forEach(button => {
+            button.disabled = false;
+            button.classList.remove("disabled-button"); // Aggi
+        });
+    }                
 }
 
 function disableAllElements() {
