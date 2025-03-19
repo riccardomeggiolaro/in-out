@@ -1,4 +1,4 @@
-from applications.router.weigher.dto import DataInExecutionDTO
+from applications.router.weigher.dto import DataInExecutionDTO, DataDTO
 from applications.router.weigher.types import Data
 from modules.md_weigher import md_weigher
 import libs.lb_config as lb_config

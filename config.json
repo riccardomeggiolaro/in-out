@@ -33,6 +33,7 @@
                         "data": {
                             "data_in_execution": {
                                 "material": {
+                                    "hidden": null,
                                     "id": null,
                                     "name": null
                                 },
@@ -40,6 +41,7 @@
                                 "social_reason": {
                                     "cell": null,
                                     "cfpiva": null,
+                                    "hidden": null,
                                     "id": null,
                                     "name": null
                                 },
@@ -47,10 +49,12 @@
                                 "vector": {
                                     "cell": null,
                                     "cfpiva": null,
+                                    "hidden": null,
                                     "id": null,
                                     "name": null
                                 },
                                 "vehicle": {
+                                    "hidden": null,
                                     "id": null,
                                     "name": null,
                                     "plate": null
@@ -65,7 +69,8 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": []
+                                    "set_rele": [],
+                                    "take_picture": []
                                 },
                                 "under_min": {
                                     "set_rele": [],

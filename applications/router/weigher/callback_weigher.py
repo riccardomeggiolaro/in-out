@@ -47,61 +47,54 @@ class CallbackWeigher(Functions):
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
 		if last_pesata.weight_executed.executed:
-			if last_pesata.data_assigned.id_selected.id is None and last_pesata.type_weighing in ["PRINT", "IN"]:
+			if last_pesata.data_assigned.id_selected.id is None:
 				node = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance_name,weigher_name=weigher_name)
 				tare = float(last_pesata.weight_executed.tare)
-				weighing = {
+				reservation = {
 					"typeSocialReason": last_pesata.data_assigned.data_in_execution.typeSocialReason,
 					"idSocialReason": last_pesata.data_assigned.data_in_execution.social_reason.id,
 					"idVector": last_pesata.data_assigned.data_in_execution.vector.id,
 					"idVehicle": last_pesata.data_assigned.data_in_execution.vehicle.id,
 					"idMaterial": last_pesata.data_assigned.data_in_execution.material.id,
 					"note": last_pesata.data_assigned.data_in_execution.note,
-					"weight1": last_pesata.weight_executed.gross_weight if last_pesata.type_weighing == "IN" else tare,
-					"weight2": last_pesata.weight_executed.gross_weight if last_pesata.type_weighing != "IN" else None,
-					"net_weight": last_pesata.weight_executed.net_weight,
-					"date1": dt.datetime.now() if last_pesata.type_weighing == "IN" else None,
-					"date2": dt.datetime.now() if last_pesata.type_weighing != "IN" else None,
-					"pid1": last_pesata.weight_executed.pid if last_pesata.type_weighing == "IN" else None,
-					"pid2": last_pesata.weight_executed.pid if last_pesata.type_weighing != "IN" else None,
-					"weigher": weigher_name
+					"number_weighings": last_pesata.data_assigned.number_weighings
 				}
 				if not last_pesata.data_assigned.data_in_execution.social_reason.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.social_reason.dict()):
 					social_reason_without_id = last_pesata.data_assigned.data_in_execution.social_reason.dict()
 					del social_reason_without_id["id"]
 					exist_social_reason = get_data_by_attributes("social_reason", social_reason_without_id)
 					if exist_social_reason:
-						weighing["idSocialReason"] = exist_social_reason["id"]
+						reservation["idSocialReason"] = exist_social_reason["id"]
 					else:
 						social_reason = add_data("social_reason", last_pesata.data_assigned.data_in_execution.social_reason.dict())
-						weighing["idSocialReason"] = social_reason.id
+						reservation["idSocialReason"] = social_reason.id
 				if not last_pesata.data_assigned.data_in_execution.vector.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.vector.dict()):
 					vector_without_id = last_pesata.data_assigned.data_in_execution.vector.dict()
 					del vector_without_id["id"]
 					exist_vector = get_data_by_attributes("vector", vector_without_id)
 					if exist_vector:
-						weighing["idVector"] = exist_vector["id"]
+						reservation["idVector"] = exist_vector["id"]
 					else:
 						vector = add_data("vector", last_pesata.data_assigned.data_in_execution.vector.dict())
-						weighing["idVector"] = vector.id
+						reservation["idVector"] = vector.id
 				if not last_pesata.data_assigned.data_in_execution.vehicle.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.vehicle.dict()):
 					vehicle_without_id = last_pesata.data_assigned.data_in_execution.vehicle.dict()
 					del vehicle_without_id["id"]
 					exist_vehicle = get_data_by_attributes("vehicle", vehicle_without_id)
 					if exist_vehicle:
-						weighing["idVehicle"] = exist_vehicle["id"]
+						reservation["idVehicle"] = exist_vehicle["id"]
 					else:
 						vehicle = add_data("vehicle", last_pesata.data_assigned.data_in_execution.vehicle.dict())
-						weighing["idVehicle"] = vehicle.id
+						reservation["idVehicle"] = vehicle.id
 				if not last_pesata.data_assigned.data_in_execution.material.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.material.dict()):
 					material_without_id = last_pesata.data_assigned.data_in_execution.material.dict()
 					del material_without_id["id"]
 					exist_material = get_data_by_attributes("material", material_without_id)
 					if exist_material:
-						weighing["idMaterial"] = exist_material["id"]
+						reservation["idMaterial"] = exist_material["id"]
 					else:
 						material = add_data("material", last_pesata.data_assigned.data_in_execution.material.dict())
-						weighing["idMaterial"] = material.id
+						reservation["idMaterial"] = material.id
 				# if last_pesata.data_assigned.data_in_execution.social_reason.id:
 				# 	obj["idSocialReason"] = last_pesata.data_assigned.data_in_execution.social_reason.id
 				# if last_pesata.data_assigned.data_in_execution.vehicle.id:
@@ -111,6 +104,23 @@ class CallbackWeigher(Functions):
 				# for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["cams"]:
 				#	 image_capture = capture_camera_image(cam["camera_url"], cam["username"], cam["password"])
 				#	 image_saved = add_data("image_captured", image_capture)
+				reservation_add = add_data("reservation", reservation)
+				if tare != 0 and last_pesata.data_assigned.number_weighings == 2:
+					weighing_tare = {
+						"weight": tare,
+						"date": dt.datetime.now(),
+						"pid": None,
+						"weigher": weigher_name,
+						"idReservation": reservation_add.id
+					}
+					add_data("weighing", weighing_tare)
+				weighing = {
+					"weight": last_pesata.weight_executed.gross_weight,
+					"date": dt.datetime.now(),
+					"pid": last_pesata.weight_executed.pid,
+					"weigher": weigher_name,
+					"idReservation": reservation_add.id
+				}
 				add_data("weighing", weighing)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 			elif last_pesata.data_assigned.id_selected.id is not None and last_pesata.type_weighing == "OUT":
@@ -127,6 +137,7 @@ class CallbackWeigher(Functions):
 				#	 image_saved = add_data("image_captured", image_capture)
 				update_data("weighing", last_pesata.data_assigned.id_selected.id, obj)
 				self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
+				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 			if last_pesata.weight_executed.tare == '0':
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["weight1"]["set_rele"]:
 					key, value = next(iter(rele.items()))

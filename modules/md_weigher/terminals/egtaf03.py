@@ -23,7 +23,7 @@ class EgtAf03(Terminal):
 			self.write("REXT")
 		elif self.modope == "OK":
 			self.write("DINT2710")
-		elif self.modope in ["PRINT", "IN", "OUT"]:
+		elif self.modope == "WEIGHING":
 			self.write("PID")
 			self.modope_to_execute = "OK" # setto modope_to_execute a stringa vuota per evitare che la stessa funzione venga eseguita anche nel prossimo ciclo
 			self.maintaineSessionRealtime() # eseguo la funzione che si occupa di mantenere la sessione del peso in tempo reale in base a come la ho settata
@@ -177,7 +177,7 @@ class EgtAf03(Terminal):
 					self.pesa_real_time.tare = ""
 					self.pesa_real_time.unite_measure = ""
 				######### Se in esecuzione pesata pid ###############################################################################
-				elif self.modope in ["PRINT", "IN", "OUT"]:
+				elif self.modope == "WEIGHING":
 					# Controlla formato stringa pesata pid, se corretta aggiorna oggetto
 					if length_split_response == 5 and (length_response == 48 or length_response == 38):
 						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
@@ -206,7 +206,6 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.status = ""
 					self.weight.weight_executed.executed = False
 					self.weight.data_assigned = None
-					self.weight.type_weighing = ""
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:
 					if self.modope == "TARE":

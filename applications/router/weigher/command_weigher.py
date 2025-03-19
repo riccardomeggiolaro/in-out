@@ -67,14 +67,18 @@ class CommandWeigherRouter(DataInExecutionRouter):
 
 	async def Print(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
+		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
 		else:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
-				modope="PRINT", 
-	          	data_assigned=Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]))
+				modope="WEIGHING", 
+	          	data_assigned=Data(**{
+                	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"], 
+                 	"number_weighings": 1 if tare == "0" else 2
+                }))
 		return {
 			"instance": instance,
 			"command_details": {
@@ -95,8 +99,11 @@ class CommandWeigherRouter(DataInExecutionRouter):
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
-				modope="IN", 
-	          	data_assigned=Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]))
+				modope="WEIGHING", 
+	          	data_assigned=Data(**{
+                	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"], 
+                 	"number_weighings": 2
+                }))
 		return {
 			"instance": instance,
 			"command_details": {
@@ -117,7 +124,7 @@ class CommandWeigherRouter(DataInExecutionRouter):
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
-				modope="OUT", 
+				modope="WEIGHING", 
 				data_assigned=Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]))
 		return {
 			"instance": instance,

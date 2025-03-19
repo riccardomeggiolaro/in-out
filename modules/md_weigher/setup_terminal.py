@@ -93,8 +93,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"status": "",
 				"executed": False
 			},
-			"data_assigned": None,
-			"type_weighing": "" # PRINT, IN, OUT
+			"data_assigned": None
 		})
 		self.ok_value: str = ""
 		self.modope: str = ""
@@ -110,7 +109,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_action_in_execution: str = ""
 		self.callback_rele: str = ""
 		self.commands = ["VER", "SN", "OK"]
-		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "PRINT", "IN", "OUT", "CLOSERELE", "OPENRELE"]
+		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING", "CLOSERELE", "OPENRELE"]
 
 	def getSetup(self):
 		return {
@@ -237,7 +236,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.port_rele = (port_rele, self.list_port_rele[port_rele])
 			callCallback(self.callback_action_in_execution)
 			return 100, None
-		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "PRINT", "IN", "OUT")
+		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING")
 		elif mod in self.direct_commands:
     			# controllo se il comando attualmente in esecuzione in loop è DIAGNOSTICS e se si ritorno errore
 			if self.modope == "DIAGNOSTICS":
@@ -257,7 +256,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 						else:
 							return 500, "La tara deve essere di almeno 0 kg" # ritorno errore se la presettare non era valida
 					# se passo WEIGHING
-					elif mod in ["PRINT", "IN", "OUT"]:
+					elif mod == "WEIGHING":
 						if data_assigned is None:
 							return 500, "Devono essere passati dei dati assieme al comando di pesatura"
 						# controllo che il peso sia maggiore o uguale al peso minimo richiesto
@@ -267,7 +266,6 @@ class __SetupWeigher(__SetupWeigherConnection):
 							if self.take_of_weight_before_weighing is True:
 								return 500,	"Scaricare la pesa prima di eseguire nuova pesata"
 							self.weight.data_assigned = data_assigned
-							self.weight.type_weighing = mod
 						else:
 							return 500, f"Il peso deve essere maggiore di {self.min_weight} kg" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire

@@ -36,7 +36,6 @@ class WeightExecuted(BaseModel):
 class Weight(BaseModel):
 	weight_executed: WeightExecuted
 	data_assigned: Any
-	type_weighing: str # PRINT, IN, OUT
 
 class SetupWeigher(CustomBaseModel):
 	max_weight: int

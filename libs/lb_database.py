@@ -70,7 +70,7 @@ class Vehicle(Base):
 	date_created = Column(DateTime, default=datetime.utcnow)
 	hidden = Column(Boolean, default=True, nullable=False)
 
-	weighings = relationship("Weighing", back_populates="vehicle", cascade="all, delete")
+	reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
 
 class ScheletonVehicleDTO(BaseModel):
 	name: Optional[str] = None
@@ -108,7 +108,7 @@ class CommonAttributes:
 class SocialReason(Base, CommonAttributes):
 	__tablename__ = 'social_reason'
 	id = Column(Integer, primary_key=True, index=True)
-	weighings = relationship("Weighing", back_populates="social_reason", cascade="all, delete")
+	reservations = relationship("Reservation", back_populates="social_reason", cascade="all, delete")
 
 class ScheletonSocialReasonDTO(BaseModel):
 	name: Optional[str] = None
@@ -145,7 +145,7 @@ class SocialReasonDTOInit(ScheletonSocialReasonDTO):
 class Vector(Base, CommonAttributes):
 	__tablename__ = 'vector'
 	id = Column(Integer, primary_key=True, index=True)
-	weighings = relationship("Weighing", back_populates="vector", cascade="all, delete")
+	reservations = relationship("Reservation", back_populates="vector", cascade="all, delete")
 
 class ScheletonVectorDTO(BaseModel):
 	name: Optional[str] = None
@@ -186,7 +186,7 @@ class Material(Base):
 	name = Column(String, index=True)
 	date_created = Column(DateTime, default=datetime.utcnow)
 	hidden = Column(Boolean, default=True, nullable=False)
-	weighings = relationship("Weighing", back_populates="material", cascade="all, delete")
+	reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
 
 class ScheletonMaterialDTO(BaseModel):
 	name: Optional[str] = None
@@ -214,6 +214,17 @@ class MaterialDTOInit(ScheletonMaterialDTO):
 class Weighing(Base):
 	__tablename__ = 'weighing'
 	id = Column(Integer, primary_key=True, index=True)
+	weight = Column(Integer, nullable=True)
+	date = Column(DateTime, nullable=True)
+	pid = Column(String, nullable=True)
+	weigher = Column(String, nullable=True)
+	idReservation = Column(Integer, ForeignKey('reservation.id'))
+
+	reservation = relationship("Reservation", back_populates="weighings")
+
+class Reservation(Base):
+	__tablename__ = 'reservation'
+	id = Column(Integer, primary_key=True, index=True)
 	typeSocialReason = Column(Integer, nullable=True)
 	idSocialReason = Column(Integer, ForeignKey('social_reason.id'))
 	idVector = Column(Integer, ForeignKey('vector.id'))
@@ -221,24 +232,17 @@ class Weighing(Base):
 	idMaterial = Column(Integer, ForeignKey('material.id'))
 	number_weighings = Column(Integer, default=0, nullable=False)
 	note = Column(String)
-	weight1 = Column(Integer, nullable=True)
-	date1 = Column(DateTime, nullable=True)
-	pid1 = Column(String, nullable=True)
-	weight2 = Column(Integer, nullable=True)
-	date2 = Column(DateTime, nullable=True)
-	pid2 = Column(String, nullable=True)
-	net_weight = Column(Integer, nullable=True)
-	weigher = Column(String, nullable=True)
 	selected = Column(Boolean, index=True, default=False)
 	date_created = Column(DateTime, default=datetime.utcnow)
 	
 	# Relazioni
-	social_reason = relationship("SocialReason", back_populates="weighings")
-	vector = relationship("Vector", back_populates="weighings")
-	vehicle = relationship("Vehicle", back_populates="weighings")
-	material = relationship("Material", back_populates="weighings")
+	social_reason = relationship("SocialReason", back_populates="reservations")
+	vector = relationship("Vector", back_populates="reservations")
+	vehicle = relationship("Vehicle", back_populates="reservations")
+	material = relationship("Material", back_populates="reservations")    
+	weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
 
-class ScheletonWeighingDTO(BaseModel):
+class ScheletonReservationDTO(BaseModel):
 	typeSocialReason: Optional[Union[int, str]] = None
 	idSocialReason: Optional[Union[int, str]] = None
 	idVector:Optional[Union[int, str]] = None
@@ -248,7 +252,7 @@ class ScheletonWeighingDTO(BaseModel):
 	note: Optional[str] = None
 	id: Optional[Union[int, str]] = None
 	
-class WeighingDTO(ScheletonWeighingDTO):
+class ReservationDTO(ScheletonReservationDTO):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if type(v) == str:
@@ -345,7 +349,7 @@ class WeighingDTO(ScheletonWeighingDTO):
 			raise ValueError('Number weighings must to be greater than 0')
 		return v
 
-class WeighingDTOInit(ScheletonWeighingDTO):
+class ReservationDTOInit(ScheletonReservationDTO):
 	pass
 
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
@@ -355,6 +359,7 @@ table_models = {
 	'vector': Vector,
 	'material': Material,
  	'weighing': Weighing,
+	'reservation': Reservation,
 	'user': User
 }
 
@@ -389,42 +394,72 @@ def load_records_into_db(table_name: str, records: List[object]):
 		raise e
 
 def get_data_by_id(table_name, record_id):
-	"""Ottiene un record specifico da una tabella tramite l'ID e imposta 'selected' a True.
-
-	Args:
-		table_name (str): Il nome della tabella da cui ottenere il record.
-		record_id (int): L'ID del record da ottenere.
-
-	Returns:
-		dict: Un dizionario con i dati del record aggiornato, o None se il record non è trovato.
-	"""
-
-	# Verifica che il modello esista nel dizionario dei modelli
-	model = table_models.get(table_name.lower())
-	if not model:
-		raise ValueError(f"Tabella '{table_name}' non trovata.")
-
-	# Crea una sessione e cerca il record
-	session = SessionLocal()
-	try:
-		# Recupera il record specifico in base all'ID
-		record = session.query(model).filter_by(id=record_id).one_or_none()
-
-		if record is None:
-			raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
-
-		# Converte il record in un dizionario
-		record_dict = {column.name: getattr(record, column.name) for column in model.__table__.columns}
-
-		session.commit()
-		session.close()
-
-		return record_dict
-
-	except Exception as e:
-		session.rollback()  # Ripristina eventuali modifiche in caso di errore
-		session.close()
-		raise e
+    """Ottiene un record specifico da una tabella tramite l'ID con tutte le relazioni annidate.
+    
+    Args:
+        table_name (str): Il nome della tabella da cui ottenere il record.
+        record_id (int): L'ID del record da ottenere.
+        
+    Returns:
+        dict: Il record trovato con tutte le relazioni annidate, o None se non trovato.
+    """
+    # Verifica che il modello esista nel dizionario dei modelli
+    model = table_models.get(table_name.lower())
+    if not model:
+        raise ValueError(f"Tabella '{table_name}' non trovata.")
+        
+    # Crea una sessione e costruisce la query
+    session = SessionLocal()
+    try:
+        # Inizia la query sulla tabella specificata
+        query = session.query(model)
+        
+        # Carica tutte le relazioni dirette della tabella principale
+        for rel_name, rel_obj in model.__mapper__.relationships.items():
+            # Carica la relazione diretta e tutte le relazioni annidate
+            query = query.options(selectinload(getattr(model, rel_name)))
+            
+        # Cerca il record con l'ID specificato
+        record = query.filter(model.id == record_id).one_or_none()
+        
+        if record is None:
+            return None
+            
+        # Converte il record in un dizionario
+        result = {}
+        
+        # Aggiungi gli attributi di base
+        for column in model.__table__.columns:
+            result[column.name] = getattr(record, column.name)
+            
+        # Aggiungi le relazioni
+        for rel_name, rel_obj in model.__mapper__.relationships.items():
+            related_data = getattr(record, rel_name)
+            
+            # Gestisci sia relazioni singole che collections
+            if related_data is not None:
+                if hasattr(related_data, '__iter__') and not isinstance(related_data, str):
+                    # Collection di oggetti
+                    result[rel_name] = []
+                    for item in related_data:
+                        item_dict = {}
+                        for column in item.__table__.columns:
+                            item_dict[column.name] = getattr(item, column.name)
+                        result[rel_name].append(item_dict)
+                else:
+                    # Oggetto singolo
+                    result[rel_name] = {}
+                    for column in related_data.__table__.columns:
+                        result[rel_name][column.name] = getattr(related_data, column.name)
+            else:
+                result[rel_name] = None
+                
+        return result
+        
+    except Exception as e:
+        raise e
+    finally:
+        session.close()  # Assicura che la sessione venga sempre chiusa
 
 def get_data_by_id_if_is_selected(table_name, record_id):
 	"""Ottiene un record specifico da una tabella tramite l'ID e imposta 'selected' a True.
@@ -783,6 +818,8 @@ required_columns = {
 	"social_reason": {"name": str, "cell": str, "cfpiva": str},
 	"vector": {"name": str, "cell": str, "cfpiva": str},
 	"material": {"name": str},
+	"weighing": {"weight": float, "date": datetime, "pid": str, "weigher": str},
+	"reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "idMaterial": int, "number_weighings": int, "note": str}
 }
 
 required_dtos = {
@@ -790,6 +827,7 @@ required_dtos = {
 	"social_reason": SocialReasonDTO,
 	"vector": VectorDTO,
 	"material": MaterialDTO,
+	"reservation": ReservationDTO
 }
 
 Base.metadata.create_all(engine)
