@@ -41,8 +41,6 @@ class IdSelectedDTO(CustomBaseModel):
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
 			data = select_reservation_if_incomplete(v)
-			import libs.lb_log as lb_log
-			lb_log.warning(data)
 		return v
 
 class DataDTO(BaseModel):

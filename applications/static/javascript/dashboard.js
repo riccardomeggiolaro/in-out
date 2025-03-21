@@ -196,6 +196,14 @@ async function getData(path) {
         document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         selectedIdWeight = res["id_selected"]["id"];
+        if (res.id_selected.id !== null) {
+            // Seleziona tutti i pulsanti e gli input
+            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+            // Disabilita ogni elemento trovato
+            buttonsAndInputs.forEach(element => {
+                element.disabled = true;
+            });
+        }
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -556,32 +564,18 @@ function updateUIRealtime(e) {
         const gross_weight = Number(data_weight_realtime.gross_weight);
         const tare_weight = Number(data_weight_realtime.tare);
         if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
-            if (tare_weight === 0 && selectedIdWeight === null) {
+            if (tare_weight == 0 && selectedIdWeight === null) {
                 tareButton.disabled = false;
                 zeroButton.disabled = true;
                 presetTareButton.disabled = false;
                 inButton.disabled = false;
                 printButton.disabled = false;
-                outButton.disabled = false;
-                // Seleziona tutti i pulsanti e gli input
-                const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-                // Disabilita ogni elemento trovato
-                buttonsAndInputs.forEach(element => {
-                    element.disabled = false;
-                });
             } else if (tare_weight !== 0 && selectedIdWeight !== null) {
                 tareButton.disabled = true;
                 zeroButton.disabled = true;
                 presetTareButton.disabled = true;
                 inButton.disabled = true;
                 printButton.disabled = true;
-                outButton.disabled = false;
-                // Seleziona tutti i pulsanti e gli input
-                const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-                // Disabilita ogni elemento trovato
-                buttonsAndInputs.forEach(element => {
-                    element.disabled = true;
-                });
             } else {
                 tareButton.disabled = false;
                 zeroButton.disabled = true;
@@ -632,6 +626,21 @@ function updateUIRealtime(e) {
                     inline: 'start'
                 });
             }
+        }
+        if (obj.id_selected.id === null) {
+            // Seleziona tutti i pulsanti e gli input
+            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+            // Disabilita ogni elemento trovato
+            buttonsAndInputs.forEach(element => {
+                element.disabled = false;
+            });
+        } else {
+            // Seleziona tutti i pulsanti e gli input
+            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+            // Disabilita ogni elemento trovato
+            buttonsAndInputs.forEach(element => {
+                element.disabled = true;
+            });
         }
     }
 }

@@ -136,16 +136,15 @@ class CommandWeigherRouter(DataRouter):
 
 	async def OutByPlate(self, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		try:
-			if md_weigher.module_weigher.canStartWeighing(instance_name=instance.instance_name, weigher_name=instance.weigher_name):
-				reservation = get_reservation_by_plate_if_incomplete(plate=plate_dto.plate)
-				if reservation:
-					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation.id}}), instance=instance)
-					result = await self.Out(instance=instance)
-					if result["command_details"]["command_executed"] is False:
-						self.DeleteData(instance=instance)
-					return result
-			raise ValueError("The weigher is not ready to weighing")
+			reservation = get_reservation_by_plate_if_incomplete(plate=plate_dto.plate)
+			if reservation:
+				await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation.id}}), instance=instance)
+				result = await self.Out(instance=instance)
+				if result["command_details"]["command_executed"] is False:
+					await self.DeleteData(instance=instance)
+				return result
 		except Exception as e:
+			lb_log.error(e)
 			return HTTPException(status_code=500, detail=str(e))
 
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
