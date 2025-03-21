@@ -53,7 +53,7 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuova ragione sociale:</h3>
+        <h3>Nuovo vettore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Nome:<br>
             <input type="text" id="name" required><br>
@@ -71,7 +71,7 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica ragione sociale:</h3>
+        <h3>Modifica vettore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Nome:<br>
             <input type="text" id="name" required><br>
@@ -89,7 +89,7 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina ragione sociale:</h3>
+        <h3>Elimina vettore:</h3>
         <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
         <p><b>Cell:</b> <u><em><span id="cell"></span></em></u></p>
         <p><b>CF/P.IVA:</b> <u><em><span id="cfpiva"></span></em></u></p>
@@ -118,7 +118,7 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         setTimeout(() => {
-            itemName = 'Ragione sociale';
+            itemName = 'Vettore';
             listUrlPath = '/anagrafic/list/vector';
             addUrlPath = '/anagrafic/vector';
             setUrlPath = '/anagrafic/vector';

@@ -57,7 +57,7 @@ class Functions:
 	def deleteDataInExecution(self, instance_name: str, weigher_name: str):
 		# Per ogni chiave dei dati correnti
 		for key, attr in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"].items():
-			if isinstance(attr, str):
+			if isinstance(attr, str) or isinstance(attr, int):
 				lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] = None
 				lb_config.saveconfig()
 			elif isinstance(attr, dict):
@@ -72,7 +72,7 @@ class Functions:
 			new_id = None
 		current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"]
 		if current_id is not None:
-			update_data('weighing', current_id, {"selected": False})
+			update_data('reservation', current_id, {"selected": False})
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"] = new_id
 		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
@@ -80,7 +80,7 @@ class Functions:
 	def deleteIdSelected(self, instance_name: str, weigher_name: str):
 		current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"]
 		if current_id is not None:
-			update_data('weighing', current_id, {"selected": False})
+			update_data('reservation', current_id, {"selected": False})
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"] = None
 		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)

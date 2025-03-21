@@ -25,7 +25,7 @@ class ConfigWeigher(CallbackWeigher):
         self.router_config_weigher.add_api_route('/instance/node', self.DeleteInstanceWeigher, methods=['DELETE'])
         self.router_config_weigher.add_api_route('/instance/connection', self.SetInstanceConnection, methods=['PATCH'])
         self.router_config_weigher.add_api_route('/instance/connection', self.DeleteInstanceConnection, methods=['DELETE'])
-        self.router_config_weigher.add_api_route('/instance/time_between_actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'])
+        self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'])
 
     async def GetAllInstance(self):
         return md_weigher.module_weigher.getAllInstance()

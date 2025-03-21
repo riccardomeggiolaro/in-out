@@ -252,7 +252,7 @@ function editRow(item) {
             if (keyInput) keyInput.value = item[key];
         }
     }
-    if (item.weighings.length > 0) {
+    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {
         confirm_exec_funct = funct;
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').innerHTML = `
@@ -314,7 +314,7 @@ function deleteRow(item) {
             }
         }
     }
-    if (item.weighings.length > 0) {
+    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').textContent = `Non è possibile eliminare questa anagrafica perchè è associata a delle pesate salvate.`;
         openPopup('confirm-popup');

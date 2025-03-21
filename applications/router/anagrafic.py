@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 import libs.lb_log as lb_log
-from libs.lb_database import VehicleDTO, SocialReasonDTO, MaterialDTO, filter_data, add_data, update_data, delete_data, delete_all_data, load_records_into_db, required_columns, required_dtos
+from libs.lb_database import ReservationDTO, VehicleDTO, SocialReasonDTO, MaterialDTO, filter_data, add_data, update_data, delete_data, delete_all_data, load_records_into_db, required_columns, required_dtos
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -33,7 +33,7 @@ class AnagraficRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def addAnagrafic(self, anagrafic: str, body: Union[VehicleDTO, SocialReasonDTO, MaterialDTO]):
+    async def addAnagrafic(self, anagrafic: str, body: Union[ReservationDTO, VehicleDTO, SocialReasonDTO, MaterialDTO]):
         if anagrafic not in required_columns:
             raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
 
@@ -51,7 +51,7 @@ class AnagraficRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def setAnagrafic(self, anagrafic: str, id: int, body: Union[VehicleDTO, SocialReasonDTO, MaterialDTO]):
+    async def setAnagrafic(self, anagrafic: str, id: int, body: Union[ReservationDTO, VehicleDTO, SocialReasonDTO, MaterialDTO]):
         if anagrafic not in required_columns:
             raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
 

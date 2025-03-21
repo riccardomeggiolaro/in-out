@@ -544,6 +544,7 @@ button:active {
     overflow-y: auto;
     height: 300px;
     border-radius: 8px;
+    font-size: 1.1rem;
 }
 .suggestions-list li {
     padding: 8px;
@@ -664,4 +665,19 @@ button {
 
 *:disabled {
     opacity: 0.5;
+}
+
+input:disabled, 
+select:disabled, 
+textarea:disabled {
+    opacity: 1;
+    color: #000; /* O qualsiasi colore desideri */
+    background-color: #fff; /* O il colore di sfondo originale */
+    border: 1px solid #ccc; /* O lo stile del bordo originale */
+    pointer-events: none; /* Impedisce interazioni ma mantiene l'aspetto normale */
+}
+
+/* Rimuove il grigio di sfondo su Chrome/Safari */
+input:disabled {
+  -webkit-appearance: none;
 }

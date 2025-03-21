@@ -100,8 +100,6 @@ def has_values_besides_id(dictionary):
 	Restituisce True se c'è almeno un campo con valore significativo, False altrimenti.
 	"""
 	
-	lb_log.warning(dictionary)
-
 	for key, value in dictionary.items():
 		# Salta il campo 'id'
 		if key == 'id':

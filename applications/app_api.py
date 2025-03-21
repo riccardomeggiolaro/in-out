@@ -9,7 +9,6 @@ import psutil
 from applications.router.generic import GenericRouter
 from applications.router.anagrafic import AnagraficRouter
 from applications.router.weigher.router import WeigherRouter
-from applications.router.historic_data import HistoricDataRouter
 from applications.router.auth import AuthRouter
 from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
@@ -115,7 +114,6 @@ def init():
 	generic_router = GenericRouter()
 	anagrafic_router = AnagraficRouter()
 	weigher_router = WeigherRouter()
-	historic_data_router = HistoricDataRouter()
 	auth_router = AuthRouter()
 	printer_router = PrinterRouter()
 	tunnel_connections_router = TunnelConnectionsRouter()
@@ -125,8 +123,6 @@ def init():
 	app.include_router(anagrafic_router.router, prefix="/anagrafic", tags=["anagrafic"])
 
 	app.include_router(printer_router.router, prefix="/printer", tags=["printer"])
-
-	app.include_router(historic_data_router.router, prefix="/historic_data", tags=["historic data"])
 
 	app.include_router(generic_router.router, prefix="/generic", tags=["generic"])
 

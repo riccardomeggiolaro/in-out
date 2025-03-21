@@ -29,7 +29,6 @@
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
-                        "cams": {},
                         "data": {
                             "data_in_execution": {
                                 "material": {
@@ -45,7 +44,7 @@
                                     "id": null,
                                     "name": null
                                 },
-                                "typeSocialReason": 0,
+                                "typeSocialReason": null,
                                 "vector": {
                                     "cell": null,
                                     "cfpiva": null,
@@ -69,23 +68,32 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [],
-                                    "take_picture": []
+                                    "set_rele": [
+                                        {
+                                            "1": 1
+                                        }
+                                    ]
                                 },
                                 "under_min": {
-                                    "set_rele": [],
-                                    "take_picture": []
+                                    "set_rele": [
+                                        {
+                                            "1": 0
+                                        }
+                                    ]
                                 }
                             },
                             "weighing": {
-                                "weight1": {
-                                    "set_rele": [],
-                                    "take_picture": []
-                                },
-                                "weight2": {
-                                    "set_rele": [],
-                                    "take_picture": []
-                                }
+                                "cams": [
+                                    {
+                                        "active": true,
+                                        "url": "http://Pesatura:Vista2023@192.168.0.230/ISAPI/Streaming/channels/1/picture"
+                                    }
+                                ],
+                                "set_rele": [
+                                    {
+                                        "1": 0
+                                    }
+                                ]
                             }
                         },
                         "list_port_rele": {
@@ -97,8 +105,8 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_weight": 50000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": true,
                         "node": null,
                         "port_rele": null,
                         "run": true,

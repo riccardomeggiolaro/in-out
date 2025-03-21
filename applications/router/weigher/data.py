@@ -9,20 +9,20 @@ import asyncio
 from libs.lb_utils import check_values
 from libs.lb_database import get_data_by_id
 
-class DataInExecutionRouter(ConfigWeigher):
+class DataRouter(ConfigWeigher):
 	def __init__(self):
 		super().__init__()
 		
-		self.router_data_in_execution = APIRouter()
+		self.router_data = APIRouter()
 	
-		self.router_data_in_execution.add_api_route('/data_in_execution', self.GetDataInExecution, methods=['GET'])
-		self.router_data_in_execution.add_api_route('/data_in_execution', self.SetDataInExecution, methods=['PATCH'])
-		self.router_data_in_execution.add_api_route('/data_in_execution', self.DeleteData, methods=['DELETE'])
+		self.router_data.add_api_route('', self.GetDataInExecution, methods=['GET'])
+		self.router_data.add_api_route('', self.SetData, methods=['PATCH'])
+		self.router_data.add_api_route('', self.DeleteData, methods=['DELETE'])
  
 	async def GetDataInExecution(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
-	async def SetDataInExecution(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def SetData(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		if data_dto.id_selected.id:
 			await self.DeleteData(instance=instance)
 			if data_dto.id_selected.id != -1:
@@ -38,7 +38,7 @@ class DataInExecutionRouter(ConfigWeigher):
 						"id": weighing["social_reason"]["id"] if weighing["social_reason"] else None,
 						"name": weighing["social_reason"]["name"] if weighing["social_reason"] else None,
 						"cell": weighing["social_reason"]["cell"] if weighing["social_reason"] else None,
-						"cfpiva": weighing["social_reaon"]["cfpiva"] if weighing["social_reason"] else None
+						"cfpiva": weighing["social_reason"]["cfpiva"] if weighing["social_reason"] else None
 					},
 					"vector": {
 						"id": weighing["vector"]["id"] if weighing["vector"] else None,
@@ -54,7 +54,7 @@ class DataInExecutionRouter(ConfigWeigher):
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution)
-		else:
+		elif not data_dto.id_selected.id and not lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
 			self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 

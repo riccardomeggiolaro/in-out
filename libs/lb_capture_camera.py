@@ -1,34 +1,37 @@
 import requests
-from requests.auth import HTTPDigestAuth
 from datetime import datetime
+from urllib.parse import urlparse, urlunparse
 
-def capture_camera_image(camera_url, username, password):
+def capture_camera_image(camera_url):
     date_capture = None
     image_data = None
     file_size = None
     status = None
-
+    
     try:
-        # Effettua la richiesta HTTP con autenticazione digest
+        # Parse the URL to extract credentials if present
+        parsed_url = urlparse(camera_url)
+        
+        # Make the HTTP request (credentials in URL will be used automatically)
         response = requests.get(
             camera_url,
-            auth=HTTPDigestAuth(username, password),
             stream=True,
-            verify=False  # Aggiungiamo questo se la telecamera usa HTTPS con certificato auto-firmato
+            verify=False  # For cameras using self-signed certificates
         )
         
-        # Verifica se la richiesta è andata a buon fine
+        # Check if the request was successful
         response.raise_for_status()
-
         date_capture = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         image_data = response.content
         file_size = len(image_data)
         status = "success"
+        
     except requests.exceptions.RequestException as e:
         date_capture = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         image_data = None
         file_size = 0
         status = f'error: {str(e)}'
+        
     finally:
         return {
             "date": date_capture,

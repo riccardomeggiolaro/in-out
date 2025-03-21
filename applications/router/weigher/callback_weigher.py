@@ -57,7 +57,7 @@ class CallbackWeigher(Functions):
 					"idVehicle": last_pesata.data_assigned.data_in_execution.vehicle.id,
 					"idMaterial": last_pesata.data_assigned.data_in_execution.material.id,
 					"note": last_pesata.data_assigned.data_in_execution.note,
-					"number_weighings": last_pesata.data_assigned.number_weighings
+					"number_weighings": last_pesata.data_assigned.number_weighings if tare == 0 else 2
 				}
 				if not last_pesata.data_assigned.data_in_execution.social_reason.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.social_reason.dict()):
 					social_reason_without_id = last_pesata.data_assigned.data_in_execution.social_reason.dict()
@@ -95,17 +95,8 @@ class CallbackWeigher(Functions):
 					else:
 						material = add_data("material", last_pesata.data_assigned.data_in_execution.material.dict())
 						reservation["idMaterial"] = material.id
-				# if last_pesata.data_assigned.data_in_execution.social_reason.id:
-				# 	obj["idSocialReason"] = last_pesata.data_assigned.data_in_execution.social_reason.id
-				# if last_pesata.data_assigned.data_in_execution.vehicle.id:
-				# 	obj["idVehicle"] = last_pesata.data_assigned.data_in_execution.vehicle.id
-				# if last_pesata.data_assigned.data_in_execution.material.id:
-				# 	obj["idMaterial"] = last_pesata.data_assigned.data_in_execution.material.id
-				# for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["cams"]:
-				#	 image_capture = capture_camera_image(cam["camera_url"], cam["username"], cam["password"])
-				#	 image_saved = add_data("image_captured", image_capture)
 				reservation_add = add_data("reservation", reservation)
-				if tare != 0 and last_pesata.data_assigned.number_weighings == 2:
+				if tare != 0:
 					weighing_tare = {
 						"weight": tare,
 						"date": dt.datetime.now(),
@@ -123,33 +114,30 @@ class CallbackWeigher(Functions):
 				}
 				add_data("weighing", weighing)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-			elif last_pesata.data_assigned.id_selected.id is not None and last_pesata.type_weighing == "OUT":
-				data = get_data_by_id("weighing", last_pesata.data_assigned.id_selected.id)
-				net_weight = data["weight1"] - int(last_pesata.weight_executed.gross_weight)
-				obj = {
-					"weight2": last_pesata.weight_executed.gross_weight,
-					"net_weight": net_weight,
-					"date2": dt.datetime.now(),
-					"pid2": last_pesata.weight_executed.pid
-				}
-				# for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["cams"]:
-				#	 image_capture = capture_camera_image(cam["camera_url"], cam["username"], cam["password"])
-				#	 image_saved = add_data("image_captured", image_capture)
-				update_data("weighing", last_pesata.data_assigned.id_selected.id, obj)
+			elif last_pesata.data_assigned.id_selected.id:
+				reservation = get_data_by_id("reservation", last_pesata.data_assigned.id_selected.id)
+				weighing = {
+					"weight": last_pesata.weight_executed.gross_weight,
+					"date": dt.datetime.now(),
+					"pid": last_pesata.weight_executed.pid,
+					"weigher": weigher_name,
+					"idReservation": last_pesata.data_assigned.id_selected.id
+     			}
+				add_data("weighing", weighing)
 				self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-			if last_pesata.weight_executed.tare == '0':
-				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["weight1"]["set_rele"]:
-					key, value = next(iter(rele.items()))
-					modope = "CLOSERELE" if value == 0 else "OPENRELE"
-					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+			for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
+				key, value = next(iter(rele.items()))
+				modope = "CLOSERELE" if value == 0 else "OPENRELE"
+				md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+			for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
+				if cam["active"]:
+					image_captured_details = capture_camera_image(camera_url=cam["url"])
 					import libs.lb_log as lb_log
-					lb_log.warning(value)
-			else:
-				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["weight2"]["set_rele"]:
-					key, value = next(iter(rele.items()))
-					modope = "CLOSERELE" if value == 0 else "OPENRELE"
-					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+					lb_log.warning(image_captured_details["date"])
+					lb_log.warning(image_captured_details["image"])
+					lb_log.warning(image_captured_details["size"])
+					lb_log.warning(image_captured_details["status"])
 		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(last_pesata.dict()))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):

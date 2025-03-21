@@ -1,17 +1,17 @@
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, Depends, WebSocket, HTTPException
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 from applications.utils.utils import validate_time
 from applications.router.weigher.types import Data
 import modules.md_weigher.md_weigher as md_weigher
-from applications.router.weigher.dto import DataInExecution
-from applications.router.weigher.dto import IdSelectedDTO, WeighingDataDTO
+from applications.router.weigher.dto import DataInExecution, IdSelectedDTO, PlateDTO, DataDTO
 from typing import Optional, Union
 import asyncio
 import libs.lb_log as lb_log
-from applications.router.weigher.cams import DataInExecutionRouter
+from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
+from libs.lb_database import get_reservation_by_plate_if_incomplete
 
-class CommandWeigherRouter(DataInExecutionRouter):
+class CommandWeigherRouter(DataRouter):
 	def __init__(self):
 		super().__init__()
 
@@ -19,15 +19,14 @@ class CommandWeigherRouter(DataInExecutionRouter):
 
 		self.router_action_weigher.add_api_route('/realtime', self.StartRealtime, methods=['GET'])
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostics, methods=['GET'])
-		self.router_action_weigher.add_api_route('/stop_all_command', self.StopAllCommand, methods=['GET'])
+		self.router_action_weigher.add_api_route('/stop-all-command', self.StopAllCommand, methods=['GET'])
 		self.router_action_weigher.add_api_route('/print', self.Print, methods=['GET'])
 		self.router_action_weigher.add_api_route('/in', self.In, methods=['POST'])
 		self.router_action_weigher.add_api_route('/out', self.Out, methods=['POST'])
+		self.router_action_weigher.add_api_route('/out/plate', self.OutByPlate, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
-		self.router_action_weigher.add_api_route('/preset_tare', self.PresetTare, methods=['GET'])
+		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
-		self.router_action_weigher.add_api_route('/open_rele', self.OpenRele, methods=['GET'])
-		self.router_action_weigher.add_api_route('/close_rele', self.CloseRele,methods=['GET'])
 
 		self.router_action_weigher.add_api_websocket_route('/realtime', self.websocket_endpoint)
 
@@ -135,6 +134,20 @@ class CommandWeigherRouter(DataInExecutionRouter):
 			}
 		}
 
+	async def OutByPlate(self, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		try:
+			if md_weigher.module_weigher.canStartWeighing(instance_name=instance.instance_name, weigher_name=instance.weigher_name):
+				reservation = get_reservation_by_plate_if_incomplete(plate=plate_dto.plate)
+				if reservation:
+					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation.id}}), instance=instance)
+					result = await self.Out(instance=instance)
+					if result["command_details"]["command_executed"] is False:
+						self.DeleteData(instance=instance)
+					return result
+			raise ValueError("The weigher is not ready to weighing")
+		except Exception as e:
+			return HTTPException(status_code=500, detail=str(e))
+
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="TARE")
 		return {
@@ -168,29 +181,6 @@ class CommandWeigherRouter(DataInExecutionRouter):
 			}
 		}
   
-	async def OpenRele(self, port_rele: str, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="OPENRELE", port_rele=port_rele)
-		lb_log.warning(port_rele)
-		return {
-			"instance": instance,
-			"command_details": {
-				"status_modope": status_modope,
-				"command_executed": command_executed,
-				"error_message": error_message
-			}
-		}
-  
-	async def CloseRele(self, port_rele: str, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="CLOSERELE", port_rele=port_rele)
-		return {
-			"instance": instance,
-			"command_details": {
-				"status_modope": status_modope,
-				"command_executed": command_executed,
-				"error_message": error_message
-			}
-		}
-
 	async def websocket_endpoint(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		await self.weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.connect(websocket)
 		while instance.instance_name in self.weighers_data and instance.weigher_name in self.weighers_data[instance.instance_name]:

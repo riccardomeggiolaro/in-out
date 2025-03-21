@@ -279,6 +279,12 @@ class __SetupWeigher(__SetupWeigherConnection):
 		else:
 			return 404, "Modope not exist"
 
+	def canStartWeighing(self):
+		status = False
+		if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight and self.take_of_weight_on_startup is False and self.take_of_weight_before_weighing is False:
+			status = True
+		return status
+
 class Terminal(__SetupWeigher):
 	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		# Chiama il costruttore della classe base

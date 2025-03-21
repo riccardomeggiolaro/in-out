@@ -13,9 +13,9 @@ class TunnelConnectionsRouter:
     def __init__(self):
         self.router = APIRouter()
 
-        self.router.add_api_route('/ssh_reverse_tunneling', self.getSshReverseTunneling, methods=['GET'])        
-        self.router.add_api_route('/ssh_reverse_tunneling', self.setSshReverseTunneling, methods=['PATCH'])
-        self.router.add_api_route('/ssh_reverse_tunneling', self.deleteSshReverseTunneling, methods=['DELETE'])
+        self.router.add_api_route('/ssh-reverse-tunneling', self.getSshReverseTunneling, methods=['GET'])        
+        self.router.add_api_route('/ssh-reverse-tunneling', self.setSshReverseTunneling, methods=['PATCH'])
+        self.router.add_api_route('/ssh-reverse-tunneling', self.deleteSshReverseTunneling, methods=['DELETE'])
 
     async def getSshReverseTunneling(self):
         return md_tunnel_connections.tunnel_connections.getSshReverseTunneling()

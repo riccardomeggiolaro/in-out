@@ -52,7 +52,7 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuova veicolo:</h3>
+        <h3>Nuovo veicolo:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #name').value.trim() || document.querySelector('#add-popup #plate').value.trim()) || !this.checkValidity())">
             Descrizione: (Opzionale):<br>
             <input type="text" id="name"><br>

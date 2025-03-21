@@ -3,12 +3,12 @@ from libs.lb_database import SocialReasonDTOInit, VectorDTOInit, VehicleDTOInit,
 from typing import Union, Optional, List
 
 class DataInExecution(BaseModel):
-	typeSocialReason: Optional[Union[int, str]] = 0
+	typeSocialReason: Optional[Union[int, str]] = None
 	social_reason: SocialReasonDTOInit = SocialReasonDTOInit(**{})
 	vector: VectorDTOInit = VectorDTOInit(**{})
 	vehicle: VehicleDTOInit = VehicleDTOInit(**{})
 	material: MaterialDTOInit = MaterialDTOInit(**{})
-	note: Union[str, None] = None
+	note: Optional[str] = None
 
 class IdSelected(BaseModel):
 	id: Optional[int] = None

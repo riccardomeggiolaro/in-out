@@ -75,7 +75,7 @@ const observer = new MutationObserver(() => updateStyle());
 
 document.addEventListener('DOMContentLoaded', async () => {
     updateStyle();
-    fetch('/config_weigher/all/instance')
+    fetch('/config-weigher/all/instance')
     .then(res => res.json())
     .then(res => {
         currentWeigherPath = localStorage.getItem('currentWeigherPath');
@@ -110,7 +110,7 @@ selectedIdWeigher.addEventListener('change', (event) => {
         document.getElementById('uniteMisure').innerText = "N/A";
         document.getElementById('tare').innerText = "N/A";
         document.getElementById('status').innerText = "N/A";
-        connectWebSocket(`command_weigher/realtime${currentWeigherPath}`, updateUIRealtime)
+        connectWebSocket(`command-weigher/realtime${currentWeigherPath}`, updateUIRealtime)
         getInstanceWeigher(currentWeigherPath)
         getData(currentWeigherPath)
         .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
@@ -147,7 +147,7 @@ function updateStyle() {
 }
 
 async function getInstanceWeigher(path) {
-    await fetch(`/config_weigher/instance/node${path}`)
+    await fetch(`/config-weigher/instance/node${path}`)
     .then(res => {
         if (res.status === 404) {
             alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
@@ -173,7 +173,7 @@ async function getInstanceWeigher(path) {
 }
 
 async function getData(path) {
-    await fetch(`/data_in_execution/data_in_execution${path}`)
+    await fetch(`/data${path}`)
     .then(res => {
         if (res.status === 404) {
             alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
@@ -190,7 +190,7 @@ async function getData(path) {
         selectedIdMaterial = obj.material.id;
         document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-        document.querySelector('#typeSocialReason').value = obj.typeSocialReason;
+        document.querySelector('#typeSocialReason').value = [0, 1].includes(obj.typeSocialReason) ? String(obj.typeSocialReason) : String(-1);
         document.querySelector('#currentNameSocialReason').value = obj.social_reason.name ? obj.social_reason.name : '';
         document.querySelector('#currentNameVector').value = obj.vector.name ? obj.vector.name : '';
         document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
@@ -205,10 +205,10 @@ async function populateListIn() {
 
     listIn.innerHTML = '';
 
-    await fetch('/historic_data/weighings/in')
+    await fetch('/generic/list/reservations-open')
     .then(res => res.json())
     .then(data => {
-        data.data.forEach(item => {
+        data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             let content = item.id;
@@ -229,7 +229,7 @@ async function populateListIn() {
                     }
                 }
                 if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                await fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
+                await fetch(`/data${currentWeigherPath}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -286,7 +286,7 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
     try {
         closePopup();
     } catch (err) {}
-    fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
+    fetch(`/data${currentWeigherPath}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -295,6 +295,11 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
     })
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
+}
+
+function isDate(string) {
+    const date = new Date(string);
+    return !isNaN(date.getTime());
 }
 
 async function showSuggestions(name_list, inputHtml, filter, inputValue, data, popup, showList, condition = null, valueCondition = null) {
@@ -334,7 +339,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
 
             li.onclick = () => {
                 closePopup();
-                fetch(`/data_in_execution/data_in_execution${currentWeigherPath}`, {
+                fetch(`/data${currentWeigherPath}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -353,7 +358,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
 
             let text = highlightText(suggestion, inputValue, filter);
             for (const [key, value] of Object.entries(suggestion)) {
-                if (value && typeof(value) !== 'object' && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
+                if (value && typeof(value) !== 'object' && !["cell", "cfpiva", "date_created"].includes(key) && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
             }
             li.innerHTML = text; // Evidenzia il testo
             li.dataset.id = suggestion.id
@@ -551,42 +556,54 @@ function updateUIRealtime(e) {
         const gross_weight = Number(data_weight_realtime.gross_weight);
         const tare_weight = Number(data_weight_realtime.tare);
         if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
-        //     if (tare_weight === 0 && selectedIdWeight === null) {
-        //         tareButton.disabled = false;
-        //         zeroButton.disabled = true;
-        //         presetTareButton.disabled = false;
-        //         inButton.disabled = false;
-        //         printButton.disabled = false;
-        //         outButton.disabled = false;
-        //     } else if (tare_weight === 0 && selectedIdWeight !== null) {
-        //         tareButton.disabled = true;
-        //         zeroButton.disabled = true;
-        //         presetTareButton.disabled = true;
-        //         inButton.disabled = true;
-        //         printButton.disabled = true;
-        //         outButton.disabled = false;
-        //     } else {
-        //         tareButton.disabled = false;
-        //         zeroButton.disabled = true;
-        //         presetTareButton.disabled = false;
-        //         inButton.disabled = true;
-        //         printButton.disabled = false;
-        //         outButton.disabled = false;
-        //     }
-        // } else if (numeric && minWeightValue >= gross_weight) {
-        //     tareButton.disabled = true;
-        //     zeroButton.disabled = false;
-        //     presetTareButton.disabled = false;
-        //     inButton.disabled = true;
-        //     printButton.disabled = true;
-        //     outButton.disabled = true;
-        // } else {
-        //     tareButton.disabled = true;
-        //     zeroButton.disabled = true;
-        //     presetTareButton.disabled = true;
-        //     inButton.disabled = true;
-        //     printButton.disabled = true;
-        //     outButton.disabled = true;
+            if (tare_weight === 0 && selectedIdWeight === null) {
+                tareButton.disabled = false;
+                zeroButton.disabled = true;
+                presetTareButton.disabled = false;
+                inButton.disabled = false;
+                printButton.disabled = false;
+                outButton.disabled = false;
+                // Seleziona tutti i pulsanti e gli input
+                const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+                // Disabilita ogni elemento trovato
+                buttonsAndInputs.forEach(element => {
+                    element.disabled = false;
+                });
+            } else if (tare_weight !== 0 && selectedIdWeight !== null) {
+                tareButton.disabled = true;
+                zeroButton.disabled = true;
+                presetTareButton.disabled = true;
+                inButton.disabled = true;
+                printButton.disabled = true;
+                outButton.disabled = false;
+                // Seleziona tutti i pulsanti e gli input
+                const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+                // Disabilita ogni elemento trovato
+                buttonsAndInputs.forEach(element => {
+                    element.disabled = true;
+                });
+            } else {
+                tareButton.disabled = false;
+                zeroButton.disabled = true;
+                presetTareButton.disabled = false;
+                inButton.disabled = true;
+                printButton.disabled = false;
+                outButton.disabled = false;
+            }
+        } else if (numeric && minWeightValue >= gross_weight) {
+            tareButton.disabled = true;
+            zeroButton.disabled = false;
+            presetTareButton.disabled = false;
+            inButton.disabled = true;
+            printButton.disabled = true;
+            outButton.disabled = true;
+        } else {
+            tareButton.disabled = true;
+            zeroButton.disabled = true;
+            presetTareButton.disabled = true;
+            inButton.disabled = true;
+            printButton.disabled = true;
+            outButton.disabled = true;
         }
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
@@ -595,9 +612,10 @@ function updateUIRealtime(e) {
         selectedIdSocialReason = obj.data_in_execution.social_reason.id;
         selectedIdVector = obj.data_in_execution.vector.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
+        console.log(obj.data_in_execution.typeSocialReason);
         document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.name ? obj.data_in_execution.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
-        document.querySelector('#typeSocialReason').selectedIndex = obj.data_in_execution.typeSocialReason;
+        document.querySelector('#typeSocialReason').value = [0, 1].includes(obj.data_in_execution.typeSocialReason) ? String(obj.data_in_execution.typeSocialReason) : String(-1);
         document.querySelector('#currentNameSocialReason').value = obj.data_in_execution.social_reason.name ? obj.data_in_execution.social_reason.name : '';
         document.querySelector('#currentNameVector').value = obj.data_in_execution.vector.name ? obj.data_in_execution.vector.name : '';
         document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
@@ -619,13 +637,13 @@ function updateUIRealtime(e) {
 }
 
 async function handleTara() {
-    await fetch(`${pathname}/command_weigher/tare${currentWeigherPath}`)
+    await fetch(`${pathname}/command-weigher/tare${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
 }
 
 async function handleZero() {
-    await fetch(`${pathname}/command_weigher/zero${currentWeigherPath}`)
+    await fetch(`${pathname}/command-weigher/zero${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -633,7 +651,7 @@ async function handleZero() {
 async function handlePTara() {
     let preset_tare = 0;
     if (myNumberInput.value) preset_tare = myNumberInput.value;
-    await fetch(`${pathname}/command_weigher/preset_tare${currentWeigherPath}&tare=${preset_tare}`)
+    await fetch(`${pathname}/command-weigher/tare/preset${currentWeigherPath}&tare=${preset_tare}`)
     .then(res => {
         closePopup();
         return res.json();
@@ -646,7 +664,7 @@ async function handleStampa() {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    const r = await fetch(`${pathname}/command_weigher/print${currentWeigherPath}`)
+    const r = await fetch(`${pathname}/command-weigher/print${currentWeigherPath}`)
     .then(res => {
         return res.json();
     })
@@ -667,7 +685,7 @@ async function handlePesata() {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    const r = await fetch(`${pathname}/command_weigher/in${currentWeigherPath}`,
+    const r = await fetch(`${pathname}/command-weigher/in${currentWeigherPath}`,
         {
             method: 'POST',
             headers: {
@@ -698,7 +716,7 @@ async function handlePesata2() {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    const r = await fetch(`${pathname}/command_weigher/out${currentWeigherPath}`, {
+    const r = await fetch(`${pathname}/command-weigher/out${currentWeigherPath}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

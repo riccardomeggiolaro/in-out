@@ -214,6 +214,9 @@ class WeigherModule:
 	def setModope(self, instance_name, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None):
 		return self.instances[instance_name].setModope(weigher_name=weigher_name, modope=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele)
 
+	def canStartWeighing(self, instance_name, weigher_name: str):
+		return self.instances[instance_name].canStartWeighing(weigher_name=weigher_name)
+
 class WeigherInstance:
 	def __init__(
 		self, 
@@ -479,4 +482,7 @@ class WeigherInstance:
 				cb_action_in_execution=cb_action_in_execution,
                 cb_rele=cb_rele
     		)
+   
+	def canStartWeighing(self, weigher_name: str):
+		return self.nodes[weigher_name].canStartWeighing()
 	# ==============================================================
