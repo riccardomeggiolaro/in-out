@@ -8,7 +8,8 @@ import datetime as dt
 from applications.router.weigher.types import DataInExecution
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
-from libs.lb_utils import has_values_besides_id
+from libs.lb_utils import has_values_besides_id, current_month
+from libs.lb_folders import save_bytes_to_file, search_file
 
 class CallbackWeigher(Functions):
 	def __init__(self):
@@ -133,11 +134,7 @@ class CallbackWeigher(Functions):
 			for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 				if cam["active"]:
 					image_captured_details = capture_camera_image(camera_url=cam["url"])
-					import libs.lb_log as lb_log
-					lb_log.warning(image_captured_details["date"])
-					lb_log.warning(image_captured_details["image"])
-					lb_log.warning(image_captured_details["size"])
-					lb_log.warning(image_captured_details["status"])
+					save_bytes_to_file(image_captured_details["image"], f"{last_pesata.weight_executed.pid}_{weigher_name}.png", lb_config.g_config["app_api"]["path_weighing_pictures"] + current_month())
 		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(last_pesata.dict()))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):

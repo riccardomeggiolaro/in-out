@@ -4,6 +4,7 @@ import signal
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
 import threading
+import datetime
 
 # Definizione di CustomBaseModel che estende BaseModel di Pydantic.
 class CustomBaseModel(BaseModel):
@@ -129,3 +130,6 @@ def check_values(obj):
             elif value != "" and value is not None:  # Se il valore non è "" o None
                 return True
     return False
+
+def current_month():
+    return datetime.datetime.now().strftime("%B").lower()

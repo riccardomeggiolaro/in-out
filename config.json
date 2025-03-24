@@ -1,5 +1,6 @@
 {
     "app_api": {
+        "path_weighing_pictures": "/var/lib/in-out/images/",
         "port": 8000,
         "rfid": {
             "connection": {
