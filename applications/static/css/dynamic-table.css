@@ -29,7 +29,7 @@ table td:last-child,
 table th:last-child {
   white-space: nowrap; /* Evita il wrapping del testo */
   width: 1px;
-  max-width: 64px; /* Evita che la colonna si espanda */
+  max-width: 90px; /* Evita che la colonna si espanda */
 }
 th, td {
     padding: 10px;
@@ -164,4 +164,8 @@ form div {
 
 td button {
     padding: 0px 8px !important;
+}
+
+li {
+    list-style-type: none;
 }

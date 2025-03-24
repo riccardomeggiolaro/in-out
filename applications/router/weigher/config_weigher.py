@@ -72,12 +72,16 @@ class ConfigWeigher(CallbackWeigher):
         weigher_created[setup.name]["cams"] = {}
         weigher_created[setup.name]["events"] = {
             "realtime": {
-                "over_min": EventAction(**{}).dict(),
-                "under_min": EventAction(**{}).dict()
+                "over_min": {
+                    "set_rele": []
+                },
+                "under_min": {
+                    "set_rele": []
+                }
             },
             "weighing": {
-                "weight1": EventAction(**{}).dict(),
-                "weight2": EventAction(**{}).dict()
+                "set_rele": [],
+                "cams": []
             }
         }
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][setup.name] = weigher_created[setup.name]

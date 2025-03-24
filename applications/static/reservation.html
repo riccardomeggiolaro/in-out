@@ -27,12 +27,12 @@
         <table>
             <thead>
                 <tr>
+                    <th name="date_created">Data</th>
                     <th name="social_reason.name">Ragione Sociale</th>
-                    <th name="social_reason.cell">Cell</th>
-                    <th name="social_reason.cfpiva">CF/P.IVA</th>
+                    <th name="vector.name">Trasportatore</th>
+                    <th name="vector.cell">Cell Trasportatore</th>
                     <th name="vehicle.plate">Targa</th>
-                    <th name="number_weighings">Numero pesate</th>
-                    <th>Pesate mancanti</th>
+                    <th name="number_weighings">Pesate</th>
                     <th></th>
                 </tr>
             </thead>
@@ -40,7 +40,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="9" style="text-align: center;">
+                    <td colspan="8" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -58,7 +58,7 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova prenotazione:</h3>
@@ -71,6 +71,8 @@
             <select id="idSocialReason"></select><br>
             Veicolo: (Opzionale)<br>
             <select id="idVehicle"></select><br>
+            Vettore: (Opzionale)<br>
+            <select id="idVector"></select><br>
             Numero pesate: (Min 2)<br>
             <input id="number_weighings" type="number" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" min="2" required><br>
         </form>
@@ -91,6 +93,8 @@
             <select id="idSocialReason"></select><br>
             Veicolo: (Opzionale)<br>
             <select id="idVehicle"></select><br>
+            Vettore: (Opzionale)<br>
+            <select id="idVector"></select><br>
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                
@@ -113,6 +117,15 @@
         </div>
     </div>
 
+    <div id="confirm-popup" class="modal-content popup">
+        <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+            <button id="save-btn" class="confirm-btn">Ok</button><br>
+        </div>
+    </div>
+
     <!-- Snackbar -->
     <div id="snackbar"></div>
 
@@ -129,6 +142,7 @@
             setUrlPath = '/anagrafic/reservation';
             deleteUrlPath = '/anagrafic/reservation';
             callback_populate_select = populateForm;
+            populate_detail_tr = populateDetailTr;
             updateTable();
         }, 1000);
 
@@ -138,8 +152,17 @@
                 populateSocialReason(`${idForm} #idSocialReason`, item.idSocialReason);
                 populateVector(`${idForm} #idVector`, item.idVector);
                 populateVehicle(`${idForm} #idVehicle`, item.idVehicle);
-                populateMaterial(`${idForm} #idMaterial`, item.idMaterial);
+                // populateMaterial(`${idForm} #idMaterial`, item.idMaterial);
             }
+        }
+
+        function populateDetailTr(item) {
+            let content = `<ul>`;
+            item.weighings.reverse().forEach(weighing => {
+                content += `<li><em><strong>${weighing.weight} kg</strong></em>, <em>Pid: ${weighing.pid}</em>, <em>Pesa: ${weighing.weigher}</li>`;
+            })
+            content += `</ul>`;
+            return content;
         }
 
         function populateTypeSocialReason(typeSocialReason, idSelected) {
@@ -166,10 +189,12 @@
         }
 
         function populateVector(vector, idSelected) {
-            fetch('/anagrafic/list/social_reason')
+            console.log(vector)
+            fetch('/anagrafic/list/vector')
             .then(res => res.json())
             .then(res => {
                 const idVector = document.querySelector(vector);
+                console.log(idVector)
                 idVector.innerHTML = '';
                 res.data.forEach(item => {
                     const option = document.createElement('option');

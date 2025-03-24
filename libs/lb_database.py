@@ -12,7 +12,7 @@ from datetime import datetime
 # Connessione al database
 Base = declarative_base()
 cwd = os.getcwd()
-engine = create_engine(f"sqlite:///{cwd}/database.db", echo=True)
+engine = create_engine(f"sqlite:///{cwd}/database.db")
 SessionLocal = sessionmaker(bind=engine)
 
 # Modello per la tabella User

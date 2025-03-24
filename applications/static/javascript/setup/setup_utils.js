@@ -35,7 +35,7 @@ await fetch('/static/content/printer.svg')
     printerButtonContent = data;
 });
 
-await fetch('/generic/list_serial_ports')
+await fetch('/generic/list/serial-ports')
 .then(res => res.json())
 .then(data => {
     list_serial_ports = data.list_serial_ports;

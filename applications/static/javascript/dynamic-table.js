@@ -7,16 +7,39 @@ let addUrlPath = null;
 let setUrlPath = null;
 let deleteUrlPath = null;
 let callback_populate_select = null;
+let populate_detail_tr = null;
 let currentId = null;
 let confirm_exec_funct = null;
+let currentRowExtended = null;
 const columns = {};
-
+const options = {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: 'numeric',
+    year: 'numeric'
+};
+  
 document.querySelectorAll('thead th').forEach((th, index) => {
     const columnName = th.attributes["name"];
     if (columnName && columnName.value) {
         columns[columnName.value] = index;
     }
 });
+
+function isValidDate(dateStr) {
+    // Verifica se la stringa corrisponde al formato ISO 8601
+    const regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)?$/;
+    
+    if (!regex.test(dateStr)) {
+      return false;
+    }
+    
+    const date = new Date(dateStr);
+  
+    // Verifica se la data è valida
+    return date instanceof Date && !isNaN(date.getTime());
+}
 
 function updateTable() {
     const offset = (currentPage - 1) * rowsPerPage; // Calcola l'offset in base alla pagina
@@ -85,85 +108,100 @@ function changeRowsPerPage() {
 }
 
 function populateTable(data) {
-  const table = document.querySelector("tbody");
-  table.innerHTML = ""; // Pulisce la tabella esistente
-  
-  // Extract column names and positions from the headers
-  const columns = {};
-  const headers = document.querySelectorAll("thead th[name]");
-  headers.forEach((header, index) => {
-    if (header.getAttribute("name")) {
-      columns[header.getAttribute("name")] = index;
-    }
-  });
-  
-  data.forEach(item => {
-    const row = document.createElement("tr");
+    const table = document.querySelector("tbody");
+    table.innerHTML = ""; // Pulisce la tabella esistente
     
-    // Create cells for each column
-    for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
-      row.insertCell();
-    }
-    
-    // Funzione ricorsiva per gestire oggetti annidati a qualsiasi livello
-    function populateNestedValues(obj, prefix = '') {
-      Object.entries(obj).forEach(([key, value]) => {
-        const fullKey = prefix ? `${prefix}.${key}` : key;
-        
-        if (fullKey in columns) {
-          row.cells[columns[fullKey]].textContent = value;
-        } 
-        // Gestione ricorsiva per gli oggetti annidati
-        else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          populateNestedValues(value, fullKey);
+    // Extract column names and positions from the headers
+    const columns = {};
+    const headers = document.querySelectorAll("thead th[name]");
+    headers.forEach((header, index) => {
+        if (header.getAttribute("name")) {
+            columns[header.getAttribute("name")] = index;
         }
-      });
-    }
-    
-    // Applica la funzione ricorsiva sull'oggetto riga
-    populateNestedValues(item);
-    
-    // Crea la cella per i pulsanti di azione
-    const actionsCell = document.createElement("td");
-    actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra
-    
-    // Pulsante Modifica
-    const editButton = document.createElement("button");
-    editButton.style.visibility = 'hidden';
-    editButton.textContent = "✏️";
-    editButton.onclick = () => editRow(item);
-    
-    // Pulsante Elimina
-    const deleteButton = document.createElement("button");
-    deleteButton.style.visibility = 'hidden';
-    deleteButton.textContent = "🗑️";
-    deleteButton.onclick = () => deleteRow(item);
-    
-    actionsCell.appendChild(editButton);
-    actionsCell.appendChild(deleteButton);
-    row.appendChild(actionsCell);
-    
-    // Mostra i pulsanti solo all'hover della riga
-    row.addEventListener("mouseenter", () => {
-      row.style.backgroundColor = 'whitesmoke';
-      editButton.style.visibility = 'inherit';
-      deleteButton.style.visibility = 'inherit';
     });
-    
-    row.addEventListener("mouseleave", () => {
-      row.style.backgroundColor = 'white';
-      editButton.style.visibility = 'hidden';
-      deleteButton.style.visibility = 'hidden';
+  
+    data.forEach(item => {
+        const row = document.createElement("tr");        
+        // Create cells for each column
+        for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
+            row.insertCell();
+        }
+        // Funzione ricorsiva per gestire oggetti annidati a qualsiasi livello
+        function populateNestedValues(obj, prefix = '') {
+            Object.entries(obj).forEach(([key, value]) => {
+                const fullKey = prefix ? `${prefix}.${key}` : key;
+                if (fullKey in columns) {
+                    row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof(value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
+                } 
+                // Gestione ricorsiva per gli oggetti annidati
+                else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    populateNestedValues(value, fullKey);
+                }
+            });
+        }        
+        // Applica la funzione ricorsiva sull'oggetto riga
+        populateNestedValues(item);
+        // Crea la cella per i pulsanti di azione
+        const actionsCell = document.createElement("td");
+        actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra        
+        // Pulsante Modifica
+        const editButton = document.createElement("button");
+        editButton.style.visibility = 'hidden';
+        editButton.textContent = "✏️";
+        editButton.onclick = () => editRow(item);
+        // Pulsante Elimina
+        const deleteButton = document.createElement("button");
+        deleteButton.style.visibility = 'hidden';
+        deleteButton.textContent = "🗑️";
+        deleteButton.onclick = () => deleteRow(item);        
+        actionsCell.appendChild(editButton);
+        actionsCell.appendChild(deleteButton);
+        row.appendChild(actionsCell);        
+        // Mostra i pulsanti solo all'hover della riga
+        row.addEventListener("mouseenter", () => {
+            row.style.backgroundColor = 'whitesmoke';
+            editButton.style.visibility = 'inherit';
+            deleteButton.style.visibility = 'inherit';
+        });        
+        row.addEventListener("mouseleave", () => {
+            row.style.backgroundColor = 'white';
+            editButton.style.visibility = 'hidden';
+            deleteButton.style.visibility = 'hidden';
+        });
+        table.appendChild(row);
+        if (populate_detail_tr) {
+            // Crea la riga per i dettagli (inizialmente nascosta)
+            const detailRow = document.createElement("tr");
+            detailRow.classList.add("detail-row");
+            detailRow.style.display = "none"; // Dettagli nascosti inizialmente
+            // Crea una cella che si estende per tutta la larghezza della tabella
+            const detailCell = document.createElement("td");
+            detailCell.colSpan = document.querySelectorAll("thead th").length;
+            detailCell.className = "detail-cell";
+            // Crea il contenuto dei dettagli
+            detailCell.innerHTML = populate_detail_tr(item);
+            detailRow.appendChild(detailCell);
+            table.appendChild(detailRow);
+            row.onclick = () => toggleExpandRow(row);
+        }
     });
-    
-    table.appendChild(row);
-  });
 }
+
+// Funzione per espandere/collassare la riga
+function toggleExpandRow(row) {
+    if (currentRowExtended && currentRowExtended !== row.nextElementSibling) {
+        // Se già espanso, nascondi
+        currentRowExtended.style.display = "none";        
+    }
+    currentRowExtended = row.nextElementSibling; // Dettagli subito dopo la riga
+    const isExpanded = currentRowExtended.style.display === "table-row";
+    // Se già espanso, nascondi
+    currentRowExtended.style.display = isExpanded ? "none" : "table-row";
+}  
 
 function getFormData(form) {
     const formData = {};
     const elements = form.elements;
-
     for (let element of elements) {
         if (element.id) {
             if (element.type === 'checkbox') {
@@ -176,16 +214,13 @@ function getFormData(form) {
                 formData[element.id] = element.value !== "" ? element.value : null;
             }
         }
-    }
-    
+    }    
     return formData;
 }
 
 function removeNullValues(obj) {
     return Object.entries(obj).reduce((acc, [key, value]) => {
-        if (value !== null) {
-            acc[key] = value;
-        }
+        if (value !== null) acc[key] = value;
         return acc;
     }, {});
 }
