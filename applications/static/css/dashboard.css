@@ -556,7 +556,6 @@ button:active {
 .highlight {
     background-color: yellow; /* Colore di evidenziazione */
 }
-
 .selected {
     background-color: #e0e0e0;
     font-weight: bold;

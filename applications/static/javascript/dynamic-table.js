@@ -392,6 +392,7 @@ function closePopups(idPopups) {
         const inputs = popup.querySelectorAll('input');
         inputs.forEach(input => {
             if (input.type !== 'radio') input.value = '';
+            if (input.dataset.id) input.dataset.id = '';
         });
     });
 

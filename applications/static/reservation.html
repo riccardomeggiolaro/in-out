@@ -62,23 +62,69 @@
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova prenotazione:</h3>
-        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #idSocialReason').value.trim() || document.querySelector('#add-popup #idVector').value.trim() || document.querySelector('#add-popup #idVehicle').value.trim() || document.querySelector('#add-popup #idMaterial').value.trim()) || !this.checkValidity())" autocomplete="off">
-            <div class="radio">
-                <input id="typeSocialReason" type="radio" name="option" value="0" checked>Cliente
-                <input id="typeSocialReason" type="radio" name="option" value="1">Fornitore
+        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #social_reason\\.name').value.trim()) || !this.checkValidity())" autocomplete="off">
+            <h4>Soggetto</h4>
+
+            <div>
+                <div class="radio">
+                    <div class="radio-option left">
+                        <input id="typeSocialReason1" type="radio" name="option" value="0" checked>
+                        <label for="typeSocialReason1">Cliente</label>
+                    </div>
+                    <div class="radio-option right">
+                        <input id="typeSocialReason2" type="radio" name="option" value="1">
+                        <label for="typeSocialReason2">Fornitore</label>
+                    </div>
+                </div>                
+    
+                <input placeholder="Ragione Sociale" id="social_reason.name" type="text" data-id=""
+                    oninput="
+                        populateSuggestions('#register #suggestions\\.social_reason\\.name', 'name', this.value);
+                        if (this.dataset.id) {
+                            this.dataset.id = '';
+                            cellSocialReason.dataset.id = '';
+                            cellSocialReason.value = ''; 
+                            fcpivaSocialReason.dataset.id = '';
+                            fcpivaSocialReason.value = '';
+                        }"
+                    onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.social_reason\\.name', 'name', this.value);"
+                    onblur="closeSuggestions('#register #suggestions\\.social_reason\\.name', 'name', this.value)"><br>
+                <div id="suggestions.social_reason.name" class="suggestions"></div>
+    
+                <input placeholder="Telefono" id="social_reason.cell" type="text" data-id="" pattern="\d*"
+                    oninput="
+                        this.value = this.value.replace(/\D/g, '');
+                        populateSuggestions('#register #suggestions\\.social_reason\\.cell', 'cell', this.value);
+                        if (this.dataset.id) {
+                            this.dataset.id = '';
+                            nameSocialReason.dataset.id = '';
+                            nameSocialReason.value = '';
+                            fcpivaSocialReason.dataset.id = '';
+                            fcpivaSocialReason.value = '';
+                        }"
+                    onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.social_reason\\.cell', 'cell', this.value);"
+                    onblur="closeSuggestions('#register #suggestions\\.social_reason\\.cell')"><br>
+                <div id="suggestions.social_reason.cell" class="suggestions"></div>
+    
+                <input placeholder="CF/P.Iva" id="social_reason.cfpiva" type="text" data-id="" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" 
+                    oninput="
+                        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
+                        populateSuggestions('#register #suggestions\\.social_reason\\.cfpiva', 'cfpiva', this.value);
+                        if (this.dataset.id) {
+                            this.dataset.id = '';
+                            nameSocialReason.dataset.id = '';
+                            nameSocialReason.value = '';
+                            cellSocialReason.dataset.id = '';
+                            cellSocialReason.value = '';                        
+                        }"
+                    onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.social_reason\\.cfpiva', 'cfpiva', this.value);"
+                    onblur="closeSuggestions('#register #suggestions\\.social_reason\\.cfpiva')"><br>
+                <div id="suggestions.social_reason.cfpiva" class="suggestions"></div>    
             </div>
-            Ragione Sociale: (Opzionale)<br>
-            <select id="idSocialReason"></select><br>
-            Veicolo: (Opzionale)<br>
-            <select id="idVehicle"></select><br>
-            Vettore: (Opzionale)<br>
-            <select id="idVector"></select><br>
-            Numero pesate: (Min 2)<br>
-            <input id="number_weighings" type="number" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" min="2" required><br>
         </form>
         <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
-            <button id="save-btn" class="save-btn" disabled>Salva</button><br>
+            <button class="cancel-btn" onclick="closePopups(['add-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
         </div>
     </div>
 
@@ -135,6 +181,13 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
+        const nameSocialReason = document.querySelector('#social_reason\\.name');
+        const suggestionsSocialReasonName = document.querySelector('#suggestions\\.social_reason\\.name');
+        const cellSocialReason = document.querySelector('#social_reason\\.cell');
+        const suggestionsSocialReasonCell = document.querySelector('#suggestions\\.social_reason\\.cell');
+        const fcpivaSocialReason = document.querySelector('#social_reason\\.cfpiva');
+        const suggestionsSocialReasonCfpiva = document.querySelector('#suggestions\\.social_reason\\.cfpiva');
+
         setTimeout(() => {
             itemName = 'Ragione sociale';
             listUrlPath = '/anagrafic/list/reservation';
@@ -148,12 +201,12 @@
 
         function populateForm(idForm, item={typeSocialReason: 0, idSocialReason: null, idVector: null, idVehicle: null, idMaterial: null}) {
             if (idForm !== '#delete') {
-                populateTypeSocialReason(`${idForm} #typeSocialReason`, item.typeSocialReason);
-                populateSocialReason(`${idForm} #idSocialReason`, item.idSocialReason);
-                populateVector(`${idForm} #idVector`, item.idVector);
-                populateVehicle(`${idForm} #idVehicle`, item.idVehicle);
-                // populateMaterial(`${idForm} #idMaterial`, item.idMaterial);
             }
+        }
+
+        function highlightText(suggestion, input, filter) {
+            const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
+            return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
         }
 
         function populateDetailTr(item) {
@@ -165,77 +218,46 @@
             return content;
         }
 
-        function populateTypeSocialReason(typeSocialReason, idSelected) {
-            const radioTypeSocialReason = document.querySelectorAll(typeSocialReason);
-            radioTypeSocialReason.forEach(radio => {
-                if (radio.value == idSelected) radio.checked = true;
-            })
-        }
-
-        function populateSocialReason(socialReason, idSelected) {
-            fetch('/anagrafic/list/social_reason')
+        function populateSuggestions(suggestions, key, value) {
+            let currentSuggestionsSocialReason = document.querySelector(suggestions);
+            currentSuggestionsSocialReason.style.display = 'block';
+            fetch(`/anagrafic/list/social_reason?${key}=${value}`)
             .then(res => res.json())
             .then(res => {
-                const idSocialReason = document.querySelector(socialReason);
-                idSocialReason.innerHTML = '';
+                currentSuggestionsSocialReason.innerHTML = '';
                 res.data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.name;
-                    idSocialReason.appendChild(option);             
+                    const option = document.createElement('p');
+                    option.innerHTML = highlightText(item, value, key);
+                    option.id = item.id;
+                    option.dataset.item = JSON.stringify(item);
+                    option.onmousedown = () => {
+                        nameSocialReason.dataset.id = item.id;
+                        nameSocialReason.value = item.name;
+                        cellSocialReason.dataset.id = item.id;
+                        cellSocialReason.value = item.cell;
+                        fcpivaSocialReason.dataset.id = item.id;
+                        fcpivaSocialReason.value = item.cfpiva;
+                    };
+                    currentSuggestionsSocialReason.appendChild(option);             
                 });
-                idSocialReason.value = idSelected;
             });
-        }
+        }        
 
-        function populateVector(vector, idSelected) {
-            console.log(vector)
-            fetch('/anagrafic/list/vector')
-            .then(res => res.json())
-            .then(res => {
-                const idVector = document.querySelector(vector);
-                console.log(idVector)
-                idVector.innerHTML = '';
-                res.data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.name;
-                    idVector.appendChild(option);             
-                });
-                idVector.value = idSelected;
-            });
-        }
-
-        function populateVehicle(vehicle, idSelected) {
-            fetch('/anagrafic/list/vehicle')
-            .then(res => res.json())
-            .then(res => {
-                const idVehicle = document.querySelector(vehicle);
-                idVehicle.innerHTML = '';
-                res.data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.plate;
-                    idVehicle.appendChild(option);
-                });
-                idVehicle.value = idSelected;
-            });
-        }
-
-        function populateMaterial(material, idSelected) {
-            fetch('/anagrafic/list/material')
-            .then(res => res.json())
-            .then(res => {
-                const idMaterial = document.querySelector(material);
-                idMaterial.innerHTML = '';
-                res.data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.name;
-                    idMaterial.appendChild(option);
-                });
-                idMaterial.value = idSelected;
-            });
+        function closeSuggestions(suggestions, key, value) {
+            const currentSuggestions = document.querySelector(suggestions);
+            currentSuggestions.style.display = 'none';
+            const options = currentSuggestions.querySelectorAll('p');
+            if (options.length === 1) {
+                const item = JSON.parse(options[0].dataset.item);
+                if (item[key].toLowerCase() == value.toLowerCase()) {
+                    nameSocialReason.dataset.id = item.id;
+                    nameSocialReason.value = item.name;
+                    cellSocialReason.dataset.id = item.id;
+                    cellSocialReason.value = item.cell;
+                    fcpivaSocialReason.dataset.id = item.id;
+                    fcpivaSocialReason.value = item.cfpiva;
+                }
+            }
         }
     </script>
 </body>
