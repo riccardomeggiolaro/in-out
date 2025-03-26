@@ -1,10 +1,10 @@
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 from typing import Optional
 
 class DriverDTO(BaseModel):
 	id: Optional[int] = None
-	name: Optional[str] = None
-	cell: Optional[str] = None
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
 
 	@validator('id', pre=True, always=True)
@@ -14,35 +14,44 @@ class DriverDTO(BaseModel):
 			if not data:
 				raise ValueError('Id not exist in driver')
 			else:
-				values['name'] = data.get('name')
-				values['cell'] = data.get('cell')
+				values['social_reason'] = data.get('social_reason')
+				values['telephone'] = data.get('telephone')
 				values['cfpiva'] = data.get('cfpiva')
 		return v
 
 	class Config:
-        # Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
+		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
 		arbitrary_types_allowed = True
 
 class AddDriverDTO(BaseModel):
-    name: Optional[str] = None
-    cell: Optional[str] = None
+    social_reason:  Optional[str] = None
+    telephone: Optional[str] = None
     cfpiva: Optional[str] = None
 
-    @validator('name', 'cell', 'cfpiva', always=True)
-    def validate_at_least_one_value(cls, v, values):
-        # Check if both name and plate are None
-        if not values.get('name') and not values.get('cell') and not values.get('cfpiva'):
-            raise ValueError("At least one of name or plate must be provided")
-        return v
+    @root_validator(pre=True)
+    def check_at_least_one_field(cls, values):
+        social_reason = values.get('social_reason')
+        telephone = values.get('telephone')
+        cfpiva = values.get('cfpiva')
+        if not social_reason and not telephone and not cfpiva:
+            raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
+        return values
 
 class SetDriverDTO(BaseModel):
-    name: Optional[str] = None
-    cell: Optional[str] = None
+    social_reason:  Optional[str] = None
+    telephone: Optional[str] = None
     cfpiva: Optional[str] = None
 
-    @validator('name', 'cell', 'cfpiva', always=True)
-    def validate_at_least_one_value(cls, v, values):
-        # Check if both name and plate are None
-        if not values.get('name') and not values.get('cell') and not values.get('cfpiva'):
-            raise ValueError("At least one of name or plate must be provided")
-        return v
+    @root_validator(pre=True)
+    def check_at_least_one_field(cls, values):
+        social_reason = values.get('social_reason')
+        telephone = values.get('telephone')
+        cfpiva = values.get('cfpiva')
+        if not social_reason and not telephone and not cfpiva:
+            raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
+        return values
+    
+class FilterDriverDTO(BaseModel):
+    social_reason:  Optional[str] = None
+    telephone: Optional[str] = None
+    cfpiva: Optional[str] = None

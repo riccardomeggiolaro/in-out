@@ -22,7 +22,7 @@
         <table>
             <thead>
                 <tr>
-                    <th name="name">Nome</th>
+                    <th name="description">Nome</th>
                     <th></th>
                 </tr>
             </thead>
@@ -53,7 +53,7 @@
     <div id="add-popup" class="modal-content popup">
         <h3>Nuovo materiale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
-            <input type="text" id="name" required><br>
+            <input type="text" id="description" required><br>
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                
@@ -65,7 +65,7 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica materiale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
-            <input type="text" id="name" required><br>
+            <input type="text" id="description" required><br>
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                
@@ -76,7 +76,7 @@
 
     <div id="delete-popup" class="modal-content popup">
         <h3>Elimina materiale:</h3>
-        <p><u><em><span id="name"></span></em></u></p>
+        <p><u><em><span id="description"></span></em></u></p>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
             <button id="save-btn" class="delete-save-btn">Elimina</button><br>

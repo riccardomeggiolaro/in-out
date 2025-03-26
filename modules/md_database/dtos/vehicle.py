@@ -2,7 +2,7 @@ from pydantic import BaseModel, validator, root_validator
 from typing import Optional
 
 class VehicleDTO(BaseModel):
-	name: Optional[str] = None
+	description: Optional[str] = None
 	plate: Optional[str] = None
 	id: Optional[int] = None
 
@@ -13,8 +13,8 @@ class VehicleDTO(BaseModel):
 			if not data:
 				raise ValueError('Id not exist in vehicle')
 			else:
+				values['description'] = data.get('description')
 				values['plate'] = data.get('plate')
-				values['name'] = data.get('name')
 		return v
 
 	class Config:
@@ -22,29 +22,29 @@ class VehicleDTO(BaseModel):
 		arbitrary_types_allowed = True
 
 class AddVehicleDTO(BaseModel):
-    name: Optional[str] = None
+    description: Optional[str] = None
     plate: Optional[str] = None
 
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        name = values.get('name')
+        description = values.get('description')
         plate = values.get('plate')
-        if not name:
-            raise ValueError('At least one of "name" or "plate" must be provided.')
+        if not description and not plate:
+            raise ValueError('At least one of "description" or "plate" must be provided.')
         return values
 
 class SetVehicleDTO(BaseModel):
-    name: Optional[str] = None
+    description: Optional[str] = None
     plate: Optional[str] = None
 
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        name = values.get('name')
+        description = values.get('description')
         plate = values.get('plate')
-        if not name:
-            raise ValueError('At least one of "name" or "plate" must be provided.')
+        if not description and not plate:
+            raise ValueError('At least one of "description" or "plate" must be provided.')
         return values
     
 class FilterVehicleDTO(BaseModel):
-    name: Optional[str] = None
+    description: Optional[str] = None
     plate: Optional[str] = None

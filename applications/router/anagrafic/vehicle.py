@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import required_columns
+from modules.md_database.md_database import upload_file_datas_required_columns
 from modules.md_database.dtos.vehicle import AddVehicleDTO, SetVehicleDTO, FilterVehicleDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
@@ -82,7 +82,7 @@ class VehicleRouter:
             df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
             # Definizione delle colonne richieste
-            required_column = required_columns["vehicle"]
+            required_column = upload_file_datas_required_columns["vehicle"]
 
             allowed_columns = set(required_column.keys())
 

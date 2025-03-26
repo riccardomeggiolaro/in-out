@@ -2,7 +2,7 @@ from pydantic import BaseModel, validator, root_validator
 from typing import Optional
 
 class MaterialDTO(BaseModel):
-	name: Optional[str] = None
+	description:  Optional[str] = None
 	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
@@ -12,7 +12,7 @@ class MaterialDTO(BaseModel):
 			if not data:
 				raise ValueError('Id not exist in material')
 			else:
-				values['name'] = data.get('name')
+				values['description'] = data.get('description')
 		return v
 
 	class Config:
@@ -20,24 +20,24 @@ class MaterialDTO(BaseModel):
 		arbitrary_types_allowed = True
 
 class AddMaterialDTO(BaseModel):
-    name: Optional[str] = None
+    description: Optional[str] = None
 
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        name = values.get('name')
-        if not name:
+        description = values.get('description')
+        if not description: 
             raise ValueError('At least one of "name" must be provided.')
         return values
 
 class SetMaterialDTO(BaseModel):
-    name: Optional[str] = None
+    description: Optional[str] = None
     
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        name = values.get('name')
-        if not name:
+        description = values.get('description')
+        if not description:
             raise ValueError('At least one of "name" must be provided.')
         return values
     
 class FilterMaterialDTO(BaseModel):
-    name: Optional[str] = None
+    description: Optional[str] = None

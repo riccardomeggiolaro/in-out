@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.material import AddMaterialDTO, SetMaterialDTO, FilterMaterialDTO
+from modules.md_database.dtos.driver import AddDriverDTO, SetDriverDTO, FilterDriverDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -12,24 +12,24 @@ import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
 
-class MaterialRouter:
+class DriverRouter:
     def __init__(self):
         self.router = APIRouter()
         
-        self.router.add_api_route('/list', self.getListMaterials, methods=['GET'])
-        self.router.add_api_route('', self.addMaterial, methods=['POST'])
-        self.router.add_api_route('/{id}', self.setMaterial, methods=['PATCH'])
-        self.router.add_api_route('/{id}', self.deleteMaterial, methods=['DELETE'])
-        self.router.add_api_route('', self.deleteAllMaterials, methods=['DELETE'])
+        self.router.add_api_route('/list', self.getListDrivers, methods=['GET'])
+        self.router.add_api_route('', self.addDriver, methods=['POST'])
+        self.router.add_api_route('/{id}', self.setDriver, methods=['PATCH'])
+        self.router.add_api_route('/{id}', self.deleteDriver, methods=['DELETE'])
+        self.router.add_api_route('', self.deleteAllDrivers, methods=['DELETE'])
         self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'])
 
-    async def getListMaterials(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
+    async def getListDrivers(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
         try:
             if limit is not None:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("material", query_params, limit, offset)
+            data, total_rows = filter_data("driver", query_params, limit, offset)
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -37,31 +37,31 @@ class MaterialRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def addMaterial(self, body: AddMaterialDTO):
+    async def addDriver(self, body: AddDriverDTO):
         try:
-            add_data("material", body.dict())
+            add_data("driver", body.dict())
             return {"message": "Data added successfully"}
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def setMaterial(self, id: int, body: SetMaterialDTO):
+    async def setDriver(self, id: int, body: SetDriverDTO):
         try:
-            update_data("material", id, body.dict())
+            update_data("driver", id, body.dict())
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
 
         return {"message": "Data updated successfully"}
 
-    async def deleteMaterial(self, id: int):
+    async def deleteDriver(self, id: int):
         try:
-            delete_data("material", id)
+            delete_data("driver", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}
 
-    async def deleteAllMaterials(self):
+    async def deleteAllDrivers(self):
         try:
-            length = delete_all_data("material")
+            length = delete_all_data("driver")
             return {"message": f"{length} records deleted successfully"}
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
@@ -82,7 +82,7 @@ class MaterialRouter:
             df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
             # Definizione delle colonne richieste
-            required_column = upload_file_datas_required_columns["material"]
+            required_column = upload_file_datas_required_columns["driver"]
 
             allowed_columns = set(required_column.keys())
 
@@ -113,7 +113,7 @@ class MaterialRouter:
 
         try:
             # Salva i dati nel database
-            length = load_datas_into_db("material", data)
+            length = load_datas_into_db("driver", data)
 
             return {"message": f"{length} records loaded successfully"}
         except Exception as e:

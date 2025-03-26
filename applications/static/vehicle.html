@@ -22,7 +22,7 @@
         <table>
             <thead>
                 <tr>
-                    <th name="name">Nome</th>
+                    <th name="description">Nome</th>
                     <th name="plate">Targa</th>
                     <th></th>
                 </tr>
@@ -53,9 +53,9 @@
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuovo veicolo:</h3>
-        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #name').value.trim() || document.querySelector('#add-popup #plate').value.trim()) || !this.checkValidity())">
+        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #description').value.trim() || document.querySelector('#add-popup #plate').value.trim()) || !this.checkValidity())">
             Descrizione: (Opzionale):<br>
-            <input type="text" id="name"><br>
+            <input type="text" id="description"><br>
             Targa: (Opzionale)<br>
             <input type="text" id="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()">
             <br>    
@@ -69,9 +69,9 @@
 
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica veicolo:</h3>
-        <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #name').value.trim() || document.querySelector('#edit-popup #plate').value.trim()) || !this.checkValidity())">
+        <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #description').value.trim() || document.querySelector('#edit-popup #plate').value.trim()) || !this.checkValidity())">
             Nome: (Opzionale)<br>
-            <input type="text" id="name"><br>
+            <input type="text" id="description"><br>
             Targa: (Opzionale)<br>
             <input type="text" id="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()"><br>
         </form>
@@ -85,7 +85,7 @@
     <div id="delete-popup" class="modal-content popup">
         <div id="delete">
             <h3>Elimina veicolo:</h3>
-            <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
+            <p><b>Nome:</b> <u><em><span id="description"></span></em></u></p>
             <p><b>Targa:</b> <u><em><span id="plate"></span></em></u></p>
             <div class="container-buttons right">
                 <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
@@ -114,7 +114,7 @@
     <script>
         setTimeout(() => {
             itemName = 'Veicolo';
-            listUrlPath = '/anagrafic/list/vehicle';
+            listUrlPath = '/anagrafic/vehicle/list';
             addUrlPath = '/anagrafic/vehicle';
             setUrlPath = '/anagrafic/vehicle';
             deleteUrlPath = '/anagrafic/vehicle';

@@ -22,29 +22,11 @@ class User(Base):
     printer_name = Column(String, nullable=True)
     date_created = Column(DateTime, default=datetime.utcnow)
 
-# Model for Vehicle table
-class Vehicle(Base):
-    __tablename__ = 'vehicle'
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    plate = Column(String)
-    date_created = Column(DateTime, default=datetime.utcnow)
-
-    reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
-
-# Model for Material table
-class Material(Base):
-    __tablename__ = 'material'
-    id = Column(Integer, primary_key=True, index=True) 
-    name = Column(String, index=True)
-    date_created = Column(DateTime, default=datetime.utcnow)
-    reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
-
 # Common attributes mixin
 class CommonAttributes:
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    cell = Column(String)
+    social_reason = Column(String)
+    telephone = Column(String)
     cfpiva = Column(String)
     date_created = Column(DateTime, default=datetime.utcnow)
 
@@ -62,6 +44,25 @@ class Vector(Base, CommonAttributes):
 class Driver(Base, CommonAttributes):
     __tablename__ = 'driver'
     reservations = relationship("Reservation", back_populates="driver", cascade="all, delete")  # Fixed typo: resservations -> reservations
+
+
+# Model for Vehicle table
+class Vehicle(Base):
+    __tablename__ = 'vehicle'
+    id = Column(Integer, primary_key=True, index=True)
+    description = Column(String)
+    plate = Column(String)
+    date_created = Column(DateTime, default=datetime.utcnow)
+
+    reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
+
+# Model for Material table
+class Material(Base):
+    __tablename__ = 'material'
+    id = Column(Integer, primary_key=True, index=True) 
+    description = Column(String, index=True)
+    date_created = Column(DateTime, default=datetime.utcnow)
+    reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
 
 # Model for Weighing table
 class Weighing(Base):
@@ -101,22 +102,21 @@ class Reservation(Base):
 # Dictionary of models to map table names to model classes
 table_models = {
     'user': User,
-    'vehicle': Vehicle,
-    'material': Material,
     'subject': Subject,
     'vector': Vector,
     'driver': Driver,
+    'vehicle': Vehicle,
+    'material': Material,
     'weighing': Weighing,
     'reservation': Reservation
 }
 
-required_columns = {
-	"vehicle": {"name": str, "plate": str},
-	"subject": {"name": str, "cell": str, "cfpiva": str},
-	"vector": {"name": str, "cell": str, "cfpiva": str},
-    "driver": {"name": str, "cell": str},
-	"material": {"name": str},
-	"weighing": {"weight": float, "date": datetime, "pid": str, "weigher": str},
+upload_file_datas_required_columns = {
+	"subject": {"social_reason": str, "telephone": str, "cfpiva": str},
+	"vector": {"social_reason": str, "telephone": str, "cfpiva": str},
+    "driver": {"social_reason": str, "telephone": str, "cfpiva": str},
+	"vehicle": {"description": str, "plate": str},
+	"material": {"description": str},
 	"reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "idMaterial": int, "number_weighings": int, "note": str}
 }
 

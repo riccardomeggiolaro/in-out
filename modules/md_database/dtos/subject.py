@@ -3,8 +3,8 @@ from typing import Optional
 
 class SubjectDTO(BaseModel):
 	id: Optional[int] = None
-	name: Optional[str] = None
-	cell: Optional[str] = None
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
 
 	@validator('id', pre=True, always=True)
@@ -14,8 +14,8 @@ class SubjectDTO(BaseModel):
 			if not data:
 				raise ValueError('Id not exist in subject')
 			else:
-				values['name'] = data.get('name')
-				values['cell'] = data.get('cell')
+				values['social_reason'] = data.get('social_reason')
+				values['telephone'] = data.get('telephone')
 				values['cfpiva'] = data.get('cfpiva')
 		return v
 
@@ -24,34 +24,34 @@ class SubjectDTO(BaseModel):
 		arbitrary_types_allowed = True
 
 class AddSubjectDTO(BaseModel):
-    name: Optional[str] = None
-    cell: Optional[str] = None
+    social_reason:  Optional[str] = None
+    telephone: Optional[str] = None
     cfpiva: Optional[str] = None
 
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        name = values.get('name')
-        cell = values.get('cell')
+        name = values.get('social_reason')
+        telephone = values.get('telephone')
         cfpiva = values.get('cfpiva')
-        if not name and not cell and not cfpiva:
-            raise ValueError('At least one of "name", "cell" or "cfpiva" must be provided.')
+        if not name and not telephone and not cfpiva:
+            raise ValueError('At least one of "name", "telephone" or "cfpiva" must be provided.')
         return values
 
 class SetSubjectDTO(BaseModel):
-    name: Optional[str] = None
-    cell: Optional[str] = None
+    social_reason:  Optional[str] = None
+    telephone: Optional[str] = None
     cfpiva: Optional[str] = None
 
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        name = values.get('name')
-        cell = values.get('cell')
+        name = values.get('social_reason')
+        telephone = values.get('telephone')
         cfpiva = values.get('cfpiva')
-        if not name and not cell and not cfpiva:
-            raise ValueError('At least one of "name", "cell" or "cfpiva" must be provided.')
+        if not name and not telephone and not cfpiva:
+            raise ValueError('At least one of "name", "telephone" or "cfpiva" must be provided.')
         return values
     
 class FilterSubjectDTO(BaseModel):
-    name: Optional[str] = None
-    cell: Optional[str] = None
+    social_reason:  Optional[str] = None
+    telephone: Optional[str] = None
     cfpiva: Optional[str] = None

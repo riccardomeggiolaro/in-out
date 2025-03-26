@@ -4,7 +4,7 @@
         <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Vettori</title>
+        <title>Soggetti</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -16,7 +16,7 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Vettori</h2>
+            <h2>Soggetti</h2>
             <button class="register-button" onclick="addRow()">Registra</button>
         </div>
         <table>
@@ -53,7 +53,7 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuovo vettore:</h3>
+        <h3>Nuovo soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Nome:<br>
             <input type="text" id="social_reason" required><br>
@@ -71,7 +71,7 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica vettore:</h3>
+        <h3>Modifica soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Nome:<br>
             <input type="text" id="social_reason" required><br>
@@ -89,7 +89,7 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina vettore:</h3>
+        <h3>Elimina soggetto:</h3>
         <p><b>Nome:</b> <u><em><span id="social_reason"></span></em></u></p>
         <p><b>Cell:</b> <u><em><span id="telephone"></span></em></u></p>
         <p><b>CF/P.IVA:</b> <u><em><span id="cfpiva"></span></em></u></p>
@@ -118,11 +118,11 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         setTimeout(() => {
-            itemName = 'Vettore';
-            listUrlPath = '/anagrafic/vector/list';
-            addUrlPath = '/anagrafic/vector';
-            setUrlPath = '/anagrafic/vector';
-            deleteUrlPath = '/anagrafic/vector';
+            itemName = 'Soggetto';
+            listUrlPath = '/anagrafic/subject/list';
+            addUrlPath = '/anagrafic/subject';
+            setUrlPath = '/anagrafic/subject';
+            deleteUrlPath = '/anagrafic/subject';
             updateTable();
         }, 1000);
     </script>

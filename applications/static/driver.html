@@ -4,7 +4,7 @@
         <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ragioni sociali</title>
+        <title>Autisti</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -16,14 +16,14 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Ragioni Sociali</h2>
+            <h2>Autisti</h2>
             <button class="register-button" onclick="addRow()">Registra</button>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th name="name">Nome</th>
-                    <th name="cell">Cell</th>
+                    <th name="social_reason">Nome</th>
+                    <th name="telephone">Cell</th>
                     <th name="cfpiva">CF/P.IVA</th>
                     <th></th>
                 </tr>
@@ -53,12 +53,12 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuova ragione sociale:</h3>
+        <h3>Nuovo vettore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Nome:<br>
-            <input type="text" id="name" required><br>
+            <input type="text" id="social_reason" required><br>
             Cell: (Opzionale)<br>
-            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
             <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
             <br>            
@@ -71,12 +71,12 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica ragione sociale:</h3>
+        <h3>Modifica vettore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Nome:<br>
-            <input type="text" id="name" required><br>
+            <input type="text" id="social_reason" required><br>
             Cell: (Opzionale)<br>
-            <input type="text" id="cell" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
             <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
             <br>            
@@ -89,9 +89,9 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina ragione sociale:</h3>
-        <p><b>Nome:</b> <u><em><span id="name"></span></em></u></p>
-        <p><b>Cell:</b> <u><em><span id="cell"></span></em></u></p>
+        <h3>Elimina vettore:</h3>
+        <p><b>Nome:</b> <u><em><span id="social_reason"></span></em></u></p>
+        <p><b>Cell:</b> <u><em><span id="telephone"></span></em></u></p>
         <p><b>CF/P.IVA:</b> <u><em><span id="cfpiva"></span></em></u></p>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
@@ -118,11 +118,11 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         setTimeout(() => {
-            itemName = 'Ragione sociale';
-            listUrlPath = '/anagrafic/list/social_reason';
-            addUrlPath = '/anagrafic/social_reason';
-            setUrlPath = '/anagrafic/social_reason';
-            deleteUrlPath = '/anagrafic/social_reason';
+            itemName = 'Vettore';
+            listUrlPath = '/anagrafic/driver/list';
+            addUrlPath = '/anagrafic/driver';
+            setUrlPath = '/anagrafic/driver';
+            deleteUrlPath = '/anagrafic/driver';
             updateTable();
         }, 1000);
     </script>
