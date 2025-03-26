@@ -32,29 +32,31 @@
                         "always_execute_realtime_in_undeground": true,
                         "data": {
                             "data_in_execution": {
+                                "driver": {
+                                    "cell": null,
+                                    "cfpiva": null,
+                                    "id": null,
+                                    "name": null
+                                },
                                 "material": {
-                                    "hidden": null,
                                     "id": null,
                                     "name": null
                                 },
                                 "note": null,
-                                "social_reason": {
+                                "subject": {
                                     "cell": null,
                                     "cfpiva": null,
-                                    "hidden": null,
                                     "id": null,
                                     "name": null
                                 },
-                                "typeSocialReason": null,
+                                "typeSubject": null,
                                 "vector": {
                                     "cell": null,
                                     "cfpiva": null,
-                                    "hidden": null,
                                     "id": null,
                                     "name": null
                                 },
                                 "vehicle": {
-                                    "hidden": null,
                                     "id": null,
                                     "name": null,
                                     "plate": null

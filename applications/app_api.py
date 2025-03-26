@@ -7,8 +7,8 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import psutil
 from applications.router.generic import GenericRouter
-from applications.router.anagrafic import AnagraficRouter
 from applications.router.weigher.router import WeigherRouter
+from applications.router.anagrafic.router import AnagraficRouter
 from applications.router.auth import AuthRouter
 from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
@@ -112,15 +112,15 @@ def init():
 	app.add_middleware(AuthMiddleware)
 
 	generic_router = GenericRouter()
-	anagrafic_router = AnagraficRouter()
 	weigher_router = WeigherRouter()
+	anagrafic_router = AnagraficRouter()
 	auth_router = AuthRouter()
 	printer_router = PrinterRouter()
 	tunnel_connections_router = TunnelConnectionsRouter()
 
 	app.include_router(weigher_router.router)
 
-	app.include_router(anagrafic_router.router, prefix="/anagrafic", tags=["anagrafic"])
+	app.include_router(anagrafic_router.router)
 
 	app.include_router(printer_router.router, prefix="/printer", tags=["printer"])
 

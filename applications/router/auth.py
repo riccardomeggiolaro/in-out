@@ -1,5 +1,11 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, status
-from libs.lb_database import filter_data, add_data, update_data, delete_data, get_data_by_id, get_data_by_attribute, UserDTO
+from modules.md_database.functions.filter_data import filter_data
+from modules.md_database.functions.add_data import add_data
+from modules.md_database.functions.update_data import update_data
+from modules.md_database.functions.delete_data import delete_data
+from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.dtos.user import UserDTO
 from applications.utils.utils_auth import LoginDTO, SetUserDTO, create_access_token
 from applications.middleware.admin import is_admin
 

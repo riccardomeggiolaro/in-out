@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from libs.lb_printer import printer
-import libs.lb_database as lb_database
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 import libs.lb_config as lb_config
 
 class PrinterRouter:
@@ -39,7 +39,7 @@ class PrinterRouter:
         }
 
     async def printWeighingId(self, request: Request, weighing_id: int):
-        weight = lb_database.get_data_by_id('weighing', weighing_id)
+        weight = get_data_by_id('weighing', weighing_id)
         html = f"""
             <h1>{weight["pid2"]}</h1>
         """

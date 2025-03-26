@@ -3,7 +3,10 @@ import asyncio
 from typing import Union
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
-from libs.lb_database import add_data, get_data_by_id, get_data_by_attributes, update_data
+from modules.md_database.functions.add_data import add_data
+from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from modules.md_database.functions.update_data import update_data
 import datetime as dt
 from applications.router.weigher.types import DataInExecution
 from libs.lb_capture_camera import capture_camera_image

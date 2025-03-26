@@ -1,31 +1,35 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
-import libs.lb_log as lb_log
-from libs.lb_database import ReservationDTO, VehicleDTO, SocialReasonDTO, MaterialDTO, filter_data, add_data, update_data, delete_data, delete_all_data, load_records_into_db, required_columns, required_dtos
+from modules.md_database.md_database import required_columns
+from modules.md_database.dtos.vehicle import AddVehicleDTO, SetVehicleDTO, FilterVehicleDTO
+from modules.md_database.functions.filter_data import filter_data
+from modules.md_database.functions.add_data import add_data
+from modules.md_database.functions.delete_data import delete_data
+from modules.md_database.functions.update_data import update_data
+from modules.md_database.functions.delete_all_data import delete_all_data
+from modules.md_database.functions.load_datas_into_db import load_datas_into_db
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
 
-class AnagraficRouter:
+class VehicleRouter:
     def __init__(self):
         self.router = APIRouter()
         
-        self.router.add_api_route('/list/{anagrafic}', self.getListAnagrafic, methods=['GET'])
-        self.router.add_api_route('/{anagrafic}', self.addAnagrafic, methods=['POST'])
-        self.router.add_api_route('/{anagrafic}/{id}', self.setAnagrafic, methods=['PATCH'])
-        self.router.add_api_route('/{anagrafic}/{id}', self.deleteAnagrafic, methods=['DELETE'])
-        self.router.add_api_route('/{anagrafic}', self.deleteAllAnagrafic, methods=['DELETE'])
-        self.router.add_api_route('/upload-file/{anagrafic}', self.upload_file, methods=['POST'])
+        self.router.add_api_route('/list', self.getListVehicles, methods=['GET'])
+        self.router.add_api_route('', self.addVehicle, methods=['POST'])
+        self.router.add_api_route('/{id}', self.setVehicle, methods=['PATCH'])
+        self.router.add_api_route('/{id}', self.deleteVehicle, methods=['DELETE'])
+        self.router.add_api_route('', self.deleteAllVehicles, methods=['DELETE'])
+        self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'])
 
-    async def getListAnagrafic(self, anagrafic: str, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
-        if anagrafic not in required_columns:
-            raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+    async def getListVehicles(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
         try:
             if limit is not None:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data(anagrafic, query_params, limit, offset)
+            data, total_rows = filter_data("vehicle", query_params, limit, offset)
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -33,65 +37,36 @@ class AnagraficRouter:
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def addAnagrafic(self, anagrafic: str, body: Union[ReservationDTO, VehicleDTO, SocialReasonDTO, MaterialDTO]):
-        if anagrafic not in required_columns:
-            raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
-
-        # Definizione delle colonne richieste
-        required_dto = required_dtos[anagrafic]
-
-        data_parsed = required_dto(**body.dict())
-
-        if not isinstance(data_parsed, required_dto):
-            raise HTTPException(status_code=400, detail=f"Invalid body for {anagrafic}")
-
+    async def addVehicle(self, body: AddVehicleDTO):
         try:
-            add_data(anagrafic, data_parsed.dict())
+            add_data("vehicle", body.dict())
             return {"message": "Data added successfully"}
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def setAnagrafic(self, anagrafic: str, id: int, body: Union[ReservationDTO, VehicleDTO, SocialReasonDTO, MaterialDTO]):
-        if anagrafic not in required_columns:
-            raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
-
-        # Definizione delle colonne richieste
-        required_dto = required_dtos[anagrafic]
-
-        data_parsed = required_dto(**body.dict())
-
-        lb_log.warning(data_parsed)
-
-        if not isinstance(data_parsed, required_dto):
-            raise HTTPException(status_code=400, detail=f"Invalid body for {anagrafic}")
-
+    async def setVehicle(self, id: int, body: SetVehicleDTO):
         try:
-            update_data(anagrafic, id, data_parsed.dict())
+            update_data("vehicle", id, body.dict())
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
 
         return {"message": "Data updated successfully"}
 
-    async def deleteAnagrafic(self, anagrafic: str, id: int):
-        if anagrafic not in required_columns:
-            raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
-
+    async def deleteVehicle(self, id: int):
         try:
-            delete_data(anagrafic, id)
+            delete_data("vehicle", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}
 
-    async def deleteAllAnagrafic(self, anagrafic: str):
-        if anagrafic not in required_columns:
-            raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
+    async def deleteAllVehicles(self):
         try:
-            length = delete_all_data(anagrafic)
+            length = delete_all_data("vehicle")
             return {"message": f"{length} records deleted successfully"}
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def upload_file(self, anagrafic: str, file: UploadFile = File(...)):
+    async def upload_file(self, file: UploadFile = File(...)):
         # Verifica l'estensione del file
         if file.content_type not in ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
             raise HTTPException(status_code=400, detail="File type not supported")
@@ -106,11 +81,8 @@ class AnagraficRouter:
             # Rimuovi le colonne senza titolo (solitamente con nome 'Unnamed') e verifica che non ci siano
             df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
-            if anagrafic not in required_columns:
-                raise HTTPException(status_code=400, detail=f"Anagrafic {anagrafic} is not supported")
-
             # Definizione delle colonne richieste
-            required_column = required_columns[anagrafic]
+            required_column = required_columns["vehicle"]
 
             allowed_columns = set(required_column.keys())
 
@@ -141,7 +113,7 @@ class AnagraficRouter:
 
         try:
             # Salva i dati nel database
-            length = load_records_into_db(anagrafic, data)
+            length = load_datas_into_db("vehicle", data)
 
             return {"message": f"{length} records loaded successfully"}
         except Exception as e:

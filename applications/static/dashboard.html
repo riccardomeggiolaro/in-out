@@ -27,17 +27,21 @@
                     </div>
 
                     <div>
-                        <select id="typeSocialReason" onchange="setDataInExecutionOnCLick('typeSocialReason', '', typeSocialReason.value)">
+                        <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSocialReason', '', typeSocialReason.value)">
                             <option value="-1">Tipo ragione sociale</option>
                             <option value="0">Cliente</option>
                             <option value="1">Fornitore</option>
                         </select>
                         <br><br>
-                        <input placeholder="Ragione Sociale" id="currentNameSocialReason" type="text"name="plate" onclick="showSuggestions('social_reason', 'nameSocialReasonInput', 'name', '', ['description'], 'nameSocialReasonPopup', 'suggestionsListNameSocialReason'); openPopup('nameSocialReasonPopup', 'nameSocialReasonInput')" >
+                        <input placeholder="Soggetto" id="currentNameSubject" type="text"name="plate" onclick="showSuggestions('subject', 'nameSubjectInput', 'name', '', ['description'], 'nameSubjectPopup', 'suggestionsListNameSubject'); openPopup('nameSubjectPopup', 'nameSubjectInput')" >
                     </div>
 
                     <div>
                         <input placeholder="Vettore" id="currentNameVector" type="text"name="plate" onclick="showSuggestions('vector', 'nameVectorInput', 'name', '', ['description'], 'nameVectorPopup', 'suggestionsListNameVector'); openPopup('nameVectorPopup', 'nameVectorInput')" >
+                    </div>
+
+                    <div>
+                        <input placeholder="Autista" id="currentNameDriver" type="text"name="plate" onclick="showSuggestions('driver', 'nameDriverInput', 'name', '', ['description'], 'nameDriverPopup', 'suggestionsListNameDriver'); openPopup('nameDriverPopup', 'nameDriverInput')" >
                     </div>
 
                     <div>

@@ -1,13 +1,22 @@
 from libs.lb_utils import CustomBaseModel, is_number
-from libs.lb_database import SocialReasonDTO, VectorDTO, VehicleDTO, MaterialDTO, get_data_by_id, get_data_by_id_if_is_selected, update_data, select_reservation_if_incomplete
 from typing import Optional, Union
 from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
+from modules.md_database.dtos.subject import SubjectDTO
+from modules.md_database.dtos.vector import VectorDTO
+from modules.md_database.dtos.driver import DriverDTO
+from modules.md_database.dtos.vehicle import VehicleDTO
+from modules.md_database.dtos.material import MaterialDTO
+from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.get_data_by_id_if_not_selected import get_data_by_id_if_not_selected
+from modules.md_database.functions.update_data import update_data
+from modules.md_database.functions.select_reservation_if_incomplete import select_reservation_if_incomplete
 
 class DataInExecutionDTO(CustomBaseModel):
 	typeSocialReason: Optional[Union[int, str]] = None
-	social_reason: Optional[SocialReasonDTO] = SocialReasonDTO(**{})
+	subject: Optional[SubjectDTO] = SubjectDTO(**{})
 	vector: Optional[VectorDTO] = VectorDTO(**{})
+	driver: Optional[DriverDTO] = DriverDTO(**{})
 	vehicle: Optional[VehicleDTO] = VehicleDTO(**{})
 	material: Optional[MaterialDTO] = MaterialDTO(**{})
 	note: Optional[str] = None

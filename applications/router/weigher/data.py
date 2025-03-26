@@ -7,7 +7,7 @@ from applications.router.weigher.types import DataInExecution as DataInExecution
 from applications.router.weigher.config_weigher import ConfigWeigher
 import asyncio
 from libs.lb_utils import check_values
-from libs.lb_database import get_data_by_id
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 class DataRouter(ConfigWeigher):
 	def __init__(self):

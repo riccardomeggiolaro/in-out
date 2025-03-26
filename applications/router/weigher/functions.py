@@ -3,7 +3,8 @@ from applications.router.weigher.types import Data
 from modules.md_weigher import md_weigher
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import NodeConnectionManager
-from libs.lb_database import get_data_by_id, update_data
+from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.update_data import update_data
 
 class Functions:
 	def __init__(self):

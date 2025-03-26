@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 import libs.lb_system as lb_system
-from libs.lb_database import get_reservations_with_incomplete_weighings
+from modules.md_database.functions.get_reservation_with_incomplete_weighings import get_reservations_with_incomplete_weighings
 
 class GenericRouter:
     def __init__(self):

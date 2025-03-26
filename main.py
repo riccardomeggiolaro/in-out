@@ -17,7 +17,7 @@ import modules.md_weigher.md_weigher as md_weigher
 import modules.md_tunnel_connections.md_tunnel_connections as md_tunnel_connections
 import applications.app_api as app_api
 from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
-import libs.lb_database as lb_database
+import modules.md_database.md_database as md_database
 # ==============================================================
 
 APPS = [app_api]

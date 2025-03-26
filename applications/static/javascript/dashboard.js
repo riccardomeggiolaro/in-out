@@ -9,8 +9,8 @@ let currentInput;
 let connected;
 
 let selectedIdVehicle;
-let selectedIdTypeSocialReason;
-let selectedIdSocialReason;
+let selectedIdTypeSubject;
+let selectedIdSubject;
 let selectedIdVector;
 let selectedIdMaterial;
 
@@ -184,14 +184,14 @@ async function getData(path) {
         dataInExecution = res["data_in_execution"];
         const obj = res["data_in_execution"];
         selectedIdVehicle = obj.vehicle.id;
-        selectedIdTypeSocialReason = obj.typeSocialReason;
-        selectedIdSocialReason = obj.social_reason.id;
+        selectedIdTypeSubject = obj.typeSubject;
+        selectedIdSubject = obj.subject.id;
         selectedIdVector = obj.vector.id;
         selectedIdMaterial = obj.material.id;
         document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-        document.querySelector('#typeSocialReason').value = [0, 1].includes(obj.typeSocialReason) ? String(obj.typeSocialReason) : String(-1);
-        document.querySelector('#currentNameSocialReason').value = obj.social_reason.name ? obj.social_reason.name : '';
+        document.querySelector('#typeSubject').value = [0, 1].includes(obj.typeSubject) ? String(obj.typeSubject) : String(-1);
+        document.querySelector('#currentNameSubject').value = obj.subject.name ? obj.subject.name : '';
         document.querySelector('#currentNameVector').value = obj.vector.name ? obj.vector.name : '';
         document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
@@ -221,7 +221,7 @@ async function populateListIn() {
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             let content = item.id;
             if (item.vehicle) content = item.vehicle.name;
-            else if (item.social_reason) content = item.social_reason.name;
+            else if (item.subject) content = item.subject.name;
             if (selectedIdWeigher.children.length > 1) {
                 content += ` - ${item.weigher}`;
             }
@@ -321,9 +321,9 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') {
         currentId = selectedIdVehicle;
         anagrafic_to_set = 'vehicle';
-    } else if (showList === 'suggestionsListNameSocialReason') {
-        currentId = selectedIdSocialReason;
-        anagrafic_to_set = 'social_reason';
+    } else if (showList === 'suggestionsListNameSubject') {
+        currentId = selectedIdSubject;
+        anagrafic_to_set = 'subject';
     } else if (showList === 'suggestionsListNameVector') {
         currentId = selectedIdVector;
         anagrafic_to_set = 'vector';
@@ -332,7 +332,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
         anagrafic_to_set = 'material';
     }
 
-    let url = `/anagrafic/list/${name_list}`;
+    let url = `/anagrafic/${name_list}/list`;
 
     if (inputValue) url += `?${filter}=${inputValue}`;
 
@@ -340,6 +340,8 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     const response = await fetch(url)
     .then(response => response.json())
     .catch(error => console.error(error)); // Sostituisci con l'URL del tuo endpoint
+
+    console.log(response);
 
     response.data.forEach(suggestion => {
         if (suggestion[filter] && suggestion.selected !== true || suggestion.id === currentId) {
@@ -602,15 +604,15 @@ function updateUIRealtime(e) {
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
-        selectedIdTypeSocialReason = obj.data_in_execution.typeSocialReason;
-        selectedIdSocialReason = obj.data_in_execution.social_reason.id;
+        selectedIdTypeSubject = obj.data_in_execution.typeSubject;
+        selectedIdSubject = obj.data_in_execution.subject.id;
         selectedIdVector = obj.data_in_execution.vector.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
-        console.log(obj.data_in_execution.typeSocialReason);
+        console.log(obj.data_in_execution.typeSubject);
         document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.name ? obj.data_in_execution.vehicle.name : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
-        document.querySelector('#typeSocialReason').value = [0, 1].includes(obj.data_in_execution.typeSocialReason) ? String(obj.data_in_execution.typeSocialReason) : String(-1);
-        document.querySelector('#currentNameSocialReason').value = obj.data_in_execution.social_reason.name ? obj.data_in_execution.social_reason.name : '';
+        document.querySelector('#typeSubject').value = [0, 1].includes(obj.data_in_execution.typeSubject) ? String(obj.data_in_execution.typeSubject) : String(-1);
+        document.querySelector('#currentNameSubject').value = obj.data_in_execution.subject.name ? obj.data_in_execution.subject.name : '';
         document.querySelector('#currentNameVector').value = obj.data_in_execution.vector.name ? obj.data_in_execution.vector.name : '';
         document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';

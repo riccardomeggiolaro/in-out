@@ -7,7 +7,7 @@ from applications.utils.utils_auth import TokenData
 import jwt
 from datetime import datetime, timezone
 import libs.lb_config as lb_config
-from libs.lb_database import get_data_by_id
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
