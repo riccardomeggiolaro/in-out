@@ -1,3 +1,4 @@
+from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import table_models, SessionLocal
 
 def get_data_by_id(table_name, record_id):

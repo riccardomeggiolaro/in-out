@@ -1,5 +1,6 @@
 from pydantic import BaseModel, validator, root_validator
 from typing import Optional
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 class VehicleDTO(BaseModel):
 	description: Optional[str] = None

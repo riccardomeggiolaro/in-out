@@ -12,6 +12,7 @@ let selectedIdVehicle;
 let selectedIdTypeSubject;
 let selectedIdSubject;
 let selectedIdVector;
+let selectedIdDriver;
 let selectedIdMaterial;
 
 let selectedIdWeight;
@@ -187,13 +188,15 @@ async function getData(path) {
         selectedIdTypeSubject = obj.typeSubject;
         selectedIdSubject = obj.subject.id;
         selectedIdVector = obj.vector.id;
+        selectedIdDriver = obj.driver.id;
         selectedIdMaterial = obj.material.id;
-        document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.name ? obj.vehicle.name : '';
+        document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.description ? obj.vehicle.description : '';
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
         document.querySelector('#typeSubject').value = [0, 1].includes(obj.typeSubject) ? String(obj.typeSubject) : String(-1);
-        document.querySelector('#currentNameSubject').value = obj.subject.name ? obj.subject.name : '';
-        document.querySelector('#currentNameVector').value = obj.vector.name ? obj.vector.name : '';
-        document.querySelector('#currentMaterial').value = obj.material.name ? obj.material.name : '';
+        document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
+        document.querySelector('#currentSocialReasonVector').value = obj.vector.social_reason ? obj.vector.social_reason : '';
+        document.querySelector('#currentSocialReasonDriver').value = obj.driver.social_reason ? obj.driver.social_reason : '';
+        document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         selectedIdWeight = res["id_selected"]["id"];
         if (res.id_selected.id !== null) {
@@ -220,8 +223,8 @@ async function populateListIn() {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             let content = item.id;
-            if (item.vehicle) content = item.vehicle.name;
-            else if (item.subject) content = item.subject.name;
+            if (item.vehicle) content = item.vehicle.description;
+            else if (item.subject) content = item.subject.social_reason;
             if (selectedIdWeigher.children.length > 1) {
                 content += ` - ${item.weigher}`;
             }
@@ -314,6 +317,8 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     const suggestionsList = document.getElementById(showList);
     suggestionsList.innerHTML = ""; // Pulisce la lista precedente
 
+    console.log(suggestionsList);
+
     let currentId;
     let anagrafic_to_set;
 
@@ -321,12 +326,15 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') {
         currentId = selectedIdVehicle;
         anagrafic_to_set = 'vehicle';
-    } else if (showList === 'suggestionsListNameSubject') {
+    } else if (showList === 'suggestionsListSocialReasonSubject') {
         currentId = selectedIdSubject;
         anagrafic_to_set = 'subject';
-    } else if (showList === 'suggestionsListNameVector') {
+    } else if (showList === 'suggestionsListSocialReasonVector') {
         currentId = selectedIdVector;
         anagrafic_to_set = 'vector';
+    } else if (showList === 'suggestionsListSocialReasonDriver') {
+        currentId = selectedIdDriver;
+        anagrafic_to_set = 'driver';
     } else if (showList === 'suggestionsListMaterial') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
@@ -344,6 +352,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
     console.log(response);
 
     response.data.forEach(suggestion => {
+        console.log(filter)
         if (suggestion[filter] && suggestion.selected !== true || suggestion.id === currentId) {
             const li = document.createElement("li");
 
@@ -368,7 +377,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
 
             let text = highlightText(suggestion, inputValue, filter);
             for (const [key, value] of Object.entries(suggestion)) {
-                if (value && typeof(value) !== 'object' && !["cell", "cfpiva", "date_created"].includes(key) && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
+                if (value && typeof(value) !== 'object' && !["telephone", "cfpiva", "date_created"].includes(key) && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
             }
             li.innerHTML = text; // Evidenzia il testo
             li.dataset.id = suggestion.id
@@ -607,14 +616,16 @@ function updateUIRealtime(e) {
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;
         selectedIdSubject = obj.data_in_execution.subject.id;
         selectedIdVector = obj.data_in_execution.vector.id;
+        selectedIdDriver = obj.data_in_execution.driver.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
         console.log(obj.data_in_execution.typeSubject);
-        document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.name ? obj.data_in_execution.vehicle.name : '';
+        document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.description ? obj.data_in_execution.vehicle.description : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
         document.querySelector('#typeSubject').value = [0, 1].includes(obj.data_in_execution.typeSubject) ? String(obj.data_in_execution.typeSubject) : String(-1);
-        document.querySelector('#currentNameSubject').value = obj.data_in_execution.subject.name ? obj.data_in_execution.subject.name : '';
-        document.querySelector('#currentNameVector').value = obj.data_in_execution.vector.name ? obj.data_in_execution.vector.name : '';
-        document.querySelector('#currentMaterial').value = obj.data_in_execution.material.name ? obj.data_in_execution.material.name : '';
+        document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
+        document.querySelector('#currentSocialReasonVector').value = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
+        document.querySelector('#currentSocialReasonDriver').value = obj.data_in_execution.driver.social_reason ? obj.data_in_execution.driver.social_reason : '';
+        document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         if (obj.id_selected.id != selectedIdWeight) {
             if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.remove('selected');

@@ -33,32 +33,32 @@
                         "data": {
                             "data_in_execution": {
                                 "driver": {
-                                    "cell": null,
                                     "cfpiva": null,
                                     "id": null,
-                                    "name": null
+                                    "social_reason": null,
+                                    "telephone": null
                                 },
                                 "material": {
-                                    "id": null,
-                                    "name": null
+                                    "description": null,
+                                    "id": null
                                 },
                                 "note": null,
                                 "subject": {
-                                    "cell": null,
                                     "cfpiva": null,
                                     "id": null,
-                                    "name": null
+                                    "social_reason": null,
+                                    "telephone": null
                                 },
                                 "typeSubject": null,
                                 "vector": {
-                                    "cell": null,
                                     "cfpiva": null,
                                     "id": null,
-                                    "name": null
+                                    "social_reason": null,
+                                    "telephone": null
                                 },
                                 "vehicle": {
+                                    "description": null,
                                     "id": null,
-                                    "name": null,
                                     "plate": null
                                 }
                             },

@@ -1,11 +1,12 @@
 from pydantic import BaseModel, validator, root_validator
 from typing import Optional
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 class VectorDTO(BaseModel):
-	id: Optional[int] = None
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
+	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):

@@ -7,7 +7,7 @@ from modules.md_database.dtos.material import MaterialDTO
 from typing import Union, Optional, List
 
 class DataInExecution(BaseModel):
-	typeSocialReason: Optional[Union[int, str]] = None
+	typeSubject: Optional[Union[int, str]] = None
 	subject: SubjectDTO = SubjectDTO(**{})
 	vector: DriverDTO = DriverDTO(**{})
 	driver: DriverDTO = DriverDTO(**{})

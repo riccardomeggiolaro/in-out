@@ -13,7 +13,7 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.select_reservation_if_incomplete import select_reservation_if_incomplete
 
 class DataInExecutionDTO(CustomBaseModel):
-	typeSocialReason: Optional[Union[int, str]] = None
+	typeSubject: Optional[Union[int, str]] = None
 	subject: Optional[SubjectDTO] = SubjectDTO(**{})
 	vector: Optional[VectorDTO] = VectorDTO(**{})
 	driver: Optional[DriverDTO] = DriverDTO(**{})
@@ -31,7 +31,7 @@ class DataInExecutionDTO(CustomBaseModel):
 
 		return values
 
-	@validator('typeSocialReason', pre=True, always=True)
+	@validator('typeSubject', pre=True, always=True)
 	def check_type_social_reason(cls, v, values):
 		if v is not None:
 			if type(v) == str:
