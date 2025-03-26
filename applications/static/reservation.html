@@ -27,11 +27,15 @@
         <table>
             <thead>
                 <tr>
-                    <th name="date_created">Data</th>
-                    <th name="social_reason.name">Ragione Sociale</th>
-                    <th name="vector.name">Trasportatore</th>
-                    <th name="vector.cell">Cell Trasportatore</th>
+                    <th name="date_created">Data accettazione</th>
+                    <th name="status">Stato</th>
+                    <th name="waiting">Attesa</th>
+                    <th name="subject.social_reason">Soggetto</th>
+                    <th name="vector.social_reason">Vettore</th>
+                    <th name="driver.social_reason">Autista</th>
+                    <th name="driver.telephone">Telefono</th>
                     <th name="vehicle.plate">Targa</th>
+                    <th name="note">Note</th>
                     <th name="number_weighings">Pesate</th>
                     <th></th>
                 </tr>
@@ -190,7 +194,7 @@
 
         setTimeout(() => {
             itemName = 'Ragione sociale';
-            listUrlPath = '/anagrafic/list/reservation';
+            listUrlPath = '/anagrafic/reservation/list';
             addUrlPath = '/anagrafic/reservation';
             setUrlPath = '/anagrafic/reservation';
             deleteUrlPath = '/anagrafic/reservation';

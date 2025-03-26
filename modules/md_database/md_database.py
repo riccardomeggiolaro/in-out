@@ -4,6 +4,7 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, validator
 from datetime import datetime
 import os
+from enum import Enum as PyEnum
 
 # Database connection
 Base = declarative_base()
@@ -76,6 +77,12 @@ class Weighing(Base):
 
     reservation = relationship("Reservation", back_populates="weighings")
 
+class ReservationStatus(PyEnum):
+    WAITING = "waiting"
+    CALLED = "called"
+    ENTERED = "entered"
+    CLOSED = "closed"
+
 # Model for Reservation table
 class Reservation(Base):
     __tablename__ = 'reservation'
@@ -90,6 +97,8 @@ class Reservation(Base):
     note = Column(String)
     selected = Column(Boolean, index=True, default=False)
     date_created = Column(DateTime, default=datetime.utcnow)
+    status = Column(Enum(ReservationStatus), default=ReservationStatus.WAITING)
+    document_reference = Column(String, nullable=True)
 
     # Relationships
     subject = relationship("Subject", back_populates="reservations")
