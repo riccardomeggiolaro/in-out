@@ -37,6 +37,7 @@ th, td {
     border-bottom: 1px solid #ddd;
 }
 th {
+    padding: 5px 10px;
     background-color: #1362b8;
     color: white;
 }
@@ -228,4 +229,23 @@ form {
 
 h4 {
     margin: 10px 0px;
+}
+
+thead input {
+    background-color: transparent;
+    border: none;
+    color: white;
+    box-shadow: 6px 5px 7px rgba(0, 0, 0, 0.1);
+}
+
+thead input::placeholder {
+    opacity: 0.8;
+}
+
+thead input:focus {
+    box-shadow: 6px 5px 7px rgba(0, 0, 0, 0.2);
+}
+
+.register-button {
+    box-shadow: 0px 4px 3px rgba(0, 0, 0, 0.3);
 }

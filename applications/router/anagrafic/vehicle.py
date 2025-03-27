@@ -8,6 +8,8 @@ from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
+from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -29,7 +31,7 @@ class VehicleRouter:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("vehicle", query_params, limit, offset)
+            data, total_rows = filter_data("vehicle", query_params, limit, offset, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -39,6 +41,10 @@ class VehicleRouter:
 
     async def addVehicle(self, body: AddVehicleDTO):
         try:
+            if body.description and get_data_by_attribute("vehicle", "description", body.description):
+                raise ValueError(f"La descrizione '{body.description}' è già esistente")
+            if body.plate and get_data_by_attribute("vehicle", "plate", body.plate):
+                raise ValueError(f"La targa '{body.plate}' è già esistente")
             add_data("vehicle", body.dict())
             return {"message": "Data added successfully"}
         except Exception as e:
@@ -46,6 +52,14 @@ class VehicleRouter:
 
     async def setVehicle(self, id: int, body: SetVehicleDTO):
         try:
+            if body.description:
+                vehicle = get_data_by_attribute("vehicle", "description", body.description)
+                if vehicle and vehicle["id"] != id:
+                    raise ValueError(f"La descrizione '{body.description}' è già esistente")
+            if body.plate:
+                vehicle = get_data_by_attribute("vehicle", "plate", body.plate)
+                if vehicle and vehicle["id"] != id:
+                    raise ValueError(f"La targa '{body.plate}' è già esistente")
             update_data("vehicle", id, body.dict())
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -54,6 +68,9 @@ class VehicleRouter:
 
     async def deleteVehicle(self, id: int):
         try:
+            vehicle = get_data_by_id("vehicle", id)
+            if vehicle and len(vehicle["reservations"]) > 0:
+                raise ValueError(f"Non puoi eliminare il veicolo con id '{id}' perchè è assegnato a delle pesate salvate")
             delete_data("vehicle", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")

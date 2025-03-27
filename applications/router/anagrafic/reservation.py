@@ -29,7 +29,7 @@ class ReservationRouter:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("reservation", query_params, limit, offset)
+            data, total_rows = filter_data("reservation", query_params, limit, offset, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows

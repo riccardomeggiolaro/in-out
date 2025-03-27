@@ -8,6 +8,8 @@ from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
+from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -29,7 +31,7 @@ class DriverRouter:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("driver", query_params, limit, offset)
+            data, total_rows = filter_data("driver", query_params, limit, offset, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -39,6 +41,10 @@ class DriverRouter:
 
     async def addDriver(self, body: AddDriverDTO):
         try:
+            if body.social_reason and get_data_by_attribute("driver", "social_reason", body.social_reason):
+                raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+            if body.cfpiva and get_data_by_attribute("driver", "cfpiva", body.cfpiva):
+                raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             add_data("driver", body.dict())
             return {"message": "Data added successfully"}
         except Exception as e:
@@ -46,6 +52,14 @@ class DriverRouter:
 
     async def setDriver(self, id: int, body: SetDriverDTO):
         try:
+            if body.social_reason:
+                driver = get_data_by_attribute("driver", "social_reason", body.social_reason)
+                if driver and driver["id"] != id:
+                    raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+            if body.cfpiva:
+                driver = get_data_by_attribute("driver", "cfpiva", body.cfpiva)
+                if driver and driver["id"] != id:
+                    raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             update_data("driver", id, body.dict())
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -54,6 +68,9 @@ class DriverRouter:
 
     async def deleteDriver(self, id: int):
         try:
+            driver = get_data_by_id("driver", id)
+            if driver and len(driver["reservations"]) > 0:
+                raise ValueError(f"Non puoi eliminare l'autista con id '{id}' perchè è assegnato a delle pesate salvate")
             delete_data("driver", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")

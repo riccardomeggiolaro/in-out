@@ -42,8 +42,13 @@ function isValidDate(dateStr) {
 }
 
 function updateTable() {
+    let queryParams = '';
+    const filters = document.querySelector('#filters');
+    filters.querySelectorAll('input').forEach(input => {
+        if (input.value) queryParams += `${input.name}=${input.value}%&`;
+    })
     const offset = (currentPage - 1) * rowsPerPage; // Calcola l'offset in base alla pagina
-    fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}`)
+    fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}&${queryParams}`)
     .then(res => res.json())
     .then(res => {
         totalRows = res.total_rows; // Aggiorna il numero totale di righe dalla risposta

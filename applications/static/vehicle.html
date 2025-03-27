@@ -21,9 +21,13 @@
         </div>
         <table>
             <thead>
-                <tr>
-                    <th name="description">Nome</th>
-                    <th name="plate">Targa</th>
+                <tr id="filters">
+                    <th name="description">
+                        <input id="filter.description" name="description" type="text" placeholder="Descrizione" oninput="updateTable()">
+                    </th>
+                    <th name="plate">
+                        <input id="filter.plate" name="plate" type="text" placeholder="Targa" oninput="this.value = this.value.toUpperCase(); updateTable()">
+                    </th>
                     <th></th>
                 </tr>
             </thead>

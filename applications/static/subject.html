@@ -8,6 +8,56 @@
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
+        <style>
+            .column-header {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                position: relative;
+            }
+            .filter-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 2px;
+                color: #888;
+                transition: color 0.3s ease;
+            }
+            .filter-btn:hover {
+                color: #333;
+            }
+            .filter-btn.active {
+                color: #007bff;
+            }
+            .filter-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                z-index: 10;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                width: 250px;
+                padding: 10px;
+                margin-top: 5px;
+            }
+            .filter-dropdown input {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                margin-bottom: 10px;
+            }
+            .filter-dropdown-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 5;
+            }
+        </style>
     </head>
 <body>
     <div id="navbar-container"></div>
@@ -21,10 +71,16 @@
         </div>
         <table>
             <thead>
-                <tr>
-                    <th name="social_reason">Nome</th>
-                    <th name="telephone">Cell</th>
-                    <th name="cfpiva">CF/P.IVA</th>
+                <tr id="filters">
+                    <th name="social_reason">
+                        <input id="filter.social_reason" name="social_reason" type="text" placeholder="Ragione sociale" oninput="updateTable()">
+                    </th>
+                    <th name="telephone">
+                        <input id="filter.telephone" name="telephone" type="text" placeholder="Telefono" oninput="this.value = this.value.replace(/\D/g, ''); updateTable()">
+                    </th>
+                    <th name="cfpiva">
+                        <input id="filter.cfpiva" name="cfpiva" type="text" placeholder="CF/P.IVA" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); updateTable()">
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -43,7 +99,7 @@
                         <button id="previous-page" onclick="previousPage()">&laquo; Precedente</button>
                         <select id="page-select" onchange="goToPage()"></select>
                         <button id="next-page" onclick="nextPage()">Successiva &raquo;</button>
-                        <span id="total-rows" style="margin-left: 20px;"></span> <!-- Aggiungi il numero totale di righe qui -->
+                        <span id="total-rows" style="margin-left: 20px;"></span>
                     </td>
                 </tr>
             </tfoot>            
@@ -55,9 +111,9 @@
     <div id="add-popup" class="modal-content popup">
         <h3>Nuovo soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
-            Nome:<br>
+            Ragione sociale:<br>
             <input type="text" id="social_reason" required><br>
-            Cell: (Opzionale)<br>
+            Telefono: (Opzionale)<br>
             <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
             <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
@@ -73,9 +129,9 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
-            Nome:<br>
+            Ragione sociale:<br>
             <input type="text" id="social_reason" required><br>
-            Cell: (Opzionale)<br>
+            Telefono: (Opzionale)<br>
             <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
             <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
@@ -90,8 +146,8 @@
 
     <div id="delete-popup" class="modal-content popup">
         <h3>Elimina soggetto:</h3>
-        <p><b>Nome:</b> <u><em><span id="social_reason"></span></em></u></p>
-        <p><b>Cell:</b> <u><em><span id="telephone"></span></em></u></p>
+        <p><b>Ragione sociale:</b> <u><em><span id="social_reason"></span></em></u></p>
+        <p><b>Telefono:</b> <u><em><span id="telephone"></span></em></u></p>
         <p><b>CF/P.IVA:</b> <u><em><span id="cfpiva"></span></em></u></p>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>

@@ -21,8 +21,10 @@
         </div>
         <table>
             <thead>
-                <tr>
-                    <th name="description">Nome</th>
+                <tr id="filters">
+                    <th name="description">
+                        <input id="filter.description" name="description" type="text" placeholder="Descrizione" oninput="updateTable()">
+                    </th>
                     <th></th>
                 </tr>
             </thead>

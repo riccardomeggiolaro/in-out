@@ -8,6 +8,8 @@ from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
+from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -29,7 +31,7 @@ class SubjectRouter:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("subject", query_params, limit, offset)
+            data, total_rows = filter_data("subject", query_params, limit, offset, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -39,6 +41,10 @@ class SubjectRouter:
 
     async def addSubject(self, body: AddSubjectDTO):
         try:
+            if body.social_reason and get_data_by_attribute("subject", "social_reason", body.social_reason):
+                raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+            if body.cfpiva and get_data_by_attribute("subject", "cfpiva", body.cfpiva):
+                raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             add_data("subject", body.dict())
             return {"message": "Data added successfully"}
         except Exception as e:
@@ -46,6 +52,14 @@ class SubjectRouter:
 
     async def setSubject(self, id: int, body: SetSubjectDTO):
         try:
+            if body.social_reason:
+                subject = get_data_by_attribute("subject", "social_reason", body.social_reason)
+                if subject and subject["id"] != id:
+                    raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+            if body.cfpiva:
+                subject = get_data_by_attribute("subject", "cfpiva", body.cfpiva)
+                if subject and subject["id"] != id:
+                    raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             update_data("subject", id, body.dict())
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -54,6 +68,9 @@ class SubjectRouter:
 
     async def deleteSubject(self, id: int):
         try:
+            subject = get_data_by_id("subject", id)
+            if subject and len(subject["reservations"]) > 0:
+                raise ValueError(f"Non puoi eliminare il soggetto con id '{id}' perchè è assegnato a delle pesate salvate")
             delete_data("subject", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")

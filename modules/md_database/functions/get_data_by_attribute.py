@@ -37,7 +37,7 @@ def get_data_by_attribute(table_name, attribute_name, attribute_value):
         else:
             query = query.filter(getattr(model, attribute_name) == attribute_value)
             
-        record = query.one_or_none()
+        record = query.first()
         record_dict = None
         
         if record:
