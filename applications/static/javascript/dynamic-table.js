@@ -6,11 +6,16 @@ let listUrlPath = null;
 let addUrlPath = null;
 let setUrlPath = null;
 let deleteUrlPath = null;
+let websocketUrlPath = null;
 let callback_populate_select = null;
+let callback_websocket_message = null;
 let populate_detail_tr = null;
 let currentId = null;
 let confirm_exec_funct = null;
 let currentRowExtended = null;
+let websocket_connection = null;
+let isRefreshing = false;
+let reconnectTimeout = null;
 const columns = {};
 const options = {
     hour: '2-digit',
@@ -19,7 +24,12 @@ const options = {
     month: 'numeric',
     year: 'numeric'
 };
-  
+
+window.onbeforeunload = function() {
+    isRefreshing = true; // Imposta il flag prima del refresh
+    clearTimeout(reconnectTimeout);
+};
+
 document.querySelectorAll('thead th').forEach((th, index) => {
     const columnName = th.attributes["name"];
     if (columnName && columnName.value) {
@@ -402,4 +412,33 @@ function closePopups(idPopups) {
     });
 
     document.getElementById('overlay').classList.remove('active');
+}
+
+function connectWebSocket() {
+    websocket_connection = new WebSocket(websocketUrlPath);
+
+    websocket_connection.addEventListener('message', (e) => {
+        if (callback_websocket_message) callback_websocket_message(e);
+    });
+
+    websocket_connection.addEventListener('open', () => {});
+
+    websocket_connection.addEventListener('error', () => {
+        if (!isRefreshing) attemptReconnect();
+    });
+
+    websocket_connection.addEventListener('close', () => {
+        if (!isRefreshing) attemptReconnect();
+    });
+}
+
+function attemptReconnect() {
+    clearTimeout(reconnectTimeout);
+    if (websocket_connection) {
+        websocket_connection.close(); // Chiude la connessione WebSocket
+        websocket_connection = null;  // Imposta websocket_connection a null per indicare che la connessione è chiusa
+    }
+    reconnectTimeout = setTimeout(() => {
+        connectWebSocket(websocketUrlPath);
+    }, 3000);
 }

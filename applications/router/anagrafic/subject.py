@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.subject import AddSubjectDTO, SetSubjectDTO, FilterSubjectDTO
+from modules.md_database.dtos.subject import Subject, AddSubjectDTO, SetSubjectDTO, FilterSubjectDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -13,9 +13,13 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
+from applications.router.anagrafic.web_sockets import WebSocket
+import json
 
-class SubjectRouter:
+class SubjectRouter(WebSocket):
     def __init__(self):
+        super().__init__()
+        
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListSubjects, methods=['GET'])
@@ -45,8 +49,9 @@ class SubjectRouter:
                 raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
             if body.cfpiva and get_data_by_attribute("subject", "cfpiva", body.cfpiva):
                 raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
-            add_data("subject", body.dict())
-            return {"message": "Data added successfully"}
+            data = add_data("subject", body.dict())
+            await self.broadcastAddAnagrafic("subject", Subject(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
@@ -60,7 +65,9 @@ class SubjectRouter:
                 subject = get_data_by_attribute("subject", "cfpiva", body.cfpiva)
                 if subject and subject["id"] != id:
                     raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
-            update_data("subject", id, body.dict())
+            data = update_data("subject", id, body.dict())
+            await self.broadcastUpdateAnagrafic("subject", Subject(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
 
@@ -72,14 +79,19 @@ class SubjectRouter:
             if subject and len(subject["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il soggetto con id '{id}' perchè è assegnato a delle pesate salvate")
             delete_data("subject", id)
+            await self.broadcastDeleteAnagrafic("subject", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}
 
     async def deleteAllSubjects(self):
         try:
-            length = delete_all_data("subject")
-            return {"message": f"{length} records deleted successfully"}
+            deleted_count, preserved_count, total_records = delete_all_data_if_not_correlations("subject")
+            return {
+                "deleted_count": deleted_count,
+                "preserved_count": preserved_count,
+                "total_records": total_records
+            }
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 

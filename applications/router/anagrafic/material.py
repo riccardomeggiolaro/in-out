@@ -1,21 +1,24 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.material import AddMaterialDTO, SetMaterialDTO, FilterMaterialDTO
+from modules.md_database.dtos.material import Material, AddMaterialDTO, SetMaterialDTO, FilterMaterialDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.functions.delete_all_data import delete_all_data
+from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
+from applications.router.anagrafic.web_sockets import WebSocket
 
-class MaterialRouter:
+class MaterialRouter(WebSocket):
     def __init__(self):
+        super().__init__()
+
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListMaterials, methods=['GET'])
@@ -43,8 +46,9 @@ class MaterialRouter:
         try:
             if body.description and get_data_by_attribute("material", "description", body.description):
                 raise ValueError(f"Il materiale '{body.description}' è già esistente")
-            add_data("material", body.dict())
-            return {"message": "Data added successfully"}
+            data = add_data("material", body.dict())
+            await self.broadcastAddAnagrafic("material", Material(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
@@ -54,7 +58,9 @@ class MaterialRouter:
                 material = get_data_by_attribute("material", "description", body.description)
                 if material and material["id"] != id:
                     raise ValueError(f"Il materiale '{body.description}' è già esistente")
-            update_data("material", id, body.dict())
+            data = update_data("material", id, body.dict())
+            await self.broadcastUpdateAnagrafic("material", Material(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
 
@@ -66,14 +72,19 @@ class MaterialRouter:
             if material and len(material["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il materiale con id '{id}' perchè è assegnato a delle pesate salvate")
             delete_data("material", id)
+            await self.broadcastDeleteAnagrafic("material", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}
 
     async def deleteAllMaterials(self):
         try:
-            length = delete_all_data("material")
-            return {"message": f"{length} records deleted successfully"}
+            deleted_count, preserved_count, total_records = delete_all_data_if_not_correlations("material")
+            return {
+                "deleted_count": deleted_count,
+                "preserved_count": preserved_count,
+                "total_records": total_records
+            }
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 

@@ -2,6 +2,16 @@ from pydantic import BaseModel, validator, root_validator
 from typing import Optional
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 
+class Driver(BaseModel):
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
+	cfpiva: Optional[str] = None
+	id: Optional[int] = None
+
+	class Config:
+		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
+		arbitrary_types_allowed = True
+
 class DriverDTO(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None

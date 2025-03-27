@@ -1,5 +1,14 @@
 from pydantic import BaseModel, validator, root_validator
 from typing import Optional
+from modules.md_database.functions.get_data_by_id import get_data_by_id
+
+class Material(BaseModel):
+	description:  Optional[str] = None
+	id: Optional[int] = None
+
+	class Config:
+		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
+		arbitrary_types_allowed = True
 
 class MaterialDTO(BaseModel):
 	description:  Optional[str] = None

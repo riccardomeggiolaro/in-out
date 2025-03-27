@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.vector import AddVectorDTO, SetVectorDTO, FilterVectorDTO
+from modules.md_database.dtos.vector import Vector, AddVectorDTO, SetVectorDTO, FilterVectorDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -13,9 +13,12 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
+from applications.router.anagrafic.web_sockets import WebSocket
 
-class VectorRouter:
+class VectorRouter(WebSocket):
     def __init__(self):
+        super().__init__()
+
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListVectors, methods=['GET'])
@@ -45,8 +48,9 @@ class VectorRouter:
                 raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
             if body.cfpiva and get_data_by_attribute("vector", "cfpiva", body.cfpiva):
                 raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
-            add_data("vector", body.dict())
-            return {"message": "Data added successfully"}
+            data = add_data("vector", body.dict())
+            await self.broadcastAddAnagrafic("vector", Vector(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
@@ -60,7 +64,9 @@ class VectorRouter:
                 vector = get_data_by_attribute("vector", "cfpiva", body.cfpiva)
                 if vector and vector["id"] != id:
                     raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
-            update_data("vector", id, body.dict())
+            data = update_data("vector", id, body.dict())
+            await self.broadcastUpdateAnagrafic("vector", Vector(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
 
@@ -72,14 +78,19 @@ class VectorRouter:
             if vector and len(vector["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il vettore con id '{id}' perchè è assegnato a delle pesate salvate")
             delete_data("vector", id)
+            await self.broadcastDeleteAnagrafic("vector", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}
 
     async def deleteAllVectors(self):
         try:
-            length = delete_all_data("vector")
-            return {"message": f"{length} records deleted successfully"}
+            deleted_count, preserved_count, total_records = delete_all_data_if_not_correlations("vector")
+            return {
+                "deleted_count": deleted_count,
+                "preserved_count": preserved_count,
+                "total_records": total_records
+            }
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 

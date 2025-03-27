@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.vehicle import AddVehicleDTO, SetVehicleDTO, FilterVehicleDTO
+from modules.md_database.dtos.vehicle import Vehicle, AddVehicleDTO, SetVehicleDTO, FilterVehicleDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -13,9 +13,12 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
+from applications.router.anagrafic.web_sockets import WebSocket
 
-class VehicleRouter:
+class VehicleRouter(WebSocket):
     def __init__(self):
+        super().__init__()
+
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListVehicles, methods=['GET'])
@@ -45,8 +48,9 @@ class VehicleRouter:
                 raise ValueError(f"La descrizione '{body.description}' è già esistente")
             if body.plate and get_data_by_attribute("vehicle", "plate", body.plate):
                 raise ValueError(f"La targa '{body.plate}' è già esistente")
-            add_data("vehicle", body.dict())
-            return {"message": "Data added successfully"}
+            data = add_data("vehicle", body.dict())
+            await self.broadcastAddAnagrafic("vehicle", Vehicle(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
@@ -60,7 +64,9 @@ class VehicleRouter:
                 vehicle = get_data_by_attribute("vehicle", "plate", body.plate)
                 if vehicle and vehicle["id"] != id:
                     raise ValueError(f"La targa '{body.plate}' è già esistente")
-            update_data("vehicle", id, body.dict())
+            data = update_data("vehicle", id, body.dict())
+            await self.broadcastUpdateAnagrafic("vehicle", Vehicle(**vars(data)).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
 
@@ -72,14 +78,19 @@ class VehicleRouter:
             if vehicle and len(vehicle["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il veicolo con id '{id}' perchè è assegnato a delle pesate salvate")
             delete_data("vehicle", id)
+            await self.broadcastDeleteAnagrafic("vehicle", id)
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}
 
     async def deleteAllVehicles(self):
         try:
-            length = delete_all_data("vehicle")
-            return {"message": f"{length} records deleted successfully"}
+            deleted_count, preserved_count, total_records = delete_all_data_if_not_correlations("vehicle")
+            return {
+                "deleted_count": deleted_count,
+                "preserved_count": preserved_count,
+                "total_records": total_records
+            }
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
