@@ -49,7 +49,7 @@ class VectorRouter(WebSocket):
             if body.cfpiva and get_data_by_attribute("vector", "cfpiva", body.cfpiva):
                 raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = add_data("vector", body.dict())
-            await self.broadcastAddAnagrafic("vector", Vector(**vars(data)).dict())
+            await self.broadcastAddAnagrafic("vector", Vector(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
@@ -65,7 +65,7 @@ class VectorRouter(WebSocket):
                 if vector and vector["id"] != id:
                     raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = update_data("vector", id, body.dict())
-            await self.broadcastUpdateAnagrafic("vector", Vector(**vars(data)).dict())
+            await self.broadcastUpdateAnagrafic("vector", Vector(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -77,8 +77,9 @@ class VectorRouter(WebSocket):
             vector = get_data_by_id("vector", id)
             if vector and len(vector["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il vettore con id '{id}' perchè è assegnato a delle pesate salvate")
-            delete_data("vector", id)
-            await self.broadcastDeleteAnagrafic("vector", id)
+            data = delete_data("vector", id)
+            await self.broadcastDeleteAnagrafic("vector", Vector(**data).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}

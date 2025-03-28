@@ -103,16 +103,15 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
-        setTimeout(() => {
+        document.addEventListener("DOMContentLoaded", () => {
             itemName = 'Materiale';
             listUrlPath = '/anagrafic/material/list';
             addUrlPath = '/anagrafic/material';
             setUrlPath = '/anagrafic/material';
             deleteUrlPath = '/anagrafic/material';
             websocketUrlPath = '/anagrafic/material';
-            connectWebSocket();
-            updateTable();
-        }, 1000);
+            init();
+        });
     </script>
 </body>
 </html>

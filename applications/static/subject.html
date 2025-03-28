@@ -173,16 +173,18 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
-        setTimeout(() => {
+        document.addEventListener("DOMContentLoaded", () => {
             itemName = 'Soggetto';
             listUrlPath = '/anagrafic/subject/list';
             addUrlPath = '/anagrafic/subject';
             setUrlPath = '/anagrafic/subject';
             deleteUrlPath = '/anagrafic/subject';
             websocketUrlPath = '/anagrafic/subject';
-            connectWebSocket();
-            updateTable();
-        }, 1000);
+            params = {
+                'social_reason': 'ragione sociale'
+            }
+            init();
+        });
     </script>
 </body>
 </html>

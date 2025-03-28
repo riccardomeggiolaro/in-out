@@ -123,16 +123,15 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
-        setTimeout(() => {
+        document.addEventListener("DOMContentLoaded", () => {
             itemName = 'Vettore';
             listUrlPath = '/anagrafic/vector/list';
             addUrlPath = '/anagrafic/vector';
             setUrlPath = '/anagrafic/vector';
             deleteUrlPath = '/anagrafic/vector';
             websocketUrlPath = '/anagrafic/vector';
-            connectWebSocket();
-            updateTable();
-        }, 1000);
+            init();
+        });
     </script>
 </body>
 </html>

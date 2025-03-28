@@ -47,7 +47,7 @@ class MaterialRouter(WebSocket):
             if body.description and get_data_by_attribute("material", "description", body.description):
                 raise ValueError(f"Il materiale '{body.description}' è già esistente")
             data = add_data("material", body.dict())
-            await self.broadcastAddAnagrafic("material", Material(**vars(data)).dict())
+            await self.broadcastAddAnagrafic("material", Material(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
@@ -59,7 +59,7 @@ class MaterialRouter(WebSocket):
                 if material and material["id"] != id:
                     raise ValueError(f"Il materiale '{body.description}' è già esistente")
             data = update_data("material", id, body.dict())
-            await self.broadcastUpdateAnagrafic("material", Material(**vars(data)).dict())
+            await self.broadcastUpdateAnagrafic("material", Material(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -71,8 +71,9 @@ class MaterialRouter(WebSocket):
             material = get_data_by_id("material", id)
             if material and len(material["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il materiale con id '{id}' perchè è assegnato a delle pesate salvate")
-            delete_data("material", id)
-            await self.broadcastDeleteAnagrafic("material", id)
+            data = delete_data("material", id)
+            await self.broadcastDeleteAnagrafic("material", Material(**data).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}

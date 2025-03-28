@@ -16,6 +16,7 @@ let currentRowExtended = null;
 let websocket_connection = null;
 let isRefreshing = false;
 let reconnectTimeout = null;
+let params = {};
 const columns = {};
 const options = {
     hour: '2-digit',
@@ -27,6 +28,7 @@ const options = {
 
 window.onbeforeunload = function() {
     isRefreshing = true; // Imposta il flag prima del refresh
+    console.log(reconnectTimeout)
     clearTimeout(reconnectTimeout);
 };
 
@@ -51,22 +53,22 @@ function isValidDate(dateStr) {
     return date instanceof Date && !isNaN(date.getTime());
 }
 
-function updateTable() {
+async function updateTable() {
     let queryParams = '';
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
         if (input.value) queryParams += `${input.name}=${input.value}%&`;
     })
-    const offset = (currentPage - 1) * rowsPerPage; // Calcola l'offset in base alla pagina
-    fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}&${queryParams}`)
-    .then(res => res.json())
-    .then(res => {
-        totalRows = res.total_rows; // Aggiorna il numero totale di righe dalla risposta
-        populateTable(res.data); // Popola la tabella con i dati
-        updatePageSelect(); // Aggiorna la selezione della pagina
-        // Mostra il numero totale di righe
-        document.getElementById("total-rows").textContent = `Totale righe: ${totalRows}`;
-    });
+    const offset = (currentPage - 1) * rowsPerPage;
+    const res = await fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}&${queryParams}`);
+    const data = await res.json();
+    
+    totalRows = data.total_rows;
+    populateTable(data.data);
+    updatePageSelect();
+    document.getElementById("total-rows").textContent = `Totale righe: ${totalRows}`;
+    
+    return data;
 }
 
 function updatePageSelect() {
@@ -122,9 +124,8 @@ function changeRowsPerPage() {
     updateTable();
 }
 
-function populateTable(data) {
+function getTableColumns() {
     const table = document.querySelector("tbody");
-    table.innerHTML = ""; // Pulisce la tabella esistente
     
     // Extract column names and positions from the headers
     const columns = {};
@@ -133,73 +134,105 @@ function populateTable(data) {
         if (header.getAttribute("name")) {
             columns[header.getAttribute("name")] = index;
         }
-    });
+    });    
+
+    return {
+        table,
+        columns
+    }
+}
+
+function populateTable(data) {
+    const obj = getTableColumns();
+    obj.table.innerHTML = ""; // Pulisce la tabella esistente
   
-    data.forEach(item => {
-        const row = document.createElement("tr");        
-        // Create cells for each column
-        for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
-            row.insertCell();
-        }
-        // Funzione ricorsiva per gestire oggetti annidati a qualsiasi livello
-        function populateNestedValues(obj, prefix = '') {
-            Object.entries(obj).forEach(([key, value]) => {
-                const fullKey = prefix ? `${prefix}.${key}` : key;
-                if (fullKey in columns) {
-                    row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof(value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
-                } 
-                // Gestione ricorsiva per gli oggetti annidati
-                else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                    populateNestedValues(value, fullKey);
-                }
-            });
-        }        
-        // Applica la funzione ricorsiva sull'oggetto riga
-        populateNestedValues(item);
-        // Crea la cella per i pulsanti di azione
-        const actionsCell = document.createElement("td");
-        actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra        
-        // Pulsante Modifica
-        const editButton = document.createElement("button");
-        editButton.style.visibility = 'hidden';
-        editButton.textContent = "✏️";
-        editButton.onclick = () => editRow(item);
-        // Pulsante Elimina
-        const deleteButton = document.createElement("button");
-        deleteButton.style.visibility = 'hidden';
-        deleteButton.textContent = "🗑️";
-        deleteButton.onclick = () => deleteRow(item);        
-        actionsCell.appendChild(editButton);
-        actionsCell.appendChild(deleteButton);
-        row.appendChild(actionsCell);        
-        // Mostra i pulsanti solo all'hover della riga
-        row.addEventListener("mouseenter", () => {
-            row.style.backgroundColor = 'whitesmoke';
-            editButton.style.visibility = 'inherit';
-            deleteButton.style.visibility = 'inherit';
-        });        
-        row.addEventListener("mouseleave", () => {
-            row.style.backgroundColor = 'white';
-            editButton.style.visibility = 'hidden';
-            deleteButton.style.visibility = 'hidden';
+    data.forEach(item => createRow(obj.table, obj.columns, item));
+}
+
+function createRow(table, columns, item) {
+    const row = document.createElement("tr");        
+    row.dataset.id = item.id;
+    // Create cells for each column
+    for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
+        row.insertCell();
+    }
+    // Funzione ricorsiva per gestire oggetti annidati a qualsiasi livello
+    function populateNestedValues(obj, prefix = '') {
+        Object.entries(obj).forEach(([key, value]) => {
+            const fullKey = prefix ? `${prefix}.${key}` : key;
+            if (fullKey in columns) {
+                row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof(value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
+            } 
+            // Gestione ricorsiva per gli oggetti annidati
+            else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                populateNestedValues(value, fullKey);
+            }
         });
-        table.appendChild(row);
-        if (populate_detail_tr) {
-            // Crea la riga per i dettagli (inizialmente nascosta)
-            const detailRow = document.createElement("tr");
-            detailRow.classList.add("detail-row");
-            detailRow.style.display = "none"; // Dettagli nascosti inizialmente
-            // Crea una cella che si estende per tutta la larghezza della tabella
-            const detailCell = document.createElement("td");
-            detailCell.colSpan = document.querySelectorAll("thead th").length;
-            detailCell.className = "detail-cell";
-            // Crea il contenuto dei dettagli
-            detailCell.innerHTML = populate_detail_tr(item);
-            detailRow.appendChild(detailCell);
-            table.appendChild(detailRow);
-            row.onclick = () => toggleExpandRow(row);
-        }
+    }        
+    // Applica la funzione ricorsiva sull'oggetto riga
+    populateNestedValues(item);
+    // Crea la cella per i pulsanti di azione
+    const actionsCell = document.createElement("td");
+    actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra        
+    // Pulsante Modifica
+    const editButton = document.createElement("button");
+    editButton.style.visibility = 'hidden';
+    editButton.textContent = "✏️";
+    editButton.onclick = () => editRow(item);
+    // Pulsante Elimina
+    const deleteButton = document.createElement("button");
+    deleteButton.style.visibility = 'hidden';
+    deleteButton.textContent = "🗑️";
+    deleteButton.onclick = () => deleteRow(item);        
+    actionsCell.appendChild(editButton);
+    actionsCell.appendChild(deleteButton);
+    row.appendChild(actionsCell);        
+    // Mostra i pulsanti solo all'hover della riga
+    row.addEventListener("mouseenter", () => {
+        row.style.backgroundColor = 'whitesmoke';
+        editButton.style.visibility = 'inherit';
+        deleteButton.style.visibility = 'inherit';
+    });        
+    row.addEventListener("mouseleave", () => {
+        row.style.backgroundColor = 'white';
+        editButton.style.visibility = 'hidden';
+        deleteButton.style.visibility = 'hidden';
     });
+    table.appendChild(row);
+    if (populate_detail_tr) {
+        // Crea la riga per i dettagli (inizialmente nascosta)
+        const detailRow = document.createElement("tr");
+        detailRow.classList.add("detail-row");
+        detailRow.style.display = "none"; // Dettagli nascosti inizialmente
+        // Crea una cella che si estende per tutta la larghezza della tabella
+        const detailCell = document.createElement("td");
+        detailCell.colSpan = document.querySelectorAll("thead th").length;
+        detailCell.className = "detail-cell";
+        // Crea il contenuto dei dettagli
+        detailCell.innerHTML = populate_detail_tr(item);
+        detailRow.appendChild(detailCell);
+        table.appendChild(detailRow);
+        row.onclick = () => toggleExpandRow(row);
+    }
+}
+
+function updateRow(table, columns, item) {
+    const row = table.querySelector(`[data-id="${item.id}"]`)
+    // Funzione ricorsiva per gestire oggetti annidati a qualsiasi livello
+    function populateNestedValues(obj, prefix = '') {
+        Object.entries(obj).forEach(([key, value]) => {
+            const fullKey = prefix ? `${prefix}.${key}` : key;
+            if (fullKey in columns) {
+                row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof(value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
+            } 
+            // Gestione ricorsiva per gli oggetti annidati
+            else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                populateNestedValues(value, fullKey);
+            }
+        });
+    }        
+    // Applica la funzione ricorsiva sull'oggetto riga
+    populateNestedValues(item);
 }
 
 // Funzione per espandere/collassare la riga
@@ -254,8 +287,6 @@ addPopup.querySelector('#save-btn').addEventListener('click', () => {
     .then(res => res.json())
     .then(_ => {
         closePopups(['add-popup']);
-        showSnackbar(`${itemName} creata`, 'green', 'white');
-        updateTable();
     })
 });
 
@@ -282,10 +313,15 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
         }
     })
     .then(res => {
+        return Promise.all([res.data, Promise.resolve(res.status)])
+            .then(([data, status]) => ({
+                data,
+                status
+            }));
+    })
+    .then(res => {
         closePopups(['edit-popup']);
         if (res.status === 404) showSnackbar(`La ${itemName.toLowerCase()} è stata eliminata da un altro utente`, 'red', 'white');
-        else showSnackbar(`${itemName} modificata`, 'green', 'white');
-        updateTable();
     })
     .catch(error => console.error(error));
 });
@@ -331,9 +367,7 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
     })
     .then(res => {
         closePopups(['delete-popup']);
-        updateTable();
         if (res.status === 404) showSnackbar(`La ${itemName.toLowerCase()} è stata eliminata da un altro utente`, 'red', 'white');
-        else showSnackbar(`${itemName} eliminata`, 'green', 'white');
         return res;
     })
     .catch(error => {
@@ -417,11 +451,59 @@ function closePopups(idPopups) {
 function connectWebSocket() {
     websocket_connection = new WebSocket(websocketUrlPath);
 
-    websocket_connection.addEventListener('message', (e) => {
+    websocket_connection.addEventListener('message', async (e) => {
+        if (e.data) {
+            const data = JSON.parse(e.data);
+            let specific = null;
+            Object.entries(params).forEach(([key, value]) => {
+                if (data.data[key]) {
+                    specific = `${value} "${data.data[key]}"`;
+                    return;
+                }
+            })
+            if (data.action === "add") {
+                await updateTable();
+                const obj = getTableColumns();
+                const li = obj.table.querySelector(`tr[data-id="${data.data.id}"]`);
+                if (li) {
+                    li.classList.add('added');
+                    li.addEventListener('animationend', () => {
+                        li.classList.remove('added');
+                    }, { once: true });
+                }
+                showSnackbar(`Nuovo ${itemName.toLowerCase()} con ${specific} creato`, 'rgb(208, 255, 208)', 'black');
+            } else if (data.action === "update") {
+                await updateTable();
+                const obj = getTableColumns();
+                const li = obj.table.querySelector(`[data-id="${data.data.id}"]`);
+                if (li) {
+                    li.classList.toggle('updated');
+                    // Rimuove la classe dopo l'animazione
+                    li.addEventListener('animationend', async () => {
+                        li.classList.remove('updated');
+                    }, { once: true }); // Ascolta solo una volta
+                }
+                showSnackbar(`${itemName} con ${specific} modificato`, 'rgb(255, 240, 208)', 'black');
+            } else if (data.action === "delete") {
+                const obj = getTableColumns();
+                const li = obj.table.querySelector(`[data-id="${data.data}"]`);
+                if (li) {
+                    li.classList.toggle('deleted');
+                    li.addEventListener('animationend', async () => {
+                        await updateTable();
+                    }, { once: true });
+                } else {
+                    await updateTable();
+                }
+                showSnackbar(`${itemName} con ${specific} eliminato`, 'rgb(255, 208, 208)', 'black');
+            }
+        }
         if (callback_websocket_message) callback_websocket_message(e);
     });
 
-    websocket_connection.addEventListener('open', () => {});
+    websocket_connection.addEventListener('open', () => {
+        updateTable();
+    });
 
     websocket_connection.addEventListener('error', () => {
         if (!isRefreshing) attemptReconnect();
@@ -441,4 +523,8 @@ function attemptReconnect() {
     reconnectTimeout = setTimeout(() => {
         connectWebSocket(websocketUrlPath);
     }, 3000);
+}
+
+function init() {
+    connectWebSocket();
 }

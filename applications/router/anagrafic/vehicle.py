@@ -65,7 +65,7 @@ class VehicleRouter(WebSocket):
                 if vehicle and vehicle["id"] != id:
                     raise ValueError(f"La targa '{body.plate}' è già esistente")
             data = update_data("vehicle", id, body.dict())
-            await self.broadcastUpdateAnagrafic("vehicle", Vehicle(**vars(data)).dict())
+            await self.broadcastUpdateAnagrafic("vehicle", Vehicle(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -77,8 +77,9 @@ class VehicleRouter(WebSocket):
             vehicle = get_data_by_id("vehicle", id)
             if vehicle and len(vehicle["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il veicolo con id '{id}' perchè è assegnato a delle pesate salvate")
-            delete_data("vehicle", id)
-            await self.broadcastDeleteAnagrafic("vehicle", id)
+            data = delete_data("vehicle", id)
+            await self.broadcastDeleteAnagrafic("vehicle", Vehicle(**data).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}

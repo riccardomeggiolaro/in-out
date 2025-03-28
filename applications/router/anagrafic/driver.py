@@ -49,7 +49,7 @@ class DriverRouter(WebSocket):
             if body.cfpiva and get_data_by_attribute("driver", "cfpiva", body.cfpiva):
                 raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = add_data("driver", body.dict())
-            await self.broadcastAddAnagrafic("driver", Driver(**vars(data)).dict())
+            await self.broadcastAddAnagrafic("driver", Driver(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
@@ -65,7 +65,7 @@ class DriverRouter(WebSocket):
                 if driver and driver["id"] != id:
                     raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = update_data("driver", id, body.dict())
-            await self.broadcastUpdateAnagrafic("driver", Driver(**vars(data)).dict())
+            await self.broadcastUpdateAnagrafic("driver", Driver(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -77,8 +77,9 @@ class DriverRouter(WebSocket):
             driver = get_data_by_id("driver", id)
             if driver and len(driver["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare l'autista con id '{id}' perchè è assegnato a delle pesate salvate")
-            delete_data("driver", id)
-            await self.broadcastDeleteAnagrafic("driver", id)
+            data = delete_data("driver", id)
+            await self.broadcastDeleteAnagrafic("driver", Driver(**data).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}

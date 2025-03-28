@@ -1,11 +1,12 @@
 from pydantic import BaseModel, validator, root_validator
-from typing import Optional
+from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 class Vector(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
+	reservations: List[any] = []
 	id: Optional[int] = None
 
 	class Config:
@@ -35,34 +36,34 @@ class VectorDTO(BaseModel):
 		arbitrary_types_allowed = True
 
 class AddVectorDTO(BaseModel):
-    social_reason:  Optional[str] = None
-    telephone: Optional[str] = None
-    cfpiva: Optional[str] = None
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
+	cfpiva: Optional[str] = None
 
-    @root_validator(pre=True)
-    def check_at_least_one_field(cls, values):
-        social_reason = values.get('social_reason')
-        telephone = values.get('telephone')
-        cfpiva = values.get('cfpiva')
-        if not social_reason and not telephone and not cfpiva:
-            raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
-        return values
+	@root_validator(pre=True)
+	def check_at_least_one_field(cls, values):
+		social_reason = values.get('social_reason')
+		telephone = values.get('telephone')
+		cfpiva = values.get('cfpiva')
+		if not social_reason and not telephone and not cfpiva:
+			raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
+		return values
 
 class SetVectorDTO(BaseModel):
-    social_reason:  Optional[str] = None
-    telephone: Optional[str] = None
-    cfpiva: Optional[str] = None
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
+	cfpiva: Optional[str] = None
 
-    @root_validator(pre=True)
-    def check_at_least_one_field(cls, values):
-        social_reason = values.get('social_reason')
-        telephone = values.get('telephone')
-        cfpiva = values.get('cfpiva')
-        if not social_reason and not telephone and not cfpiva:
-            raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
-        return values
-    
+	@root_validator(pre=True)
+	def check_at_least_one_field(cls, values):
+		social_reason = values.get('social_reason')
+		telephone = values.get('telephone')
+		cfpiva = values.get('cfpiva')
+		if not social_reason and not telephone and not cfpiva:
+			raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
+		return values
+	
 class FilterVectorDTO(BaseModel):
-    social_reason:  Optional[str] = None
-    telephone: Optional[str] = None
-    cfpiva: Optional[str] = None
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
+	cfpiva: Optional[str] = None

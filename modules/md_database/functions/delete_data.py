@@ -26,6 +26,46 @@ def delete_data(table_name, record_id):
 		session.delete(record)
 		session.commit()
 		session.close()
+
+		# Funzione di supporto per serializzare oggetti
+		def serialize_object(obj):
+			if obj is None:
+				return None
+			
+			# Gestione oggetti singoli
+			if not hasattr(obj, '__table__'):
+				return obj
+			
+			# Serializzazione base
+			serialized = {}
+			for column in obj.__table__.columns:
+				serialized[column.name] = getattr(obj, column.name)
+			
+			return serialized
+		
+		# Preparazione del risultato
+		result = {}
+		
+		# Serializzazione attributi base
+		for column in model.__table__.columns:
+			result[column.name] = getattr(record, column.name)
+		
+		# Serializzazione relazioni
+		for rel_name, rel_obj in model.__mapper__.relationships.items():
+			related_data = getattr(record, rel_name)
+			
+			if related_data is None:
+				result[rel_name] = None
+			elif hasattr(related_data, '__iter__') and not isinstance(related_data, str):
+				# Gestione collection
+				result[rel_name] = [
+					serialize_object(item) for item in related_data
+				]
+			else:
+				# Gestione oggetto singolo
+				result[rel_name] = serialize_object(related_data)
+		
+		return result
 	except Exception as e:
 		session.rollback()
 		session.close()

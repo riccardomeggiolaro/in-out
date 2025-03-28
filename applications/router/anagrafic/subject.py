@@ -50,7 +50,7 @@ class SubjectRouter(WebSocket):
             if body.cfpiva and get_data_by_attribute("subject", "cfpiva", body.cfpiva):
                 raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = add_data("subject", body.dict())
-            await self.broadcastAddAnagrafic("subject", Subject(**vars(data)).dict())
+            await self.broadcastAddAnagrafic("subject", Subject(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
@@ -66,7 +66,7 @@ class SubjectRouter(WebSocket):
                 if subject and subject["id"] != id:
                     raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = update_data("subject", id, body.dict())
-            await self.broadcastUpdateAnagrafic("subject", Subject(**vars(data)).dict())
+            await self.broadcastUpdateAnagrafic("subject", Subject(**data).dict())
             return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
@@ -78,8 +78,9 @@ class SubjectRouter(WebSocket):
             subject = get_data_by_id("subject", id)
             if subject and len(subject["reservations"]) > 0:
                 raise ValueError(f"Non puoi eliminare il soggetto con id '{id}' perchè è assegnato a delle pesate salvate")
-            delete_data("subject", id)
-            await self.broadcastDeleteAnagrafic("subject", id)
+            data = delete_data("subject", id)
+            await self.broadcastDeleteAnagrafic("subject", Subject(**data).dict())
+            return data
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"{e}")
         return {"message": "Data deleted successfully"}

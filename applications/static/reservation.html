@@ -192,7 +192,7 @@
         const fcpivaSocialReason = document.querySelector('#subject\\.cfpiva');
         const suggestionsSocialReasonCfpiva = document.querySelector('#suggestions\\.subject\\.cfpiva');
 
-        setTimeout(() => {
+        document.addEventListener("DOMContentLoaded", () => {
             itemName = 'Ragione sociale';
             listUrlPath = '/anagrafic/reservation/list';
             addUrlPath = '/anagrafic/reservation';
@@ -200,8 +200,8 @@
             deleteUrlPath = '/anagrafic/reservation';
             callback_populate_select = populateForm;
             populate_detail_tr = populateDetailTr;
-            updateTable();
-        }, 1000);
+            init();
+        });
 
         function populateForm(idForm, item={typeSocialReason: 0, idSocialReason: null, idVector: null, idVehicle: null, idMaterial: null}) {
             if (idForm !== '#delete') {
