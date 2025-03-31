@@ -218,10 +218,10 @@ async function populateListIn() {
 
     listIn.innerHTML = '';
 
-    await fetch('/anagrafic/reservation/list/uncomplete')
+    await fetch('/anagrafic/reservation/list?uncomplete=true')
     .then(res => res.json())
     .then(data => {
-        data.forEach(item => {
+        data.data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             let content = item.id;

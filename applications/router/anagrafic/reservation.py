@@ -19,19 +19,20 @@ class ReservationRouter(WebSocket):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
-        self.router.add_api_route('/list/uncomplete', self.getListReservationWithUncompleteWeighings, methods=['GET'])
         # self.router.add_api_route('', self.addSubject, methods=['POST'])
         # self.router.add_api_route('/{id}', self.setSubject, methods=['PATCH'])
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
         self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'])
 
-    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
+    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, uncomplete: Optional[bool] = None):
         try:
             if limit is not None:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = get_list_reservations(True, query_params, limit, offset, ('date_created', 'desc'))
+            if uncomplete is not None:
+                del query_params["uncomplete"]                
+            data, total_rows = get_list_reservations(uncomplete, query_params, limit, offset, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
