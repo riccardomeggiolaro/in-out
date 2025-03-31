@@ -23,13 +23,10 @@
             <thead>
                 <tr id="filters">
                     <th name="social_reason">
-                        <input id="filter.social_reason" name="social_reason" type="text" placeholder="Ragione sociale" oninput="updateTable()">
+                        <input id="filter.social_reason" name="social_reason" type="text" placeholder="Nome" oninput="updateTable()">
                     </th>
                     <th name="telephone">
                         <input id="filter.telephone" name="telephone" type="text" placeholder="Telefono" oninput="this.value = this.value.replace(/\D/g, ''); updateTable()">
-                    </th>
-                    <th name="cfpiva">
-                        <input id="filter.cfpiva" name="cfpiva" type="text" placeholder="CF/P.IVA" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); updateTable()">
                     </th>
                     <th></th>
                 </tr>
@@ -65,11 +62,7 @@
             <input type="text" id="social_reason" required><br>
             Cell: (Opzionale)<br>
             <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
-            CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-            <br>            
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
             <button id="save-btn" class="save-btn" disabled>Salva</button><br>
@@ -83,11 +76,7 @@
             <input type="text" id="social_reason" required><br>
             Cell: (Opzionale)<br>
             <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
-            CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-            <br>            
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
             <button id="save-btn" class="edit-save-btn">Salva</button><br>
@@ -98,7 +87,6 @@
         <h3>Elimina vettore:</h3>
         <p><b>Nome:</b> <u><em><span id="social_reason"></span></em></u></p>
         <p><b>Cell:</b> <u><em><span id="telephone"></span></em></u></p>
-        <p><b>CF/P.IVA:</b> <u><em><span id="cfpiva"></span></em></u></p>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
             <button id="save-btn" class="delete-save-btn">Elimina</button><br>
@@ -130,6 +118,9 @@
             setUrlPath = '/anagrafic/driver';
             deleteUrlPath = '/anagrafic/driver';
             websocketUrlPath = '/anagrafic/driver';
+            params = {
+                'social_reason': 'ragione sociale',
+            };
             init();
         });
     </script>

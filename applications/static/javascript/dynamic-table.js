@@ -28,7 +28,6 @@ const options = {
 
 window.onbeforeunload = function() {
     isRefreshing = true; // Imposta il flag prima del refresh
-    console.log(reconnectTimeout)
     clearTimeout(reconnectTimeout);
 };
 
@@ -57,7 +56,10 @@ async function updateTable() {
     let queryParams = '';
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
-        if (input.value) queryParams += `${input.name}=${input.value}%&`;
+        if (input.value) {
+            if (input.type == 'text') queryParams += `${input.name}=${input.value}%&`;
+            else if (input.type == 'number') queryParams += `${input.name}=${input.value}&`;
+        }
     })
     const offset = (currentPage - 1) * rowsPerPage;
     const res = await fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}&${queryParams}`);
@@ -258,8 +260,10 @@ function getFormData(form) {
                 if (element.checked) {
                     formData[element.id] = element.value;
                 }
-            } else {
-                formData[element.id] = element.value !== "" ? element.value : null;
+            } else if (element.type === 'text') {
+                formData[element.id] = element.value;
+            } else if (element.type === 'number') {
+                formData[element.id] = element.value !== "" ? element.value : -1;
             }
         }
     }    
@@ -284,10 +288,21 @@ addPopup.querySelector('#save-btn').addEventListener('click', () => {
         },
         body: JSON.stringify(nonNullableData)
     })
-    .then(res => res.json())
-    .then(_ => {
-        closePopups(['add-popup']);
+    .then(async res => {
+        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+        return ({
+            data,
+            status
+        });
     })
+    .then(res => {
+        if (res.status === 400) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+        } else {
+            closePopups(['add-popup']);
+        }
+    })
+    .catch(error => console.error(error));
 });
 
 function addRow() {
@@ -306,24 +321,24 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
         },
         body: JSON.stringify(data)
     })
+    .then(async res => {
+        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+        return ({
+            data,
+            status
+        });
+    })
     .then(res => {
-        return {
-            "data": res.json(),
-            "status": res.status
+        if (res.status === 404) {
+            showSnackbar(`${itemName} non trovato`, 'rgb(255, 208, 208)', 'black');
+            closePopups(['edit-popup']);
+        } else if (res.status === 400) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+        } else {
+            closePopups(['edit-popup']);
         }
     })
-    .then(res => {
-        return Promise.all([res.data, Promise.resolve(res.status)])
-            .then(([data, status]) => ({
-                data,
-                status
-            }));
-    })
-    .then(res => {
-        closePopups(['edit-popup']);
-        if (res.status === 404) showSnackbar(`La ${itemName.toLowerCase()} è stata eliminata da un altro utente`, 'red', 'white');
-    })
-    .catch(error => console.error(error));
+    .catch(error => console.log(error));
 });
 
 // Funzioni segnaposto per modifica ed eliminazione
@@ -359,21 +374,20 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
             'Content-Type': 'application/json'
         }
     })
+    .then(async res => {
+        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+        return ({
+            data,
+            status
+        });
+    })
     .then(res => {
-        return {
-            "data": res.json(),
-            "status": res.status
+        if (res.status === 404) {
+            showSnackbar(`${itemName} non trovato`, 'rgb(255, 208, 208)', 'black');
         }
-    })
-    .then(res => {
         closePopups(['delete-popup']);
-        if (res.status === 404) showSnackbar(`La ${itemName.toLowerCase()} è stata eliminata da un altro utente`, 'red', 'white');
-        return res;
     })
-    .catch(error => {
-        console.log(error);
-        showSnackbar(`${error}`, 'red', 'white');
-    });
+    .catch(error => showSnackbar(`${error}`, 'red', 'white'));
 })
 
 function deleteRow(item) {
@@ -455,12 +469,16 @@ function connectWebSocket() {
         if (e.data) {
             const data = JSON.parse(e.data);
             let specific = null;
-            Object.entries(params).forEach(([key, value]) => {
+            const objectEntriesParams = Object.entries(params);
+            objectEntriesParams.forEach(([key, value]) => {
                 if (data.data[key]) {
                     specific = `${value} "${data.data[key]}"`;
                     return;
                 }
             })
+            if (objectEntriesParams.some(([_, value]) => value !== "" && value !== null)) {
+                specific = `con ${specific}`;
+            }
             if (data.action === "add") {
                 await updateTable();
                 const obj = getTableColumns();
@@ -471,7 +489,7 @@ function connectWebSocket() {
                         li.classList.remove('added');
                     }, { once: true });
                 }
-                showSnackbar(`Nuovo ${itemName.toLowerCase()} con ${specific} creato`, 'rgb(208, 255, 208)', 'black');
+                showSnackbar(`Nuovo ${itemName.toLowerCase()} ${specific} creato`, 'rgb(208, 255, 208)', 'black');
             } else if (data.action === "update") {
                 await updateTable();
                 const obj = getTableColumns();
@@ -483,10 +501,10 @@ function connectWebSocket() {
                         li.classList.remove('updated');
                     }, { once: true }); // Ascolta solo una volta
                 }
-                showSnackbar(`${itemName} con ${specific} modificato`, 'rgb(255, 240, 208)', 'black');
+                showSnackbar(`${itemName} ${specific} modificato`, 'rgb(255, 240, 208)', 'black');
             } else if (data.action === "delete") {
                 const obj = getTableColumns();
-                const li = obj.table.querySelector(`[data-id="${data.data}"]`);
+                const li = obj.table.querySelector(`[data-id="${data.data.id}"]`);
                 if (li) {
                     li.classList.toggle('deleted');
                     li.addEventListener('animationend', async () => {
@@ -495,7 +513,7 @@ function connectWebSocket() {
                 } else {
                     await updateTable();
                 }
-                showSnackbar(`${itemName} con ${specific} eliminato`, 'rgb(255, 208, 208)', 'black');
+                showSnackbar(`${itemName} ${specific} eliminato`, 'rgb(255, 208, 208)', 'black');
             }
         }
         if (callback_websocket_message) callback_websocket_message(e);

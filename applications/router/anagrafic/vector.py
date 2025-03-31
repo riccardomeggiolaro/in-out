@@ -45,44 +45,47 @@ class VectorRouter(WebSocket):
     async def addVector(self, body: AddVectorDTO):
         try:
             if body.social_reason and get_data_by_attribute("vector", "social_reason", body.social_reason):
-                raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+                raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             if body.cfpiva and get_data_by_attribute("vector", "cfpiva", body.cfpiva):
-                raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
+                raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = add_data("vector", body.dict())
             await self.broadcastAddAnagrafic("vector", Vector(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
+            status_code = getattr(e, 'status_code', 400)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def setVector(self, id: int, body: SetVectorDTO):
         try:
             if body.social_reason:
                 vector = get_data_by_attribute("vector", "social_reason", body.social_reason)
                 if vector and vector["id"] != id:
-                    raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+                    raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             if body.cfpiva:
                 vector = get_data_by_attribute("vector", "cfpiva", body.cfpiva)
                 if vector and vector["id"] != id:
-                    raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
+                    raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = update_data("vector", id, body.dict())
             await self.broadcastUpdateAnagrafic("vector", Vector(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-
-        return {"message": "Data updated successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteVector(self, id: int):
         try:
             vector = get_data_by_id("vector", id)
             if vector and len(vector["reservations"]) > 0:
-                raise ValueError(f"Non puoi eliminare il vettore con id '{id}' perchè è assegnato a delle pesate salvate")
+                raise HTTPException(status_code=400, detail=f"Il vettore con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("vector", id)
             await self.broadcastDeleteAnagrafic("vector", Vector(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-        return {"message": "Data deleted successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteAllVectors(self):
         try:

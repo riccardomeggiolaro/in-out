@@ -46,44 +46,49 @@ class SubjectRouter(WebSocket):
     async def addSubject(self, body: AddSubjectDTO):
         try:
             if body.social_reason and get_data_by_attribute("subject", "social_reason", body.social_reason):
-                raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+                raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             if body.cfpiva and get_data_by_attribute("subject", "cfpiva", body.cfpiva):
-                raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
+                raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = add_data("subject", body.dict())
             await self.broadcastAddAnagrafic("subject", Subject(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
+            # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
+            status_code = getattr(e, 'status_code', 400)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def setSubject(self, id: int, body: SetSubjectDTO):
         try:
             if body.social_reason:
                 subject = get_data_by_attribute("subject", "social_reason", body.social_reason)
                 if subject and subject["id"] != id:
-                    raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
+                    raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             if body.cfpiva:
                 subject = get_data_by_attribute("subject", "cfpiva", body.cfpiva)
                 if subject and subject["id"] != id:
-                    raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
+                    raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = update_data("subject", id, body.dict())
             await self.broadcastUpdateAnagrafic("subject", Subject(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-
-        return {"message": "Data updated successfully"}
+            # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteSubject(self, id: int):
         try:
             subject = get_data_by_id("subject", id)
             if subject and len(subject["reservations"]) > 0:
-                raise ValueError(f"Non puoi eliminare il soggetto con id '{id}' perchè è assegnato a delle pesate salvate")
+                raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("subject", id)
             await self.broadcastDeleteAnagrafic("subject", Subject(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-        return {"message": "Data deleted successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteAllSubjects(self):
         try:

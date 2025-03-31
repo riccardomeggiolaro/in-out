@@ -44,45 +44,48 @@ class VehicleRouter(WebSocket):
 
     async def addVehicle(self, body: AddVehicleDTO):
         try:
-            if body.description and get_data_by_attribute("vehicle", "description", body.description):
-                raise ValueError(f"La descrizione '{body.description}' è già esistente")
             if body.plate and get_data_by_attribute("vehicle", "plate", body.plate):
-                raise ValueError(f"La targa '{body.plate}' è già esistente")
+                raise HTTPException(status_code=400, detail=f"La targa '{body.plate}' è già esistente")
+            if body.description and get_data_by_attribute("vehicle", "description", body.description):
+                raise HTTPException(status_code=400, detail=f"La descrizione '{body.description}' è già esistente")
             data = add_data("vehicle", body.dict())
-            await self.broadcastAddAnagrafic("vehicle", Vehicle(**vars(data)).dict())
+            await self.broadcastAddAnagrafic("vehicle", Vehicle(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
+            status_code = getattr(e, 'status_code', 400)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def setVehicle(self, id: int, body: SetVehicleDTO):
         try:
-            if body.description:
-                vehicle = get_data_by_attribute("vehicle", "description", body.description)
-                if vehicle and vehicle["id"] != id:
-                    raise ValueError(f"La descrizione '{body.description}' è già esistente")
             if body.plate:
                 vehicle = get_data_by_attribute("vehicle", "plate", body.plate)
                 if vehicle and vehicle["id"] != id:
-                    raise ValueError(f"La targa '{body.plate}' è già esistente")
+                    raise HTTPException(status_code=400, detail=f"La targa '{body.plate}' è già esistente")
+            if body.description:
+                vehicle = get_data_by_attribute("vehicle", "description", body.description)
+                if vehicle and vehicle["id"] != id:
+                    raise HTTPException(status_code=400, detail=f"La descrizione '{body.description}' è già esistente")
             data = update_data("vehicle", id, body.dict())
             await self.broadcastUpdateAnagrafic("vehicle", Vehicle(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-
-        return {"message": "Data updated successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteVehicle(self, id: int):
         try:
             vehicle = get_data_by_id("vehicle", id)
             if vehicle and len(vehicle["reservations"]) > 0:
-                raise ValueError(f"Non puoi eliminare il veicolo con id '{id}' perchè è assegnato a delle pesate salvate")
+                raise HTTPException(status_code=400, detail=f"Il veicolo con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("vehicle", id)
             await self.broadcastDeleteAnagrafic("vehicle", Vehicle(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-        return {"message": "Data deleted successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteAllVehicles(self):
         try:

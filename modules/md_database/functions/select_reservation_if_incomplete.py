@@ -1,4 +1,5 @@
-from modules.md_database.md_database import table_models, SessionLocal
+from sqlalchemy import func
+from modules.md_database.md_database import table_models, SessionLocal, Weighing, Reservation
 
 def select_reservation_if_incomplete(reservation_id: int):
 	session = SessionLocal()

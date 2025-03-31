@@ -67,9 +67,7 @@
             <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
             <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-            <br>            
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
             <button id="save-btn" class="save-btn" disabled>Salva</button><br>
@@ -85,9 +83,7 @@
             <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
             <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-            <br>            
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
             <button id="save-btn" class="edit-save-btn">Salva</button><br>
@@ -130,6 +126,9 @@
             setUrlPath = '/anagrafic/vector';
             deleteUrlPath = '/anagrafic/vector';
             websocketUrlPath = '/anagrafic/vector';
+            params = {
+                'social_reason': 'ragione sociale'
+            };
             init();
         });
     </script>

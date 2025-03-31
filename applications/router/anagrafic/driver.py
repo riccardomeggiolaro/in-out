@@ -45,44 +45,41 @@ class DriverRouter(WebSocket):
     async def addDriver(self, body: AddDriverDTO):
         try:
             if body.social_reason and get_data_by_attribute("driver", "social_reason", body.social_reason):
-                raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
-            if body.cfpiva and get_data_by_attribute("driver", "cfpiva", body.cfpiva):
-                raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
+                raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             data = add_data("driver", body.dict())
             await self.broadcastAddAnagrafic("driver", Driver(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
+            status_code = getattr(e, 'status_code', 400)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def setDriver(self, id: int, body: SetDriverDTO):
         try:
             if body.social_reason:
                 driver = get_data_by_attribute("driver", "social_reason", body.social_reason)
                 if driver and driver["id"] != id:
-                    raise ValueError(f"La ragione sociale '{body.social_reason}' è già esistente")
-            if body.cfpiva:
-                driver = get_data_by_attribute("driver", "cfpiva", body.cfpiva)
-                if driver and driver["id"] != id:
-                    raise ValueError(f"La CF/P.Iva '{body.cfpiva}' è già esistente")
+                    raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             data = update_data("driver", id, body.dict())
             await self.broadcastUpdateAnagrafic("driver", Driver(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-
-        return {"message": "Data updated successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteDriver(self, id: int):
         try:
             driver = get_data_by_id("driver", id)
             if driver and len(driver["reservations"]) > 0:
-                raise ValueError(f"Non puoi eliminare l'autista con id '{id}' perchè è assegnato a delle pesate salvate")
+                raise HTTPException(status_code=400, detail=f"L'autista con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("driver", id)
             await self.broadcastDeleteAnagrafic("driver", Driver(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-        return {"message": "Data deleted successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteAllDrivers(self):
         try:

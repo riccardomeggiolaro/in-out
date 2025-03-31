@@ -45,38 +45,41 @@ class MaterialRouter(WebSocket):
     async def addMaterial(self, body: AddMaterialDTO):
         try:
             if body.description and get_data_by_attribute("material", "description", body.description):
-                raise ValueError(f"Il materiale '{body.description}' è già esistente")
+                raise HTTPException(status_code=400, detail=f"Il materiale '{body.description}' è già esistente")
             data = add_data("material", body.dict())
             await self.broadcastAddAnagrafic("material", Material(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
+            status_code = getattr(e, 'status_code', 400)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def setMaterial(self, id: int, body: SetMaterialDTO):
         try:
             if body.description:
                 material = get_data_by_attribute("material", "description", body.description)
                 if material and material["id"] != id:
-                    raise ValueError(f"Il materiale '{body.description}' è già esistente")
+                    raise HTTPException(status_code=400, detail=f"Il materiale '{body.description}' è già esistente")
             data = update_data("material", id, body.dict())
             await self.broadcastUpdateAnagrafic("material", Material(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-
-        return {"message": "Data updated successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteMaterial(self, id: int):
         try:
             material = get_data_by_id("material", id)
             if material and len(material["reservations"]) > 0:
-                raise ValueError(f"Non puoi eliminare il materiale con id '{id}' perchè è assegnato a delle pesate salvate")
+                raise HTTPException(status_code=400, detail=f"Il materiale con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("material", id)
             await self.broadcastDeleteAnagrafic("material", Material(**data).dict())
             return data
         except Exception as e:
-            raise HTTPException(status_code=404, detail=f"{e}")
-        return {"message": "Data deleted successfully"}
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def deleteAllMaterials(self):
         try:

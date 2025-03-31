@@ -3,8 +3,8 @@ from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 class Vehicle(BaseModel):
-	description: Optional[str] = None
 	plate: Optional[str] = None
+	description: Optional[str] = None
 	reservations: List[any] = []
 	id: Optional[int] = None
 
@@ -13,8 +13,8 @@ class Vehicle(BaseModel):
 		arbitrary_types_allowed = True    
 
 class VehicleDTO(BaseModel):
-	description: Optional[str] = None
 	plate: Optional[str] = None
+	description: Optional[str] = None
 	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
@@ -33,29 +33,29 @@ class VehicleDTO(BaseModel):
 		arbitrary_types_allowed = True
 
 class AddVehicleDTO(BaseModel):
-    description: Optional[str] = None
     plate: Optional[str] = None
+    description: Optional[str] = None
 
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        description = values.get('description')
         plate = values.get('plate')
+        description = values.get('description')
         if not description and not plate:
             raise ValueError('At least one of "description" or "plate" must be provided.')
         return values
 
 class SetVehicleDTO(BaseModel):
-    description: Optional[str] = None
     plate: Optional[str] = None
+    description: Optional[str] = None
 
     @root_validator(pre=True)
     def check_at_least_one_field(cls, values):
-        description = values.get('description')
         plate = values.get('plate')
+        description = values.get('description')
         if not description and not plate:
             raise ValueError('At least one of "description" or "plate" must be provided.')
         return values
     
 class FilterVehicleDTO(BaseModel):
-    description: Optional[str] = None
     plate: Optional[str] = None
+    description: Optional[str] = None

@@ -1,7 +1,9 @@
-setTimeout(() => {
-    document.querySelector('.loading').style.display = 'none';
-    document.querySelector('.container').style.display = 'flex';
-}, 1000)
+window.addEventListener('load', () => {
+    setTimeout(_ => {
+        document.querySelector('.loading').style.display = 'none';
+        document.querySelector('.container').style.display = 'flex';
+    }, 300);
+})
 
 let currentPopup;
 let currentInput;
@@ -216,18 +218,16 @@ async function populateListIn() {
 
     listIn.innerHTML = '';
 
-    await fetch('/generic/list/reservations-open')
+    await fetch('/anagrafic/reservation/list/uncomplete')
     .then(res => res.json())
     .then(data => {
         data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             let content = item.id;
-            if (item.vehicle) content = item.vehicle.description;
-            else if (item.subject) content = item.subject.social_reason;
-            if (selectedIdWeigher.children.length > 1) {
-                content += ` - ${item.weigher}`;
-            }
+            if (item.vehicle && item.vehicle.plate) content += `) ${item.vehicle.plate}`;
+            else if (item.vehicle && item.vehicle.description) content += `) ${item.vehicle.description}`;
+            else if (item.subject && item.subject.social_reason) content += `) ${item.subject.social_reason}`;
             li.textContent = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');
@@ -313,11 +313,9 @@ function isDate(string) {
     return !isNaN(date.getTime());
 }
 
-async function showSuggestions(name_list, inputHtml, filter, inputValue, data, popup, showList, condition = null, valueCondition = null) {
+async function showSuggestions(name_list, inputHtml, filter, inputValue, columns_to_obscure, popup, showList, condition = null, valueCondition = null) {
     const suggestionsList = document.getElementById(showList);
     suggestionsList.innerHTML = ""; // Pulisce la lista precedente
-
-    console.log(suggestionsList);
 
     let currentId;
     let anagrafic_to_set;
@@ -342,17 +340,14 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
 
     let url = `/anagrafic/${name_list}/list`;
 
-    if (inputValue) url += `?${filter}=${inputValue}`;
+    if (inputValue) url += `?${filter}=${inputValue}%`;
 
     // Eseguire una chiamata HTTP per ottenere la lista
     const response = await fetch(url)
     .then(response => response.json())
     .catch(error => console.error(error)); // Sostituisci con l'URL del tuo endpoint
 
-    console.log(response);
-
     response.data.forEach(suggestion => {
-        console.log(filter)
         if (suggestion[filter] && suggestion.selected !== true || suggestion.id === currentId) {
             const li = document.createElement("li");
 
@@ -377,16 +372,19 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, data, p
 
             let text = highlightText(suggestion, inputValue, filter);
             for (const [key, value] of Object.entries(suggestion)) {
-                if (value && typeof(value) !== 'object' && !["telephone", "cfpiva", "date_created"].includes(key) && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
-            }
-            li.innerHTML = text; // Evidenzia il testo
-            li.dataset.id = suggestion.id
-
-            if (suggestion.id == currentId) {
-                li.classList.add('selected');
+                if (value && typeof(value) !== 'object' && !columns_to_obscure.includes(key) && key !== filter && key !== 'selected' && key !== 'id') text += `  -   ${value}`;
             }
 
-            suggestionsList.appendChild(li);                    
+            if (text) {
+                li.innerHTML = text; // Evidenzia il testo
+                li.dataset.id = suggestion.id
+    
+                if (suggestion.id == currentId) {
+                    li.classList.add('selected');
+                }
+    
+                suggestionsList.appendChild(li);
+            }
         }
     });
 
@@ -618,7 +616,6 @@ function updateUIRealtime(e) {
         selectedIdVector = obj.data_in_execution.vector.id;
         selectedIdDriver = obj.data_in_execution.driver.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
-        console.log(obj.data_in_execution.typeSubject);
         document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.description ? obj.data_in_execution.vehicle.description : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
         document.querySelector('#typeSubject').value = [0, 1].includes(obj.data_in_execution.typeSubject) ? String(obj.data_in_execution.typeSubject) : String(-1);

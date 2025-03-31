@@ -38,7 +38,7 @@ def update_data(table_name, record_id, updated_data):
             for key, value in updated_data.items():
                 if hasattr(record, key) and value is not None:
                     # Gestione speciale per campi ID
-                    if "id" in key and value == -1:
+                    if value in ["", -1]:
                         value = None
                     
                     setattr(record, key, value)

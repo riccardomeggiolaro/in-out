@@ -26,16 +26,28 @@
         </div>
         <table>
             <thead>
-                <tr>
+                <tr id="filters">
                     <th name="date_created">Data accettazione</th>
                     <th name="status">Stato</th>
                     <th name="waiting">Attesa</th>
-                    <th name="subject.social_reason">Soggetto</th>
-                    <th name="vector.social_reason">Vettore</th>
-                    <th name="driver.social_reason">Autista</th>
-                    <th name="driver.telephone">Telefono</th>
-                    <th name="vehicle.plate">Targa</th>
-                    <th name="note">Note</th>
+                    <th name="subject.social_reason">
+                        <input id="filter.subject.social_reason" name="subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
+                    </th>
+                    <th name="vector.social_reason">
+                        <input id="filter.vector.social_reason" name="vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
+                    </th>
+                    <th name="driver.social_reason">
+                        <input id="filter.driver.social_reason" name="driver.social_reason" type="text" placeholder="Autista" oninput="updateTable()">
+                    </th>
+                    <th name="driver.telephone">
+                        <input id="filter.driver.telephone" name="driver.telephone" type="text" placeholder="Tel. Autista" oninput="updateTable()">
+                    </th>
+                    <th name="vehicle.plate">
+                        <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
+                    </th>
+                    <th name="note">
+                        <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
+                    </th>
                     <th name="number_weighings">Pesate</th>
                     <th></th>
                 </tr>
@@ -146,7 +158,6 @@
             Vettore: (Opzionale)<br>
             <select id="idVector"></select><br>
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
             <button id="save-btn" class="edit-save-btn">Salva</button><br>
@@ -198,6 +209,7 @@
             addUrlPath = '/anagrafic/reservation';
             setUrlPath = '/anagrafic/reservation';
             deleteUrlPath = '/anagrafic/reservation';
+            websocketUrlPath = '/anagrafic/reservation';
             callback_populate_select = populateForm;
             populate_detail_tr = populateDetailTr;
             init();

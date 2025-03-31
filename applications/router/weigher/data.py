@@ -28,27 +28,33 @@ class DataRouter(ConfigWeigher):
 			if data_dto.id_selected.id != -1:
 				weighing = get_data_by_id("reservation", data_dto.id_selected.id)
 				data_in_execution = DataInExecutionType(**{
-					"vehicle": {
-						"id": weighing["vehicle"]["id"] if weighing["vehicle"] else None,
-						"name": weighing["vehicle"]["name"] if weighing["vehicle"] else None,
-						"plate": weighing["vehicle"]["plate"] if weighing["vehicle"] else None
-					},
-					"typeSocialReason": weighing["typeSocialReason"],
-					"social_reason": {
-						"id": weighing["social_reason"]["id"] if weighing["social_reason"] else None,
-						"name": weighing["social_reason"]["name"] if weighing["social_reason"] else None,
-						"cell": weighing["social_reason"]["cell"] if weighing["social_reason"] else None,
-						"cfpiva": weighing["social_reason"]["cfpiva"] if weighing["social_reason"] else None
+					"typeSubject": weighing["typeSubject"],
+					"subject": {
+						"id": weighing["subject"]["id"] if weighing["subject"] else None,
+						"social_reason": weighing["subject"]["social_reason"] if weighing["subject"] else None,
+						"telephone": weighing["subject"]["telephone"] if weighing["subject"] else None,
+						"cfpiva": weighing["subject"]["cfpiva"] if weighing["subject"] else None
 					},
 					"vector": {
 						"id": weighing["vector"]["id"] if weighing["vector"] else None,
-						"name": weighing["vector"]["name"] if weighing["vector"] else None,
-						"cell": weighing["vector"]["cell"] if weighing["vector"] else None,
+						"social_reason": weighing["vector"]["social_reason"] if weighing["vector"] else None,
+						"telephone": weighing["vector"]["telephone"] if weighing["vector"] else None,
 						"cfpiva": weighing["vector"]["cfpiva"] if weighing["vector"] else None
+					},
+					"driver": {
+						"id": weighing["driver"]["id"] if weighing["driver"] else None,
+						"social_reason": weighing["driver"]["social_reason"] if weighing["driver"] else None,
+						"telephone": weighing["driver"]["telephone"] if weighing["driver"] else None,
+						"cfpiva": weighing["driver"]["cfpiva"] if weighing["driver"] else None
+					},
+					"vehicle": {
+						"id": weighing["vehicle"]["id"] if weighing["vehicle"] else None,
+						"plate": weighing["vehicle"]["plate"] if weighing["vehicle"] else None,
+						"description": weighing["vehicle"]["description"] if weighing["vehicle"] else None,
 					},
 					"material": {
 						"id": weighing["material"]["id"] if weighing["material"] else None,
-						"name": weighing["material"]["name"] if weighing["material"] else None
+						"social_reason": weighing["material"]["social_reason"] if weighing["material"] else None
 					},
 					"note": weighing["note"],
 				})

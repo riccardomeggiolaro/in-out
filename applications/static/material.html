@@ -57,7 +57,6 @@
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             <input type="text" id="description" required><br>
         </form>
-        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
             <button id="save-btn" class="save-btn" disabled>Salva</button><br>
@@ -110,6 +109,9 @@
             setUrlPath = '/anagrafic/material';
             deleteUrlPath = '/anagrafic/material';
             websocketUrlPath = '/anagrafic/material';
+            params = {
+                'description': ''
+            }
             init();
         });
     </script>

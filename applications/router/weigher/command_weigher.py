@@ -9,7 +9,6 @@ import asyncio
 import libs.lb_log as lb_log
 from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
-from modules.md_database.functions.get_reservation_with_incomplete_weighings import get_reservations_with_incomplete_weighings
 
 class CommandWeigherRouter(DataRouter):
 	def __init__(self):
