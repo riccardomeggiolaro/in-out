@@ -1,7 +1,8 @@
 from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import table_models, SessionLocal
+from datetime import datetime, date
 
-def filter_data(table_name, filters=None, limit=None, offset=None, order_by=None):
+def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None, toDate=None, order_by=None):
     """Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione
     e popola automaticamente le colonne di riferimenti con i dati delle tabelle correlate,
     incluse tutte le relazioni annidate.
@@ -92,6 +93,73 @@ def filter_data(table_name, filters=None, limit=None, offset=None, order_by=None
                             query = query.filter(getattr(model, key).is_(None))
                     else:
                         raise ValueError(f"Colonna '{key}' non trovata nella tabella '{table_name}'.")
+
+        # Apply date range filters if specified
+        if fromDate:
+            # Handle various input types and ensure we're dealing with a datetime object
+            if fromDate:
+                if isinstance(fromDate, dict) or not fromDate:
+                    # Skip invalid input
+                    pass
+                elif isinstance(fromDate, str):
+                    try:
+                        # Try ISO format first
+                        fromDate = datetime.fromisoformat(fromDate)
+                        query = query.filter(Reservation.date_created >= fromDate)
+                    except ValueError:
+                        try:
+                            # Then try common date formats
+                            formats_to_try = [
+                                "%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", 
+                                "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"
+                            ]
+                            
+                            for fmt in formats_to_try:
+                                try:
+                                    fromDate = datetime.strptime(fromDate, fmt)
+                                    query = query.filter(Reservation.date_created >= fromDate)
+                                    break
+                                except ValueError:
+                                    continue
+                        except Exception:
+                            # If all parsing fails, skip this filter
+                            pass
+                elif isinstance(fromDate, (datetime, date)):
+                    # Already a datetime or date object
+                    query = query.filter(Reservation.date_created >= fromDate)
+            
+        if toDate:
+            # Handle various input types and ensure we're dealing with a datetime object
+            if toDate:
+                if isinstance(toDate, dict) or not toDate:
+                    # Skip invalid input
+                    pass
+                elif isinstance(toDate, str):
+                    try:
+                        # Try ISO format first
+                        toDate = datetime.fromisoformat(toDate)
+                        query = query.filter(Reservation.date_created <= toDate)
+                    except ValueError:
+                        try:
+                            # Then try common date formats
+                            formats_to_try = [
+                                "%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", 
+                                "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"
+                            ]
+                            
+                            for fmt in formats_to_try:
+                                try:
+                                    toDate = datetime.strptime(toDate, fmt)
+                                    query = query.filter(Reservation.date_created <= toDate)
+                                    break
+                                except ValueError:
+                                    continue
+                        except Exception:
+                            # If all parsing fails, skip this filter
+                            pass
+                elif isinstance(toDate, (datetime, date)):
+                    # Already a datetime or date object
+                    query = query.filter(Reservation.date_created <= toDate)
         
         # Aggiungi l'ordinamento se specificato
         if order_by:

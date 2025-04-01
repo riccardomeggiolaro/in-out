@@ -1,8 +1,9 @@
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
 from modules.md_database.md_database import table_models, SessionLocal, Weighing, Reservation
+from datetime import datetime, date
 
-def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offset=None, order_by=None):
+def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offset=None, fromDate=None, toDate=None, order_by=None):
     """
     Gets a list of reservations with optional filtering for incomplete reservations
     and additional filters on any reservation field or related entities.
@@ -12,6 +13,8 @@ def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offse
         filters (dict): Dictionary of filters (column_name: value) for search. Can include nested attributes.
         limit (int): Maximum number of rows to return.
         offset (int): Number of rows to skip.
+        fromDate (str or datetime): Start date to filter by date_created. Default is None.
+        toDate (str or datetime): End date to filter by date_created. Default is None.
         order_by (tuple): Tuple containing (column_name, direction) for ordering.
             Direction can be 'asc' or 'desc'. Default is (date_created, desc).
             
@@ -112,6 +115,73 @@ def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offse
                             query = query.filter(getattr(Reservation, key).is_(None))
                     else:
                         raise ValueError(f"Column '{key}' not found in Reservation table.")
+        
+        # Apply date range filters if specified
+        if fromDate:
+            # Handle various input types and ensure we're dealing with a datetime object
+            if fromDate:
+                if isinstance(fromDate, dict) or not fromDate:
+                    # Skip invalid input
+                    pass
+                elif isinstance(fromDate, str):
+                    try:
+                        # Try ISO format first
+                        fromDate = datetime.fromisoformat(fromDate)
+                        query = query.filter(Reservation.date_created >= fromDate)
+                    except ValueError:
+                        try:
+                            # Then try common date formats
+                            formats_to_try = [
+                                "%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", 
+                                "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"
+                            ]
+                            
+                            for fmt in formats_to_try:
+                                try:
+                                    fromDate = datetime.strptime(fromDate, fmt)
+                                    query = query.filter(Reservation.date_created >= fromDate)
+                                    break
+                                except ValueError:
+                                    continue
+                        except Exception:
+                            # If all parsing fails, skip this filter
+                            pass
+                elif isinstance(fromDate, (datetime, date)):
+                    # Already a datetime or date object
+                    query = query.filter(Reservation.date_created >= fromDate)
+            
+        if toDate:
+            # Handle various input types and ensure we're dealing with a datetime object
+            if toDate:
+                if isinstance(toDate, dict) or not toDate:
+                    # Skip invalid input
+                    pass
+                elif isinstance(toDate, str):
+                    try:
+                        # Try ISO format first
+                        toDate = datetime.fromisoformat(toDate)
+                        query = query.filter(Reservation.date_created <= toDate)
+                    except ValueError:
+                        try:
+                            # Then try common date formats
+                            formats_to_try = [
+                                "%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", 
+                                "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M:%S"
+                            ]
+                            
+                            for fmt in formats_to_try:
+                                try:
+                                    toDate = datetime.strptime(toDate, fmt)
+                                    query = query.filter(Reservation.date_created <= toDate)
+                                    break
+                                except ValueError:
+                                    continue
+                        except Exception:
+                            # If all parsing fails, skip this filter
+                            pass
+                elif isinstance(toDate, (datetime, date)):
+                    # Already a datetime or date object
+                    query = query.filter(Reservation.date_created <= toDate)
         
         # Get total count of matching rows
         total_rows = query.count()

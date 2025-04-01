@@ -10,9 +10,18 @@
         <link rel="stylesheet" href="/static/css/snackbar.css">
         <style>
             .table-container {
-                max-width: 1100px;
+                max-width: 1500px;
+            }
+            #dateRange {
+                width: 200px;
+            }
+            #filter\.fromDate,
+            #filter\.toDate {
+                display: none;
             }
         </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
 <body>
     <div id="navbar-container"></div>
@@ -27,8 +36,20 @@
         <table>
             <thead>
                 <tr id="filters">
-                    <th name="date_created">Data accettazione</th>
-                    <th name="status">Stato</th>
+                    <th name="date_created">
+                        <input type="text" id="dateRange" placeholder="Data accettazione" autocomplete="off" onclick="this.select()">
+                        <input type="date" id="filter.fromDate" name="fromDate" autocomplete="off">
+                        <input type="date" id="filter.toDate" name="toDate" autocomplete="off">
+                    </th>
+                    <th name="status">
+                        <select id="filter.status" name="status" onchange="updateTable()">
+                            <option value="">Stato</option>
+                            <option value="WAITING">Attesa</option>
+                            <option value="CALLED">Chiamato</option>
+                            <option value="ENTERED">Entrato</option>
+                            <option value="CLOSED">Chiusa</option>
+                        </select>
+                    </th>
                     <th name="waiting">Attesa</th>
                     <th name="subject.social_reason">
                         <input id="filter.subject.social_reason" name="subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
@@ -56,7 +77,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="8" style="text-align: center;">
+                    <td colspan="11" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -196,6 +217,8 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
+        const fromDate = document.querySelector('#filter\\.fromDate');
+        const toDate = document.querySelector('#filter\\.toDate');
         const nameSocialReason = document.querySelector('#subject\\.social_reason');
         const suggestionsSocialReasonName = document.querySelector('#suggestions\\.subject\\.social_reason');
         const cellSocialReason = document.querySelector('#subject\\.telephone');
@@ -213,6 +236,36 @@
             callback_populate_select = populateForm;
             populate_detail_tr = populateDetailTr;
             init();
+        });
+
+        flatpickr("#dateRange", {
+            locale: {
+                rangeSeparator: ' / '
+            },
+            mode: 'range',
+            // allowInput: true,
+            dateFormat: "d-m-Y", // Formato della data
+            onClose: function(selectedDates, dateStr, instance) {
+                document.querySelector('#dateRange').setSelectionRange(0, 0);
+                const firstDay = selectedDates[0];
+                let secondDay = selectedDates[1];
+                // Verifica se una data è selezionata o meno
+                if (firstDay && secondDay === undefined) {
+                secondDay = structuredClone(firstDay);
+                secondDay.setHours(23, 59, 59, 999);
+                } else if (selectedDates.length === 2 && firstDay == secondDay) {
+                secondDay.setHours(23, 59, 99, 999);
+                }
+                // Imposta l'istanza flatpickr con le date selezionate
+                instance.setDate([firstDay, secondDay]);
+                const adjustedFirstDay = new Date(firstDay);
+                adjustedFirstDay.setHours(12, 0, 0, 0);
+                const adjustedSecondDay = new Date(secondDay);
+                adjustedSecondDay.setHours(12, 0, 0, 0);
+                fromDate.valueAsDate = adjustedFirstDay;
+                toDate.valueAsDate = adjustedSecondDay;
+                updateTable();
+            }
         });
 
         function populateForm(idForm, item={typeSocialReason: 0, idSocialReason: null, idVector: null, idVehicle: null, idMaterial: null}) {

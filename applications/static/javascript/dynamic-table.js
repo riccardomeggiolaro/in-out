@@ -56,9 +56,15 @@ async function updateTable() {
     let queryParams = '';
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
-        if (input.value) {
+        if (input.name && input.value) {
             if (input.type == 'text') queryParams += `${input.name}=${input.value}%&`;
             else if (input.type == 'number') queryParams += `${input.name}=${input.value}&`;
+            else if (input.type == 'date') queryParams += `${input.name}=${input.value}&`;
+        }
+    })
+    filters.querySelectorAll('select').forEach(select => {
+        if (select.value) {
+            queryParams += `${select.name}=${select.value}&`;
         }
     })
     const offset = (currentPage - 1) * rowsPerPage;

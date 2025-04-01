@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
+from datetime import datetime
 
 class ReservationRouter(WebSocket):
     def __init__(self):
@@ -24,7 +25,7 @@ class ReservationRouter(WebSocket):
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
         self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'])
 
-    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, uncomplete: Optional[bool] = None):
+    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, uncomplete: Optional[bool] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
             if limit is not None:
                 del query_params["limit"]
@@ -32,7 +33,12 @@ class ReservationRouter(WebSocket):
                 del query_params["offset"]
             if uncomplete is not None:
                 del query_params["uncomplete"]                
-            data, total_rows = get_list_reservations(uncomplete, query_params, limit, offset, ('date_created', 'desc'))
+            if fromDate is not None:
+                del query_params["fromDate"]
+            if toDate is not None:
+                del query_params["toDate"]
+                toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
+            data, total_rows = get_list_reservations(uncomplete, query_params, limit, offset, fromDate, toDate, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
