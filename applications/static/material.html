@@ -103,14 +103,14 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'Materiale';
+            itemName = 'material';
             listUrlPath = '/anagrafic/material/list';
             addUrlPath = '/anagrafic/material';
             setUrlPath = '/anagrafic/material';
             deleteUrlPath = '/anagrafic/material';
             websocketUrlPath = '/anagrafic/material';
             params = {
-                'description': ''
+                'materiale': 'material.description'
             }
             init();
         });

@@ -7,6 +7,7 @@ from modules.md_database.dtos.driver import Driver
 from modules.md_database.dtos.vehicle import Vehicle
 from modules.md_database.dtos.material import Material
 from modules.md_database.dtos.weighing import Weighing
+from datetime import datetime
 
 class Reservation(BaseModel):
     id: Optional[int] = None
@@ -19,17 +20,24 @@ class Reservation(BaseModel):
     number_weighings: Optional[int] = None
     note: Optional[str] = None
     status: Optional[str] = None
+    number_weighings: Optional[int] = None
     document_reference: Optional[str] = None
-    subject: Optional[Subject] = Subject(**{})
-    vector: Optional[Vector] = Vector(**{})
-    driver: Optional[Driver] = Driver(**{})
-    vehicle: Optional[Vehicle] = Vehicle(**{})
-    material: Optional[Material] = Material(**{})
+    date_created: Optional[datetime] = None
+
+    subject: Optional[Subject] = None
+    vector: Optional[Vector] = None
+    driver: Optional[Driver] = None
+    vehicle: Optional[Vehicle] = None
+    material: Optional[Material] = None
     weighings: List[Weighing] = []
 
     class Config:
         # Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
         arbitrary_types_allowed = True
+
+    @validator('weighings', pre=True, always=True)
+    def check_weighings(cls, v, values):
+        return [Weighing(**weighing).dict() for weighing in v]
 
 # class ReservationDTO(BaseModel):
 #     id: Optional[Union[int, str]] = None

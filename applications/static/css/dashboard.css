@@ -85,13 +85,12 @@ body {
     width: 20%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
 }
 
 .anagrafic div,
 .ins ul {
-    margin: auto;
+    margin: 5px;
     max-width: 99%;
 }
 
@@ -101,9 +100,9 @@ select {
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 1.1rem;
-    max-width: fit-content;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
     transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+    width: 1000px;
     max-width: -moz-available;
 }
 
@@ -114,7 +113,6 @@ select:focus {
 }
 
 select {
-    width: 100%;
     background-color: white;
 }
 
@@ -589,7 +587,8 @@ button:active {
     max-width: 246.33px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.3s ease;
-    width: -moz-available;
+    width: 1000px;
+    max-width: -moz-available;
     margin: 5px auto;
 }
 .list-in li:hover {
@@ -679,4 +678,16 @@ textarea:disabled {
 /* Rimuove il grigio di sfondo su Chrome/Safari */
 input:disabled {
   -webkit-appearance: none;
+}
+
+hr {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.3s ease;
+    border-bottom: 1px solid #ccc;
+    background: transparent;
+    color: transparent;
+    margin-top: 0px;
 }

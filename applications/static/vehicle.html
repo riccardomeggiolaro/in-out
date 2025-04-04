@@ -97,6 +97,7 @@
 
     <div id="confirm-popup" class="modal-content popup">
         <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
             <button id="save-btn" class="confirm-btn">Ok</button><br>
@@ -113,15 +114,15 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'Veicolo';
+            itemName = 'vehicle';
             listUrlPath = '/anagrafic/vehicle/list';
             addUrlPath = '/anagrafic/vehicle';
             setUrlPath = '/anagrafic/vehicle';
             deleteUrlPath = '/anagrafic/vehicle';
             websocketUrlPath = '/anagrafic/vehicle';
             params = {
-                'plate': 'targa',
-                'description': 'descrizione'
+                'veicolo con targa': 'vehicle.plate',
+                'veicolo con descrizione': 'vehicle.description'
             }
             init();
         });

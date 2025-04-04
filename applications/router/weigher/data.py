@@ -45,7 +45,6 @@ class DataRouter(ConfigWeigher):
 						"id": weighing["driver"]["id"] if weighing["driver"] else None,
 						"social_reason": weighing["driver"]["social_reason"] if weighing["driver"] else None,
 						"telephone": weighing["driver"]["telephone"] if weighing["driver"] else None,
-						"cfpiva": weighing["driver"]["cfpiva"] if weighing["driver"] else None
 					},
 					"vehicle": {
 						"id": weighing["vehicle"]["id"] if weighing["vehicle"] else None,
@@ -54,7 +53,7 @@ class DataRouter(ConfigWeigher):
 					},
 					"material": {
 						"id": weighing["material"]["id"] if weighing["material"] else None,
-						"social_reason": weighing["material"]["social_reason"] if weighing["material"] else None
+						"description": weighing["material"]["description"] if weighing["material"] else None
 					},
 					"note": weighing["note"],
 				})

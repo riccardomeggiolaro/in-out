@@ -20,19 +20,26 @@
         <div class="container">
             <div class="display-wrapper">
                 <div class="item anagrafic">
+                    <img class="loading" src="https://on.baron.it/tecnico/pesi/LOGO_BARONPESI.png" alt="Logo Baron Pesi" style="max-height: 70px; width: fit-content;">
+                    <hr>
+
                     <div>
                         <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')" >
-                        <br><br>
+                    </div>
+
+                    <div>
                         <input placeholder="Descrizione veicolo" id="currentDescriptionVehicle" type="text" name="description" onclick="showSuggestions('vehicle', 'descriptionVehicleInput', 'description', '', ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'descriptionVehicleInput')" >
                     </div>
 
                     <div>
                         <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)">
-                            <option value="-1">Tipo ragione sociale</option>
-                            <option value="0">Cliente</option>
-                            <option value="1">Fornitore</option>
+                            <option value="">Tipo soggetto</option>
+                            <option value="CUSTOMER">Cliente</option>
+                            <option value="SUPPLIER">Fornitore</option>
                         </select>
-                        <br><br>
+                    </div>
+
+                    <div>
                         <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')" >
                     </div>
 
@@ -85,6 +92,8 @@
                     </div>            
                 </div>
                 <div class="item ins">
+                    <h2>Accessi</h3>
+                    <hr>
                     <ul class="list-in">
                     </ul>                    
                 </div>

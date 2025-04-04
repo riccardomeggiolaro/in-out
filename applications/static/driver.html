@@ -112,14 +112,14 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'Vettore';
+            itemName = 'driver';
             listUrlPath = '/anagrafic/driver/list';
             addUrlPath = '/anagrafic/driver';
             setUrlPath = '/anagrafic/driver';
             deleteUrlPath = '/anagrafic/driver';
             websocketUrlPath = '/anagrafic/driver';
             params = {
-                'social_reason': 'ragione sociale',
+                'autista': 'driver.social_reason',
             };
             init();
         });

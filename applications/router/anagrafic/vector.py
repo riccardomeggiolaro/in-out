@@ -34,7 +34,7 @@ class VectorRouter(WebSocket):
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("vector", query_params, limit, offset, ('date_created', 'desc'))
+            data, total_rows = filter_data("vector", query_params, limit, offset, None, None, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -49,7 +49,9 @@ class VectorRouter(WebSocket):
             if body.cfpiva and get_data_by_attribute("vector", "cfpiva", body.cfpiva):
                 raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = add_data("vector", body.dict())
-            await self.broadcastAddAnagrafic("vector", Vector(**data).dict())
+            vector = Vector(**data).json()
+            await self.broadcastAddAnagrafic("vector", {"vector": vector})
+            await self.broadcastAddAnagrafic("reservation", {"vector": vector})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -67,7 +69,9 @@ class VectorRouter(WebSocket):
                 if vector and vector["id"] != id:
                     raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = update_data("vector", id, body.dict())
-            await self.broadcastUpdateAnagrafic("vector", Vector(**data).dict())
+            vector = Vector(**data).json()
+            await self.broadcastUpdateAnagrafic("vector", {"vector": vector})
+            await self.broadcastUpdateAnagrafic("reservation", {"vector": vector})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -80,7 +84,9 @@ class VectorRouter(WebSocket):
             if vector and len(vector["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il vettore con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("vector", id)
-            await self.broadcastDeleteAnagrafic("vector", Vector(**data).dict())
+            vector = Vector(**data).json()
+            await self.broadcastDeleteAnagrafic("vector", {"vector": vector})
+            await self.broadcastDeleteAnagrafic("reservation", {"vector": vector})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

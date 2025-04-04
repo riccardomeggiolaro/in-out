@@ -34,7 +34,7 @@ class VehicleRouter(WebSocket):
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("vehicle", query_params, limit, offset, ('date_created', 'desc'))
+            data, total_rows = filter_data("vehicle", query_params, limit, offset, None, None, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -46,10 +46,10 @@ class VehicleRouter(WebSocket):
         try:
             if body.plate and get_data_by_attribute("vehicle", "plate", body.plate):
                 raise HTTPException(status_code=400, detail=f"La targa '{body.plate}' è già esistente")
-            if body.description and get_data_by_attribute("vehicle", "description", body.description):
-                raise HTTPException(status_code=400, detail=f"La descrizione '{body.description}' è già esistente")
             data = add_data("vehicle", body.dict())
-            await self.broadcastAddAnagrafic("vehicle", Vehicle(**data).dict())
+            vehicle = Vehicle(**data).json()
+            await self.broadcastAddAnagrafic("vehicle", {"vehicle": vehicle})
+            await self.broadcastAddAnagrafic("reservation", {"vehicle": vehicle})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -67,7 +67,9 @@ class VehicleRouter(WebSocket):
                 if vehicle and vehicle["id"] != id:
                     raise HTTPException(status_code=400, detail=f"La descrizione '{body.description}' è già esistente")
             data = update_data("vehicle", id, body.dict())
-            await self.broadcastUpdateAnagrafic("vehicle", Vehicle(**data).dict())
+            vehicle = Vehicle(**data).json()
+            await self.broadcastUpdateAnagrafic("vehicle", {"vehicle": vehicle})
+            await self.broadcastUpdateAnagrafic("reservation", {"vehicle": vehicle})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -80,7 +82,9 @@ class VehicleRouter(WebSocket):
             if vehicle and len(vehicle["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il veicolo con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("vehicle", id)
-            await self.broadcastDeleteAnagrafic("vehicle", Vehicle(**data).dict())
+            vehicle = Vehicle(**data).json()
+            await self.broadcastDeleteAnagrafic("vehicle", {"vehicle": vehicle})
+            await self.broadcastDeleteAnagrafic("reservation", {"vehicle": vehicle})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

@@ -11,9 +11,10 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_id_if_not_selected import get_data_by_id_if_not_selected
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.select_reservation_if_incomplete import select_reservation_if_incomplete
+from modules.md_database.md_database import TypeSubjectEnum
 
 class DataInExecutionDTO(CustomBaseModel):
-	typeSubject: Optional[Union[int, str]] = None
+	typeSubject: Optional[str] = None
 	subject: Optional[SubjectDTO] = SubjectDTO(**{})
 	vector: Optional[VectorDTO] = VectorDTO(**{})
 	driver: Optional[DriverDTO] = DriverDTO(**{})
@@ -33,14 +34,8 @@ class DataInExecutionDTO(CustomBaseModel):
 
 	@validator('typeSubject', pre=True, always=True)
 	def check_type_social_reason(cls, v, values):
-		if v is not None:
-			if type(v) == str:
-				if not is_number(v):
-					raise ValueError("Type social reason must to be a digit string or number")
-				else:
-					v = int(v)
-			if v not in [0, 1, -1]:
-				raise ValueError("Type Social Reason must to be 1 for 'customer', 2 for 'supplier' or void if you don't want to be specic")
+		if v is not None and v not in ["CUSTOMER", "SUPPLIER"]:
+			raise ValueError("typeSocialReason può essere solo 'CLIENTE' o 'FORNITORE'")
 		return v
 
 class IdSelectedDTO(CustomBaseModel):

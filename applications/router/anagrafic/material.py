@@ -34,7 +34,7 @@ class MaterialRouter(WebSocket):
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("material", query_params, limit, offset, ('date_created', 'desc'))
+            data, total_rows = filter_data("material", query_params, limit, offset, None, None, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -47,7 +47,9 @@ class MaterialRouter(WebSocket):
             if body.description and get_data_by_attribute("material", "description", body.description):
                 raise HTTPException(status_code=400, detail=f"Il materiale '{body.description}' è già esistente")
             data = add_data("material", body.dict())
-            await self.broadcastAddAnagrafic("material", Material(**data).dict())
+            material = Material(**data).json()
+            await self.broadcastAddAnagrafic("material", {"material": material})
+            await self.broadcastAddAnagrafic("reservation", {"material": material})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -61,7 +63,9 @@ class MaterialRouter(WebSocket):
                 if material and material["id"] != id:
                     raise HTTPException(status_code=400, detail=f"Il materiale '{body.description}' è già esistente")
             data = update_data("material", id, body.dict())
-            await self.broadcastUpdateAnagrafic("material", Material(**data).dict())
+            material = Material(**data).json()
+            await self.broadcastUpdateAnagrafic("material", {"material": material})
+            await self.broadcastUpdateAnagrafic("reservation", {"material": material})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -74,7 +78,9 @@ class MaterialRouter(WebSocket):
             if material and len(material["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il materiale con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("material", id)
-            await self.broadcastDeleteAnagrafic("material", Material(**data).dict())
+            material = Material(**data).json()
+            await self.broadcastDeleteAnagrafic("material", {"material": material})
+            await self.broadcastDeleteAnagrafic("reservation", {"material": material})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

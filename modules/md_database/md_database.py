@@ -1,5 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum, func
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum, func, UniqueConstraint
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 from typing import Optional, List, Union
 from pydantic import BaseModel, validator
 from datetime import datetime
@@ -86,17 +87,21 @@ class Weighing(Base):
 
     reservation = relationship("Reservation", back_populates="weighings")
 
+class TypeSubjectEnum(PyEnum):
+    CUSTOMER = "Cliente"
+    SUPPLIER = "Fornitore"
+
 class ReservationStatus(PyEnum):
-    WAITING = "waiting"
-    CALLED = "called"
-    ENTERED = "entered"
-    CLOSED = "closed"
+    WAITING = "Attesa"
+    CALLED = "Chiamato"
+    ENTERED = "Entrato"
+    CLOSED = "Chiusa"
 
 # Model for Reservation table
 class Reservation(Base):
     __tablename__ = 'reservation'
     id = Column(Integer, primary_key=True, index=True)
-    typeSubject = Column(Integer, nullable=True)
+    typeSubject = Column(Enum(TypeSubjectEnum), default=None, nullable=True)
     idSubject = Column(Integer, ForeignKey('subject.id'))
     idVector = Column(Integer, ForeignKey('vector.id'))
     idDriver = Column(Integer, ForeignKey('driver.id'))
@@ -117,6 +122,18 @@ class Reservation(Base):
     material = relationship("Material", back_populates="reservations")	
     weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
 
+class LockRecord(Base):
+    __tablename__ = 'lock_record'
+    id = Column(Integer, primary_key=True, index=True)
+    nameTable = Column(String, nullable=False)
+    idRecord = Column(Integer, nullable=False)
+    websocket = Column(String, nullable=True)
+    
+    # Aggiungi unique constraint
+    __table_args__ = (
+        UniqueConstraint('nameTable', 'idRecord', name='uq_lock_record'),
+    )
+
 # Dictionary of models to map table names to model classes
 table_models = {
     'user': User,
@@ -126,7 +143,8 @@ table_models = {
     'vehicle': Vehicle,
     'material': Material,
     'weighing': Weighing,
-    'reservation': Reservation
+    'reservation': Reservation,
+    'lock_record': LockRecord
 }
 
 upload_file_datas_required_columns = {

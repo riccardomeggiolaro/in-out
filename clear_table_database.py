@@ -4,7 +4,7 @@ conn = sqlite3.connect('database.db')
 
 cursor = conn.cursor()
 
-cursor.execute("DELETE FROM reservation")
+cursor.execute("DELETE FROM lock_record")
 
 conn.commit()
 

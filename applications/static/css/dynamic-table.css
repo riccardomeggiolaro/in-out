@@ -185,11 +185,9 @@ form {
     background: white;
     border: 1px solid #ccc;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-    width: -moz-available;
-    max-width: 300px !important;
+    width: 100%;
     overflow: auto;
     display: none;
-    max-height: 170px;
 }
 
 .suggestions p {
@@ -306,4 +304,37 @@ thead input:focus {
         opacity: 0;
         background-color: rgb(255, 208, 208);
     }
+}
+
+#add-popup {
+    max-width: 800px !important;
+    width: auto;
+}
+
+#register > div {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.item {
+    position: relative;
+    flex: 100%;
+}
+
+.item-25 {
+    position: relative;
+    flex: 25%;
+}
+
+#register input[type="radio"] {
+    margin-top: 0px;
+    margin-right: 5px;  
+}
+
+hr {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    color: aliceblue;
 }

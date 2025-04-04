@@ -46,9 +46,6 @@ class ReservationRouter(WebSocket):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def getListReservationWithUncompleteWeighings(self, query_params: Dict[str, int] = Depends(get_query_params)):
-        return get_list_reservations(True)
-
     # async def addSubject(self, body: AddSubjectDTO):
     #     try:
     #         add_data("subject", body.dict())
@@ -67,7 +64,7 @@ class ReservationRouter(WebSocket):
     async def deleteReservation(self, id: int):
         try:
             data = delete_data("reservation", id)
-            await self.broadcastDeleteAnagrafic("reservation", Reservation(**data).dict())
+            await self.broadcastDeleteAnagrafic("reservation", {"reservation": Reservation(**data).json()})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

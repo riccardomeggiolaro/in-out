@@ -102,61 +102,127 @@
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #subject\\.social_reason').value.trim()) || !this.checkValidity())" autocomplete="off">
             <h4>Soggetto</h4>
 
+            <div class="radio">
+                <div class="radio-option left">
+                    <input id="customer" type="radio" name="typeSubject" value="CUSTOMER" checked>
+                    <label for="customer">Cliente</label>
+                </div>
+                <div class="radio-option right">
+                    <input id="supplier" type="radio" name="typeSubject" value="SUPPLIER">
+                    <label for="supplier">Fornitore</label>
+                </div>
+            </div>                
+
             <div>
-                <div class="radio">
-                    <div class="radio-option left">
-                        <input id="typeSocialReason1" type="radio" name="option" value="0" checked>
-                        <label for="typeSocialReason1">Cliente</label>
-                    </div>
-                    <div class="radio-option right">
-                        <input id="typeSocialReason2" type="radio" name="option" value="1">
-                        <label for="typeSocialReason2">Fornitore</label>
-                    </div>
-                </div>                
+                <div class="item">
+                    <input placeholder="Ragione Sociale" id="subject.social_reason" type="text" data-id=""
+                        oninput="
+                            populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            if (this.dataset.id) {
+                                this.dataset.id = '';
+                                subjectTelephone.dataset.id = '';
+                                subjectTelephone.value = ''; 
+                                subjectCfpiva.dataset.id = '';
+                                subjectCfpiva.value = '';
+                            }"
+                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', this.value)">
+                    <div id="suggestions.subject.social_reason" class="suggestions"></div>
+                </div>
     
-                <input placeholder="Ragione Sociale" id="subject.social_reason" type="text" data-id=""
-                    oninput="
-                        populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', this.value);
-                        if (this.dataset.id) {
-                            this.dataset.id = '';
-                            cellSocialReason.dataset.id = '';
-                            cellSocialReason.value = ''; 
-                            fcpivaSocialReason.dataset.id = '';
-                            fcpivaSocialReason.value = '';
-                        }"
-                    onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', this.value);"
-                    onblur="closeSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', this.value)"><br>
-                <div id="suggestions.subject.social_reason" class="suggestions"></div>
+                <div class="item-25">
+                    <input placeholder="Telefono" id="subject.telephone" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')">
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="subject.cfpiva" type="text" data-id="" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Vettore</h4>
+
+            <div>
+                <div class="item">
+                    <input placeholder="Ragione Sociale" id="vector.social_reason" type="text" data-id=""
+                        oninput="
+                            populateSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            if (this.dataset.id) {
+                                this.dataset.id = '';
+                                vectorTelephone.dataset.id = '';
+                                vectorTelephone.value = ''; 
+                                vectorCfpiva.dataset.id = '';
+                                vectorCfpiva.value = '';
+                            };"
+                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', this.value)">
+                    <div id="suggestions.vector.social_reason" class="suggestions"></div>
+                </div>
     
-                <input placeholder="Telefono" id="subject.telephone" type="text" data-id="" pattern="\d*"
-                    oninput="
-                        this.value = this.value.replace(/\D/g, '');
-                        populateSuggestions('#register #suggestions\\.subject\\.telephone', 'telephone', this.value);
-                        if (this.dataset.id) {
-                            this.dataset.id = '';
-                            nameSocialReason.dataset.id = '';
-                            nameSocialReason.value = '';
-                            fcpivaSocialReason.dataset.id = '';
-                            fcpivaSocialReason.value = '';
-                        }"
-                    onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.subject\\.telephone', 'telephone', this.value);"
-                    onblur="closeSuggestions('#register #suggestions\\.subject\\.telephone', 'telephone', this.value)"><br>
-                <div id="suggestions.subject.telephone" class="suggestions"></div>
+                <div class="item-25">
+                    <input placeholder="Telefono" id="vector.telephone" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');"><br>
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="vector.cfpiva" type="text" data-id="" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"><br>
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Autista</h4>
+
+            <div>
+                <div class="item-25">
+                    <input placeholder="Nome Cognome" id="driver.social_reason" type="text" data-id=""
+                        oninput="
+                            populateSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            if (this.dataset.id) {
+                                driverSocialReason.value = '';
+                                driverTelephone.value = '';
+                            }"
+                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', this.value)">
+                    <div id="suggestions.driver.social_reason" class="suggestions"></div>
+                </div>
     
-                <input placeholder="CF/P.Iva" id="subject.cfpiva" type="text" data-id="" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" 
-                    oninput="
-                        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')
-                        populateSuggestions('#register #suggestions\\.subject\\.cfpiva', 'cfpiva', this.value);
-                        if (this.dataset.id) {
-                            this.dataset.id = '';
-                            nameSocialReason.dataset.id = '';
-                            nameSocialReason.value = '';
-                            cellSocialReason.dataset.id = '';
-                            cellSocialReason.value = '';                        
-                        }"
-                    onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.subject\\.cfpiva', 'cfpiva', this.value);"
-                    onblur="closeSuggestions('#register #suggestions\\.subject\\.cfpiva', 'cfpiva', this.value)"><br>
-                <div id="suggestions.subject.cfpiva" class="suggestions"></div>    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="driver.telephone" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Veicolo</h4>
+
+            <div>
+                <div class="item-25">
+                    <input placeholder="Targa" id="vehicle.plate" type="text" data-id=""
+                        oninput="
+                            populateSuggestions('#register #suggestions\\.plate\\.plate', 'plate', 'vehicle', this.value);
+                            vehiclePlate.value = '';
+                            vehicleDescription.value = '';"
+                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', this.value)">
+                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Descrizione" id="vehicle.description" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
+                </div>
+            </div>
+
+            <hr>
+
+            <div>
+                <div class="item-25">
+                    <input placeholder="Numero pesate" id="number_weighings" type="number" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                </div>
+
+                <div class="item-25">
+                    <input placeholder="Note" id="note" type="text">
+                </div>
             </div>
         </form>
         <div class="container-buttons right">                
@@ -169,8 +235,8 @@
         <h3>Modifica prenotazione:</h3>
         <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #idSocialReason').value.trim() || document.querySelector('#edit-popup #idVector').value.trim() || document.querySelector('#edit-popup #idVehicle').value.trim() || document.querySelector('#edit-popup #idMaterial').value.trim()) || !this.checkValidity())" autocomplete="off">
             <div class="radio">
-                <input id="typeSocialReason" type="radio" name="option" value="0">Cliente
-                <input id="typeSocialReason" type="radio" name="option" value="1">Fornitore
+                <input id="typeSubject" type="radio" name="option" value="0">Cliente
+                <input id="typeSubject" type="radio" name="option" value="1">Fornitore
             </div>
             Ragione Sociale: (Opzionale)<br>
             <select id="idSocialReason"></select><br>
@@ -188,9 +254,12 @@
     <div id="delete-popup" class="modal-content popup">
         <div id="delete">
             <h3>Elimina ragione sociale:</h3>
-            <p><b>Tipo:</b> <u><em><span id="typeSocialReason"></span></em></u></p>
-            <p><b>Ragione Sociale:</b> <u><em><span id="social_reason.name"></span></em></u></p>
+            <p><b>Tipo soggetto:</b> <u><em><span id="typeSubject"></span></em></u></p>
+            <p><b>Soggetto:</b> <u><em><span id="subject.social_reason"></span></em></u></p>
+            <p><b>Vettore:</b> <u><em><span id="vector.social_reason"></span></em></u></p>
+            <p><b>Autista:</b> <u><em><span id="driver.social_reason"></span></em></u></p>
             <p><b>Targa:</b> <u><em><span id="vehicle.plate"></span></em></u></p>
+            <p><b>Stato:</b> <u><em><span id="status"></span></em></u></p>
             <p><b>Numero pesate:</b> <u><em><span id="number_weighings"></span></em></u></p>
             <div class="container-buttons right">                
                 <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
@@ -219,15 +288,27 @@
     <script>
         const fromDate = document.querySelector('#filter\\.fromDate');
         const toDate = document.querySelector('#filter\\.toDate');
-        const nameSocialReason = document.querySelector('#subject\\.social_reason');
-        const suggestionsSocialReasonName = document.querySelector('#suggestions\\.subject\\.social_reason');
-        const cellSocialReason = document.querySelector('#subject\\.telephone');
-        const suggestionsSocialReasonCell = document.querySelector('#suggestions\\.subject\\.telephone');
-        const fcpivaSocialReason = document.querySelector('#subject\\.cfpiva');
-        const suggestionsSocialReasonCfpiva = document.querySelector('#suggestions\\.subject\\.cfpiva');
+        const subjectSocialReason = document.querySelector('#subject\\.social_reason');
+        const suggestionsSubjectSocialReason = document.querySelector('#suggestions\\.subject\\.social_reason');
+        const subjectTelephone = document.querySelector('#subject\\.telephone');
+        const subjectCfpiva = document.querySelector('#subject\\.cfpiva');
+        const vectorSocialReason = document.querySelector('#vector\\.social_reason');
+        const suggestionsVectorSocialReason = document.querySelector('#suggestions\\.vector\\.social_reason');
+        const vectorTelephone = document.querySelector('#vector\\.telephone');
+        const vectorCfpiva = document.querySelector('#vector\\.cfpiva');
+        const driverSocialReason = document.querySelector('#driver\\.social_reason');
+        const suggestionsDriverSocialReason = document.querySelector('#suggestions\\.driver\\.social_reason');
+        const driverTelephone = document.querySelector('#driver\\.telephone');
+        const vehiclePlate = document.querySelector('#vehicle\\.plate');
+        const suggestionsVehiclePlate = document.querySelector('#suggestions\\.vehicle\\.plate');
+        const vehicleDescription = document.querySelector('#vehicle\\.description');
+        const numberWeighings = document.querySelector('#number_weighings');
+        const note = document.querySelector('#note');
 
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'Ragione sociale';
+            itemName = 'reservation';
+            lastChar = 'a';
+            canAlwaysDelete = true;
             listUrlPath = '/anagrafic/reservation/list';
             addUrlPath = '/anagrafic/reservation';
             setUrlPath = '/anagrafic/reservation';
@@ -235,6 +316,20 @@
             websocketUrlPath = '/anagrafic/reservation';
             callback_populate_select = populateForm;
             populate_detail_tr = populateDetailTr;
+            params = {
+                "prenotazione con veicolo": "reservation.vehicle.plate",
+                "prenotazione con veicolo": "reservation.vehicle.description",
+                "prenotazione con soggetto": "reservation.subject.social_reason",
+                "prenotazione con vettore": "reservation.vector.social_reason",
+                "prenotazione con autista": "reservation.driver.social_reason",
+                "prenotazione con id": "reservation.id",
+                "soggetto": "subject.social_reason",
+                "vettore": "vector.social_reason",
+                "autista": "driver.social_reason",
+                "veicolo con targa": "vehicle.plate",
+                "veicolo con descrizione": "vehicle.description",
+                "materiale": "material.description"
+            }
             init();
         });
 
@@ -251,10 +346,10 @@
                 let secondDay = selectedDates[1];
                 // Verifica se una data è selezionata o meno
                 if (firstDay && secondDay === undefined) {
-                secondDay = structuredClone(firstDay);
-                secondDay.setHours(23, 59, 59, 999);
+                    secondDay = new Date(Date.now());
+                    secondDay.setHours(12, 0, 0, 0);
                 } else if (selectedDates.length === 2 && firstDay == secondDay) {
-                secondDay.setHours(23, 59, 99, 999);
+                    secondDay.setHours(12, 0, 0, 0);
                 }
                 // Imposta l'istanza flatpickr con le date selezionate
                 instance.setDate([firstDay, secondDay]);
@@ -287,10 +382,10 @@
             return content;
         }
 
-        function populateSuggestions(suggestions, key, value) {
+        function populateSuggestions(suggestions, key, anagrafic, value) {
             let currentSuggestionsSocialReason = document.querySelector(suggestions);
             currentSuggestionsSocialReason.style.display = 'block';
-            fetch(`/anagrafic/subject/list?${key}=${value}`)
+            fetch(`/anagrafic/${anagrafic}/list?${key}=${value}%`)
             .then(res => res.json())
             .then(res => {
                 currentSuggestionsSocialReason.innerHTML = '';
@@ -300,12 +395,24 @@
                     option.id = item.id;
                     option.dataset.item = JSON.stringify(item);
                     option.onmousedown = () => {
-                        nameSocialReason.dataset.id = item.id;
-                        nameSocialReason.value = item.social_reason;
-                        cellSocialReason.dataset.id = item.id;
-                        cellSocialReason.value = item.telephone;
-                        fcpivaSocialReason.dataset.id = item.id;
-                        fcpivaSocialReason.value = item.cfpiva;
+                        if (anagrafic === 'subject') {
+                            subjectSocialReason.dataset.id = item.id;
+                            subjectSocialReason.value = item.social_reason;
+                            subjectTelephone.dataset.id = item.id;
+                            subjectTelephone.value = item.telephone;
+                            subjectCfpiva.dataset.id = item.id;
+                            subjectCfpiva.value = item.cfpiva;
+                        } else if (anagrafic === 'vector') {
+                            vectorSocialReason.value = item.social_reason;
+                            vectorTelephone.value = item.telephone;
+                            vectorCfpiva.value = item.cfpiva;
+                        } else if (anagrafic === 'driver') {
+                            driverSocialReason.value = item.social_reason;
+                            driverTelephone.value = item.telephone;                            
+                        } else if (anagrafic === 'vehicle') {
+                            vehiclePlate.value = item.plate;
+                            vehicleDescription.value = item.description;
+                        }
                     };
                     currentSuggestionsSocialReason.appendChild(option);             
                 });
@@ -319,12 +426,12 @@
             if (options.length === 1) {
                 const item = JSON.parse(options[0].dataset.item);
                 if (item[key].toLowerCase() == value.toLowerCase()) {
-                    nameSocialReason.dataset.id = item.id;
-                    nameSocialReason.value = item.social_reason;
-                    cellSocialReason.dataset.id = item.id;
-                    cellSocialReason.value = item.telephone;
-                    fcpivaSocialReason.dataset.id = item.id;
-                    fcpivaSocialReason.value = item.cfpiva;
+                    subjectSocialReason.dataset.id = item.id;
+                    subjectSocialReason.value = item.social_reason;
+                    subjectTelephone.dataset.id = item.id;
+                    subjectTelephone.value = item.telephone;
+                    subjectCfpiva.dataset.id = item.id;
+                    subjectCfpiva.value = item.cfpiva;
                 }
             }
         }

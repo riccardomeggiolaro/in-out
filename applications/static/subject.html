@@ -170,14 +170,14 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'Soggetto';
+            itemName = 'subject';
             listUrlPath = '/anagrafic/subject/list';
             addUrlPath = '/anagrafic/subject';
             setUrlPath = '/anagrafic/subject';
             deleteUrlPath = '/anagrafic/subject';
             websocketUrlPath = '/anagrafic/subject';
             params = {
-                'social_reason': 'ragione sociale'
+                'soggetto': 'subject.social_reason'
             };
             init();
         });

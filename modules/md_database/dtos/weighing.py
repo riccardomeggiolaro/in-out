@@ -5,6 +5,5 @@ from typing import Optional, Union
 class Weighing(BaseModel):
     id: Optional[int] = None
     weight: Optional[Union[int, float]] = None
-    date: Optional[date] = None
     pid: Optional[str] = None
     weigher: Optional[str] = None

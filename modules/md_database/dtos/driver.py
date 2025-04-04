@@ -1,10 +1,12 @@
 from pydantic import BaseModel, validator, root_validator
 from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from datetime import datetime
 
 class Driver(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
+	date_created: Optional[datetime] = None
 	reservations: List[any] = []
 	id: Optional[int] = None
 

@@ -34,7 +34,7 @@ class DriverRouter(WebSocket):
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("driver", query_params, limit, offset, ('date_created', 'desc'))
+            data, total_rows = filter_data("driver", query_params, limit, offset, None, None, ('date_created', 'desc'))
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -47,7 +47,9 @@ class DriverRouter(WebSocket):
             if body.social_reason and get_data_by_attribute("driver", "social_reason", body.social_reason):
                 raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             data = add_data("driver", body.dict())
-            await self.broadcastAddAnagrafic("driver", Driver(**data).dict())
+            driver = Driver(**data).json()
+            await self.broadcastAddAnagrafic("driver", {"driver": driver})
+            await self.broadcastAddAnagrafic("reservation", {"driver": driver})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -61,7 +63,9 @@ class DriverRouter(WebSocket):
                 if driver and driver["id"] != id:
                     raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             data = update_data("driver", id, body.dict())
-            await self.broadcastUpdateAnagrafic("driver", Driver(**data).dict())
+            driver = Driver(**data).json()
+            await self.broadcastUpdateAnagrafic("driver", {"driver": driver})
+            await self.broadcastUpdateAnagrafic("reservation", {"driver": driver})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -74,7 +78,9 @@ class DriverRouter(WebSocket):
             if driver and len(driver["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"L'autista con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("driver", id)
-            await self.broadcastDeleteAnagrafic("driver", Driver(**data).dict())
+            driver = Driver(**data).json()
+            await self.broadcastDeleteAnagrafic("driver", {"driver": driver})
+            await self.broadcastDeleteAnagrafic("reservation", {"driver": driver})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

@@ -160,7 +160,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                 elif isinstance(toDate, (datetime, date)):
                     # Already a datetime or date object
                     query = query.filter(Reservation.date_created <= toDate)
-        
+
         # Aggiungi l'ordinamento se specificato
         if order_by:
             column_name, direction = order_by

@@ -2,6 +2,8 @@ let currentPage = 1;
 let rowsPerPage = 10;
 let totalRows = 0; // Aggiungi questa variabile per tenere traccia del numero totale di righe
 let itemName = null;
+let lastChar = 'o';
+let canAlwaysDelete = false;
 let listUrlPath = null;
 let addUrlPath = null;
 let setUrlPath = null;
@@ -186,7 +188,7 @@ function createRow(table, columns, item) {
     const editButton = document.createElement("button");
     editButton.style.visibility = 'hidden';
     editButton.textContent = "✏️";
-    editButton.onclick = () => editRow(item);
+    editButton.onclick = () => selectAnagrafic(item.id);
     // Pulsante Elimina
     const deleteButton = document.createElement("button");
     deleteButton.style.visibility = 'hidden';
@@ -336,7 +338,7 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
     })
     .then(res => {
         if (res.status === 404) {
-            showSnackbar(`${itemName} non trovato`, 'rgb(255, 208, 208)', 'black');
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
             closePopups(['edit-popup']);
         } else if (res.status === 400) {
             showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
@@ -360,11 +362,11 @@ function editRow(item) {
         }
     }
     if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {
+        const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
         confirm_exec_funct = funct;
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').innerHTML = `
-            Questa anagrafica è associata a delle pesate salvate.<br>
-            Apportando modifiche, verranno aggiornati anche i dati correlati alle pesate.
+            Apportando le modifiche, verranno aggiornati anche i dati correlati alle ${reservations_or_weighings}.
         `;
         openPopup('confirm-popup');
     } else {
@@ -389,7 +391,7 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
     })
     .then(res => {
         if (res.status === 404) {
-            showSnackbar(`${itemName} non trovato`, 'rgb(255, 208, 208)', 'black');
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
         }
         closePopups(['delete-popup']);
     })
@@ -418,9 +420,12 @@ function deleteRow(item) {
             }
         }
     }
-    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {
+    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0 && !canAlwaysDelete) {
+        const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
         document.querySelector('#confirm-title').textContent = "Attenzione!";
-        document.querySelector('#confirm-content').textContent = `Non è possibile eliminare questa anagrafica perchè è associata a delle pesate salvate.`;
+        document.querySelector('#confirm-content').textContent = `
+            Non è possibile procedere con l'eliminazione perchè è associata a delle ${reservations_or_weighings}.
+        `;
         openPopup('confirm-popup');
     } else {
         funct();
@@ -446,6 +451,7 @@ function openPopup(idPopup) {
 }
 
 function closePopups(idPopups) {
+    deselectAnagrafic(currentId);
     confirm_exec_funct = null;
     idPopups.forEach(idPopup => {
         const popup = document.getElementById(idPopup);
@@ -468,38 +474,64 @@ function closePopups(idPopups) {
     document.getElementById('overlay').classList.remove('active');
 }
 
+function capitalizeFirstLetter(str) {
+  if (!str) return str; // If the string is empty or undefined, return it as is
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function determineGender(word) {
+    // Convert the word to lowercase to avoid case-sensitive issues
+    word = word.toLowerCase();
+
+    // Check the word's ending
+    if (word.endsWith('a') || word.endsWith('e')) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 function connectWebSocket() {
     websocket_connection = new WebSocket(websocketUrlPath);
 
     websocket_connection.addEventListener('message', async (e) => {
         if (e.data) {
             const data = JSON.parse(e.data);
-            let specific = null;
+            const firstKey = Object.keys(data.data)[0];
+            data.data[firstKey] = JSON.parse(data.data[firstKey]);
+            let specific = '';
             const objectEntriesParams = Object.entries(params);
-            objectEntriesParams.forEach(([key, value]) => {
-                if (data.data[key]) {
-                    specific = `${value} "${data.data[key]}"`;
-                    return;
+            for (let [key, value] of objectEntriesParams) {
+                let current = structuredClone(data.data);
+                const keys = value.split(".");
+                for (let i = 0; i < keys.length; i++) {
+                    if (current && current.hasOwnProperty(keys[i])) {
+                        current = current[keys[i]];
+                        console.log(current);
+                        if (typeof(current) === 'string' || typeof(current) === 'number') {
+                            specific = `${key} "${current}"`;
+                        }
+                    }
                 }
-            })
-            if (objectEntriesParams.some(([_, value]) => value !== "" && value !== null)) {
-                specific = `con ${specific}`;
-            }
+                if (specific) {
+                    break; // Interrompe il ciclo principale quando si trova una corrispondenza
+                }
+            }            
             if (data.action === "add") {
                 await updateTable();
                 const obj = getTableColumns();
-                const li = obj.table.querySelector(`tr[data-id="${data.data.id}"]`);
+                const li = obj.table.querySelector(`tr[data-id="${data.data[firstKey].id}"]`);
                 if (li) {
                     li.classList.add('added');
                     li.addEventListener('animationend', () => {
                         li.classList.remove('added');
                     }, { once: true });
                 }
-                showSnackbar(`Nuovo ${itemName.toLowerCase()} ${specific} creato`, 'rgb(208, 255, 208)', 'black');
+                showSnackbar(capitalizeFirstLetter(`Nuov${lastChar} ${specific} creat${lastChar}`), 'rgb(208, 255, 208)', 'black');
             } else if (data.action === "update") {
                 await updateTable();
                 const obj = getTableColumns();
-                const li = obj.table.querySelector(`[data-id="${data.data.id}"]`);
+                const li = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
                 if (li) {
                     li.classList.toggle('updated');
                     // Rimuove la classe dopo l'animazione
@@ -507,10 +539,10 @@ function connectWebSocket() {
                         li.classList.remove('updated');
                     }, { once: true }); // Ascolta solo una volta
                 }
-                showSnackbar(`${itemName} ${specific} modificato`, 'rgb(255, 240, 208)', 'black');
+                showSnackbar(capitalizeFirstLetter(`${specific} modificat${lastChar}`), 'rgb(255, 240, 208)', 'black');
             } else if (data.action === "delete") {
                 const obj = getTableColumns();
-                const li = obj.table.querySelector(`[data-id="${data.data.id}"]`);
+                const li = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
                 if (li) {
                     li.classList.toggle('deleted');
                     li.addEventListener('animationend', async () => {
@@ -519,7 +551,10 @@ function connectWebSocket() {
                 } else {
                     await updateTable();
                 }
-                showSnackbar(`${itemName} ${specific} eliminato`, 'rgb(255, 208, 208)', 'black');
+                showSnackbar(capitalizeFirstLetter(`${specific} eliminat${lastChar}`), 'rgb(255, 208, 208)', 'black');
+            } else if (data.type === "select_response") {
+                if (data.success === true) editRow(data.data);
+                else console.log(data)
             }
         }
         if (callback_websocket_message) callback_websocket_message(e);
@@ -547,6 +582,59 @@ function attemptReconnect() {
     reconnectTimeout = setTimeout(() => {
         connectWebSocket(websocketUrlPath);
     }, 3000);
+}
+
+// Track pending requests
+const pendingRequests = new Map();
+let requestIdCounter = 0;
+
+async function sendWebSocketRequest(type, data) {
+    return new Promise((resolve, reject) => {
+        if (!websocket_connection || websocket_connection.readyState !== WebSocket.OPEN) {
+            reject(new Error("WebSocket is not connected"));
+            return;
+        }
+
+        // Create a unique request ID
+        const requestId = ++requestIdCounter;
+
+        // Store the promise callbacks
+        pendingRequests.set(requestId, { resolve, reject });
+        
+        // Send the request with the ID
+        const message = { type, ...data, requestId };
+        websocket_connection.send(JSON.stringify(message));
+        
+        // Set a timeout to clean up if no response comes
+        setTimeout(() => {
+            if (pendingRequests.has(requestId)) {
+                pendingRequests.delete(requestId);
+                reject(new Error("Request timed out"));
+            }
+        }, 10000); // 10 second timeout
+    });
+}
+
+// Example of using WebSocket for selectAnagrafic
+async function selectAnagrafic(id) {
+    try {
+        const response = await sendWebSocketRequest("select", { id });
+        return response.data;
+    } catch (error) {
+        console.error("Error selecting anagrafic:", error);
+        throw error;
+    }
+}
+
+// Example of using WebSocket for deselectAnagrafic
+async function deselectAnagrafic(id) {
+    try {
+        const response = await sendWebSocketRequest("deselect", { id });
+        return response;
+    } catch (error) {
+        console.error("Error deselecting anagrafic:", error);
+        throw error;
+    }
 }
 
 function init() {

@@ -13,9 +13,6 @@ def save_bytes_to_file(file_bytes, filename, folder_path):
     str: Il percorso completo del file salvato
     """
 
-    import libs.lb_log as lb_log
-    lb_log.warning("ijwebfoqwefbob")
-
     # Crea la cartella di destinazione se non esiste
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
@@ -23,8 +20,6 @@ def save_bytes_to_file(file_bytes, filename, folder_path):
     # Costruisci il percorso completo del file
     file_path = os.path.join(folder_path, filename)
 
-    lb_log.warning(file_path)
-    
     # Scrivi i bytes nel file
     with open(file_path, 'wb') as file:
         file.write(file_bytes)
