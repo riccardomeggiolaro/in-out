@@ -14,3 +14,6 @@ async def validate_time(time: Union[int, float]) -> Union[int, float]:
     if time <= 0:
         raise HTTPException(status_code=400, detail="Time must be greater than 0")
     return time
+
+def has_non_none_value(d):
+    return any(value not in [None, ""] for value in d.values())

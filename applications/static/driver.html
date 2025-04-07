@@ -59,9 +59,9 @@
         <h3>Nuovo vettore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Nome:<br>
-            <input type="text" id="social_reason" required><br>
+            <input type="text" id="social_reason" name="social_reason" required><br>
             Cell: (Opzionale)<br>
-            <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -73,9 +73,9 @@
         <h3>Modifica vettore:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Nome:<br>
-            <input type="text" id="social_reason" required><br>
+            <input type="text" id="social_reason" name="social_reason" required><br>
             Cell: (Opzionale)<br>
-            <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>

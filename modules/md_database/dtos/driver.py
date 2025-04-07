@@ -14,6 +14,18 @@ class Driver(BaseModel):
 		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
 		arbitrary_types_allowed = True
 
+class DriverDataDTO(BaseModel):
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
+	id: Optional[int] = None
+
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			if not get_data_by_id('driver', v):
+				raise ValueError('Id not exist in driver')
+		return v
+
 class DriverDTO(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
@@ -24,7 +36,7 @@ class DriverDTO(BaseModel):
 		if v not in (None, -1):
 			data = get_data_by_id('driver', v)
 			if not data:
-				raise ValueError('Id not exist in driver')
+    				raise ValueError('Id not exist in driver')
 			else:
 				values['social_reason'] = data.get('social_reason')
 				values['telephone'] = data.get('telephone')

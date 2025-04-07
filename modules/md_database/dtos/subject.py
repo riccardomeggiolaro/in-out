@@ -15,6 +15,19 @@ class Subject(BaseModel):
 		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
 		arbitrary_types_allowed = True
 
+class SubjectDataDTO(BaseModel):
+	social_reason:  Optional[str] = None
+	telephone: Optional[str] = None
+	cfpiva: Optional[str] = None
+	id: Optional[int] = None
+
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			if not get_data_by_id('subject', v):
+				raise ValueError('Id not exist in subject')
+		return v
+
 class SubjectDTO(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None

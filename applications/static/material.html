@@ -55,7 +55,7 @@
     <div id="add-popup" class="modal-content popup">
         <h3>Nuovo materiale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
-            <input type="text" id="description" required><br>
+            <input type="text" id="description" name="description" required><br>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -66,7 +66,7 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica materiale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
-            <input type="text" id="description" required><br>
+            <input type="text" id="description" name="description" required><br>
         </form>
         <div class="errors"></div>
         <div class="container-buttons right">                

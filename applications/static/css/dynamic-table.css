@@ -188,6 +188,7 @@ form {
     width: 100%;
     overflow: auto;
     display: none;
+    max-height: 180px;
 }
 
 .suggestions p {
@@ -306,9 +307,9 @@ thead input:focus {
     }
 }
 
-#add-popup {
-    max-width: 800px !important;
-    width: auto;
+.popup.active {
+    max-width: 400px !important;
+    width: 100%;
 }
 
 #register > div {
@@ -337,4 +338,13 @@ hr {
     margin-top: 15px;
     margin-bottom: 15px;
     color: aliceblue;
+}
+
+#filter\.fromDate,
+#filter\.toDate {
+    display: none;
+}
+
+.suggestionId {
+    display: none;
 }

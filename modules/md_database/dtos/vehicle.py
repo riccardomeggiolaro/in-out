@@ -14,6 +14,18 @@ class Vehicle(BaseModel):
 		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
 		arbitrary_types_allowed = True    
 
+class VehicleDataDTO(BaseModel):
+	plate: Optional[str] = None
+	description: Optional[str] = None
+	id: Optional[int] = None
+ 
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			if not get_data_by_id('vehicle', v):
+				raise ValueError('Id not exist in vehicle')
+		return v
+
 class VehicleDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None

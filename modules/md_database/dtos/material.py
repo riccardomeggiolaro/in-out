@@ -13,6 +13,17 @@ class Material(BaseModel):
 		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
 		arbitrary_types_allowed = True
 
+class MaterialDataDTO(BaseModel):
+	description:  Optional[str] = None
+	id: Optional[int] = None
+
+	@validator('id', pre=True, always=True)
+	def check_id(cls, v, values):
+		if v not in (None, -1):
+			if not get_data_by_id('material', v):
+				raise ValueError('Id not exist in material')
+		return v
+
 class MaterialDTO(BaseModel):
 	description:  Optional[str] = None
 	id: Optional[int] = None

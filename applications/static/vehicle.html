@@ -59,9 +59,9 @@
         <h3>Nuovo veicolo:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #description').value.trim() || document.querySelector('#add-popup #plate').value.trim()) || !this.checkValidity())">
             Targa: (Opzionale)<br>
-            <input type="text" id="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()">
+            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()">
             Descrizione: (Opzionale):<br>
-            <input type="text" id="description"><br>
+            <input type="text" id="description" name="description"><br>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -73,9 +73,9 @@
         <h3>Modifica veicolo:</h3>
         <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #description').value.trim() || document.querySelector('#edit-popup #plate').value.trim()) || !this.checkValidity())">
             Targa: (Opzionale)<br>
-            <input type="text" id="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()"><br>
+            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()"><br>
             Descrizione: (Opzionale)<br>
-            <input type="text" id="description"><br>
+            <input type="text" id="description" name="description"><br>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>

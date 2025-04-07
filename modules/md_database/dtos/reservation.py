@@ -1,17 +1,17 @@
 from pydantic import BaseModel, validator, root_validator
-from typing import Optional, List
+from typing import Optional, List, Union
 from modules.md_database.functions.get_data_by_id import get_data_by_id
-from modules.md_database.dtos.subject import Subject
-from modules.md_database.dtos.vector import Vector
-from modules.md_database.dtos.driver import Driver
-from modules.md_database.dtos.vehicle import Vehicle
-from modules.md_database.dtos.material import Material
+from modules.md_database.dtos.subject import Subject, SubjectDataDTO
+from modules.md_database.dtos.vector import Vector, VectorDataDTO
+from modules.md_database.dtos.driver import Driver, DriverDataDTO
+from modules.md_database.dtos.vehicle import Vehicle, VehicleDataDTO
+from modules.md_database.dtos.material import Material, MaterialDataDTO
 from modules.md_database.dtos.weighing import Weighing
 from datetime import datetime
 
 class Reservation(BaseModel):
     id: Optional[int] = None
-    typeSubject: Optional[int] = None
+    typeSubject: Optional[str] = None
     idSubject: Optional[int] = None
     idVector: Optional[int] = None
     idDriver: Optional[int] = None
@@ -144,3 +144,23 @@ class Reservation(BaseModel):
 #         if v is not None and v <= 0:
 #             raise ValueError('Number weighings must to be greater than 0')
 #         return v
+
+class AddReservationDTO(BaseModel):
+    typeSubject: str
+    subject: Optional[SubjectDataDTO] = SubjectDataDTO(**{})
+    vector: Optional[VectorDataDTO] = VectorDataDTO(**{})
+    driver: Optional[DriverDataDTO] = DriverDataDTO(**{})
+    vehicle: Optional[VehicleDataDTO] = VehicleDataDTO(**{})
+    number_weighings: int = 2
+    note: Optional[str] = None
+    document_reference: Optional[str] = None
+    
+class SetReservationDTO(BaseModel):
+    typeSubject: str
+    subject: Optional[SubjectDataDTO] = SubjectDataDTO(**{})
+    vector: Optional[VectorDataDTO] = VectorDataDTO(**{})
+    driver: Optional[DriverDataDTO] = DriverDataDTO(**{})
+    vehicle: Optional[VehicleDataDTO] = VehicleDataDTO(**{})
+    number_weighings: int = 2
+    note: Optional[str] = None
+    document_reference: Optional[str] = None

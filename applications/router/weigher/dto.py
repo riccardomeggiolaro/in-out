@@ -10,7 +10,7 @@ from modules.md_database.dtos.material import MaterialDTO
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_id_if_not_selected import get_data_by_id_if_not_selected
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.functions.select_reservation_if_incomplete import select_reservation_if_incomplete
+from modules.md_database.functions.select_reservation_if_uncomplete import select_reservation_if_uncomplete
 from modules.md_database.md_database import TypeSubjectEnum
 
 class DataInExecutionDTO(CustomBaseModel):
@@ -44,7 +44,7 @@ class IdSelectedDTO(CustomBaseModel):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in [None, -1]:
-			data = select_reservation_if_incomplete(v)
+			data = select_reservation_if_uncomplete(v)
 		return v
 
 class DataDTO(BaseModel):

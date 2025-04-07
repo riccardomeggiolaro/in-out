@@ -190,18 +190,12 @@ function createRow(table, columns, item) {
     const editButton = document.createElement("button");
     editButton.style.visibility = 'hidden';
     editButton.textContent = "✏️";
-    editButton.onclick = (e) => {
-        e.preventDefault();
-        selectAnagrafic(item.id, "update");
-    };
+    editButton.onclick = () => selectAnagrafic(item.id, "update");
     // Pulsante Elimina
     const deleteButton = document.createElement("button");
     deleteButton.style.visibility = 'hidden';
     deleteButton.textContent = "🗑️";
-    deleteButton.onclick = (e) => {
-        e.preventDefault();
-        selectAnagrafic(item.id, "delete");
-    };        
+    deleteButton.onclick = () => selectAnagrafic(item.id, "delete");        
     actionsCell.appendChild(editButton);
     actionsCell.appendChild(deleteButton);
     row.appendChild(actionsCell);        
@@ -267,29 +261,42 @@ function toggleExpandRow(row) {
 
 function getFormData(form) {
     const formData = {};
+
     const elements = form.elements;
     for (let element of elements) {
-        if (element.name) {
-            const keys = element.name.split('.'); // Suddivide l'ID in base al punto
+        if (element.id) {
+            const keys = element.id.split('.'); // Suddivide l'ID in base al punto
             let currentObj = formData; // Inizializziamo l'oggetto principale
+
             // Scorriamo i segmenti dell'ID e creiamo la struttura ad albero
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
+
                 // Se siamo nell'ultimo livello, aggiungiamo il valore
                 if (i === keys.length - 1) {
-                    if (element.type === 'checkbox') currentObj[key] = element.checked;
-                    else if (element.type === 'radio') {
-                        if (element.checked) currentObj[key] = element.value;
-                    } else if (element.type === 'text') currentObj[key] = element.value;
-                    else if (element.type === 'number') currentObj[key] = element.value !== "" ? element.value : -1;
+                    if (element.type === 'checkbox') {
+                        currentObj[key] = element.checked;
+                    } else if (element.type === 'radio') {
+                        if (element.checked) {
+                            currentObj[key] = element.value;
+                        }
+                    } else if (element.type === 'text') {
+                        currentObj[key] = element.value;
+                    } else if (element.type === 'number') {
+                        currentObj[key] = element.value !== "" ? element.value : -1;
+                    }
                 } else {
                     // Se non siamo all'ultimo livello, assicurarsi che l'oggetto esista
-                    if (!currentObj[key]) currentObj[key] = {}; // Crea un oggetto vuoto se non esiste
+                    if (!currentObj[key]) {
+                        currentObj[key] = {}; // Crea un oggetto vuoto se non esiste
+                    }
                     currentObj = currentObj[key]; // Scorriamo al livello successivo
                 }
             }
         }
     }
+
+    console.log(formData);
     return formData;
 }
 
@@ -366,26 +373,14 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
 
 // Funzioni segnaposto per modifica ed eliminazione
 function editRow(item) {
-    console.log(item)
     const funct = () => {
         if (callback_populate_select) callback_populate_select('#edit', item);
         currentId = item.id;
         document.getElementById('overlay').classList.add('active');
         editPopup.classList.add('active');
         for (let key in item) {
-            let annidate_key = `#${key}`;
-            let annidate_value = item[key];
-            if (typeof annidate_value === 'object' && annidate_value !== null && !Array.isArray(annidate_value)) {
-                Object.entries(annidate_value).forEach(([sub_key, sub_value]) => {
-                    annidate_key = `#${key}\\.${sub_key}`;
-                    annidate_value = sub_value;
-                    const keyInput = editPopup.querySelector(annidate_key);
-                    if (keyInput) keyInput.value = annidate_value;
-                })
-            } else {
-                const keyInput = editPopup.querySelector(annidate_key);
-                if (keyInput) keyInput.value = annidate_value;
-            }
+            const keyInput = editPopup.querySelector(`#${key}`);
+            if (keyInput) keyInput.value = item[key];
         }
     }
     if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {

@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.reservation import Reservation
+from modules.md_database.md_database import upload_file_datas_required_columns, ReservationStatus
+from modules.md_database.dtos.reservation import Reservation, AddReservationDTO, SetReservationDTO
+from modules.md_database.dtos.subject import Subject
+from modules.md_database.dtos.vector import Vector
+from modules.md_database.dtos.driver import Driver
+from modules.md_database.dtos.vehicle import Vehicle
+from modules.md_database.dtos.material import Material
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -9,9 +14,12 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
 from modules.md_database.functions.get_list_reservations import get_list_reservations
+from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_incomplete
 import pandas as pd
 import numpy as np
-from applications.utils.utils import get_query_params
+from applications.utils.utils import get_query_params, has_non_none_value
 from applications.router.anagrafic.web_sockets import WebSocket
 from datetime import datetime
 
@@ -20,8 +28,8 @@ class ReservationRouter(WebSocket):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
-        # self.router.add_api_route('', self.addSubject, methods=['POST'])
-        # self.router.add_api_route('/{id}', self.setSubject, methods=['PATCH'])
+        self.router.add_api_route('', self.addReservation, methods=['POST'])
+        self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'])
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
         self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'])
 
@@ -46,20 +54,130 @@ class ReservationRouter(WebSocket):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    # async def addSubject(self, body: AddSubjectDTO):
-    #     try:
-    #         add_data("subject", body.dict())
-    #         return {"message": "Data added successfully"}
-    #     except Exception as e:
-    #         raise HTTPException(status_code=400, detail=f"{e}")
+    async def addReservation(self, body: AddReservationDTO):
+        try:
+            if not body.vehicle.plate:
+                raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
+            if get_reservation_by_plate_if_incomplete(body.vehicle.plate):
+                raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{body.vehicle.plate}' ancora da chiudere")
+            
+            body.subject.id = body.subject.id if body.subject.id not in [None, -1] else None
+            body.vector.id = body.vector.id if body.vector.id not in [None, -1] else None
+            body.driver.id = body.driver.id if body.driver.id not in [None, -1] else None
+            body.vehicle.id = body.vehicle.id if body.vehicle.id not in [None, -1] else None
+            reservation_to_add = {
+                "typeSubject": body.typeSubject,
+                "idSubject": body.subject.id,
+                "idVector": body.vector.id,
+                "idDriver": body.driver.id,
+                "idVehicle": body.vehicle.id,
+                "idMaterial": None,
+                "number_weighings": body.number_weighings,
+                "note": body.note,
+                "status": ReservationStatus.WAITING,
+                "document_reference": body.document_reference
+            }
+            if body.subject.id in [None, -1] and body.subject.social_reason and get_data_by_attribute("subject", "social_reason", body.subject.social_reason):
+                raise HTTPException(status_code=400, detail=f"Soggetto con ragione sociale '{body.subject.social_reason}' già esistente")
+            if body.subject.id in [None, -1] and body.subject.cfpiva and get_data_by_attribute("subject", "cfpiva", body.subject.cfpiva):
+                raise HTTPException(status_code=400, detail=f"Soggetto con CF/P.Iva '{body.subject.cfpiva}' già esistente")
+            if body.vector.id in [None, -1] and body.vector.social_reason and get_data_by_attribute("vector", "social_reason", body.vector.social_reason):
+                raise HTTPException(status_code=400, detail=f"Vettore con ragione sociale '{body.vector.social_reason}' già esistente")
+            if body.vector.id in [None, -1] and body.vector.cfpiva and get_data_by_attribute("vector", "cfpiva", body.vector.cfpiva):
+                raise HTTPException(status_code=400, detail=f"Vettore con CF/P.Iva '{body.vector.cfpiva}' già esistente")
+            if body.driver.id in [None, -1] and body.driver.social_reason:
+                del body.driver.id
+                if get_data_by_attributes("driver", body.driver.dict()):
+                    raise HTTPException(status_code=400, detail=f"Autista già registrato")
+            if body.vehicle.id in [None, -1] and body.vehicle.plate and get_data_by_attribute("vehicle", "plate", body.vehicle.plate):
+                raise HTTPException(status_code=400, detail=f"Veicolo con targa '{body.vehicle.plate}' già esistente")
+            if not reservation_to_add["idSubject"] and has_non_none_value(body.subject.dict()):
+                data = add_data("subject", body.subject.dict())
+                subject = Subject(**data)
+                await self.broadcastAddAnagrafic("subject", {"subject": subject.json()})
+                reservation_to_add["idSubject"] = subject.id
+            if not reservation_to_add["idVector"] and has_non_none_value(body.vector.dict()):
+                data = add_data("vector", body.vector.dict())
+                vector = Vector(**data)
+                await self.broadcastAddAnagrafic("vector", {"vector": vector.json()})
+                reservation_to_add["idVector"] = vector.id
+            if not reservation_to_add["idDriver"] and has_non_none_value(body.driver.dict()):
+                data = add_data("driver", body.driver.dict())
+                driver = Driver(**data)
+                await self.broadcastAddAnagrafic("driver", {"driver": driver.json()})
+                reservation_to_add["idDriver"] = driver.id
+            if not reservation_to_add["idVehicle"] and has_non_none_value(body.vehicle.dict()):
+                data = add_data("vehicle", body.vehicle.dict())
+                vehicle = Vehicle(**data)
+                await self.broadcastAddAnagrafic("vehicle", {"vehicle": vehicle.json()})
+                reservation_to_add["idVehicle"] = vehicle.id
+            data = add_data("reservation", reservation_to_add)
+            reservation = Reservation(**data).json()
+            await self.broadcastAddAnagrafic("reservation", {"reservation": reservation})
+            return reservation
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"{e}")
 
-    # async def setSubject(self, id: int, body: SetSubjectDTO):
-    #     try:
-    #         update_data("subject", id, body.dict())
-    #     except Exception as e:
-    #         raise HTTPException(status_code=404, detail=f"{e}")
-
-    #     return {"message": "Data updated successfully"}
+    async def setReservation(self, id: int, body: SetReservationDTO):
+        try:
+            if not body.vehicle.plate:
+                raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
+            just_exist_reservation =  get_reservation_by_plate_if_incomplete(body.vehicle.plate)
+            if just_exist_reservation and just_exist_reservation["id"] != id:
+                raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{body.vehicle.plate}' ancora da chiudere")
+            
+            reservation_to_update = {
+                "typeSubject": body.typeSubject,
+                "idSubject": body.subject.id,
+                "idVector": body.vector.id,
+                "idDriver": body.driver.id,
+                "idVehicle": body.vehicle.id,
+                "idMaterial": None,
+                "number_weighings": body.number_weighings,
+                "note": body.note,
+                "status": ReservationStatus.WAITING,
+                "document_reference": body.document_reference
+            }
+            if body.subject.id in [None, -1] and body.subject.social_reason and get_data_by_attribute("subject", "social_reason", body.subject.social_reason):
+                raise HTTPException(status_code=400, detail=f"Soggetto con ragione sociale '{body.subject.social_reason}' già esistente")
+            if body.subject.id in [None, -1] and body.subject.cfpiva and get_data_by_attribute("subject", "cfpiva", body.subject.cfpiva):
+                raise HTTPException(status_code=400, detail=f"Soggetto con CF/P.Iva '{body.subject.cfpiva}' già esistente")
+            if body.vector.id in [None, -1] and body.vector.social_reason and get_data_by_attribute("vector", "social_reason", body.vector.social_reason):
+                raise HTTPException(status_code=400, detail=f"Vettore con ragione sociale '{body.vector.social_reason}' già esistente")
+            if body.vector.id in [None, -1] and body.vector.cfpiva and get_data_by_attribute("vector", "cfpiva", body.vector.cfpiva):
+                raise HTTPException(status_code=400, detail=f"Vettore con CF/P.Iva '{body.vector.cfpiva}' già esistente")
+            if body.driver.id in [None, -1] and body.driver.social_reason:
+                del body.driver.id
+                if get_data_by_attributes("driver", body.driver.dict()):
+                    raise HTTPException(status_code=400, detail=f"Autista già registrato")
+            if body.vehicle.id in [None, -1] and body.vehicle.plate and get_data_by_attribute("vehicle", "plate", body.vehicle.plate):
+                raise HTTPException(status_code=400, detail=f"Veicolo con targa '{body.vehicle.plate}' già esistente")
+            if not reservation_to_update["idSubject"] and has_non_none_value(body.subject.dict()):
+                data = add_data("subject", body.subject.dict())
+                subject = Subject(**data)
+                await self.broadcastAddAnagrafic("subject", {"subject": subject.json()})
+                reservation_to_update["idSubject"] = subject.id
+            if not reservation_to_update["idVector"] and has_non_none_value(body.vector.dict()):
+                data = add_data("vector", body.vector.dict())
+                vector = Vector(**data)
+                await self.broadcastAddAnagrafic("vector", {"vector": vector.json()})
+                reservation_to_update["idVector"] = vector.id
+            if not reservation_to_update["idDriver"] and has_non_none_value(body.driver.dict()):
+                data = add_data("driver", body.driver.dict())
+                driver = Driver(**data)
+                await self.broadcastAddAnagrafic("driver", {"driver": driver.json()})
+                reservation_to_update["idDriver"] = driver.id
+            if not reservation_to_update["idVehicle"] and has_non_none_value(body.vehicle.dict()):
+                data = add_data("vehicle", body.vehicle.dict())
+                vehicle = Vehicle(**data)
+                await self.broadcastAddAnagrafic("vehicle", {"vehicle": vehicle.json()})
+                reservation_to_update["idVehicle"] = vehicle.id
+            data = update_data("reservation", reservation_to_update)
+            reservation = Reservation(**data).json()
+            await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation})
+            return reservation
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"{e}")
 
     async def deleteReservation(self, id: int):
         try:

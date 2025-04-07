@@ -8,56 +8,6 @@
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
-        <style>
-            .column-header {
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                position: relative;
-            }
-            .filter-btn {
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 2px;
-                color: #888;
-                transition: color 0.3s ease;
-            }
-            .filter-btn:hover {
-                color: #333;
-            }
-            .filter-btn.active {
-                color: #007bff;
-            }
-            .filter-dropdown {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                z-index: 10;
-                background: white;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                width: 250px;
-                padding: 10px;
-                margin-top: 5px;
-            }
-            .filter-dropdown input {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                margin-bottom: 10px;
-            }
-            .filter-dropdown-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 5;
-            }
-        </style>
     </head>
 <body>
     <div id="navbar-container"></div>
@@ -112,11 +62,11 @@
         <h3>Nuovo soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Ragione sociale:<br>
-            <input type="text" id="social_reason" required><br>
+            <input type="text" id="social_reason" name="social_reason" required><br>
             Telefono: (Opzionale)<br>
-            <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <input type="text" id="cfpiva" name="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -128,11 +78,11 @@
         <h3>Modifica soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Ragione sociale:<br>
-            <input type="text" id="social_reason" required><br>
+            <input type="text" id="social_reason" name="social_reason" required><br>
             Telefono: (Opzionale)<br>
-            <input type="text" id="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
             CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <input type="text" id="cfpiva" name="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>

@@ -15,9 +15,8 @@
             #dateRange {
                 width: 200px;
             }
-            #filter\.fromDate,
-            #filter\.toDate {
-                display: none;
+            .popup.active {
+                max-width: 800px !important;
             }
         </style>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -70,6 +69,9 @@
                         <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
                     <th name="number_weighings">Pesate</th>
+                    <th name="document_reference">
+                        <input id="filter.document_reference" name="document_reference" type="text" placeholder="Bolla" oninput="updateTable()">
+                    </th>
                     <th></th>
                 </tr>
             </thead>
@@ -77,7 +79,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="11" style="text-align: center;">
+                    <td colspan="12" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -115,27 +117,28 @@
 
             <div>
                 <div class="item">
-                    <input placeholder="Ragione Sociale" id="subject.social_reason" type="text" data-id=""
+                    <input id="subject.id" name="subject.id" type="number" class="suggestionId">
+                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text"
                         oninput="
                             populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
-                            if (this.dataset.id) {
-                                this.dataset.id = '';
-                                subjectTelephone.dataset.id = '';
-                                subjectTelephone.value = ''; 
-                                subjectCfpiva.dataset.id = '';
-                                subjectCfpiva.value = '';
-                            }"
-                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', this.value)">
+                            if (subjectId.value != '') deselectAnagrafic(subjectId.value, 'deselect', 'subject');
+                            subjectId.value = '';
+                            subjectTelephone.disabled = false;
+                            subjectTelephone.value = '';
+                            subjectCfpiva.disabled = false;
+                            subjectCfpiva.value = '';
+                        "
+                        onfocus="if (!subjectId.value) populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
                     <div id="suggestions.subject.social_reason" class="suggestions"></div>
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="subject.telephone" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')">
+                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')">
                 </div>
                     
                 <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="subject.cfpiva" type="text" data-id="" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
                 </div>
             </div>
 
@@ -145,27 +148,28 @@
 
             <div>
                 <div class="item">
-                    <input placeholder="Ragione Sociale" id="vector.social_reason" type="text" data-id=""
+                    <input id="vector.id" name="vector.id" type="number" class="suggestionId">
+                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text"
                         oninput="
                             populateSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
-                            if (this.dataset.id) {
-                                this.dataset.id = '';
-                                vectorTelephone.dataset.id = '';
-                                vectorTelephone.value = ''; 
-                                vectorCfpiva.dataset.id = '';
-                                vectorCfpiva.value = '';
-                            };"
-                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', this.value)">
+                            if (vectorId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'vector');
+                            vectorId.value = '';
+                            vectorTelephone.disabled = false;
+                            vectorTelephone.value = '';
+                            vectorCfpiva.disabled = false;
+                            vectorCfpiva.value = '';
+                        "
+                        onfocus="if (!vectorId.value) populateSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
                     <div id="suggestions.vector.social_reason" class="suggestions"></div>
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="vector.telephone" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');"><br>
+                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');"><br>
                 </div>
                     
                 <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="vector.cfpiva" type="text" data-id="" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"><br>
+                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"><br>
                 </div>
             </div>
 
@@ -175,20 +179,22 @@
 
             <div>
                 <div class="item-25">
-                    <input placeholder="Nome Cognome" id="driver.social_reason" type="text" data-id=""
+                    <input id="driver.id" name="driver.id" type="number" class="suggestionId">
+                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text"
                         oninput="
                             populateSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
-                            if (this.dataset.id) {
-                                driverSocialReason.value = '';
-                                driverTelephone.value = '';
-                            }"
-                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', this.value)">
+                            if (driverId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'driver');
+                            vectorId.value = '';
+                            driverTelephone.disabled = false;
+                            driverTelephone.value = '';
+                        "
+                        onfocus="if (!driverId.value) populateSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
                     <div id="suggestions.driver.social_reason" class="suggestions"></div>
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="driver.telephone" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
+                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
                 </div>
             </div>
 
@@ -198,18 +204,23 @@
 
             <div>
                 <div class="item-25">
-                    <input placeholder="Targa" id="vehicle.plate" type="text" data-id=""
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}"
                         oninput="
-                            populateSuggestions('#register #suggestions\\.plate\\.plate', 'plate', 'vehicle', this.value);
-                            vehiclePlate.value = '';
-                            vehicleDescription.value = '';"
-                        onfocus="if (!this.dataset.id) populateSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', this.value)">
+                            this.value = this.value.toUpperCase();
+                            populateSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (vehicleId.value != '') deselectAnagrafic(vehicleId.value, 'deselect', 'vehicle');
+                            vehicleId.value = '';
+                            vehicleDescription.disabled = false;
+                            vehicleDescription.value = '';
+                        "
+                        onfocus="if (!vehicleId.value) populateSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);"
+                        onblur="closeSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
                     <div id="suggestions.vehicle.plate" class="suggestions"></div>
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Descrizione" id="vehicle.description" type="text" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text">
                 </div>
             </div>
 
@@ -217,11 +228,11 @@
 
             <div>
                 <div class="item-25">
-                    <input placeholder="Numero pesate" id="number_weighings" type="number" data-id="" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
                 <div class="item-25">
-                    <input placeholder="Note" id="note" type="text">
+                    <input placeholder="Note" id="note" name="note" type="text">
                 </div>
             </div>
         </form>
@@ -232,22 +243,145 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica prenotazione:</h3>
-        <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #idSocialReason').value.trim() || document.querySelector('#edit-popup #idVector').value.trim() || document.querySelector('#edit-popup #idVehicle').value.trim() || document.querySelector('#edit-popup #idMaterial').value.trim()) || !this.checkValidity())" autocomplete="off">
+        <h3>Nuova prenotazione:</h3>
+        <form id="edit" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #subject\\.social_reason').value.trim()) || !this.checkValidity())" autocomplete="off">
+            <h4>Soggetto</h4>
+
             <div class="radio">
-                <input id="typeSubject" type="radio" name="option" value="0">Cliente
-                <input id="typeSubject" type="radio" name="option" value="1">Fornitore
+                <div class="radio-option left">
+                    <input id="customer" type="radio" name="typeSubject" value="CUSTOMER" checked>
+                    <label for="customer">Cliente</label>
+                </div>
+                <div class="radio-option right">
+                    <input id="supplier" type="radio" name="typeSubject" value="SUPPLIER">
+                    <label for="supplier">Fornitore</label>
+                </div>
+            </div>                
+
+            <div>
+                <div class="item">
+                    <input id="subject.id" name="subject.id" type="number" class="suggestionId">
+                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text"
+                        oninput="
+                            populateSuggestions('#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            if (subjectId.value != '') deselectAnagrafic(subjectId.value, 'deselect', 'subject');
+                            subjectId.value = '';
+                            subjectTelephone.disabled = false;
+                            subjectTelephone.value = '';
+                            subjectCfpiva.disabled = false;
+                            subjectCfpiva.value = '';
+                        "
+                        onfocus="if (!subjectId.value) populateSuggestions('#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);"
+                        onblur="closeSuggestions('#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
+                    <div id="suggestions.subject.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')">
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+                </div>
             </div>
-            Ragione Sociale: (Opzionale)<br>
-            <select id="idSocialReason"></select><br>
-            Veicolo: (Opzionale)<br>
-            <select id="idVehicle"></select><br>
-            Vettore: (Opzionale)<br>
-            <select id="idVector"></select><br>
+
+            <hr>
+
+            <h4>Vettore</h4>
+
+            <div>
+                <div class="item">
+                    <input id="vector.id" name="vector.id" type="number" class="suggestionId">
+                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text"
+                        oninput="
+                            populateSuggestions('#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            if (vectorId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'vector');
+                            vectorId.value = '';
+                            vectorTelephone.disabled = false;
+                            vectorTelephone.value = '';
+                            vectorCfpiva.disabled = false;
+                            vectorCfpiva.value = '';
+                        "
+                        onfocus="if (!vectorId.value) populateSuggestions('#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);"
+                        onblur="closeSuggestions('#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
+                    <div id="suggestions.vector.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');"><br>
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"><br>
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Autista</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="driver.id" name="driver.id" type="number" class="suggestionId">
+                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text"
+                        oninput="
+                            populateSuggestions('#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            if (driverId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'driver');
+                            vectorId.value = '';
+                            driverTelephone.disabled = false;
+                            driverTelephone.value = '';
+                        "
+                        onfocus="if (!driverId.value) populateSuggestions('#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);"
+                        onblur="closeSuggestions('#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
+                    <div id="suggestions.driver.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Veicolo</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}"
+                        oninput="
+                            this.value = this.value.toUpperCase();
+                            populateSuggestions('#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (vehicleId.value != '') deselectAnagrafic(vehicleId.value, 'deselect', 'vehicle');
+                            vehicleId.value = '';
+                            vehicleDescription.disabled = false;
+                            vehicleDescription.value = '';
+                        "
+                        onfocus="if (!vehicleId.value) populateSuggestions('#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);"
+                        onblur="closeSuggestions('#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text">
+                </div>
+            </div>
+
+            <hr>
+
+            <div>
+                <div class="item-25">
+                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                </div>
+
+                <div class="item-25">
+                    <input placeholder="Note" id="note" name="note" type="text">
+                </div>
+            </div>
         </form>
         <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
-            <button id="save-btn" class="edit-save-btn">Salva</button><br>
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
         </div>
     </div>
 
@@ -288,22 +422,27 @@
     <script>
         const fromDate = document.querySelector('#filter\\.fromDate');
         const toDate = document.querySelector('#filter\\.toDate');
+        const subjectId = document.querySelector('#subject\\.id');
         const subjectSocialReason = document.querySelector('#subject\\.social_reason');
         const suggestionsSubjectSocialReason = document.querySelector('#suggestions\\.subject\\.social_reason');
         const subjectTelephone = document.querySelector('#subject\\.telephone');
         const subjectCfpiva = document.querySelector('#subject\\.cfpiva');
+        const vectorId = document.querySelector('#vector\\.id');
         const vectorSocialReason = document.querySelector('#vector\\.social_reason');
         const suggestionsVectorSocialReason = document.querySelector('#suggestions\\.vector\\.social_reason');
         const vectorTelephone = document.querySelector('#vector\\.telephone');
         const vectorCfpiva = document.querySelector('#vector\\.cfpiva');
+        const driverId = document.querySelector('#driver\\.id');
         const driverSocialReason = document.querySelector('#driver\\.social_reason');
         const suggestionsDriverSocialReason = document.querySelector('#suggestions\\.driver\\.social_reason');
         const driverTelephone = document.querySelector('#driver\\.telephone');
+        const vehicleId = document.querySelector('#vehicle\\.id');
         const vehiclePlate = document.querySelector('#vehicle\\.plate');
         const suggestionsVehiclePlate = document.querySelector('#suggestions\\.vehicle\\.plate');
         const vehicleDescription = document.querySelector('#vehicle\\.description');
         const numberWeighings = document.querySelector('#number_weighings');
         const note = document.querySelector('#note');
+        const documentReference = document.querySelector('#document_reference');
 
         document.addEventListener("DOMContentLoaded", () => {
             itemName = 'reservation';
@@ -315,10 +454,10 @@
             deleteUrlPath = '/anagrafic/reservation';
             websocketUrlPath = '/anagrafic/reservation';
             callback_populate_select = populateForm;
+            callback_close_popups = deselectAllAnagrafic;
             populate_detail_tr = populateDetailTr;
             params = {
                 "prenotazione con veicolo": "reservation.vehicle.plate",
-                "prenotazione con veicolo": "reservation.vehicle.description",
                 "prenotazione con soggetto": "reservation.subject.social_reason",
                 "prenotazione con vettore": "reservation.vector.social_reason",
                 "prenotazione con autista": "reservation.driver.social_reason",
@@ -383,56 +522,107 @@
         }
 
         function populateSuggestions(suggestions, key, anagrafic, value) {
-            let currentSuggestionsSocialReason = document.querySelector(suggestions);
-            currentSuggestionsSocialReason.style.display = 'block';
+            let currentSuggestions = document.querySelector(suggestions);
+            currentSuggestions.style.display = 'block';
             fetch(`/anagrafic/${anagrafic}/list?${key}=${value}%`)
             .then(res => res.json())
             .then(res => {
-                currentSuggestionsSocialReason.innerHTML = '';
+                currentSuggestions.innerHTML = '';
                 res.data.forEach(item => {
+                    console.log(item)
                     const option = document.createElement('p');
                     option.innerHTML = highlightText(item, value, key);
                     option.id = item.id;
                     option.dataset.item = JSON.stringify(item);
-                    option.onmousedown = () => {
+                    option.onmousedown = (e) => {
                         if (anagrafic === 'subject') {
-                            subjectSocialReason.dataset.id = item.id;
+                            subjectId.value = item.id;
+                            console.log(subjectId.value)
                             subjectSocialReason.value = item.social_reason;
-                            subjectTelephone.dataset.id = item.id;
                             subjectTelephone.value = item.telephone;
-                            subjectCfpiva.dataset.id = item.id;
+                            subjectTelephone.disabled = true;
                             subjectCfpiva.value = item.cfpiva;
+                            subjectCfpiva.disabled = true;
                         } else if (anagrafic === 'vector') {
+                            vectorId.value = item.id;
                             vectorSocialReason.value = item.social_reason;
                             vectorTelephone.value = item.telephone;
+                            vectorTelephone.disabled = true;
                             vectorCfpiva.value = item.cfpiva;
+                            vectorCfpiva.disabled = true;
                         } else if (anagrafic === 'driver') {
+                            driverId.value = item.id;
                             driverSocialReason.value = item.social_reason;
                             driverTelephone.value = item.telephone;                            
+                            driverTelephone.disabled = true;
                         } else if (anagrafic === 'vehicle') {
+                            vehicleId.value = item.id;
                             vehiclePlate.value = item.plate;
                             vehicleDescription.value = item.description;
+                            vehicleDescription.disabled = true;
                         }
+                        selectAnagrafic(item.id, "select", anagrafic);
+                        currentSuggestions.style.display = 'none';
+                        e.preventDefault();
                     };
-                    currentSuggestionsSocialReason.appendChild(option);             
+                    currentSuggestions.appendChild(option);         
                 });
             });
         }        
 
-        function closeSuggestions(suggestions, key, value) {
+        function closeSuggestions(suggestions, key, anagrafic, value) {
             const currentSuggestions = document.querySelector(suggestions);
             currentSuggestions.style.display = 'none';
             const options = currentSuggestions.querySelectorAll('p');
+            let continues = false;
             if (options.length === 1) {
                 const item = JSON.parse(options[0].dataset.item);
                 if (item[key].toLowerCase() == value.toLowerCase()) {
-                    subjectSocialReason.dataset.id = item.id;
-                    subjectSocialReason.value = item.social_reason;
-                    subjectTelephone.dataset.id = item.id;
-                    subjectTelephone.value = item.telephone;
-                    subjectCfpiva.dataset.id = item.id;
-                    subjectCfpiva.value = item.cfpiva;
+                    if (anagrafic === 'subject' && subjectId.value != item.id) {
+                        subjectId.value = item.id;
+                        subjectSocialReason.value = item.social_reason;
+                        subjectTelephone.value = item.telephone;
+                        subjectTelephone.disabled = true;
+                        subjectCfpiva.value = item.cfpiva;
+                        subjectCfpiva.disabled = true;
+                        selectAnagrafic(item.id, "select", anagrafic);
+                    } else if (anagrafic === 'vector' && vectorId.value != item.id) {
+                        vectorId.value = item.id;
+                        vectorSocialReason.value = item.social_reason;
+                        vectorTelephone.value = item.telephone;
+                        vectorTelephone.disabled = true;
+                        vectorCfpiva.value = item.cfpiva;
+                        vectorCfpiva.disabled = true;
+                        selectAnagrafic(item.id, "select", anagrafic);
+                    } else if (anagrafic === 'driver' && driverId.value != item.id && driverSocialReason.telephone === item.telephone) {
+                        driverId.value = item.id;
+                        driverSocialReason.value = item.social_reason;
+                        driverTelephone.value = item.telephone;                            
+                        driverTelephone.disabled = true;
+                        selectAnagrafic(item.id, "select", anagrafic);
+                    } else if (anagrafic === 'vehicle' && vehicleId.value != item.id) {
+                        vehicleId.value = item.id;
+                        vehiclePlate.value = item.plate;
+                        vehicleDescription.value = item.description;
+                        vehicleDescription.disabled = true;
+                        selectAnagrafic(item.id, "select", anagrafic);
+                    }
                 }
+            }
+        }
+
+        function deselectAllAnagrafic() {
+            if (subjectId.value != '') {
+                deselectAnagrafic(subjectId.value, "select", "subject");
+            }
+            if (vectorId.value != '') {
+                deselectAnagrafic(vectorId.value, "select", "vector");
+            }
+            if (driverId.value != '') {
+                deselectAnagrafic(driverId.value, "select", "driver");
+            }
+            if (vehicleId.value != '') {
+                deselectAnagrafic(vehicleId.value, "select", "vehicle");
             }
         }
     </script>
