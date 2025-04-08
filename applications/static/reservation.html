@@ -101,35 +101,45 @@
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova prenotazione:</h3>
-        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #subject\\.social_reason').value.trim()) || !this.checkValidity())" autocomplete="off">
+        <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = (!(document.querySelector('#add-popup #subject\\.social_reason').value.trim()) || !this.checkValidity())" autocomplete="off">
             <h4>Soggetto</h4>
 
             <div class="radio">
                 <div class="radio-option left">
+                  <label class="flexRadio">
                     <input id="customer" type="radio" name="typeSubject" value="CUSTOMER" checked>
-                    <label for="customer">Cliente</label>
+                    Cliente
+                  </label>
                 </div>
                 <div class="radio-option right">
+                  <label class="flexRadio">
                     <input id="supplier" type="radio" name="typeSubject" value="SUPPLIER">
-                    <label for="supplier">Fornitore</label>
+                    Fornitore
+                  </label>
                 </div>
-            </div>                
+            </div>
 
             <div>
                 <div class="item">
                     <input id="subject.id" name="subject.id" type="number" class="suggestionId">
                     <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text"
                         oninput="
-                            populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
-                            if (subjectId.value != '') deselectAnagrafic(subjectId.value, 'deselect', 'subject');
-                            subjectId.value = '';
-                            subjectTelephone.disabled = false;
-                            subjectTelephone.value = '';
-                            subjectCfpiva.disabled = false;
-                            subjectCfpiva.value = '';
+                            populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            if (document.querySelector('#add-popup #subject\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#add-popup #subject\\.id').value, 'deselect', 'subject');
+                                document.querySelector('#add-popup #subject\\.id').value = '';
+                                document.querySelector('#add-popup #subject\\.telephone').disabled = false;
+                                document.querySelector('#add-popup #subject\\.telephone').value = '';
+                                document.querySelector('#add-popup #subject\\.cfpiva').disabled = false;
+                                document.querySelector('#add-popup #subject\\.cfpiva').value = '';
+                            }
                         "
-                        onfocus="if (!subjectId.value) populateSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#add-popup #subject\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
                     <div id="suggestions.subject.social_reason" class="suggestions"></div>
                 </div>
     
@@ -151,16 +161,22 @@
                     <input id="vector.id" name="vector.id" type="number" class="suggestionId">
                     <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text"
                         oninput="
-                            populateSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
-                            if (vectorId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'vector');
-                            vectorId.value = '';
-                            vectorTelephone.disabled = false;
-                            vectorTelephone.value = '';
-                            vectorCfpiva.disabled = false;
-                            vectorCfpiva.value = '';
+                            populateSuggestions('#add-popup', '#register', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            if (document.querySelector('#add-popup #vector\\.id').value != '') {
+                                deselectAnagrafic('#add-popup', document.querySelector('#add-popup #vector\\.id').value, 'deselect', 'vector');
+                                document.querySelector('#add-popup #vector\\.id').value = '';
+                                document.querySelector('#add-popup #vector\\.telephone').disabled = false;
+                                document.querySelector('#add-popup #vector\\.telephone').value = '';
+                                document.querySelector('#add-popup #vector\\.cfpiva').disabled = false;
+                                document.querySelector('#add-popup #vector\\.cfpiva').value = '';
+                            }
                         "
-                        onfocus="if (!vectorId.value) populateSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#add-popup #vector\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
                     <div id="suggestions.vector.social_reason" class="suggestions"></div>
                 </div>
     
@@ -182,14 +198,20 @@
                     <input id="driver.id" name="driver.id" type="number" class="suggestionId">
                     <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text"
                         oninput="
-                            populateSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
-                            if (driverId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'driver');
-                            vectorId.value = '';
-                            driverTelephone.disabled = false;
-                            driverTelephone.value = '';
+                            populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            if (document.querySelector('#add-popup #driver\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#add-popup #driver\\.id').value, 'deselect', 'driver');
+                                document.querySelector('#add-popup #driver\\.id').value = '';
+                                document.querySelector('#add-popup #driver\\.telephone').disabled = false;
+                                document.querySelector('#add-popup #driver\\.telephone').value = '';
+                            }
                         "
-                        onfocus="if (!driverId.value) populateSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#add-popup #driver\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
                     <div id="suggestions.driver.social_reason" class="suggestions"></div>
                 </div>
     
@@ -208,14 +230,20 @@
                     <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}"
                         oninput="
                             this.value = this.value.toUpperCase();
-                            populateSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            if (vehicleId.value != '') deselectAnagrafic(vehicleId.value, 'deselect', 'vehicle');
-                            vehicleId.value = '';
-                            vehicleDescription.disabled = false;
-                            vehicleDescription.value = '';
+                            populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#add-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'deselect', 'vehicle');
+                                document.querySelector('#add-popup #vehicle\\.id').value = '';
+                                document.querySelector('#add-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#add-popup #vehicle\\.description').value = '';
+                            }
                         "
-                        onfocus="if (!vehicleId.value) populateSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);"
-                        onblur="closeSuggestions('#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#add-popup #vehicle\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
                     <div id="suggestions.vehicle.plate" class="suggestions"></div>
                 </div>
     
@@ -244,35 +272,50 @@
 
     <div id="edit-popup" class="modal-content popup">
         <h3>Nuova prenotazione:</h3>
-        <form id="edit" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #subject\\.social_reason').value.trim()) || !this.checkValidity())" autocomplete="off">
+        <form id="edit" class="content form-content" autocomplete="off">
             <h4>Soggetto</h4>
 
             <div class="radio">
                 <div class="radio-option left">
+                  <label class="flexRadio">
                     <input id="customer" type="radio" name="typeSubject" value="CUSTOMER" checked>
-                    <label for="customer">Cliente</label>
+                    Cliente
+                  </label>
                 </div>
                 <div class="radio-option right">
+                  <label class="flexRadio">
                     <input id="supplier" type="radio" name="typeSubject" value="SUPPLIER">
-                    <label for="supplier">Fornitore</label>
+                    Fornitore
+                  </label>
                 </div>
-            </div>                
+            </div>
 
             <div>
                 <div class="item">
-                    <input id="subject.id" name="subject.id" type="number" class="suggestionId">
+                    <input id="subject.id" name="subject.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #subject\\.telephone').disabled = true;
+                                document.querySelector('#edit-popup #subject\\.cfpiva').disabled = true;
+                            }">
                     <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text"
                         oninput="
-                            populateSuggestions('#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
-                            if (subjectId.value != '') deselectAnagrafic(subjectId.value, 'deselect', 'subject');
-                            subjectId.value = '';
-                            subjectTelephone.disabled = false;
-                            subjectTelephone.value = '';
-                            subjectCfpiva.disabled = false;
-                            subjectCfpiva.value = '';
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            if (document.querySelector('#edit-popup #subject\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #subject\\.id').value, 'deselect', 'subject');
+                                document.querySelector('#edit-popup #subject\\.id').value = '';
+                                document.querySelector('#edit-popup #subject\\.telephone').disabled = false;
+                                document.querySelector('#edit-popup #subject\\.telephone').value = '';
+                                document.querySelector('#edit-popup #subject\\.cfpiva').disabled = false;
+                                document.querySelector('#edit-popup #subject\\.cfpiva').value = '';
+                            }
                         "
-                        onfocus="if (!subjectId.value) populateSuggestions('#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);"
-                        onblur="closeSuggestions('#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #subject\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
                     <div id="suggestions.subject.social_reason" class="suggestions"></div>
                 </div>
     
@@ -291,19 +334,30 @@
 
             <div>
                 <div class="item">
-                    <input id="vector.id" name="vector.id" type="number" class="suggestionId">
+                    <input id="vector.id" name="vector.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #vector\\.telephone').disabled = true;
+                                document.querySelector('#edit-popup #vector\\.cfpiva').disabled = true;
+                            }">
                     <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text"
                         oninput="
-                            populateSuggestions('#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
-                            if (vectorId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'vector');
-                            vectorId.value = '';
-                            vectorTelephone.disabled = false;
-                            vectorTelephone.value = '';
-                            vectorCfpiva.disabled = false;
-                            vectorCfpiva.value = '';
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            if (document.querySelector('#edit-popup #vector\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #vector\\.id').value, 'deselect', 'vector');
+                                document.querySelector('#edit-popup #vector\\.id').value = '';
+                                document.querySelector('#edit-popup #vector\\.telephone').disabled = false;
+                                document.querySelector('#edit-popup #vector\\.telephone').value = '';
+                                document.querySelector('#edit-popup #vector\\.cfpiva').disabled = false;
+                                document.querySelector('#edit-popup #vector\\.cfpiva').value = '';
+                            }
                         "
-                        onfocus="if (!vectorId.value) populateSuggestions('#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);"
-                        onblur="closeSuggestions('#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #vector\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
                     <div id="suggestions.vector.social_reason" class="suggestions"></div>
                 </div>
     
@@ -322,22 +376,34 @@
 
             <div>
                 <div class="item-25">
-                    <input id="driver.id" name="driver.id" type="number" class="suggestionId">
+                    <input id="driver.id" name="driver.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #driver\\.telephone').disabled = true;
+                            }                           
+                        ">
                     <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text"
                         oninput="
-                            populateSuggestions('#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
-                            if (driverId.value != '') deselectAnagrafic(vectorId.value, 'deselect', 'driver');
-                            vectorId.value = '';
-                            driverTelephone.disabled = false;
-                            driverTelephone.value = '';
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            if (document.querySelector('#edit-popup #driver\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #driver\\.id').value, 'deselect', 'driver');
+                                document.querySelector('#edit-popup #driver\\.id').value = '';
+                                document.querySelector('#edit-popup #driver\\.telephone').disabled = false;
+                                document.querySelector('#edit-popup #driver\\.telephone').value = '';
+                            }
                         "
-                        onfocus="if (!driverId.value) populateSuggestions('#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);"
-                        onblur="closeSuggestions('#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #driver\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
                     <div id="suggestions.driver.social_reason" class="suggestions"></div>
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
+                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" 
+                        oninput="this.value = this.value.replace(/\D/g, '');">
                 </div>
             </div>
 
@@ -347,18 +413,29 @@
 
             <div>
                 <div class="item-25">
-                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
+                            }
+                        ">
                     <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}"
                         oninput="
                             this.value = this.value.toUpperCase();
-                            populateSuggestions('#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            if (vehicleId.value != '') deselectAnagrafic(vehicleId.value, 'deselect', 'vehicle');
-                            vehicleId.value = '';
-                            vehicleDescription.disabled = false;
-                            vehicleDescription.value = '';
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'deselect', 'vehicle');
+                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
+                            }
                         "
-                        onfocus="if (!vehicleId.value) populateSuggestions('#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);"
-                        onblur="closeSuggestions('#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #vehicle\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
                     <div id="suggestions.vehicle.plate" class="suggestions"></div>
                 </div>
     
@@ -521,9 +598,8 @@
             return content;
         }
 
-        function populateSuggestions(suggestions, key, anagrafic, value) {
+        function populateSuggestions(popup, suggestions, key, anagrafic, value) {
             let currentSuggestions = document.querySelector(suggestions);
-            currentSuggestions.style.display = 'block';
             fetch(`/anagrafic/${anagrafic}/list?${key}=${value}%`)
             .then(res => res.json())
             .then(res => {
@@ -536,30 +612,29 @@
                     option.dataset.item = JSON.stringify(item);
                     option.onmousedown = (e) => {
                         if (anagrafic === 'subject') {
-                            subjectId.value = item.id;
-                            console.log(subjectId.value)
-                            subjectSocialReason.value = item.social_reason;
-                            subjectTelephone.value = item.telephone;
-                            subjectTelephone.disabled = true;
-                            subjectCfpiva.value = item.cfpiva;
-                            subjectCfpiva.disabled = true;
+                            document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                            document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
                         } else if (anagrafic === 'vector') {
-                            vectorId.value = item.id;
-                            vectorSocialReason.value = item.social_reason;
-                            vectorTelephone.value = item.telephone;
-                            vectorTelephone.disabled = true;
-                            vectorCfpiva.value = item.cfpiva;
-                            vectorCfpiva.disabled = true;
+                            document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
                         } else if (anagrafic === 'driver') {
-                            driverId.value = item.id;
-                            driverSocialReason.value = item.social_reason;
-                            driverTelephone.value = item.telephone;                            
-                            driverTelephone.disabled = true;
+                            document.querySelector(`${popup} #driver\\.id`).value = item.id;
+                            document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
+                            document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
                         } else if (anagrafic === 'vehicle') {
-                            vehicleId.value = item.id;
-                            vehiclePlate.value = item.plate;
-                            vehicleDescription.value = item.description;
-                            vehicleDescription.disabled = true;
+                            document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                            document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                            document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                         }
                         selectAnagrafic(item.id, "select", anagrafic);
                         currentSuggestions.style.display = 'none';
@@ -567,10 +642,11 @@
                     };
                     currentSuggestions.appendChild(option);         
                 });
+                currentSuggestions.style.display = 'block';
             });
         }        
 
-        function closeSuggestions(suggestions, key, anagrafic, value) {
+        function closeSuggestions(popup, suggestions, key, anagrafic, value) {
             const currentSuggestions = document.querySelector(suggestions);
             currentSuggestions.style.display = 'none';
             const options = currentSuggestions.querySelectorAll('p');
@@ -578,33 +654,33 @@
             if (options.length === 1) {
                 const item = JSON.parse(options[0].dataset.item);
                 if (item[key].toLowerCase() == value.toLowerCase()) {
-                    if (anagrafic === 'subject' && subjectId.value != item.id) {
-                        subjectId.value = item.id;
-                        subjectSocialReason.value = item.social_reason;
-                        subjectTelephone.value = item.telephone;
-                        subjectTelephone.disabled = true;
-                        subjectCfpiva.value = item.cfpiva;
-                        subjectCfpiva.disabled = true;
+                    if (anagrafic === 'subject' && document.querySelector(`${popup} #subject\\.id`).value != item.id) {
+                        document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                        document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                        document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                        document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                        document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                        document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
                         selectAnagrafic(item.id, "select", anagrafic);
-                    } else if (anagrafic === 'vector' && vectorId.value != item.id) {
-                        vectorId.value = item.id;
-                        vectorSocialReason.value = item.social_reason;
-                        vectorTelephone.value = item.telephone;
-                        vectorTelephone.disabled = true;
-                        vectorCfpiva.value = item.cfpiva;
-                        vectorCfpiva.disabled = true;
+                    } else if (anagrafic === 'vector' && document.querySelector(`${popup} #vector\\.id`).value != item.id) {
+                        document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                        document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                        document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                        document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                        document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                        document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
                         selectAnagrafic(item.id, "select", anagrafic);
-                    } else if (anagrafic === 'driver' && driverId.value != item.id && driverSocialReason.telephone === item.telephone) {
-                        driverId.value = item.id;
-                        driverSocialReason.value = item.social_reason;
-                        driverTelephone.value = item.telephone;                            
-                        driverTelephone.disabled = true;
+                    } else if (anagrafic === 'driver' && document.querySelector(`${popup} #driver\\.id`).value != item.id && document.querySelector(`${popup} #driver\\.telephone`).value === item.telephone) {
+                        document.querySelector(`${popup} #driver\\.id`).value = item.id;
+                        document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
+                        document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
+                        document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
                         selectAnagrafic(item.id, "select", anagrafic);
-                    } else if (anagrafic === 'vehicle' && vehicleId.value != item.id) {
-                        vehicleId.value = item.id;
-                        vehiclePlate.value = item.plate;
-                        vehicleDescription.value = item.description;
-                        vehicleDescription.disabled = true;
+                    } else if (anagrafic === 'vehicle' && document.querySelector(`${popup} #vehicle\\.id`).value != item.id) {
+                        document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                        document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                        document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                        document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                         selectAnagrafic(item.id, "select", anagrafic);
                     }
                 }

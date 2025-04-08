@@ -120,12 +120,11 @@ class ReservationRouter(WebSocket):
 
     async def setReservation(self, id: int, body: SetReservationDTO):
         try:
-            if not body.vehicle.plate:
-                raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
-            just_exist_reservation =  get_reservation_by_plate_if_incomplete(body.vehicle.plate)
-            if just_exist_reservation and just_exist_reservation["id"] != id:
+            if body.vehicle.id == -1 and not body.vehicle.plate:
+                raise HTTPException(status_code=400, detail="Il campo targa deve essere compilato")
+            just_exist_reservation = get_reservation_by_plate_if_incomplete(body.vehicle.plate)
+            if just_exist_reservation and just_exist_reservation.id != id:
                 raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{body.vehicle.plate}' ancora da chiudere")
-            
             reservation_to_update = {
                 "typeSubject": body.typeSubject,
                 "idSubject": body.subject.id,
@@ -172,7 +171,7 @@ class ReservationRouter(WebSocket):
                 vehicle = Vehicle(**data)
                 await self.broadcastAddAnagrafic("vehicle", {"vehicle": vehicle.json()})
                 reservation_to_update["idVehicle"] = vehicle.id
-            data = update_data("reservation", reservation_to_update)
+            data = update_data("reservation", id, reservation_to_update)
             reservation = Reservation(**data).json()
             await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation})
             return reservation

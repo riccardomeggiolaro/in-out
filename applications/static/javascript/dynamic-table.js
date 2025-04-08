@@ -364,9 +364,37 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
     .catch(error => console.log(error));
 });
 
+function triggerEventsForAll(elements) {
+    // Seleziona tutti gli elementi input
+    const allInputs = document.querySelectorAll(elements);
+    
+    // Crea gli eventi
+    const inputEvent = new Event('input', {
+      bubbles: true,
+      cancelable: true
+    });
+    
+    const changeEvent = new Event('change', {
+      bubbles: true,
+      cancelable: true
+    });
+    
+    // Itera su tutti gli elementi
+    allInputs.forEach(input => {
+        console.log(input);
+
+      // Lancia input per tutti
+      input.dispatchEvent(inputEvent);
+      
+      // Lancia anche change per radio e checkbox
+      if (input.type === 'radio' || input.type === 'checkbox') {
+        input.dispatchEvent(changeEvent);
+      }
+    });
+}
+
 // Funzioni segnaposto per modifica ed eliminazione
 function editRow(item) {
-    console.log(item)
     const funct = () => {
         if (callback_populate_select) callback_populate_select('#edit', item);
         currentId = item.id;
@@ -387,6 +415,7 @@ function editRow(item) {
                 if (keyInput) keyInput.value = annidate_value;
             }
         }
+        triggerEventsForAll('.id');
     }
     if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {
         const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
