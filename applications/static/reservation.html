@@ -126,7 +126,7 @@
                         oninput="
                             populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
                             if (document.querySelector('#add-popup #subject\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#add-popup #subject\\.id').value, 'deselect', 'subject');
+                                deselectAnagrafic(document.querySelector('#add-popup #subject\\.id').value, 'subject');
                                 document.querySelector('#add-popup #subject\\.id').value = '';
                                 document.querySelector('#add-popup #subject\\.telephone').disabled = false;
                                 document.querySelector('#add-popup #subject\\.telephone').value = '';
@@ -163,7 +163,7 @@
                         oninput="
                             populateSuggestions('#add-popup', '#register', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
                             if (document.querySelector('#add-popup #vector\\.id').value != '') {
-                                deselectAnagrafic('#add-popup', document.querySelector('#add-popup #vector\\.id').value, 'deselect', 'vector');
+                                deselectAnagrafic('#add-popup', document.querySelector('#add-popup #vector\\.id').value, 'vector');
                                 document.querySelector('#add-popup #vector\\.id').value = '';
                                 document.querySelector('#add-popup #vector\\.telephone').disabled = false;
                                 document.querySelector('#add-popup #vector\\.telephone').value = '';
@@ -200,7 +200,7 @@
                         oninput="
                             populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
                             if (document.querySelector('#add-popup #driver\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#add-popup #driver\\.id').value, 'deselect', 'driver');
+                                deselectAnagrafic(document.querySelector('#add-popup #driver\\.id').value, 'driver');
                                 document.querySelector('#add-popup #driver\\.id').value = '';
                                 document.querySelector('#add-popup #driver\\.telephone').disabled = false;
                                 document.querySelector('#add-popup #driver\\.telephone').value = '';
@@ -232,7 +232,7 @@
                             this.value = this.value.toUpperCase();
                             populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
                             if (document.querySelector('#add-popup #vehicle\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'deselect', 'vehicle');
+                                deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'vehicle');
                                 document.querySelector('#add-popup #vehicle\\.id').value = '';
                                 document.querySelector('#add-popup #vehicle\\.description').disabled = false;
                                 document.querySelector('#add-popup #vehicle\\.description').value = '';
@@ -303,7 +303,7 @@
                         oninput="
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
                             if (document.querySelector('#edit-popup #subject\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #subject\\.id').value, 'deselect', 'subject');
+                                deselectAnagrafic(document.querySelector('#edit-popup #subject\\.id').value, 'subject');
                                 document.querySelector('#edit-popup #subject\\.id').value = '';
                                 document.querySelector('#edit-popup #subject\\.telephone').disabled = false;
                                 document.querySelector('#edit-popup #subject\\.telephone').value = '';
@@ -345,7 +345,7 @@
                         oninput="
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
                             if (document.querySelector('#edit-popup #vector\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #vector\\.id').value, 'deselect', 'vector');
+                                deselectAnagrafic(document.querySelector('#edit-popup #vector\\.id').value, 'vector');
                                 document.querySelector('#edit-popup #vector\\.id').value = '';
                                 document.querySelector('#edit-popup #vector\\.telephone').disabled = false;
                                 document.querySelector('#edit-popup #vector\\.telephone').value = '';
@@ -387,7 +387,7 @@
                         oninput="
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
                             if (document.querySelector('#edit-popup #driver\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #driver\\.id').value, 'deselect', 'driver');
+                                deselectAnagrafic(document.querySelector('#edit-popup #driver\\.id').value, 'driver');
                                 document.querySelector('#edit-popup #driver\\.id').value = '';
                                 document.querySelector('#edit-popup #driver\\.telephone').disabled = false;
                                 document.querySelector('#edit-popup #driver\\.telephone').value = '';
@@ -425,7 +425,7 @@
                             this.value = this.value.toUpperCase();
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
                             if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'deselect', 'vehicle');
+                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
                                 document.querySelector('#edit-popup #vehicle\\.id').value = '';
                                 document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
                                 document.querySelector('#edit-popup #vehicle\\.description').value = '';
@@ -659,16 +659,16 @@
 
         function deselectAllAnagrafic() {
             document.querySelectorAll('#subject\\.id').forEach(input => {
-                if (input.value != '') deselectAnagrafic(input.value, "select", "subject");
+                if (input.value != '') deselectAnagrafic(input.value, "subject");
             });
             document.querySelectorAll('#vector\\.id').forEach(input => {
-                if (input.value != '') deselectAnagrafic(input.value, "select", "vector");
+                if (input.value != '') deselectAnagrafic(input.value, "vector");
             });
             document.querySelectorAll('#driver\\.id').forEach(input => {
-                if (input.value != '') deselectAnagrafic(input.value, "select", "driver");
+                if (input.value != '') deselectAnagrafic(input.value, "driver");
             });
             document.querySelectorAll('#vehicle\\.id').forEach(input => {
-                if (input.value != '') deselectAnagrafic(input.value, "select", "vehicle");
+                if (input.value != '') deselectAnagrafic(input.value, "vehicle");
             });
         }
     </script>

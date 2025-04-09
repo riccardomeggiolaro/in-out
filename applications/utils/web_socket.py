@@ -23,12 +23,6 @@ class ConnectionManager:
         try:
             await websocket.send_text(message)
         except Exception as e:
-            # Check if the websocket is still in the active connections
-            # before trying to disconnect it
-            import libs.lb_log as lb_log
-            lb_log.error(e)
-            lb_log.error(type(message))
-            lb_log.error(message)
             if websocket in self.active_connections:
                 self.disconnect(websocket)
     

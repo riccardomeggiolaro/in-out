@@ -38,27 +38,26 @@ class AnagraficRouter:
 
 		self.router.add_api_websocket_route('/{anagrafic}', self.websocket_anagrafic)
 
-	async def handle_select(self, anagrafic: str, record_id: int, type_action: str, websocket: WebSocket, websocket_identifier: str):
+	async def handle_select(self, anagrafic: str, record_id: int, type_action: str, websocket_identifier: str):
 		try:
 			if anagrafic not in manager_anagrafics:
-				return {"action": "select_response", "success": False, "error": f"Anagrafic {anagrafic} does not exist", "type_action": type_action}			
+				return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": f"Anagrafic {anagrafic} does not exist", "type_action": type_action}			
 			success, locked_record = lock_record(name_table=anagrafic, id_record=record_id, web_socket=websocket_identifier)
 			if success is False:
-				return {"action": "select_response", "success": False, "error": f"Record con id '{record_id}' nella tabella '{anagrafic}' bloccato dall'utente '{locked_record.websocket}", "type_action": type_action}
+				return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": f"Record con id '{record_id}' nella tabella '{anagrafic}' bloccato dall'utente '{locked_record.websocket}", "type_action": type_action}
 			data = get_data_by_id(anagrafic, record_id)
-			return {"action": "select_response", "success": True, "data": data, "type_action": type_action}
+			return {"action": "select_response", "success": True, "anagrafic": anagrafic, "data": data, "type_action": type_action}
 		except Exception as e:
-			return {"action": "select_response", "success": False, "error": e, "type_action": type_action}
+			return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": e, "type_action": type_action}
 	
-	async def handle_deselect(self, anagrafic: str, record_id: int, type_action: str, websocket: WebSocket, websocket_identifier: str):
+	async def handle_deselect(self, anagrafic: str, record_id: int, type_action: str, websocket_identifier: str):
 		try:
-			lb_log.error("iwbefoiubon")
 			if anagrafic not in manager_anagrafics:
-				return {"action": "select_response", "success": False, "error": f"Anagrafic {anagrafic} does not exist", "type_action": type_action}
+				return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": f"Anagrafic {anagrafic} does not exist", "type_action": type_action}
 			data = unlock_record_by_attributes(name_table=anagrafic, record_id=record_id, web_socket=websocket_identifier)
 			return {"action": "deselect_response", "success": data, "anagrafic": anagrafic, "data": {"id": record_id}, "type_action": type_action}
 		except Exception as e:
-			return {"action": "deselect_response", "success": False, "error": e, "type_action": type_action}
+			return {"action": "deselect_response", "success": False, "anagrafic": anagrafic, "error": e, "type_action": type_action}
   
 	async def websocket_anagrafic(self, anagrafic: str, websocket: WebSocket):
 		if anagrafic not in manager_anagrafics:
@@ -71,11 +70,21 @@ class AnagraficRouter:
 				message = json.loads(data)
 				# Handle different types of messages
 				if message["type"] == "select":
-					response = await self.handle_select(message["anagrafic"] if "anagrafic" in message else anagrafic, message["id"], message["type_action"], websocket, websocket_identifier)
+					response = await self.handle_select(
+         				anagrafic=message["anagrafic"] if "anagrafic" in message else anagrafic, 
+             			record_id=message["id"], 
+                		type_action=message["type_action"], 
+                  		websocket_identifier=websocket_identifier
+                    )
 					json_response = json.dumps(jsonable_encoder(response))
 					await manager_anagrafics[anagrafic].send_personal_message(json_response, websocket)
 				elif message["type"] == "deselect":
-					response = await self.handle_deselect(message["anagrafic"] if "anagrafic" in message else anagrafic, message["id"], message["type_action"], websocket, websocket_identifier)
+					response = await self.handle_deselect(
+         				anagrafic=message["anagrafic"] if "anagrafic" in message else anagrafic, 
+             			record_id=message["id"], 
+                		type_action=message["type_action"], 
+                  		websocket_identifier=websocket_identifier
+                    )
 					json_response = json.dumps(jsonable_encoder(response))
 					await manager_anagrafics[anagrafic].send_personal_message(json_response, websocket)        
 			except Exception as e:

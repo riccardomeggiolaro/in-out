@@ -156,7 +156,7 @@ class AddReservationDTO(BaseModel):
     document_reference: Optional[str] = None
     
 class SetReservationDTO(BaseModel):
-    typeSubject: str
+    typeSubject: Optional[str] = None
     subject: Optional[SubjectDataDTO] = SubjectDataDTO(**{})
     vector: Optional[VectorDataDTO] = VectorDataDTO(**{})
     driver: Optional[DriverDataDTO] = DriverDataDTO(**{})

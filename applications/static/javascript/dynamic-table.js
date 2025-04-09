@@ -192,7 +192,7 @@ function createRow(table, columns, item) {
     editButton.textContent = "✏️";
     editButton.onclick = (e) => {
         e.preventDefault();
-        selectAnagrafic(item.id, "update");
+        selectAnagrafic(item.id, "update", itemName);
         currentId = item.id;
     };
     // Pulsante Elimina
@@ -201,7 +201,7 @@ function createRow(table, columns, item) {
     deleteButton.textContent = "🗑️";
     deleteButton.onclick = (e) => {
         e.preventDefault();
-        selectAnagrafic(item.id, "delete");
+        selectAnagrafic(item.id, "delete", itemName);
     };        
     actionsCell.appendChild(editButton);
     actionsCell.appendChild(deleteButton);
@@ -524,7 +524,7 @@ function closePopups(idPopups, deselectCurrentId=true) {
     confirm_exec_funct = null;
     if (deselectCurrentId) {
         if (currentId) {
-            deselectAnagrafic(currentId, '');
+            deselectAnagrafic(currentId);
             currentId = null;
         }    
     }
@@ -635,11 +635,8 @@ function connectWebSocket() {
                     }
                     else console.log(data)
                 } else if (data.action === "deselect_response") {
-                    if (data.success === true) {
-                        if (data.type_action === "update") editRow(data.data);
-                        else if (data.type_action === "delete") deleteRow(data.data);
-                    }
-                    else console.log(data);
+                    if (data.type_action === "update") editRow(data.data);
+                    else if (data.type_action === "delete") deleteRow(data.data);
                 }
             } else {
                 showSnackbar(data.error, 'rgb(255, 208, 208)', 'black');
@@ -715,8 +712,9 @@ async function selectAnagrafic(id, type_action, anagrafic) {
 }
 
 // Example of using WebSocket for deselectAnagrafic
-async function deselectAnagrafic(id, type_action, anagrafic=itemName) {
+async function deselectAnagrafic(id, anagrafic=itemName) {
     try {
+        const type_action = "";
         const response = await sendWebSocketRequest("deselect", { id, type_action, anagrafic });
         return response;
     } catch (error) {

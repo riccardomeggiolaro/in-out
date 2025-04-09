@@ -143,7 +143,7 @@ class ReservationRouter(WebSocket):
             else:
                 just_exist_reservation = get_data_by_id("reservation", id)
             len_weighings = len(just_exist_reservation["weighings"])
-            if reservation_to_update["idVehicle"] is not None:
+            if just_exist_reservation["idVehicle"] is not None and reservation_to_update["idVehicle"] is not None:
                 if len_weighings > 0 and reservation_to_update["idVehicle"] != just_exist_reservation["idVehicle"]:
                     raise HTTPException(status_code=400, detail="Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
             if reservation_to_update["number_weighings"]:
