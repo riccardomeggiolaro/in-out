@@ -101,7 +101,7 @@
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova prenotazione:</h3>
-        <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = (!(document.querySelector('#add-popup #subject\\.social_reason').value.trim()) || !this.checkValidity())" autocomplete="off">
+        <form id="register" class="content form-content" autocomplete="off" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
             <h4>Soggetto</h4>
 
             <div class="radio">
@@ -227,7 +227,7 @@
             <div>
                 <div class="item-25">
                     <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}"
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" required
                         oninput="
                             this.value = this.value.toUpperCase();
                             populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
@@ -256,7 +256,8 @@
 
             <div>
                 <div class="item-25">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" required
+                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
                 <div class="item-25">
@@ -271,20 +272,20 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Nuova prenotazione:</h3>
-        <form id="edit" class="content form-content" autocomplete="off">
+        <h3>Modifica prenotazione:</h3>
+        <form id="edit" class="content form-content" autocomplete="off" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
             <h4>Soggetto</h4>
 
             <div class="radio">
                 <div class="radio-option left">
                   <label class="flexRadio">
-                    <input id="customer" type="radio" name="typeSubject" value="CUSTOMER" checked>
+                    <input type="radio" id="typeSubject" name="typeSubject" value="CUSTOMER">
                     Cliente
                   </label>
                 </div>
                 <div class="radio-option right">
                   <label class="flexRadio">
-                    <input id="supplier" type="radio" name="typeSubject" value="SUPPLIER">
+                    <input type="radio" id="typeSubject" name="typeSubject" value="SUPPLIER">
                     Fornitore
                   </label>
                 </div>
@@ -419,7 +420,7 @@
                                 document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
                             }
                         ">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}"
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" required
                         oninput="
                             this.value = this.value.toUpperCase();
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
@@ -448,7 +449,8 @@
 
             <div>
                 <div class="item-25">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" required
+                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
                 <div class="item-25">
@@ -499,27 +501,6 @@
     <script>
         const fromDate = document.querySelector('#filter\\.fromDate');
         const toDate = document.querySelector('#filter\\.toDate');
-        const subjectId = document.querySelector('#subject\\.id');
-        const subjectSocialReason = document.querySelector('#subject\\.social_reason');
-        const suggestionsSubjectSocialReason = document.querySelector('#suggestions\\.subject\\.social_reason');
-        const subjectTelephone = document.querySelector('#subject\\.telephone');
-        const subjectCfpiva = document.querySelector('#subject\\.cfpiva');
-        const vectorId = document.querySelector('#vector\\.id');
-        const vectorSocialReason = document.querySelector('#vector\\.social_reason');
-        const suggestionsVectorSocialReason = document.querySelector('#suggestions\\.vector\\.social_reason');
-        const vectorTelephone = document.querySelector('#vector\\.telephone');
-        const vectorCfpiva = document.querySelector('#vector\\.cfpiva');
-        const driverId = document.querySelector('#driver\\.id');
-        const driverSocialReason = document.querySelector('#driver\\.social_reason');
-        const suggestionsDriverSocialReason = document.querySelector('#suggestions\\.driver\\.social_reason');
-        const driverTelephone = document.querySelector('#driver\\.telephone');
-        const vehicleId = document.querySelector('#vehicle\\.id');
-        const vehiclePlate = document.querySelector('#vehicle\\.plate');
-        const suggestionsVehiclePlate = document.querySelector('#suggestions\\.vehicle\\.plate');
-        const vehicleDescription = document.querySelector('#vehicle\\.description');
-        const numberWeighings = document.querySelector('#number_weighings');
-        const note = document.querySelector('#note');
-        const documentReference = document.querySelector('#document_reference');
 
         document.addEventListener("DOMContentLoaded", () => {
             itemName = 'reservation';
@@ -534,11 +515,7 @@
             callback_close_popups = deselectAllAnagrafic;
             populate_detail_tr = populateDetailTr;
             params = {
-                "prenotazione con veicolo": "reservation.vehicle.plate",
-                "prenotazione con soggetto": "reservation.subject.social_reason",
-                "prenotazione con vettore": "reservation.vector.social_reason",
-                "prenotazione con autista": "reservation.driver.social_reason",
-                "prenotazione con id": "reservation.id",
+                "prenotazione con targa": "reservation.vehicle.plate",
                 "soggetto": "subject.social_reason",
                 "vettore": "vector.social_reason",
                 "autista": "driver.social_reason",
@@ -605,7 +582,6 @@
             .then(res => {
                 currentSuggestions.innerHTML = '';
                 res.data.forEach(item => {
-                    console.log(item)
                     const option = document.createElement('p');
                     option.innerHTML = highlightText(item, value, key);
                     option.id = item.id;
@@ -636,11 +612,9 @@
                             document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
                             document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                         }
-                        selectAnagrafic(item.id, "select", anagrafic);
-                        currentSuggestions.style.display = 'none';
-                        e.preventDefault();
+                        document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                     };
-                    currentSuggestions.appendChild(option);         
+                    currentSuggestions.appendChild(option);  
                 });
                 currentSuggestions.style.display = 'block';
             });
@@ -661,7 +635,6 @@
                         document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
                         document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
                         document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
-                        selectAnagrafic(item.id, "select", anagrafic);
                     } else if (anagrafic === 'vector' && document.querySelector(`${popup} #vector\\.id`).value != item.id) {
                         document.querySelector(`${popup} #vector\\.id`).value = item.id;
                         document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
@@ -669,37 +642,34 @@
                         document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
                         document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
                         document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
-                        selectAnagrafic(item.id, "select", anagrafic);
                     } else if (anagrafic === 'driver' && document.querySelector(`${popup} #driver\\.id`).value != item.id && document.querySelector(`${popup} #driver\\.telephone`).value === item.telephone) {
                         document.querySelector(`${popup} #driver\\.id`).value = item.id;
                         document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
                         document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
                         document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
-                        selectAnagrafic(item.id, "select", anagrafic);
                     } else if (anagrafic === 'vehicle' && document.querySelector(`${popup} #vehicle\\.id`).value != item.id) {
                         document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
                         document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
                         document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
                         document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
-                        selectAnagrafic(item.id, "select", anagrafic);
                     }
                 }
             }
         }
 
         function deselectAllAnagrafic() {
-            if (subjectId.value != '') {
-                deselectAnagrafic(subjectId.value, "select", "subject");
-            }
-            if (vectorId.value != '') {
-                deselectAnagrafic(vectorId.value, "select", "vector");
-            }
-            if (driverId.value != '') {
-                deselectAnagrafic(driverId.value, "select", "driver");
-            }
-            if (vehicleId.value != '') {
-                deselectAnagrafic(vehicleId.value, "select", "vehicle");
-            }
+            document.querySelectorAll('#subject\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "select", "subject");
+            });
+            document.querySelectorAll('#vector\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "select", "vector");
+            });
+            document.querySelectorAll('#driver\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "select", "driver");
+            });
+            document.querySelectorAll('#vehicle\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "select", "vehicle");
+            });
         }
     </script>
 </body>

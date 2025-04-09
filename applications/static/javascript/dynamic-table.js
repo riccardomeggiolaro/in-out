@@ -193,6 +193,7 @@ function createRow(table, columns, item) {
     editButton.onclick = (e) => {
         e.preventDefault();
         selectAnagrafic(item.id, "update");
+        currentId = item.id;
     };
     // Pulsante Elimina
     const deleteButton = document.createElement("button");
@@ -381,7 +382,6 @@ function triggerEventsForAll(elements) {
     
     // Itera su tutti gli elementi
     allInputs.forEach(input => {
-        console.log(input);
 
       // Lancia input per tutti
       input.dispatchEvent(inputEvent);
@@ -408,11 +408,25 @@ function editRow(item) {
                     annidate_key = `#${key}\\.${sub_key}`;
                     annidate_value = sub_value;
                     const keyInput = editPopup.querySelector(annidate_key);
-                    if (keyInput) keyInput.value = annidate_value;
+                    if (keyInput) {
+                        keyInput.value = annidate_value;
+                    }
                 })
             } else {
                 const keyInput = editPopup.querySelector(annidate_key);
-                if (keyInput) keyInput.value = annidate_value;
+                if (keyInput) {
+                    if (keyInput.type === "radio") {
+                        if (annidate_value === "Cliente") annidate_value = "CUSTOMER"
+                        else if (annidate_value === "Fornitore") annidate_value = "SUPPLIER"
+                        document.querySelectorAll(annidate_key).forEach(input => {
+                            if (input.value === annidate_value) {
+                                input.checked = true;
+                            }
+                        });                        
+                    } else {
+                        keyInput.value = annidate_value;
+                    }
+                }
             }
         }
         triggerEventsForAll('.id');
@@ -491,7 +505,7 @@ function deleteRow(item) {
 const confirmPopup = document.getElementById('confirm-popup');
 confirmPopup.querySelector('#save-btn').addEventListener('click', () => {
     const clone_funct = confirm_exec_funct;
-    closePopups(['confirm-popup']);
+    closePopups(['confirm-popup'], false);
     if (typeof(clone_funct) === "function") {
         clone_funct();
     }
@@ -506,9 +520,14 @@ function openPopup(idPopup) {
     document.getElementById('overlay').classList.add('active');
 }
 
-function closePopups(idPopups) {
-    deselectAnagrafic(currentId, '');
+function closePopups(idPopups, deselectCurrentId=true) {
     confirm_exec_funct = null;
+    if (deselectCurrentId) {
+        if (currentId) {
+            deselectAnagrafic(currentId, '');
+            currentId = null;
+        }    
+    }
     if (callback_close_popups) callback_close_popups();
     idPopups.forEach(idPopup => {
         const popup = document.getElementById(idPopup);
@@ -565,7 +584,6 @@ function connectWebSocket() {
                     for (let i = 0; i < keys.length; i++) {
                         if (current && current.hasOwnProperty(keys[i])) {
                             current = current[keys[i]];
-                            console.log(current);
                             if (typeof(current) === 'string' || typeof(current) === 'number') {
                                 specific = `${key} "${current}"`;
                             }

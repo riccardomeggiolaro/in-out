@@ -14,6 +14,7 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
 from modules.md_database.functions.get_list_reservations import get_list_reservations
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_incomplete
@@ -120,11 +121,6 @@ class ReservationRouter(WebSocket):
 
     async def setReservation(self, id: int, body: SetReservationDTO):
         try:
-            if body.vehicle.id == -1 and not body.vehicle.plate:
-                raise HTTPException(status_code=400, detail="Il campo targa deve essere compilato")
-            just_exist_reservation = get_reservation_by_plate_if_incomplete(body.vehicle.plate)
-            if just_exist_reservation and just_exist_reservation.id != id:
-                raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{body.vehicle.plate}' ancora da chiudere")
             reservation_to_update = {
                 "typeSubject": body.typeSubject,
                 "idSubject": body.subject.id,
@@ -134,9 +130,32 @@ class ReservationRouter(WebSocket):
                 "idMaterial": None,
                 "number_weighings": body.number_weighings,
                 "note": body.note,
-                "status": ReservationStatus.WAITING,
+                "status": None,
                 "document_reference": body.document_reference
             }
+            if reservation_to_update["idVehicle"] == -1 and not body.vehicle.plate:
+                raise HTTPException(status_code=400, detail="Il campo targa deve essere compilato")
+            just_exist_reservation = None
+            if body.vehicle.plate:
+                just_exist_reservation = get_reservation_by_plate_if_incomplete(body.vehicle.plate)
+            if just_exist_reservation and just_exist_reservation.id != id:
+                raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{body.vehicle.plate}' ancora da chiudere")
+            else:
+                just_exist_reservation = get_data_by_id("reservation", id)
+            len_weighings = len(just_exist_reservation["weighings"])
+            if reservation_to_update["idVehicle"] is not None:
+                if len_weighings > 0 and reservation_to_update["idVehicle"] != just_exist_reservation["idVehicle"]:
+                    raise HTTPException(status_code=400, detail="Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
+            if reservation_to_update["number_weighings"]:
+                if reservation_to_update["number_weighings"] < len_weighings:
+                    raise HTTPException(status_code=400, detail=f"Il numero di pesate ({body.number_weighings}) non può essere inferiore alle pesate effettuate ({len_weighings})")
+                if reservation_to_update["number_weighings"] == len_weighings:
+                    reservation_to_update["status"] = ReservationStatus.CLOSED
+                elif reservation_to_update["number_weighings"] > len_weighings and just_exist_reservation["status"] == ReservationStatus.CLOSED:
+                    reservation_to_update["status"] = ReservationStatus.ENTERED
+            if body.vehicle.id not in [None, -1]:
+                vehicle = get_data_by_id("vehicle", body.vehicle.id)
+                plate = vehicle["plate"]
             if body.subject.id in [None, -1] and body.subject.social_reason and get_data_by_attribute("subject", "social_reason", body.subject.social_reason):
                 raise HTTPException(status_code=400, detail=f"Soggetto con ragione sociale '{body.subject.social_reason}' già esistente")
             if body.subject.id in [None, -1] and body.subject.cfpiva and get_data_by_attribute("subject", "cfpiva", body.subject.cfpiva):
