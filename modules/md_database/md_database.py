@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum, func, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum, func, UniqueConstraint, Index
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from typing import Optional, List, Union
@@ -122,17 +122,19 @@ class Reservation(Base):
     material = relationship("Material", back_populates="reservations")	
     weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
 
+
+class LockRecordType(PyEnum):
+    SELECT = "select"
+    UPDATE = "update"
+    DELETE = "delete"
+
 class LockRecord(Base):
     __tablename__ = 'lock_record'
     id = Column(Integer, primary_key=True, index=True)
-    nameTable = Column(String, nullable=False)
+    table_name = Column(String, nullable=False)
     idRecord = Column(Integer, nullable=False)
-    websocket = Column(String, nullable=True)
-    
-    # Aggiungi unique constraint
-    __table_args__ = (
-        UniqueConstraint('nameTable', 'idRecord', name='uq_lock_record'),
-    )
+    type = Column(Enum(LockRecordType), default=LockRecordType.SELECT)
+    websocket_identifier = Column(String, nullable=True)
 
 # Dictionary of models to map table names to model classes
 table_models = {

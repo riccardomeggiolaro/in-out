@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from modules.md_database.md_database import LockRecord, SessionLocal
 
-def unlock_record_by_attributes(name_table, record_id, web_socket):
+def unlock_record_by_attributes(table_name, idRecord, websocket_identifier):
     """
     Sblocca un record eliminando il lock specificato dall'ID
     
@@ -19,14 +19,14 @@ def unlock_record_by_attributes(name_table, record_id, web_socket):
             # Cerca il record di blocco specifico
             record = session.query(LockRecord)
             
-            if name_table:
-                record = record.filter_by(nameTable=name_table)
+            if table_name:
+                record = record.filter_by(table_name=table_name)
                 
-            if record_id:
-                record = record.filter_by(idRecord=record_id)
+            if idRecord:
+                record = record.filter_by(idRecord=idRecord)
                 
-            if web_socket:
-                record = record.filter_by(websocket=web_socket)
+            if websocket_identifier:
+                record = record.filter_by(websocket_identifier=websocket_identifier)
             
             record = record.one_or_none()
             

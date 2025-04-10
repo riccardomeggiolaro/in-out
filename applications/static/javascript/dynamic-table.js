@@ -21,6 +21,9 @@ let isRefreshing = false;
 let reconnectTimeout = null;
 let typeSelect; // update or delete
 let params = {};
+let requestIdCounter = 0;
+// Track pending requests
+const pendingRequests = new Map();
 const columns = {};
 const options = {
     hour: '2-digit',
@@ -192,7 +195,7 @@ function createRow(table, columns, item) {
     editButton.textContent = "✏️";
     editButton.onclick = (e) => {
         e.preventDefault();
-        selectAnagrafic(item.id, "update", itemName);
+        selectAnagrafic(item.id, "UPDATE", itemName);
         currentId = item.id;
     };
     // Pulsante Elimina
@@ -201,7 +204,7 @@ function createRow(table, columns, item) {
     deleteButton.textContent = "🗑️";
     deleteButton.onclick = (e) => {
         e.preventDefault();
-        selectAnagrafic(item.id, "delete", itemName);
+        selectAnagrafic(item.id, "DELETE", itemName);
     };        
     actionsCell.appendChild(editButton);
     actionsCell.appendChild(deleteButton);
@@ -231,6 +234,7 @@ function createRow(table, columns, item) {
         detailCell.innerHTML = populate_detail_tr(item);
         detailRow.appendChild(detailCell);
         table.appendChild(detailRow);
+        console.log(row);
         row.onclick = () => toggleExpandRow(row);
     }
 }
@@ -256,6 +260,7 @@ function updateRow(table, columns, item) {
 
 // Funzione per espandere/collassare la riga
 function toggleExpandRow(row) {
+    console.log(row);
     if (currentRowExtended && currentRowExtended !== row.nextElementSibling) {
         // Se già espanso, nascondi
         currentRowExtended.style.display = "none";        
@@ -615,28 +620,59 @@ function connectWebSocket() {
                             li.classList.remove('updated');
                         }, { once: true }); // Ascolta solo una volta
                     }
-                    showSnackbar(capitalizeFirstLetter(`${specific} modificat${lastChar}`), 'rgb(255, 240, 208)', 'black');
+                    let action = `modificat${lastChar}`;
+                    if (firstKey === "weighing") action = `effettuat${lastChar}`;
+                    showSnackbar(capitalizeFirstLetter(`${specific} ${action}`), 'rgb(255, 240, 208)', 'black');
                 } else if (data.action === "delete") {
                     const obj = getTableColumns();
-                    const li = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
-                    if (li) {
-                        li.classList.toggle('deleted');
-                        li.addEventListener('animationend', async () => {
-                            await updateTable();
-                        }, { once: true });
+                    const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    if (tr) {
+                        if (firstKey === "weighing") {
+                            if (currentRowExtended) {
+                                try {
+                                    currentRowExtended.querySelector('li:first-child').classList.toggle('deleted');
+                                    currentRowExtended.querySelector('li:first-child').addEventListener('animationend', async () => {
+                                        await updateTable();
+                                        toggleExpandRow(obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`));
+                                    }, { once: true });
+                                } catch {
+                                    await updateTable();
+                                }
+                            } else {
+                                await updateTable();
+                            }
+                        } else {
+                            tr.classList.toggle('deleted');
+                            tr.addEventListener('animationend', async () => {
+                                await updateTable();
+                                toggleExpandRow(obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`));
+                            }, { once: true });
+                        }
                     } else {
                         await updateTable();
                     }
                     showSnackbar(capitalizeFirstLetter(`${specific} eliminat${lastChar}`), 'rgb(255, 208, 208)', 'black');
-                } else if (data.action === "select_response") {
+                } else if (data.action === "lock") {
                     if (data.success === true) {
-                        if (data.type_action === "update") editRow(data.data);
-                        else if (data.type_action === "delete") deleteRow(data.data);
+                        if (data.type === "UPDATE") editRow(data.data);
+                        else if (data.type === "DELETE") deleteRow(data.data);
+                        else if (data.type === "SELECT") {
+                            if (pendingRequests.has(data.idRequest)) {
+                                const request = pendingRequests.get(data.idRequest);
+                                if (request.callback_anagrafic) request.callback_anagrafic();
+                                pendingRequests.delete(data.idRequest);
+                            }
+                        }
                     }
                     else console.log(data)
-                } else if (data.action === "deselect_response") {
-                    if (data.type_action === "update") editRow(data.data);
-                    else if (data.type_action === "delete") deleteRow(data.data);
+                } else if (data.action === "unlock") {
+                    if (data.success === true) {
+                        if (pendingRequests.has(data.idRequest)) {
+                            const request = pendingRequests.get(data.idRequest);
+                            if (request.callback_anagrafic) request.callback_anagrafic();
+                            pendingRequests.delete(data.idRequest);
+                        }
+                    }
                 }
             } else {
                 showSnackbar(data.error, 'rgb(255, 208, 208)', 'black');
@@ -669,11 +705,7 @@ function attemptReconnect() {
     }, 3000);
 }
 
-// Track pending requests
-const pendingRequests = new Map();
-let requestIdCounter = 0;
-
-async function sendWebSocketRequest(type, data) {
+async function sendWebSocketRequest(action, data, callback_anagrafic) {
     return new Promise((resolve, reject) => {
         if (!websocket_connection || websocket_connection.readyState !== WebSocket.OPEN) {
             reject(new Error("WebSocket is not connected"));
@@ -681,19 +713,19 @@ async function sendWebSocketRequest(type, data) {
         }
 
         // Create a unique request ID
-        const requestId = ++requestIdCounter;
+        const idRequest = ++requestIdCounter;
 
         // Store the promise callbacks
-        pendingRequests.set(requestId, { resolve, reject });
-        
+        pendingRequests.set(idRequest, { resolve, reject, callback_anagrafic });
+
         // Send the request with the ID
-        const message = { type, ...data, requestId };
+        const message = { action, ...data, idRequest };
         websocket_connection.send(JSON.stringify(message));
         
         // Set a timeout to clean up if no response comes
         setTimeout(() => {
-            if (pendingRequests.has(requestId)) {
-                pendingRequests.delete(requestId);
+            if (pendingRequests.has(idRequest)) {
+                pendingRequests.delete(idRequest);
                 // reject(new Error("Request timed out"));
             }
         }, 10000); // 10 second timeout
@@ -701,9 +733,9 @@ async function sendWebSocketRequest(type, data) {
 }
 
 // Example of using WebSocket for selectAnagrafic
-async function selectAnagrafic(id, type_action, anagrafic) {
+async function selectAnagrafic(idRecord, type, anagrafic=itemName, callback_anagrafic=null) {
     try {
-        const response = await sendWebSocketRequest("select", { id, type_action, anagrafic });
+        const response = await sendWebSocketRequest("lock", { idRecord, type, anagrafic }, callback_anagrafic);
         return response.data;
     } catch (error) {
         console.error("Error selecting anagrafic:", error);
@@ -712,10 +744,10 @@ async function selectAnagrafic(id, type_action, anagrafic) {
 }
 
 // Example of using WebSocket for deselectAnagrafic
-async function deselectAnagrafic(id, anagrafic=itemName) {
+async function deselectAnagrafic(idRecord, anagrafic=itemName, callback_anagrafic=null) {
     try {
-        const type_action = "";
-        const response = await sendWebSocketRequest("deselect", { id, type_action, anagrafic });
+        const type = "";
+        const response = await sendWebSocketRequest("unlock", { idRecord, type, anagrafic }, callback_anagrafic);
         return response;
     } catch (error) {
         console.error("Error deselecting anagrafic:", error);

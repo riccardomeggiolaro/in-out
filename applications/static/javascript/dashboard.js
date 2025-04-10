@@ -398,9 +398,23 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
     }
 }
 
+// function highlightText(suggestion, input, filter) {
+//     const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
+//     return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
+// }
+
 function highlightText(suggestion, input, filter) {
-    const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
-    return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
+    // Creiamo un'espressione regolare che cerca l'input solo all'inizio della stringa
+    const regex = new RegExp(`^(${input})`, 'i');
+    if (suggestion[filter]) {
+        // Se c'è una corrispondenza all'inizio, evidenziala
+        if (regex.test(suggestion[filter])) {
+            return suggestion[filter].replace(regex, '<span class="highlight">$1</span>');
+        }
+        // Altrimenti, restituisci la stringa originale senza evidenziazioni
+        return suggestion[filter];
+    }
+    return '';
 }
 
 function changeContent(type, value) {

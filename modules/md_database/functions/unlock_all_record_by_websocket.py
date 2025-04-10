@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from modules.md_database.md_database import LockRecord, SessionLocal
 
-def unlock_all_record_by_websocket(web_socket):
+def unlock_all_record_by_websocket(websocket_identifier):
     """
     Sblocca un record eliminando il lock specificato dall'ID
     
@@ -17,7 +17,7 @@ def unlock_all_record_by_websocket(web_socket):
     with SessionLocal() as session:
         try:
             # Cerca il record di blocco specifico
-            deleted_count = session.query(LockRecord).filter_by(websocket=web_socket).delete(synchronize_session=False)
+            deleted_count = session.query(LockRecord).filter_by(websocket_identifier=websocket_identifier).delete(synchronize_session=False)
             
             session.commit()
             return deleted_count

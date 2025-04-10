@@ -38,26 +38,26 @@ class AnagraficRouter:
 
 		self.router.add_api_websocket_route('/{anagrafic}', self.websocket_anagrafic)
 
-	async def handle_select(self, anagrafic: str, record_id: int, type_action: str, websocket_identifier: str):
+	async def handle_lock(self, table_name: str, idRecord: int, type: str, websocket_identifier: str, idRequest: int):
 		try:
-			if anagrafic not in manager_anagrafics:
-				return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": f"Anagrafic {anagrafic} does not exist", "type_action": type_action}			
-			success, locked_record = lock_record(name_table=anagrafic, id_record=record_id, web_socket=websocket_identifier)
+			if table_name not in manager_anagrafics:
+				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Anagrafic {table_name} does not exist", "idRecord": idRecord, "type": type, "idRequest": idRequest}
+			success, locked_record = lock_record(table_name=table_name, idRecord=idRecord, type=type, websocket_identifier=websocket_identifier)
 			if success is False:
-				return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": f"Record con id '{record_id}' nella tabella '{anagrafic}' bloccato dall'utente '{locked_record.websocket}", "type_action": type_action}
-			data = get_data_by_id(anagrafic, record_id)
-			return {"action": "select_response", "success": True, "anagrafic": anagrafic, "data": data, "type_action": type_action}
+				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Record con id '{idRecord}' nella tabella '{table_name}' bloccato dall'utente '{locked_record.websocket_identifier}", "idRecord": idRecord, "type": type, "idRequest": idRequest}
+			data = get_data_by_id(table_name, idRecord)
+			return {"action": "lock", "success": True, "anagrafic": table_name, "data": data, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 		except Exception as e:
-			return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": e, "type_action": type_action}
+			return {"action": "lock", "success": False, "anagrafic": table_name, "error": str(e), "idRecord": idRecord, "type": type, "idRequest": idRequest}
 	
-	async def handle_deselect(self, anagrafic: str, record_id: int, type_action: str, websocket_identifier: str):
+	async def handle_unlock(self, table_name: str, idRecord: int, type: str, websocket_identifier: str, idRequest: int):
 		try:
-			if anagrafic not in manager_anagrafics:
-				return {"action": "select_response", "success": False, "anagrafic": anagrafic, "error": f"Anagrafic {anagrafic} does not exist", "type_action": type_action}
-			data = unlock_record_by_attributes(name_table=anagrafic, record_id=record_id, web_socket=websocket_identifier)
-			return {"action": "deselect_response", "success": data, "anagrafic": anagrafic, "data": {"id": record_id}, "type_action": type_action}
+			if table_name not in manager_anagrafics:
+				return {"action": "unlock", "success": False, "anagrafic": table_name, "error": f"Anagrafic {table_name} does not exist", "idRecord": idRecord, "type": type, "idRequest": idRequest}
+			success = unlock_record_by_attributes(table_name=table_name, idRecord=idRecord, websocket_identifier=websocket_identifier)
+			return {"action": "unlock", "success": success, "anagrafic": table_name, "data": {}, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 		except Exception as e:
-			return {"action": "deselect_response", "success": False, "anagrafic": anagrafic, "error": e, "type_action": type_action}
+			return {"action": "unlock", "success": False, "anagrafic": table_name, "error": e, "idRecord": idRecord, "type": type, "idRequest": idRequest}
   
 	async def websocket_anagrafic(self, anagrafic: str, websocket: WebSocket):
 		if anagrafic not in manager_anagrafics:
@@ -69,24 +69,26 @@ class AnagraficRouter:
 				data = await asyncio.wait_for(websocket.receive_text(), timeout=5)
 				message = json.loads(data)
 				# Handle different types of messages
-				if message["type"] == "select":
-					response = await self.handle_select(
-         				anagrafic=message["anagrafic"] if "anagrafic" in message else anagrafic, 
-             			record_id=message["id"], 
-                		type_action=message["type_action"], 
+				if message["action"] == "lock":
+					response = await self.handle_lock(
+         				table_name=message["anagrafic"] if "anagrafic" in message else anagrafic, 
+             			idRecord=message["idRecord"], 
+                		type=message["type"],
+						idRequest=message["idRequest"],
                   		websocket_identifier=websocket_identifier
                     )
 					json_response = json.dumps(jsonable_encoder(response))
 					await manager_anagrafics[anagrafic].send_personal_message(json_response, websocket)
-				elif message["type"] == "deselect":
-					response = await self.handle_deselect(
-         				anagrafic=message["anagrafic"] if "anagrafic" in message else anagrafic, 
-             			record_id=message["id"], 
-                		type_action=message["type_action"], 
+				elif message["action"] == "unlock":
+					response = await self.handle_unlock(
+         				table_name=message["anagrafic"] if "anagrafic" in message else anagrafic, 
+             			idRecord=message["idRecord"], 
+                		type=message["type"], 
+						idRequest=message["idRequest"],
                   		websocket_identifier=websocket_identifier
                     )
 					json_response = json.dumps(jsonable_encoder(response))
 					await manager_anagrafics[anagrafic].send_personal_message(json_response, websocket)        
 			except Exception as e:
 				await manager_anagrafics[anagrafic].send_personal_message('', websocket)
-		unlock_all_record_by_websocket(web_socket=websocket_identifier)
+		unlock_all_record_by_websocket(websocket_identifier=websocket_identifier)

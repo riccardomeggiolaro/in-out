@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response, WebSocket as StringWebSocket
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns, ReservationStatus
 from modules.md_database.dtos.reservation import Reservation, AddReservationDTO, SetReservationDTO
@@ -18,6 +18,7 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_incomplete
+from modules.md_database.functions.delete_last_weighing_of_reservation import delete_last_weighing_of_reservation
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params, has_non_none_value
@@ -33,6 +34,7 @@ class ReservationRouter(WebSocket):
         self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'])
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
         self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'])
+        self.router.add_api_route('/last-weighing/{id}', self.deleteLastWeighing, methods=['DELETE'])
 
     async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, uncomplete: Optional[bool] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
@@ -119,8 +121,10 @@ class ReservationRouter(WebSocket):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def setReservation(self, id: int, body: SetReservationDTO):
+    async def setReservation(self, id: int, body: SetReservationDTO, websocket: StringWebSocket = None):
         try:
+            if websocket and websocket not in manager_anagrafics["reservation"].active_connections:
+                raise HTTPException(status_code=400, detail="Websocket need to be registered in the list of active connections")            
             reservation_to_update = {
                 "typeSubject": body.typeSubject,
                 "idSubject": body.subject.id,
@@ -197,8 +201,10 @@ class ReservationRouter(WebSocket):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def deleteReservation(self, id: int):
+    async def deleteReservation(self, id: int, websocket: StringWebSocket = None):
         try:
+            if websocket and websocket not in manager_anagrafics["subject"].active_connections:
+                raise HTTPException(status_code=400, detail="Websocket need to be registered in the list of active connections")
             data = delete_data("reservation", id)
             await self.broadcastDeleteAnagrafic("reservation", {"reservation": Reservation(**data).json()})
             return data
@@ -216,5 +222,19 @@ class ReservationRouter(WebSocket):
             }
         except Exception as e:
             status_code = getattr(e, 'status_code', 500)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
+        
+    async def deleteLastWeighing(self, id: int, websocket: StringWebSocket = None):
+        try:
+            if websocket and websocket not in manager_anagrafics["reservation"].active_connections:
+                raise HTTPException(status_code=400, detail="Websocket need to be registered in the list of active connections")
+            weighing_deleted = delete_last_weighing_of_reservation(id)
+            data = get_data_by_id("reservation", id)
+            reservation = Reservation(**data).json()
+            await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
+            return reservation
+        except Exception as e:
+            status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)

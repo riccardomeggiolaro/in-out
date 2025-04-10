@@ -18,6 +18,16 @@
             .popup.active {
                 max-width: 800px !important;
             }
+            .detail-cell {
+                padding: 0px;
+            }
+            .list-detail-tr li {
+                padding: 0px 0px 10px 0px;
+                list-style-type: disc;
+            }
+            .list-detail-tr li:last-child {
+                padding: 0px;
+            }
         </style>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -521,7 +531,8 @@
                 "autista": "driver.social_reason",
                 "veicolo con targa": "vehicle.plate",
                 "veicolo con descrizione": "vehicle.description",
-                "materiale": "material.description"
+                "materiale": "material.description",
+                "pesata con il veicolo": "weighing.vehicle.plate"
             }
             init();
         });
@@ -561,15 +572,82 @@
             }
         }
 
+        // function highlightText(suggestion, input, filter) {
+        //     const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
+        //     return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
+        // }
+
         function highlightText(suggestion, input, filter) {
-            const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
-            return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
+            // Creiamo un'espressione regolare che cerca l'input solo all'inizio della stringa
+            const regex = new RegExp(`^(${input})`, 'i');
+            if (suggestion[filter]) {
+                // Se c'è una corrispondenza all'inizio, evidenziala
+                if (regex.test(suggestion[filter])) {
+                    return suggestion[filter].replace(regex, '<span class="highlight">$1</span>');
+                }
+                // Altrimenti, restituisci la stringa originale senza evidenziazioni
+                return suggestion[filter];
+            }
+            return '';
+        }
+
+        function deleteLastWeighing(idReservation, plate, weighing, pid, bil) {
+            confirm_exec_funct = () => {
+                fetch(`/anagrafic/reservation/last-weighing/${idReservation}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .catch(error => console.error(error));
+            }
+            document.querySelector('#confirm-title').textContent = "Attenzione!";
+            document.querySelector('#confirm-content').innerHTML = `
+                Sei sicuro di voler eliminare l'ultima pesata effettuata dal veicolo '${plate}'?'.
+                <br><br>
+                <h4><u>Dettagli pesata</u></h4>
+                <br>
+                <b>Peso:</b> <em><u>${weighing}</u></em>
+                <br><br>
+                <b>PID:</b> <em><u>${pid}</u></em>
+                <br><br>
+                <b>Bilancia:</b> <em><u>${bil}</u></em>
+            `;
+            openPopup('confirm-popup');
         }
 
         function populateDetailTr(item) {
-            let content = `<ul>`;
+            let content = `<ul class="list-detail-tr">`;
+            let lengthWighings = item.weighings.length;
             item.weighings.reverse().forEach(weighing => {
-                content += `<li><em><strong>${weighing.weight} kg</strong></em>, <em>Pid: ${weighing.pid}</em>, <em>Pesa: ${weighing.weigher}</li>`;
+                if (lengthWighings === item.weighings.length) {
+                    // Pulsante Elimina
+                    const deleteWeighingButton = document.createElement("button");
+                    deleteWeighingButton.style.visibility = 'hidden';
+                    deleteWeighingButton.textContent = "🗑️";
+                    deleteWeighingButton.onclick = (e) => {
+                        e.preventDefault();
+                    };
+                    console.log(item.vehicle.plate);
+                    content += `
+                        <li>
+                            <em><strong>${weighing.weight} kg</strong></em>, 
+                            <em>Pid: ${weighing.pid}</em>, 
+                            <em>Pesa: ${weighing.weigher}</em>
+                            <button>📥</button>
+                            <button onclick="deleteLastWeighing(${item.id}, '${item.vehicle.plate}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>
+                        </li>`;
+                } else {
+                    content += `
+                        <li>
+                            <em><strong>${weighing.weight} kg</strong></em>,
+                            <em>Pid: ${weighing.pid}</em>,
+                            <em>Pesa: ${weighing.weigher}</em>
+                            <button>📥</button>
+                        </li>`;
+                }
+                lengthWighings--;
             })
             content += `</ul>`;
             return content;
@@ -587,32 +665,45 @@
                     option.id = item.id;
                     option.dataset.item = JSON.stringify(item);
                     option.onmousedown = (e) => {
+                        let callback_select_anagrafic;
                         if (anagrafic === 'subject') {
-                            document.querySelector(`${popup} #subject\\.id`).value = item.id;
-                            document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
-                            document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
-                            document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
-                            document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
-                            document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                                document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                                document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                                document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
                         } else if (anagrafic === 'vector') {
-                            document.querySelector(`${popup} #vector\\.id`).value = item.id;
-                            document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
-                            document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
-                            document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
-                            document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
-                            document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                                document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                                document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                                document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
                         } else if (anagrafic === 'driver') {
-                            document.querySelector(`${popup} #driver\\.id`).value = item.id;
-                            document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
-                            document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
-                            document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #driver\\.id`).value = item.id;
+                                document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
+                                document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
                         } else if (anagrafic === 'vehicle') {
-                            document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
-                            document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
-                            document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
-                            document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                                document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                                document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                                document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
                         }
-                        document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
                     };
                     currentSuggestions.appendChild(option);  
                 });
@@ -628,31 +719,43 @@
             if (options.length === 1) {
                 const item = JSON.parse(options[0].dataset.item);
                 if (item[key].toLowerCase() == value.toLowerCase()) {
+                    let callback_select_anagrafic;
                     if (anagrafic === 'subject' && document.querySelector(`${popup} #subject\\.id`).value != item.id) {
-                        document.querySelector(`${popup} #subject\\.id`).value = item.id;
-                        document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
-                        document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
-                        document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
-                        document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
-                        document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                            document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                        }
                     } else if (anagrafic === 'vector' && document.querySelector(`${popup} #vector\\.id`).value != item.id) {
-                        document.querySelector(`${popup} #vector\\.id`).value = item.id;
-                        document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
-                        document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
-                        document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
-                        document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
-                        document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                        }
                     } else if (anagrafic === 'driver' && document.querySelector(`${popup} #driver\\.id`).value != item.id && document.querySelector(`${popup} #driver\\.telephone`).value === item.telephone) {
-                        document.querySelector(`${popup} #driver\\.id`).value = item.id;
-                        document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
-                        document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
-                        document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #driver\\.id`).value = item.id;
+                            document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
+                            document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
                     } else if (anagrafic === 'vehicle' && document.querySelector(`${popup} #vehicle\\.id`).value != item.id) {
-                        document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
-                        document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
-                        document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
-                        document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                            document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                            document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
                     }
+                    if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
                 }
             }
         }

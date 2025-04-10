@@ -165,7 +165,7 @@ class CallbackWeigher(Functions, WebSocket):
 					reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.ENTERED})
 				self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-				asyncio.run(self.broadcastUpdateAnagrafic("reservation", {"reservation": Reservation(**reservation_update).json()}))
+				asyncio.run(self.broadcastUpdateAnagrafic("reservation", {"weighing": Reservation(**reservation_update).json()}))
 			for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
 				key, value = next(iter(rele.items()))
 				modope = "CLOSERELE" if value == 0 else "OPENRELE"

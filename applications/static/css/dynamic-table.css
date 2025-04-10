@@ -296,6 +296,10 @@ thead input:focus {
     animation: delete-item 0.6s ease-out forwards;
 }
 
+.soft-deleted {
+    animation: soft-delete-item 0.6s ease-out forwards;
+}
+
 @keyframes delete-item {
     0% {
         opacity: 1;
@@ -304,6 +308,15 @@ thead input:focus {
     100% {
         opacity: 0;
         background-color: rgb(255, 208, 208);
+    }
+}
+
+@keyframes soft-delete-item {
+    0% {
+        background-color: rgb(255, 208, 208);
+    }
+    100% {
+        background-color: transparent;
     }
 }
 
