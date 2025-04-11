@@ -365,3 +365,20 @@ hr {
 .flexRadio {
     display: flex;
 }
+
+.preview-image {
+    position: absolute !important;
+    top: 0;
+    width: 100%;
+    height: 100vh;
+    position: sticky;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-image img {
+    max-width: 100%;
+    width: 800px;
+}

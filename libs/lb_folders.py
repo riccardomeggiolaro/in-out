@@ -55,7 +55,11 @@ def search_file(filename, folder_path, search_subfolders=True):
     else:
         # Cerca solo nella cartella principale
         files_in_folder = os.listdir(folder_path)
+        import libs.lb_log as lb_log
+        lb_log.warning(len(files_in_folder))
         for file in files_in_folder:
+            lb_log.warning(filename)
+            lb_log.warning(file)
             if file == filename and os.path.isfile(os.path.join(folder_path, file)):
                 found_file_path = os.path.join(folder_path, file)
                 found_files.append(found_file_path)
@@ -99,3 +103,43 @@ def search_file_with_pattern(pattern, folder_path, search_subfolders=True):
                 found_files.append(found_file_path)
     
     return found_files
+
+import os
+
+def get_image_from_folder(image_name, folder_path):
+    """
+    Recupera un'immagine dalla cartella specificata e restituisce i suoi byte.
+    Se l'estensione non è specificata, cerca un file che corrisponde al nome base.
+    
+    Parametri:
+    image_name (str): Il nome del file immagine da recuperare (con o senza estensione)
+    folder_path (str): Il percorso della cartella dove cercare l'immagine
+    
+    Returns:
+    bytes: I byte dell'immagine recuperata
+    str: Il percorso completo del file
+    
+    Raises:
+    FileNotFoundError: Se l'immagine non esiste nella cartella specificata
+    """
+    # Verifica se il percorso esiste
+    if not os.path.exists(folder_path):
+        raise FileNotFoundError(f"La cartella '{folder_path}' non esiste")
+    
+    # Ottieni il nome base (senza estensione)
+    name_without_ext = os.path.splitext(image_name)[0]
+    
+    # Cerca un file che corrisponda al nome base
+    for filename in os.listdir(folder_path):
+        file_name_without_ext = os.path.splitext(filename)[0]
+        if file_name_without_ext == name_without_ext:
+            file_path = os.path.join(folder_path, filename)
+            if os.path.isfile(file_path):
+                # Legge e restituisce i byte dell'immagine trovata
+                with open(file_path, 'rb') as file:
+                    image_bytes = file.read()
+                image_path = file_path
+                return image_bytes, image_path
+    
+    # Se non trova nulla, solleva un'eccezione
+    raise FileNotFoundError(f"Nessuna immagine con nome '{name_without_ext}' trovata nella cartella '{folder_path}'")

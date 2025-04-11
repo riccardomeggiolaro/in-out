@@ -133,3 +133,6 @@ def check_values(obj):
 
 def current_month():
     return datetime.datetime.now().strftime("%B").lower()
+
+def get_month(date):
+    return date.strftime("%B").lower()

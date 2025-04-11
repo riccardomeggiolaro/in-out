@@ -24,6 +24,9 @@ import numpy as np
 from applications.utils.utils import get_query_params, has_non_none_value
 from applications.router.anagrafic.web_sockets import WebSocket
 from datetime import datetime
+from libs.lb_utils import get_month
+from libs.lb_folders import get_image_from_folder
+import libs.lb_config as lb_config
 
 class ReservationRouter(WebSocket):
     def __init__(self):
@@ -35,6 +38,7 @@ class ReservationRouter(WebSocket):
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
         self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'])
         self.router.add_api_route('/last-weighing/{id}', self.deleteLastWeighing, methods=['DELETE'])
+        self.router.add_api_route('/image-weighing/{id}', self.getImageWeighing, methods=['GET'])
 
     async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, uncomplete: Optional[bool] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
@@ -234,6 +238,30 @@ class ReservationRouter(WebSocket):
             reservation = Reservation(**data).json()
             await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
             return reservation
+        except Exception as e:
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
+        
+    async def getImageWeighing(self, id: int, websocket: StringWebSocket = None):
+        try:
+            if websocket and websocket not in manager_anagrafics["reservation"].active_connections:
+                raise HTTPException(status_code=400, detail="Websocket need to be registered in the list of active connections")
+            weighing = get_data_by_id("weighing", id)
+            if not weighing:
+                raise HTTPException(status_code=404, detail="Pesata non trovata")
+            month = get_month(weighing["date"])
+            image_bytes, image_path = get_image_from_folder(f"{weighing['pid']}_{weighing['weigher']}", lb_config.g_config["app_api"]["path_weighing_pictures"] + month)
+            # Determina il tipo di contenuto in base all'estensione del file
+            content_type = "image/jpeg"  # Default
+            if image_path.lower().endswith(".png"):
+                content_type = "image/png"
+            elif image_path.lower().endswith(".gif"):
+                content_type = "image/gif"
+            elif image_path.lower().endswith(".webp"):
+                content_type = "image/webp"
+            # Restituisce i byte dell'immagine con il tipo di contenuto appropriato
+            return Response(content=image_bytes, media_type=content_type)
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))

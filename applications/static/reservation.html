@@ -617,6 +617,43 @@
             openPopup('confirm-popup');
         }
 
+        function getImageWeighing(idWeighing) {
+            fetch(`/anagrafic/reservation/image-weighing/${idWeighing}`)
+                .then(response => {
+                    // Verifica se la risposta è ok
+                    if (!response.ok) {
+                        throw new Error(`Errore HTTP: ${response.status}`);
+                    }
+                    // Per le immagini, dobbiamo convertire la risposta in blob
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Crea un URL per il blob dell'immagine
+                    const imageUrl = URL.createObjectURL(blob);
+                    
+                    // Crea un elemento immagine
+                    const imgElement = document.createElement('img');
+                    imgElement.src = imageUrl;
+                    imgElement.alt = 'Anteprima pesata';
+                    
+                    // Crea un container per l'anteprima se non esiste già
+                    let previewContainer = document.getElementById('image-preview-container');
+                    if (!previewContainer) {
+                        previewContainer = document.createElement('div');
+                        previewContainer.id = 'image-preview-container';
+                        previewContainer.classList.toggle('preview-image');
+                        document.body.appendChild(previewContainer);
+                    }
+                    
+                    // Pulisce il container e aggiunge l'immagine
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(imgElement);
+                })
+                .catch(error => {
+                    console.error('Errore nel recupero dell\'immagine:', error);
+                });
+        }
+
         function populateDetailTr(item) {
             let content = `<ul class="list-detail-tr">`;
             let lengthWighings = item.weighings.length;
@@ -635,7 +672,7 @@
                             <em><strong>${weighing.weight} kg</strong></em>, 
                             <em>Pid: ${weighing.pid}</em>, 
                             <em>Pesa: ${weighing.weigher}</em>
-                            <button>📥</button>
+                            <button onclick="getImageWeighing(${weighing.id})">📥</button>
                             <button onclick="deleteLastWeighing(${item.id}, '${item.vehicle.plate}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>
                         </li>`;
                 } else {
@@ -644,7 +681,7 @@
                             <em><strong>${weighing.weight} kg</strong></em>,
                             <em>Pid: ${weighing.pid}</em>,
                             <em>Pesa: ${weighing.weigher}</em>
-                            <button>📥</button>
+                            <button onclick="getImageWeighing(${weighing.id})">📥</button>
                         </li>`;
                 }
                 lengthWighings--;
