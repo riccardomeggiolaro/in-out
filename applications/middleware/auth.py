@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Callable
 import traceback
-from applications.utils.utils_auth import TokenData
+from applications.utils.utils_auth import TokenData, pages
 import jwt
 from datetime import datetime, timezone
 import libs.lb_config as lb_config
@@ -16,42 +16,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.algorithm = "HS256"
 
     async def dispatch(self, request: Request, call_next: Callable):
-        pages = [
-            "/login", 
-            "/login.html", 
-            "/dashboard", 
-            "/dashboard.html", 
-            "/dashboard-mobile", 
-            "/dashboard-mobile.html", 
-            "/concept", 
-            "concept.html", 
-            "/reporter", 
-            "/reporter.html", 
-            "/dashboard.html", 
-            "/setup", 
-            "/setup.html", 
-            "/profile", 
-            "/profile.html",
-            "/subject", 
-            "/subject.html",
-            "/vector",
-            "/vector.html",
-            "/driver",
-            "/driver.html",
-            "/vehicle",
-            "/vehicle.html",
-            "/transporter",
-            "/transporter.html",
-            "/material",
-            "/material.html",
-            "/reservation",
-            "/reservation.html",
-            "/navbar", 
-            "/navbar.html", 
-            "/auth/login", 
-            "/docs", 
-            "/openapi.json"]
-        
         # Skip authentication for specific routes
         if request.url.path in pages or request.url.path.startswith("/static"):
             return await call_next(request)

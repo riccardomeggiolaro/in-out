@@ -1,8 +1,7 @@
 import requests
-from requests.auth import HTTPDigestAuth
 import socket
 
-class MessageLAN:
+class PanelMessage:
     def __init__(self, panel_id: int, duration: int = 0x5A):
         self.panel_id = panel_id
         self.duration = duration
@@ -40,9 +39,9 @@ class MessageLAN:
         self.data.append((checksum >> 8) & 0xFF)
 
         return bytes(self.data)
-
-def send_panel_message(ip, port, message, timeout=5):
-    panel = MessageLAN(panel_id=0x10)
+    
+def send_message(ip, port, username, password, timeout, endpoint, message):
+    panel = PanelMessage(panel_id=0x10)
     packet = panel.build_message(message)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -58,43 +57,3 @@ def send_panel_message(ip, port, message, timeout=5):
             raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")
         except Exception as e:
             raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")
-
-def send_siren_command(ip, port, endpoint, username, password, timeout=5):
-    try:
-        # Verificare preventivamente la raggiungibilità dell'host
-        socket.create_connection((ip, port), timeout=timeout)
-        
-        # Impostare un timeout per la richiesta
-        response = requests.get(
-            endpoint, 
-            auth=HTTPDigestAuth(username, password),
-            timeout=timeout
-        )
-
-        # Sollevare un'eccezione in caso di errore
-        response.raise_for_status()
-    except ConnectionRefusedError:
-        raise ConnectionRefusedError(f"Connection refused by {ip}:{port}")
-    except socket.timeout:
-        raise ConnectionError(f"Host {ip}:{port} non raggiungibile (timeout)")
-    except socket.error as e:
-        raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")
-    except Exception as e:
-        raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")
-
-def send_messages():
-    try:
-        # Send message to LED panel
-        send_panel_message(ip="100.100.100.100", port=5200, message="AB123CD")
-    except Exception as e:
-        # Fallback error handling if messagebox fails
-        print(f"Errore nell'invio: {e}")
-    try:
-        # Activate siren
-        send_siren_command(ip="100.100.100.101", port=80, endpoint=f"http://100.100.100.101/rpc/Switch.Set?id=0&on=true", username="admin", password="16888")
-    except Exception as e:
-        # Fallback error handling if messagebox fails
-        print(f"Errore nell'invio: {e}")
-
-if __name__ == "__main__":
-    send_messages()

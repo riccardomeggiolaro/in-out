@@ -88,3 +88,40 @@ is_admin = [2, 3]
 is_super_admin = [3]
 
 all_level = [1, 2, 3]
+
+pages = [
+	"/login", 
+	"/login.html", 
+	"/dashboard", 
+	"/dashboard.html", 
+	"/dashboard-mobile", 
+	"/dashboard-mobile.html", 
+	"/concept", 
+	"concept.html", 
+	"/reporter", 
+	"/reporter.html", 
+	"/dashboard.html", 
+	"/setup", 
+	"/setup.html", 
+	"/profile", 
+	"/profile.html",
+	"/subject", 
+	"/subject.html",
+	"/vector",
+	"/vector.html",
+	"/driver",
+	"/driver.html",
+	"/vehicle",
+	"/vehicle.html",
+	"/transporter",
+	"/transporter.html",
+	"/material",
+	"/material.html",
+	"/reservation",
+	"/reservation.html",
+	"/navbar", 
+	"/navbar.html", 
+	"/auth/login", 
+	"/docs", 
+	"/openapi.json"
+]

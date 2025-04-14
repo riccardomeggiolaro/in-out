@@ -12,6 +12,7 @@ let websocketUrlPath = null;
 let callback_populate_select = null;
 let callback_websocket_message = null;
 let callback_close_popups = null;
+let callback_populate_table = null;
 let populate_detail_tr = null;
 let currentId = null;
 let confirm_exec_funct = null;
@@ -33,7 +34,7 @@ const options = {
     year: 'numeric'
 };
 
-window.onbeforeunload = function() {
+window.onbeforeunload = function () {
     isRefreshing = true; // Imposta il flag prima del refresh
     clearTimeout(reconnectTimeout);
 };
@@ -48,13 +49,13 @@ document.querySelectorAll('thead th').forEach((th, index) => {
 function isValidDate(dateStr) {
     // Verifica se la stringa corrisponde al formato ISO 8601
     const regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)?$/;
-    
+
     if (!regex.test(dateStr)) {
-      return false;
+        return false;
     }
-    
+
     const date = new Date(dateStr);
-  
+
     // Verifica se la data è valida
     return date instanceof Date && !isNaN(date.getTime());
 }
@@ -77,12 +78,12 @@ async function updateTable() {
     const offset = (currentPage - 1) * rowsPerPage;
     const res = await fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}&${queryParams}`);
     const data = await res.json();
-    
+
     totalRows = data.total_rows;
     populateTable(data.data);
     updatePageSelect();
     document.getElementById("total-rows").textContent = `Totale righe: ${totalRows}`;
-    
+
     return data;
 }
 
@@ -141,7 +142,7 @@ function changeRowsPerPage() {
 
 function getTableColumns() {
     const table = document.querySelector("tbody");
-    
+
     // Extract column names and positions from the headers
     const columns = {};
     const headers = document.querySelectorAll("thead th[name]");
@@ -149,7 +150,7 @@ function getTableColumns() {
         if (header.getAttribute("name")) {
             columns[header.getAttribute("name")] = index;
         }
-    });    
+    });
 
     return {
         table,
@@ -160,15 +161,15 @@ function getTableColumns() {
 function populateTable(data) {
     const obj = getTableColumns();
     obj.table.innerHTML = ""; // Pulisce la tabella esistente
-  
     data.forEach(item => {
         if (item.weighings && item.number_weighings) item.number_weighings = `${item.weighings.length}/${item.number_weighings}`;
         createRow(obj.table, obj.columns, item)
     });
+    if (callback_populate_table) callback_populate_table();
 }
 
 function createRow(table, columns, item) {
-    const row = document.createElement("tr");        
+    const row = document.createElement("tr");
     row.dataset.id = item.id;
     // Create cells for each column
     for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
@@ -179,14 +180,15 @@ function createRow(table, columns, item) {
         Object.entries(obj).forEach(([key, value]) => {
             const fullKey = prefix ? `${prefix}.${key}` : key;
             if (fullKey in columns) {
-                row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof(value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
-            } 
+                row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof (value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
+                row.cells[columns[fullKey]].dataset.value = value;
+            }
             // Gestione ricorsiva per gli oggetti annidati
             else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 populateNestedValues(value, fullKey);
             }
         });
-    }        
+    }
     // Applica la funzione ricorsiva sull'oggetto riga
     populateNestedValues(item);
     // Crea la cella per i pulsanti di azione
@@ -208,16 +210,16 @@ function createRow(table, columns, item) {
     deleteButton.onclick = (e) => {
         e.preventDefault();
         selectAnagrafic(item.id, "DELETE", itemName);
-    };        
+    };
     actionsCell.appendChild(editButton);
     actionsCell.appendChild(deleteButton);
-    row.appendChild(actionsCell);        
+    row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga
     row.addEventListener("mouseenter", () => {
         row.style.backgroundColor = 'whitesmoke';
         editButton.style.visibility = 'inherit';
         deleteButton.style.visibility = 'inherit';
-    });        
+    });
     row.addEventListener("mouseleave", () => {
         row.style.backgroundColor = 'white';
         editButton.style.visibility = 'hidden';
@@ -249,14 +251,14 @@ function updateRow(table, columns, item) {
         Object.entries(obj).forEach(([key, value]) => {
             const fullKey = prefix ? `${prefix}.${key}` : key;
             if (fullKey in columns) {
-                row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof(value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
-            } 
+                row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof (value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
+            }
             // Gestione ricorsiva per gli oggetti annidati
             else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 populateNestedValues(value, fullKey);
             }
         });
-    }        
+    }
     // Applica la funzione ricorsiva sull'oggetto riga
     populateNestedValues(item);
 }
@@ -266,7 +268,7 @@ function toggleExpandRow(row) {
     console.log(row);
     if (currentRowExtended && currentRowExtended !== row.nextElementSibling) {
         // Se già espanso, nascondi
-        currentRowExtended.style.display = "none";        
+        currentRowExtended.style.display = "none";
     }
     currentRowExtended = row.nextElementSibling; // Dettagli subito dopo la riga
     const isExpanded = currentRowExtended.style.display === "table-row";
@@ -319,21 +321,21 @@ addPopup.querySelector('#save-btn').addEventListener('click', () => {
         },
         body: JSON.stringify(nonNullableData)
     })
-    .then(async res => {
-        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-        return ({
-            data,
-            status
-        });
-    })
-    .then(res => {
-        if (res.status === 400) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-        } else {
-            closePopups(['add-popup']);
-        }
-    })
-    .catch(error => console.error(error));
+        .then(async res => {
+            const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+            return ({
+                data,
+                status
+            });
+        })
+        .then(res => {
+            if (res.status === 400) {
+                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            } else {
+                closePopups(['add-popup']);
+            }
+        })
+        .catch(error => console.error(error));
 });
 
 function addRow() {
@@ -352,51 +354,51 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
         },
         body: JSON.stringify(data)
     })
-    .then(async res => {
-        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-        return ({
-            data,
-            status
-        });
-    })
-    .then(res => {
-        if (res.status === 404) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-            closePopups(['edit-popup']);
-        } else if (res.status === 400) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-        } else {
-            closePopups(['edit-popup']);
-        }
-    })
-    .catch(error => console.log(error));
+        .then(async res => {
+            const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+            return ({
+                data,
+                status
+            });
+        })
+        .then(res => {
+            if (res.status === 404) {
+                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+                closePopups(['edit-popup']);
+            } else if (res.status === 400) {
+                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            } else {
+                closePopups(['edit-popup']);
+            }
+        })
+        .catch(error => console.log(error));
 });
 
 function triggerEventsForAll(elements) {
     // Seleziona tutti gli elementi input
     const allInputs = document.querySelectorAll(elements);
-    
+
     // Crea gli eventi
     const inputEvent = new Event('input', {
-      bubbles: true,
-      cancelable: true
+        bubbles: true,
+        cancelable: true
     });
-    
+
     const changeEvent = new Event('change', {
-      bubbles: true,
-      cancelable: true
+        bubbles: true,
+        cancelable: true
     });
-    
+
     // Itera su tutti gli elementi
     allInputs.forEach(input => {
 
-      // Lancia input per tutti
-      input.dispatchEvent(inputEvent);
-      
-      // Lancia anche change per radio e checkbox
-      if (input.type === 'radio' || input.type === 'checkbox') {
-        input.dispatchEvent(changeEvent);
-      }
+        // Lancia input per tutti
+        input.dispatchEvent(inputEvent);
+
+        // Lancia anche change per radio e checkbox
+        if (input.type === 'radio' || input.type === 'checkbox') {
+            input.dispatchEvent(changeEvent);
+        }
     });
 }
 
@@ -429,7 +431,7 @@ function editRow(item) {
                             if (input.value === annidate_value) {
                                 input.checked = true;
                             }
-                        });                        
+                        });
                     } else {
                         keyInput.value = annidate_value;
                     }
@@ -459,20 +461,20 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
             'Content-Type': 'application/json'
         }
     })
-    .then(async res => {
-        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-        return ({
-            data,
-            status
-        });
-    })
-    .then(res => {
-        if (res.status === 404) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-        }
-        closePopups(['delete-popup']);
-    })
-    .catch(error => showSnackbar(`${error}`, 'red', 'white'));
+        .then(async res => {
+            const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+            return ({
+                data,
+                status
+            });
+        })
+        .then(res => {
+            if (res.status === 404) {
+                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            }
+            closePopups(['delete-popup']);
+        })
+        .catch(error => showSnackbar(`${error}`, 'red', 'white'));
 })
 
 function deleteRow(item) {
@@ -513,7 +515,7 @@ const confirmPopup = document.getElementById('confirm-popup');
 confirmPopup.querySelector('#save-btn').addEventListener('click', () => {
     const clone_funct = confirm_exec_funct;
     closePopups(['confirm-popup'], false);
-    if (typeof(clone_funct) === "function") {
+    if (typeof (clone_funct) === "function") {
         clone_funct();
     }
 })
@@ -527,13 +529,13 @@ function openPopup(idPopup) {
     document.getElementById('overlay').classList.add('active');
 }
 
-function closePopups(idPopups, deselectCurrentId=true) {
+function closePopups(idPopups, deselectCurrentId = true) {
     confirm_exec_funct = null;
     if (deselectCurrentId) {
         if (currentId) {
             deselectAnagrafic(currentId);
             currentId = null;
-        }    
+        }
     }
     if (callback_close_popups) callback_close_popups();
     idPopups.forEach(idPopup => {
@@ -558,8 +560,8 @@ function closePopups(idPopups, deselectCurrentId=true) {
 }
 
 function capitalizeFirstLetter(str) {
-  if (!str) return str; // If the string is empty or undefined, return it as is
-  return str.charAt(0).toUpperCase() + str.slice(1);
+    if (!str) return str; // If the string is empty or undefined, return it as is
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 function determineGender(word) {
@@ -591,7 +593,7 @@ function connectWebSocket() {
                     for (let i = 0; i < keys.length; i++) {
                         if (current && current.hasOwnProperty(keys[i])) {
                             current = current[keys[i]];
-                            if (typeof(current) === 'string' || typeof(current) === 'number') {
+                            if (typeof (current) === 'string' || typeof (current) === 'number') {
                                 specific = `${key} "${current}"`;
                             }
                         }
@@ -599,7 +601,7 @@ function connectWebSocket() {
                     if (specific) {
                         break; // Interrompe il ciclo principale quando si trova una corrispondenza
                     }
-                }            
+                }
                 if (data.action === "add") {
                     await updateTable();
                     const obj = getTableColumns();
@@ -723,7 +725,7 @@ async function sendWebSocketRequest(action, data, callback_anagrafic) {
         // Send the request with the ID
         const message = { action, ...data, idRequest };
         websocket_connection.send(JSON.stringify(message));
-        
+
         // Set a timeout to clean up if no response comes
         setTimeout(() => {
             if (pendingRequests.has(idRequest)) {
@@ -735,7 +737,7 @@ async function sendWebSocketRequest(action, data, callback_anagrafic) {
 }
 
 // Example of using WebSocket for selectAnagrafic
-async function selectAnagrafic(idRecord, type, anagrafic=itemName, callback_anagrafic=null) {
+async function selectAnagrafic(idRecord, type, anagrafic = itemName, callback_anagrafic = null) {
     try {
         const response = await sendWebSocketRequest("lock", { idRecord, type, anagrafic }, callback_anagrafic);
         return response.data;
@@ -746,7 +748,7 @@ async function selectAnagrafic(idRecord, type, anagrafic=itemName, callback_anag
 }
 
 // Example of using WebSocket for deselectAnagrafic
-async function deselectAnagrafic(idRecord, anagrafic=itemName, callback_anagrafic=null) {
+async function deselectAnagrafic(idRecord, anagrafic = itemName, callback_anagrafic = null) {
     try {
         const type = "";
         const response = await sendWebSocketRequest("unlock", { idRecord, type, anagrafic }, callback_anagrafic);

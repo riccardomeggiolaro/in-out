@@ -2,7 +2,7 @@ import requests
 from requests.auth import HTTPDigestAuth
 import socket
 
-def send_message(ip, port, endpoint, username, password, timeout=5):
+def send_message(ip, port, username, password, timeout, endpoint):
     try:
         # Verificare preventivamente la raggiungibilità dell'host
         socket.create_connection((ip, port), timeout=timeout)

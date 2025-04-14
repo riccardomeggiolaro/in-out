@@ -562,6 +562,7 @@
             callback_populate_select = populateForm;
             callback_close_popups = deselectAllAnagrafic;
             populate_detail_tr = populateDetailTr;
+            callback_populate_table = updateElapsedTimes;
             params = {
                 "prenotazione con targa": "reservation.vehicle.plate",
                 "soggetto": "subject.social_reason",
@@ -574,6 +575,50 @@
                 "pesata con il veicolo": "weighing.vehicle.plate"
             }
             init();
+            function updateElapsedTimes() {
+                const rows = document.querySelectorAll("table tr");
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll("td");
+
+                    if (cells.length >= 2) {
+                        const datetimeCell = cells[0]; // primo td = data di creazione
+                        const statusCell = cells[1]; // secondo td = stato della prenotazione
+                        const elapsedCell = cells[2]; // terzo td = tempo trascorso
+
+                        if (statusCell.dataset.value === "Attesa") {
+                            const startDate = new Date(datetimeCell.dataset.value);
+                            const now = new Date();
+                            const diffMs = now - startDate;
+
+                            if (isNaN(diffMs) || diffMs < 0) {
+                                elapsedCell.textContent = '—';
+                                return;
+                            }
+
+                            const totalMinutes = Math.floor(diffMs / 60000);
+                            const days = Math.floor(totalMinutes / (60 * 24));
+                            const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+                            const minutes = totalMinutes % 60;
+
+                            let displayText = '';
+
+                            if (days > 0) {
+                                displayText += `${days}d `;
+                            }
+                            if (hours > 0 || days > 0) {
+                                displayText += `${hours}h `;
+                            }
+                            displayText += `${minutes}min`;
+
+                            elapsedCell.textContent = displayText.trim();
+                        } else {
+                            elapsedCell.textContent = "";
+                        }
+                    }
+                });
+            }
+            setInterval(updateElapsedTimes, 1000); // aggiorna ogni minuto
         });
 
         flatpickr("#dateRange", {
