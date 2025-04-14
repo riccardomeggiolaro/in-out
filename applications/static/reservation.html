@@ -21,12 +21,20 @@
             .detail-cell {
                 padding: 0px;
             }
+            .detail-cell img:hover {
+                cursor: pointer;
+            }
             .list-detail-tr li {
-                padding: 0px 0px 10px 0px;
                 list-style-type: disc;
             }
-            .list-detail-tr li:last-child {
-                padding: 0px;
+            .imgs {
+                display: flex;
+                gap: 10px;
+            }
+            .imgs img {
+                width: 100px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
             }
         </style>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -53,6 +61,7 @@
                     <th name="status">
                         <select id="filter.status" name="status" onchange="updateTable()">
                             <option value="">Stato</option>
+                            <option value="NOT_CLOSED" selected>Non chiusa</option>
                             <option value="WAITING">Attesa</option>
                             <option value="CALLED">Chiamato</option>
                             <option value="ENTERED">Entrato</option>
@@ -78,9 +87,9 @@
                     <th name="note">
                         <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
-                    <th name="number_weighings">Pesate</th>
+                    <th name="number_weighings">N. Pesate</th>
                     <th name="document_reference">
-                        <input id="filter.document_reference" name="document_reference" type="text" placeholder="Bolla" oninput="updateTable()">
+                        <input id="filter.document_reference" name="document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
                     </th>
                     <th></th>
                 </tr>
@@ -107,7 +116,7 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuova prenotazione:</h3>
@@ -265,13 +274,17 @@
             <hr>
 
             <div>
-                <div class="item-25">
+                <div class="item">
                     <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" required
                         oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text">
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30">
                 </div>
             </div>
         </form>
@@ -458,13 +471,17 @@
             <hr>
 
             <div>
-                <div class="item-25">
+                <div class="item">
                     <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" required
                         oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text">
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30">
                 </div>
             </div>
         </form>
@@ -500,6 +517,27 @@
         </div>
     </div>
 
+    <div id="img-popup" class="modal-content popup preview-image">
+        <img id="confirm-content" src="" alt="">
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['img-popup'])">Chiudi</button>
+            <button id="download-btn" class="confirm-btn" onclick="
+                // Prende l'elemento <img> e il suo src
+                const img = document.querySelector('#img-popup img');
+                const url = img.src;
+                // Crea un link invisibile per il download
+                const link = document.createElement('a');
+                link.href = url;
+                // Nome file da salvare (se vuoi usare un nome fisso o dinamico)
+                link.download = img.alt;
+                // Simula il click per scaricare
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            ">Scarica</button><br>
+        </div>
+    </div>
+
     <!-- Snackbar -->
     <div id="snackbar"></div>
 
@@ -529,6 +567,7 @@
                 "soggetto": "subject.social_reason",
                 "vettore": "vector.social_reason",
                 "autista": "driver.social_reason",
+                "autista": "driver.telephone",
                 "veicolo con targa": "vehicle.plate",
                 "veicolo con descrizione": "vehicle.description",
                 "materiale": "material.description",
@@ -617,74 +656,49 @@
             openPopup('confirm-popup');
         }
 
-        function getImageWeighing(idWeighing) {
-            fetch(`/anagrafic/reservation/image-weighing/${idWeighing}`)
-                .then(response => {
-                    // Verifica se la risposta è ok
-                    if (!response.ok) {
-                        throw new Error(`Errore HTTP: ${response.status}`);
-                    }
-                    // Per le immagini, dobbiamo convertire la risposta in blob
-                    return response.blob();
-                })
-                .then(blob => {
-                    // Crea un URL per il blob dell'immagine
-                    const imageUrl = URL.createObjectURL(blob);
-                    
-                    // Crea un elemento immagine
-                    const imgElement = document.createElement('img');
-                    imgElement.src = imageUrl;
-                    imgElement.alt = 'Anteprima pesata';
-                    
-                    // Crea un container per l'anteprima se non esiste già
-                    let previewContainer = document.getElementById('image-preview-container');
-                    if (!previewContainer) {
-                        previewContainer = document.createElement('div');
-                        previewContainer.id = 'image-preview-container';
-                        previewContainer.classList.toggle('preview-image');
-                        document.body.appendChild(previewContainer);
-                    }
-                    
-                    // Pulisce il container e aggiunge l'immagine
-                    previewContainer.innerHTML = '';
-                    previewContainer.appendChild(imgElement);
-                })
-                .catch(error => {
-                    console.error('Errore nel recupero dell\'immagine:', error);
-                });
+        function getImageWeighing(imageUrl) {
+            const imgElement = document.querySelector('#img-popup img');
+            const fileName = imageUrl.split("/").at(-1);
+            imgElement.src = imageUrl;
+            imgElement.alt = fileName;
+            openPopup('img-popup');
         }
 
         function populateDetailTr(item) {
             let content = `<ul class="list-detail-tr">`;
             let lengthWighings = item.weighings.length;
             item.weighings.reverse().forEach(weighing => {
+                // Pulsante Elimina
+                const deleteWeighingButton = document.createElement("button");
+                deleteWeighingButton.style.visibility = 'hidden';
+                deleteWeighingButton.textContent = "🗑️";
+                deleteWeighingButton.onclick = (e) => {
+                    e.preventDefault();
+                };
+
+                // Start the list item content
+                content += `
+                    <li>
+                        <p>
+                            <strong>${new Date(weighing.date).toLocaleString('it-IT', options)}.</strong>
+                            Peso: <em><u>${weighing.weight} kg</u></em>,
+                            Pid: <em><u>${weighing.pid}</u></em>,
+                            Bilancia: <em><u>${weighing.weigher}</u></em>`;
+
                 if (lengthWighings === item.weighings.length) {
-                    // Pulsante Elimina
-                    const deleteWeighingButton = document.createElement("button");
-                    deleteWeighingButton.style.visibility = 'hidden';
-                    deleteWeighingButton.textContent = "🗑️";
-                    deleteWeighingButton.onclick = (e) => {
-                        e.preventDefault();
-                    };
-                    console.log(item.vehicle.plate);
-                    content += `
-                        <li>
-                            <em><strong>${weighing.weight} kg</strong></em>, 
-                            <em>Pid: ${weighing.pid}</em>, 
-                            <em>Pesa: ${weighing.weigher}</em>
-                            <button onclick="getImageWeighing(${weighing.id})">📥</button>
-                            <button onclick="deleteLastWeighing(${item.id}, '${item.vehicle.plate}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>
-                        </li>`;
-                } else {
-                    content += `
-                        <li>
-                            <em><strong>${weighing.weight} kg</strong></em>,
-                            <em>Pid: ${weighing.pid}</em>,
-                            <em>Pesa: ${weighing.weigher}</em>
-                            <button onclick="getImageWeighing(${weighing.id})">📥</button>
-                        </li>`;
+                    content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>`;
                 }
-                lengthWighings--;
+                
+                content += `</p><div class="imgs">`;
+
+                // Add images to the .imgs div
+                weighing.weighing_pictures.forEach(picture => {
+                    content += `<img src="/images/${picture.path_name}" onclick="getImageWeighing('/images/${picture.path_name}')">`;
+                });
+                
+                // Close the div and li tags
+                content += `</div></li>`;
+               lengthWighings--;
             })
             content += `</ul>`;
             return content;

@@ -1,4 +1,13 @@
 import os
+from datetime import datetime
+
+def structure_folder_rule(base_path):
+    current_date = datetime.now()
+    year = current_date.year
+    month = current_date.month
+    
+    # Create path with /year/month format
+    return f"{base_path}/{year}/{month:02d}"
 
 def save_bytes_to_file(file_bytes, filename, folder_path):
     """

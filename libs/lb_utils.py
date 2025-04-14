@@ -130,9 +130,3 @@ def check_values(obj):
             elif value != "" and value is not None:  # Se il valore non è "" o None
                 return True
     return False
-
-def current_month():
-    return datetime.datetime.now().strftime("%B").lower()
-
-def get_month(date):
-    return date.strftime("%B").lower()

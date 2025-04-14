@@ -1,9 +1,9 @@
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload, selectinload
-from modules.md_database.md_database import table_models, SessionLocal, Weighing, Reservation
+from modules.md_database.md_database import table_models, SessionLocal, Weighing, Reservation, ReservationStatus
 from datetime import datetime, date
 
-def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offset=None, fromDate=None, toDate=None, order_by=None):
+def get_list_reservations(filters=None, not_closed=True, fromDate=None, toDate=None, limit=None, offset=None, order_by=None):
     """
     Gets a list of reservations with optional filtering for incomplete reservations
     and additional filters on any reservation field or related entities.
@@ -38,25 +38,20 @@ def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offse
         # Start with base query
         query = session.query(Reservation)
         
-        # Load all relationships including weighings
-        for rel_name, rel_obj in Reservation.__mapper__.relationships.items():
-            # Use selectinload to efficiently load all relationships and nested relationships
-            query = query.options(selectinload(getattr(Reservation, rel_name)))
-        
+        query = query.options(
+            selectinload(Reservation.subject),
+            selectinload(Reservation.vector),
+            selectinload(Reservation.driver),
+            selectinload(Reservation.vehicle),
+            selectinload(Reservation.material),
+            selectinload(Reservation.weighings).selectinload(Weighing.weighing_pictures)
+        )
+
         # Join with the weighing count subquery
         query = query.outerjoin(
             weighing_count_subquery,
             Reservation.id == weighing_count_subquery.c.idReservation
         )
-        
-        # Apply filter for incomplete reservations if only_uncomplete is True
-        if only_uncomplete:
-            query = query.filter(
-                (
-                    ((weighing_count_subquery.c.weighing_count == None) & (Reservation.number_weighings > 0)) |
-                    (weighing_count_subquery.c.weighing_count < Reservation.number_weighings)
-                )
-            )
         
         # Apply additional filters if specified
         if filters:
@@ -77,7 +72,7 @@ def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offse
                     # Verify that the attribute exists in the related model
                     if not hasattr(related_model, attr_name):
                         raise ValueError(f"Attribute '{attr_name}' not found in relationship '{rel_name}'.")
-                    
+
                     if isinstance(value, str):
                         # For strings, handle % properly for LIKE queries
                         if "%" in value:
@@ -115,6 +110,9 @@ def get_list_reservations(only_uncomplete=False, filters=None, limit=None, offse
                             query = query.filter(getattr(Reservation, key).is_(None))
                     else:
                         raise ValueError(f"Column '{key}' not found in Reservation table.")
+
+        if not_closed:
+            query = query.filter(Reservation.status != ReservationStatus.CLOSED)
         
         # Apply date range filters if specified
         if fromDate:

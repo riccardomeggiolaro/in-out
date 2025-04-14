@@ -9,7 +9,7 @@ from typing import Union, Optional, List
 class DataInExecution(BaseModel):
 	typeSubject: Optional[str] = None
 	subject: SubjectDTO = SubjectDTO(**{})
-	vector: DriverDTO = DriverDTO(**{})
+	vector: VectorDTO = VectorDTO(**{})
 	driver: DriverDTO = DriverDTO(**{})
 	vehicle: VehicleDTO = VehicleDTO(**{})
 	material: MaterialDTO = MaterialDTO(**{})

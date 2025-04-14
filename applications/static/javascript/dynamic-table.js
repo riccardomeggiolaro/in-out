@@ -161,7 +161,10 @@ function populateTable(data) {
     const obj = getTableColumns();
     obj.table.innerHTML = ""; // Pulisce la tabella esistente
   
-    data.forEach(item => createRow(obj.table, obj.columns, item));
+    data.forEach(item => {
+        if (item.weighings && item.number_weighings) item.number_weighings = `${item.weighings.length}/${item.number_weighings}`;
+        createRow(obj.table, obj.columns, item)
+    });
 }
 
 function createRow(table, columns, item) {
@@ -267,9 +270,8 @@ function toggleExpandRow(row) {
     }
     currentRowExtended = row.nextElementSibling; // Dettagli subito dopo la riga
     const isExpanded = currentRowExtended.style.display === "table-row";
-    // Se già espanso, nascondi
     currentRowExtended.style.display = isExpanded ? "none" : "table-row";
-}  
+}
 
 function getFormData(form) {
     const formData = {};

@@ -218,7 +218,7 @@ async function populateListIn() {
 
     listIn.innerHTML = '';
 
-    await fetch('/anagrafic/reservation/list?uncomplete=true')
+    await fetch('/anagrafic/reservation/list?status=NOT_CLOSED')
     .then(res => res.json())
     .then(data => {
         data.data.forEach(item => {

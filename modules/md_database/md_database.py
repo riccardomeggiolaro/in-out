@@ -75,6 +75,14 @@ class Material(Base):
 
     reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
 
+class WeighingPicture(Base):
+    __tablename__ = 'weighing_picture'
+    id = Column(Integer, primary_key=True, index=True)
+    path_name = Column(String, nullable=False)
+    idWeighing = Column(Integer, ForeignKey('weighing.id'))
+
+    weighing = relationship("Weighing", back_populates="weighing_pictures")
+
 # Model for Weighing table
 class Weighing(Base):
     __tablename__ = 'weighing'
@@ -86,7 +94,8 @@ class Weighing(Base):
     idReservation = Column(Integer, ForeignKey('reservation.id'))
 
     reservation = relationship("Reservation", back_populates="weighings")
-
+    weighing_pictures = relationship("WeighingPicture", back_populates="weighing", cascade="all, delete")
+    
 class TypeSubjectEnum(PyEnum):
     CUSTOMER = "Cliente"
     SUPPLIER = "Fornitore"
@@ -121,7 +130,6 @@ class Reservation(Base):
     vehicle = relationship("Vehicle", back_populates="reservations")
     material = relationship("Material", back_populates="reservations")	
     weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
-
 
 class LockRecordType(PyEnum):
     SELECT = "select"

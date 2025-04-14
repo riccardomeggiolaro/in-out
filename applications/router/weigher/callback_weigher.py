@@ -18,8 +18,8 @@ import datetime as dt
 from applications.router.weigher.types import DataInExecution
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
-from libs.lb_utils import has_values_besides_id, current_month
-from libs.lb_folders import save_bytes_to_file, search_file
+from libs.lb_utils import has_values_besides_id
+from libs.lb_folders import structure_folder_rule, save_bytes_to_file, search_file
 from applications.router.anagrafic.web_sockets import WebSocket
 
 class CallbackWeigher(Functions, WebSocket):
@@ -59,6 +59,7 @@ class CallbackWeigher(Functions, WebSocket):
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
 		if last_pesata.weight_executed.executed:
+			weighing_stored_db = None
 			if last_pesata.data_assigned.id_selected.id is None:
 				node = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance_name,weigher_name=weigher_name)
 				tare = float(last_pesata.weight_executed.tare)
@@ -137,7 +138,7 @@ class CallbackWeigher(Functions, WebSocket):
 						"weigher": weigher_name,
 						"idReservation": reservation_add["id"]
 					}
-					add_data("weighing", weighing_tare)
+					weighing_stored_db = add_data("weighing", weighing_tare)
 				weighing = {
 					"weight": last_pesata.weight_executed.gross_weight,
 					"date": dt.datetime.now(),
@@ -145,7 +146,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"weigher": weigher_name,
 					"idReservation": reservation_add["id"]
 				}
-				add_data("weighing", weighing)
+				weighing_stored_db = add_data("weighing", weighing)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 				asyncio.run(self.broadcastAddAnagrafic("reservation", {"reservation": Reservation(**reservation_add).json()}))
 			elif last_pesata.data_assigned.id_selected.id:
@@ -156,7 +157,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"weigher": weigher_name,
 					"idReservation": last_pesata.data_assigned.id_selected.id
      			}
-				add_data("weighing", weighing)
+				weighing_stored_db = add_data("weighing", weighing)
 				reservation = get_data_by_id("reservation", last_pesata.data_assigned.id_selected.id)
 				reservation_update = None
 				if reservation["number_weighings"] == len(reservation["weighings"]):
@@ -170,11 +171,15 @@ class CallbackWeigher(Functions, WebSocket):
 				key, value = next(iter(rele.items()))
 				modope = "CLOSERELE" if value == 0 else "OPENRELE"
 				md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
-			for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
-				if cam["active"]:
-					image_captured_details = capture_camera_image(camera_url=cam["url"], timeout=5)
-					if image_captured_details["image"]:
-						save_bytes_to_file(image_captured_details["image"], f"{last_pesata.weight_executed.pid}_{weigher_name}.png", lb_config.g_config["app_api"]["path_weighing_pictures"] + current_month())
+			if weighing_stored_db:
+				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
+					if cam["active"]:
+						image_captured_details = capture_camera_image(camera_url=cam["url"], timeout=5)
+						if image_captured_details["image"]:
+							folder_path = structure_folder_rule(lb_config.g_config["app_api"]["path_weighing_pictures"])
+							save_bytes_to_file(image_captured_details["image"], f"{last_pesata.weight_executed.pid}_{weigher_name}.png", folder_path)
+							add_data("weighing_pictures", {"path_name": folder_path, "idWeighing": weighing["id"]})
+
 		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(last_pesata.dict()))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):

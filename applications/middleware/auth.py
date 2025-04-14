@@ -56,6 +56,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if request.url.path in pages or request.url.path.startswith("/static"):
             return await call_next(request)
 
+        # Skip authentication for specific routes
+        if request.url.path in pages or request.url.path.startswith("/images"):
+            return await call_next(request)
+
         try:
             # Check Authorization header
             auth_header = request.headers.get("Authorization")
