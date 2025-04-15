@@ -135,6 +135,8 @@ class LockRecordType(PyEnum):
     SELECT = "select"
     UPDATE = "update"
     DELETE = "delete"
+    CALL = "call"
+    CANCEL_CALL = "cancel_call"
 
 class LockRecord(Base):
     __tablename__ = 'lock_record'

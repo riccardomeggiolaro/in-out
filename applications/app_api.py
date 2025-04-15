@@ -12,7 +12,6 @@ from applications.router.anagrafic.router import AnagraficRouter
 from applications.router.auth import AuthRouter
 from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
-from applications.router.panel_siren.router import PanelSirenRouter
 from typing import Optional
 from pathlib import Path
 import os
@@ -118,7 +117,6 @@ def init():
 	auth_router = AuthRouter()
 	printer_router = PrinterRouter()
 	tunnel_connections_router = TunnelConnectionsRouter()
-	pane_siren_router = PanelSirenRouter()
 
 	app.include_router(weigher_router.router)
 
@@ -131,8 +129,6 @@ def init():
 	app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 
 	app.include_router(tunnel_connections_router.router, prefix="/tunnel_connections", tags=["tunnel connections"])
-
-	app.include_router(pane_siren_router.router, prefix="", tags=["panel siren"])
 
 	# Monta la cartella 'static' nella rotta '/static'
 	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")

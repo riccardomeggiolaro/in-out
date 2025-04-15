@@ -35,6 +35,7 @@ class AnagraficRouter:
 		self.router.include_router(vehicle.router, prefix='/vehicle', tags=['vehicle'])
 		self.router.include_router(material.router, prefix='/material', tags=['material'])
 		self.router.include_router(reservation.router, prefix='/reservation', tags=['reservation'])
+		self.router.include_router(reservation.panel_siren_router, prefix='', tags=['panel siren'])
 
 		self.router.add_api_websocket_route('/{anagrafic}', self.websocket_anagrafic)
 

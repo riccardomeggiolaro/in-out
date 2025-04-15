@@ -20,6 +20,18 @@ def lock_record(table_name, idRecord, type, websocket_identifier=None):
                     LockRecord.idRecord == idRecord,
                     LockRecord.type.in_([LockRecordType.UPDATE, LockRecordType.DELETE])
                 ).first()
+            elif type == "CALL":
+                existing = session.query(LockRecord).filter(
+                    LockRecord.table_name == table_name,
+                    LockRecord.idRecord == idRecord,
+                    LockRecord.type.in_([LockRecordType.UPDATE, LockRecordType.DELETE, LockRecordType.CALL, LockRecordType.CANCEL_CALL])
+                ).first()
+            elif type == "CANCEL_CALL":
+                existing = session.query(LockRecord).filter(
+                    LockRecord.table_name == table_name,
+                    LockRecord.idRecord == idRecord,
+                    LockRecord.type.in_([LockRecordType.UPDATE, LockRecordType.DELETE, LockRecordType.CALL, LockRecordType.CANCEL_CALL])
+                ).first()
             elif type in ["UPDATE", "DELETE"]:
                 existing = session.query(LockRecord).filter(
                     LockRecord.table_name == table_name,
@@ -45,18 +57,12 @@ def lock_record(table_name, idRecord, type, websocket_identifier=None):
             # con type="UPDATE" o type="DELETE", grazie all'indice parziale
             session.rollback()
             
-            import libs.lb_log as lb_log
-            
-            lb_log.error("ijqebnofnopn")
-            
             # Recupera il record esistente che causa il conflitto
             existing_record = session.query(LockRecord).filter(
                 LockRecord.table_name == table_name,
                 LockRecord.idRecord == idRecord,
                 LockRecord.type.in_([LockRecordType.UPDATE, LockRecordType.DELETE])
             ).first()
-            
-            lb_log.error("ijqebnofnopn")
             
             return False, existing_record
         except Exception as e:

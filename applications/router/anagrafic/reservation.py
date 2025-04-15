@@ -23,12 +23,15 @@ import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params, has_non_none_value
 from applications.router.anagrafic.web_sockets import WebSocket
+from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
 from datetime import datetime
 from libs.lb_folders import get_image_from_folder
 import libs.lb_config as lb_config
 
-class ReservationRouter(WebSocket):
+class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
+        super().__init__()
+        
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
@@ -37,7 +40,9 @@ class ReservationRouter(WebSocket):
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
         self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'])
         self.router.add_api_route('/last-weighing/{id}', self.deleteLastWeighing, methods=['DELETE'])
-
+        self.router.add_api_route('/call/{id}', self.callReservation, methods=["GET"])
+        self.router.add_api_route('/cancel-call/{id}', self.cancelCallReservation, methods=["GET"])
+        
     async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
             not_closed = False
@@ -56,7 +61,8 @@ class ReservationRouter(WebSocket):
             data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'))
             return {
                 "data": data,
-                "total_rows": total_rows
+                "total_rows": total_rows,
+                "buffer": self.buffer
             }
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
@@ -250,6 +256,41 @@ class ReservationRouter(WebSocket):
             reservation = Reservation(**data).json()
             await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
             return reservation
+        except Exception as e:
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
+        
+    async def callReservation(self, id: int):
+        try:
+            data = get_data_by_id("reservation", id)
+            if data["status"] not in [ReservationStatus.WAITING, ReservationStatus.CALLED]:
+                raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' ha già effettuato una pesata")
+            elif data["vehicle"]["plate"] in self.buffer:
+                raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' è già presente nel buffer")
+            edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"])
+            await self.sendMessageSiren()
+            data = update_data("reservation", id, {"status": ReservationStatus.CALLED})
+            reservation = Reservation(**data).json()
+            await self.broadcastCallAnagrafic("reservation", {"reservation": reservation})
+            return edit_buffer
+        except Exception as e:
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
+    
+    async def cancelCallReservation(self, id: int):
+        try:
+            data = get_data_by_id("reservation", id)
+            if data["status"] != ReservationStatus.CALLED:
+                raise HTTPException(status_code=400, detail="Il mezzo non è ancora stato chiamato")
+            elif data["vehicle"]["plate"] not in self.buffer:
+                raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' non è presente nel buffer")
+            undo_buffer = await self.deleteMessagePanel(data["vehicle"]["plate"])
+            data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
+            reservation = Reservation(**data).json()
+            await self.broadcastCallAnagrafic("reservation", {"reservation": reservation})
+            return undo_buffer
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))

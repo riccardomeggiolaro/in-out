@@ -1,5 +1,4 @@
-import requests
-import socket
+import asyncio
 
 class PanelMessage:
     def __init__(self, panel_id: int, duration: int = 0x5A):
@@ -40,20 +39,30 @@ class PanelMessage:
 
         return bytes(self.data)
     
-def send_message(ip, port, username, password, timeout, endpoint, message):
+async def send_message(ip, port, username, password, timeout, endpoint, message):
     panel = PanelMessage(panel_id=0x10)
     packet = panel.build_message(message)
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(timeout)
-        try:
-            sock.connect((ip, port))
-            sock.sendall(packet)
-        except ConnectionRefusedError:
-            raise ConnectionRefusedError(f"Connection refused by {ip}:{port}")
-        except socket.timeout:
-            raise ConnectionError(f"Host {ip}:{port} non raggiungibile (timeout)")
-        except socket.error as e:
-            raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")
-        except Exception as e:
-            raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")
+    try:
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(ip, port),
+            timeout=timeout
+        )
+
+        writer.write(packet)
+        await writer.drain()
+
+        # Se vuoi leggere una risposta, puoi usare: await reader.read(n)
+        # response = await reader.read(1024)
+
+        writer.close()
+        await writer.wait_closed()
+
+    except asyncio.TimeoutError:
+        raise ConnectionError(f"Host {ip}:{port} non raggiungibile (timeout)")
+    except ConnectionRefusedError:
+        raise ConnectionRefusedError(f"Connection refused by {ip}:{port}")
+    except OSError as e:
+        raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")
+    except Exception as e:
+        raise ConnectionError(f"Errore di rete con {ip}:{port}: {e}")

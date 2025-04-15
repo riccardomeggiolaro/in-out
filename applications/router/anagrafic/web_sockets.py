@@ -17,3 +17,7 @@ class WebSocket:
     async def broadcastDeleteAnagrafic(self, anagrafic: str, data: any):
         message = Message("delete", data).__dict__
         await manager_anagrafics[anagrafic].broadcast(message)
+        
+    async def broadcastCallAnagrafic(self, anagrafic: str, data: any):
+        message = Message("call", data).__dict__
+        await manager_anagrafics[anagrafic].broadcast(message)

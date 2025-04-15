@@ -13,6 +13,7 @@ let callback_populate_select = null;
 let callback_websocket_message = null;
 let callback_close_popups = null;
 let callback_populate_table = null;
+let callback_call_anagrafic = null;
 let populate_detail_tr = null;
 let currentId = null;
 let confirm_exec_funct = null;
@@ -23,6 +24,7 @@ let reconnectTimeout = null;
 let typeSelect; // update or delete
 let params = {};
 let requestIdCounter = 0;
+let buffer = "";
 // Track pending requests
 const pendingRequests = new Map();
 const columns = {};
@@ -80,6 +82,7 @@ async function updateTable() {
     const data = await res.json();
 
     totalRows = data.total_rows;
+    if (data.buffer) buffer = data.buffer;
     populateTable(data.data);
     updatePageSelect();
     document.getElementById("total-rows").textContent = `Totale righe: ${totalRows}`;
@@ -194,6 +197,21 @@ function createRow(table, columns, item) {
     // Crea la cella per i pulsanti di azione
     const actionsCell = document.createElement("td");
     actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra        
+    let callButton;
+    if (item.status && item.status === "Attesa" || item.status === "Chiamato") {
+        // Pulsante chiamata
+        callButton = document.createElement("button");
+        const textContent = !buffer.includes(item["vehicle"]["plate"]) ? "📢" : "🚫📢";
+        const action = !buffer.includes(item["vehicle"]["plate"]) ? "CALL" : "CANCEL_CALL";
+        callButton.textContent = textContent;
+        callButton.onclick = (e) => {
+            e.preventDefault();
+            selectAnagrafic(item.id, action, itemName);
+            currentId = item.id;
+        }
+        callButton.style.visibility = "hidden";
+        actionsCell.appendChild(callButton);
+    }
     // Pulsante Modifica
     const editButton = document.createElement("button");
     editButton.style.visibility = 'hidden';
@@ -219,11 +237,13 @@ function createRow(table, columns, item) {
         row.style.backgroundColor = 'whitesmoke';
         editButton.style.visibility = 'inherit';
         deleteButton.style.visibility = 'inherit';
+        if (callButton) callButton.style.visibility = 'inherit';
     });
     row.addEventListener("mouseleave", () => {
         row.style.backgroundColor = 'white';
         editButton.style.visibility = 'hidden';
         deleteButton.style.visibility = 'hidden';
+        if (callButton) callButton.style.visibility = 'hidden';
     });
     table.appendChild(row);
     if (populate_detail_tr) {
@@ -530,6 +550,7 @@ function openPopup(idPopup) {
 }
 
 function closePopups(idPopups, deselectCurrentId = true) {
+    console.log(currentId, deselectCurrentId);
     confirm_exec_funct = null;
     if (deselectCurrentId) {
         if (currentId) {
@@ -656,27 +677,51 @@ function connectWebSocket() {
                         await updateTable();
                     }
                     showSnackbar(capitalizeFirstLetter(`${specific} eliminat${lastChar}`), 'rgb(255, 208, 208)', 'black');
+                } else if (data.action === "call") {
+                    await updateTable();
+                    const obj = getTableColumns();
+                    const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    if (tr) {
+                        tr.classList.toggle('updated');
+                        // Rimuove la classe dopo l'animazione
+                        tr.addEventListener('animationend', async () => {
+                            tr.classList.remove('updated');
+                        }, { once: true }); // Ascolta solo una volta
+                    }
+                    showSnackbar(capitalizeFirstLetter(`${specific} chiamat${lastChar}`), 'rgb(255, 240, 208)', 'black');                    
+                } else if (data.action === "cancel_call") {
+                    await updateTable();
+                    const obj = getTableColumns();
+                    const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    if (tr) {
+                        tr.classList.toggle('updated');
+                        // Rimuove la classe dopo l'animazione
+                        tr.addEventListener('animationend', async () => {
+                            tr.classList.remove('updated');
+                        }, { once: true }); // Ascolta solo una volta
+                    }
+                    showSnackbar(capitalizeFirstLetter(`Chiamata del ${specific} annullat${lastChar}`), 'rgb(255, 240, 208)', 'black'); 
                 } else if (data.action === "lock") {
                     if (data.success === true) {
-                        if (data.type === "UPDATE") editRow(data.data);
-                        else if (data.type === "DELETE") deleteRow(data.data);
-                        else if (data.type === "SELECT") {
-                            if (pendingRequests.has(data.idRequest)) {
-                                const request = pendingRequests.get(data.idRequest);
-                                if (request.callback_anagrafic) request.callback_anagrafic();
-                                pendingRequests.delete(data.idRequest);
-                            }
-                        }
+                        if (data.type === "UPDATE") {
+                            removeWebSocketRequest(data.idRequest);
+                            editRow(data.data)
+                        } else if (data.type === "DELETE") {
+                            removeWebSocketRequest(data.idRequest);
+                            deleteRow(data.data)
+                        } else if (data.type === "CALL") {
+                            currentId = data.data.id;
+                            removeWebSocketRequest(data.idRequest);
+                            if (callback_call_anagrafic) callback_call_anagrafic(data.type, data.data);
+                        } else if (data.type === "CANCEL_CALL") {
+                            currentId = data.data.id;
+                            removeWebSocketRequest(data.idRequest);
+                            if (callback_call_anagrafic) callback_call_anagrafic(data.type, data.data);
+                        } else if (data.type === "SELECT") removeWebSocketRequest(data.idRequest);
                     }
                     else console.log(data)
                 } else if (data.action === "unlock") {
-                    if (data.success === true) {
-                        if (pendingRequests.has(data.idRequest)) {
-                            const request = pendingRequests.get(data.idRequest);
-                            if (request.callback_anagrafic) request.callback_anagrafic();
-                            pendingRequests.delete(data.idRequest);
-                        }
-                    }
+                    if (data.success === true) removeWebSocketRequest(data.idRequest);
                 }
             } else {
                 showSnackbar(data.error, 'rgb(255, 208, 208)', 'black');
@@ -707,6 +752,14 @@ function attemptReconnect() {
     reconnectTimeout = setTimeout(() => {
         connectWebSocket(websocketUrlPath);
     }, 3000);
+}
+
+function removeWebSocketRequest(id) {
+    if (pendingRequests.has(id)) {
+        const request = pendingRequests.get(id);
+        if (request.callback_anagrafic) request.callback_anagrafic();
+        pendingRequests.delete(id);
+    }
 }
 
 async function sendWebSocketRequest(action, data, callback_anagrafic) {
@@ -750,6 +803,7 @@ async function selectAnagrafic(idRecord, type, anagrafic = itemName, callback_an
 // Example of using WebSocket for deselectAnagrafic
 async function deselectAnagrafic(idRecord, anagrafic = itemName, callback_anagrafic = null) {
     try {
+        console.log("response");
         const type = "";
         const response = await sendWebSocketRequest("unlock", { idRecord, type, anagrafic }, callback_anagrafic);
         return response;
