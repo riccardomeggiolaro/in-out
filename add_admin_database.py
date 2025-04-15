@@ -5,7 +5,7 @@ import os
 def add_default_user():
     # Get current working directory and create database connection
     cwd = os.getcwd()
-    engine = create_engine(f"sqlite:///{cwd}/database.db", echo=True)
+    engine = create_engine(f"sqlite:////var/lib/in-out/database/database.db", echo=True)
     
     # Create session
     Session = sessionmaker(bind=engine)

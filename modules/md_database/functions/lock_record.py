@@ -1,5 +1,5 @@
 from sqlalchemy.exc import IntegrityError
-from modules.md_database.md_database import LockRecord, SessionLocal, LockRecordType
+from modules.md_database.md_database import LockRecord, SessionLocal, LockRecordType, Reservation
 
 def lock_record(table_name, idRecord, type, websocket_identifier=None):
     """

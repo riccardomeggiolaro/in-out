@@ -1,10 +1,28 @@
 #!/bin/bash
 set -e # Termina lo script in caso di errore
 
-# Funzione corretta per controllare se un pacchetto è installato
+# Funzione per controllare se un pacchetto è installato
 is_installed() {
     dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
 }
+
+# Installa sudo se non è presente
+if ! command -v sudo &>/dev/null; then
+    echo "Installazione di sudo..."
+    apt update
+    apt install -y sudo
+else
+    echo "sudo è già installato, procedo..."
+fi
+
+# Installa python3.11-venv se non è presente
+if ! is_installed python3.11-venv; then
+    echo "Installazione di python3.11-venv..."
+    sudo apt update
+    sudo apt install -y python3.11-venv
+else
+    echo "python3.11-venv è già installato, procedo..."
+fi
 
 # Installa python3-dev se non è presente
 if ! is_installed python3-dev; then

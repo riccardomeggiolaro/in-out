@@ -6,11 +6,12 @@ from pydantic import BaseModel, validator
 from datetime import datetime
 import os
 from enum import Enum as PyEnum
+import libs.lb_config as lb_config
 
 # Database connection
 Base = declarative_base()
-cwd = os.getcwd()
-engine = create_engine(f"sqlite:///{cwd}/database.db")
+path_database = lb_config.g_config['app_api']['path_database']
+engine = create_engine(f"sqlite:///{path_database}")
 SessionLocal = sessionmaker(bind=engine)
 
 # Model for User table

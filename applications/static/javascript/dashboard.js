@@ -224,10 +224,10 @@ async function populateListIn() {
         data.data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
-            let content = item.id;
-            if (item.vehicle && item.vehicle.plate) content += `) ${item.vehicle.plate}`;
-            else if (item.vehicle && item.vehicle.description) content += `) ${item.vehicle.description}`;
-            else if (item.subject && item.subject.social_reason) content += `) ${item.subject.social_reason}`;
+            let content = item.weighings.length > 0 ? item.weighings[0].pid : item.id;
+            if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
+            else if (item.vehicle && item.vehicle.description) content = `${item.vehicle.description}`;
+            else if (item.subject && item.subject.social_reason) content = `${item.subject.social_reason}`;
             li.textContent = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');

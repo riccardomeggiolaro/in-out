@@ -13,3 +13,4 @@ pycups
 python-dateutil
 pandas
 requests
+httpx

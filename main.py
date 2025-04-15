@@ -10,19 +10,12 @@ import time
 import threading
 import sys
 import signal
-import libs.lb_config as lb_config  # Importa il modulo per la configurazione
-import libs.lb_log as lb_log  # Importa il modulo per il logger
 import modules.md_weigher.md_weigher as md_weigher
 # import modules.md_rfid as md_rfid
-import modules.md_tunnel_connections.md_tunnel_connections as md_tunnel_connections
-import applications.app_api as app_api
 from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
-import modules.md_database.md_database as md_database
+import libs.lb_config as lb_config  # Importa il modulo per la configurazione
+import libs.lb_log as lb_log  # Importa il modulo per il logger
 # ==============================================================
-
-APPS = [app_api]
-
-MODULES = [md_weigher, md_tunnel_connections]
 
 # ==== MAINPRGLOOP =============================================
 # Configura globale e lo stato del programma.
@@ -36,6 +29,15 @@ def mainprg():
 
 	# Carica thread per il logger in background.
 	thr_logger = createThread(lb_log.start)
+
+	import modules.md_database.md_database as md_database
+
+	import modules.md_tunnel_connections.md_tunnel_connections as md_tunnel_connections
+	import applications.app_api as app_api
+
+	APPS = [app_api]
+
+	MODULES = [md_weigher, md_tunnel_connections]
 
 	# Carica thread per i mdouli esterni.
 	modules_thr = {}
