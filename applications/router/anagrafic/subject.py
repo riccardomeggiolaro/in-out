@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Respons
 from fastapi.encoders import jsonable_encoder
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.subject import Subject, AddSubjectDTO, SetSubjectDTO, FilterSubjectDTO
+from modules.md_database.interfaces.subject import Subject, AddSubjectDTO, SetSubjectDTO, FilterSubjectDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -46,10 +46,6 @@ class SubjectRouter(WebSocket):
 
     async def addSubject(self, body: AddSubjectDTO):
         try:
-            if body.social_reason and get_data_by_attribute("subject", "social_reason", body.social_reason):
-                raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
-            if body.cfpiva and get_data_by_attribute("subject", "cfpiva", body.cfpiva):
-                raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = add_data("subject", body.dict())
             subject = Subject(**data).json()
             await self.broadcastAddAnagrafic("subject", {"subject": subject})

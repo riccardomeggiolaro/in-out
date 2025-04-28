@@ -4,7 +4,7 @@ import signal
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
 import threading
-import datetime
+import bcrypt
 
 # Definizione di CustomBaseModel che estende BaseModel di Pydantic.
 class CustomBaseModel(BaseModel):
@@ -130,3 +130,14 @@ def check_values(obj):
             elif value != "" and value is not None:  # Se il valore non è "" o None
                 return True
     return False
+
+def hash_password(password: str):
+	# Convert password to bytes and generate salt
+	password_bytes = password.encode('utf-8')
+
+	salt = lb_config.g_config["secret_key"].encode('utf-8')
+
+	# Hash the password with the generated salt
+	hashed_password = bcrypt.hashpw(password_bytes, salt)
+
+	return hashed_password.decode('utf-8')

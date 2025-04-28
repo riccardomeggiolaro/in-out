@@ -1,5 +1,5 @@
 from sqlalchemy import func
-from modules.md_database.md_database import table_models, SessionLocal, Weighing, Reservation
+from modules.md_database.md_database import SessionLocal, Weighing, Reservation
 
 def select_reservation_if_uncomplete(reservation_id: int):
 	session = SessionLocal()

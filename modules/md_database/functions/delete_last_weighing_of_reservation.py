@@ -1,9 +1,6 @@
 from sqlalchemy import desc
-from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import SQLAlchemyError
-from modules.md_database.md_database import table_models, SessionLocal, Weighing
-from modules.md_database.functions.lock_record import lock_record
-from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
+from modules.md_database.md_database import SessionLocal, Weighing
 
 def delete_last_weighing_of_reservation(reservation_id, web_socket=None):
     """

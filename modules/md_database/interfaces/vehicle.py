@@ -1,4 +1,4 @@
-from pydantic import BaseModel, validator, root_validator
+from pydantic import BaseModel, validator, root_validator, field_validator
 from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from datetime import datetime
@@ -47,16 +47,15 @@ class VehicleDTO(BaseModel):
 		arbitrary_types_allowed = True
 
 class AddVehicleDTO(BaseModel):
-    plate: Optional[str] = None
+    plate: str
     description: Optional[str] = None
 
-    @root_validator(pre=True)
-    def check_at_least_one_field(cls, values):
-        plate = values.get('plate')
-        description = values.get('description')
-        if not description and not plate:
-            raise ValueError('At least one of "description" or "plate" must be provided.')
-        return values
+    @field_validator('*', mode='before')
+    @classmethod
+    def empty_str_to_none(cls, value, info):
+        if isinstance(value, str) and value == "":
+            return None
+        return value
 
 class SetVehicleDTO(BaseModel):
     plate: Optional[str] = None

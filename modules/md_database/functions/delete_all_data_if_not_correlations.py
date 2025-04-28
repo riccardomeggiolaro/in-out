@@ -1,4 +1,3 @@
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import inspect
 from modules.md_database.md_database import table_models, SessionLocal, engine
 

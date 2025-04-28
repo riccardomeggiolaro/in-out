@@ -1,12 +1,10 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum, func, UniqueConstraint, Index
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum
+from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from sqlalchemy.ext.hybrid import hybrid_property
-from typing import Optional, List, Union
-from pydantic import BaseModel, validator
-from datetime import datetime
-import os
 from enum import Enum as PyEnum
+from datetime import datetime
 import libs.lb_config as lb_config
+from libs.lb_utils import hash_password
 
 # Database connection
 Base = declarative_base()
@@ -18,21 +16,24 @@ SessionLocal = sessionmaker(bind=engine)
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String)
+    username = Column(String(collation="NOCASE"), unique=True, index=True)
     password = Column(String)
     level = Column(Integer)
     description = Column(String)
     printer_name = Column(String, nullable=True)
-    date_created = Column(DateTime, default=datetime.utcnow)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
+
+    # Relazione con LockRecord
+    lock_records = relationship("LockRecord", back_populates="user", cascade="all, delete")
 
 # Model for Subject table
 class Subject(Base):
     __tablename__ = 'subject'
     id = Column(Integer, primary_key=True, index=True)
-    social_reason = Column(String)
-    telephone = Column(String)
-    cfpiva = Column(String)
-    date_created = Column(DateTime, default=datetime.utcnow)
+    social_reason = Column(String(collation="NOCASE"), index=True, unique=True)
+    telephone = Column(String(collation="NOCASE"), unique=True, nullable=True)
+    cfpiva = Column(String(collation="NOCASE"), unique=True, nullable=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="subject", cascade="all, delete")
 
@@ -40,10 +41,10 @@ class Subject(Base):
 class Vector(Base):
     __tablename__ = 'vector'
     id = Column(Integer, primary_key=True, index=True)
-    social_reason = Column(String)
-    telephone = Column(String)
-    cfpiva = Column(String)
-    date_created = Column(DateTime, default=datetime.utcnow)
+    social_reason = Column(String(collation="NOCASE"), index=True, unique=True)
+    telephone = Column(String(collation="NOCASE"), unique=True, nullable=True)
+    cfpiva = Column(String(collation="NOCASE"), unique=True, nullable=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="vector", cascade="all, delete")
 
@@ -52,8 +53,8 @@ class Driver(Base):
     __tablename__ = 'driver'
     id = Column(Integer, primary_key=True, index=True)
     social_reason = Column(String)
-    telephone = Column(String)
-    date_created = Column(DateTime, default=datetime.utcnow)
+    telephone = Column(String(collation="NOCASE"), index=True, unique=True, nullable=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="driver", cascade="all, delete")  # Fixed typo: resservations -> reservations
 
@@ -61,9 +62,9 @@ class Driver(Base):
 class Vehicle(Base):
     __tablename__ = 'vehicle'
     id = Column(Integer, primary_key=True, index=True)
-    plate = Column(String)
-    description = Column(String)
-    date_created = Column(DateTime, default=datetime.utcnow)
+    plate = Column(String(collation="NOCASE"), index=True, unique=True)
+    description = Column(String, nullable=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
 
@@ -71,8 +72,8 @@ class Vehicle(Base):
 class Material(Base):
     __tablename__ = 'material'
     id = Column(Integer, primary_key=True, index=True) 
-    description = Column(String, index=True)
-    date_created = Column(DateTime, default=datetime.utcnow)
+    description = Column(String(collation="NOCASE"), index=True, unique=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
 
@@ -89,8 +90,8 @@ class Weighing(Base):
     __tablename__ = 'weighing'
     id = Column(Integer, primary_key=True, index=True)
     weight = Column(Integer, nullable=True)
-    date = Column(DateTime, nullable=True)
-    pid = Column(String, nullable=True)
+    date = Column(DateTime, server_default=func.now(), default=datetime.now)
+    pid = Column(String, index=True, unique=True, nullable=True)
     weigher = Column(String, nullable=True)
     idReservation = Column(Integer, ForeignKey('reservation.id'))
 
@@ -120,7 +121,7 @@ class Reservation(Base):
     number_weighings = Column(Integer, default=0, nullable=False)
     note = Column(String)
     selected = Column(Boolean, index=True, default=False)
-    date_created = Column(DateTime, default=datetime.utcnow)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
     status = Column(Enum(ReservationStatus), default=ReservationStatus.WAITING)
     document_reference = Column(String, nullable=True)
 
@@ -146,6 +147,9 @@ class LockRecord(Base):
     idRecord = Column(Integer, nullable=False)
     type = Column(Enum(LockRecordType), default=LockRecordType.SELECT)
     websocket_identifier = Column(String, nullable=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
+    user = relationship("User", back_populates="lock_records")
 
 # Dictionary of models to map table names to model classes
 table_models = {
@@ -170,3 +174,18 @@ upload_file_datas_required_columns = {
 }
 
 Base.metadata.create_all(engine)
+
+# Esegui la funzione per creare l'utente admin se non esiste
+with SessionLocal() as db_session:
+    # Controlla se l'utente admin esiste già
+    admin_user = db_session.query(User).filter(User.username == "admin").first()
+
+    if admin_user is None:
+        admin_user = User(
+            username="admin",
+            password=hash_password("3181"),  # Sostituisci con una password sicura
+            level=3,  # Imposta il livello appropriato, ad esempio 1 per admin
+            description="Administrator"
+        )
+        db_session.add(admin_user)
+        db_session.commit()

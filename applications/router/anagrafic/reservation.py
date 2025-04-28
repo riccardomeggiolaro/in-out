@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response, WebSocket as StringWebSocket
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns, ReservationStatus
-from modules.md_database.dtos.reservation import Reservation, AddReservationDTO, SetReservationDTO
-from modules.md_database.dtos.subject import Subject
-from modules.md_database.dtos.vector import Vector
-from modules.md_database.dtos.driver import Driver
-from modules.md_database.dtos.vehicle import Vehicle
-from modules.md_database.dtos.material import Material
+from modules.md_database.interfaces.reservation import Reservation, AddReservationDTO, SetReservationDTO
+from modules.md_database.interfaces.subject import Subject
+from modules.md_database.interfaces.vector import Vector
+from modules.md_database.interfaces.driver import Driver
+from modules.md_database.interfaces.vehicle import Vehicle
+from modules.md_database.interfaces.material import Material
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -121,6 +121,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 reservation_to_add["idDriver"] = driver.id
             if not reservation_to_add["idVehicle"] and has_non_none_value(body.vehicle.dict()):
                 data = add_data("vehicle", body.vehicle.dict())
+                import libs.lb_log as lb_log
+                lb_log.warning(data)
                 vehicle = Vehicle(**data)
                 await self.broadcastAddAnagrafic("vehicle", {"vehicle": vehicle.json()})
                 reservation_to_add["idVehicle"] = vehicle.id

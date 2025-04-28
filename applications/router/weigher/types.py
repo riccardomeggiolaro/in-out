@@ -1,9 +1,9 @@
 from pydantic import BaseModel
-from modules.md_database.dtos.subject import SubjectDTO
-from modules.md_database.dtos.vector import VectorDTO
-from modules.md_database.dtos.driver import DriverDTO
-from modules.md_database.dtos.vehicle import VehicleDTO
-from modules.md_database.dtos.material import MaterialDTO
+from modules.md_database.interfaces.subject import SubjectDTO
+from modules.md_database.interfaces.vector import VectorDTO
+from modules.md_database.interfaces.driver import DriverDTO
+from modules.md_database.interfaces.vehicle import VehicleDTO
+from modules.md_database.interfaces.material import MaterialDTO
 from typing import Union, Optional, List
 
 class DataInExecution(BaseModel):

@@ -5,8 +5,8 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
-from modules.md_database.dtos.user import UserDTO
-from applications.utils.utils_auth import LoginDTO, SetUserDTO, create_access_token
+from modules.md_database.interfaces.user import UserDTO, LoginDTO, SetUserDTO
+from applications.utils.utils_auth import create_access_token
 from applications.middleware.admin import is_admin
 
 class AuthRouter(APIRouter):
@@ -24,6 +24,7 @@ class AuthRouter(APIRouter):
     def login(self, login_dto: LoginDTO):
         try:
             user = get_data_by_attribute("user", "username", login_dto.username)
+            user["date_created"] = user["date_created"].isoformat()
             if user["password"] == login_dto.password:
                 return {
                     "access_token": create_access_token(user)

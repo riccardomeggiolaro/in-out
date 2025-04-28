@@ -8,12 +8,12 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.md_database import ReservationStatus, TypeSubjectEnum
-from modules.md_database.dtos.subject import Subject
-from modules.md_database.dtos.vector import Vector
-from modules.md_database.dtos.driver import Driver
-from modules.md_database.dtos.vehicle import Vehicle
-from modules.md_database.dtos.material import Material
-from modules.md_database.dtos.reservation import Reservation
+from modules.md_database.interfaces.subject import Subject
+from modules.md_database.interfaces.vector import Vector
+from modules.md_database.interfaces.driver import Driver
+from modules.md_database.interfaces.vehicle import Vehicle
+from modules.md_database.interfaces.material import Material
+from modules.md_database.interfaces.reservation import Reservation
 import datetime as dt
 from applications.router.weigher.types import DataInExecution
 from libs.lb_capture_camera import capture_camera_image

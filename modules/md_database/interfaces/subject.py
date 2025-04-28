@@ -1,9 +1,9 @@
-from pydantic import BaseModel, validator, root_validator
+from pydantic import BaseModel, validator, root_validator, field_validator
 from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from datetime import datetime
 
-class Vector(BaseModel):
+class Subject(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
@@ -15,7 +15,7 @@ class Vector(BaseModel):
 		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
 		arbitrary_types_allowed = True
 
-class VectorDataDTO(BaseModel):
+class SubjectDataDTO(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
@@ -24,11 +24,11 @@ class VectorDataDTO(BaseModel):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			if not get_data_by_id('vector', v):
-				raise ValueError('Id not exist in vector')
+			if not get_data_by_id('subject', v):
+				raise ValueError('Id not exist in subject')
 		return v
 
-class VectorDTO(BaseModel):
+class SubjectDTO(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
@@ -37,9 +37,9 @@ class VectorDTO(BaseModel):
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
-			data = get_data_by_id('vector', v)
+			data = get_data_by_id('subject', v)
 			if not data:
-				raise ValueError('Id not exist in vector')
+				raise ValueError('Id not exist in subject')
 			else:
 				values['social_reason'] = data.get('social_reason')
 				values['telephone'] = data.get('telephone')
@@ -50,35 +50,33 @@ class VectorDTO(BaseModel):
 		# Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
 		arbitrary_types_allowed = True
 
-class AddVectorDTO(BaseModel):
+class AddSubjectDTO(BaseModel):
+	social_reason: str
+	telephone: Optional[str] = None
+	cfpiva: Optional[str] = None
+
+	@field_validator('*', mode='before')
+	@classmethod
+	def empty_str_to_none(cls, value, info):
+		if isinstance(value, str) and value == "":
+			return None
+		return value
+
+class SetSubjectDTO(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None
 
 	@root_validator(pre=True)
 	def check_at_least_one_field(cls, values):
-		social_reason = values.get('social_reason')
+		name = values.get('social_reason')
 		telephone = values.get('telephone')
 		cfpiva = values.get('cfpiva')
-		if not social_reason and not telephone and not cfpiva:
-			raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
-		return values
-
-class SetVectorDTO(BaseModel):
-	social_reason:  Optional[str] = None
-	telephone: Optional[str] = None
-	cfpiva: Optional[str] = None
-
-	@root_validator(pre=True)
-	def check_at_least_one_field(cls, values):
-		social_reason = values.get('social_reason')
-		telephone = values.get('telephone')
-		cfpiva = values.get('cfpiva')
-		if not social_reason and not telephone and not cfpiva:
-			raise ValueError('At least one of "social_reason", "telephone" or "cfpiva" must be provided.')
+		if not name and not telephone and not cfpiva:
+			raise ValueError('At least one of "name", "telephone" or "cfpiva" must be provided.')
 		return values
 	
-class FilterVectorDTO(BaseModel):
+class FilterSubjectDTO(BaseModel):
 	social_reason:  Optional[str] = None
 	telephone: Optional[str] = None
 	cfpiva: Optional[str] = None

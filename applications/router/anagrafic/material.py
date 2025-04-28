@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.material import Material, AddMaterialDTO, SetMaterialDTO, FilterMaterialDTO
+from modules.md_database.interfaces.material import Material, AddMaterialDTO, SetMaterialDTO, FilterMaterialDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -44,8 +44,6 @@ class MaterialRouter(WebSocket):
 
     async def addMaterial(self, body: AddMaterialDTO):
         try:
-            if body.description and get_data_by_attribute("material", "description", body.description):
-                raise HTTPException(status_code=400, detail=f"Il materiale '{body.description}' è già esistente")
             data = add_data("material", body.dict())
             material = Material(**data).json()
             await self.broadcastAddAnagrafic("material", {"material": material})

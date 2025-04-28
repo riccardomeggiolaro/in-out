@@ -1,8 +1,7 @@
-from pydantic import validator, BaseModel, ValidationError, root_validator
-from typing import Optional, Union, List
+from pydantic import validator, BaseModel, root_validator
+from typing import Optional, Union
 from libs.lb_system import Connection, SerialPort, Tcp
 from libs.lb_utils import CustomBaseModel
-from modules.md_weigher.types import SetupWeigher
 from modules.md_weigher.globals import terminalsClasses
 from pydantic import root_validator
 

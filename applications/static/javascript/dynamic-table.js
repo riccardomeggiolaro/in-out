@@ -565,7 +565,7 @@ function closePopups(idPopups, deselectCurrentId = true) {
             popup.classList.remove('active');
         }
         // Disabilita il pulsante "Save"
-        const saveBtn = popup.querySelector('save-btn');
+        const saveBtn = popup.querySelector('.save-btn');
         if (saveBtn) {
             saveBtn.disabled = true;
         }
@@ -598,7 +598,8 @@ function determineGender(word) {
 }
 
 function connectWebSocket() {
-    websocket_connection = new WebSocket(websocketUrlPath);
+    const token = localStorage.getItem('token');
+    websocket_connection = new WebSocket(`${websocketUrlPath}?token=${encodeURIComponent(token)}`);
 
     websocket_connection.addEventListener('message', async (e) => {
         if (e.data) {

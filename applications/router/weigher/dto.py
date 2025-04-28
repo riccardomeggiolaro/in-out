@@ -2,11 +2,11 @@ from libs.lb_utils import CustomBaseModel, is_number
 from typing import Optional, Union
 from pydantic import root_validator, validator, BaseModel
 from applications.router.weigher.types import DataInExecution
-from modules.md_database.dtos.subject import SubjectDTO
-from modules.md_database.dtos.vector import VectorDTO
-from modules.md_database.dtos.driver import DriverDTO
-from modules.md_database.dtos.vehicle import VehicleDTO
-from modules.md_database.dtos.material import MaterialDTO
+from modules.md_database.interfaces.subject import SubjectDTO
+from modules.md_database.interfaces.vector import VectorDTO
+from modules.md_database.interfaces.driver import DriverDTO
+from modules.md_database.interfaces.vehicle import VehicleDTO
+from modules.md_database.interfaces.material import MaterialDTO
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_id_if_not_selected import get_data_by_id_if_not_selected
 from modules.md_database.functions.update_data import update_data

@@ -1,4 +1,4 @@
-from fastapi import Request
+from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Callable
@@ -9,11 +9,32 @@ from datetime import datetime, timezone
 import libs.lb_config as lb_config
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 
+def get_user(token: str):
+    payload = jwt.decode(token, lb_config.g_config["secret_key"], algorithms=["HS256"])
+
+    token_data = TokenData(**payload)
+
+    if token_data.exp < datetime.now(timezone.utc):
+        raise JSONResponse(
+            status_code=401, 
+            content={"detail": "Token expired"}
+        )
+
+    user = get_data_by_id("user", token_data.id)
+
+    if not user:
+        return JSONResponse(
+            status_code=401, 
+            content={"detail": "User not found"}
+        )
+
+    user["exp"] = token_data.exp
+    
+    return TokenData(**user)
+
 class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
-        self.secret_key = lb_config.g_config["secret_key"]
-        self.algorithm = "HS256"
 
     async def dispatch(self, request: Request, call_next: Callable):
         # Skip authentication for specific routes
@@ -48,30 +69,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     content={"detail": "Invalid authentication scheme, expected 'Bearer'"}
                 )
 
-            # Decode token
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            user = get_user(token)
 
-            token_data = TokenData(**payload)
-
-            if token_data.exp < datetime.now(timezone.utc):
-                return JSONResponse(
-                    status_code=401, 
-                    content={"detail": "Token expired"}
-                )
-
-            user = get_data_by_id("user", token_data.id)
-
-            if not user:
-                return JSONResponse(
-                    status_code=401, 
-                    content={"detail": "User not found"}
-                )
-
-            user["exp"] = token_data.exp
-            
-            new_token_data = TokenData(**user)
-            
-            request.state.user = new_token_data
+            request.state.user = user
 
             # Continue with request
             response = await call_next(request)

@@ -1,8 +1,7 @@
 from libs.lb_utils import CustomBaseModel
 from libs.lb_system import SerialPort, Tcp, Connection, SerialPortWithoutControls, TcpWithoutControls
 from typing import Optional, Union, Dict, Any
-from pydantic import BaseModel, validator
-from datetime import datetime
+from pydantic import BaseModel
 
 class PlateWeighing(BaseModel):
 	plate: str

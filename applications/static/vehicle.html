@@ -57,9 +57,9 @@
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuovo veicolo:</h3>
-        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = (!(document.querySelector('#add-popup #description').value.trim() || document.querySelector('#add-popup #plate').value.trim()) || !this.checkValidity())">
-            Targa: (Opzionale)<br>
-            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()">
+        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
+            Targa:<br>
+            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" required>
             Descrizione: (Opzionale):<br>
             <input type="text" id="description" name="description"><br>
         </form>
@@ -71,9 +71,9 @@
 
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica veicolo:</h3>
-        <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = (!(document.querySelector('#edit-popup #description').value.trim() || document.querySelector('#edit-popup #plate').value.trim()) || !this.checkValidity())">
-            Targa: (Opzionale)<br>
-            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()"><br>
+        <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
+            Targa:<br>
+            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" required>
             Descrizione: (Opzionale)<br>
             <input type="text" id="description" name="description"><br>
         </form>

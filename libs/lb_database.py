@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, BLOB, Float, ForeignKey, Enum, func
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, func
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, joinedload, selectinload
 from sqlalchemy.ext.declarative import declarative_base
 import os
@@ -25,6 +25,9 @@ class User(Base):
 	description = Column(String)
 	printer_name = Column(String, nullable=True)
 	date_created = Column(DateTime, default=datetime.utcnow)
+
+	# Relazione con LockRecord
+	lock_records = relationship("LockRecord", back_populates="user", cascade="all, delete")
 
 class UserDTO(BaseModel):
 	username: str
@@ -348,6 +351,18 @@ class ReservationDTO(ScheletonReservationDTO):
 class ReservationDTOInit(ScheletonReservationDTO):
 	pass
 
+# Modello per la tabella LockRecord
+class LockRecord(Base):
+    __tablename__ = 'lock_record'
+    id = Column(Integer, primary_key=True, index=True)
+    table_name = Column(String, nullable=False)
+    record_id = Column(Integer, nullable=False)
+    websocket_identifier = Column(String, nullable=False)
+    date_created = Column(DateTime, default=datetime.utcnow)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+
+    user = relationship("User", back_populates="lock_records")
+
 # Dizionario di modelli per mappare nomi di tabella a classi di modelli
 table_models = {
 	'vehicle': Vehicle,
@@ -356,7 +371,8 @@ table_models = {
 	'material': Material,
  	'weighing': Weighing,
 	'reservation': Reservation,
-	'user': User
+	'user': User,
+	'lock_record': LockRecord
 }
 
 # Funzione per caricare l'array di record nel database
@@ -575,7 +591,7 @@ def get_data_by_attributes(table_name, attributes_dict):
 	for attribute_name in attributes_dict.keys():
 		if not hasattr(model, attribute_name):
 			raise ValueError(f"Attributo '{attribute_name}' non trovato nella tabella '{table_name}'.")
-	
+
 	# Crea una sessione e cerca il record
 	session = SessionLocal()
 	try:

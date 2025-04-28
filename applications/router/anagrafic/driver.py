@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.driver import Driver, AddDriverDTO, SetDriverDTO, FilterDriverDTO
+from modules.md_database.interfaces.driver import Driver, AddDriverDTO, SetDriverDTO, FilterDriverDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -44,8 +44,6 @@ class DriverRouter(WebSocket):
 
     async def addDriver(self, body: AddDriverDTO):
         try:
-            if body.social_reason and get_data_by_attribute("driver", "social_reason", body.social_reason):
-                raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             data = add_data("driver", body.dict())
             driver = Driver(**data).json()
             await self.broadcastAddAnagrafic("driver", {"driver": driver})

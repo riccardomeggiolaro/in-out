@@ -1,11 +1,8 @@
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
-import libs.lb_log as lb_log
 from libs.lb_utils import checkCallbackFormat, callCallback
-from pydantic import BaseModel
-from typing import Optional, Callable, Union, Any
-import select
+from typing import Callable, Any
 
 class __SetupWeigherConnection:
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, list_port_rele):

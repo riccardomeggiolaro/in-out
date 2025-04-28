@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.dtos.vehicle import Vehicle, AddVehicleDTO, SetVehicleDTO, FilterVehicleDTO
+from modules.md_database.interfaces.vehicle import Vehicle, AddVehicleDTO, SetVehicleDTO, FilterVehicleDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
@@ -44,8 +44,6 @@ class VehicleRouter(WebSocket):
 
     async def addVehicle(self, body: AddVehicleDTO):
         try:
-            if body.plate and get_data_by_attribute("vehicle", "plate", body.plate):
-                raise HTTPException(status_code=400, detail=f"La targa '{body.plate}' è già esistente")
             data = add_data("vehicle", body.dict())
             vehicle = Vehicle(**data).json()
             await self.broadcastAddAnagrafic("vehicle", {"vehicle": vehicle})

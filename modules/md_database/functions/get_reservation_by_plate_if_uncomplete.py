@@ -1,6 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from modules.md_database.md_database import table_models, SessionLocal, Weighing, Reservation, Vehicle
+from modules.md_database.md_database import SessionLocal, Weighing, Reservation, Vehicle
 
 def get_reservation_by_plate_if_incomplete(plate: str):
     session = SessionLocal()

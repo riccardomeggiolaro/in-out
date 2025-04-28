@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
-from modules.md_database.md_database import LockRecord, SessionLocal, LockRecordType, Reservation
+from modules.md_database.md_database import LockRecord, SessionLocal, LockRecordType
 
-def lock_record(table_name, idRecord, type, websocket_identifier=None):
+def lock_record(table_name, idRecord, type, websocket_identifier, user_id):
     """
     Prova a bloccare un record.
     Il database applicherà automaticamente il vincolo di unicità solo quando type è "UPDATE" o "DELETE".
@@ -46,7 +46,8 @@ def lock_record(table_name, idRecord, type, websocket_identifier=None):
                 table_name=table_name,
                 idRecord=idRecord,
                 type=type,
-                websocket_identifier=websocket_identifier
+                websocket_identifier=websocket_identifier,
+                user_id=user_id
             )
             session.add(nuovo_record)
             session.commit()
@@ -63,7 +64,7 @@ def lock_record(table_name, idRecord, type, websocket_identifier=None):
                 LockRecord.idRecord == idRecord,
                 LockRecord.type.in_([LockRecordType.UPDATE, LockRecordType.DELETE])
             ).first()
-            
+
             return False, existing_record
         except Exception as e:
             session.rollback()

@@ -8,7 +8,7 @@
 # ==== LIBRERIE DA IMPORTARE ===================================
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
-from typing import Callable, Union, Optional, Any
+from typing import Callable, Union, Any
 import time
 from libs.lb_system import SerialPort, Tcp
 from modules.md_weigher.globals import terminalsClasses

@@ -1,12 +1,11 @@
-from pydantic import BaseModel, validator, root_validator
-from typing import Optional, List, Union
-from modules.md_database.functions.get_data_by_id import get_data_by_id
-from modules.md_database.dtos.subject import Subject, SubjectDataDTO
-from modules.md_database.dtos.vector import Vector, VectorDataDTO
-from modules.md_database.dtos.driver import Driver, DriverDataDTO
-from modules.md_database.dtos.vehicle import Vehicle, VehicleDataDTO
-from modules.md_database.dtos.material import Material, MaterialDataDTO
-from modules.md_database.dtos.weighing import Weighing
+from pydantic import BaseModel, validator
+from typing import Optional, List
+from modules.md_database.interfaces.subject import Subject, SubjectDataDTO
+from modules.md_database.interfaces.vector import Vector, VectorDataDTO
+from modules.md_database.interfaces.driver import Driver, DriverDataDTO
+from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
+from modules.md_database.interfaces.material import Material
+from modules.md_database.interfaces.weighing import Weighing
 from datetime import datetime
 
 class Reservation(BaseModel):

@@ -1,4 +1,3 @@
-from datetime import datetime
 from modules.md_database.md_database import table_models, SessionLocal
 
 def get_data_by_attributes(table_name, attributes_dict):

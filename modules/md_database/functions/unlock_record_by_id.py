@@ -1,4 +1,3 @@
-from sqlalchemy.exc import IntegrityError
 from modules.md_database.md_database import LockRecord, SessionLocal
 
 def unlock_record_by_id(id):

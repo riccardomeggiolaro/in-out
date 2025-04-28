@@ -9,7 +9,7 @@
             "timeout": 5,
             "username": null
         },
-        "path_database": "/var/lib/in-out/database/database.db",
+        "path_database": "/var/lib/in-out/database.db",
         "path_weighing_pictures": "/var/lib/in-out/images/",
         "port": 80,
         "rfid": {
@@ -32,7 +32,7 @@
         },
         "ssh_reverse_tunneling": {
             "forwarding_port": 80,
-            "local_port": 8000,
+            "local_port": 80,
             "password": "318101",
             "server": "on.baron.it",
             "ssh_port": 10022,
@@ -211,5 +211,5 @@
         "max-size-mb": 10
     },
     "name": "in-out",
-    "secret_key": "newfoiwnfwoijfnijbnib"
+    "secret_key": "$2b$12$PAHE4kh6lnXo3w9SF9tj7O"
 }

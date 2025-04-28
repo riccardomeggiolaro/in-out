@@ -1,4 +1,3 @@
-from sqlalchemy.orm import selectinload, joinedload
 from modules.md_database.md_database import table_models, SessionLocal
 from modules.md_database.functions.lock_record import lock_record
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
