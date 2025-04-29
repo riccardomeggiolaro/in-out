@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from modules.md_database.md_database import LockRecord, SessionLocal, LockRecordType
+from sqlalchemy.orm import joinedload
 
 def lock_record(table_name, idRecord, type, websocket_identifier, user_id):
     """
@@ -39,6 +40,10 @@ def lock_record(table_name, idRecord, type, websocket_identifier, user_id):
                 ).first()                
                 
             if existing:
+                # Carica anche l'utente associato
+                existing = session.query(LockRecord).options(joinedload(LockRecord.user)).filter(
+                    LockRecord.id == existing.id
+                ).first()
                 return False, existing
 
             # Prova a creare il blocco
@@ -55,11 +60,11 @@ def lock_record(table_name, idRecord, type, websocket_identifier, user_id):
             return True, nuovo_record
         except IntegrityError:
             # Questo errore si verificherà solo quando si tenta di inserire un record duplicato
-            # con type="UPDATE" o type="DELETE", grazie all'indice parziale
+            # con type="UPDATE" o "DELETE", grazie all'indice parziale
             session.rollback()
             
-            # Recupera il record esistente che causa il conflitto
-            existing_record = session.query(LockRecord).filter(
+            # Recupera il record esistente che causa il conflitto e carica l'utente associato
+            existing_record = session.query(LockRecord).options(joinedload(LockRecord.user)).filter(
                 LockRecord.table_name == table_name,
                 LockRecord.idRecord == idRecord,
                 LockRecord.type.in_([LockRecordType.UPDATE, LockRecordType.DELETE])

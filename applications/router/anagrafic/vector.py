@@ -56,14 +56,6 @@ class VectorRouter(WebSocket):
 
     async def setVector(self, id: int, body: SetVectorDTO):
         try:
-            if body.social_reason:
-                vector = get_data_by_attribute("vector", "social_reason", body.social_reason)
-                if vector and vector["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
-            if body.cfpiva:
-                vector = get_data_by_attribute("vector", "cfpiva", body.cfpiva)
-                if vector and vector["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
             data = update_data("vector", id, body.dict())
             vector = Vector(**data).json()
             await self.broadcastUpdateAnagrafic("vector", {"vector": vector})

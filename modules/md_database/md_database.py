@@ -183,7 +183,7 @@ with SessionLocal() as db_session:
     if admin_user is None:
         admin_user = User(
             username="admin",
-            password=hash_password("3181"),  # Sostituisci con una password sicura
+            password=hash_password("admin"),  # Sostituisci con una password sicura
             level=3,  # Imposta il livello appropriato, ad esempio 1 per admin
             description="Administrator"
         )

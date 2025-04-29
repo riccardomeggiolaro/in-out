@@ -56,14 +56,6 @@ class VehicleRouter(WebSocket):
 
     async def setVehicle(self, id: int, body: SetVehicleDTO):
         try:
-            if body.plate:
-                vehicle = get_data_by_attribute("vehicle", "plate", body.plate)
-                if vehicle and vehicle["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"La targa '{body.plate}' è già esistente")
-            if body.description:
-                vehicle = get_data_by_attribute("vehicle", "description", body.description)
-                if vehicle and vehicle["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"La descrizione '{body.description}' è già esistente")
             data = update_data("vehicle", id, body.dict())
             vehicle = Vehicle(**data).json()
             await self.broadcastUpdateAnagrafic("vehicle", {"vehicle": vehicle})

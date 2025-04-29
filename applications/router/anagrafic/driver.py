@@ -56,10 +56,6 @@ class DriverRouter(WebSocket):
 
     async def setDriver(self, id: int, body: SetDriverDTO):
         try:
-            if body.social_reason:
-                driver = get_data_by_attribute("driver", "social_reason", body.social_reason)
-                if driver and driver["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
             data = update_data("driver", id, body.dict())
             driver = Driver(**data).json()
             await self.broadcastUpdateAnagrafic("driver", {"driver": driver})

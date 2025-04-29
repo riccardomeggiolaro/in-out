@@ -57,19 +57,9 @@ class SubjectRouter(WebSocket):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setSubject(self, id: int, body: SetSubjectDTO, websocket: StringWebSocket = None):
+    async def setSubject(self, id: int, body: SetSubjectDTO):
         try:
-            if websocket and websocket not in manager_anagrafics["subject"].active_connections:
-                raise HTTPException(status_code=400, detail="Websocket need to be registered in the list of active connections")
-            if body.social_reason:
-                subject = get_data_by_attribute("subject", "social_reason", body.social_reason)
-                if subject and subject["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"La ragione sociale '{body.social_reason}' è già esistente")
-            if body.cfpiva:
-                subject = get_data_by_attribute("subject", "cfpiva", body.cfpiva)
-                if subject and subject["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"La CF/P.Iva '{body.cfpiva}' è già esistente")
-            data = update_data("subject", id, body.dict(), websocket)
+            data = update_data("subject", id, body.dict())
             subject = Subject(**data).json()
             await self.broadcastUpdateAnagrafic("subject", {"subject": subject})
             await self.broadcastUpdateAnagrafic("reservation", {"subject": subject})
@@ -80,14 +70,12 @@ class SubjectRouter(WebSocket):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def deleteSubject(self, id: int, websocket: StringWebSocket = None):
+    async def deleteSubject(self, id: int):
         try:
-            if websocket and websocket not in manager_anagrafics["subject"].active_connections:
-                raise HTTPException(status_code=400, detail="Websocket need to be registered in the list of active connections")
             subject = get_data_by_id("subject", id)
             if subject and len(subject["reservations"]) > 0:
-                raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle pesate salvate")
-            data = delete_data("subject", id, websocket)
+                raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle prenotazioni")
+            data = delete_data("subject", id)
             subject = Subject(**data).json()
             await self.broadcastDeleteAnagrafic("subject", {"subject": subject})
             await self.broadcastDeleteAnagrafic("reservation", {"subject": subject})

@@ -56,10 +56,6 @@ class MaterialRouter(WebSocket):
 
     async def setMaterial(self, id: int, body: SetMaterialDTO):
         try:
-            if body.description:
-                material = get_data_by_attribute("material", "description", body.description)
-                if material and material["id"] != id:
-                    raise HTTPException(status_code=400, detail=f"Il materiale '{body.description}' è già esistente")
             data = update_data("material", id, body.dict())
             material = Material(**data).json()
             await self.broadcastUpdateAnagrafic("material", {"material": material})

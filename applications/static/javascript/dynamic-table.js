@@ -228,6 +228,7 @@ function createRow(table, columns, item) {
     deleteButton.onclick = (e) => {
         e.preventDefault();
         selectAnagrafic(item.id, "DELETE", itemName);
+        currentId = item.id;
     };
     actionsCell.appendChild(editButton);
     actionsCell.appendChild(deleteButton);
@@ -534,7 +535,7 @@ function deleteRow(item) {
 const confirmPopup = document.getElementById('confirm-popup');
 confirmPopup.querySelector('#save-btn').addEventListener('click', () => {
     const clone_funct = confirm_exec_funct;
-    closePopups(['confirm-popup'], false);
+    closePopups(['confirm-popup'], clone_funct ? false : true);
     if (typeof (clone_funct) === "function") {
         clone_funct();
     }
@@ -606,7 +607,7 @@ function connectWebSocket() {
             const data = JSON.parse(e.data);
             if (data.data) {
                 const firstKey = Object.keys(data.data)[0];
-                data.data[firstKey] = JSON.parse(data.data[firstKey]);
+                data.data[firstKey] = data.data[firstKey] ? JSON.parse(data.data[firstKey]) : null;
                 let specific = '';
                 const objectEntriesParams = Object.entries(params);
                 for (let [key, value] of objectEntriesParams) {
