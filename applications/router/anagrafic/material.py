@@ -1,15 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.interfaces.material import Material, AddMaterialDTO, SetMaterialDTO, FilterMaterialDTO
+from modules.md_database.md_database import upload_file_datas_required_columns, LockRecordType
+from modules.md_database.interfaces.material import Material, AddMaterialDTO, SetMaterialDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
-from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -54,8 +55,12 @@ class MaterialRouter(WebSocket):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setMaterial(self, id: int, body: SetMaterialDTO):
+    async def setMaterial(self, request: Request, id: int, body: SetMaterialDTO):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "material", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the material with id '{id}' before to update that")
             data = update_data("material", id, body.dict())
             material = Material(**data).json()
             await self.broadcastUpdateAnagrafic("material", {"material": material})
@@ -65,12 +70,22 @@ class MaterialRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
-    async def deleteMaterial(self, id: int):
+    async def deleteMaterial(self, request: Request, id: int):
+        locked_data = None
         try:
+            check_material_reservations = get_data_by_id("material", id)
+            if check_material_reservations and len(check_material_reservations["reservations"]) > 0:
+                raise HTTPException(status_code=400, detail=f"Il materiale con id '{id}' è assegnato a delle pesate salvate")
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "material", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the material with id '{id}' before to delete that")
             material = get_data_by_id("material", id)
             if material and len(material["reservations"]) > 0:
-                raise HTTPException(status_code=400, detail=f"Il materiale con id '{id}' è assegnato a delle pesate salvate")
+                raise HTTPException(status_code=400, detail=f"Il materiale con id '{id}' è collegato a delle pesate salvate")
             data = delete_data("material", id)
             material = Material(**data).json()
             await self.broadcastDeleteAnagrafic("material", {"material": material})
@@ -80,6 +95,9 @@ class MaterialRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
     async def deleteAllMaterials(self):
         try:
@@ -131,7 +149,6 @@ class MaterialRouter(WebSocket):
 
         except Exception as e:
             # Log dell'errore e risposta HTTP 500
-            lb_log.error(f"Error reading file: {e}")
             raise HTTPException(status_code=500, detail="Error reading file") from e
 
         # Converti i dati in JSON

@@ -141,3 +141,6 @@ def hash_password(password: str):
 	hashed_password = bcrypt.hashpw(password_bytes, salt)
 
 	return hashed_password.decode('utf-8')
+
+def has_non_none_value(d):
+    return any(value not in [None, ""] for value in d.values())

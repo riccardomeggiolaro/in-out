@@ -1,15 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.interfaces.driver import Driver, AddDriverDTO, SetDriverDTO, FilterDriverDTO
+from modules.md_database.md_database import upload_file_datas_required_columns, LockRecordType
+from modules.md_database.interfaces.driver import Driver, AddDriverDTO, SetDriverDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
+from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
-from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -54,8 +55,12 @@ class DriverRouter(WebSocket):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setDriver(self, id: int, body: SetDriverDTO):
+    async def setDriver(self, request: Request, id: int, body: SetDriverDTO):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "driver", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the driver with id '{id}' before to update that")
             data = update_data("driver", id, body.dict())
             driver = Driver(**data).json()
             await self.broadcastUpdateAnagrafic("driver", {"driver": driver})
@@ -65,12 +70,19 @@ class DriverRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
-    async def deleteDriver(self, id: int):
+    async def deleteDriver(self, request:Request, id: int):
+        locked_data = None
         try:
-            driver = get_data_by_id("driver", id)
-            if driver and len(driver["reservations"]) > 0:
+            check_driver_reservations = get_data_by_id("driver", id)
+            if check_driver_reservations and len(check_driver_reservations["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"L'autista con id '{id}' è assegnato a delle pesate salvate")
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "driver", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the driver with id '{id}' before to update that")
             data = delete_data("driver", id)
             driver = Driver(**data).json()
             await self.broadcastDeleteAnagrafic("driver", {"driver": driver})
@@ -80,6 +92,9 @@ class DriverRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
     async def deleteAllDrivers(self):
         try:
@@ -130,8 +145,6 @@ class DriverRouter(WebSocket):
             df = df.replace([np.nan, np.inf, -np.inf], None)
 
         except Exception as e:
-            # Log dell'errore e risposta HTTP 500
-            lb_log.error(f"Error reading file: {e}")
             raise HTTPException(status_code=500, detail="Error reading file") from e
 
         # Converti i dati in JSON

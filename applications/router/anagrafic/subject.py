@@ -1,21 +1,20 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response, WebSocket as StringWebSocket
-from fastapi.encoders import jsonable_encoder
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.interfaces.subject import Subject, AddSubjectDTO, SetSubjectDTO, FilterSubjectDTO
+from modules.md_database.md_database import upload_file_datas_required_columns, LockRecordType
+from modules.md_database.interfaces.subject import Subject, AddSubjectDTO, SetSubjectDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.functions.delete_all_data import delete_all_data
+from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
-from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
-from applications.router.anagrafic.web_sockets import manager_anagrafics
 
 class SubjectRouter(WebSocket):
     def __init__(self):
@@ -57,8 +56,15 @@ class SubjectRouter(WebSocket):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setSubject(self, id: int, body: SetSubjectDTO):
+    async def setSubject(self, request: Request, id: int, body: SetSubjectDTO):
+        locked_data = None
         try:
+            check_subject_reservations = get_data_by_id("subject", id)
+            if check_subject_reservations and len(check_subject_reservations["reservations"]) > 0:
+                raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle pesate salvate")
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "subject", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the subject with id '{id}' before to update that")
             data = update_data("subject", id, body.dict())
             subject = Subject(**data).json()
             await self.broadcastUpdateAnagrafic("subject", {"subject": subject})
@@ -69,12 +75,16 @@ class SubjectRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
-    async def deleteSubject(self, id: int):
+    async def deleteSubject(self, request: Request, id: int):
+        locked_data = None
         try:
-            subject = get_data_by_id("subject", id)
-            if subject and len(subject["reservations"]) > 0:
-                raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle prenotazioni")
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "subject", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the subject with id '{id}' before to update that")
             data = delete_data("subject", id)
             subject = Subject(**data).json()
             await self.broadcastDeleteAnagrafic("subject", {"subject": subject})
@@ -84,6 +94,9 @@ class SubjectRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
     async def deleteAllSubjects(self):
         try:
@@ -134,8 +147,6 @@ class SubjectRouter(WebSocket):
             df = df.replace([np.nan, np.inf, -np.inf], None)
 
         except Exception as e:
-            # Log dell'errore e risposta HTTP 500
-            lb_log.error(f"Error reading file: {e}")
             raise HTTPException(status_code=500, detail="Error reading file") from e
 
         # Converti i dati in JSON

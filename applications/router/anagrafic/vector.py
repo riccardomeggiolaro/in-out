@@ -1,15 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.interfaces.vector import Vector, AddVectorDTO, SetVectorDTO, FilterVectorDTO
+from modules.md_database.md_database import upload_file_datas_required_columns, LockRecordType
+from modules.md_database.interfaces.vector import Vector, AddVectorDTO, SetVectorDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.functions.delete_all_data import delete_all_data
+from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
-from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -54,8 +55,12 @@ class VectorRouter(WebSocket):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setVector(self, id: int, body: SetVectorDTO):
+    async def setVector(self, request: Request, id: int, body: SetVectorDTO):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "vector", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the vector with id '{id}' before to update that")
             data = update_data("vector", id, body.dict())
             vector = Vector(**data).json()
             await self.broadcastUpdateAnagrafic("vector", {"vector": vector})
@@ -65,12 +70,19 @@ class VectorRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
-    async def deleteVector(self, id: int):
+    async def deleteVector(self, request: Request, id: int):
+        locked_data = None
         try:
-            vector = get_data_by_id("vector", id)
-            if vector and len(vector["reservations"]) > 0:
+            check_vector_reservations = get_data_by_id("vector", id)
+            if check_vector_reservations and len(check_vector_reservations["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il vettore con id '{id}' è assegnato a delle pesate salvate")
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "vector", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the vector with id '{id}' before to delete that")
             data = delete_data("vector", id)
             vector = Vector(**data).json()
             await self.broadcastDeleteAnagrafic("vector", {"vector": vector})
@@ -80,6 +92,9 @@ class VectorRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
     async def deleteAllVectors(self):
         try:
@@ -130,8 +145,6 @@ class VectorRouter(WebSocket):
             df = df.replace([np.nan, np.inf, -np.inf], None)
 
         except Exception as e:
-            # Log dell'errore e risposta HTTP 500
-            lb_log.error(f"Error reading file: {e}")
             raise HTTPException(status_code=500, detail="Error reading file") from e
 
         # Converti i dati in JSON

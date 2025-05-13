@@ -206,6 +206,11 @@ function createRow(table, columns, item) {
         callButton.textContent = textContent;
         callButton.onclick = (e) => {
             e.preventDefault();
+            e.stopPropagation();
+            if (!currentRowExtended 
+                || currentRowExtended !== row.nextElementSibling
+                || (currentRowExtended === row.nextElementSibling && currentRowExtended.style.display === "none")
+            ) toggleExpandRow(row);
             selectAnagrafic(item.id, action, itemName);
             currentId = item.id;
         }
@@ -218,6 +223,11 @@ function createRow(table, columns, item) {
     editButton.textContent = "✏️";
     editButton.onclick = (e) => {
         e.preventDefault();
+        e.stopPropagation();
+        if (!currentRowExtended 
+            || currentRowExtended !== row.nextElementSibling
+            || (currentRowExtended === row.nextElementSibling && currentRowExtended.style.display === "none")
+        ) toggleExpandRow(row);
         selectAnagrafic(item.id, "UPDATE", itemName);
         currentId = item.id;
     };
@@ -227,6 +237,11 @@ function createRow(table, columns, item) {
     deleteButton.textContent = "🗑️";
     deleteButton.onclick = (e) => {
         e.preventDefault();
+        e.stopPropagation();
+        if (!currentRowExtended 
+            || currentRowExtended !== row.nextElementSibling
+            || (currentRowExtended === row.nextElementSibling && currentRowExtended.style.display === "none")
+        ) toggleExpandRow(row);
         selectAnagrafic(item.id, "DELETE", itemName);
         currentId = item.id;
     };
@@ -286,7 +301,7 @@ function updateRow(table, columns, item) {
 
 // Funzione per espandere/collassare la riga
 function toggleExpandRow(row) {
-    console.log(row);
+    if (!row.nextElementSibling) return;
     if (currentRowExtended && currentRowExtended !== row.nextElementSibling) {
         // Se già espanso, nascondi
         currentRowExtended.style.display = "none";
@@ -309,10 +324,9 @@ function getFormData(form) {
                 // Se siamo nell'ultimo livello, aggiungiamo il valore
                 if (i === keys.length - 1) {
                     if (element.type === 'checkbox') currentObj[key] = element.checked;
-                    else if (element.type === 'radio') {
-                        if (element.checked) currentObj[key] = element.value;
-                    } else if (element.type === 'text') currentObj[key] = element.value;
-                    else if (element.type === 'number') currentObj[key] = element.value !== "" ? element.value : -1;
+                    else if (element.type === 'radio' && element.checked) currentObj[key] = element.value;
+                    else if (element.type === 'text') currentObj[key] = element.value;
+                    else if (element.type === 'number') currentObj[key] = element.value !== "" ? Number(element.value) : -1;
                 } else {
                     // Se non siamo all'ultimo livello, assicurarsi che l'oggetto esista
                     if (!currentObj[key]) currentObj[key] = {}; // Crea un oggetto vuoto se non esiste
@@ -342,21 +356,24 @@ addPopup.querySelector('#save-btn').addEventListener('click', () => {
         },
         body: JSON.stringify(nonNullableData)
     })
-        .then(async res => {
-            const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-            return ({
-                data,
-                status
-            });
-        })
-        .then(res => {
-            if (res.status === 400) {
-                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-            } else {
-                closePopups(['add-popup']);
-            }
-        })
-        .catch(error => console.error(error));
+    .then(async res => {
+        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+        return ({
+            data,
+            status
+        });
+    })
+    .then(res => {
+        if (res.status === 404) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            closePopups(['add-popup'], false);
+        } else if (res.status === 400) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+        } else {
+            closePopups(['add-popup'], false);
+        }
+    })
+    .catch(error => console.error(error));
 });
 
 function addRow() {
@@ -375,24 +392,24 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
         },
         body: JSON.stringify(data)
     })
-        .then(async res => {
-            const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-            return ({
-                data,
-                status
-            });
-        })
-        .then(res => {
-            if (res.status === 404) {
-                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-                closePopups(['edit-popup']);
-            } else if (res.status === 400) {
-                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-            } else {
-                closePopups(['edit-popup']);
-            }
-        })
-        .catch(error => console.log(error));
+    .then(async res => {
+        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+        return ({
+            data,
+            status
+        });
+    })
+    .then(res => {
+        if (res.status === 404) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            closePopups(['edit-popup'], false);
+        } else if (res.status === 400) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+        } else {
+            closePopups(['edit-popup'], false);
+        }
+    })
+    .catch(error => console.log(error));
 });
 
 function triggerEventsForAll(elements) {
@@ -482,20 +499,24 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
             'Content-Type': 'application/json'
         }
     })
-        .then(async res => {
-            const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-            return ({
-                data,
-                status
-            });
-        })
-        .then(res => {
-            if (res.status === 404) {
-                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-            }
-            closePopups(['delete-popup']);
-        })
-        .catch(error => showSnackbar(`${error}`, 'red', 'white'));
+    .then(async res => {
+        const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+        return ({
+            data,
+            status
+        });
+    })
+    .then(res => {
+        if (res.status === 404) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            closePopups(['delete-popup'], false);
+        } else if (res.status === 400) {
+            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+        } else {
+            closePopups(['delete-popup'], false);
+        }
+    })
+    .catch(error => showSnackbar(`${error}`, 'red', 'white'));
 })
 
 function deleteRow(item) {
@@ -628,23 +649,25 @@ function connectWebSocket() {
                 if (data.action === "add") {
                     await updateTable();
                     const obj = getTableColumns();
-                    const li = obj.table.querySelector(`tr[data-id="${data.data[firstKey].id}"]`);
-                    if (li) {
-                        li.classList.add('added');
-                        li.addEventListener('animationend', () => {
-                            li.classList.remove('added');
+                    const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    if (tr) {
+                        toggleExpandRow(tr);
+                        tr.classList.add('added');
+                        tr.addEventListener('animationend', () => {
+                            tr.classList.remove('added');
                         }, { once: true });
                     }
                     showSnackbar(capitalizeFirstLetter(`Nuov${lastChar} ${specific} creat${lastChar}`), 'rgb(208, 255, 208)', 'black');
                 } else if (data.action === "update") {
                     await updateTable();
                     const obj = getTableColumns();
-                    const li = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
-                    if (li) {
-                        li.classList.toggle('updated');
+                    const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    if (tr) {
+                        toggleExpandRow(tr);
+                        tr.classList.toggle('updated');
                         // Rimuove la classe dopo l'animazione
-                        li.addEventListener('animationend', async () => {
-                            li.classList.remove('updated');
+                        tr.addEventListener('animationend', async () => {
+                            tr.classList.remove('updated');
                         }, { once: true }); // Ascolta solo una volta
                     }
                     let action = `modificat${lastChar}`;
@@ -657,10 +680,10 @@ function connectWebSocket() {
                         if (firstKey === "weighing") {
                             if (currentRowExtended) {
                                 try {
+                                    console.log(currentRowExtended);
                                     currentRowExtended.querySelector('li:first-child').classList.toggle('deleted');
                                     currentRowExtended.querySelector('li:first-child').addEventListener('animationend', async () => {
                                         await updateTable();
-                                        toggleExpandRow(obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`));
                                     }, { once: true });
                                 } catch {
                                     await updateTable();
@@ -672,7 +695,6 @@ function connectWebSocket() {
                             tr.classList.toggle('deleted');
                             tr.addEventListener('animationend', async () => {
                                 await updateTable();
-                                toggleExpandRow(obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`));
                             }, { once: true });
                         }
                     } else {

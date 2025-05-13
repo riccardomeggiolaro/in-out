@@ -1,15 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Response
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import upload_file_datas_required_columns
-from modules.md_database.interfaces.vehicle import Vehicle, AddVehicleDTO, SetVehicleDTO, FilterVehicleDTO
+from modules.md_database.md_database import upload_file_datas_required_columns, LockRecordType
+from modules.md_database.interfaces.vehicle import Vehicle, AddVehicleDTO, SetVehicleDTO
 from modules.md_database.functions.filter_data import filter_data
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.functions.delete_all_data import delete_all_data
+from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
-from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
@@ -54,8 +55,12 @@ class VehicleRouter(WebSocket):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setVehicle(self, id: int, body: SetVehicleDTO):
+    async def setVehicle(self, request: Request, id: int, body: SetVehicleDTO):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "vehicle", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the vehicle with id '{id}' before to update that")
             data = update_data("vehicle", id, body.dict())
             vehicle = Vehicle(**data).json()
             await self.broadcastUpdateAnagrafic("vehicle", {"vehicle": vehicle})
@@ -65,12 +70,19 @@ class VehicleRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
-    async def deleteVehicle(self, id: int):
+    async def deleteVehicle(self, request: Request, id: int):
+        locked_data = None
         try:
-            vehicle = get_data_by_id("vehicle", id)
-            if vehicle and len(vehicle["reservations"]) > 0:
+            check_vehicle_reservations = get_data_by_id("vehicle", id)
+            if check_vehicle_reservations and len(check_vehicle_reservations["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il veicolo con id '{id}' è assegnato a delle pesate salvate")
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "vehicle", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=400, detail=f"You need to block the vehicle with id '{id}' before to update that")
             data = delete_data("vehicle", id)
             vehicle = Vehicle(**data).json()
             await self.broadcastDeleteAnagrafic("vehicle", {"vehicle": vehicle})
@@ -130,8 +142,6 @@ class VehicleRouter(WebSocket):
             df = df.replace([np.nan, np.inf, -np.inf], None)
 
         except Exception as e:
-            # Log dell'errore e risposta HTTP 500
-            lb_log.error(f"Error reading file: {e}")
             raise HTTPException(status_code=500, detail="Error reading file") from e
 
         # Converti i dati in JSON

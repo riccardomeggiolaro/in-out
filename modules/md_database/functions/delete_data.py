@@ -54,8 +54,6 @@ def delete_data(table_name, record_id, web_socket=None):
                 
                 return result
             except Exception as e:
-                import libs.lb_log as lb_log
-                lb_log.warning(e)
                 session.rollback()
                 raise e
             finally:
