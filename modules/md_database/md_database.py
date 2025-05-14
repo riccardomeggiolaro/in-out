@@ -75,8 +75,6 @@ class Material(Base):
     description = Column(String(collation="NOCASE"), index=True, unique=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
-    reservations = relationship("Reservation", back_populates="material", cascade="all, delete")
-
 class WeighingPicture(Base):
     __tablename__ = 'weighing_picture'
     id = Column(Integer, primary_key=True, index=True)
@@ -117,9 +115,8 @@ class Reservation(Base):
     idVector = Column(Integer, ForeignKey('vector.id'))
     idDriver = Column(Integer, ForeignKey('driver.id'))
     idVehicle = Column(Integer, ForeignKey('vehicle.id'))
-    idMaterial = Column(Integer, ForeignKey('material.id'))
     number_weighings = Column(Integer, default=0, nullable=False)
-    note = Column(String)
+    note = Column(String, nullable=True)
     selected = Column(Boolean, index=True, default=False)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
     status = Column(Enum(ReservationStatus), default=ReservationStatus.WAITING)
@@ -130,7 +127,6 @@ class Reservation(Base):
     vector = relationship("Vector", back_populates="reservations")
     driver = relationship("Driver", back_populates="reservations")
     vehicle = relationship("Vehicle", back_populates="reservations")
-    material = relationship("Material", back_populates="reservations")	
     weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
 
 class LockRecordType(PyEnum):
@@ -170,7 +166,7 @@ upload_file_datas_required_columns = {
     "driver": {"social_reason": str, "telephone": str},
 	"vehicle": {"plate": str, "description": str},
 	"material": {"description": str},
-	"reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "idMaterial": int, "number_weighings": int, "note": str}
+	"reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_weighings": int, "note": str}
 }
 
 Base.metadata.create_all(engine)

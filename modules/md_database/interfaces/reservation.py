@@ -16,7 +16,6 @@ class Reservation(BaseModel):
     idVector: Optional[int] = None
     idDriver: Optional[int] = None
     idVehicle: Optional[int] = None
-    idMaterial: Optional[int] = None
     number_weighings: Optional[int] = None
     note: Optional[str] = None
     status: Optional[str] = None
@@ -28,7 +27,6 @@ class Reservation(BaseModel):
     vector: Optional[Vector] = None
     driver: Optional[Driver] = None
     vehicle: Optional[Vehicle] = None
-    material: Optional[Material] = None
     weighings: List[Weighing] = []
 
     class Config:

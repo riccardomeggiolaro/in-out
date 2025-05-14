@@ -70,7 +70,7 @@ def add_data(table_name: str, data):
                 table_part = error_message.split("UNIQUE constraint failed:")[1].strip()
                 # Può contenere vincoli multipli separati da virgole
                 constraint_parts = table_part.split(',')
-                
+
                 for part in constraint_parts:
                     part = part.strip()
                     # Verifichiamo se contiene un punto che separa nome tabella e colonna

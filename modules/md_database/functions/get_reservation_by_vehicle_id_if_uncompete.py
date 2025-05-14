@@ -2,7 +2,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from modules.md_database.md_database import SessionLocal, Weighing, Reservation, Vehicle
 
-def get_reservation_by_plate_if_uncomplete(plate: str):
+def get_reservation_by_vehicle_id_if_incomplete(id: int):
     session = SessionLocal()
     try:
         # Crea una subquery che conta le pesate per ogni prenotazione
@@ -27,7 +27,7 @@ def get_reservation_by_plate_if_uncomplete(plate: str):
             weighing_count_subquery,
             Reservation.id == weighing_count_subquery.c.idReservation
         ).filter(
-            Vehicle.plate == plate,
+            Vehicle.id == id,
             Reservation.selected == False,  # Non già selezionata
             # Filtro per il numero di pesate: o nessuna pesata (NULL) o conteggio < number_weighings
             (
@@ -47,7 +47,7 @@ def get_reservation_by_plate_if_uncomplete(plate: str):
         
         # Esegui refresh per assicurarti che tutti gli attributi siano aggiornati
         session.refresh(reservation)
-        return reservation
+        return reservation.__dict__
         
     except Exception as e:
         session.rollback()

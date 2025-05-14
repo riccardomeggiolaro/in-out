@@ -51,10 +51,6 @@ class DataRouter(ConfigWeigher):
 						"plate": weighing["vehicle"]["plate"] if weighing["vehicle"] else None,
 						"description": weighing["vehicle"]["description"] if weighing["vehicle"] else None,
 					},
-					"material": {
-						"id": weighing["material"]["id"] if weighing["material"] else None,
-						"description": weighing["material"]["description"] if weighing["material"] else None
-					},
 					"note": weighing["note"],
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)

@@ -74,7 +74,6 @@ class CallbackWeigher(Functions, WebSocket):
 					"idVector": last_pesata.data_assigned.data_in_execution.vector.id,
 					"idVehicle": last_pesata.data_assigned.data_in_execution.vehicle.id,
 					"idDriver": last_pesata.data_assigned.data_in_execution.driver.id,
-					"idMaterial": last_pesata.data_assigned.data_in_execution.material.id,
 					"note": last_pesata.data_assigned.data_in_execution.note,
 					"number_weighings": last_pesata.data_assigned.number_weighings if tare == 0 else 2,
 					"status": ReservationStatus.ENTERED if tare == 0 else ReservationStatus.CLOSED

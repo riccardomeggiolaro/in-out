@@ -43,7 +43,6 @@ def get_list_reservations(filters=None, not_closed=True, fromDate=None, toDate=N
             selectinload(Reservation.vector),
             selectinload(Reservation.driver),
             selectinload(Reservation.vehicle),
-            selectinload(Reservation.material),
             selectinload(Reservation.weighings).selectinload(Weighing.weighing_pictures)
         )
 

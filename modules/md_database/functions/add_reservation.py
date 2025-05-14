@@ -1,17 +1,20 @@
 from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum
 from modules.md_database.interfaces.reservation import AddReservationDTO
+from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_incomplete
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
+import libs.lb_log as lb_log
 
 def add_reservation(data: AddReservationDTO):
     """
     Aggiunge un record a una tabella specificata dinamicamente con gestione dei conflitti per SQLite.
     """
     with SessionLocal() as session:
+        data_to_check = None
         try:
             add_reservation = {
-                "typeSubject": TypeSubjectEnum.CUSTOMER,
+                "typeSubject": TypeSubjectEnum[data.typeSubject],
                 "idSubject": data.subject.id,
                 "idVector": data.vector.id,
                 "idDriver": data.driver.id,
@@ -30,9 +33,11 @@ def add_reservation(data: AddReservationDTO):
                     "cfpiva": data.subject.cfpiva if data.subject.cfpiva != "" else None
                 }
                 if has_non_none_value(add_subject):
+                    data_to_check = data.subject.dict()
                     subject = current_model(**add_subject)
                     session.add(subject)
-                    add_reservation["idSubject"] = subject["id"]
+                    session.flush()
+                    add_reservation["idSubject"] = subject.id
 
             current_model = Vector
             if not data.vector.id:
@@ -42,9 +47,11 @@ def add_reservation(data: AddReservationDTO):
                     "cfpiva": data.vector.cfpiva if data.vector.cfpiva != "" else None
                 }
                 if has_non_none_value(add_vector):
+                    data_to_check = data.vector.dict()
                     vector = current_model(**add_vector)
                     session.add(vector)
-                    add_reservation["idVector"] = vector["id"]
+                    session.flush()
+                    add_reservation["idVector"] = vector.id
 
             current_model = Driver
             if not data.driver.id:
@@ -53,26 +60,41 @@ def add_reservation(data: AddReservationDTO):
                     "telephone": data.driver.telephone if data.driver.telephone != "" else None
                 }
                 if has_non_none_value(add_driver):
+                    data_to_check = data.driver.dict()
                     driver = current_model(**add_driver)
                     session.add(driver)
-                    add_reservation["idDriver"] = driver["id"]
+                    session.flush()
+                    add_reservation["idDriver"] = driver.id
             
             current_model = Vehicle
+            vehicle = None
             if not data.vehicle.id:
                 add_vehicle = {
                     "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
                     "description": data.vehicle.description if data.vehicle.description != "" else None
                 }
                 if has_non_none_value(add_vehicle):
+                    data_to_check = data.vehicle.dict()
                     vehicle = current_model(**add_vehicle)
                     session.add(vehicle)
-                    add_reservation["idVehicle"] = vehicle["id"]
+                    session.flush()
+                    add_reservation["idVehicle"] = vehicle.id
+
+            existing = get_reservation_by_vehicle_id_if_incomplete(add_reservation["idVehicle"])
+
+            if existing:
+                existing = existing["vehicle"].__dict__
+                plate = existing["plate"]
+                raise Exception(f"E' presente una prenotazione con la targa '{plate}' ancora da chiudere")
 
             current_model = Reservation
+            data_to_check = data.dict()
             reservation = current_model(**add_reservation)
             session.add(reservation)
 
             session.commit()
+
+            session.refresh(reservation)
 
             return reservation.__dict__
         except IntegrityError as e:
@@ -88,6 +110,8 @@ def add_reservation(data: AddReservationDTO):
                 table_part = error_message.split("UNIQUE constraint failed:")[1].strip()
                 # Può contenere vincoli multipli separati da virgole
                 constraint_parts = table_part.split(',')
+
+                lb_log.warning(constraint_parts)
                 
                 for part in constraint_parts:
                     part = part.strip()
@@ -97,25 +121,26 @@ def add_reservation(data: AddReservationDTO):
                         # Assicuriamoci che ci siano abbastanza elementi dopo lo split
                         if len(table_column) >= 2:
                             column_name = table_column[1].strip()
-                            if column_name in data:
-                                conflicts.append(f"{column_name}: {data[column_name]}")
+                            if column_name in data_to_check:
+                                conflicts.append(f"{column_name}: {data_to_check[column_name]}")
             
             # Se non siamo riusciti a estrarre i conflitti con il metodo precedente
             # proviamo con un approccio alternativo
             if not conflicts:
                 unique_columns = [column.name for column in current_model.__table__.columns if column.unique]
                 for column in unique_columns:
-                    if column in data:
+                    if column in data_to_check:
+                        lb_log.warning(column)
                         # Verifichiamo se questo valore esiste già nel database
-                        existing = session.query(current_model).filter(getattr(current_model, column) == data[column]).first()
+                        existing = session.query(current_model).filter(getattr(current_model, column) == data_to_check[column]).first()
                         if existing:
-                            conflicts.append(f"{column}: {data[column]}")
+                            conflicts.append(f"{column}: {data_to_check[column]}")
             
             if conflicts:
                 conflict_details = ', '.join(conflicts)
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Conflitto sui vincoli di unicità. I seguenti valori sono duplicati: {conflict_details}"
+                    detail=f"Conflitto sui vincoli di unicità. I seguenti valori sono duplicati in '{current_model.__tablename__}': {conflict_details}"
                 )
             else:
                 # Fallback se non riusciamo a determinare i conflitti specifici
@@ -125,5 +150,6 @@ def add_reservation(data: AddReservationDTO):
                 )
         except Exception as e:
             session.rollback()
+            raise e
         finally:
             session.close()

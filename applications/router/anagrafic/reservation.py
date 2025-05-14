@@ -14,7 +14,7 @@ from modules.md_database.functions.get_list_reservations import get_list_reserva
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
-from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_incomplete
+from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
 from modules.md_database.functions.delete_last_weighing_of_reservation import delete_last_weighing_of_reservation
 from modules.md_database.functions.add_reservation import add_reservation
 from applications.utils.utils import get_query_params, has_non_none_value
@@ -63,10 +63,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
        
     async def addReservation(self, body: AddReservationDTO):
         try:
-            if not body.vehicle.plate:
+            if not body.vehicle.id and not body.vehicle.plate:
                 raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
-            if get_reservation_by_plate_if_incomplete(body.vehicle.plate):
-                raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{body.vehicle.plate}' ancora da chiudere")
 
             body.subject.id = body.subject.id if body.subject.id not in [None, -1] else None
             body.vector.id = body.vector.id if body.vector.id not in [None, -1] else None
@@ -74,14 +72,17 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             body.vehicle.id = body.vehicle.id if body.vehicle.id not in [None, -1] else None
 
             data = add_reservation(body)
-            import libs.lb_log as lb_log
-            lb_log.warning(data)
 
-            reservation = Reservation(**data).json()
+            get_reservation_data = get_data_by_id("reservation", data["id"])
+
+            reservation = Reservation(**get_reservation_data).json()
             await self.broadcastAddAnagrafic("reservation", {"reservation": reservation})
             return reservation
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
+            # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
+            status_code = getattr(e, 'status_code', 400)
+            detail = getattr(e, 'detail', str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
 
     async def setReservation(self, id: int, body: SetReservationDTO):
         reservation_to_update = {
@@ -103,7 +104,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         lb_log.warning(body.vehicle.plate)
         just_exist_reservation = None
         if body.vehicle.plate:
-            just_exist_reservation = get_reservation_by_plate_if_incomplete(body.vehicle.plate)
+            just_exist_reservation = get_reservation_by_plate_if_uncomplete(body.vehicle.plate)
         if just_exist_reservation and just_exist_reservation.id != id:
             lb_log.warning("just exist")
             raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{body.vehicle.plate}' ancora da chiudere")
