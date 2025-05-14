@@ -43,9 +43,9 @@ class AnagraficRouter:
 		try:
 			if table_name not in manager_anagrafics:
 				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Anagrafic {table_name} does not exist", "idRecord": idRecord, "type": type, "idRequest": idRequest}
-			success, locked_record = lock_record(table_name=table_name, idRecord=idRecord, type=type, websocket_identifier=websocket_identifier, user_id=user_id)
+			success, locked_record, locked_table_name = lock_record(table_name=table_name, idRecord=idRecord, type=type, websocket_identifier=websocket_identifier, user_id=user_id)
 			if success is False:
-				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Record con id '{idRecord}' nella tabella '{table_name}' bloccato dall'utente '{locked_record.user.username}'", "idRecord": idRecord, "type": type, "idRequest": idRequest}
+				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Record con id '{idRecord}' nella tabella '{locked_table_name if locked_table_name else table_name}' bloccato dall'utente '{locked_record.user.username}'", "idRecord": idRecord, "type": type, "idRequest": idRequest}
 			data = get_data_by_id(table_name, idRecord)
 			return {"action": "lock", "success": True, "anagrafic": table_name, "data": data, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 		except Exception as e:

@@ -56,7 +56,7 @@ def add_data(table_name: str, data):
                     # Gestione oggetto singolo
                     result[rel_name] = serialize_object(related_data)
             
-            return record.__dict__
+            return result
         except IntegrityError as e:
             session.rollback()
             error_message = str(e)
