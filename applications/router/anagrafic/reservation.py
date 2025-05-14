@@ -21,6 +21,7 @@ from applications.utils.utils import get_query_params, has_non_none_value
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
 from datetime import datetime
+import libs.lb_log as lb_log
 
 class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -75,8 +76,16 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
             get_reservation_data = get_data_by_id("reservation", data["id"])
 
-            reservation = Reservation(**get_reservation_data).json()
-            await self.broadcastAddAnagrafic("reservation", {"reservation": reservation})
+            reservation = Reservation(**get_reservation_data)
+            await self.broadcastAddAnagrafic("reservation", {"reservation": reservation.json()})
+            if not body.subject.id and reservation.idSubject:
+                await self.broadcastAddAnagrafic("subject", {"subject": reservation.subject.json()})
+            if not body.vector.id and reservation.idVector:
+                await self.broadcastAddAnagrafic("vector", {"vector": reservation.vector.json()})
+            if not body.driver.id and reservation.idDriver:
+                await self.broadcastAddAnagrafic("driver", {"driver": reservation.driver.json()})
+            if not body.vehicle.id and reservation.idVehicle:
+                await self.broadcastAddAnagrafic("vehicle", {"vehicle": reservation.vehicle.json()})
             return reservation
         except Exception as e:
             # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
@@ -97,7 +106,6 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             "status": None,
             "document_reference": body.document_reference
         }
-        import libs.lb_log as lb_log
         if reservation_to_update["idVehicle"] == -1 and not body.vehicle.plate:
             raise HTTPException(status_code=400, detail="Il campo targa deve essere compilato")
         lb_log.warning(reservation_to_update["idVehicle"])

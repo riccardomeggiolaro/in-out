@@ -107,7 +107,7 @@ class AnagraficRouter:
 
 			except asyncio.TimeoutError:
 				# Timeout scaduto, continua ad aspettare nuovi messaggi
-				lb_log.warning(f"Timeout while waiting for message from {websocket_identifier}")
+				# lb_log.warning(f"Timeout while waiting for message from {websocket_identifier}")
 				continue
 
 			except json.JSONDecodeError as e:

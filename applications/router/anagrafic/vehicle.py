@@ -9,6 +9,7 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from modules.md_database.functions.has_vehicle_weighings import has_vehicle_weighings
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
@@ -61,6 +62,10 @@ class VehicleRouter(WebSocket):
             locked_data = get_data_by_attributes('lock_record', {"table_name": "vehicle", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=400, detail=f"You need to block the vehicle with id '{id}' before to update that")
+            current_data = get_data_by_id("vehicle", id)
+            weighings = has_vehicle_weighings(id)
+            if weighings and body.plate and body.plate != current_data["plate"]:
+                raise HTTPException(status_code=400, detail=f"Non puoi modificare la targa ad un veicolo che ha effettuato delle pesate salvate")
             data = update_data("vehicle", id, body.dict())
             vehicle = Vehicle(**data).json()
             await self.broadcastUpdateAnagrafic("vehicle", {"vehicle": vehicle})
@@ -77,12 +82,12 @@ class VehicleRouter(WebSocket):
     async def deleteVehicle(self, request: Request, id: int):
         locked_data = None
         try:
-            check_vehicle_reservations = get_data_by_id("vehicle", id)
-            if check_vehicle_reservations and len(check_vehicle_reservations["reservations"]) > 0:
-                raise HTTPException(status_code=400, detail=f"Il veicolo con id '{id}' è assegnato a delle pesate salvate")
             locked_data = get_data_by_attributes('lock_record', {"table_name": "vehicle", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=400, detail=f"You need to block the vehicle with id '{id}' before to update that")
+            check_vehicle_reservations = get_data_by_id("vehicle", id)
+            if check_vehicle_reservations and len(check_vehicle_reservations["reservations"]) > 0:
+                raise HTTPException(status_code=400, detail=f"Il veicolo con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("vehicle", id)
             vehicle = Vehicle(**data).json()
             await self.broadcastDeleteAnagrafic("vehicle", {"vehicle": vehicle})

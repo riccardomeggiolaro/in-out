@@ -3,17 +3,12 @@ from sqlalchemy.orm import joinedload
 from modules.md_database.functions.lock_record import lock_record
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 
-def delete_data(table_name, record_id, web_socket=None):
+def delete_data(table_name, record_id):
     """Elimina un record specifico da una tabella."""
     # Verifica che il modello esista nel dizionario dei modelli
     model = table_models.get(table_name.lower())
     if not model:
         raise ValueError(f"Tabella '{table_name}' non trovata.")
-
-    if web_socket:
-        success, locked_record = lock_record(table_name, record_id, web_socket)
-        if success is False:
-            raise ValueError(f"Record con id '{record_id}' nella tabella '{table_name}' bloccato dall'utente '{locked_record.websocket}'")
 
     try:    
         # Crea una sessione
@@ -61,9 +56,6 @@ def delete_data(table_name, record_id, web_socket=None):
                 session.close()
     except Exception as e:
         raise e
-    finally:
-        if web_socket and success is True:
-            unlock_record_by_id(locked_record.id)
 
 def serialize_object(obj):
     """Serializza un oggetto SQLAlchemy."""
