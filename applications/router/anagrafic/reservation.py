@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import ReservationStatus
+from modules.md_database.md_database import ReservationStatus, LockRecordType
 from modules.md_database.interfaces.reservation import Reservation, AddReservationDTO, SetReservationDTO
 from modules.md_database.interfaces.subject import Subject
 from modules.md_database.interfaces.vector import Vector
@@ -17,9 +17,11 @@ from modules.md_database.functions.get_data_by_attributes import get_data_by_att
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
 from modules.md_database.functions.delete_last_weighing_of_reservation import delete_last_weighing_of_reservation
 from modules.md_database.functions.add_reservation import add_reservation
+from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 from applications.utils.utils import get_query_params, has_non_none_value
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
+from applications.router.weigher.manager_weighers_data import weighers_data
 from datetime import datetime
 import libs.lb_log as lb_log
 
@@ -78,6 +80,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
             reservation = Reservation(**get_reservation_data)
             await self.broadcastAddAnagrafic("reservation", {"reservation": reservation.json()})
+            await weighers_data
             if not body.subject.id and reservation.idSubject:
                 await self.broadcastAddAnagrafic("subject", {"subject": reservation.subject.json()})
             if not body.vector.id and reservation.idVector:
@@ -177,8 +180,15 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation})
         return reservation
 
-    async def deleteReservation(self, id: int):
+    async def deleteReservation(self, request: Request, id: int):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
+            check_reservation_weighings = get_data_by_id("reservation", id)
+            if check_reservation_weighings and len(check_reservation_weighings["weighings"]) > 0:
+                raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è assegnata a delle pesate salvate")
             data = delete_data("reservation", id)
             await self.broadcastDeleteAnagrafic("reservation", {"reservation": Reservation(**data).json()})
             return data
@@ -186,6 +196,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
     async def deleteAllReservations(self):
         try:
@@ -199,8 +212,12 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
         
-    async def deleteLastWeighing(self, id: int):
+    async def deleteLastWeighing(self, request: Request, id: int):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
             delete_last_weighing_of_reservation(id)
             data = get_data_by_id("reservation", id)
             number_weighings_executed = len(data["weighings"])
@@ -215,9 +232,16 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
         
-    async def callReservation(self, id: int):
+    async def callReservation(self, request: Request, id: int):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.CALL, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
             data = get_data_by_id("reservation", id)
             if data["status"] not in [ReservationStatus.WAITING, ReservationStatus.CALLED]:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' ha già effettuato una pesata")
@@ -233,9 +257,16 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
     
-    async def cancelCallReservation(self, id: int):
+    async def cancelCallReservation(self, request: Request, id: int):
+        locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.CANCEL_CALL, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
             data = get_data_by_id("reservation", id)
             if data["status"] != ReservationStatus.CALLED:
                 raise HTTPException(status_code=400, detail="Il mezzo non è ancora stato chiamato")
@@ -250,3 +281,6 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])

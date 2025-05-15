@@ -1,5 +1,6 @@
 from applications.router.weigher.dto import DataInExecutionDTO, DataDTO
 from applications.router.weigher.types import Data
+from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_weigher import md_weigher
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import NodeConnectionManager
@@ -8,8 +9,6 @@ from modules.md_database.functions.update_data import update_data
 
 class Functions:
 	def __init__(self):
-		self.weighers_data = {}
-
 		md_weigher.module_weigher.initializeModuleConfig(config=lb_config.g_config["app_api"]["weighers"])
 
 		for instance_name, instance in md_weigher.module_weigher.instances.items():
@@ -19,7 +18,7 @@ class Functions:
 					"sockets": NodeConnectionManager(),
 					"data": Data(**lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"])
 				}
-			self.weighers_data[instance_name] = nodes_sockets
+			weighers_data[instance_name] = nodes_sockets
 
 		md_weigher.module_weigher.setApplicationCallback(
 			cb_realtime=self.Callback_Realtime, 
@@ -87,28 +86,28 @@ class Functions:
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def addInstanceSocket(self, instance_name: str):
-		self.weighers_data[instance_name] = {}
+		weighers_data[instance_name] = {}
 
 	def deleteInstanceSocket(self, instance_name: str):
-		for node in self.weighers_data[instance_name]:
-			self.weighers_data[instance_name][node]["sockets"].manager_realtime.disconnect_all()
-			self.weighers_data[instance_name][node]["sockets"].manager_realtime = None
-			self.weighers_data[instance_name][node]["sockets"].manager_diagnostic.disconnect_all()
-			self.weighers_data[instance_name][node]["sockets"].manager_diagnostic = None
-			self.weighers_data[instance_name][node]["data"].data_in_execution.deleteAttribute()
-			self.weighers_data[instance_name][node]["data"].id_selected.deleteAttribute()
-		self.weighers_data.pop(instance_name)
+		for node in weighers_data[instance_name]:
+			weighers_data[instance_name][node]["sockets"].manager_realtime.disconnect_all()
+			weighers_data[instance_name][node]["sockets"].manager_realtime = None
+			weighers_data[instance_name][node]["sockets"].manager_diagnostic.disconnect_all()
+			weighers_data[instance_name][node]["sockets"].manager_diagnostic = None
+			weighers_data[instance_name][node]["data"].data_in_execution.deleteAttribute()
+			weighers_data[instance_name][node]["data"].id_selected.deleteAttribute()
+		weighers_data.pop(instance_name)
 
 	def addInstanceWeigherSocket(self, instance_name: str, weigher_name: str, data: Data):
 		node_sockets = {
 			"sockets": NodeConnectionManager(),
 			"data": data
 		}
-		self.weighers_data[instance_name][weigher_name] = node_sockets
+		weighers_data[instance_name][weigher_name] = node_sockets
 
 	def deleteInstanceWeigherSocket(self, instance_name: str, weigher_name: str):
-		self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.disconnect_all()
-		self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime = None
-		self.weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.disconnect_all()
-		self.weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic = None
-		self.weighers_data[instance_name].pop(weigher_name)
+		weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.disconnect_all()
+		weighers_data[instance_name][weigher_name]["sockets"].manager_realtime = None
+		weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.disconnect_all()
+		weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic = None
+		weighers_data[instance_name].pop(weigher_name)

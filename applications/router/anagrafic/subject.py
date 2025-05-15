@@ -59,9 +59,6 @@ class SubjectRouter(WebSocket):
     async def setSubject(self, request: Request, id: int, body: SetSubjectDTO):
         locked_data = None
         try:
-            check_subject_reservations = get_data_by_id("subject", id)
-            if check_subject_reservations and len(check_subject_reservations["reservations"]) > 0:
-                raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle pesate salvate")
             locked_data = get_data_by_attributes('lock_record', {"table_name": "subject", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=400, detail=f"You need to block the subject with id '{id}' before to update that")
@@ -74,6 +71,8 @@ class SubjectRouter(WebSocket):
             # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
+            if status_code == 400:
+                locked_data = None
             raise HTTPException(status_code=status_code, detail=detail)
         finally:
             if locked_data:
@@ -84,7 +83,10 @@ class SubjectRouter(WebSocket):
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "subject", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=400, detail=f"You need to block the subject with id '{id}' before to update that")
+                raise HTTPException(status_code=403, detail=f"You need to block the subject with id '{id}' before to update that")
+            check_subject_reservations = get_data_by_id("subject", id)
+            if check_subject_reservations and len(check_subject_reservations["reservations"]) > 0:
+                raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("subject", id)
             subject = Subject(**data).json()
             await self.broadcastDeleteAnagrafic("subject", {"subject": subject})

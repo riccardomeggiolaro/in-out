@@ -4,7 +4,7 @@
         <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Prenotazioni</title>
+        <title>Accessi</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -47,8 +47,8 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Prenotazioni</h2>
-            <button class="register-button" onclick="addRow()">Registra</button>
+            <h2>Accessi</h2>
+            <button class="register-button" onclick="addRow()">Prenota accesso</button>
         </div>
         <table>
             <thead>
@@ -119,7 +119,7 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuova prenotazione:</h3>
+        <h3>Prenota accesso:</h3>
         <form id="register" class="content form-content" autocomplete="off" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
             <h4>Soggetto</h4>
 
@@ -295,7 +295,7 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica prenotazione:</h3>
+        <h3>Modifica accesso:</h3>
         <form id="edit" class="content form-content" autocomplete="off" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
             <h4>Soggetto</h4>
 
@@ -493,7 +493,7 @@
 
     <div id="delete-popup" class="modal-content popup">
         <div id="delete">
-            <h3>Elimina ragione sociale:</h3>
+            <h3>Elimina accesso:</h3>
             <p><b>Tipo soggetto:</b> <u><em><span id="typeSubject"></span></em></u></p>
             <p><b>Soggetto:</b> <u><em><span id="subject.social_reason"></span></em></u></p>
             <p><b>Vettore:</b> <u><em><span id="vector.social_reason"></span></em></u></p>
@@ -732,8 +732,19 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(res => res.json())
-                .catch(error => console.error(error));
+                .then(async res => {
+                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+                    return ({
+                        data,
+                        status
+                    });
+                })
+                .then(res => {
+                    if (res.status !== 200) {
+                        showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                    }
+                    closePopups(['delete-popup'], false);
+                })
             }
             document.querySelector('#confirm-title').textContent = "Attenzione!";
             document.querySelector('#confirm-content').innerHTML = `
@@ -747,7 +758,8 @@
                 <br><br>
                 <b>Bilancia:</b> <em><u>${bil}</u></em>
             `;
-            openPopup('confirm-popup');
+            selectAnagrafic(idReservation, "DELETE", "reservation", null, true);
+            currentId = idReservation;
         }
 
         function getImageWeighing(imageUrl) {

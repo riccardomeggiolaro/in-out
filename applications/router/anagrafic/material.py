@@ -77,15 +77,9 @@ class MaterialRouter(WebSocket):
     async def deleteMaterial(self, request: Request, id: int):
         locked_data = None
         try:
-            check_material_reservations = get_data_by_id("material", id)
-            if check_material_reservations and len(check_material_reservations["reservations"]) > 0:
-                raise HTTPException(status_code=400, detail=f"Il materiale con id '{id}' è assegnato a delle pesate salvate")
             locked_data = get_data_by_attributes('lock_record', {"table_name": "material", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=400, detail=f"You need to block the material with id '{id}' before to delete that")
-            material = get_data_by_id("material", id)
-            if material and len(material["reservations"]) > 0:
-                raise HTTPException(status_code=400, detail=f"Il materiale con id '{id}' è collegato a delle pesate salvate")
             data = delete_data("material", id)
             material = Material(**data).json()
             await self.broadcastDeleteAnagrafic("material", {"material": material})

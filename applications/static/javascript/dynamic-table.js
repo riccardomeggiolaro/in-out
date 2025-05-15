@@ -275,7 +275,6 @@ function createRow(table, columns, item) {
         detailCell.innerHTML = populate_detail_tr(item);
         detailRow.appendChild(detailCell);
         table.appendChild(detailRow);
-        console.log(row);
         row.onclick = () => toggleExpandRow(row);
     }
 }
@@ -297,6 +296,10 @@ function updateRow(table, columns, item) {
     }
     // Applica la funzione ricorsiva sull'oggetto riga
     populateNestedValues(item);
+}
+
+function isExpandedRow() {
+    return currentRowExtended && currentRowExtended.style.display === "table-row" ;
 }
 
 // Funzione per espandere/collassare la riga
@@ -364,7 +367,7 @@ addPopup.querySelector('#save-btn').addEventListener('click', () => {
         });
     })
     .then(res => {
-        if (res.status === 404) {
+        if (res.status === 404 || res.status === 403) {
             showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
             closePopups(['add-popup'], false);
         } else if (res.status === 400) {
@@ -400,7 +403,7 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
         });
     })
     .then(res => {
-        if (res.status === 404) {
+        if (res.status === 404 || res.status === 403) {
             showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
             closePopups(['edit-popup'], false);
         } else if (res.status === 400) {
@@ -409,7 +412,7 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
             closePopups(['edit-popup'], false);
         }
     })
-    .catch(error => console.log(error));
+    .catch(error => console.error(error));
 });
 
 function triggerEventsForAll(elements) {
@@ -507,14 +510,10 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
         });
     })
     .then(res => {
-        if (res.status === 404) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-            closePopups(['delete-popup'], false);
-        } else if (res.status === 400) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-        } else {
-            closePopups(['delete-popup'], false);
+        if (res.status !== 200) {
+            showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
         }
+        closePopups(['delete-popup'], false);
     })
     .catch(error => showSnackbar(`${error}`, 'red', 'white'));
 })
@@ -572,7 +571,6 @@ function openPopup(idPopup) {
 }
 
 function closePopups(idPopups, deselectCurrentId = true) {
-    console.log(currentId, deselectCurrentId);
     confirm_exec_funct = null;
     if (deselectCurrentId) {
         if (currentId) {
@@ -651,45 +649,46 @@ function connectWebSocket() {
                     const obj = getTableColumns();
                     const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
                     if (tr) {
-                        toggleExpandRow(tr);
-                        tr.classList.add('added');
-                        tr.addEventListener('animationend', () => {
-                            tr.classList.remove('added');
-                        }, { once: true });
+                        if (firstKey === "weighing") {
+                            if (isExpandedRow()) {
+                                toggleExpandRow(tr);
+                                tr.nextElementSibling.querySelector('li:first-child p').classList.toggle('soft-added');
+                            } else {
+                                tr.classList.toggle('soft-added');
+                            }
+                        } else {
+                            tr.classList.toggle('added');
+                        }
                     }
-                    showSnackbar(capitalizeFirstLetter(`Nuov${lastChar} ${specific} creat${lastChar}`), 'rgb(208, 255, 208)', 'black');
+                    let action = `creat${lastChar}`;
+                    if (firstKey === "weighing") action = `effettuat${lastChar}`;
+                    showSnackbar(capitalizeFirstLetter(`Nuov${lastChar} ${specific} ${action}`), 'rgb(208, 255, 208)', 'black');
                 } else if (data.action === "update") {
                     await updateTable();
                     const obj = getTableColumns();
                     const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
                     if (tr) {
-                        toggleExpandRow(tr);
+                        if (isExpandedRow()) toggleExpandRow(tr);
                         tr.classList.toggle('updated');
-                        // Rimuove la classe dopo l'animazione
-                        tr.addEventListener('animationend', async () => {
-                            tr.classList.remove('updated');
-                        }, { once: true }); // Ascolta solo una volta
                     }
-                    let action = `modificat${lastChar}`;
-                    if (firstKey === "weighing") action = `effettuat${lastChar}`;
-                    showSnackbar(capitalizeFirstLetter(`${specific} ${action}`), 'rgb(255, 240, 208)', 'black');
+                    showSnackbar(capitalizeFirstLetter(`${specific} modificat${lastChar}`), 'rgb(255, 240, 208)', 'black');
                 } else if (data.action === "delete") {
                     const obj = getTableColumns();
-                    const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    let tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
                     if (tr) {
                         if (firstKey === "weighing") {
-                            if (currentRowExtended) {
-                                try {
-                                    console.log(currentRowExtended);
-                                    currentRowExtended.querySelector('li:first-child').classList.toggle('deleted');
-                                    currentRowExtended.querySelector('li:first-child').addEventListener('animationend', async () => {
-                                        await updateTable();
-                                    }, { once: true });
-                                } catch {
+                            if (isExpandedRow()) {
+                                currentRowExtended.querySelector('li:first-child p').classList.toggle('deleted');
+                                currentRowExtended.querySelector('li:first-child p').addEventListener('animationend', async () => {
                                     await updateTable();
-                                }
+                                    tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                                    toggleExpandRow(tr);
+                                }, { once: true });
                             } else {
-                                await updateTable();
+                                tr.classList.toggle('soft-deleted');
+                                tr.addEventListener('animationend', async () => {
+                                    await updateTable();
+                                }, { once: true });
                             }
                         } else {
                             tr.classList.toggle('deleted');
@@ -728,11 +727,15 @@ function connectWebSocket() {
                 } else if (data.action === "lock") {
                     if (data.success === true) {
                         if (data.type === "UPDATE") {
+                            request = getWebSocketRequest(data.idRequest);
                             removeWebSocketRequest(data.idRequest);
-                            editRow(data.data)
+                            if (request.custom_execute_callback) openPopup("confirm-popup");
+                            else editRow(data.data);
                         } else if (data.type === "DELETE") {
+                            request = getWebSocketRequest(data.idRequest);
                             removeWebSocketRequest(data.idRequest);
-                            deleteRow(data.data)
+                            if (request.custom_execute_callback) openPopup("confirm-popup");
+                            else deleteRow(data.data)
                         } else if (data.type === "CALL") {
                             currentId = data.data.id;
                             removeWebSocketRequest(data.idRequest);
@@ -743,7 +746,6 @@ function connectWebSocket() {
                             if (callback_call_anagrafic) callback_call_anagrafic(data.type, data.data);
                         } else if (data.type === "SELECT") removeWebSocketRequest(data.idRequest);
                     }
-                    else console.log(data)
                 } else if (data.action === "unlock") {
                     if (data.success === true) removeWebSocketRequest(data.idRequest);
                 }
@@ -778,6 +780,10 @@ function attemptReconnect() {
     }, 3000);
 }
 
+function getWebSocketRequest(id) {
+    return pendingRequests.has(id) ? pendingRequests.get(id) : null;
+}
+
 function removeWebSocketRequest(id) {
     if (pendingRequests.has(id)) {
         const request = pendingRequests.get(id);
@@ -786,7 +792,7 @@ function removeWebSocketRequest(id) {
     }
 }
 
-async function sendWebSocketRequest(action, data, callback_anagrafic) {
+async function sendWebSocketRequest(action, data, callback_anagrafic, custom_execute_callback = false) {
     return new Promise((resolve, reject) => {
         if (!websocket_connection || websocket_connection.readyState !== WebSocket.OPEN) {
             reject(new Error("WebSocket is not connected"));
@@ -797,7 +803,7 @@ async function sendWebSocketRequest(action, data, callback_anagrafic) {
         const idRequest = ++requestIdCounter;
 
         // Store the promise callbacks
-        pendingRequests.set(idRequest, { resolve, reject, callback_anagrafic });
+        pendingRequests.set(idRequest, { resolve, reject, callback_anagrafic, custom_execute_callback });
 
         // Send the request with the ID
         const message = { action, ...data, idRequest };
@@ -814,9 +820,9 @@ async function sendWebSocketRequest(action, data, callback_anagrafic) {
 }
 
 // Example of using WebSocket for selectAnagrafic
-async function selectAnagrafic(idRecord, type, anagrafic = itemName, callback_anagrafic = null) {
+async function selectAnagrafic(idRecord, type, anagrafic = itemName, callback_anagrafic = null, custom_execute_callback = false) {
     try {
-        const response = await sendWebSocketRequest("lock", { idRecord, type, anagrafic }, callback_anagrafic);
+        const response = await sendWebSocketRequest("lock", { idRecord, type, anagrafic }, callback_anagrafic, custom_execute_callback);
         return response.data;
     } catch (error) {
         console.error("Error selecting anagrafic:", error);
@@ -825,11 +831,10 @@ async function selectAnagrafic(idRecord, type, anagrafic = itemName, callback_an
 }
 
 // Example of using WebSocket for deselectAnagrafic
-async function deselectAnagrafic(idRecord, anagrafic = itemName, callback_anagrafic = null) {
+async function deselectAnagrafic(idRecord, anagrafic = itemName, callback_anagrafic = null, custom_execute_callback = false) {
     try {
-        console.log("response");
         const type = "";
-        const response = await sendWebSocketRequest("unlock", { idRecord, type, anagrafic }, callback_anagrafic);
+        const response = await sendWebSocketRequest("unlock", { idRecord, type, anagrafic }, callback_anagrafic, custom_execute_callback);
         return response;
     } catch (error) {
         console.error("Error deselecting anagrafic:", error);

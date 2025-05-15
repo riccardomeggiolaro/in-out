@@ -60,7 +60,7 @@ class VectorRouter(WebSocket):
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "vector", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=400, detail=f"You need to block the vector with id '{id}' before to update that")
+                raise HTTPException(status_code=403, detail=f"You need to block the vector with id '{id}' before to update that")
             data = update_data("vector", id, body.dict())
             vector = Vector(**data).json()
             await self.broadcastUpdateAnagrafic("vector", {"vector": vector})
@@ -69,6 +69,8 @@ class VectorRouter(WebSocket):
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
+            if status_code == 400:
+                locked_data = None
             raise HTTPException(status_code=status_code, detail=detail)
         finally:
             if locked_data:
@@ -77,12 +79,12 @@ class VectorRouter(WebSocket):
     async def deleteVector(self, request: Request, id: int):
         locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "vector", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=403, detail=f"You need to block the vector with id '{id}' before to delete that")
             check_vector_reservations = get_data_by_id("vector", id)
             if check_vector_reservations and len(check_vector_reservations["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il vettore con id '{id}' è assegnato a delle pesate salvate")
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "vector", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
-            if not locked_data:
-                raise HTTPException(status_code=400, detail=f"You need to block the vector with id '{id}' before to delete that")
             data = delete_data("vector", id)
             vector = Vector(**data).json()
             await self.broadcastDeleteAnagrafic("vector", {"vector": vector})

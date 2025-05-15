@@ -61,7 +61,7 @@ class VehicleRouter(WebSocket):
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "vehicle", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=400, detail=f"You need to block the vehicle with id '{id}' before to update that")
+                raise HTTPException(status_code=403, detail=f"You need to block the vehicle with id '{id}' before to update that")
             current_data = get_data_by_id("vehicle", id)
             weighings = has_vehicle_weighings(id)
             if weighings and body.plate and body.plate != current_data["plate"]:
@@ -74,6 +74,8 @@ class VehicleRouter(WebSocket):
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
+            if status_code == 400:
+                locked_data = None
             raise HTTPException(status_code=status_code, detail=detail)
         finally:
             if locked_data:
@@ -84,7 +86,7 @@ class VehicleRouter(WebSocket):
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "vehicle", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=400, detail=f"You need to block the vehicle with id '{id}' before to update that")
+                raise HTTPException(status_code=403, detail=f"You need to block the vehicle with id '{id}' before to update that")
             check_vehicle_reservations = get_data_by_id("vehicle", id)
             if check_vehicle_reservations and len(check_vehicle_reservations["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il veicolo con id '{id}' è assegnato a delle pesate salvate")
@@ -97,6 +99,9 @@ class VehicleRouter(WebSocket):
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
 
     async def deleteAllVehicles(self):
         try:

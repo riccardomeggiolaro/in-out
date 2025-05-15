@@ -60,7 +60,7 @@ class DriverRouter(WebSocket):
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "driver", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=400, detail=f"You need to block the driver with id '{id}' before to update that")
+                raise HTTPException(status_code=403, detail=f"You need to block the driver with id '{id}' before to update that")
             data = update_data("driver", id, body.dict())
             driver = Driver(**data).json()
             await self.broadcastUpdateAnagrafic("driver", {"driver": driver})
@@ -69,6 +69,8 @@ class DriverRouter(WebSocket):
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
+            if status_code == 400:
+                locked_data = None
             raise HTTPException(status_code=status_code, detail=detail)
         finally:
             if locked_data:
@@ -77,12 +79,12 @@ class DriverRouter(WebSocket):
     async def deleteDriver(self, request:Request, id: int):
         locked_data = None
         try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "driver", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=403, detail=f"You need to block the driver with id '{id}' before to update that")
             check_driver_reservations = get_data_by_id("driver", id)
             if check_driver_reservations and len(check_driver_reservations["reservations"]) > 0:
                 raise HTTPException(status_code=400, detail=f"L'autista con id '{id}' è assegnato a delle pesate salvate")
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "driver", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
-            if not locked_data:
-                raise HTTPException(status_code=400, detail=f"You need to block the driver with id '{id}' before to update that")
             data = delete_data("driver", id)
             driver = Driver(**data).json()
             await self.broadcastDeleteAnagrafic("driver", {"driver": driver})

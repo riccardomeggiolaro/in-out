@@ -260,7 +260,11 @@ thead input:focus {
 }
 
 .added {
-    animation: add-item 0.6s ease-out;
+    animation: add-item 0.6s ease-out forwards;
+}
+
+.soft-added {
+    animation: soft-add-item 0.6s ease-out forwards;
 }
 
 @keyframes add-item {
@@ -275,11 +279,20 @@ thead input:focus {
     }
 }
 
-.updated {
-    animation: flash-background 1.5s ease-out;
+@keyframes soft-add-item {
+    0% {
+        background-color: rgb(208, 255, 208);
+    }
+    100% {
+        background-color: transparent;
+    }
 }
 
-@keyframes flash-background {
+.updated {
+    animation: update-item 0.6s ease-out forwards;
+}
+
+@keyframes update-item {
     0% {
         background-color: rgb(255, 240, 208);
     }

@@ -9,6 +9,7 @@ import asyncio
 import libs.lb_log as lb_log
 from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
+from applications.router.weigher.manager_weighers_data import weighers_data
 
 class CommandWeigherRouter(DataRouter):
 	def __init__(self):
@@ -180,17 +181,17 @@ class CommandWeigherRouter(DataRouter):
 		}
   
 	async def websocket_endpoint(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		await self.weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.connect(websocket)
-		while instance.instance_name in self.weighers_data and instance.weigher_name in self.weighers_data[instance.instance_name]:
-			if websocket not in self.weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections:
+		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.connect(websocket)
+		while instance.instance_name in weighers_data and instance.weigher_name in weighers_data[instance.instance_name]:
+			if websocket not in weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections:
 				break
-			if len(self.weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) > 0:
+			if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) > 0:
 				status = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]["status"]
 				if status == 200:
 					modope_in_execution = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 					if modope_in_execution in ["OK", "DIAGNOSTICS"]:
 						if modope_in_execution == "DIAGNOSTICS":
-							await self.weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
+							await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
 								"status":"--",
 								"type":"--",
 								"net_weight": "Diagnostica in corso",
@@ -205,7 +206,7 @@ class CommandWeigherRouter(DataRouter):
 						message = "Connessione non settata"
 					elif status == 201:
 						message = "Protocollo pesa non valido"
-					await self.weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
+					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
 						"status":"--",
 						"type":"--",
 						"net_weight": message,

@@ -21,6 +21,7 @@ from applications.router.weigher.functions import Functions
 from libs.lb_utils import has_values_besides_id
 from libs.lb_folders import structure_folder_rule, save_bytes_to_file, search_file
 from applications.router.anagrafic.web_sockets import WebSocket
+from applications.router.weigher.manager_weighers_data import weighers_data
 
 class CallbackWeigher(Functions, WebSocket):
 	def __init__(self):
@@ -50,11 +51,11 @@ class CallbackWeigher(Functions, WebSocket):
 					modope = "CLOSERELE" if value == 0 else "OPENRELE"
 					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
 				self.switch_to_call = 0
-		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
+		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
 	def Callback_Diagnostic(self, instance_name: str, weigher_name: str, diagnostic: Diagnostic):
-		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(diagnostic.dict()))
+		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(diagnostic.dict()))
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
@@ -165,7 +166,7 @@ class CallbackWeigher(Functions, WebSocket):
 					reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.ENTERED})
 				self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-				asyncio.run(self.broadcastUpdateAnagrafic("reservation", {"weighing": Reservation(**reservation_update).json()}))
+				asyncio.run(self.broadcastAddAnagrafic("reservation", {"weighing": Reservation(**reservation_update).json()}))
 			for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
 				key, value = next(iter(rele.items()))
 				modope = "CLOSERELE" if value == 0 else "OPENRELE"
@@ -178,41 +179,45 @@ class CallbackWeigher(Functions, WebSocket):
 							folder_path = structure_folder_rule(lb_config.g_config["app_api"]["path_weighing_pictures"])
 							save_bytes_to_file(image_captured_details["image"], f"{last_pesata.weight_executed.pid}_{weigher_name}.png", folder_path)
 							add_data("weighing_pictures", {"path_name": folder_path, "idWeighing": weighing["id"]})
-
-		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(last_pesata.dict()))
+		for instance in weighers_data:
+			for weigher in weighers_data[instance]:
+				weight = last_pesata.dict()
+				weight["instance_name"] = instance_name
+				weight["weigher_name"] = weigher_name
+				asyncio.run(weighers_data[instance][weigher]["sockets"].manager_realtime.broadcast(weight))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):
-		asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"command_executed": ok_value}))
+		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"command_executed": ok_value}))
 
 	def Callback_DataInExecution(self, instance_name, weigher_name):
 		try:
 			if asyncio.get_event_loop().is_running():
-				asyncio.create_task(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
+				asyncio.create_task(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
 			else:
 				loop = asyncio.get_event_loop()
-				loop.run_until_complete(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
+				loop.run_until_complete(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
 		except RuntimeError:
-			asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
 
 	def Callback_ActionInExecution(self, instance_name: str, weigher_name: str, action_in_execution: str):
 		result = {"command_in_executing": action_in_execution}
 		try:
 			if asyncio.get_event_loop().is_running():
-				asyncio.create_task(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+				asyncio.create_task(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 			else:
 				loop = asyncio.get_event_loop()
-				loop.run_until_complete(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+				loop.run_until_complete(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 		except Exception as e:
-			asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 		
 	def Callback_Rele(self, instance_name: str, weigher_name: str, port_rele: tuple):
 		key, value = port_rele
 		result = {"rele": key, "status": value}
 		try:
 			if asyncio.get_event_loop().is_running():
-				asyncio.create_task(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+				asyncio.create_task(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 			else:
 				loop = asyncio.get_event_loop()
-				loop.run_until_complete(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+				loop.run_until_complete(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 		except RuntimeError:
-			asyncio.run(self.weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
