@@ -568,7 +568,7 @@ function updateUIRealtime(e) {
         }                    
     } else if (obj.weight_executed) {
         if (obj.weight_executed.pid != "") { 
-            showSnackbar("Pesata eseguita! Identificativo: " + obj.weight_executed.pid);
+            showSnackbar(`Pesata eseguita! Bilancia: ${obj.weigher_name}. Pid: ${obj.weight_executed.pid}`);
             populateListIn();
         } else { 
             showSnackbar("Pesata fallita!");

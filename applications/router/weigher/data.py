@@ -26,6 +26,8 @@ class DataRouter(ConfigWeigher):
 		if data_dto.id_selected.id:
 			await self.DeleteData(instance=instance)
 			if data_dto.id_selected.id != -1:
+				import libs.lb_log as lb_log
+				lb_log.warning(data_dto.id_selected.id)
 				weighing = get_data_by_id("reservation", data_dto.id_selected.id)
 				data_in_execution = DataInExecutionType(**{
 					"typeSubject": weighing["typeSubject"],

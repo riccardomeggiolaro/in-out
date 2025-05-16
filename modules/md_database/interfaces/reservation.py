@@ -55,10 +55,19 @@ class AddReservationDTO(BaseModel):
     
 class SetReservationDTO(BaseModel):
     typeSubject: Optional[str] = None
-    subject: Optional[SubjectDataDTO] = SubjectDataDTO(**{})
-    vector: Optional[VectorDataDTO] = VectorDataDTO(**{})
-    driver: Optional[DriverDataDTO] = DriverDataDTO(**{})
-    vehicle: Optional[VehicleDataDTO] = VehicleDataDTO(**{})
-    number_weighings: int = 2
+    subject: SubjectDataDTO = SubjectDataDTO(**{})
+    vector: VectorDataDTO = VectorDataDTO(**{})
+    driver: DriverDataDTO = DriverDataDTO(**{})
+    vehicle: VehicleDataDTO = VehicleDataDTO(**{})
+    number_weighings: Optional[int] = None
     note: Optional[str] = None
     document_reference: Optional[str] = None
+
+    @validator('typeSubject', pre=True, always=True)
+    def check_type_subject(cls, v, values):
+        if v:
+            if v in ["CUSTOMER", "SUPPLIER"]:
+                return v
+            else:
+                raise ValueError("typeSubject is not a valid string")
+        return v
