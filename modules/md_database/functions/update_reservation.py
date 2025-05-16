@@ -71,7 +71,7 @@ def update_reservation(id: int, data: SetReservationDTO):
                     reservation.idDriver = None
             else:
                 reservation.idDriver = data.driver.id
-            
+
             if data.vehicle.id and reservation.idVehicle != data.vehicle.id and len(reservation.weighings) > 0:
                 raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
 
@@ -87,7 +87,7 @@ def update_reservation(id: int, data: SetReservationDTO):
                     vehicle = current_model(**add_vehicle)
                     session.add(vehicle)
                     session.flush()
-                    reservation.idVehicle = driver.id
+                    reservation.idVehicle = vehicle.id
                 elif data.vehicle.id == -1:
                     reservation.idVehicle = None
             else:
