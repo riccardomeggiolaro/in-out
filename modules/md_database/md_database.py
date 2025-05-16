@@ -185,3 +185,14 @@ with SessionLocal() as db_session:
         )
         db_session.add(admin_user)
         db_session.commit()
+        
+    cam_capture_plate_user = db_session.query(User).filter(User.username == "camcaptureplate").first()
+    
+    if cam_capture_plate_user is None:
+        cam_capture_plate_user = User(
+            username="camcaptureplate",
+            level=0,
+            description="Cam Capture Plate"
+        )
+        db_session.add(cam_capture_plate_user)
+        db_session.commit()

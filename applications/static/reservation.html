@@ -54,9 +54,9 @@
             <thead>
                 <tr id="filters">
                     <th name="date_created">
-                        <input type="text" id="dateRange" placeholder="Data accettazione" autocomplete="off" onclick="this.select()">
-                        <input type="date" id="filter.fromDate" name="fromDate" autocomplete="off">
-                        <input type="date" id="filter.toDate" name="toDate" autocomplete="off">
+                        <input type="text" id="dateRange" placeholder="Data accettazione" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
+                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
                     </th>
                     <th name="status">
                         <select id="filter.status" name="status" onchange="updateTable()">
@@ -120,7 +120,7 @@
     
     <div id="add-popup" class="modal-content popup">
         <h3>Prenota accesso:</h3>
-        <form id="register" class="content form-content" autocomplete="off" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
+        <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
             <h4>Soggetto</h4>
 
             <div class="radio">
@@ -141,7 +141,7 @@
             <div>
                 <div class="item">
                     <input id="subject.id" name="subject.id" type="number" class="suggestionId">
-                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text"
+                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text" autocomplete="new-password"
                         oninput="
                             populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
                             if (document.querySelector('#add-popup #subject\\.id').value != '') {
@@ -163,11 +163,11 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')">
+                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="new-password">
                 </div>
                     
                 <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
                 </div>
             </div>
 
@@ -178,7 +178,7 @@
             <div>
                 <div class="item">
                     <input id="vector.id" name="vector.id" type="number" class="suggestionId">
-                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text"
+                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text" autocomplete="new-password"
                         oninput="
                             populateSuggestions('#add-popup', '#register', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
                             if (document.querySelector('#add-popup #vector\\.id').value != '') {
@@ -200,11 +200,11 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');"><br>
+                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
                 </div>
                     
                 <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"><br>
+                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
                 </div>
             </div>
 
@@ -215,7 +215,7 @@
             <div>
                 <div class="item-25">
                     <input id="driver.id" name="driver.id" type="number" class="suggestionId">
-                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text"
+                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text" autocomplete="new-password"
                         oninput="
                             populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
                             if (document.querySelector('#add-popup #driver\\.id').value != '') {
@@ -235,7 +235,7 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');">
+                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
                 </div>
             </div>
 
@@ -246,7 +246,7 @@
             <div>
                 <div class="item-25">
                     <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" required
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password" required
                         oninput="
                             this.value = this.value.toUpperCase();
                             populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
@@ -267,7 +267,7 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
                 </div>
             </div>
 
@@ -275,16 +275,16 @@
 
             <div>
                 <div class="item">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" required
+                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" autocomplete="new-password" required
                         oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
                 <div class="item-25">
-                    <input placeholder="Note" id="note" name="note" type="text">
+                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
                 </div>
             </div>
         </form>
@@ -296,7 +296,7 @@
 
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica accesso:</h3>
-        <form id="edit" class="content form-content" autocomplete="off" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+        <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
             <h4>Soggetto</h4>
 
             <div class="radio">
@@ -322,7 +322,7 @@
                                 document.querySelector('#edit-popup #subject\\.telephone').disabled = true;
                                 document.querySelector('#edit-popup #subject\\.cfpiva').disabled = true;
                             }">
-                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text"
+                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text" autocomplete="new-password"
                         oninput="
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
                             if (document.querySelector('#edit-popup #subject\\.id').value != '') {
@@ -344,11 +344,11 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')">
+                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="new-password">
                 </div>
                     
                 <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
                 </div>
             </div>
 
@@ -364,7 +364,7 @@
                                 document.querySelector('#edit-popup #vector\\.telephone').disabled = true;
                                 document.querySelector('#edit-popup #vector\\.cfpiva').disabled = true;
                             }">
-                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text"
+                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text" autocomplete="new-password"
                         oninput="
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
                             if (document.querySelector('#edit-popup #vector\\.id').value != '') {
@@ -386,11 +386,11 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');"><br>
+                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
                 </div>
                     
                 <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"><br>
+                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
                 </div>
             </div>
 
@@ -406,7 +406,7 @@
                                 document.querySelector('#edit-popup #driver\\.telephone').disabled = true;
                             }                           
                         ">
-                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text"
+                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text" autocomplete="new-password"
                         oninput="
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
                             if (document.querySelector('#edit-popup #driver\\.id').value != '') {
@@ -426,7 +426,7 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" 
+                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" autocomplete="new-password"
                         oninput="this.value = this.value.replace(/\D/g, '');">
                 </div>
             </div>
@@ -443,7 +443,7 @@
                                 document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
                             }
                         ">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" required
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
                         oninput="
                             this.value = this.value.toUpperCase();
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
@@ -464,7 +464,7 @@
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
                 </div>
             </div>
 
@@ -472,16 +472,16 @@
 
             <div>
                 <div class="item">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" required
+                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" autocomplete="new-password" required
                         oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
                 <div class="item-25">
-                    <input placeholder="Note" id="note" name="note" type="text">
+                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
                 </div>
     
                 <div class="item-25">
-                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
                 </div>
             </div>
         </form>
@@ -566,6 +566,7 @@
             callback_call_anagrafic = callReservation;
             params = {
                 "prenotazione con targa": "reservation.vehicle.plate",
+                "prenotazione con id": "reservation.id",
                 "soggetto": "subject.social_reason",
                 "vettore": "vector.social_reason",
                 "autista": "driver.social_reason",

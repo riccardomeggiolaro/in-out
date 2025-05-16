@@ -7,13 +7,13 @@ import libs.lb_config as lb_config
 class TokenData(BaseModel):
 	id: int
 	username: str
-	password: str
+	password: Optional[str] = None
 	level: int
 	description: str
 	printer_name: Optional[str] = None
 	exp: datetime
 
-def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=1)):
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=365*100)):
 	try:
 		to_encode = data.copy()
 		expire = datetime.now(timezone.utc) + expires_delta
@@ -21,7 +21,6 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=1)
 		
 		return jwt.encode(to_encode, lb_config.g_config["secret_key"], algorithm="HS256")
 	except Exception as e:
-		print(e)
 		return e
 
 level_user = {

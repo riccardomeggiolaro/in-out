@@ -23,10 +23,10 @@
             <thead>
                 <tr id="filters">
                     <th name="plate">
-                        <input id="filter.plate" name="plate" type="text" placeholder="Targa" oninput="this.value = this.value.toUpperCase(); updateTable()">
+                        <input id="filter.plate" name="plate" type="text" placeholder="Targa" oninput="this.value = this.value.toUpperCase(); updateTable()" autocomplete="off">
                     </th>
                     <th name="description">
-                        <input id="filter.description" name="description" type="text" placeholder="Descrizione" oninput="updateTable()">
+                        <input id="filter.description" name="description" type="text" placeholder="Descrizione" oninput="updateTable()" autocomplete="off">
                     </th>
                     <th></th>
                 </tr>
@@ -59,9 +59,9 @@
         <h3>Nuovo veicolo:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Targa:<br>
-            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" required>
+            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" autocomplete="off" required>
             Descrizione: (Opzionale):<br>
-            <input type="text" id="description" name="description"><br>
+            <input type="text" id="description" name="description" autocomplete="off">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -73,9 +73,9 @@
         <h3>Modifica veicolo:</h3>
         <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Targa:<br>
-            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" required>
+            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" autocomplete="off" required>
             Descrizione: (Opzionale)<br>
-            <input type="text" id="description" name="description"><br>
+            <input type="text" id="description" name="description" autocomplete="off">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>

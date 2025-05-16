@@ -23,13 +23,13 @@
             <thead>
                 <tr id="filters">
                     <th name="social_reason">
-                        <input id="filter.social_reason" name="social_reason" type="text" placeholder="Ragione sociale" oninput="updateTable()">
+                        <input id="filter.social_reason" name="social_reason" type="text" placeholder="Ragione sociale" oninput="updateTable()" autocomplete="off">
                     </th>
                     <th name="telephone">
-                        <input id="filter.telephone" name="telephone" type="text" placeholder="Telefono" oninput="this.value = this.value.replace(/\D/g, ''); updateTable()">
+                        <input id="filter.telephone" name="telephone" type="text" placeholder="Telefono" oninput="this.value = this.value.replace(/\D/g, ''); updateTable()" autocomplete="off">
                     </th>
                     <th name="cfpiva">
-                        <input id="filter.cfpiva" name="cfpiva" type="text" placeholder="CF/P.IVA" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); updateTable()">
+                        <input id="filter.cfpiva" name="cfpiva" type="text" placeholder="CF/P.IVA" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); updateTable()" autocomplete="off">
                     </th>
                     <th></th>
                 </tr>
@@ -62,11 +62,11 @@
         <h3>Nuovo soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Ragione sociale:<br>
-            <input type="text" id="social_reason" name="social_reason" required><br>
+            <input type="text" id="social_reason" name="social_reason" autocomplete="off" required>
             Telefono: (Opzionale)<br>
-            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="off">
             CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" name="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <input type="text" id="cfpiva" name="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="off">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -78,11 +78,11 @@
         <h3>Modifica soggetto:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Ragione sociale:<br>
-            <input type="text" id="social_reason" name="social_reason" required><br>
+            <input type="text" id="social_reason" name="social_reason" autocomplete="off" required>
             Telefono: (Opzionale)<br>
-            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')"><br>
+            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="off">
             CF/.P.IVA: (Opzionale)<br>
-            <input type="text" id="cfpiva" name="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+            <input type="text" id="cfpiva" name="cfpiva" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="off">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>

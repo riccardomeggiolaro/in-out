@@ -41,6 +41,7 @@ window.onbeforeunload = function () {
     clearTimeout(reconnectTimeout);
 };
 
+
 document.querySelectorAll('thead th').forEach((th, index) => {
     const columnName = th.attributes["name"];
     if (columnName && columnName.value) {

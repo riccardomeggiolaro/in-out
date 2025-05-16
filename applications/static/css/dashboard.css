@@ -103,7 +103,8 @@ select {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
     transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
     width: 1000px;
-    max-width: -moz-available;
+    max-width: -webkit-fill-available; /* Chrome, Safari */
+    max-width: -moz-available;  
 }
 
 input:focus, 
@@ -399,6 +400,7 @@ button:active {
         transition: right 0.3s ease-in-out;
         position: absolute;
         top: 0;
+        display: none;
     }
 
     .anagrafic {
@@ -588,7 +590,8 @@ button:active {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.3s ease;
     width: 1000px;
-    max-width: -moz-available;
+    max-width: -webkit-fill-available; /* Chrome, Safari */
+    max-width: -moz-available;  
     margin: 5px auto;
 }
 .list-in li:hover {

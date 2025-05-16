@@ -28,7 +28,6 @@ def get_reservation_by_plate_if_uncomplete(plate: str):
             Reservation.id == weighing_count_subquery.c.idReservation
         ).filter(
             Vehicle.plate == plate,
-            Reservation.selected == False,  # Non già selezionata
             # Filtro per il numero di pesate: o nessuna pesata (NULL) o conteggio < number_weighings
             (
                 (weighing_count_subquery.c.weighing_count == None) & (Reservation.number_weighings > 0) |

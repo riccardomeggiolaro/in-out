@@ -589,19 +589,19 @@ function updateUIRealtime(e) {
         if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
             if (tare_weight == 0 && selectedIdWeight === null) {
                 tareButton.disabled = false;
-                zeroButton.disabled = true;
+                // zeroButton.disabled = true;
                 presetTareButton.disabled = false;
                 inButton.disabled = false;
                 printButton.disabled = false;
             } else if (tare_weight !== 0 && selectedIdWeight !== null) {
                 tareButton.disabled = true;
-                zeroButton.disabled = true;
+                // zeroButton.disabled = true;
                 presetTareButton.disabled = true;
                 inButton.disabled = true;
                 printButton.disabled = true;
             } else {
                 tareButton.disabled = false;
-                zeroButton.disabled = true;
+                // zeroButton.disabled = true;
                 presetTareButton.disabled = false;
                 inButton.disabled = true;
                 printButton.disabled = false;
@@ -609,14 +609,14 @@ function updateUIRealtime(e) {
             }
         } else if (numeric && minWeightValue >= gross_weight) {
             tareButton.disabled = true;
-            zeroButton.disabled = false;
+            // zeroButton.disabled = false;
             presetTareButton.disabled = false;
             inButton.disabled = true;
             printButton.disabled = true;
             outButton.disabled = true;
         } else {
             tareButton.disabled = true;
-            zeroButton.disabled = true;
+            // zeroButton.disabled = true;
             presetTareButton.disabled = true;
             inButton.disabled = true;
             printButton.disabled = true;
@@ -668,6 +668,9 @@ function updateUIRealtime(e) {
                 element.disabled = true;
             });
         }
+    } else if (obj.message) {
+        console.log("iwebhfiwuefuoi")
+        showSnackbar(obj.message);
     }
 }
 

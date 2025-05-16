@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, WebSocket, HTTPException
+from fastapi import APIRouter, Depends, WebSocket, HTTPException, Request
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 from applications.utils.utils import validate_time
 from applications.router.weigher.types import Data
@@ -10,6 +10,7 @@ import libs.lb_log as lb_log
 from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
+from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
 
 class CommandWeigherRouter(DataRouter):
 	def __init__(self):
@@ -134,14 +135,22 @@ class CommandWeigherRouter(DataRouter):
 			}
 		}
 
-	async def OutByPlate(self, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def OutByPlate(self, request: Request, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		try:
-			reservation = get_reservation_by_plate_if_incomplete(plate=plate_dto.plate)
+			reservation = get_reservation_by_plate_if_uncomplete(plate=plate_dto.plate)
 			if reservation:
-				await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation.id}}), instance=instance)
+				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				specific = "telecamera " if request.state.user.level == 0 else ""
+				if current_weigher_data["id_selected"]["id"] != reservation.id:
+					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"Targa '{plate_dto.plate}' selezionata da {specific}'{request.client.host}'")
+					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation.id}}), instance=instance)
 				result = await self.Out(instance=instance)
-				if result["command_details"]["command_executed"] is False:
-					await self.DeleteData(instance=instance)
+				if result["command_details"]["error_message"]:
+					error = result["command_details"]["error_message"]
+					error_message = f"Errore effettuando pesata da {specific}'{request.client.host}': {error}"
+					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=error_message)
+				# if result["command_details"]["command_executed"] is False:
+				# 	await self.DeleteData(instance=instance)
 				return result
 		except Exception as e:
 			lb_log.error(e)
