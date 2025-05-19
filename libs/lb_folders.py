@@ -7,7 +7,7 @@ def structure_folder_rule(base_path):
     month = current_date.month
     
     # Create path with /year/month format
-    return f"{year}/{month:02d}"
+    return f"/{base_path}/{year}/{month:02d}"
 
 def save_bytes_to_file(file_bytes, filename, folder_path):
     """
