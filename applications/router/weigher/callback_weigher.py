@@ -178,7 +178,7 @@ class CallbackWeigher(Functions, WebSocket):
 						if image_captured_details["image"]:
 							folder_path = structure_folder_rule(lb_config.g_config["app_api"]["path_weighing_pictures"])
 							save_bytes_to_file(image_captured_details["image"], f"{last_pesata.weight_executed.pid}_{weigher_name}.png", folder_path)
-							add_data("weighing_pictures", {"path_name": folder_path, "idWeighing": weighing["id"]})
+							add_data("weighing_picture", {"path_name": folder_path, "idWeighing": weighing_stored_db["id"]})
 		for instance in weighers_data:
 			for weigher in weighers_data[instance]:
 				weight = last_pesata.dict()

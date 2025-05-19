@@ -800,7 +800,7 @@
 
                 // Add images to the .imgs div
                 weighing.weighing_pictures.forEach(picture => {
-                    content += `<img src="/images/${picture.path_name}" onclick="getImageWeighing('/images/${picture.path_name}')">`;
+                    content += `<img src="/images/${picture.path_name}/${weighing.pid}_${weighing.weigher}.png" onclick="getImageWeighing('/images/${picture.path_name}/${weighing.pid}_${weighing.weigher}.png')">`;
                 });
                 
                 // Close the div and li tags

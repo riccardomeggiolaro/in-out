@@ -157,7 +157,8 @@ table_models = {
     'material': Material,
     'weighing': Weighing,
     'reservation': Reservation,
-    'lock_record': LockRecord
+    'lock_record': LockRecord,
+    'weighing_picture': WeighingPicture
 }
 
 upload_file_datas_required_columns = {

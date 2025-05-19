@@ -10,7 +10,7 @@
             "username": null
         },
         "path_database": "/var/lib/in-out/database.db",
-        "path_weighing_pictures": "/var/lib/in-out/images/",
+        "path_weighing_pictures": "/var/lib/in-out/images",
         "port": 80,
         "rfid": {
             "connection": {
@@ -67,7 +67,7 @@
                                     "social_reason": null,
                                     "telephone": null
                                 },
-                                "typeSubject": "Cliente",
+                                "typeSubject": null,
                                 "vector": {
                                     "cfpiva": null,
                                     "id": null,
@@ -76,12 +76,12 @@
                                 },
                                 "vehicle": {
                                     "description": null,
-                                    "id": 3,
-                                    "plate": "GF170YT"
+                                    "id": null,
+                                    "plate": null
                                 }
                             },
                             "id_selected": {
-                                "id": 5
+                                "id": null
                             }
                         },
                         "diagnostic_has_priority_than_realtime": true,
@@ -106,8 +106,8 @@
                             "weighing": {
                                 "cams": [
                                     {
-                                        "active": false,
-                                        "url": "http://Pesatura:Vista2023@192.168.0.230/ISAPI/Streaming/channels/1/picture"
+                                        "active": true,
+                                        "url": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/1/picture"
                                     }
                                 ],
                                 "set_rele": [
@@ -118,7 +118,7 @@
                             }
                         },
                         "list_port_rele": {
-                            "1": 0,
+                            "1": 1,
                             "2": 0,
                             "3": 0,
                             "4": 0
@@ -126,8 +126,8 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_weight": 50000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "port_rele": null,
                         "run": true,
