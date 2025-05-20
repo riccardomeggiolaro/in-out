@@ -36,6 +36,9 @@ is_super_admin = [3]
 all_level = [1, 2, 3]
 
 pages = [
+    "/"
+    "/index",
+    "/index.html",
 	"/login", 
 	"/login.html", 
 	"/dashboard", 

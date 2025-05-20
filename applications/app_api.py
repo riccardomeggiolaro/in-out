@@ -37,10 +37,6 @@ def mainprg():
 		if filename is None or filename == "":
 			return templates.TemplateResponse("index.html", {"request": request})
 
-		# Redirect alla home se il file richiesto è "index" o "index.html"
-		elif filename in ["index", "index.html"]:
-			return RedirectResponse(url="/")
-		
 		# Verifica se il file esiste nella directory templates
 		file_path = base_dir_templates / filename
 		if file_path.is_file():
@@ -53,7 +49,7 @@ def mainprg():
 			return templates.TemplateResponse(filename_html, {"request": request})
 
 		# Se il file non esiste, fai un redirect alla home
-		return RedirectResponse(url="/")
+		return RedirectResponse(url="/dashboard.html")
 
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================
