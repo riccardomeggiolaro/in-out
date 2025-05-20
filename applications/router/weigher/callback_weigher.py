@@ -176,9 +176,11 @@ class CallbackWeigher(Functions, WebSocket):
 					if cam["active"]:
 						image_captured_details = capture_camera_image(camera_url=cam["url"], timeout=5)
 						if image_captured_details["image"]:
-							folder_path = structure_folder_rule(lb_config.g_config["app_api"]["path_weighing_pictures"])
-							save_bytes_to_file(image_captured_details["image"], f"{last_pesata.weight_executed.pid}_{weigher_name}.png", folder_path)
-							add_data("weighing_picture", {"path_name": folder_path, "idWeighing": weighing_stored_db["id"]})
+							base_folder_path = lb_config.g_config["app_api"]["path_weighing_pictures"]
+							sub_folder_path = structure_folder_rule()
+							file_name = f"{last_pesata.weight_executed.pid}.png"
+							save_bytes_to_file(image_captured_details["image"], file_name, f"{base_folder_path}{sub_folder_path}")
+							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 		for instance in weighers_data:
 			for weigher in weighers_data[instance]:
 				weight = last_pesata.dict()
