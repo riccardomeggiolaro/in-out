@@ -107,7 +107,10 @@ def update_reservation(id: int, data: SetReservationDTO):
                 if len(reservation.weighings) > data.number_weighings:
                     raise ValueError("Non puoi assegnare un numero di pesate inferiore a quelle già effettuate")
                 reservation.number_weighings = data.number_weighings
-                reservation.status = ReservationStatus.CLOSED if len(reservation.weighings) == reservation.number_weighings else ReservationStatus.ENTERED
+                if len(reservation.weighings) > 0:
+                    reservation.status = ReservationStatus.CLOSED if len(reservation.weighings) == reservation.number_weighings else ReservationStatus.ENTERED
+                else:
+                    reservation.status = ReservationStatus.WAITING
 
             if data.note is not None:
                 reservation.note = data.note if data.note != "" else None
