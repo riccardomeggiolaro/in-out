@@ -313,6 +313,7 @@ function toggleExpandRow(row) {
     currentRowExtended = row.nextElementSibling; // Dettagli subito dopo la riga
     const isExpanded = currentRowExtended.style.display === "table-row";
     currentRowExtended.style.display = isExpanded ? "none" : "table-row";
+    currentId = isExpanded ? null : row.dataset.id;
 }
 
 function getFormData(form) {
@@ -593,6 +594,7 @@ function closePopups(idPopups, deselectCurrentId = true) {
         // Resetta i campi input
         const inputs = popup.querySelectorAll('input');
         inputs.forEach(input => {
+            if (input.disabled) input.disabled = false;
             if (input.type !== 'radio') input.value = '';
             if (input.dataset.id) input.dataset.id = '';
         });
@@ -649,16 +651,23 @@ function connectWebSocket() {
                     await updateTable();
                     const obj = getTableColumns();
                     const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
-                    if (tr) {
+                    const currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
+                    if (tr || currentRow) {
                         if (firstKey === "weighing") {
-                            if (isExpandedRow()) {
-                                toggleExpandRow(tr);
-                                tr.nextElementSibling.querySelector('li:first-child p').classList.toggle('soft-added');
+                            if (isExpandedRow() && data.data["weighing"].id == currentId) {
+                                toggleExpandRow(currentRow);
+                                currentRow.nextElementSibling.querySelector('li:first-child p').classList.toggle('soft-added');
                             } else {
-                                tr.classList.toggle('soft-added');
+                                if (tr) tr.classList.toggle('soft-added');
+                                if (isExpandedRow()) {
+                                    toggleExpandRow(currentRow);
+                                }
                             }
                         } else {
                             tr.classList.toggle('added');
+                            if (isExpandedRow()) {
+                                toggleExpandRow(currentRow);
+                            }
                         }
                     }
                     let action = `creat${lastChar}`;
@@ -668,33 +677,53 @@ function connectWebSocket() {
                     await updateTable();
                     const obj = getTableColumns();
                     const tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    const currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
                     if (tr) {
-                        if (isExpandedRow()) toggleExpandRow(tr);
+                        if (isExpandedRow()) {
+                            toggleExpandRow(currentRow);
+                        }
                         tr.classList.toggle('updated');
                     }
                     showSnackbar(capitalizeFirstLetter(`${specific} modificat${lastChar}`), 'rgb(255, 240, 208)', 'black');
                 } else if (data.action === "delete") {
                     const obj = getTableColumns();
                     let tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
+                    let currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
                     if (tr) {
                         if (firstKey === "weighing") {
-                            if (isExpandedRow()) {
+                            if (isExpandedRow() && data.data["weighing"].id == currentId) {
                                 currentRowExtended.querySelector('li:first-child p').classList.toggle('deleted');
                                 currentRowExtended.querySelector('li:first-child p').addEventListener('animationend', async () => {
-                                    await updateTable();
-                                    tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
-                                    toggleExpandRow(tr);
+                                    await updateTable()
+                                    .then(_ => {
+                                        currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
+                                        if (isExpandedRow())  {
+                                            toggleExpandRow(currentRow);
+                                        }
+                                    })
                                 }, { once: true });
                             } else {
                                 tr.classList.toggle('soft-deleted');
                                 tr.addEventListener('animationend', async () => {
-                                    await updateTable();
+                                    await updateTable()
+                                    .then(_ => {
+                                        currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
+                                        if (isExpandedRow())  {
+                                            toggleExpandRow(currentRow);
+                                        }
+                                    })
                                 }, { once: true });
                             }
                         } else {
                             tr.classList.toggle('deleted');
                             tr.addEventListener('animationend', async () => {
-                                await updateTable();
+                                await updateTable()
+                                .then(_ => {
+                                    currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
+                                    if (isExpandedRow())  {
+                                        toggleExpandRow(currentRow);
+                                    }
+                                })
                             }, { once: true });
                         }
                     } else {
