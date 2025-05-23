@@ -1,32 +1,32 @@
-// Load navbar
 fetch('navbar.html')
 .then(response => response.text())
 .then(data => {
-    // Inserisci l'HTML modificato
-    document.getElementById('navbar-container').innerHTML = data;
-
-    // Colora il link attivo
-    const currentPath = window.location.pathname;
-    document.querySelectorAll('.side-menu-navbar li').forEach(li => {
-        const link = li.querySelector('a');
-        if (link && link.getAttribute('href') === currentPath) {
-            link.classList.add('active-link-navbar');
-            if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
-                document.querySelector('.arrow-dropdown-navbar').classList.toggle('up');
-                document.querySelector('.dropdown-navbar').classList.toggle('active');
-            }
-        }
-    })
+// Inserisci l'HTML modificato
+document.getElementById('navbar-container').innerHTML = data;
+// Colora il link attivo
+const currentPath = window.location.pathname;
+document.querySelectorAll('.side-menu-navbar li').forEach(li => {
+const link = li.querySelector('a');
+if (link && link.getAttribute('href') === currentPath) {
+link.classList.add('active-link-navbar');
+if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
+document.querySelector('.arrow-dropdown-navbar').classList.toggle('up');
+document.querySelector('.dropdown-navbar').classList.toggle('active');
+ }
+ }
+ })
 });
 
 function toggleMenu(element) {
-    element.querySelector('.arrow-container-navbar').classList.toggle('up');
+    const hamburger = element.querySelector('.hamburger-navbar');
+    hamburger.classList.toggle('open');
     element.nextElementSibling.classList.toggle('active');
     element.previousElementSibling.classList.toggle('active');
 }
 
 function removeMenu(element) {
-    element.nextElementSibling.querySelector('.arrow-container-navbar').classList.remove('up');
+    const hamburger = element.nextElementSibling.querySelector('.hamburger-navbar');
+    hamburger.classList.remove('open');
     element.nextElementSibling.nextElementSibling.classList.remove('active');
     element.classList.remove('active');
 }

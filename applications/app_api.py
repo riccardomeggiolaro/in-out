@@ -27,12 +27,13 @@ name_app = "app_api"
 # funzione che si connette a redis, setta i moduli e imposta le callback da richiamare dentro i moduli
 def mainprg():
 	global app
-	global thread_ssh_tunnel
 	global base_dir_templates
 	global templates
  
 	@app.get('/{filename:path}', response_class=HTMLResponse)
-	async def Static(request: Request, filename: Optional[str] = None):
+	async def Static(request: Request, filename: str):
+		lb_log.warning(f"Richiesta di file statico: {filename}")
+
 		"""Gestisce le richieste di file statici (HTML, CSS, JS)."""
 		if filename is None or filename == "":
 			return templates.TemplateResponse("index.html", {"request": request})
@@ -49,7 +50,7 @@ def mainprg():
 			return templates.TemplateResponse(filename_html, {"request": request})
 
 		# Se il file non esiste, fai un redirect alla home
-		return RedirectResponse(url="/dashboard.html")
+		return RedirectResponse(url="/index.html")
 
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================

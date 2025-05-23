@@ -1,132 +1,170 @@
 <style>
-    .container-navbar {
-        position: absolute;
-        right: 0;
-        top: 30px;
-        display: inline-block;
-        cursor: pointer;
-        border: 1px solid #333;
-        border-right: none;
-        border-radius: 5px 0 0 5px;
-        padding: 10px 3px;
-        background-color: #f0f0f0;
-        z-index: 1000;
-    }
+.container-navbar {
+    position: absolute;
+    right: 0;
+    top: 30px;
+    display: inline-block;
+    cursor: pointer;
+    border: 1px solid #333;
+    border-right: none;
+    border-radius: 5px 0 0 5px;
+    padding: 10px 8px;
+    background-color: #f0f0f0;
+    z-index: 1000;
+}
 
-    .arrow-container-navbar {
-        border: solid black;
-        border-width: 0 2px 2px 0;
-        padding: 10px;
-        margin: 5px;
-        transform: rotate(135deg);
-        transition: transform 0.3s;
-    }
+.hamburger-navbar {
+    width: 25px;
+    height: 20px;
+    position: relative;
+    cursor: pointer;
+}
 
-    .arrow-container-navbar.up {
-        transform: rotate(-45deg);
-    }
+.hamburger-navbar span {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: #333;
+    border-radius: 2px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: .25s ease-in-out;
+}
 
-    .overlay-navbar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease-in-out;
-        z-index: 998;
-    }
+.hamburger-navbar span:nth-child(1) {
+    top: 0px;
+}
 
-    .overlay-navbar.active {
-        opacity: 1;
-        visibility: visible;
-    }
+.hamburger-navbar span:nth-child(2) {
+    top: 8px;
+}
 
-    .side-menu-navbar {
-        position: fixed;
-        top: 0;
-        right: -300px;
-        width: 300px;
-        height: 100%;
-        background-color: #f0f0f0;
-        transition: right 0.3s ease-in-out;
-        border-left: 1px solid #333;
-        padding: 20px;
-        z-index: 999;
-        box-sizing: border-box;
-    }
+.hamburger-navbar span:nth-child(3) {
+    top: 16px;
+}
 
-    .side-menu-navbar.active {
-        right: 0;
-    }
+.hamburger-navbar.open span:nth-child(1) {
+    top: 8px;
+    transform: rotate(135deg);
+}
 
-    .side-menu-navbar h2 {
-        margin-bottom: 20px;
-    }
+.hamburger-navbar.open span:nth-child(2) {
+    opacity: 0;
+    left: -60px;
+}
 
-    .side-menu-navbar ul {
-        list-style: none;
-    }
+.hamburger-navbar.open span:nth-child(3) {
+    top: 8px;
+    transform: rotate(-135deg);
+}
 
-    .side-menu-navbar li {
-        padding: 10px 0;
-        border-bottom: 1px solid #ddd;
-    }
+.overlay-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 998;
+}
 
-    .ul-navbar {
-        margin: 0;
-        padding: 0;
-    }
+.overlay-navbar.active {
+    opacity: 1;
+    visibility: visible;
+}
 
-    .li-navbar {
-        margin: 10px;
-    }
-    
-    .a-navbar {
-        text-decoration: none;
-        color: black;
-    }
-    
-    .active-link-navbar {
-        color: #1362b8;
-    }
+.side-menu-navbar {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 300px;
+    height: 100%;
+    background-color: #f0f0f0;
+    transition: right 0.3s ease-in-out;
+    border-left: 1px solid #333;
+    padding: 20px;
+    z-index: 999;
+    box-sizing: border-box;
+}
 
-    .dropdown-navbar {
-        display: none;
-        padding-left: 20px;
-    }
+.side-menu-navbar.active {
+    right: 0;
+}
 
-    .dropdown-navbar.active {
-        display: block;
-    }
+.side-menu-navbar h2 {
+    margin-bottom: 20px;
+}
 
-    .arrow-dropdown-navbar {
-        display: inline-block;
-        border: solid black;
-        border-width: 0 2px 2px 0;
-        padding: 5px;
-        margin-left: 5px;
-        transform: rotate(45deg);
-        transition: transform 0.3s;
-    }
+.side-menu-navbar ul {
+    list-style: none;
+}
 
-    .arrow-dropdown-navbar.up {
-        transform: rotate(-135deg);
-    }
+.side-menu-navbar li {
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
 
-    .li-last {
-        margin-bottom: 0px;
-        padding-bottom: 0px !important;
-        border-bottom: none !important;
-    }
+.ul-navbar {
+    margin: 0;
+    padding: 0;
+}
+
+.li-navbar {
+    margin: 10px;
+}
+
+.a-navbar {
+    text-decoration: none;
+    color: black;
+}
+
+.active-link-navbar {
+    color: #1362b8;
+}
+
+.dropdown-navbar {
+    display: none;
+    padding-left: 20px;
+}
+
+.dropdown-navbar.active {
+    display: block;
+}
+
+.arrow-dropdown-navbar {
+    display: inline-block;
+    border: solid black;
+    border-width: 0 2px 2px 0;
+    padding: 5px;
+    margin-left: 5px;
+    transform: rotate(45deg);
+    transition: transform 0.3s;
+}
+
+.arrow-dropdown-navbar.up {
+    transform: rotate(-135deg);
+}
+
+.li-last {
+    margin-bottom: 0px;
+    padding-bottom: 0px !important;
+    border-bottom: none !important;
+}
 </style>
-<div class="overlay-navbar" onclick="removeMenu(this)">
-</div>
+
+<div class="overlay-navbar" onclick="removeMenu(this)"></div>
 
 <div class="container-navbar" onclick="toggleMenu(this)">
-    <div class="arrow-container-navbar"></div>
+    <div class="hamburger-navbar">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
 </div>
 
 <div class="side-menu-navbar">
