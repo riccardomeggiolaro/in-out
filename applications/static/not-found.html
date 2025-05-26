@@ -4,7 +4,9 @@
     <link rel="icon" href="/static/content/baronpesi_favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Dashboard Peso</title>
+    <meta name="description" content="About this app" />
+    <link rel="stylesheet" href="/static/css/dashboard.css">
     <style>
         html, body {
             margin: 0;
@@ -12,6 +14,7 @@
             font-family: Verdana, Geneva, Tahoma, sans-serif;
             box-sizing: border-box; /* Impostazione per una gestione migliore dei margini e del padding */
             height: 100%; /* Garantire che l'altezza della pagina si estenda completamente */
+            color: white !important;
         }
 
         /* Aggiungi un universale per applicare box-sizing a tutti gli elementi */
@@ -87,78 +90,17 @@
             position: absolute;
             bottom: 10px;
         }
+        a {
+            color: #00346b;
+        }
     </style>
 </head>
+<!-- Rest of your HTML remains unchanged -->
+</style>
+</head>
 <body>
-    <form onsubmit="handleLogin(event)">
-        <h2>Login</h2>
-        <input type="text" name="username" placeholder="Username" oninput="checkInputs()" autocomplete="off">
-        <input type="password" name="password" placeholder="Password" oninput="checkInputs()" autocomplete="off">
-        <button type="submit" disabled>Login</button>
-    </form>
-    <img src="/static/content/baronpesi_logo.png" alt="">
-
-    <script>
-        const token = localStorage.getItem('token');
-        if (token) {
-            fetch('/api/auth/me', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.username) {
-                    window.location.href = '/dashboard';
-                } else {
-                    localStorage.removeItem('token');
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-                localStorage.removeItem('token');
-            })
-        }
-
-        function handleLogin(event) {
-            event.preventDefault(); // Evita il refresh della pagina
-
-            const username = document.querySelector('input[name="username"]').value;
-            const password = document.querySelector('input[name="password"]').value;
-            fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.access_token) {
-                    localStorage.setItem('token', data.access_token);
-                    window.location.href = '/dashboard';
-                } else {
-                    alert('Invalid username or password');
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-                console.error('Error:', error);
-            });
-        }
-
-        // Funzione per abilitare/disabilitare il pulsante
-        function checkInputs() {
-            const username = document.querySelector('input[name="username"]').value;
-            const password = document.querySelector('input[name="password"]').value;
-            const loginButton = document.querySelector('button[type="submit"]');
-
-            if (username && password) {
-                loginButton.disabled = false; // Abilita il pulsante
-            } else {
-                loginButton.disabled = true; // Disabilita il pulsante
-            }
-        }
-    </script>
+    <h1>Pagina non trovata!</h1>
+    <h2>Vai alla 👉<a href="/dashboard">dashboard</a>👈️</h2>
+    <img src="/static/content/baronpesi_logo.png" alt="Logo Baron Pesi">
 </body>
 </html>

@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Callable
 import traceback
-from applications.utils.utils_auth import TokenData, pages
+from applications.utils.utils_auth import TokenData
 import jwt
 from datetime import datetime, timezone
 import libs.lb_config as lb_config
@@ -38,11 +38,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable):
         # Skip authentication for specific routes
-        if request.url.path in pages or request.url.path.startswith("/static"):
-            return await call_next(request)
-
-        # Skip authentication for specific routes
-        if request.url.path in pages or request.url.path.startswith("/images"):
+        if not request.url.path.startswith("/api") or request.url.path.startswith("/api/auth/login") or request.url.path.startswith("/static") or request.url.path.startswith("/images"):
             return await call_next(request)
 
         try:

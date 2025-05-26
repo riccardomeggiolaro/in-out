@@ -36,7 +36,7 @@ def mainprg():
 
 		"""Gestisce le richieste di file statici (HTML, CSS, JS)."""
 		if filename is None or filename == "":
-			return templates.TemplateResponse("index.html", {"request": request})
+			return RedirectResponse(url="/dashboard")
 
 		# Verifica se il file esiste nella directory templates
 		file_path = base_dir_templates / filename
@@ -50,7 +50,7 @@ def mainprg():
 			return templates.TemplateResponse(filename_html, {"request": request})
 
 		# Se il file non esiste, fai un redirect alla home
-		return RedirectResponse(url="/index.html")
+		return RedirectResponse(url="/not-found")
 
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================
@@ -115,17 +115,17 @@ def init():
 	printer_router = PrinterRouter()
 	tunnel_connections_router = TunnelConnectionsRouter()
 
-	app.include_router(weigher_router.router)
+	app.include_router(weigher_router.router, prefix="/api")
 
-	app.include_router(anagrafic_router.router)
+	app.include_router(anagrafic_router.router, prefix="/api")
 
-	app.include_router(printer_router.router, prefix="/printer", tags=["printer"])
+	app.include_router(printer_router.router, prefix="/api/printer", tags=["printer"])
 
-	app.include_router(generic_router.router, prefix="/generic", tags=["generic"])
+	app.include_router(generic_router.router, prefix="/api/generic", tags=["generic"])
 
-	app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
+	app.include_router(auth_router.router, prefix="/api/auth", tags=["auth"])
 
-	app.include_router(tunnel_connections_router.router, prefix="/tunnel_connections", tags=["tunnel connections"])
+	app.include_router(tunnel_connections_router.router, prefix="/api/tunnel_connections", tags=["tunnel connections"])
 
 	# Monta la cartella 'static' nella rotta '/static'
 	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")

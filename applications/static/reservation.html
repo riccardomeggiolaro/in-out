@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
     <head>
-        <link rel="icon" href="https://on.baron.it/tecnico/pesi/FAVICON_BARONPESI.ico">
+        <link rel="icon" href="/static/content/baronpesi_favicon.png">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Accessi</title>
@@ -554,11 +554,11 @@
             itemName = 'reservation';
             lastChar = 'a';
             canAlwaysDelete = true;
-            listUrlPath = '/anagrafic/reservation/list';
-            addUrlPath = '/anagrafic/reservation';
-            setUrlPath = '/anagrafic/reservation';
-            deleteUrlPath = '/anagrafic/reservation';
-            websocketUrlPath = '/anagrafic/reservation';
+            listUrlPath = '/api/anagrafic/reservation/list';
+            addUrlPath = '/api/anagrafic/reservation';
+            setUrlPath = '/api/anagrafic/reservation';
+            deleteUrlPath = '/api/anagrafic/reservation';
+            websocketUrlPath = '/api/anagrafic/reservation';
             callback_populate_select = populateForm;
             callback_close_popups = deselectAllAnagrafic;
             populate_detail_tr = populateDetailTr;
@@ -685,12 +685,12 @@
             let popupContent;
             let messageSnackbar;
             if (type === "CALL") {
-                url = `/anagrafic/reservation/call/${reservation["id"]}`;
+                url = `/api/anagrafic/reservation/call/${reservation["id"]}`;
                 popupTitle = "Conferma chiamata!";
                 popupContent = `Chiamare il veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
                 messageSnackbar = `Chiamando il veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
             } else {
-                url = `/anagrafic/reservation/cancel-call/${reservation["id"]}`;
+                url = `/api/anagrafic/reservation/cancel-call/${reservation["id"]}`;
                 popupTitle = "Conferma annullamento chiamata!";
                 popupContent = `Annullare la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
                 messageSnackbar = `Annullando la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
@@ -727,7 +727,7 @@
 
         function deleteLastWeighing(idReservation, plate, weighing, pid, bil) {
             confirm_exec_funct = () => {
-                fetch(`/anagrafic/reservation/last-weighing/${idReservation}`, {
+                fetch(`/api/anagrafic/reservation/last-weighing/${idReservation}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -813,7 +813,7 @@
 
         function populateSuggestions(popup, suggestions, key, anagrafic, value) {
             let currentSuggestions = document.querySelector(suggestions);
-            fetch(`/anagrafic/${anagrafic}/list?${key}=${value}%`)
+            fetch(`/api/anagrafic/${anagrafic}/list?${key}=${value}%`)
             .then(res => res.json())
             .then(res => {
                 currentSuggestions.innerHTML = '';
