@@ -593,6 +593,9 @@ button:active {
     max-width: -webkit-fill-available; /* Chrome, Safari */
     max-width: -moz-available;  
     margin: 5px auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .list-in li:hover {
     background-color: aliceblue;
@@ -693,4 +696,21 @@ hr {
     background: transparent;
     color: transparent;
     margin-top: 0px;
+}
+
+.cams {
+    max-width: 850px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cam {
+    width: 250px;
+    max-width: 99%;
+    border-radius: 8px;
 }

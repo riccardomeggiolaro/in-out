@@ -174,7 +174,7 @@ class CallbackWeigher(Functions, WebSocket):
 			if weighing_stored_db:
 				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 					if cam["active"]:
-						image_captured_details = capture_camera_image(camera_url=cam["url"], timeout=5)
+						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 						if image_captured_details["image"]:
 							base_folder_path = lb_config.g_config["app_api"]["path_weighing_pictures"]
 							sub_folder_path = structure_folder_rule()

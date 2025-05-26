@@ -73,6 +73,7 @@ const serialNumber = document.getElementById('serialNumber');
 const minWeight = document.getElementById('minWeight');
 const maxWeight = document.getElementById('maxWeight');
 const division = document.getElementById('division');
+const cams = document.querySelector('#cams');
 // Usa un MutationObserver per rilevare i cambiamenti nei contenuti
 const observer = new MutationObserver(() => updateStyle());
 
@@ -171,6 +172,12 @@ async function getInstanceWeigher(path) {
         maxWeightValue = obj.max_weight;
         division.textContent = obj.division;
         divisionValue = obj.division;
+        obj.events.weighing.cams.forEach(cam => {
+            const img = document.createElement('img');
+            img.classList.toggle('cam');
+            img.src = cam.live;
+            cams.appendChild(img);
+        });
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -226,8 +233,7 @@ async function populateListIn() {
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             let content = item.weighings.length > 0 ? item.weighings[0].pid : item.id;
             if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
-            else if (item.vehicle && item.vehicle.description) content = `${item.vehicle.description}`;
-            else if (item.subject && item.subject.social_reason) content = `${item.subject.social_reason}`;
+            if (item.subject && item.subject.social_reason) content += ` - ${item.subject.social_reason}`;
             li.textContent = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');

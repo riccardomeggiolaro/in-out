@@ -107,7 +107,8 @@
                                 "cams": [
                                     {
                                         "active": true,
-                                        "url": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/1/picture"
+                                        "live": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/102/httpPreview",
+                                        "picture": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/1/picture"
                                     }
                                 ],
                                 "set_rele": [
