@@ -144,7 +144,7 @@ const details = document.createElement('div');
 details.classList.toggle('borders');
 details.style.marginLeft = '0px';
 
-fetch('/tunnel_connections/ssh_reverse_tunneling')
+fetch('/api/tunnel_connections/ssh_reverse_tunneling')
 .then(res => res.json())
 .then(data => {
 

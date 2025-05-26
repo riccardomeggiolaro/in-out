@@ -35,14 +35,14 @@ await fetch('/static/content/printer.svg')
     printerButtonContent = data;
 });
 
-await fetch('/generic/list/serial-ports')
+await fetch('/api/generic/list/serial-ports')
 .then(res => res.json())
 .then(data => {
     list_serial_ports = data.list_serial_ports;
 })
 
 export let list_printer_names = [];
-await fetch('/printer/list')
+await fetch('/api/printer/list')
 .then(res => res.json())
 .then(data => {
     list_printer_names = data;

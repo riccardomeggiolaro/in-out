@@ -3,7 +3,7 @@ import { deleteButtonContent, recoveryPasswordButtonContent, list_printer_names 
 
 const users_config = document.getElementById('users_config');
 
-fetch('/auth/users')
+fetch('/api/auth/users')
 .then(res => res.json())
 .then(res => {
     const addButton = document.createElement('button');

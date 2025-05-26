@@ -88,7 +88,7 @@ cancelEditBtn.addEventListener('click', () => {
 })
 
 saveEditBtn.addEventListener('click', () => {
-    fetch('/auth/me', {
+    fetch('/api/auth/me', {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -175,7 +175,7 @@ cancelEditPrinterBtn.addEventListener('click', () => {
 })
 
 saveEditPrinterBtn.addEventListener('click', () => {
-    fetch('/auth/me', {
+    fetch('/api/auth/me', {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'

@@ -2,7 +2,7 @@ import { list_serial_ports, deleteButtonContent, editButtonContent } from "./set
 
 const weighers_config = document.getElementById('weighers_config');
 
-fetch('/config-weigher/all/instance')
+fetch('/api/config-weigher/all/instance')
 .then(res => res.json())
 .then(data => {
     const addInstance = document.createElement('button');
@@ -41,7 +41,7 @@ fetch('/config-weigher/all/instance')
         addInstanceModal.querySelector('.save-btn').addEventListener('click', () => {
             const errorsDiv = addInstanceModal.querySelector('.errors');
             const name = addInstanceModal.querySelector('input[type="text"]').value;
-            fetch(`/config-weigher/instance`, {
+            fetch(`/api/config-weigher/instance`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -133,7 +133,7 @@ fetch('/config-weigher/all/instance')
 
         deleteInstanceModal.querySelector('.confirm-btn').addEventListener('click', () => {
             deleteInstanceModal.style.display = 'none';
-            fetch(`/config-weigher/instance?instance_name=${key}`, {
+            fetch(`/api/config-weigher/instance?instance_name=${key}`, {
                 method: 'DELETE',
             })
             .then(res => res.json())
@@ -188,7 +188,7 @@ fetch('/config-weigher/all/instance')
 
         deleteConnectionModal.querySelector('.confirm-btn').addEventListener('click', () => {
             deleteConnectionModal.style.display = 'none';
-            fetch(`/config-weigher/instance/connection?instance_name=${key}`, {
+            fetch(`/api/config-weigher/instance/connection?instance_name=${key}`, {
                 method: 'DELETE',
             })
             .then(res => res.json())
@@ -305,7 +305,7 @@ fetch('/config-weigher/all/instance')
             editModeSerial.querySelector('.save-btn').addEventListener('click', (event) => {
                 event.preventDefault();
                 editModeSerial.querySelector('.errors').innerHTML = '';
-                fetch(`/config-weigher/instance/connection?instance_name=${key}`, {
+                fetch(`/api/config-weigher/instance/connection?instance_name=${key}`, {
                     method: 'DELETE',
                 })
                 .then(res => res.json())
@@ -313,7 +313,7 @@ fetch('/config-weigher/all/instance')
                     console.log(res)
                     const newTimeBetweenActions = Number(editModeSerial.querySelector('input[name="time_between_actions"]').value);
                     if (newTimeBetweenActions != currentTimeBetweenActions) {
-                        fetch(`/config-weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
+                        fetch(`/api/config-weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -326,7 +326,7 @@ fetch('/config-weigher/all/instance')
                     return res;
                 })
                 .then(_ => {
-                    fetch(`/config-weigher/instance/connection?instance_name=${key}`, {
+                    fetch(`/api/config-weigher/instance/connection?instance_name=${key}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json'
@@ -435,14 +435,14 @@ fetch('/config-weigher/all/instance')
 
             editModeTcp.querySelector('.save-btn').addEventListener('click', (event) => {
                 event.preventDefault();
-                fetch(`/config-weigher/instance/connection?instance_name=${key}`, {
+                fetch(`/api/config-weigher/instance/connection?instance_name=${key}`, {
                     method: 'DELETE',
                 })
                 .then(res => res.json())
                 .then(res => {
                     const newTimeBetweenActions = Number(editModeTcp.querySelector('input[name="time_between_actions"]').value);
                     if (newTimeBetweenActions != currentTimeBetweenActions) {
-                        fetch(`/config-weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
+                        fetch(`/api/config-weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -455,7 +455,7 @@ fetch('/config-weigher/all/instance')
                     return res;
                 })
                 .then(_ => {
-                    fetch(`/config-weigher/instance/connection?instance_name=${key}`, {
+                    fetch(`/api/config-weigher/instance/connection?instance_name=${key}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json'
@@ -624,7 +624,7 @@ fetch('/config-weigher/all/instance')
                 data[selection.name] = selection.value;
             })
 
-            fetch(`/config-weigher/instance/node?instance_name=${key}`, {
+            fetch(`/api/config-weigher/instance/node?instance_name=${key}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
