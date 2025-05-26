@@ -38,7 +38,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable):
         # Skip authentication for specific routes
-        if not request.url.path.startswith("/api") or request.url.path.startswith("/api/auth/login") or request.url.path.startswith("/static") or request.url.path.startswith("/images"):
+        if request.url.path.startswith("/api/anagrafic/reservation/export") or not request.url.path.startswith("/api") or request.url.path.startswith("/api/auth/login") or request.url.path.startswith("/static") or request.url.path.startswith("/images"):
             return await call_next(request)
 
         try:

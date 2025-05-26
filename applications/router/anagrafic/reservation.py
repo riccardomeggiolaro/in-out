@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import StreamingResponse
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import ReservationStatus, LockRecordType
 from modules.md_database.interfaces.reservation import Reservation, AddReservationDTO, SetReservationDTO
@@ -18,6 +19,8 @@ from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
 from applications.router.weigher.manager_weighers_data import weighers_data
 from datetime import datetime
 import libs.lb_log as lb_log
+import pandas as pd
+from io import BytesIO
 
 class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -26,6 +29,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
+        self.router.add_api_route('/export', self.exportListReservations, methods=['GET'])
         self.router.add_api_route('', self.addReservation, methods=['POST'])
         self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'])
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
@@ -55,6 +59,66 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 "total_rows": total_rows,
                 "buffer": self.buffer
             }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"{e}")
+        
+    async def exportListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+        try:
+            not_closed = False
+            if "status" in query_params and query_params["status"] == "NOT_CLOSED":
+                not_closed = True                
+                del query_params["status"]
+            if fromDate is not None:
+                del query_params["fromDate"]
+            if toDate is not None:
+                del query_params["toDate"]
+                toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
+            if limit is not None:
+                del query_params["limit"]
+            if offset is not None:
+                del query_params["offset"]
+            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'))
+            # 1. Prepariamo il foglio "Prenotazioni"
+            reservations_list = []
+            weighings_list = []
+
+            for res in data:
+                reservations_list.append({
+                    "ID": res.id,
+                    "Data creazione": res.date_created,
+                    "Stato": res.status,
+                    "Targa": res.vehicle.plate if res.vehicle else None,
+                    "Cliente/Vettore": res.subject.social_reason if res.subject else None,
+                    "Numero pesate": res.number_weighings,
+                    "Note": res.note
+                })
+
+                for idx, w in enumerate(res.weighings, start=1):
+                    weighings_list.append({
+                        "ID Prenotazione": res.id,
+                        "Numero pesata": idx,
+                        "Data pesata": w.date,
+                        "Peso (kg)": w.weight,
+                        "Operatore": w.weigher,
+                        "Codice pesata": w.pid
+                    })
+
+            # 2. Creiamo DataFrame
+            df_reservations = pd.DataFrame(reservations_list)
+            df_weighings = pd.DataFrame(weighings_list)
+
+            # 3. Scriviamo su file Excel
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df_reservations.to_excel(writer, sheet_name="Prenotazioni", index=False)
+                df_weighings.to_excel(writer, sheet_name="Pesate", index=False)
+
+            output.seek(0)
+            return StreamingResponse(
+                output,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": "attachment; filename=prenotazioni.xlsx"}
+            )
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
        
