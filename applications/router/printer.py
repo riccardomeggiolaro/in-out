@@ -8,9 +8,7 @@ class PrinterRouter:
         self.router = APIRouter()
 
         self.router.add_api_route('/connection', self.checkSubsystemConnection)
-        self.router.add_api_route('/test', self.printTest)
-        self.router.add_api_route('/print/{weighing_id}', self.printWeighingId)
-        self.router.add_api_route('/info', self.getPrinter)
+        self.router.add_api_route('/test/{printer_name}', self.printTest)
         self.router.add_api_route('/list', self.getListPrinters)
 
     async def checkSubsystemConnection(self):
@@ -18,7 +16,7 @@ class PrinterRouter:
             "connection": printer.check_subsystem_connection()
         }
 
-    async def printTest(self, request: Request):
+    async def printTest(self, printer_name: str):
         html = """
             <!DOCTYPE html>
             <html>
@@ -31,27 +29,12 @@ class PrinterRouter:
                 </body>
             </html>
         """
-        id, m1, m2 = printer.print_html(html, request.state.user.printer_name)
+        id, m1, m2 = printer.print_html(html, printer_name)
         return {
             "id": id,
             "message_one": m1,
             "message_two": m2
         }
-
-    async def printWeighingId(self, request: Request, weighing_id: int):
-        weight = get_data_by_id('weighing', weighing_id)
-        html = f"""
-            <h1>{weight["pid2"]}</h1>
-        """
-        id, m1, m2 = printer.print_html(html)
-        return {
-            "id": id,
-            "message_one": m1,
-            "message_two": m2
-        }
-
-    async def getPrinter(self, request: Request):
-        return printer.get_detailed_status(request.state.user.printer_name)
 
     async def getListPrinters(self):
         return printer.get_list_printers()

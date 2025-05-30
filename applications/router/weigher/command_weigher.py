@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, WebSocket, HTTPException, Request
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
-from applications.utils.utils import validate_time
 from applications.router.weigher.types import Data
 import modules.md_weigher.md_weigher as md_weigher
-from applications.router.weigher.dto import DataInExecution, IdSelectedDTO, PlateDTO, DataDTO
-from typing import Optional, Union
+from applications.router.weigher.dto import PlateDTO, DataDTO
+from typing import Optional
 import asyncio
 import libs.lb_log as lb_log
 from applications.router.weigher.data import DataRouter

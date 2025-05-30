@@ -1,7 +1,6 @@
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from pydantic import BaseModel, validator
 from typing import Optional
-from libs.lb_printer import printer
 from libs.lb_utils import hash_password
 
 class UserDTO(BaseModel):
@@ -9,7 +8,6 @@ class UserDTO(BaseModel):
 	password: str
 	level: int
 	description: str
-	printer_name: Optional[str] = None
 
 	@validator('username', pre=True, always=True)
 	def check_username(cls, v):
@@ -36,7 +34,6 @@ class LoginDTO(BaseModel):
 
 class SetUserDTO(BaseModel):
 	password: Optional[str] = None
-	printer_name: Optional[str] = None
 	
 	@validator('password', pre=True, always=True)
 	def check_password(cls, v):
@@ -44,13 +41,4 @@ class SetUserDTO(BaseModel):
 			raise ValueError('Password must be at least 8 characters long')
 		if v:
 			return hash_password(v)
-		return v
-
-	@validator('printer_name', pre=True, always=True)
-	def check_printer_name(cls, v):
-		if v is not None:
-			if v in printer.get_list_printers_name():
-				return v
-			else:
-				raise ValueError('Printer name is not configurated')
 		return v

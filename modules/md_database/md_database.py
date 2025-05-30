@@ -20,7 +20,6 @@ class User(Base):
     password = Column(String)
     level = Column(Integer)
     description = Column(String)
-    printer_name = Column(String, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     # Relazione con LockRecord

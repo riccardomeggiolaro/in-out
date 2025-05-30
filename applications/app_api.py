@@ -12,7 +12,6 @@ from applications.router.anagrafic.router import AnagraficRouter
 from applications.router.auth import AuthRouter
 from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
-from typing import Optional
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
@@ -99,7 +98,7 @@ def init():
 
 	app.add_middleware(
 		CORSMiddleware, 
-		allow_origins=["*"],
+		allow_origins=[""],
 		allow_credentials=True,
 		allow_methods=["*"],
 		allow_headers=["*"],
