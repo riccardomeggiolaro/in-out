@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from libs.lb_printer import printer
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 import libs.lb_config as lb_config
+from jinja2 import Environment, FileSystemLoader, meta
 
 class PrinterRouter:
     def __init__(self):

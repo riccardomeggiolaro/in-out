@@ -10,6 +10,7 @@
             "username": null
         },
         "path_database": "/var/lib/in-out/database.db",
+        "path_reports": "/var/lib/in-out/reports",
         "path_weighing_pictures": "/var/lib/in-out/images",
         "port": 80,
         "rfid": {
@@ -111,6 +112,11 @@
                                         "picture": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/1/picture"
                                     }
                                 ],
+                                "reports": {
+                                    "direct": "weight.html",
+                                    "in": "weight_in.html",
+                                    "out": "weight_out.html"
+                                },
                                 "set_rele": [
                                     {
                                         "1": 0
@@ -131,6 +137,7 @@
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "port_rele": null,
+                        "printer_name": null,
                         "run": true,
                         "terminal": "egt-af03"
                     },
