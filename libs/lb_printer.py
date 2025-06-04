@@ -4,6 +4,7 @@ import os
 from typing import List
 import libs.lb_log as lb_log
 import datetime as dt
+from weasyprint import HTML
 
 """
 Linux debian dependencies:
@@ -51,7 +52,7 @@ class HTMLPrinter:
             'paper-jam': 'Inceppamento carta',
             'media-empty-warning': 'Vassio carta vuoto',
             'offline-report': 'Stampante offline',
-            'cups-waiting-for-job-completed': 'In attessa di completamento stampa'
+            'cups-waiting-for-job-completed': 'In attesa di completamento stampa'
         }
         
         return [reason_descriptions.get(reason, reason) for reason in reasons]
@@ -123,39 +124,61 @@ class HTMLPrinter:
         if not printer_name:
             message1 = "Stampante non specificata."
             message2 = "Stampa non inviata."
-        else:
-            # Controlla se la stampante è presente nella lista delle stampanti
-            try:
-                printers = self.conn.getPrinters()
-                if printer_name not in printers:
-                    message1 = f"Stampante '{printer_name}' non trovata."
-                    message2 = "Stampa non inviata."
-                else:
-                    # Controlla lo stato della stampante
-                    printer_status = printers[printer_name].get('printer-state', None)
+            return job_id, message1, message2
 
-                    # Gestione stampante offline
-                    if printer_status == cups.IPP_PRINTER_STOPPED:
-                        message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline. La stampa rimarrà in coda."
-
-                    # Crea un file temporaneo per il contenuto HTML
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
-                        temp_file.write(html_content.encode('utf-8'))
-                        temp_file_path = temp_file.name
-
-                    # Invia il file HTML alla stampante
-                    try:
-                        job_id = self.conn.printFile(printer_name, temp_file_path, "HTML Print Job", {})
-                        message2 = f"Stampa inviata alla stampante '{printer_name}' con successo. La stampa rimarrà in coda se la stampante è offline."
-                    except Exception as e:
-                        message2 = f"Errore durante la stampa: {e}"
-                    finally:
-                        # Rimuovi il file temporaneo
-                        os.unlink(temp_file_path)
-
-            except Exception as e:
-                message1 = f"Errore nella gestione delle stampanti: {e}"
+        try:
+            printers = self.conn.getPrinters()
+            if printer_name not in printers:
+                message1 = f"Stampante '{printer_name}' non trovata."
                 message2 = "Stampa non inviata."
+                return job_id, message1, message2
+
+            # Controlla lo stato della stampante
+            printer_status = printers[printer_name].get('printer-state', None)
+
+            # Gestione stampante offline
+            if printer_status == cups.IPP_PRINTER_STOPPED:
+                message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline. La stampa rimarrà in coda."
+
+            # Crea file temporanei per HTML e PDF
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as html_file, \
+                 tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
+                
+                # Salva il contenuto HTML
+                html_file.write(html_content.encode('utf-8'))
+                html_file.flush()
+
+                try:
+                    # Converti HTML in PDF
+                    HTML(filename=html_file.name).write_pdf(pdf_file.name)
+
+                    # Imposta le opzioni di stampa
+                    options = {
+                        'orientation-requested': '3',  # 3 = portrait (verticale)
+                        'landscape': '0',             # 0 = disabilita orientamento orizzontale
+                        'fit-to-page': 'true'        # Adatta alla pagina
+                    }
+
+                    # Stampa il PDF
+                    job_id = self.conn.printFile(
+                        printer_name,
+                        pdf_file.name,
+                        "HTML to PDF Print Job",
+                        options
+                    )
+                    message2 = f"Stampa inviata alla stampante '{printer_name}' con successo."
+                
+                except Exception as e:
+                    message2 = f"Errore durante la conversione/stampa: {e}"
+                
+                finally:
+                    # Rimuovi i file temporanei
+                    os.unlink(html_file.name)
+                    os.unlink(pdf_file.name)
+
+        except Exception as e:
+            message1 = f"Errore nella gestione delle stampanti: {e}"
+            message2 = "Stampa non inviata."
 
         return job_id, message1, message2
     

@@ -137,7 +137,7 @@
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "port_rele": null,
-                        "printer_name": null,
+                        "printer_name": "Canon_iR_ADV_C5235_5240",
                         "run": true,
                         "terminal": "egt-af03"
                     },

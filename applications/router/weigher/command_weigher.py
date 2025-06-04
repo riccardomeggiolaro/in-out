@@ -68,7 +68,9 @@ class CommandWeigherRouter(DataRouter):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
-			error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
+			error_message = "Deselezionare l'id per effettuare la pesata singola del mezzo."
+		elif tare != "0":
+			error_message = "Eliminare la tara per effettuare la pesata singola del mezzo."
 		else:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 

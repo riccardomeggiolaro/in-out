@@ -22,6 +22,8 @@ from libs.lb_utils import has_values_besides_id
 from libs.lb_folders import structure_folder_rule, save_bytes_to_file, search_file
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.weigher.manager_weighers_data import weighers_data
+from applications.utils.utils_report import generate_report
+from libs.lb_printer import printer
 
 class CallbackWeigher(Functions, WebSocket):
 	def __init__(self):
@@ -60,6 +62,9 @@ class CallbackWeigher(Functions, WebSocket):
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
 		if last_pesata.weight_executed.executed:
+			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
+			template = None
+			variables = {}
 			weighing_stored_db = None
 			if last_pesata.data_assigned.id_selected.id is None:
 				node = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance_name,weigher_name=weigher_name)
@@ -77,7 +82,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"idDriver": last_pesata.data_assigned.data_in_execution.driver.id,
 					"note": last_pesata.data_assigned.data_in_execution.note,
 					"number_weighings": last_pesata.data_assigned.number_weighings if tare == 0 else 2,
-					"status": ReservationStatus.ENTERED if tare == 0 else ReservationStatus.CLOSED
+					"status": ReservationStatus.ENTERED if tare == 0 and last_pesata.data_assigned.number_weighings > 1 else ReservationStatus.CLOSED
 				}
 				if not last_pesata.data_assigned.data_in_execution.subject.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.subject.dict()):
 					subject_without_id = last_pesata.data_assigned.data_in_execution.subject.dict()
@@ -149,6 +154,10 @@ class CallbackWeigher(Functions, WebSocket):
 				weighing_stored_db = add_data("weighing", weighing)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 				asyncio.run(self.broadcastAddAnagrafic("reservation", {"reservation": Reservation(**reservation_add).json()}))
+				if tare == 0:
+					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
+				else:
+					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
 			elif last_pesata.data_assigned.id_selected.id:
 				weighing = {
 					"weight": last_pesata.weight_executed.gross_weight,
@@ -167,6 +176,13 @@ class CallbackWeigher(Functions, WebSocket):
 				self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
 				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 				asyncio.run(self.broadcastAddAnagrafic("reservation", {"weighing": Reservation(**reservation_update).json()}))
+				if len(reservation["weighings"]) > 1:
+					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
+				else:
+					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
+			if printer_name and template:
+				report = generate_report(template)
+				printer.print_html(html_content=report, printer_name=printer_name)
 			for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
 				key, value = next(iter(rele.items()))
 				modope = "CLOSERELE" if value == 0 else "OPENRELE"
