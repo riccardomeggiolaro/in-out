@@ -573,8 +573,10 @@ function updateUIRealtime(e) {
             });
         }                    
     } else if (obj.weight_executed) {
-        if (obj.weight_executed.pid != "") { 
-            showSnackbar(`Pesata eseguita! Bilancia: ${obj.weigher_name}. Pid: ${obj.weight_executed.pid}`);
+        if (obj.weight_executed.gross_weight != "") {
+            let message = `Pesata eseguita! Bilancia: ${obj.weigher_name}.`;
+            if (obj.weight_executed.pid != "") message += ` Pid: ${obj.weight_executed.pid}`;
+            showSnackbar(message);
             populateListIn();
         } else { 
             showSnackbar("Pesata fallita!");
@@ -605,28 +607,29 @@ function updateUIRealtime(e) {
                 presetTareButton.disabled = true;
                 inButton.disabled = true;
                 printButton.disabled = true;
-                printButton.disabled = true;
             } else {
                 tareButton.disabled = false;
                 // zeroButton.disabled = true;
                 presetTareButton.disabled = false;
                 inButton.disabled = true;
-                printButton.disabled = true;
                 outButton.disabled = false;
+                if (selectedIdWeight !== null) {
+                    printButton.disabled = true;
+                } else {
+                    printButton.disabled = false;
+                }
             }
         } else if (numeric && minWeightValue >= gross_weight) {
             tareButton.disabled = true;
             // zeroButton.disabled = false;
             presetTareButton.disabled = false;
             inButton.disabled = true;
-            printButton.disabled = true;
             outButton.disabled = true;
         } else {
             tareButton.disabled = true;
             // zeroButton.disabled = true;
             presetTareButton.disabled = true;
             inButton.disabled = true;
-            printButton.disabled = true;
             outButton.disabled = true;
         }
     } else if (obj.data_in_execution) {

@@ -5,6 +5,7 @@ from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
 from typing import Union, Optional, List
+from datetime import datetime
 
 class DataInExecution(BaseModel):
 	typeSubject: Optional[str] = None
@@ -14,6 +15,7 @@ class DataInExecution(BaseModel):
 	vehicle: VehicleDTO = VehicleDTO(**{})
 	material: MaterialDTO = MaterialDTO(**{})
 	note: Optional[str] = None
+	document_reference: Optional[str] = None
 
 class IdSelected(BaseModel):
 	id: Optional[int] = None
@@ -26,3 +28,13 @@ class Data(BaseModel):
 class EventAction(BaseModel):
     take_picture: List[int] = []
     set_rele: List[object] = []
+    
+class Weight(BaseModel):
+	weight: Union[int, float] = None
+	date: Optional[datetime] = None
+	pid: Optional[str] = None
+    
+class ReportVariables(BaseModel):
+    data: DataInExecution = DataInExecution(**{})
+    weight1: Weight = Weight(**{})
+    weight2: Weight = Weight(**{})

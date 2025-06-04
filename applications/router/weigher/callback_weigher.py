@@ -15,7 +15,7 @@ from modules.md_database.interfaces.vehicle import Vehicle
 from modules.md_database.interfaces.material import Material
 from modules.md_database.interfaces.reservation import Reservation
 import datetime as dt
-from applications.router.weigher.types import DataInExecution
+from applications.router.weigher.types import ReportVariables
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
 from libs.lb_utils import has_values_besides_id
@@ -64,7 +64,7 @@ class CallbackWeigher(Functions, WebSocket):
 		if last_pesata.weight_executed.executed:
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			template = None
-			variables = {}
+			variables = ReportVariables(**{})
 			weighing_stored_db = None
 			if last_pesata.data_assigned.id_selected.id is None:
 				node = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance_name,weigher_name=weigher_name)
@@ -90,8 +90,10 @@ class CallbackWeigher(Functions, WebSocket):
 					exist_subject = get_data_by_attributes("subject", subject_without_id)
 					if exist_subject:
 						reservation["idSubject"] = exist_subject["id"]
+						variables.data.subject = exist_subject
 					else:
 						subject = add_data("subject", last_pesata.data_assigned.data_in_execution.subject.dict())
+						variables.data.subject = subject
 						reservation["idSubject"] = subject["id"]
 						asyncio.run(self.broadcastAddAnagrafic("subject", {"subject": Subject(**subject).json()}))
 				if not last_pesata.data_assigned.data_in_execution.vector.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.vector.dict()):
@@ -100,8 +102,10 @@ class CallbackWeigher(Functions, WebSocket):
 					exist_vector = get_data_by_attributes("vector", vector_without_id)
 					if exist_vector:
 						reservation["idVector"] = exist_vector["id"]
+						variables.data.vector = exist_vector
 					else:
 						vector = add_data("vector", last_pesata.data_assigned.data_in_execution.vector.dict())
+						variables.data.vector = vector
 						reservation["idVector"] = vector["id"]
 						asyncio.run(self.broadcastAddAnagrafic("vector", {"vector": Vector(**vector).json()}))
 				if not last_pesata.data_assigned.data_in_execution.driver.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.driver.dict()):
@@ -110,8 +114,10 @@ class CallbackWeigher(Functions, WebSocket):
 					exist_driver = get_data_by_attributes("driver", driver_without_id)
 					if exist_driver:
 						reservation["idDriver"] = exist_driver["id"]
+						variables.data.driver = exist_driver
 					else:
 						driver = add_data("driver", last_pesata.data_assigned.data_in_execution.driver.dict())
+						variables.data.driver = driver
 						reservation["idDriver"] = driver["id"]
 						asyncio.run(self.broadcastAddAnagrafic("driver", {"driver": Driver(**driver).json()}))
 				if not last_pesata.data_assigned.data_in_execution.vehicle.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.vehicle.dict()):
@@ -120,8 +126,10 @@ class CallbackWeigher(Functions, WebSocket):
 					exist_vehicle = get_data_by_attributes("vehicle", vehicle_without_id)
 					if exist_vehicle:
 						reservation["idVehicle"] = exist_vehicle["id"]
+						variables.data.vehicle = exist_vehicle
 					else:
 						vehicle = add_data("vehicle", last_pesata.data_assigned.data_in_execution.vehicle.dict())
+						variables.data.vehicle = vehicle
 						reservation["idVehicle"] = vehicle["id"]
 						asyncio.run(self.broadcastAddAnagrafic("vehicle", {"vehicle": Vehicle(**vehicle).json()}))
 				if not last_pesata.data_assigned.data_in_execution.material.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.material.dict()):
@@ -134,6 +142,10 @@ class CallbackWeigher(Functions, WebSocket):
 						material = add_data("material", last_pesata.data_assigned.data_in_execution.material.dict())
 						reservation["idMaterial"] = material["id"]
 						asyncio.run(self.broadcastAddAnagrafic("material", {"material": Material(**material).json()}))
+				if last_pesata.data_assigned.data_in_execution.note:
+					variables["note"] = last_pesata.data_assigned.data_in_execution.note
+				if last_pesata.data_assigned.data_in_execution.document_reference:
+					variables["document_reference"] = last_pesata.data_assigned.data_in_execution.document_reference
 				reservation_add = add_data("reservation", reservation)
 				if tare != 0:
 					weighing_tare = {
@@ -168,6 +180,13 @@ class CallbackWeigher(Functions, WebSocket):
      			}
 				weighing_stored_db = add_data("weighing", weighing)
 				reservation = get_data_by_id("reservation", last_pesata.data_assigned.id_selected.id)
+				variables.data.typeSubject = reservation["typeSubject"]
+				variables.data.subject = reservation["subject"]
+				variables.data.vector = reservation["vector"]
+				variables.data.driver = reservation["driver"]
+				variables.data.vehicle = reservation["vehicle"]
+				variables.data.note = reservation["note"]
+				variables.data.document_reference = reservation["document_reference"]
 				reservation_update = None
 				if reservation["number_weighings"] == len(reservation["weighings"]):
 					reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.CLOSED})
@@ -181,13 +200,13 @@ class CallbackWeigher(Functions, WebSocket):
 				else:
 					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
 			if printer_name and template:
-				report = generate_report(template)
-				printer.print_html(html_content=report, printer_name=printer_name)
-			for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
-				key, value = next(iter(rele.items()))
-				modope = "CLOSERELE" if value == 0 else "OPENRELE"
-				md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+				report = generate_report(template, v=variables.data)
+				# printer.print_html(html_content=report, printer_name=printer_name)
 			if weighing_stored_db:
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
+					key, value = next(iter(rele.items()))
+					modope = "CLOSERELE" if value == 0 else "OPENRELE"
+					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
 				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 					if cam["active"]:
 						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
