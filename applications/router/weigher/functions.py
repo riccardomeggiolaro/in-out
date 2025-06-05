@@ -1,11 +1,11 @@
-from applications.router.weigher.dto import DataInExecutionDTO, DataDTO
+from applications.router.weigher.dto import DataInExecutionDTO
 from applications.router.weigher.types import Data
 from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_weigher import md_weigher
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import NodeConnectionManager
-from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.update_data import update_data
+from applications.router.weigher.types import DataInExecution
 
 class Functions:
 	def __init__(self):
@@ -56,15 +56,8 @@ class Functions:
 
 	def deleteDataInExecution(self, instance_name: str, weigher_name: str):
 		# Per ogni chiave dei dati correnti
-		for key, attr in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"].items():
-			if isinstance(attr, str) or isinstance(attr, int):
-				lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] = None
-				lb_config.saveconfig()
-			elif isinstance(attr, dict):
-				# Resetta tutti gli attributi dell'oggetto corrente a None
-				for sub_key in attr:
-					lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key][sub_key] = None
-				lb_config.saveconfig()
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"] = DataInExecution(**{}).dict()
+		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
 	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int):

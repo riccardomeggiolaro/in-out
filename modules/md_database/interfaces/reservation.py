@@ -5,7 +5,6 @@ from modules.md_database.interfaces.subject import Subject, SubjectDataDTO
 from modules.md_database.interfaces.vector import Vector, VectorDataDTO
 from modules.md_database.interfaces.driver import Driver, DriverDataDTO
 from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
-from modules.md_database.interfaces.material import Material
 from modules.md_database.interfaces.weighing import Weighing
 from datetime import datetime
 
@@ -38,7 +37,7 @@ class Reservation(BaseModel):
         return [Weighing(**weighing).dict() for weighing in v]
 
 class AddReservationDTO(BaseModel):
-    typeSubject: str
+    typeSubject: str = "CUSTOMER"
     subject: SubjectDataDTO = SubjectDataDTO(**{})
     vector: VectorDataDTO = VectorDataDTO(**{})
     driver: DriverDataDTO = DriverDataDTO(**{})

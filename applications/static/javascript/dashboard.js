@@ -207,6 +207,7 @@ async function getData(path) {
         document.querySelector('#currentSocialReasonDriver').value = obj.driver.social_reason ? obj.driver.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
+        document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
         selectedIdWeight = res["id_selected"]["id"];
         if (res.id_selected.id !== null) {
             // Seleziona tutti i pulsanti e gli input
@@ -650,6 +651,7 @@ function updateUIRealtime(e) {
         document.querySelector('#currentSocialReasonDriver').value = obj.data_in_execution.driver.social_reason ? obj.data_in_execution.driver.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
+        document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
         if (obj.id_selected.id != selectedIdWeight) {
             if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.remove('selected');
             selectedIdWeight = obj.id_selected.id;                    

@@ -51,8 +51,8 @@
                         "always_execute_realtime_in_undeground": true,
                         "data": {
                             "data_in_execution": {
+                                "document_reference": null,
                                 "driver": {
-                                    "cfpiva": null,
                                     "id": null,
                                     "social_reason": null,
                                     "telephone": null
@@ -68,11 +68,11 @@
                                     "social_reason": null,
                                     "telephone": null
                                 },
-                                "typeSubject": null,
+                                "typeSubject": "CUSTOMER",
                                 "vector": {
                                     "cfpiva": null,
-                                    "id": null,
-                                    "social_reason": null,
+                                    "id": 1,
+                                    "social_reason": "DHL",
                                     "telephone": null
                                 },
                                 "vehicle": {
@@ -82,7 +82,7 @@
                                 }
                             },
                             "id_selected": {
-                                "id": null
+                                "id": 7
                             }
                         },
                         "diagnostic_has_priority_than_realtime": true,
@@ -113,7 +113,6 @@
                                     }
                                 ],
                                 "reports": {
-                                    "direct": "weight.html",
                                     "in": "weight_in.html",
                                     "out": "weight_out.html"
                                 },
@@ -162,7 +161,7 @@
                                     "social_reason": null,
                                     "telephone": null
                                 },
-                                "typeSubject": null,
+                                "typeSubject": "CUSTOMER",
                                 "vector": {
                                     "cfpiva": null,
                                     "id": null,

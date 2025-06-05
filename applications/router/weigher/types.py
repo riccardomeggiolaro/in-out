@@ -4,11 +4,12 @@ from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
+from modules.md_database.md_database import TypeSubjectEnum
 from typing import Union, Optional, List
 from datetime import datetime
 
 class DataInExecution(BaseModel):
-	typeSubject: Optional[str] = None
+	typeSubject: Optional[str] = "CUSTOMER"
 	subject: SubjectDTO = SubjectDTO(**{})
 	vector: VectorDTO = VectorDTO(**{})
 	driver: DriverDTO = DriverDTO(**{})
@@ -34,7 +35,8 @@ class Weight(BaseModel):
 	date: Optional[datetime] = None
 	pid: Optional[str] = None
     
-class ReportVariables(BaseModel):
-    data: DataInExecution = DataInExecution(**{})
-    weight1: Weight = Weight(**{})
-    weight2: Weight = Weight(**{})
+class ReportVariables(DataInExecution):
+	material: MaterialDTO = MaterialDTO(**{})
+	weight1: Weight = Weight(**{})
+	weight2: Weight = Weight(**{})
+	net_weight: Union[int, float] = None

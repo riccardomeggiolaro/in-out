@@ -28,7 +28,7 @@ class DataRouter(ConfigWeigher):
 			if data_dto.id_selected.id != -1:
 				weighing = get_data_by_id("reservation", data_dto.id_selected.id)
 				data_in_execution = DataInExecutionType(**{
-					"typeSubject": weighing["typeSubject"],
+					"typeSubject": weighing["typeSubject"].name,
 					"subject": {
 						"id": weighing["subject"]["id"] if weighing["subject"] else None,
 						"social_reason": weighing["subject"]["social_reason"] if weighing["subject"] else None,
@@ -52,6 +52,7 @@ class DataRouter(ConfigWeigher):
 						"description": weighing["vehicle"]["description"] if weighing["vehicle"] else None,
 					},
 					"note": weighing["note"],
+					"document_reference": weighing["document_reference"]
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution)

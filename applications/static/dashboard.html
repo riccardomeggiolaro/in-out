@@ -55,7 +55,11 @@
                     </div>
 
                     <div>
-                        <input placeholder="Note" id="currentNote" type="text" name="plate" onclick="openPopup('notePopup', 'myNoteInput')" >
+                        <input placeholder="Note" id="currentNote" type="text" name="note" onclick="openPopup('notePopup', 'myNoteInput')" >
+                    </div>
+
+                    <div>
+                        <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" >
                     </div>
                 </div>
                 <div class="display item">
@@ -194,6 +198,17 @@
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button class="p-tare-button" onclick="setDataInExecutionOnCLick('note', '', myNoteInput.value)">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="documentReferencePopup" class="popup">
+            <div class="popup-content">
+                <h2>Referenza documento:</h2>
+                <input type="text" id="myDocumentReferenceInput" autocomplete="off" class="input">
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('document_reference', '', myDocumentReferenceInput.value)">OK</button>
                 </div>
             </div>
         </div>

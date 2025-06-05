@@ -14,13 +14,14 @@ from modules.md_database.functions.select_reservation_if_uncomplete import selec
 from modules.md_database.md_database import TypeSubjectEnum
 
 class DataInExecutionDTO(CustomBaseModel):
-	typeSubject: Optional[str] = None
+	typeSubject: Optional[str] = "CUSTOMER"
 	subject: Optional[SubjectDTO] = SubjectDTO(**{})
 	vector: Optional[VectorDTO] = VectorDTO(**{})
 	driver: Optional[DriverDTO] = DriverDTO(**{})
 	vehicle: Optional[VehicleDTO] = VehicleDTO(**{})
 	material: Optional[MaterialDTO] = MaterialDTO(**{})
 	note: Optional[str] = None
+	document_reference: Optional[str] = None
 
 	@root_validator(pre=True)
 	def check_only_one_attribute_set(cls, values):

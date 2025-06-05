@@ -1,6 +1,16 @@
 from jinja2 import Environment, FileSystemLoader, meta
 import libs.lb_config as lb_config
 
+def convert_none_to_empty(data):
+    """Recursively converts None values to empty strings in dictionaries and lists"""
+    if isinstance(data, dict):
+        return {k: convert_none_to_empty(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [convert_none_to_empty(item) for item in data]
+    elif data is None:
+        return ""
+    return data
+
 def generate_report(report_name_file, v=None):
     try:
         # Setup path to templates
@@ -14,9 +24,13 @@ def generate_report(report_name_file, v=None):
         parsed_content = env.parse(source)
         variables = meta.find_undeclared_variables(parsed_content)
 
+        # Create template data dictionary
         template_data = {var: v[var] if v and var in v else None for var in variables}
+        
+        # Convert all None values to empty strings recursively
+        template_data = convert_none_to_empty(template_data)
 
-        # Return the raw template without data
+        # Return the rendered template
         return template.render(**template_data)
         
     except Exception as e:

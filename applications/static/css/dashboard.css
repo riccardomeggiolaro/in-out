@@ -594,7 +594,6 @@ button:active {
     max-width: -moz-available;  
     margin: 5px auto;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 .list-in li:hover {
