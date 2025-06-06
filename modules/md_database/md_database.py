@@ -82,6 +82,11 @@ class WeighingPicture(Base):
 
     weighing = relationship("Weighing", back_populates="weighing_pictures")
 
+class TypeWeightEnum(PyEnum):
+    PRESETTARE = "PT"
+    TARE = "Tara"
+    WEIGHT = "Peso"
+
 # Model for Weighing table
 class Weighing(Base):
     __tablename__ = 'weighing'
@@ -90,7 +95,8 @@ class Weighing(Base):
     date = Column(DateTime, server_default=func.now(), default=datetime.now)
     pid = Column(String, index=True, unique=True, nullable=True)
     weigher = Column(String, nullable=True)
-    idReservation = Column(Integer, ForeignKey('reservation.id'))
+    type = Column(Enum(TypeWeightEnum), default=None, nullable=None)
+    idReservation = Column(Integer, ForeignKey('reservation.id'))    
 
     reservation = relationship("Reservation", back_populates="weighings")
     weighing_pictures = relationship("WeighingPicture", back_populates="weighing", cascade="all, delete")

@@ -1,10 +1,7 @@
 from fastapi import APIRouter, HTTPException
-import libs.lb_system as lb_system
 import libs.lb_config as lb_config
 from applications.router.anagrafic.panel_siren.functions.functions import send_panel_message, send_siren_message
 from applications.router.anagrafic.panel_siren.dtos import Panel, Siren
-from modules.md_database.functions.get_data_by_id import get_data_by_id
-from typing import Optional
 
 class PanelSirenRouter:
     def __init__(self):

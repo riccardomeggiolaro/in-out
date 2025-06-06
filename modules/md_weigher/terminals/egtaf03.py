@@ -178,6 +178,7 @@ class EgtAf03(Terminal):
 					self.pesa_real_time.unite_measure = ""
 				######### Se in esecuzione pesata pid ###############################################################################
 				elif self.modope == "WEIGHING":
+					lb_log.warning(response)
 					# Controlla formato stringa pesata pid, se corretta aggiorna oggetto
 					if length_split_response == 5 and (length_response == 48 or length_response == 38):
 						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
@@ -185,7 +186,8 @@ class EgtAf03(Terminal):
 						nw = str(int(gw) - int(t))
 						self.weight.weight_executed.net_weight = nw
 						self.weight.weight_executed.gross_weight = gw
-						self.weight.weight_executed.tare = t
+						self.weight.weight_executed.tare.value = t
+						self.weight.weight_executed.tare.is_preset_tare = True if "PT" in split_response[3]	else False
 						self.weight.weight_executed.unite_misure = split_response[2][-2:]
 						self.weight.weight_executed.pid = split_response[4]
 						self.weight.weight_executed.bil = split_response[1]
@@ -199,7 +201,8 @@ class EgtAf03(Terminal):
 					callCallback(self.callback_weighing) # chiamo callback
 					self.weight.weight_executed.net_weight = ""
 					self.weight.weight_executed.gross_weight = ""
-					self.weight.weight_executed.tare = ""
+					self.weight.weight_executed.tare.value = ""
+					self.weight.weight_executed.tare.is_preset_tare = False
 					self.weight.weight_executed.unite_misure = ""
 					self.weight.weight_executed.pid = ""
 					self.weight.weight_executed.bil = ""

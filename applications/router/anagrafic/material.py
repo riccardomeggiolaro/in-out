@@ -9,7 +9,6 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_all_data_if_not_correlations import delete_all_data_if_not_correlations
 from modules.md_database.functions.load_datas_into_db import load_datas_into_db
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
-from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
 import numpy as np

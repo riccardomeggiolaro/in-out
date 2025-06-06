@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from applications.router.weigher.callback_weigher import CallbackWeigher
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import InstanceNameDTO, InstanceNameWeigherDTO, get_query_params_name, get_query_params_name_node
@@ -7,7 +7,7 @@ import modules.md_weigher.md_weigher as md_weigher
 from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetupWeigherDTO
 from typing import Union
 from libs.lb_system import SerialPort, Tcp
-from applications.router.weigher.types import Data, EventAction
+from applications.router.weigher.types import Data
 
 class ConfigWeigher(CallbackWeigher):
     def __init__(self):

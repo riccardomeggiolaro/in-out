@@ -22,10 +22,14 @@ class Diagnostic(CustomBaseModel):
 	vl: str
 	rz: str
 
+class Tare(BaseModel):
+	value: str
+	is_preset_tare: bool
+
 class WeightExecuted(BaseModel):
 	net_weight: str
 	gross_weight: str
-	tare: str
+	tare: Tare
 	unite_misure: str
 	pid: str
 	bil: str

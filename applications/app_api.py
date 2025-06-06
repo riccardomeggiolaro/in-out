@@ -64,7 +64,7 @@ def start():
 # ==============================================================
 
 def stop():
-	global ssh_client
+	# global ssh_client
 	
 	try:
 		port = lb_config.g_config["app_api"]["port"]
@@ -84,9 +84,9 @@ def stop():
 def init():	
 	lb_log.info("init")
 	global app
-	global rfid
-	global modules
-	global ssh_client
+	# global rfid
+	# global modules
+	# global ssh_client
 	global base_dir_templates
 	global templates
 

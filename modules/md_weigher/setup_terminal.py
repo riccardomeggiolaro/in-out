@@ -83,7 +83,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"weight_executed": {
 				"net_weight": "",
 				"gross_weight": "",
-				"tare": "",
+				"tare": {
+					"value": "",
+					"is_preset_tare": False
+				},
 				"unite_misure": "",
 				"pid": "",
 				"bil": "",

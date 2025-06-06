@@ -4,7 +4,7 @@ from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
-from modules.md_database.md_database import TypeSubjectEnum
+from modules.md_database.md_database import TypeWeightEnum
 from typing import Union, Optional, List
 from datetime import datetime
 
@@ -32,6 +32,7 @@ class EventAction(BaseModel):
     
 class Weight(BaseModel):
 	weight: Union[int, float] = None
+	type: Optional[TypeWeightEnum] = None
 	date: Optional[datetime] = None
 	pid: Optional[str] = None
     

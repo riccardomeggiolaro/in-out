@@ -22,7 +22,7 @@ def delete_last_weighing_of_reservation(reservation_id, web_socket=None):
             # Trova la pesata più recente per la prenotazione specificata
             latest_weighing = session.query(Weighing).filter(
                 Weighing.idReservation == reservation_id
-            ).order_by(desc(Weighing.date)).first()
+            ).order_by(desc(Weighing.date), desc(Weighing.id)).first()
             
             # Se non esiste nessuna pesata per questa prenotazione
             if not latest_weighing:

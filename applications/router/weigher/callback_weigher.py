@@ -1,17 +1,16 @@
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
-from typing import Union
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.md_database import ReservationStatus, TypeSubjectEnum
-from modules.md_database.interfaces.subject import Subject
-from modules.md_database.interfaces.vector import Vector
-from modules.md_database.interfaces.driver import Driver
-from modules.md_database.interfaces.vehicle import Vehicle
+from modules.md_database.md_database import ReservationStatus, TypeSubjectEnum, TypeWeightEnum
+from modules.md_database.interfaces.subject import Subject, SubjectDataDTO
+from modules.md_database.interfaces.vector import Vector, VectorDataDTO
+from modules.md_database.interfaces.driver import Driver, DriverDataDTO
+from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
 from modules.md_database.interfaces.material import Material
 from modules.md_database.interfaces.reservation import Reservation
 import datetime as dt
@@ -19,7 +18,7 @@ from applications.router.weigher.types import ReportVariables
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
 from libs.lb_utils import has_values_besides_id
-from libs.lb_folders import structure_folder_rule, save_bytes_to_file, search_file
+from libs.lb_folders import structure_folder_rule, save_bytes_to_file
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.utils.utils_report import generate_report
@@ -67,7 +66,7 @@ class CallbackWeigher(Functions, WebSocket):
 			variables = ReportVariables(**{})
 			weighing_stored_db = None
 			if last_pesata.data_assigned.id_selected.id is None:
-				str_tare = last_pesata.weight_executed.tare
+				str_tare = last_pesata.weight_executed.tare.value
 				tare = float(str_tare) if "," in str_tare or "." in str_tare else int(str_tare)
 				typeSubject = TypeSubjectEnum[last_pesata.data_assigned.data_in_execution.typeSubject]
 				variables.typeSubject = typeSubject.value
@@ -165,10 +164,10 @@ class CallbackWeigher(Functions, WebSocket):
 					variables.material = last_pesata.data_assigned.data_in_execution.material
 				reservation_add = add_data("reservation", reservation)
 				date = dt.datetime.now()
-				import libs.lb_log as lb_log
 				if tare != 0:
 					weighing_tare = {
-						"weight": tare,
+						"weight": last_pesata.weight_executed.tare.value,
+						"type": TypeWeightEnum.PRESETTARE if last_pesata.weight_executed.tare.is_preset_tare else TypeWeightEnum.TARE,
 						"date": date,
 						"pid": None,
 						"weigher": weigher_name,
@@ -178,8 +177,10 @@ class CallbackWeigher(Functions, WebSocket):
 					variables.weight1.date = None
 					variables.weight1.pid = None
 					variables.weight1.weight = tare
+					variables.weight1.type = weighing_tare["type"].value
 				weighing = {
 					"weight": last_pesata.weight_executed.gross_weight,
+					"type": TypeWeightEnum.WEIGHT,
 					"date": date,
 					"pid": last_pesata.weight_executed.pid,
 					"weigher": weigher_name,
@@ -192,16 +193,19 @@ class CallbackWeigher(Functions, WebSocket):
 					variables.weight1.date = date.strftime("%d/%m/%Y %H:%M")
 					variables.weight1.pid = last_pesata.weight_executed.pid
 					variables.weight1.weight = last_pesata.weight_executed.gross_weight
+					variables.weight1.type = TypeWeightEnum.WEIGHT.value
 					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
 				else:
 					variables.weight2.date = date.strftime("%d/%m/%Y %H:%M")
 					variables.weight2.pid = last_pesata.weight_executed.pid
 					variables.weight2.weight = last_pesata.weight_executed.gross_weight
+					variables.weight2.type = TypeWeightEnum.WEIGHT.value
 					variables.net_weight = last_pesata.weight_executed.net_weight
 					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
 			elif last_pesata.data_assigned.id_selected.id:
 				weighing = {
 					"weight": last_pesata.weight_executed.gross_weight,
+					"type": TypeWeightEnum.WEIGHT,
 					"date": dt.datetime.now(),
 					"pid": last_pesata.weight_executed.pid,
 					"weigher": weigher_name,
@@ -210,20 +214,22 @@ class CallbackWeigher(Functions, WebSocket):
 				weighing_stored_db = add_data("weighing", weighing)
 				reservation = get_data_by_id("reservation", last_pesata.data_assigned.id_selected.id)
 				variables.typeSubject = reservation["typeSubject"].value
-				variables.subject = reservation["subject"]
-				variables.vector = reservation["vector"]
-				variables.driver = reservation["driver"]
-				variables.vehicle = reservation["vehicle"]
+				variables.subject = reservation["subject"] if reservation["subject"] else SubjectDataDTO(**{})
+				variables.vector = reservation["vector"] if reservation["vector"] else VectorDataDTO(**{})
+				variables.driver = reservation["driver"] if reservation["driver"] else DriverDataDTO(**{})
+				variables.vehicle = reservation["vehicle"] if reservation["vehicle"] else VehicleDataDTO(**{})
 				variables.note = reservation["note"]
 				variables.document_reference = reservation["document_reference"]
-				if len(reservation["weighings"]) > 0:
+				if len(reservation["weighings"]) > 1:
 					last_weighing = reservation["weighings"][-2]
 					variables.weight1.date = last_weighing["date"].strftime("%d/%m/%Y %H:%M")
 					variables.weight1.pid = last_weighing["pid"]
 					variables.weight1.weight = last_weighing["weight"]
+					variables.weight1.type = None
 					variables.weight2.date = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
 					variables.weight2.pid = last_pesata.weight_executed.pid
-					variables.weight2.weight = last_pesata.weight_executed.gross_weight
+					variables.weight2.weight = float(last_pesata.weight_executed.gross_weight) if "." in last_pesata.weight_executed.gross_weight or "," in last_pesata.weight_executed.gross_weight else int(last_pesata.weight_executed.gross_weight)
+					variables.weight2.type = None
 					if variables.weight1.weight > variables.weight2.weight:
 						variables.net_weight = variables.weight1.weight - variables.weight2.weight
 					else:
@@ -232,6 +238,7 @@ class CallbackWeigher(Functions, WebSocket):
 					variables.weight1.date = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
 					variables.weight1.pid = last_pesata.weight_executed.pid
 					variables.weight1.weight = last_pesata.weight_executed.gross_weight
+					variables.weight1.type = None
 				reservation_update = None
 				if reservation["number_weighings"] == len(reservation["weighings"]):
 					reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.CLOSED})

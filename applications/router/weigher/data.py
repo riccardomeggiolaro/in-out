@@ -1,12 +1,9 @@
 from fastapi import APIRouter, Depends
 import libs.lb_config as lb_config
-import modules.md_weigher.md_weigher as md_weigher
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
-from applications.router.weigher.dto import DataDTO, DataInExecutionDTO
-from applications.router.weigher.types import DataInExecution as DataInExecutionType, Data
+from applications.router.weigher.dto import DataDTO
+from applications.router.weigher.types import DataInExecution as DataInExecutionType
 from applications.router.weigher.config_weigher import ConfigWeigher
-import asyncio
-from libs.lb_utils import check_values
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 class DataRouter(ConfigWeigher):

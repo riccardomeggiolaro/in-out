@@ -16,9 +16,7 @@ from modules.md_database.functions.unlock_record_by_id import unlock_record_by_i
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
-from applications.router.weigher.manager_weighers_data import weighers_data
 from datetime import datetime
-import libs.lb_log as lb_log
 import pandas as pd
 from io import BytesIO
 

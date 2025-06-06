@@ -71,8 +71,8 @@
                                 "typeSubject": "CUSTOMER",
                                 "vector": {
                                     "cfpiva": null,
-                                    "id": 1,
-                                    "social_reason": "DHL",
+                                    "id": null,
+                                    "social_reason": null,
                                     "telephone": null
                                 },
                                 "vehicle": {
@@ -82,7 +82,7 @@
                                 }
                             },
                             "id_selected": {
-                                "id": 7
+                                "id": null
                             }
                         },
                         "diagnostic_has_priority_than_realtime": true,
@@ -136,7 +136,7 @@
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "port_rele": null,
-                        "printer_name": "Canon_iR_ADV_C5235_5240",
+                        "printer_name": null,
                         "run": true,
                         "terminal": "egt-af03"
                     },

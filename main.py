@@ -5,11 +5,8 @@
 # ==============================================================
 
 # ==== LIBRERIE DA IMPORTARE ===================================
-import os
 import time
-import threading
 import sys
-import signal
 import modules.md_weigher.md_weigher as md_weigher
 # import modules.md_rfid as md_rfid
 from libs.lb_utils import GracefulKiller, createThread, startThread, closeThread
