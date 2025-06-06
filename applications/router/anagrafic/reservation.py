@@ -27,7 +27,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
-        self.router.add_api_route('/export', self.exportListReservations, methods=['GET'])
+        self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
         self.router.add_api_route('', self.addReservation, methods=['POST'])
         self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'])
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
@@ -60,7 +60,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
         
-    async def exportListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+    async def exportListReservationsXlsx(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
             not_closed = False
             if "status" in query_params and query_params["status"] == "NOT_CLOSED":

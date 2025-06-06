@@ -48,6 +48,10 @@
     <div class="table-container">
         <div class="title">
             <h2>Accessi</h2>
+            <div>
+                <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
+                <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
+            </div>
             <button class="register-button" onclick="addRow()">Prenota accesso</button>
         </div>
         <table>
@@ -555,6 +559,7 @@
             lastChar = 'a';
             canAlwaysDelete = true;
             listUrlPath = '/api/anagrafic/reservation/list';
+            exportUrlPath = '/api/anagrafic/reservation/export'
             addUrlPath = '/api/anagrafic/reservation';
             setUrlPath = '/api/anagrafic/reservation';
             deleteUrlPath = '/api/anagrafic/reservation';

@@ -5,6 +5,7 @@ let itemName = null;
 let lastChar = 'o';
 let canAlwaysDelete = false;
 let listUrlPath = null;
+let exportUrlPath = null;
 let addUrlPath = null;
 let setUrlPath = null;
 let deleteUrlPath = null;
@@ -89,6 +90,39 @@ async function updateTable() {
     document.getElementById("total-rows").textContent = `Totale righe: ${totalRows}`;
 
     return data;
+}
+
+async function exportTable(type) {
+    let queryParams = '';
+    const filters = document.querySelector('#filters');
+    filters.querySelectorAll('input').forEach(input => {
+        if (input.name && input.value) {
+            if (input.type == 'text') queryParams += `${input.name}=${input.value}%&`;
+            else if (input.type == 'number') queryParams += `${input.name}=${input.value}&`;
+            else if (input.type == 'date') queryParams += `${input.name}=${input.value}&`;
+        }
+    })
+    filters.querySelectorAll('select').forEach(select => {
+        if (select.value) {
+            queryParams += `${select.name}=${select.value}&`;
+        }
+    })
+    const offset = (currentPage - 1) * rowsPerPage;
+    
+    const response = await fetch(`${exportUrlPath}/${type}?${queryParams}`);
+    const blob = await response.blob();
+    
+    // Create a link element
+    const downloadLink = document.createElement('a');
+    downloadLink.href = window.URL.createObjectURL(blob);
+    
+    // Set the file name to save in Downloads
+    downloadLink.download = `export_${new Date().toISOString().slice(0,10)}.${type}`;
+    
+    // Append to the document, click it, and remove it
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
 }
 
 function updatePageSelect() {
