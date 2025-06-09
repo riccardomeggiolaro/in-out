@@ -19,6 +19,11 @@ from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
 from datetime import datetime
 import pandas as pd
 from io import BytesIO
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 
 class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -28,6 +33,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
+        self.router.add_api_route('/export/pdf', self.exportListReservationsPdf, methods=['GET'])
         self.router.add_api_route('', self.addReservation, methods=['POST'])
         self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'])
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
@@ -83,22 +89,24 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             for res in data:
                 reservations_list.append({
                     "ID": res.id,
-                    "Data creazione": res.date_created,
-                    "Stato": res.status,
+                    "Data creazione": datetime.strftime(res.date_created, "%d-%m-%Y %M:%H"),
+                    "Stato": res.status.value,
+                    "Numero pesate": f"{len(res.weighings)}/{res.number_weighings}",
                     "Targa": res.vehicle.plate if res.vehicle else None,
-                    "Cliente/Vettore": res.subject.social_reason if res.subject else None,
-                    "Numero pesate": res.number_weighings,
-                    "Note": res.note
+                    "Cliente/Fornitore": res.subject.social_reason if res.subject else None,
+                    "Vettore": res.vector.social_reason if res.vector else None,
+                    "Note": res.note,
+                    "Referenza documento": res.document_reference
                 })
 
                 for idx, w in enumerate(res.weighings, start=1):
                     weighings_list.append({
-                        "ID Prenotazione": res.id,
-                        "Numero pesata": idx,
-                        "Data pesata": w.date,
+                        "ID Accesso": res.id,
+                        "Data pesata": datetime.strftime(w.date, "%d-%m-%Y %M:%H"),
+                        "Pesa": w.weigher,
                         "Peso (kg)": w.weight,
-                        "Operatore": w.weigher,
-                        "Codice pesata": w.pid
+                        "Codice pesata": w.pid,
+                        "Tipo": w.type.value
                     })
 
             # 2. Creiamo DataFrame
@@ -108,7 +116,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             # 3. Scriviamo su file Excel
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df_reservations.to_excel(writer, sheet_name="Prenotazioni", index=False)
+                df_reservations.to_excel(writer, sheet_name="Accessi", index=False)
                 df_weighings.to_excel(writer, sheet_name="Pesate", index=False)
 
             output.seek(0)
@@ -119,7 +127,188 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             )
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
-       
+
+    async def exportListReservationsPdf(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
+                                    limit: Optional[int] = None, offset: Optional[int] = None, 
+                                    fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+        try:
+            # Get data using the same logic as before
+            not_closed = False
+            if "status" in query_params and query_params["status"] == "NOT_CLOSED":
+                not_closed = True                
+                del query_params["status"]
+            if fromDate is not None:
+                del query_params["fromDate"]
+            if toDate is not None:
+                del query_params["toDate"]
+                toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
+            if limit is not None:
+                del query_params["limit"]
+            if offset is not None:
+                del query_params["offset"]
+                
+            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, 
+                                                limit, offset, ('date_created', 'desc'))
+
+            # Create PDF buffer
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=30, rightMargin=30)
+            story = []
+
+            # Calculate available width
+            page_width = A4[0] - 60  # Total width minus left and right margins
+            
+            # Add title
+            styles = getSampleStyleSheet()
+            title = Paragraph("Lista Accessi e Pesate", styles['Heading1'])
+            story.append(title)
+            story.append(Spacer(1, 0.5*inch))
+
+            # Define common style properties
+            common_font_size = 8  # Reduced font size for better fit
+            header_color = colors.grey
+            subheader_color = colors.lightgrey
+
+            # Define table header for reservations
+            headers = ['ID', 'Data', 'Stato', 'Targa', 'Cliente/Fornitore', 'Vettore', 'Note', 'Ref. Doc.']
+            
+            # Calculate dynamic column widths with max-width constraints
+            # Define max widths for each column (in points)
+            max_widths = [25, 90, 45, 60, 120, 120, 100, 80]  # Total: 700 points
+            
+            # Scale widths to fit page if needed
+            total_max_width = sum(max_widths)
+            if total_max_width > page_width:
+                scale_factor = page_width / total_max_width
+                col_widths = [w * scale_factor for w in max_widths]
+            else:
+                col_widths = max_widths
+
+            # Function to wrap text to fit in cell
+            def wrap_text(text, max_width, font_size=common_font_size):
+                if not text:
+                    return ""
+                # Estimate characters per line based on width and font size
+                # Increased multiplier for better estimation
+                chars_per_line = int(max_width / (font_size * 0.5))  # More generous estimation
+                if len(str(text)) <= chars_per_line:
+                    return str(text)
+                
+                # Break long text into multiple lines
+                words = str(text).split()
+                lines = []
+                current_line = ""
+                
+                for word in words:
+                    test_line = current_line + " " + word if current_line else word
+                    # More accurate width calculation
+                    if len(test_line) <= chars_per_line:
+                        current_line = test_line
+                    else:
+                        if current_line:
+                            lines.append(current_line)
+                        current_line = word
+                
+                if current_line:
+                    lines.append(current_line)
+                
+                return "\n".join(lines)
+
+            table_style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), header_color),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                # Enable text wrapping
+                ('WORDWRAP', (0, 0), (-1, -1), 'WORD'),
+                ('SPLITLONGWORDS', (0, 0), (-1, -1), True),
+            ])
+
+            for res in data:
+                # Create reservation row with wrapped text
+                reservation_row = [
+                    str(res.id),
+                    datetime.strftime(res.date_created, '%d-%m-%Y %H:%M'),  # Kept in single line
+                    res.status.value,
+                    wrap_text(res.vehicle.plate if res.vehicle else "", col_widths[3]),
+                    wrap_text(res.subject.social_reason if res.subject else "", col_widths[4]),
+                    wrap_text(res.vector.social_reason if res.vector else "", col_widths[5]),
+                    wrap_text(res.note if res.note else "", col_widths[6]),
+                    wrap_text(res.document_reference if res.document_reference else "", col_widths[7])
+                ]
+                
+                table_data = [headers, reservation_row]
+                t = Table(table_data, colWidths=col_widths, repeatRows=1)
+                t.setStyle(table_style)
+                story.append(t)
+                
+                # Add weighings as a sub-table if there are any
+                if res.weighings:
+                    weighing_headers = ['Data pesata', 'Pesa', 'Peso (kg)', 'Tipo']
+                    weighing_data = [weighing_headers]
+                    
+                    # Calculate weighing table column widths
+                    weighing_col_widths = [75, 35, 53, 35]  # Total: 360 points
+                    weighing_total = sum(weighing_col_widths)
+                    if weighing_total > page_width:
+                        weighing_scale = page_width / weighing_total
+                        weighing_col_widths = [w * weighing_scale for w in weighing_col_widths]
+                    
+                    weighing_style = TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), subheader_color),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                        ('TOPPADDING', (0, 0), (-1, -1), 4),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('WORDWRAP', (0, 0), (-1, -1), 'WORD'),
+                        ('SPLITLONGWORDS', (0, 0), (-1, -1), True),
+                    ])
+                    
+                    for w in res.weighings:
+                        weighing_row = [
+                            datetime.strftime(w.date, '%d-%m-%Y %H:%M'),  # Kept in single line
+                            wrap_text(str(w.weigher), weighing_col_widths[1]),
+                            str(w.weight),
+                            w.type.value
+                        ]
+                        weighing_data.append(weighing_row)
+                    
+                    w_table = Table(weighing_data, colWidths=weighing_col_widths, repeatRows=1)
+                    w_table.setStyle(weighing_style)
+                    story.append(Spacer(1, 0.1*inch))
+                    story.append(w_table)
+                
+                story.append(Spacer(1, 0.2*inch))
+
+            # Build PDF
+            doc.build(story)
+            buffer.seek(0)
+
+            return StreamingResponse(
+                buffer,
+                media_type="application/pdf",
+                headers={"Content-Disposition": "attachment; filename=prenotazioni.pdf"}
+            )
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"{e}")
+
     async def addReservation(self, body: AddReservationDTO):
         try:
             if not body.vehicle.id and not body.vehicle.plate:
