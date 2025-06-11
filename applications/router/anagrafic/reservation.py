@@ -311,6 +311,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
     async def addReservation(self, body: AddReservationDTO):
         try:
+            import libs.lb_log as lb_log
+            lb_log.warning(body.dict())
             if not body.vehicle.id and not body.vehicle.plate:
                 raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
 
@@ -376,7 +378,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
             check_reservation_weighings = get_data_by_id("reservation", id)
-            if check_reservation_weighings and len(check_reservation_weighings["weighings"]) > 0:
+            if check_reservation_weighings and len(check_reservation_weighings["in_out"]) > 0:
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è assegnata a delle pesate salvate")
             data = delete_data("reservation", id)
             await self.broadcastDeleteAnagrafic("reservation", {"reservation": Reservation(**data).json()})

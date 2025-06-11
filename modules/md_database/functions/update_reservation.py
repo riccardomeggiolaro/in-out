@@ -72,7 +72,7 @@ def update_reservation(id: int, data: SetReservationDTO):
             else:
                 reservation.idDriver = data.driver.id
 
-            if data.vehicle.id and reservation.idVehicle and reservation.idVehicle != data.vehicle.id and len(reservation.weighings) > 0:
+            if data.vehicle.id and reservation.idVehicle and reservation.idVehicle != data.vehicle.id and len(reservation.in_out) > 0:
                 raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
 
             current_model = Vehicle
@@ -104,11 +104,11 @@ def update_reservation(id: int, data: SetReservationDTO):
                 reservation.typeSubject = TypeSubjectEnum[data.typeSubject]
 
             if data.number_weighings:
-                if len(reservation.weighings) > data.number_weighings:
+                if len(reservation.in_out) > data.number_weighings:
                     raise ValueError("Non puoi assegnare un numero di pesate inferiore a quelle già effettuate")
                 reservation.number_weighings = data.number_weighings
-                if len(reservation.weighings) > 0:
-                    reservation.status = ReservationStatus.CLOSED if len(reservation.weighings) == reservation.number_weighings else ReservationStatus.ENTERED
+                if len(reservation.in_out) > 0:
+                    reservation.status = ReservationStatus.CLOSED if len(reservation.in_out) == reservation.number_weighings else ReservationStatus.ENTERED
                 else:
                     reservation.status = ReservationStatus.WAITING
 

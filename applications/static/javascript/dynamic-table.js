@@ -200,7 +200,7 @@ function populateTable(data) {
     const obj = getTableColumns();
     obj.table.innerHTML = ""; // Pulisce la tabella esistente
     data.forEach(item => {
-        if (item.weighings && item.number_weighings) item.number_weighings = `${item.weighings.length}/${item.number_weighings}`;
+        if (item.in_out && item.number_weighings) item.number_weighings = `${item.in_out.length}/${item.number_weighings}`;
         createRow(obj.table, obj.columns, item)
     });
     if (callback_populate_table) callback_populate_table();
@@ -517,7 +517,7 @@ function editRow(item) {
         }
         triggerEventsForAll('.id');
     }
-    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {
+    if (item.reservations ? item.reservations.length > 0 : item.in_out.length > 0) {
         const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
         confirm_exec_funct = funct;
         document.querySelector('#confirm-title').textContent = "Attenzione!";
@@ -576,7 +576,7 @@ function deleteRow(item) {
             }
         }
     }
-    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0 && !canAlwaysDelete) {
+    if (item.reservations ? item.reservations.length > 0 : item.in_out.length > 0 && !canAlwaysDelete) {
         const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').textContent = `

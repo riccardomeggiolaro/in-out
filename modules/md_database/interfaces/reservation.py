@@ -1,11 +1,10 @@
 from pydantic import BaseModel, validator
 from typing import Optional, List
-from modules.md_database.md_database import TypeSubjectEnum
 from modules.md_database.interfaces.subject import Subject, SubjectDataDTO
 from modules.md_database.interfaces.vector import Vector, VectorDataDTO
 from modules.md_database.interfaces.driver import Driver, DriverDataDTO
 from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
-from modules.md_database.interfaces.weighing import Weighing
+from modules.md_database.interfaces.in_out import InOut
 from datetime import datetime
 
 class Reservation(BaseModel):
@@ -18,23 +17,16 @@ class Reservation(BaseModel):
     number_weighings: Optional[int] = None
     note: Optional[str] = None
     status: Optional[str] = None
-    number_weighings: Optional[int] = None
     document_reference: Optional[str] = None
     date_created: Optional[datetime] = None
+    type: Optional[str] = None
+    hidden: Optional[bool] = None
 
     subject: Optional[Subject] = None
     vector: Optional[Vector] = None
     driver: Optional[Driver] = None
     vehicle: Optional[Vehicle] = None
-    weighings: List[Weighing] = []
-
-    class Config:
-        # Configurazione per consentire l'uso di valori non dichiarati in fase di validazione
-        arbitrary_types_allowed = True
-
-    @validator('weighings', pre=True, always=True)
-    def check_weighings(cls, v, values):
-        return [Weighing(**weighing).dict() for weighing in v]
+    in_out: List[InOut] = []
 
 class AddReservationDTO(BaseModel):
     typeSubject: str = "CUSTOMER"
@@ -45,12 +37,20 @@ class AddReservationDTO(BaseModel):
     number_weighings: int = 2
     note: Optional[str] = None
     document_reference: Optional[str] = None
+    type: str = "RESERVATION"
+    hidden: Optional[bool] = False
 
     @validator('typeSubject', pre=True, always=True)
     def check_type_subject(cls, v, values):
         if v in ["CUSTOMER", "SUPPLIER"]:
             return v
         raise ValueError("typeSubject is not a valid string")
+
+    @validator('type', pre=True, always=True)
+    def check_type_type(cls, v, values):
+        if v in ['RESERVATION', 'MANUALLY', 'TEST']:
+            return v
+        raise ValueError("type is not a valid string")
     
 class SetReservationDTO(BaseModel):
     typeSubject: Optional[str] = None

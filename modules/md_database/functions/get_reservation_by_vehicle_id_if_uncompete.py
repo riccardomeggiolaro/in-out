@@ -1,6 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from modules.md_database.md_database import SessionLocal, Weighing, Reservation, Vehicle
+from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle
 
 def get_reservation_by_vehicle_id_if_incomplete(id: int):
     session = SessionLocal()
@@ -8,10 +8,10 @@ def get_reservation_by_vehicle_id_if_incomplete(id: int):
         # Crea una subquery che conta le pesate per ogni prenotazione
         weighing_count_subquery = (
             session.query(
-                Weighing.idReservation,
-                func.count(Weighing.id).label("weighing_count")
+                InOut.idReservation,
+                func.count(InOut.id).label("weighing_count")
             )
-            .group_by(Weighing.idReservation)
+            .group_by(InOut.idReservation)
             .subquery()
         )
         

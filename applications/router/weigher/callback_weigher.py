@@ -2,22 +2,18 @@ import modules.md_weigher.md_weigher as md_weigher
 import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
+from modules.md_database.md_database import ReservationStatus, TypeReservation
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.get_data_by_id import get_data_by_id
-from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.update_data import update_data
-from modules.md_database.md_database import ReservationStatus, TypeSubjectEnum, TypeWeightEnum
-from modules.md_database.interfaces.subject import Subject, SubjectDataDTO
-from modules.md_database.interfaces.vector import Vector, VectorDataDTO
-from modules.md_database.interfaces.driver import Driver, DriverDataDTO
-from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
-from modules.md_database.interfaces.material import Material
-from modules.md_database.interfaces.reservation import Reservation
+from modules.md_database.interfaces.subject import SubjectDataDTO
+from modules.md_database.interfaces.vector import VectorDataDTO
+from modules.md_database.interfaces.driver import DriverDataDTO
+from modules.md_database.interfaces.vehicle import VehicleDataDTO
 import datetime as dt
 from applications.router.weigher.types import ReportVariables
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
-from libs.lb_utils import has_values_besides_id
 from libs.lb_folders import structure_folder_rule, save_bytes_to_file
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.weigher.manager_weighers_data import weighers_data
@@ -60,197 +56,108 @@ class CallbackWeigher(Functions, WebSocket):
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
+		reservation = get_data_by_id("reservation", last_pesata.data_assigned)
 		if last_pesata.weight_executed.executed:
+			############################
+			# SALVATAGGIO DELLA PESATA
+			date = dt.datetime.now()
+			str_tare = last_pesata.weight_executed.tare.value
+			str_net_weight = last_pesata.weight_executed.net_weight
+			str_gross_weight = last_pesata.weight_executed.gross_weight
+			tare = float(str_tare) if "," in str_tare or "." in str_tare else int(str_tare)
+			net_weight = float(str_net_weight) if "," in str_net_weight or "." in str_net_weight else int(str_net_weight)
+			gross_weight = float(str_gross_weight) if "," in str_gross_weight or "." in str_gross_weight else int(str_gross_weight)
+			is_preset_tare = last_pesata.weight_executed.tare.is_preset_tare
+			weighing = {
+				"date": date,
+				"weigher": weigher_name,
+				"pid": last_pesata.weight_executed.pid,
+				"tare": tare,
+				"is_preset_tare": is_preset_tare,
+				"weight": gross_weight,
+			}
+			weighing_stored_db = add_data("weighing", weighing)
+			############################
+			# ASSOCIAZIONE DELLA PESATA SALVATA ALL COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
+			last_in_out = reservation["in_out"][-1] if len(reservation["in_out"]) > 0 else None
+			if last_in_out and not last_in_out["idWeight2"]:
+				update_data("in_out", last_in_out["id"], {
+        			"idWeight2": weighing_stored_db["id"],
+					"net_weight": net_weight
+	           })
+			elif last_in_out and last_in_out["idWeight2"]:
+				weight1 = last_in_out["weight2"]["weight"]
+				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
+				add_data("in_out", {
+					"idReservation": last_pesata.data_assigned,
+					"idMaterial": None,
+					"idWeight1": last_in_out["idWeight2"],
+					"idWeight2": weighing_stored_db["id"],
+					"net_weight": net_weight
+				})
+			else:
+				add_data("in_out", {
+					"idReservation": last_pesata.data_assigned,
+					"idMaterial": None,
+					"idWeight1": weighing_stored_db["id"] if tare == 0 else None,
+					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
+					"net_weight": net_weight if tare > 0 else None
+				})
+			############################
+			# AGGIORNAMENTO DELL'ACCESSO
+			reservation = get_data_by_id("reservation", last_pesata.data_assigned)
+			last_in_out = reservation["in_out"][-1] if len(reservation["in_out"]) > 0 else None
+			len_in_out = len(reservation["in_out"])
+			is_test = reservation["type"] == TypeReservation.TEST
+			update_data("reservation", last_pesata.data_assigned, {
+				"status": ReservationStatus.CLOSED if len_in_out == reservation["number_weighings"] and last_in_out["idWeight2"] or is_test else ReservationStatus.ENTERED,
+				"hidden": False
+			})
+			#############################
+			# DATI UTILI ALLA STAMPA DEL REPORT
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
-			template = None
+			template_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
+			template_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
+			template = template_in if tare > 0 else template_out
 			variables = ReportVariables(**{})
-			weighing_stored_db = None
-			if last_pesata.data_assigned.id_selected.id is None:
-				str_tare = last_pesata.weight_executed.tare.value
-				tare = float(str_tare) if "," in str_tare or "." in str_tare else int(str_tare)
-				typeSubject = TypeSubjectEnum[last_pesata.data_assigned.data_in_execution.typeSubject]
-				variables.typeSubject = typeSubject.value
-				reservation = {
-					"typeSubject": typeSubject,
-					"idSubject": last_pesata.data_assigned.data_in_execution.subject.id,
-					"idVector": last_pesata.data_assigned.data_in_execution.vector.id,
-					"idVehicle": last_pesata.data_assigned.data_in_execution.vehicle.id,
-					"idDriver": last_pesata.data_assigned.data_in_execution.driver.id,
-					"note": last_pesata.data_assigned.data_in_execution.note,
-					"document_reference": last_pesata.data_assigned.data_in_execution.document_reference,
-					"number_weighings": last_pesata.data_assigned.number_weighings if tare == 0 else 2,
-					"status": ReservationStatus.ENTERED if tare == 0 and last_pesata.data_assigned.number_weighings > 1 else ReservationStatus.CLOSED
-				}
-				if not last_pesata.data_assigned.data_in_execution.subject.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.subject.dict()):
-					subject_without_id = last_pesata.data_assigned.data_in_execution.subject.dict()
-					del subject_without_id["id"]
-					exist_subject = get_data_by_attributes("subject", subject_without_id)
-					if exist_subject:
-						reservation["idSubject"] = exist_subject["id"]
-						variables.subject = exist_subject
-					else:
-						vector = add_data("subject", last_pesata.data_assigned.data_in_execution.subject.dict())
-						variables.subject = vector
-						reservation["idSubject"] = vector["id"]
-						asyncio.run(self.broadcastAddAnagrafic("subject", {"subject": Subject(**vector).json()}))
-				elif last_pesata.data_assigned.data_in_execution.subject.id:
-					vector = get_data_by_id("subject", last_pesata.data_assigned.data_in_execution.subject.id)
-					variables.subject = vector
-				if not last_pesata.data_assigned.data_in_execution.vector.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.vector.dict()):
-					vector_without_id = last_pesata.data_assigned.data_in_execution.vector.dict()
-					del vector_without_id["id"]
-					exist_vector = get_data_by_attributes("vector", vector_without_id)
-					if exist_vector:
-						reservation["idVector"] = exist_vector["id"]
-						variables.vector = exist_vector
-					else:
-						vector = add_data("vector", last_pesata.data_assigned.data_in_execution.vector.dict())
-						variables.vector = vector
-						reservation["idVector"] = vector["id"]
-						asyncio.run(self.broadcastAddAnagrafic("vector", {"vector": Vector(**vector).json()}))
-				elif last_pesata.data_assigned.data_in_execution.vector.id:
-					vector = get_data_by_id("vector", last_pesata.data_assigned.data_in_execution.vector.id)
-					variables.vector = vector
-				if not last_pesata.data_assigned.data_in_execution.driver.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.driver.dict()):
-					driver_without_id = last_pesata.data_assigned.data_in_execution.driver.dict()
-					del driver_without_id["id"]
-					exist_driver = get_data_by_attributes("driver", driver_without_id)
-					if exist_driver:
-						reservation["idDriver"] = exist_driver["id"]
-						variables.driver = exist_driver
-					else:
-						vehicle = add_data("driver", last_pesata.data_assigned.data_in_execution.driver.dict())
-						variables.driver = vehicle
-						reservation["idDriver"] = vehicle["id"]
-						asyncio.run(self.broadcastAddAnagrafic("driver", {"driver": Driver(**vehicle).json()}))
-				elif last_pesata.data_assigned.data_in_execution.driver.id:
-					vehicle = get_data_by_id("driver", last_pesata.data_assigned.data_in_execution.driver.id)
-					variables.driver = vehicle
-				if not last_pesata.data_assigned.data_in_execution.vehicle.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.vehicle.dict()):
-					vehicle_without_id = last_pesata.data_assigned.data_in_execution.vehicle.dict()
-					del vehicle_without_id["id"]
-					exist_vehicle = get_data_by_attributes("vehicle", vehicle_without_id)
-					if exist_vehicle:
-						reservation["idVehicle"] = exist_vehicle["id"]
-						variables.vehicle = exist_vehicle
-					else:
-						vehicle = add_data("vehicle", last_pesata.data_assigned.data_in_execution.vehicle.dict())
-						variables.vehicle = vehicle
-						reservation["idVehicle"] = vehicle["id"]
-						asyncio.run(self.broadcastAddAnagrafic("vehicle", {"vehicle": Vehicle(**vehicle).json()}))
-				elif last_pesata.data_assigned.data_in_execution.vehicle.id:
-					vehicle = get_data_by_id("vehicle", last_pesata.data_assigned.data_in_execution.vehicle.id)
-					variables.vehicle = vehicle
-				if not last_pesata.data_assigned.data_in_execution.material.id and has_values_besides_id(last_pesata.data_assigned.data_in_execution.material.dict()):
-					material_without_id = last_pesata.data_assigned.data_in_execution.material.dict()
-					del material_without_id["id"]
-					exist_material = get_data_by_attributes("material", material_without_id)
-					if exist_material:
-						variables.material = exist_material
-						# reservation["idMaterial"] = exist_material["id"]
-					else:
-						material = add_data("material", last_pesata.data_assigned.data_in_execution.material.dict())
-						variables.material = material
-						# reservation["idMaterial"] = material["id"]
-						asyncio.run(self.broadcastAddAnagrafic("material", {"material": Material(**material).json()}))
-				elif last_pesata.data_assigned.data_in_execution.material.id:
-					material = get_data_by_id("material", last_pesata.data_assigned.data_in_execution.material.id)
-					variables.material = material
-				if last_pesata.data_assigned.data_in_execution.note:
-					variables.note = last_pesata.data_assigned.data_in_execution.note
-				if last_pesata.data_assigned.data_in_execution.document_reference:
-					variables.document_reference = last_pesata.data_assigned.data_in_execution.document_reference
-				if last_pesata.data_assigned.data_in_execution.material:
-					variables.material = last_pesata.data_assigned.data_in_execution.material
-				reservation_add = add_data("reservation", reservation)
-				date = dt.datetime.now()
-				if tare != 0:
-					weighing_tare = {
-						"weight": last_pesata.weight_executed.tare.value,
-						"type": TypeWeightEnum.PRESETTARE if last_pesata.weight_executed.tare.is_preset_tare else TypeWeightEnum.TARE,
-						"date": date,
-						"pid": None,
-						"weigher": weigher_name,
-						"idReservation": reservation_add["id"]
-					}
-					weighing_stored_db = add_data("weighing", weighing_tare)
-					variables.weight1.date = None
-					variables.weight1.pid = None
-					variables.weight1.weight = tare
-					variables.weight1.type = weighing_tare["type"].value
-				weighing = {
-					"weight": last_pesata.weight_executed.gross_weight,
-					"type": TypeWeightEnum.WEIGHT,
-					"date": date,
-					"pid": last_pesata.weight_executed.pid,
-					"weigher": weigher_name,
-					"idReservation": reservation_add["id"]
-				}
-				weighing_stored_db = add_data("weighing", weighing)
-				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-				asyncio.run(self.broadcastAddAnagrafic("reservation", {"reservation": Reservation(**reservation_add).json()}))
-				if tare == 0:
-					variables.weight1.date = date.strftime("%d/%m/%Y %H:%M")
-					variables.weight1.pid = last_pesata.weight_executed.pid
-					variables.weight1.weight = last_pesata.weight_executed.gross_weight
-					variables.weight1.type = TypeWeightEnum.WEIGHT.value
-					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
-				else:
-					variables.weight2.date = date.strftime("%d/%m/%Y %H:%M")
-					variables.weight2.pid = last_pesata.weight_executed.pid
-					variables.weight2.weight = last_pesata.weight_executed.gross_weight
-					variables.weight2.type = TypeWeightEnum.WEIGHT.value
-					variables.net_weight = last_pesata.weight_executed.net_weight
-					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
-			elif last_pesata.data_assigned.id_selected.id:
-				weighing = {
-					"weight": last_pesata.weight_executed.gross_weight,
-					"type": TypeWeightEnum.WEIGHT,
-					"date": dt.datetime.now(),
-					"pid": last_pesata.weight_executed.pid,
-					"weigher": weigher_name,
-					"idReservation": last_pesata.data_assigned.id_selected.id
-     			}
-				weighing_stored_db = add_data("weighing", weighing)
-				reservation = get_data_by_id("reservation", last_pesata.data_assigned.id_selected.id)
-				variables.typeSubject = reservation["typeSubject"].value
-				variables.subject = reservation["subject"] if reservation["subject"] else SubjectDataDTO(**{})
-				variables.vector = reservation["vector"] if reservation["vector"] else VectorDataDTO(**{})
-				variables.driver = reservation["driver"] if reservation["driver"] else DriverDataDTO(**{})
-				variables.vehicle = reservation["vehicle"] if reservation["vehicle"] else VehicleDataDTO(**{})
-				variables.note = reservation["note"]
-				variables.document_reference = reservation["document_reference"]
-				if len(reservation["weighings"]) > 1:
-					last_weighing = reservation["weighings"][-2]
-					variables.weight1.date = last_weighing["date"].strftime("%d/%m/%Y %H:%M")
-					variables.weight1.pid = last_weighing["pid"]
-					variables.weight1.weight = last_weighing["weight"]
-					variables.weight1.type = None
-					variables.weight2.date = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
-					variables.weight2.pid = last_pesata.weight_executed.pid
-					variables.weight2.weight = float(last_pesata.weight_executed.gross_weight) if "." in last_pesata.weight_executed.gross_weight or "," in last_pesata.weight_executed.gross_weight else int(last_pesata.weight_executed.gross_weight)
-					variables.weight2.type = None
-					if variables.weight1.weight > variables.weight2.weight:
-						variables.net_weight = variables.weight1.weight - variables.weight2.weight
-					else:
-						variables.net_weight = variables.weight2.weight - variables.weight1.weight
-				else:
-					variables.weight1.date = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
-					variables.weight1.pid = last_pesata.weight_executed.pid
-					variables.weight1.weight = last_pesata.weight_executed.gross_weight
-					variables.weight1.type = None
-				reservation_update = None
-				if reservation["number_weighings"] == len(reservation["weighings"]):
-					reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.CLOSED})
-				else:
-					reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.ENTERED})
-				self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
-				self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-				asyncio.run(self.broadcastAddAnagrafic("reservation", {"weighing": Reservation(**reservation_update).json()}))
-				if len(reservation["weighings"]) > 1:
-					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
-				else:
-					template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
+			variables.typeSubject = reservation["typeSubject"].value
+			variables.subject = reservation["subject"] if reservation["subject"] else SubjectDataDTO(**{})
+			variables.vector = reservation["vector"] if reservation["vector"] else VectorDataDTO(**{})
+			variables.driver = reservation["driver"] if reservation["driver"] else DriverDataDTO(**{})
+			variables.vehicle = reservation["vehicle"] if reservation["vehicle"] else VehicleDataDTO(**{})
+			variables.note = reservation["note"]
+			variables.document_reference = reservation["document_reference"]
+			# if len(reservation["weighings"]) > 1:
+			# 	last_weighing = reservation["weighings"][-2]
+			# 	variables.weight1.date = last_weighing["date"].strftime("%d/%m/%Y %H:%M")
+			# 	variables.weight1.pid = last_weighing["pid"]
+			# 	variables.weight1.weight = last_weighing["weight"]
+			# 	variables.weight1.type = None
+			# 	variables.weight2.date = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
+			# 	variables.weight2.pid = last_pesata.weight_executed.pid
+			# 	variables.weight2.weight = float(last_pesata.weight_executed.gross_weight) if "." in last_pesata.weight_executed.gross_weight or "," in last_pesata.weight_executed.gross_weight else int(last_pesata.weight_executed.gross_weight)
+			# 	variables.weight2.type = None
+			# 	if variables.weight1.weight > variables.weight2.weight:
+			# 		variables.net_weight = variables.weight1.weight - variables.weight2.weight
+			# 	else:
+			# 		variables.net_weight = variables.weight2.weight - variables.weight1.weight
+			# else:
+			# 	variables.weight1.date = dt.datetime.now().strftime("%d/%m/%Y %H:%M")
+			# 	variables.weight1.pid = last_pesata.weight_executed.pid
+			# 	variables.weight1.weight = last_pesata.weight_executed.gross_weight
+			# 	variables.weight1.type = None
+			# reservation_update = None
+			# if reservation["number_weighings"] == len(reservation["weighings"]):
+			# 	reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.CLOSED})
+			# else:
+			# 	reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.ENTERED})
+			# self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
+			# self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
+			# asyncio.run(self.broadcastAddAnagrafic("reservation", {"weighing": Reservation(**reservation_update).json()}))
+			# if len(reservation["weighings"]) > 1:
+			# 	template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
+			# else:
+			# 	template = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
 			if printer_name and template:
 				report = generate_report(template, v=variables.dict())
 				printer.print_html(html_content=report, printer_name=printer_name)

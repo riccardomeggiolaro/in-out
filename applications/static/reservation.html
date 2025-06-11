@@ -72,6 +72,7 @@
                             <option value="CLOSED">Chiusa</option>
                         </select>
                     </th>
+                    <th name="number_weighings">N. Pesate</th>
                     <th name="waiting">Attesa</th>
                     <th name="subject.social_reason">
                         <input id="filter.subject.social_reason" name="subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
@@ -91,7 +92,6 @@
                     <th name="note">
                         <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
-                    <th name="number_weighings">N. Pesate</th>
                     <th name="document_reference">
                         <input id="filter.document_reference" name="document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
                     </th>
@@ -624,7 +624,7 @@
                 if (cells.length >= 2) {
                     const datetimeCell = cells[0]; // primo td = data di creazione
                     const statusCell = cells[1]; // secondo td = stato della prenotazione
-                    const elapsedCell = cells[2]; // terzo td = tempo trascorso
+                    const elapsedCell = cells[3]; // terzo td = tempo trascorso
                     const buttonsCell = cells[11];
 
                     if (statusCell.dataset.value === "Attesa") {
@@ -778,8 +778,8 @@
 
         function populateDetailTr(item) {
             let content = `<ul class="list-detail-tr">`;
-            let lengthWighings = item.weighings.length;
-            item.weighings.reverse().forEach(weighing => {
+            let lengthWighings = item.in_out.length;
+            item.in_out.reverse().forEach(weighing => {
                 // Pulsante Elimina
                 const deleteWeighingButton = document.createElement("button");
                 deleteWeighingButton.style.visibility = 'hidden';
@@ -797,7 +797,7 @@
                             Pid: <em><u>${weighing.pid}</u></em>,
                             Bilancia: <em><u>${weighing.weigher}</u></em>`;
 
-                if (lengthWighings === item.weighings.length) {
+                if (lengthWighings === item.in_out.length) {
                     content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>`;
                 }
                 

@@ -1,10 +1,9 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum, TypeReservation
 from modules.md_database.interfaces.reservation import AddReservationDTO
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_incomplete
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
-import libs.lb_log as lb_log
 
 def add_reservation(data: AddReservationDTO):
     """
@@ -22,7 +21,9 @@ def add_reservation(data: AddReservationDTO):
                 "number_weighings": data.number_weighings,
                 "note": data.note,
                 "status": ReservationStatus.WAITING,
-                "document_reference": data.document_reference
+                "document_reference": data.document_reference,
+                "type": TypeReservation[data.type],
+                "hidden": data.hidden
             }
 
             current_model = Subject
