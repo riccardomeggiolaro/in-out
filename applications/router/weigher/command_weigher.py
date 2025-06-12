@@ -10,7 +10,7 @@ import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.reservation import ReservationRouter
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
-from modules.md_database.interfaces.reservation import AddReservationDTO
+from modules.md_database.interfaces.reservation import AddReservationDTO, SetReservationDTO
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
 	def __init__(self):
@@ -70,7 +70,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
 		else:
-			reservation = await self.addReservation(body=AddReservationDTO(**{
+			reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
                 	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
                  	"number_weighings": 1,
 					"type": "TEST",
@@ -99,7 +99,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		elif tare != "0":
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		else:
-			reservation = await self.addReservation(body=AddReservationDTO(**{
+			reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
                 	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
                  	"number_weighings": 1,
                   	"type": "MANUALLY",
@@ -130,11 +130,16 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			error_message = "Nessun id impostato per effettuare l'uscita."
 		else:
 			if not idReservation:
-				reservation = await self.addReservation(body=AddReservationDTO(**{
+				reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
 					**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
 					"number_weighings": 1
 				}))
 				idReservation = reservation.id
+			else:
+				await self.setReservation(request=None, id=idReservation, body=SetReservationDTO(**{
+					**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
+					"number_weighings": 1
+				}))
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 

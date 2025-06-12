@@ -3,6 +3,7 @@ import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
 from modules.md_database.md_database import ReservationStatus, TypeReservation
+from modules.md_database.functions.get_reservation import get_reservation_by_id
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.update_data import update_data
@@ -56,7 +57,7 @@ class CallbackWeigher(Functions, WebSocket):
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
-		reservation = get_data_by_id("reservation", last_pesata.data_assigned)
+		reservation = get_reservation_by_id(last_pesata.data_assigned)
 		if last_pesata.weight_executed.executed:
 			############################
 			# SALVATAGGIO DELLA PESATA
@@ -79,19 +80,23 @@ class CallbackWeigher(Functions, WebSocket):
 			weighing_stored_db = add_data("weighing", weighing)
 			############################
 			# ASSOCIAZIONE DELLA PESATA SALVATA ALL COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
-			last_in_out = reservation["in_out"][-1] if len(reservation["in_out"]) > 0 else None
-			if last_in_out and not last_in_out["idWeight2"]:
-				update_data("in_out", last_in_out["id"], {
+			last_in_out = reservation.in_out[-1] if len(reservation.in_out) > 0 else None
+			if last_in_out and not last_in_out.idWeight2:
+				import libs.lb_log as lb_log
+				lb_log.warning(last_in_out)
+				weight1 = last_in_out.weight1.weight
+				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
+				update_data("in_out", last_in_out.id, {
         			"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight
 	           })
-			elif last_in_out and last_in_out["idWeight2"]:
-				weight1 = last_in_out["weight2"]["weight"]
+			elif last_in_out and last_in_out.idWeight2:
+				weight1 = last_in_out.weight2.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
 				add_data("in_out", {
 					"idReservation": last_pesata.data_assigned,
 					"idMaterial": None,
-					"idWeight1": last_in_out["idWeight2"],
+					"idWeight1": last_in_out.idWeight2,
 					"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight
 				})
@@ -105,28 +110,32 @@ class CallbackWeigher(Functions, WebSocket):
 				})
 			############################
 			# AGGIORNAMENTO DELL'ACCESSO
-			reservation = get_data_by_id("reservation", last_pesata.data_assigned)
-			last_in_out = reservation["in_out"][-1] if len(reservation["in_out"]) > 0 else None
-			len_in_out = len(reservation["in_out"])
-			is_test = reservation["type"] == TypeReservation.TEST
+			reservation = get_reservation_by_id(last_pesata.data_assigned)
+			last_in_out = reservation.in_out[-1] if len(reservation.in_out) > 0 else None
+			len_in_out = len(reservation.in_out)
+			is_test = reservation.type == TypeReservation.TEST
 			update_data("reservation", last_pesata.data_assigned, {
-				"status": ReservationStatus.CLOSED if len_in_out == reservation["number_weighings"] and last_in_out["idWeight2"] or is_test else ReservationStatus.ENTERED,
+				"status": ReservationStatus.CLOSED if len_in_out == reservation.number_weighings and last_in_out.idWeight2 or is_test else ReservationStatus.ENTERED,
 				"hidden": False
 			})
-			#############################
+			############################
+			# RIMUOVE TUTTI I DATA IN EXECUTION
+			self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
+			self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
+			############################
 			# DATI UTILI ALLA STAMPA DEL REPORT
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			template_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]
 			template_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]
 			template = template_in if tare > 0 else template_out
 			variables = ReportVariables(**{})
-			variables.typeSubject = reservation["typeSubject"].value
-			variables.subject = reservation["subject"] if reservation["subject"] else SubjectDataDTO(**{})
-			variables.vector = reservation["vector"] if reservation["vector"] else VectorDataDTO(**{})
-			variables.driver = reservation["driver"] if reservation["driver"] else DriverDataDTO(**{})
-			variables.vehicle = reservation["vehicle"] if reservation["vehicle"] else VehicleDataDTO(**{})
-			variables.note = reservation["note"]
-			variables.document_reference = reservation["document_reference"]
+			variables.typeSubject = reservation.typeSubject.value
+			variables.subject = reservation.subject.__dict__ if reservation.subject else SubjectDataDTO(**{})
+			variables.vector = reservation.vector.__dict__ if reservation.vector else VectorDataDTO(**{})
+			variables.driver = reservation.driver.__dict__ if reservation.driver else DriverDataDTO(**{})
+			variables.vehicle = reservation.vehicle.__dict__ if reservation.vehicle else VehicleDataDTO(**{})
+			variables.note = reservation.note
+			variables.document_reference = reservation.document_reference
 			# if len(reservation["weighings"]) > 1:
 			# 	last_weighing = reservation["weighings"][-2]
 			# 	variables.weight1.date = last_weighing["date"].strftime("%d/%m/%Y %H:%M")

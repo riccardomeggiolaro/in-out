@@ -16,19 +16,17 @@ def select_reservation_if_uncomplete(reservation_id: int):
 			InOut.idReservation == reservation_id
 		).scalar()
 
-		# Verifica se il numero di pesate è inferiore al campo number_weighings
-		if weighing_count < reservation.number_weighings:
-			# Verifica che la prenotazione non sia già in uso da un'altra pesa
-			if reservation.selected == True:
-				raise ValueError(f"Reservation with ID {reservation_id} is already in use by another weigher")
-			# Imposta selected a True
-			reservation.selected = True
-			session.commit()
-			return reservation
-		else:
+		if weighing_count == reservation.number_weighings and reservation.in_out[-1].idWeight2:
 			# Numero di pesate uguale o superiore al previsto, genera errore
-			raise ValueError(f"Reservation {reservation_id} already is just closed "
-						    f"({weighing_count}/{reservation.number_weighings})")
+			raise ValueError(f"Reservation {reservation_id} already is just closed")
+
+		elif reservation.selected == True:
+			raise ValueError(f"Reservation with ID {reservation_id} is already in use by another weigher")
+
+		# Imposta selected a True
+		reservation.selected = True
+		session.commit()
+		return reservation
             
 	except Exception as e:
 		session.rollback()

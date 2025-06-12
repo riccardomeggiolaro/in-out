@@ -58,6 +58,7 @@ class EgtAf03(Terminal):
 
 	def initialize_content(self):
 		try:
+			open = self.is_open()
 			self.setModope("VER")
 			self.command()
 			response = self.read()

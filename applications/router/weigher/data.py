@@ -53,7 +53,7 @@ class DataRouter(ConfigWeigher):
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution)
-		elif not data_dto.id_selected.id and not lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
+		else:
 			self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 

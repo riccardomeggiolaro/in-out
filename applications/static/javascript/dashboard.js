@@ -665,21 +665,21 @@ function updateUIRealtime(e) {
                 });
             }
         }
-        if (obj.id_selected.id === null) {
-            // Seleziona tutti i pulsanti e gli input
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            // Disabilita ogni elemento trovato
-            buttonsAndInputs.forEach(element => {
-                element.disabled = false;
-            });
-        } else {
-            // Seleziona tutti i pulsanti e gli input
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            // Disabilita ogni elemento trovato
-            buttonsAndInputs.forEach(element => {
-                element.disabled = true;
-            });
-        }
+        // if (obj.id_selected.id === null) {
+        //     // Seleziona tutti i pulsanti e gli input
+        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+        //     // Disabilita ogni elemento trovato
+        //     buttonsAndInputs.forEach(element => {
+        //         element.disabled = false;
+        //     });
+        // } else {
+        //     // Seleziona tutti i pulsanti e gli input
+        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+        //     // Disabilita ogni elemento trovato
+        //     buttonsAndInputs.forEach(element => {
+        //         element.disabled = true;
+        //     });
+        // }
     } else if (obj.message) {
         showSnackbar(obj.message);
     }

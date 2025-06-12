@@ -309,11 +309,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def addReservation(self, body: AddReservationDTO):
+    async def addReservation(self, request: Request, body: AddReservationDTO):
         try:
-            import libs.lb_log as lb_log
-            lb_log.warning(body.dict())
-            if not body.vehicle.id and not body.vehicle.plate:
+            if request and not body.vehicle.id and not body.vehicle.plate:
                 raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
 
             body.subject.id = body.subject.id if body.subject.id not in [None, -1] else None
@@ -345,9 +343,10 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
     async def setReservation(self, request: Request, id: int, body: SetReservationDTO):
         locked_data = None
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
-            if not locked_data:
-                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
+            if request:
+                locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+                if not locked_data:
+                    raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
             data = update_reservation(id, body)
             get_reservation_data = get_data_by_id("reservation", data["id"])
             reservation = Reservation(**get_reservation_data)

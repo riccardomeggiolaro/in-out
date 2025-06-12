@@ -236,9 +236,10 @@ class TcpWithoutControls(Connection):
 			# Shutdown the socket to indicate no more data will be sent or received
 			self.conn.shutdown(socket.SHUT_RDWR)
 			# Close the socket to free up the resources
+			self.flush()
 			self.conn.close()
+			self.conn = None
 			status = True
-			status = False
 		except Exception as e:
 			status = False
 			error_message = e
@@ -255,16 +256,32 @@ class TcpWithoutControls(Connection):
 		return status
 		
 	def read(self):
-		message = None
+		message = b""  # Initialize empty bytes object
 		try:
 			readable, _, _ = select.select([self.conn], [], [], self.timeout)
 			if readable:
-				message = self.conn.recv(1024)
-		except socket.timeout as e:
+				while True:
+					try:
+						chunk = self.conn.recv(4096)
+						if not chunk:  # Connection closed by peer
+							break
+						message += chunk
+						
+						# Check if we have more data to read
+						readable, _, _ = select.select([self.conn], [], [], 0.1)
+						if not readable:
+							break
+							
+					except socket.error as e:
+						break
+		except socket.timeout:
 			pass
-		except AttributeError as e:
+		except AttributeError:
 			pass
-		return message
+		except Exception as e:
+			print(f"Error reading from socket: {e}")
+			
+		return message if message else None
 
 class Tcp(TcpWithoutControls):
 	@validator('port', pre=True, always=True)

@@ -42,9 +42,9 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "baudrate": 19200,
-                    "serial_port_name": "/dev/ttyUSB0",
-                    "timeout": 0.3
+                    "ip": "10.0.5.177",
+                    "port": 4001,
+                    "timeout": 1.0
                 },
                 "nodes": {
                     "P1": {
@@ -78,7 +78,7 @@
                                 "vehicle": {
                                     "description": null,
                                     "id": null,
-                                    "plate": "DF456GH"
+                                    "plate": null
                                 }
                             },
                             "id_selected": {
@@ -141,7 +141,7 @@
                         "terminal": "egt-af03"
                     }
                 },
-                "time_between_actions": 0.3
+                "time_between_actions": 0.5
             }
         }
     },

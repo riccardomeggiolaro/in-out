@@ -788,29 +788,36 @@
                     e.preventDefault();
                 };
 
-                // Start the list item content
+
                 content += `
                     <li>
                         <p>
-                            <strong>${new Date(weighing.date).toLocaleString('it-IT', options)}.</strong>
-                            Peso: <em><u>${weighing.weight} kg</u></em>,
-                            Pid: <em><u>${weighing.pid}</u></em>,
-                            Bilancia: <em><u>${weighing.weigher}</u></em>`;
+                            Data 1: <em><u>${new Date(weighing.date).toLocaleString('it-IT', options)}</em></u>
+                            Peso 1: <em><u>${weighing.weight} kg</u></em>,
+                            Pid 1: <em><u>${weighing.pid}</u></em>,
+                            Bil: <em><u>${weighing.weigher}</u></em>
+                            Data 2: <em><u>${new Date(weighing.date).toLocaleString('it-IT', options)}</em></u>
+                            Peso 2: <em><u>${weighing.weight} kg</u></em>,
+                            Pid 2: <em><u>${weighing.pid}</u></em>,
+                            Bil: <em><u>${weighing.weigher}</u></em>
+                        </p>
+                    </li>
+                `;
 
-                if (lengthWighings === item.in_out.length) {
-                    content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>`;
-                }
+                // if (lengthWighings === item.in_out.length) {
+                //     content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>`;
+                // }
                 
-                content += `</p><div class="imgs">`;
+                // content += `<div class="imgs">`;
 
-                // Add images to the .imgs div
-                weighing.weighing_pictures.forEach(picture => {
-                    content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
-                });
+                // // Add images to the .imgs div
+                // weighing.weighing_pictures.forEach(picture => {
+                //     content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                // });
                 
-                // Close the div and li tags
-                content += `</div></li>`;
-               lengthWighings--;
+                // // Close the div and li tags
+                // content += `</div></li>`;
+                // lengthWighings--;
             })
             content += `</ul>`;
             return content;

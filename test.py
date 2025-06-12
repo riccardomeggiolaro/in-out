@@ -1,66 +1,28 @@
-import json
+import socket
 
-k = {
-    "apps": {
-        "http": {
-            "servers": {
-                "srv0": {
-                    "listen": [":443"],
-                    "routes": [{
-                        "handle": [{
-                            "handler": "subroute",
-                            "routes": [
-                                {
-                                    "handle": [{
-                                        "handler": "headers",
-                                        "response": {
-                                            "deferred": True,
-                                            "set": {
-                                                "Access-Control-Allow-Credentials": ["true"],
-                                                "Access-Control-Allow-Headers": ["*"],
-                                                "Access-Control-Allow-Methods": ["*"],
-                                                "Access-Control-Allow-Origin": ["*"]
-                                            }
-                                        }
-                                    }]
-                                },
-                                # GPS Gate Server route
-                                {
-                                    "group": "group14",
-                                    "handle": [{
-                                        "handler": "subroute",
-                                        "routes": [
-                                            {"handle": [{"handler": "rewrite", "strip_path_prefix": "/gpsgateserver"}]},
-                                            {"group": "group9", "handle": [{"handler": "rewrite", "uri": "/GpsGateServer{http.request.uri.path}"}]},
-                                            {"handle": [{"handler": "reverse_proxy", "upstreams": [{"dial": "10.0.8.101:80"}]}]}
-                                        ]
-                                    }],
-                                    "match": [{"path": ["/gpsgateserver/*"]}]
-                                },
-                                # Pesi pes002 route
-                                {
-                                    "group": "group14",
-                                    "handle": [{
-                                        "handler": "subroute",
-                                        "routes": [
-                                            {"handle": [{"handler": "rewrite", "strip_path_prefix": "/pesi/pes002"}]},
-                                            {"group": "group0", "handle": [{"handler": "rewrite", "uri": "{http.request.uri.path}"}]},
-                                            {"handle": [{"handler": "reverse_proxy", "upstreams": [{"dial": "172.20.0.23:80"}]}]}
-                                        ]
-                                    }],
-                                    "match": [{"path": ["/pesi/pes002/*"]}]
-                                },
-                                # Other routes follow same pattern...
-                            ]
-                        }],
-                        "match": [{"host": ["on.baron.it"]}],
-                        "terminal": True
-                    }]
-                }
-            }
-        }
-    }
-}
+# Indirizzo IP e porta del server
+SERVER_IP = '10.0.5.177'
+SERVER_PORT = 4001
 
-# Pretty print the dictionary
-print(json.dumps(k, indent=4))
+def main():
+    # Creazione del socket TCP
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            # Connessione al server
+            s.connect((SERVER_IP, SERVER_PORT))
+            print(f"Connesso a {SERVER_IP}:{SERVER_PORT}")
+
+            # Esempio di invio dati
+            message = "Ciao dal client!"
+            s.sendall(message.encode('utf-8'))
+            print(f"Inviato: {message}")
+
+            # Ricezione di una risposta
+            response = s.recv(1024)
+            print(f"Ricevuto: {response.decode('utf-8')}")
+
+        except Exception as e:
+            print(f"Errore durante la connessione: {e}")
+
+if __name__ == '__main__':
+    main()
