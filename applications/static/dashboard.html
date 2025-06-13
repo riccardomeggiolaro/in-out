@@ -28,10 +28,6 @@
                     </div>
 
                     <div>
-                        <input placeholder="Descrizione veicolo" id="currentDescriptionVehicle" type="text" name="description" onclick="showSuggestions('vehicle', 'descriptionVehicleInput', 'description', '', ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'descriptionVehicleInput')" >
-                    </div>
-
-                    <div>
                         <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)">
                             <option value="CUSTOMER">Cliente</option>
                             <option value="SUPPLIER">Fornitore</option>
@@ -122,11 +118,11 @@
         <div id="plateVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Targa:</h2>
-                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase(); showSuggestions('vehicle', 'plateVehicleInput', 'plate', this.value, ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle');">
+                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="validatePlate(this); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="plate-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', plateVehicleInput.value)">OK</button>
+                    <button id="plateSubmitButton" class="plate-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', plateVehicleInput.value)">OK</button>
                 </div>
             </div>
         </div>
@@ -134,7 +130,7 @@
         <div id="descriptionVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Descrizione:</h2>
-                <input type="text" id="descriptionVehicleInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <input type="text" id="descriptionVehicleInput" autocomplete="off" class="input" oninput="validatePlate(this); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
                 <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>

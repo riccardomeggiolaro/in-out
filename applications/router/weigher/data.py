@@ -6,6 +6,7 @@ from applications.router.weigher.types import DataInExecution as DataInExecution
 from applications.router.weigher.config_weigher import ConfigWeigher
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
+from modules.md_database.functions.select_reservation_if_uncomplete import select_reservation_if_uncomplete
 
 class DataRouter(ConfigWeigher):
 	def __init__(self):
@@ -24,6 +25,7 @@ class DataRouter(ConfigWeigher):
 		if data_dto.id_selected.id:
 			await self.DeleteData(instance=instance)
 			if data_dto.id_selected.id != -1:
+				select_reservation_if_uncomplete(data_dto.id_selected.id)
 				reservation = get_reservation_by_id(data_dto.id_selected.id)
 				id_material = None
 				description_material = None

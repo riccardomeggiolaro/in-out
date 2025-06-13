@@ -48,11 +48,11 @@
     <div class="table-container">
         <div class="title">
             <h2>Accessi</h2>
-            <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
+            <!-- <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
                 <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
                 <button class="register-button" onclick="addRow()">Prenota accesso</button>
-            </div>
+            </div> -->
         </div>
         <table>
             <thead>
@@ -788,18 +788,48 @@
                     e.preventDefault();
                 };
 
+                let weight1 = '';
+                if (weighing.weight1) {
+                    weight1 = `
+                        <b>Data 1: </b> ${new Date(weighing.weight1.date).toLocaleString('it-IT', options)}.
+                        <b>Peso 1: </b> ${weighing.weight1.weight} kg.
+                        <b>Pid 1: </b> ${weighing.weight1.pid}.
+                        <b>Bil: </b> ${weighing.weight1.weigher}.
+                    `;
+                }
+
+                let weight2 = '';
+                if (weighing.weight2) {
+                    weight2 = `
+                        <b>Data 2: </b> ${new Date(weighing.weight2.date).toLocaleString('it-IT', options)}.
+                        <b>Peso 2: </b> ${weighing.weight2.weight} kg.
+                        <b>Pid 2: </b> ${weighing.weight2.pid} kg.
+                        <b>Bil: </b> ${weighing.weight2.weigher}.
+                    `;
+                }
+
+                let netWeight = '';
+                if (weighing.net_weight >= 0) {
+                    netWeight = `<b>Netto: </b> ${weighing.net_weight} kg.`;
+                }
+
+                let material = '';
+                if (weighing.material) {
+                    material = `<b>Materiale: </b> ${weighing.material.description}.`;
+                }
+
+                let img1 = '';
+                
+
+                weighing.weight1
 
                 content += `
                     <li>
                         <p>
-                            Data 1: <em><u>${new Date(weighing.date).toLocaleString('it-IT', options)}</em></u>
-                            Peso 1: <em><u>${weighing.weight} kg</u></em>,
-                            Pid 1: <em><u>${weighing.pid}</u></em>,
-                            Bil: <em><u>${weighing.weigher}</u></em>
-                            Data 2: <em><u>${new Date(weighing.date).toLocaleString('it-IT', options)}</em></u>
-                            Peso 2: <em><u>${weighing.weight} kg</u></em>,
-                            Pid 2: <em><u>${weighing.pid}</u></em>,
-                            Bil: <em><u>${weighing.weigher}</u></em>
+                            ${weight1}
+                            ${weight2}
+                            ${netWeight}
+                            ${material}
                         </p>
                     </li>
                 `;

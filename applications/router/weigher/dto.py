@@ -37,12 +37,6 @@ class DataInExecutionDTO(CustomBaseModel):
 class IdSelectedDTO(CustomBaseModel):
 	id: Optional[int] = None
 
-	@validator('id', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v not in [None, -1]:
-			data = select_reservation_if_uncomplete(v)
-		return v
-
 class DataDTO(BaseModel):
     data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})
     id_selected: Optional[IdSelectedDTO] = IdSelectedDTO(**{})

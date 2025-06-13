@@ -199,7 +199,6 @@ async function getData(path) {
         selectedIdVector = obj.vector.id;
         selectedIdDriver = obj.driver.id;
         selectedIdMaterial = obj.material.id;
-        document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.description ? obj.vehicle.description : '';
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
@@ -328,7 +327,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
     let anagrafic_to_set;
 
     // Opzionale: salva l'ID dell'elemento selezionato
-    if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') {
+    if (showList === 'suggestionsListPlateVehicle') {
         currentId = selectedIdVehicle;
         anagrafic_to_set = 'vehicle';
     } else if (showList === 'suggestionsListSocialReasonSubject') {
@@ -493,6 +492,7 @@ function openPopup(name, input) {
 function closePopup() {
     const popup = document.getElementById(currentPopup);
     const popupContent = popup.querySelector(".popup-content");
+    const buttons = popup.querySelectorAll("button");
     
     const input = document.getElementById(currentInput);
     input.value = "";
@@ -504,6 +504,7 @@ function closePopup() {
     setTimeout(() => {
         popup.style.display = "none"; // Nascondi il popup
         myNumberInput.value = "";
+        buttons.forEach(button => button.disabled = false);
     }, 300); // Tempo della transizione
 }
 
@@ -643,7 +644,6 @@ function updateUIRealtime(e) {
         selectedIdMaterial = obj.data_in_execution.material.id;
         if (obj.data_in_execution.typeSubject === 'Cliente') obj.data_in_execution.typeSubject = 'CUSTOMER';
         else if (obj.data_in_execution.typeSubject === 'Fornitore') obj.data_in_execution.typeSubject = 'SUPPLIER';
-        document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.description ? obj.data_in_execution.vehicle.description : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
@@ -807,4 +807,23 @@ function enableAllElements() {
     buttonsAndInputs.forEach(element => {
         element.disabled = false;
     });
+}
+
+function validatePlate(input) {
+    // Convert to uppercase
+    input.value = input.value.toUpperCase();
+    
+    // Show suggestions
+    showSuggestions('vehicle', 'plateVehicleInput', 'plate', input.value, 
+        ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle');
+    
+    // Validate plate format
+    const platePattern = /^[A-Z]{2}\d{3}[A-Z]{2}$/;
+    const isValid = platePattern.test(input.value) || input.value === '';
+
+    // Get the submit button
+    const submitButton = document.getElementById('plateSubmitButton');
+    
+    // Enable/disable button based on validation
+    submitButton.disabled = !isValid;
 }
