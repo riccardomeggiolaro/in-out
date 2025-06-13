@@ -112,8 +112,6 @@ def add_reservation(data: AddReservationDTO):
                 # Può contenere vincoli multipli separati da virgole
                 constraint_parts = table_part.split(',')
 
-                lb_log.warning(constraint_parts)
-                
                 for part in constraint_parts:
                     part = part.strip()
                     # Verifichiamo se contiene un punto che separa nome tabella e colonna
@@ -131,7 +129,6 @@ def add_reservation(data: AddReservationDTO):
                 unique_columns = [column.name for column in current_model.__table__.columns if column.unique]
                 for column in unique_columns:
                     if column in data_to_check:
-                        lb_log.warning(column)
                         # Verifichiamo se questo valore esiste già nel database
                         existing = session.query(current_model).filter(getattr(current_model, column) == data_to_check[column]).first()
                         if existing:

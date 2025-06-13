@@ -3,10 +3,10 @@ import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
 from modules.md_database.md_database import ReservationStatus, TypeReservation
-from modules.md_database.functions.get_reservation import get_reservation_by_id
+from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.functions.add_data import add_data
-from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.update_data import update_data
+from modules.md_database.functions.add_material_if_not_exist import add_material_if_not_exists
 from modules.md_database.interfaces.subject import SubjectDataDTO
 from modules.md_database.interfaces.vector import VectorDataDTO
 from modules.md_database.interfaces.driver import DriverDataDTO
@@ -79,14 +79,23 @@ class CallbackWeigher(Functions, WebSocket):
 			}
 			weighing_stored_db = add_data("weighing", weighing)
 			############################
+			# SALVATAGGIO DEL MATERIALE
+			id_material = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"]["material"]["id"]
+			description_material = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"]["material"]["description"]
+			if not id_material and description_material is not None:
+				material = add_material_if_not_exists(description_material)
+				import libs.lb_log as lb_log
+				lb_log.warning(material)
+				lb_log.warning(description_material)
+				id_material = material["id"]
+			############################
 			# ASSOCIAZIONE DELLA PESATA SALVATA ALL COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
 			last_in_out = reservation.in_out[-1] if len(reservation.in_out) > 0 else None
 			if last_in_out and not last_in_out.idWeight2:
-				import libs.lb_log as lb_log
-				lb_log.warning(last_in_out)
 				weight1 = last_in_out.weight1.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
 				update_data("in_out", last_in_out.id, {
+					"idMaterial": id_material,
         			"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight
 	           })
@@ -95,15 +104,15 @@ class CallbackWeigher(Functions, WebSocket):
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
 				add_data("in_out", {
 					"idReservation": last_pesata.data_assigned,
-					"idMaterial": None,
+					"idMaterial": id_material,
 					"idWeight1": last_in_out.idWeight2,
 					"idWeight2": weighing_stored_db["id"],
-					"net_weight": net_weight
+					"net_weight": net_weight,
 				})
 			else:
 				add_data("in_out", {
 					"idReservation": last_pesata.data_assigned,
-					"idMaterial": None,
+					"idMaterial": id_material,
 					"idWeight1": weighing_stored_db["id"] if tare == 0 else None,
 					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
 					"net_weight": net_weight if tare > 0 else None

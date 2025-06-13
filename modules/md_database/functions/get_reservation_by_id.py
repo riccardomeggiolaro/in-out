@@ -26,7 +26,8 @@ def get_reservation_by_id(reservation_id: int) -> Dict[str, Union[bool, str, dic
                 selectinload(Reservation.driver),
                 selectinload(Reservation.vehicle),
                 selectinload(Reservation.in_out).selectinload(InOut.weight1),
-                selectinload(Reservation.in_out).selectinload(InOut.weight2)
+                selectinload(Reservation.in_out).selectinload(InOut.weight2),
+                selectinload(Reservation.in_out).selectinload(InOut.material)
             )
             .filter(Reservation.id == reservation_id)
             .first()

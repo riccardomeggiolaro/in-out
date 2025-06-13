@@ -5,6 +5,7 @@ from applications.router.weigher.dto import DataDTO
 from applications.router.weigher.types import DataInExecution as DataInExecutionType
 from applications.router.weigher.config_weigher import ConfigWeigher
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 
 class DataRouter(ConfigWeigher):
 	def __init__(self):
@@ -23,33 +24,42 @@ class DataRouter(ConfigWeigher):
 		if data_dto.id_selected.id:
 			await self.DeleteData(instance=instance)
 			if data_dto.id_selected.id != -1:
-				weighing = get_data_by_id("reservation", data_dto.id_selected.id)
+				reservation = get_reservation_by_id(data_dto.id_selected.id)
+				id_material = None
+				description_material = None
+				if len(reservation.in_out) > 0 and reservation.in_out[-1].idMaterial:
+					id_material = reservation.in_out[-1].material.id
+					description_material = reservation.in_out[-1].material.description
 				data_in_execution = DataInExecutionType(**{
-					"typeSubject": weighing["typeSubject"].name,
+					"typeSubject": reservation.typeSubject.name,
 					"subject": {
-						"id": weighing["subject"]["id"] if weighing["subject"] else None,
-						"social_reason": weighing["subject"]["social_reason"] if weighing["subject"] else None,
-						"telephone": weighing["subject"]["telephone"] if weighing["subject"] else None,
-						"cfpiva": weighing["subject"]["cfpiva"] if weighing["subject"] else None
+						"id": reservation.subject.id if reservation.subject else None,
+						"social_reason": reservation.subject.social_reason if reservation.subject else None,
+						"telephone": reservation.subject.telephone if reservation.subject else None,
+						"cfpiva": reservation.subject.cfpiva if reservation.subject else None
 					},
 					"vector": {
-						"id": weighing["vector"]["id"] if weighing["vector"] else None,
-						"social_reason": weighing["vector"]["social_reason"] if weighing["vector"] else None,
-						"telephone": weighing["vector"]["telephone"] if weighing["vector"] else None,
-						"cfpiva": weighing["vector"]["cfpiva"] if weighing["vector"] else None
+						"id": reservation.vector.id if reservation.vector else None,
+						"social_reason": reservation.vector.social_reason if reservation.vector else None,
+						"telephone": reservation.vector.telephone if reservation.vector else None,
+						"cfpiva": reservation.vector.cfpiva if reservation.vector else None
 					},
 					"driver": {
-						"id": weighing["driver"]["id"] if weighing["driver"] else None,
-						"social_reason": weighing["driver"]["social_reason"] if weighing["driver"] else None,
-						"telephone": weighing["driver"]["telephone"] if weighing["driver"] else None,
+						"id": reservation.driver.id if reservation.driver else None,
+						"social_reason": reservation.driver.social_reason if reservation.driver else None,
+						"telephone": reservation.driver.telephone if reservation.driver else None,
 					},
 					"vehicle": {
-						"id": weighing["vehicle"]["id"] if weighing["vehicle"] else None,
-						"plate": weighing["vehicle"]["plate"] if weighing["vehicle"] else None,
-						"description": weighing["vehicle"]["description"] if weighing["vehicle"] else None,
+						"id": reservation.vehicle.id if reservation.vehicle else None,
+						"plate": reservation.vehicle.plate if reservation.vehicle else None,
+						"description": reservation.vehicle.description if reservation.vehicle else None,
 					},
-					"note": weighing["note"],
-					"document_reference": weighing["document_reference"]
+					"material": {
+						"id": id_material,
+						"description": description_material
+					},
+					"note": reservation.note,
+					"document_reference": reservation.document_reference
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution)

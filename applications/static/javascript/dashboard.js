@@ -232,7 +232,7 @@ async function populateListIn() {
         data.data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
-            let content = item.in_out.length > 0 ? item.in_out[0].pid : item.id;
+            let content = item.in_out.length > 0 ? item.in_out[0].weight1.pid : item.id;
             if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
             if (item.subject && item.subject.social_reason) content += ` - ${item.subject.social_reason}`;
             li.textContent = content;

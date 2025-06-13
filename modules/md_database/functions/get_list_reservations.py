@@ -44,7 +44,8 @@ def get_list_reservations(filters=None, not_closed=True, fromDate=None, toDate=N
             selectinload(Reservation.driver),
             selectinload(Reservation.vehicle),
             selectinload(Reservation.in_out).selectinload(InOut.weight1),
-            selectinload(Reservation.in_out).selectinload(InOut.weight2)
+            selectinload(Reservation.in_out).selectinload(InOut.weight2),
+            selectinload(Reservation.in_out).selectinload(InOut.material)
         )
 
         # Join with the weighing count subquery

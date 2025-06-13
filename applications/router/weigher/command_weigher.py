@@ -71,11 +71,11 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
 		else:
 			reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
-                	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
-                 	"number_weighings": 1,
-					"type": "TEST",
-					"hidden": True
-                }))
+				**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
+				"number_weighings": 1,
+				"type": "TEST",
+				"hidden": True
+			}))
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 

@@ -664,20 +664,24 @@ function connectWebSocket() {
             if (data.data) {
                 const firstKey = Object.keys(data.data)[0];
                 data.data[firstKey] = data.data[firstKey] ? JSON.parse(data.data[firstKey]) : null;
+                console.log(firstKey)
                 let specific = '';
                 const objectEntriesParams = Object.entries(params);
                 for (let [key, value] of objectEntriesParams) {
                     let current = structuredClone(data.data);
                     const keys = value.split(".");
-                    for (let i = 0; i < keys.length; i++) {
-                        if (current && current.hasOwnProperty(keys[i])) {
-                            current = current[keys[i]];
-                            if (typeof (current) === 'string' || typeof (current) === 'number') {
-                                specific = `${key} "${current}"`;
+                    console.log(keys[0])
+                    if (keys[0] == firstKey) {
+                        for (let i = 0; i < keys.length; i++) {
+                            if (current && current.hasOwnProperty(keys[i])) {
+                                current = current[keys[i]];
+                                if (typeof (current) === 'string' || typeof (current) === 'number') {
+                                    specific = `${key} "${current}"`;
+                                }
                             }
                         }
                     }
-                    if (specific) {
+                    else if (specific) {
                         break; // Interrompe il ciclo principale quando si trova una corrispondenza
                     }
                 }

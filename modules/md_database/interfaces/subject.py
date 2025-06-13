@@ -38,7 +38,7 @@ class SubjectDTO(BaseModel):
 	def check_id(cls, v, values):
 		if v not in (None, -1):
 			data = get_data_by_id('subject', v)
-			if not data:
+			if data:
 				raise ValueError('Id not exist in subject')
 			else:
 				values['social_reason'] = data.get('social_reason')
