@@ -14,7 +14,6 @@ let selectedIdVehicle;
 let selectedIdTypeSubject;
 let selectedIdSubject;
 let selectedIdVector;
-let selectedIdDriver;
 let selectedIdMaterial;
 
 let selectedIdWeight;
@@ -197,13 +196,11 @@ async function getData(path) {
         selectedIdTypeSubject = obj.typeSubject;
         selectedIdSubject = obj.subject.id;
         selectedIdVector = obj.vector.id;
-        selectedIdDriver = obj.driver.id;
         selectedIdMaterial = obj.material.id;
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.vector.social_reason ? obj.vector.social_reason : '';
-        document.querySelector('#currentSocialReasonDriver').value = obj.driver.social_reason ? obj.driver.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
@@ -285,9 +282,19 @@ function scrollToSelectedItem() {
     }
 }
 
-function setDataInExecutionOnCLick(anagrafic, key, value) {
+function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
     let requestBody;
-    if (key) {
+    const suggestionsList = document.getElementById(showList);
+    if (suggestionsList && suggestionsList.children.length === 1 && suggestionsList.children[0].textContent === value) {
+        id = suggestionsList.children[0].dataset.id;
+        requestBody = JSON.stringify({
+            data_in_execution: {
+                [anagrafic]: {
+                    id
+                }
+            }
+        });
+    } else if (key) {
         requestBody = JSON.stringify({
             data_in_execution: {
                 [anagrafic]: {
@@ -338,9 +345,6 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
     } else if (showList === 'suggestionsListSocialReasonVector') {
         currentId = selectedIdVector;
         anagrafic_to_set = 'vector';
-    } else if (showList === 'suggestionsListSocialReasonDriver') {
-        currentId = selectedIdDriver;
-        anagrafic_to_set = 'driver';
     } else if (showList === 'suggestionsListMaterial') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
@@ -644,7 +648,6 @@ function updateUIRealtime(e) {
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;
         selectedIdSubject = obj.data_in_execution.subject.id;
         selectedIdVector = obj.data_in_execution.vector.id;
-        selectedIdDriver = obj.data_in_execution.driver.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
         if (obj.data_in_execution.typeSubject === 'Cliente') obj.data_in_execution.typeSubject = 'CUSTOMER';
         else if (obj.data_in_execution.typeSubject === 'Fornitore') obj.data_in_execution.typeSubject = 'SUPPLIER';
@@ -652,7 +655,6 @@ function updateUIRealtime(e) {
         document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
-        document.querySelector('#currentSocialReasonDriver').value = obj.data_in_execution.driver.social_reason ? obj.data_in_execution.driver.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';

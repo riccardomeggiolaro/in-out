@@ -94,7 +94,8 @@ body {
     max-width: 99%;
 }
 
-input, 
+input,
+.input, 
 select {
     padding: 5px;
     border-radius: 5px;

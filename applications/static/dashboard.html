@@ -44,10 +44,6 @@
                     </div>
 
                     <div>
-                        <input placeholder="Autista" id="currentSocialReasonDriver" type="text" name="social_reason" onclick="showSuggestions('driver', 'socialReasonDriverInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonDriverPopup', 'suggestionsListSocialReasonDriver'); openPopup('socialReasonDriverPopup', 'socialReasonDriverInput')" >
-                    </div>
-
-                    <div>
                         <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')" >
                     </div>
 
@@ -123,7 +119,7 @@
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button id="plateSubmitButton" class="plate-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', plateVehicleInput.value)">OK</button>
+                    <button id="plateSubmitButton" class="plate-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', plateVehicleInput.value, 'suggestionsListPlateVehicle')">OK</button>
                 </div>
             </div>
         </div>
@@ -135,7 +131,7 @@
                 <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'description', descriptionVehicleInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'description', descriptionVehicleInput.value, 'suggestionsListDescriptionVehicle')">OK</button>
                 </div>
             </div>
         </div>
@@ -147,7 +143,7 @@
                 <ul id="suggestionsListSocialReasonSubject" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('subject', 'social_reason', socialReasonSubjectInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('subject', 'social_reason', socialReasonSubjectInput.value, 'suggestionsListSocialReasonSubject')">OK</button>
                 </div>
             </div>
         </div>
@@ -159,7 +155,7 @@
                 <ul id="suggestionsListSocialReasonVector" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vector', 'social_reason', socialReasonVectorInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vector', 'social_reason', socialReasonVectorInput.value, 'suggestionsListSocialReasonVector')">OK</button>
                 </div>
             </div>
         </div>
@@ -171,7 +167,7 @@
                 <ul id="suggestionsListSocialReasonDriver" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('driver', 'social_reason', socialReasonDriverInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('driver', 'social_reason', socialReasonDriverInput.value, 'suggestionsListSocialReasonDriver')">OK</button>
                 </div>
             </div>
         </div>
@@ -183,7 +179,7 @@
                 <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('material', 'description', myDescriptionMaterialInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('material', 'description', myDescriptionMaterialInput.value, 'suggestionsListMaterial')">OK</button>
                 </div>
             </div>
         </div>
