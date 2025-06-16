@@ -3,7 +3,7 @@ from modules.md_database.md_database import Reservation, LockRecord, SessionLoca
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 
-def lock_record(table_name, idRecord, type, websocket_identifier, user_id):
+def lock_record(table_name, idRecord, type, websocket_identifier, user_id, weigher_name):
     """
     Prova a bloccare un record.
     Il database applicherà automaticamente il vincolo di unicità solo quando type è "UPDATE" o "DELETE".
@@ -48,7 +48,8 @@ def lock_record(table_name, idRecord, type, websocket_identifier, user_id):
                             LockRecord.table_name == "reservation",
                             LockRecord.idRecord.in_(reservations_subquery),
                             LockRecord.type.in_([LockRecordType.UPDATE, LockRecordType.DELETE, 
-                                               LockRecordType.CALL, LockRecordType.CANCEL_CALL])
+                                               LockRecordType.CALL, LockRecordType.CANCEL_CALL,
+                                               LockRecordType.SELECT])
                         )
                     ).first()
                     
@@ -130,7 +131,8 @@ def lock_record(table_name, idRecord, type, websocket_identifier, user_id):
                 idRecord=idRecord,
                 type=type,
                 websocket_identifier=websocket_identifier,
-                user_id=user_id
+                user_id=user_id,
+                weigher_name=weigher_name
             )
             session.add(nuovo_record)
             session.commit()

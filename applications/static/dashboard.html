@@ -7,6 +7,7 @@
     <title>Dashboard Peso</title>
     <meta name="description" content="About this app" />
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
 </head>
 <!-- Rest of your HTML remains unchanged -->
 </style>
@@ -102,7 +103,7 @@
             </div>
         </div>
 
-        <div id="snackbar"></div>
+        <div id="snackbar-dashboard"></div>
 
         <div id="presetTare" class="popup">
             <div class="popup-content">
@@ -209,10 +210,13 @@
             </div>
         </div>
     </div>
-    
+
+    <div id="snackbar"></div>
+
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
     <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dashboard.js"></script>
 </body>
 </html>

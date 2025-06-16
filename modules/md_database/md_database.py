@@ -169,7 +169,8 @@ class LockRecord(Base):
     idRecord = Column(Integer, nullable=False)
     type = Column(Enum(LockRecordType), default=LockRecordType.SELECT)
     websocket_identifier = Column(String, nullable=True)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    weigher_name = Column(String, nullable=True)
 
     user = relationship("User", back_populates="lock_records")
 

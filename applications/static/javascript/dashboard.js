@@ -254,7 +254,9 @@ async function populateListIn() {
                     body: JSON.stringify(obj)
                 })
                 .then(res => res.json())
-                .catch(error => console.error(error));                    
+                .then(res => {
+                    if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                });
             })
             listIn.appendChild(li);
         })
@@ -300,9 +302,6 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
             }
         })
     }
-    try {
-        closePopup();
-    } catch (err) {}
     fetch(`/api/data${currentWeigherPath}`, {
         method: 'PATCH',
         headers: {
@@ -311,7 +310,10 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
         body: requestBody
     })
     .then(res => res.json())
-    .catch(error => console.error('Errore nella fetch:', error));
+    .then(res => {
+        if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+        else closePopup();
+    });
 }
 
 function isDate(string) {
@@ -358,7 +360,6 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
             const li = document.createElement("li");
 
             li.onclick = () => {
-                closePopup();
                 fetch(`/api/data${currentWeigherPath}`, {
                     method: 'PATCH',
                     headers: {
@@ -373,7 +374,10 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                     })
                 })
                 .then(res => res.json())
-                .catch(error => console.error(error));
+                .then(res => {
+                    if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    else closePopup();
+                });
             };
 
             let text = highlightText(suggestion, inputValue, filter);
@@ -460,8 +464,8 @@ myNumberInput.onkeydown = function(event) {
 };
 
 // script.js
-function showSnackbar(message) {
-    const snackbar = document.getElementById("snackbar");
+function showSnackbarDashboard(message) {
+    const snackbar = document.getElementById("snackbar-dashboard");
     snackbar.textContent = message; // Imposta il messaggio
     snackbar.className = "show"; // Aggiungi la classe "show"
 
@@ -564,11 +568,11 @@ function isNumeric(value) {
 function updateUIRealtime(e) {
     const obj = JSON.parse(e.data);
     if (obj.command_in_executing) {
-        if (obj.command_in_executing == "TARE") showSnackbar("Tara");
-        if (obj.command_in_executing == "PRESETTARE") showSnackbar("Preset tara");
-        if (obj.command_in_executing == "ZERO") showSnackbar("Zero");
+        if (obj.command_in_executing == "TARE") showSnackbarDashboard("Tara");
+        if (obj.command_in_executing == "PRESETTARE") showSnackbarDashboard("Preset tara");
+        if (obj.command_in_executing == "ZERO") showSnackbarDashboard("Zero");
         if (obj.command_in_executing == "WEIGHING") {
-            showSnackbar("Pesando...");
+            showSnackbarDashboard("Pesando...");
             buttons.forEach(button => {
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
@@ -578,10 +582,10 @@ function updateUIRealtime(e) {
         if (obj.weight_executed.gross_weight != "") {
             let message = `Pesata eseguita! Bilancia: ${obj.weigher_name}.`;
             if (obj.weight_executed.pid != "") message += ` Pid: ${obj.weight_executed.pid}`;
-            showSnackbar(message);
+            showSnackbarDashboard(message);
             populateListIn();
         } else { 
-            showSnackbar("Pesata fallita!");
+            showSnackbarDashboard("Pesata fallita!");
         }
         buttons.forEach(button => {
             button.disabled = false;
@@ -681,7 +685,7 @@ function updateUIRealtime(e) {
         //     });
         // }
     } else if (obj.message) {
-        showSnackbar(obj.message);
+        showSnackbarDashboard(obj.message);
     }
 }
 
@@ -719,9 +723,9 @@ async function handleStampa() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...");
+        showSnackbarDashboard("Pesando...");
     } else {
-        showSnackbar(r.command_details.error_message);
+        showSnackbarDashboard(r.command_details.error_message);
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -750,9 +754,9 @@ async function handlePesata() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...");
+        showSnackbarDashboard("Pesando...");
     } else {
-        showSnackbar(r.command_details.error_message);
+        showSnackbarDashboard(r.command_details.error_message);
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -779,9 +783,9 @@ async function handlePesata2() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...");
+        showSnackbarDashboard("Pesando...");
     } else {
-        showSnackbar(r.command_details.error_message);
+        showSnackbarDashboard(r.command_details.error_message);
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
