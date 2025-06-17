@@ -16,7 +16,7 @@ def unlock_all_record():
     with SessionLocal() as session:
         try:
             # Cerca il record di blocco specifico
-            deleted_count = session.query(LockRecord).delete(synchronize_session=False)
+            deleted_count = session.query(LockRecord).filter(LockRecord.websocket_identifier != None).delete(synchronize_session=False)
             
             session.commit()
             return deleted_count
