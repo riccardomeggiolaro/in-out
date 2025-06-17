@@ -8,6 +8,7 @@ from applications.utils.utils_weigher import NodeConnectionManager
 from modules.md_database.functions.unlock_record_by_attributes import unlock_record_by_attributes
 from modules.md_database.functions.lock_record import lock_record
 from applications.router.weigher.types import DataInExecution
+from applications.utils.utils import just_locked_message
 
 class Functions:
 	def __init__(self):
@@ -54,13 +55,8 @@ class Functions:
 					if value.id:
 						success, locked_record, error = lock_record(key, value.id, "SELECT", None, None, weigher_name)
 						if success is False:
-							message = None
-							if locked_record.user:
-								message = f"dall'utente '{locked_record.user.username}'"
-							else:
-								message = f"dalla pesa '{locked_record.weigher_name}'"
-						if not success:
-							raise HTTPException(status_code=400, detail=f"Record con id '{value.id}' nella tabella '{key}' bloccato {message}")
+							message = just_locked_message("SELECT", key, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
+							raise HTTPException(status_code=400, detail=message)
 				for sub_key, sub_value in vars(value).items():
 					if sub_value is not None or is_allow_none:
 						# Se il valore è un tipo primitivo, aggiorna il nuovo valore
@@ -86,13 +82,8 @@ class Functions:
 		else:
 			success, locked_record, error = lock_record("reservation", new_id, "SELECT", None, None, weigher_name)
 			if success is False:
-				message = None
-				if locked_record.user:
-					message = f"dall'utente '{locked_record.user.username}'"
-				else:
-					message = f"dalla pesa '{locked_record.weigher_name}'"
-			if not success:
-				raise HTTPException(status_code=400, detail=f"Record con id '{new_id}' nella tabella 'reservation' bloccato {message}")
+				message = just_locked_message("SELECT", "reservation", locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
+				raise HTTPException(status_code=400, detail=message)
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"] = new_id
 		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)

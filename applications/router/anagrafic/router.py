@@ -46,7 +46,7 @@ class AnagraficRouter:
 				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Anagrafic {table_name} does not exist", "idRecord": idRecord, "type": type, "idRequest": idRequest}
 			success, locked_record, error = lock_record(table_name=table_name, idRecord=idRecord, type=type, websocket_identifier=websocket_identifier, user_id=user_id, weigher_name=None)
 			if success is False:
-				message = just_locked_message(locked_record.type.name, table_name, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
+				message = just_locked_message(type, table_name, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
 				return {"action": "lock", "success": False, "anagrafic": table_name, "error": message, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 			data = get_data_by_id(table_name, idRecord)
 			return {"action": "lock", "success": True, "anagrafic": table_name, "data": data, "idRecord": idRecord, "type": type, "idRequest": idRequest}
