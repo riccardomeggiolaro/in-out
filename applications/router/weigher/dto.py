@@ -6,7 +6,6 @@ from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
-from modules.md_database.functions.select_reservation_if_uncomplete import select_reservation_if_uncomplete
 
 class DataInExecutionDTO(CustomBaseModel):
 	typeSubject: Optional[str] = "CUSTOMER"

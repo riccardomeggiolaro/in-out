@@ -372,6 +372,10 @@ button:active {
     flex: 0 0 49%;
 }
 
+.reconnection-footer-buttons {
+    justify-content: flex-end;
+}
+
 .close-button {
     background-color: transparent;
     color: #1362b8;

@@ -46,15 +46,21 @@ class Functions:
 				is_passed_some_values = {sub_key: sub_value for sub_key, sub_value in vars(value).items() if sub_value is not None}
 				current_data_contains_id = True if "id" in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] and lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]["id"] is not None else False
 				if is_passed_some_values:
-					if value.id:
-						success, record, error = lock_record(key, value.id, "SELECT", None, None, weigher_name)
-						if not success:
-							raise HTTPException(status_code=400, detail=f"Unable to lock record: {error}")
 					if current_data_contains_id:
 						is_allow_none = True
 						current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]["id"]
 						if current_id:
 							unlock_record_by_attributes(key, current_id, None, weigher_name)
+					if value.id:
+						success, locked_record, error = lock_record(key, value.id, "SELECT", None, None, weigher_name)
+						if success is False:
+							message = None
+							if locked_record.user:
+								message = f"dall'utente '{locked_record.user.username}'"
+							else:
+								message = f"dalla pesa '{locked_record.weigher_name}'"
+						if not success:
+							raise HTTPException(status_code=400, detail=f"Record con id '{value.id}' nella tabella '{key}' bloccato {message}")
 				for sub_key, sub_value in vars(value).items():
 					if sub_value is not None or is_allow_none:
 						# Se il valore è un tipo primitivo, aggiorna il nuovo valore
@@ -78,9 +84,15 @@ class Functions:
 		if new_id == -1:
 			new_id = None
 		else:
-			success, record, error = lock_record("reservation", new_id, "SELECT", None, None, weigher_name)
+			success, locked_record, error = lock_record("reservation", new_id, "SELECT", None, None, weigher_name)
+			if success is False:
+				message = None
+				if locked_record.user:
+					message = f"dall'utente '{locked_record.user.username}'"
+				else:
+					message = f"dalla pesa '{locked_record.weigher_name}'"
 			if not success:
-				raise HTTPException(status_code=400, detail=f"Unable to lock record: {error}")
+				raise HTTPException(status_code=400, detail=f"Record con id '{new_id}' nella tabella 'reservation' bloccato {message}")
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"] = new_id
 		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)

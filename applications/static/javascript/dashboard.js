@@ -73,6 +73,7 @@ const minWeight = document.getElementById('minWeight');
 const maxWeight = document.getElementById('maxWeight');
 const division = document.getElementById('division');
 const cams = document.querySelector('#cams');
+const reconnectionButton = document.getElementById('reconnectionButton');
 // Usa un MutationObserver per rilevare i cambiamenti nei contenuti
 const observer = new MutationObserver(() => updateStyle());
 
@@ -494,26 +495,29 @@ function openPopup(name, input) {
     popup.style.display = "flex"; // Mostra il popup
     setTimeout(() => {
         popupContent.classList.add("show"); // Aggiungi la classe per mostrare
+        if (input) popupContent.querySelector("input").focus(); // Imposta il focus sull'input
     }, 10); // Breve ritardo per assicurarsi che il display sia impostato
 }
 
 function closePopup() {
-    const popup = document.getElementById(currentPopup);
-    const popupContent = popup.querySelector(".popup-content");
-    const buttons = popup.querySelectorAll("button");
-    
-    const input = document.getElementById(currentInput);
-    input.value = "";
+    if (currentPopup) {
+        const popup = document.getElementById(currentPopup);
+        const popupContent = popup.querySelector(".popup-content");
+        const buttons = popup.querySelectorAll("button");
+        
+        const input = document.getElementById(currentInput);
+        if (input) input.value = "";
 
-    // Rimuovi la classe per nascondere
-    popupContent.classList.remove("show");
-    
-    // Aspetta il tempo di transizione prima di nascondere il popup
-    setTimeout(() => {
-        popup.style.display = "none"; // Nascondi il popup
-        myNumberInput.value = "";
-        buttons.forEach(button => button.disabled = false);
-    }, 300); // Tempo della transizione
+        // Rimuovi la classe per nascondere
+        popupContent.classList.remove("show");
+        
+        // Aspetta il tempo di transizione prima di nascondere il popup
+        setTimeout(() => {
+            popup.style.display = "none"; // Nascondi il popup
+            myNumberInput.value = "";
+            buttons.forEach(button => button.disabled = false);
+        }, 300); // Tempo della transizione
+    }
 }
 
 function connectWebSocket(path, exe) {
@@ -525,6 +529,8 @@ function connectWebSocket(path, exe) {
     // Costruisci l'URL WebSocket
     const websocketUrl = `${baseUrl}/${path}`;
 
+    closeWebSocket(); // Chiude la connessione WebSocket precedente se esiste
+
     _data = new WebSocket(websocketUrl);
 
     _data.addEventListener('message', (e) => {
@@ -533,32 +539,38 @@ function connectWebSocket(path, exe) {
 
     _data.addEventListener('open', () => {
         enableAllElements();
+        reconnectionButton.disabled = true;
+        closePopup('reconnectionPopup');
     })
 
     _data.addEventListener('error', () => {
         if (!isRefreshing) {
-            attemptReconnect(path);
+            closeWebSocket();
             disableAllElements();
+            reconnectionButton.disabled = false;
+            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+            openPopup('reconnectionPopup');
         }
     });
 
     _data.addEventListener('close', () => {
         if (!isRefreshing) {
-            attemptReconnect(path);
             disableAllElements();
+            reconnectionButton.disabled = false;
+            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+            openPopup('reconnectionPopup');
         }
     });
 }
 
-function attemptReconnect(path) {
+function attemptReconnect() {
+    reconnectionButton.disabled = true;
     closeWebSocket();
-    reconnectTimeout = setTimeout(() => {
-        connectWebSocket(path, updateUIRealtime);
-    }, 3000);
+    document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
+    connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
 }
 
 function closeWebSocket() {
-    clearTimeout(reconnectTimeout);
     if (_data) {
         _data.close(); // Chiude la connessione WebSocket
         _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
