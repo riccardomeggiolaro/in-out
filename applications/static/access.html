@@ -48,52 +48,49 @@
     <div class="table-container">
         <div class="title">
             <h2>Accessi</h2>
-            <!-- <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
+            <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
                 <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
-                <button class="register-button" onclick="addRow()">Prenota accesso</button>
-            </div> -->
+            </div>
         </div>
         <table>
             <thead>
                 <tr id="filters">
-                    <th name="date_created">
-                        <input type="text" id="dateRange" placeholder="Data accettazione" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
-                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
-                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                    <th name="reservation.vehicle.plate">
+                        <input id="filter.reservation.vehicle.plate" name="reservation.vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
                     </th>
-                    <th name="status">
-                        <select id="filter.status" name="status" onchange="updateTable()">
-                            <option value="">Stato</option>
-                            <option value="NOT_CLOSED" selected>Non chiusa</option>
-                            <option value="WAITING">Attesa</option>
-                            <option value="CALLED">Chiamato</option>
-                            <option value="ENTERED">Entrato</option>
-                            <option value="CLOSED">Chiusa</option>
-                        </select>
+                    <th name="reservation.subject.social_reason">
+                        <input id="filter.reservation.subject.social_reason" name="reservation.subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
                     </th>
-                    <th name="number_weighings">N. Pesate</th>
-                    <th name="waiting">Attesa</th>
-                    <th name="subject.social_reason">
-                        <input id="filter.subject.social_reason" name="subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
+                    <th name="reservation.vector.social_reason">
+                        <input id="filter.reservation.vector.social_reason" name="reservation.vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
                     </th>
-                    <th name="vector.social_reason">
-                        <input id="filter.vector.social_reason" name="vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
+                    <th name="reservation.note">
+                        <input id="filter.reservation.note" name="reservation.note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
-                    <th name="driver.social_reason">
-                        <input id="filter.driver.social_reason" name="driver.social_reason" type="text" placeholder="Autista" oninput="updateTable()">
+                    <th name="reservation.document_reference">
+                        <input id="filter.reservation.document_reference" name="reservation.document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
                     </th>
-                    <th name="driver.telephone">
-                        <input id="filter.driver.telephone" name="driver.telephone" type="text" placeholder="Tel. Autista" oninput="updateTable()">
+                    <th name="weight1.date">
+                        Data 1
                     </th>
-                    <th name="vehicle.plate">
-                        <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
+                    <th name="weight2.date">
+                        Data 2
                     </th>
-                    <th name="note">
-                        <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
+                    <th name="weight1.pid">
+                        Pid 1
                     </th>
-                    <th name="document_reference">
-                        <input id="filter.document_reference" name="document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
+                    <th name="weight2.pid">
+                        Pid 2
+                    </th>
+                    <th name="weight1.weight">
+                        Peso 1 (kg)
+                    </th>
+                    <th name="weight2.weight">
+                        Peso 2 (kg)
+                    </th>
+                    <th name="net_weight">
+                        Netto (kg)
                     </th>
                     <th></th>
                 </tr>
@@ -102,7 +99,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="12" style="text-align: center;">
+                    <td colspan="13" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -120,177 +117,11 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
         <h3>Prenota accesso:</h3>
         <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
-            <h4>Soggetto</h4>
-
-            <div class="radio">
-                <div class="radio-option left">
-                  <label class="flexRadio">
-                    <input id="customer" type="radio" name="typeSubject" value="CUSTOMER" checked>
-                    Cliente
-                  </label>
-                </div>
-                <div class="radio-option right">
-                  <label class="flexRadio">
-                    <input id="supplier" type="radio" name="typeSubject" value="SUPPLIER">
-                    Fornitore
-                  </label>
-                </div>
-            </div>
-
-            <div>
-                <div class="item">
-                    <input id="subject.id" name="subject.id" type="number" class="suggestionId">
-                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
-                            if (document.querySelector('#add-popup #subject\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#add-popup #subject\\.id').value, 'subject');
-                                document.querySelector('#add-popup #subject\\.id').value = '';
-                                document.querySelector('#add-popup #subject\\.telephone').disabled = false;
-                                document.querySelector('#add-popup #subject\\.telephone').value = '';
-                                document.querySelector('#add-popup #subject\\.cfpiva').disabled = false;
-                                document.querySelector('#add-popup #subject\\.cfpiva').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#add-popup #subject\\.id').value) {
-                                populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
-                    <div id="suggestions.subject.social_reason" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="new-password">
-                </div>
-                    
-                <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <h4>Vettore</h4>
-
-            <div>
-                <div class="item">
-                    <input id="vector.id" name="vector.id" type="number" class="suggestionId">
-                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#add-popup', '#register', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
-                            if (document.querySelector('#add-popup #vector\\.id').value != '') {
-                                deselectAnagrafic('#add-popup', document.querySelector('#add-popup #vector\\.id').value, 'vector');
-                                document.querySelector('#add-popup #vector\\.id').value = '';
-                                document.querySelector('#add-popup #vector\\.telephone').disabled = false;
-                                document.querySelector('#add-popup #vector\\.telephone').value = '';
-                                document.querySelector('#add-popup #vector\\.cfpiva').disabled = false;
-                                document.querySelector('#add-popup #vector\\.cfpiva').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#add-popup #vector\\.id').value) {
-                                populateSuggestions('#add-popup', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
-                    <div id="suggestions.vector.social_reason" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
-                </div>
-                    
-                <div class="item-25">
-                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <h4>Autista</h4>
-
-            <div>
-                <div class="item-25">
-                    <input id="driver.id" name="driver.id" type="number" class="suggestionId">
-                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
-                            if (document.querySelector('#add-popup #driver\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#add-popup #driver\\.id').value, 'driver');
-                                document.querySelector('#add-popup #driver\\.id').value = '';
-                                document.querySelector('#add-popup #driver\\.telephone').disabled = false;
-                                document.querySelector('#add-popup #driver\\.telephone').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#add-popup #driver\\.id').value) {
-                                populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
-                    <div id="suggestions.driver.social_reason" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <h4>Veicolo</h4>
-
-            <div>
-                <div class="item-25">
-                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password" required
-                        oninput="
-                            this.value = this.value.toUpperCase();
-                            populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            if (document.querySelector('#add-popup #vehicle\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'vehicle');
-                                document.querySelector('#add-popup #vehicle\\.id').value = '';
-                                document.querySelector('#add-popup #vehicle\\.description').disabled = false;
-                                document.querySelector('#add-popup #vehicle\\.description').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#add-popup #vehicle\\.id').value) {
-                                populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
-                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <div>
-                <div class="item">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" autocomplete="new-password" required
-                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                </div>
-
-                <div class="item-25">
-                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
-                </div>
-            </div>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Indietro</button>
@@ -400,43 +231,6 @@
 
             <hr>
 
-            <h4>Autista</h4>
-
-            <div>
-                <div class="item-25">
-                    <input id="driver.id" name="driver.id" type="number" class="suggestionId id"
-                        oninput="
-                            if (this.value != '') {
-                                document.querySelector('#edit-popup #driver\\.telephone').disabled = true;
-                            }                           
-                        ">
-                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
-                            if (document.querySelector('#edit-popup #driver\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #driver\\.id').value, 'driver');
-                                document.querySelector('#edit-popup #driver\\.id').value = '';
-                                document.querySelector('#edit-popup #driver\\.telephone').disabled = false;
-                                document.querySelector('#edit-popup #driver\\.telephone').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#edit-popup #driver\\.id').value) {
-                                populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
-                    <div id="suggestions.driver.social_reason" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" autocomplete="new-password"
-                        oninput="this.value = this.value.replace(/\D/g, '');">
-                </div>
-            </div>
-
-            <hr>
-
             <h4>Veicolo</h4>
 
             <div>
@@ -475,11 +269,6 @@
             <hr>
 
             <div>
-                <div class="item">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" autocomplete="new-password" required
-                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                </div>
-
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
                 </div>
@@ -558,17 +347,13 @@
             itemName = 'reservation';
             lastChar = 'a';
             canAlwaysDelete = true;
-            listUrlPath = '/api/anagrafic/reservation/list';
+            listUrlPath = '/api/anagrafic/reservation/in-out/list';
             exportUrlPath = '/api/anagrafic/reservation/export'
             addUrlPath = '/api/anagrafic/reservation';
             setUrlPath = '/api/anagrafic/reservation';
             deleteUrlPath = '/api/anagrafic/reservation';
             websocketUrlPath = '/api/anagrafic/reservation';
-            callback_populate_select = populateForm;
             callback_close_popups = deselectAllAnagrafic;
-            populate_detail_tr = populateDetailTr;
-            callback_populate_table = updateElapsedTimes;
-            callback_call_anagrafic = callReservation;
             params = {
                 "accesso con targa": "reservation.vehicle.plate",
                 "accesso con id": "reservation.id",
@@ -582,7 +367,6 @@
                 "pesata con il veicolo": "weighing.vehicle.plate"
             }
             init();
-            setInterval(updateElapsedTimes, 1000); // aggiorna ogni minuto
         });
 
         flatpickr("#dateRange", {
@@ -615,61 +399,6 @@
             }
         });
 
-        function updateElapsedTimes() {
-            const rows = document.querySelectorAll("table tr");
-
-            rows.forEach(row => {
-                const cells = row.querySelectorAll("td");
-
-                if (cells.length >= 2) {
-                    const datetimeCell = cells[0]; // primo td = data di creazione
-                    const statusCell = cells[1]; // secondo td = stato della prenotazione
-                    const elapsedCell = cells[3]; // terzo td = tempo trascorso
-                    const buttonsCell = cells[11];
-
-                    if (statusCell.dataset.value === "Attesa") {
-                        const startDate = new Date(datetimeCell.dataset.value);
-                        const now = new Date();
-                        const diffMs = now - startDate;
-
-                        if (isNaN(diffMs) || diffMs < 0) {
-                            elapsedCell.textContent = '—';
-                            return;
-                        }
-
-                        const totalMinutes = Math.floor(diffMs / 60000);
-                        const days = Math.floor(totalMinutes / (60 * 24));
-                        const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-                        const minutes = totalMinutes % 60;
-
-                        let displayText = '';
-
-                        if (days > 0) {
-                            displayText += `${days}d `;
-                        }
-                        if (hours > 0 || days > 0) {
-                            displayText += `${hours}h `;
-                        }
-                        displayText += `${minutes}min`;
-
-                        elapsedCell.textContent = displayText.trim();
-                    } else {
-                        elapsedCell.textContent = "";
-                    }
-                }
-            });
-        }
-        
-        function populateForm(idForm, item={typeSocialReason: 0, idSocialReason: null, idVector: null, idVehicle: null, idMaterial: null}) {
-            if (idForm !== '#delete') {
-            }
-        }
-
-        // function highlightText(suggestion, input, filter) {
-        //     const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
-        //     return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
-        // }
-
         function highlightText(suggestion, input, filter) {
             // Creiamo un'espressione regolare che cerca l'input solo all'inizio della stringa
             const regex = new RegExp(`^(${input})`, 'i');
@@ -682,52 +411,6 @@
                 return suggestion[filter];
             }
             return '';
-        }
-
-        function callReservation(type, reservation) {
-            let url;
-            let popupTitle;
-            let popupContent;
-            let messageSnackbar;
-            if (type === "CALL") {
-                url = `/api/anagrafic/reservation/call/${reservation["id"]}`;
-                popupTitle = "Conferma chiamata!";
-                popupContent = `Chiamare il veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
-                messageSnackbar = `Chiamando il veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
-            } else {
-                url = `/api/anagrafic/reservation/cancel-call/${reservation["id"]}`;
-                popupTitle = "Conferma annullamento chiamata!";
-                popupContent = `Annullare la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
-                messageSnackbar = `Annullando la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
-            }
-            confirm_exec_funct = () => {
-                showSnackbar(messageSnackbar, 'rgb(208, 255, 208)', 'black');
-                fetch(url, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(async res => {
-                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-                    return ({
-                        data,
-                        status
-                    });
-                })
-                .then(res => {
-                    if (res.data.detail) {
-                        showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
-                    } else {
-                        showSnackbar(res.data, 'rgb(255, 208, 208)', 'black');
-                    }
-                })
-                .finally(_ => {
-                    deselectAnagrafic(reservation["id"]);
-                });
-            }
-            document.querySelector('#confirm-title').textContent = popupTitle;
-            document.querySelector('#confirm-content').innerHTML = popupContent;
-            openPopup('confirm-popup');
         }
 
         function deleteLastWeighing(idReservation, plate, weighing, pid, bil) {
@@ -774,83 +457,6 @@
             imgElement.src = imageUrl;
             imgElement.alt = fileName;
             openPopup('img-popup');
-        }
-
-        function populateDetailTr(item) {
-            let content = `<ul class="list-detail-tr">`;
-            let lengthWighings = item.in_out.length;
-            item.in_out.reverse().forEach(weighing => {
-                // Pulsante Elimina
-                const deleteWeighingButton = document.createElement("button");
-                deleteWeighingButton.style.visibility = 'hidden';
-                deleteWeighingButton.textContent = "🗑️";
-                deleteWeighingButton.onclick = (e) => {
-                    e.preventDefault();
-                };
-
-                let weight1 = '';
-                if (weighing.weight1) {
-                    weight1 = `
-                        <b>Data 1: </b> ${new Date(weighing.weight1.date).toLocaleString('it-IT', options)}.
-                        <b>Peso 1: </b> ${weighing.weight1.weight} kg.
-                        <b>Pid 1: </b> ${weighing.weight1.pid}.
-                        <b>Bil: </b> ${weighing.weight1.weigher}.
-                    `;
-                }
-
-                let weight2 = '';
-                if (weighing.weight2) {
-                    weight2 = `
-                        <b>Data 2: </b> ${new Date(weighing.weight2.date).toLocaleString('it-IT', options)}.
-                        <b>Peso 2: </b> ${weighing.weight2.weight} kg.
-                        <b>Pid 2: </b> ${weighing.weight2.pid} kg.
-                        <b>Bil: </b> ${weighing.weight2.weigher}.
-                    `;
-                }
-
-                let netWeight = '';
-                if (weighing.net_weight >= 0) {
-                    netWeight = `<b>Netto: </b> ${weighing.net_weight} kg.`;
-                }
-
-                let material = '';
-                if (weighing.material) {
-                    material = `<b>Materiale: </b> ${weighing.material.description}.`;
-                }
-
-                let img1 = '';
-                
-
-                weighing.weight1
-
-                content += `
-                    <li>
-                        <p>
-                            ${weight1}
-                            ${weight2}
-                            ${netWeight}
-                            ${material}
-                        </p>
-                    </li>
-                `;
-
-                // if (lengthWighings === item.in_out.length) {
-                //     content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>`;
-                // }
-                
-                // content += `<div class="imgs">`;
-
-                // // Add images to the .imgs div
-                // weighing.weighing_pictures.forEach(picture => {
-                //     content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
-                // });
-                
-                // // Close the div and li tags
-                // content += `</div></li>`;
-                // lengthWighings--;
-            })
-            content += `</ul>`;
-            return content;
         }
 
         function populateSuggestions(popup, suggestions, key, anagrafic, value) {

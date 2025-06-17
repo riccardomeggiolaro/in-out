@@ -1,6 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, Weighing, InOut, Reservation, ReservationStatus
+from modules.md_database.md_database import SessionLocal, InOut, Reservation, ReservationStatus
 from datetime import datetime, date
 
 def get_list_reservations(filters=None, not_closed=True, fromDate=None, toDate=None, limit=None, offset=None, order_by=None):

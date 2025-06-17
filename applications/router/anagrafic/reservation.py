@@ -6,6 +6,7 @@ from modules.md_database.interfaces.reservation import Reservation, AddReservati
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.get_list_reservations import get_list_reservations
+from modules.md_database.functions.get_list_in_out import get_list_in_out
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.delete_last_weighing_of_reservation import delete_last_weighing_of_reservation
@@ -32,6 +33,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
+        self.router.add_api_route('/in-out/list', self.getListInOut, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
         self.router.add_api_route('/export/pdf', self.exportListReservationsPdf, methods=['GET'])
         self.router.add_api_route('', self.addReservation, methods=['POST'])
@@ -63,6 +65,53 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 "total_rows": total_rows,
                 "buffer": self.buffer
             }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"{e}")
+        
+    async def getListInOut(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
+        try:
+            not_closed = False
+            filters = query_params.copy()
+            
+            # Handle status filter
+            if "status" in filters and filters["status"] == "NOT_CLOSED":
+                not_closed = True                
+                del filters["status"]
+                
+            # Handle limit and offset
+            if "limit" in filters:
+                del filters["limit"]
+            if "offset" in filters:
+                del filters["offset"]
+                
+            # Handle date filters for weights
+            if "fromDate" in filters:
+                filters["weight1.date_from"] = filters["fromDate"]
+                filters["weight2.date_from"] = filters["fromDate"]
+                del filters["fromDate"]
+                
+            if "toDate" in filters:
+                toDate = datetime.fromisoformat(filters["toDate"])
+                toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
+                filters["weight1.date_to"] = toDate
+                filters["weight2.date_to"] = toDate
+                del filters["toDate"]
+                
+            # Call get_list_in_out with prepared filters
+            data, total_rows = get_list_in_out(
+                filters=filters,
+                not_closed=not_closed,
+                limit=limit,
+                offset=offset,
+                order_by=('reservation.date_created', 'desc')
+            )
+            
+            return {
+                "data": data,
+                "total_rows": total_rows,
+                "buffer": self.buffer
+            }
+            
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
         
