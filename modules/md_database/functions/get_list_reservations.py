@@ -1,6 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Reservation, ReservationStatus
+from modules.md_database.md_database import SessionLocal, InOut, Reservation, ReservationStatus, Weighing
 from datetime import datetime, date
 
 def get_list_reservations(filters=None, not_closed=True, fromDate=None, toDate=None, limit=None, offset=None, order_by=None):
@@ -43,8 +43,12 @@ def get_list_reservations(filters=None, not_closed=True, fromDate=None, toDate=N
             selectinload(Reservation.vector),
             selectinload(Reservation.driver),
             selectinload(Reservation.vehicle),
-            selectinload(Reservation.in_out).selectinload(InOut.weight1),
-            selectinload(Reservation.in_out).selectinload(InOut.weight2),
+            selectinload(Reservation.in_out)
+                .selectinload(InOut.weight1)
+                .selectinload(Weighing.weighing_pictures),   # <-- aggiungi questa riga
+            selectinload(Reservation.in_out)
+                .selectinload(InOut.weight2)
+                .selectinload(Weighing.weighing_pictures),   # <-- aggiungi questa riga
             selectinload(Reservation.in_out).selectinload(InOut.material)
         )
 

@@ -1,5 +1,5 @@
 from sqlalchemy.exc import IntegrityError
-from modules.md_database.md_database import Reservation, LockRecord, SessionLocal, LockRecordType
+from modules.md_database.md_database import Reservation, InOut, LockRecord, SessionLocal, LockRecordType
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 
@@ -18,6 +18,31 @@ def lock_record(table_name, idRecord, type, websocket_identifier, user_id, weigh
 
             # Controllo speciale per tabelle diverse da reservation
             if table_name != "reservation":
+                # --- INIZIO BLOCCO PER MATERIAL ---
+                if table_name == "material" and type != "SELECT":
+                    # Trova tutte le reservation bloccate
+                    locked_res_ids = session.query(LockRecord.idRecord).filter(
+                        LockRecord.table_name == "reservation",
+                        LockRecord.type.in_([
+                            LockRecordType.UPDATE, LockRecordType.DELETE, 
+                            LockRecordType.CALL, LockRecordType.CANCEL_CALL,
+                            LockRecordType.SELECT
+                        ])
+                    ).subquery()
+                    # Cerca se esiste almeno una reservation bloccata che ha un InOut con quel materiale
+                    blocked_res_with_material = session.query(Reservation).join(Reservation.in_out).filter(
+                        Reservation.id.in_(locked_res_ids),
+                        InOut.idMaterial == idRecord
+                    ).first()
+                    if blocked_res_with_material:
+                        # Trova il lock record della reservation bloccata
+                        lock = session.query(LockRecord).options(joinedload(LockRecord.user)).filter(
+                            LockRecord.table_name == "reservation",
+                            LockRecord.idRecord == blocked_res_with_material.id
+                        ).first()
+                        return False, lock, "material"
+                # --- FINE BLOCCO PER MATERIAL ---
+
                 # Controlla se questo record è associato a prenotazioni bloccate
                 # Questa query cerca prenotazioni associate al record corrente
                 # che sono anche bloccate nella tabella LockRecord

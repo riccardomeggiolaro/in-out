@@ -23,7 +23,7 @@ class IdSelected(BaseModel):
 class Data(BaseModel):
 	data_in_execution: DataInExecution = DataInExecution(**{})
 	id_selected: IdSelected = IdSelected(**{})
-	number_weighings: Optional[int] = 1
+	number_in_out: Optional[int] = 1
     
 class EventAction(BaseModel):
     take_picture: List[int] = []

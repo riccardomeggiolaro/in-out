@@ -124,7 +124,7 @@ class Reservation(Base):
     idVector = Column(Integer, ForeignKey('vector.id'))
     idDriver = Column(Integer, ForeignKey('driver.id'))
     idVehicle = Column(Integer, ForeignKey('vehicle.id'))
-    number_weighings = Column(Integer, default=0, nullable=False)
+    number_in_out = Column(Integer, default=0, nullable=False)
     note = Column(String, nullable=True)
     selected = Column(Boolean, index=True, default=False)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
@@ -195,7 +195,7 @@ upload_file_datas_required_columns = {
     "driver": {"social_reason": str, "telephone": str},
     "vehicle": {"plate": str, "description": str},
     "material": {"description": str},
-    "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_weighings": int, "note": str}
+    "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str}
 }
 
 # Create tables

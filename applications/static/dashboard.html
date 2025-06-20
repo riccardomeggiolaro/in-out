@@ -25,33 +25,35 @@
                     <hr>
 
                     <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>AUTOMEZZO</strong></p>
                         <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
-                        <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)">
-                            <option value="CUSTOMER">Cliente</option>
-                            <option value="SUPPLIER">Fornitore</option>
+                        <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)" style="font-weight: bold;">
+                            <option value="CUSTOMER">CLIENTE</option>
+                            <option value="SUPPLIER">FORNITORE</option>
                         </select>
-                    </div>
-
-                    <div>
                         <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>VETTORE</strong></p>
                         <input placeholder="Vettore" id="currentSocialReasonVector" type="text" name="social_reason" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>MATERIALE</strong></p>
                         <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>NOTE</strong></p>
                         <input placeholder="Note" id="currentNote" type="text" name="note" onclick="openPopup('notePopup', 'myNoteInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>DOCUMENTO</strong></p>
                         <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" oninput="this.value = ''" >
                     </div>
                 </div>

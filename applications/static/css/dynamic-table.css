@@ -408,3 +408,7 @@ hr {
 input:invalid {
     border-color: rgb(255, 131, 131);
 }
+
+.full-width {
+    width: 100%;
+}

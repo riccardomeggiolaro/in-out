@@ -4,6 +4,7 @@ from modules.md_database.interfaces.subject import Subject, SubjectDataDTO
 from modules.md_database.interfaces.vector import Vector, VectorDataDTO
 from modules.md_database.interfaces.driver import Driver, DriverDataDTO
 from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
+from modules.md_database.interfaces.material import MaterialDataDTO
 from modules.md_database.interfaces.in_out import InOut
 from datetime import datetime
 
@@ -14,7 +15,7 @@ class Reservation(BaseModel):
     idVector: Optional[int] = None
     idDriver: Optional[int] = None
     idVehicle: Optional[int] = None
-    number_weighings: Optional[int] = None
+    number_in_out: Optional[int] = None
     note: Optional[str] = None
     status: Optional[str] = None
     document_reference: Optional[str] = None
@@ -34,7 +35,7 @@ class AddReservationDTO(BaseModel):
     vector: VectorDataDTO = VectorDataDTO(**{})
     driver: DriverDataDTO = DriverDataDTO(**{})
     vehicle: VehicleDataDTO = VehicleDataDTO(**{})
-    number_weighings: int = 2
+    number_in_out: int = 2
     note: Optional[str] = None
     document_reference: Optional[str] = None
     type: str = "RESERVATION"
@@ -58,7 +59,8 @@ class SetReservationDTO(BaseModel):
     vector: VectorDataDTO = VectorDataDTO(**{})
     driver: DriverDataDTO = DriverDataDTO(**{})
     vehicle: VehicleDataDTO = VehicleDataDTO(**{})
-    number_weighings: Optional[int] = None
+    material: MaterialDataDTO = MaterialDataDTO(**{})
+    number_in_out: Optional[int] = None
     note: Optional[str] = None
     document_reference: Optional[str] = None
 

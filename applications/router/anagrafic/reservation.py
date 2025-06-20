@@ -14,6 +14,7 @@ from modules.md_database.functions.add_reservation import add_reservation
 from modules.md_database.functions.update_reservation import update_reservation
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
+from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
@@ -53,8 +54,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if fromDate is not None:
                 del query_params["fromDate"]
             if toDate is not None:
-                del query_params["toDate"]
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
+                del query_params["toDate"]
             if limit is not None:
                 del query_params["limit"]
             if offset is not None:
@@ -68,7 +69,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
         
-    async def getListInOut(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
+    async def getListInOut(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
             not_closed = False
             filters = query_params.copy()
@@ -85,25 +86,22 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 del filters["offset"]
                 
             # Handle date filters for weights
-            if "fromDate" in filters:
-                filters["weight1.date_from"] = filters["fromDate"]
-                filters["weight2.date_from"] = filters["fromDate"]
+            if fromDate is not None:
                 del filters["fromDate"]
                 
-            if "toDate" in filters:
-                toDate = datetime.fromisoformat(filters["toDate"])
+            if toDate is not None:
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
-                filters["weight1.date_to"] = toDate
-                filters["weight2.date_to"] = toDate
                 del filters["toDate"]
                 
             # Call get_list_in_out with prepared filters
             data, total_rows = get_list_in_out(
                 filters=filters,
                 not_closed=not_closed,
+                fromDate=fromDate,
+                toDate=toDate,
                 limit=limit,
                 offset=offset,
-                order_by=('reservation.date_created', 'desc')
+                order_by=('id', 'desc')
             )
             
             return {
@@ -115,235 +113,189 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
         
-    async def exportListReservationsXlsx(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+    async def exportListReservationsXlsx(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
+                                   limit: Optional[int] = None, offset: Optional[int] = None,
+                                   fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
             not_closed = False
-            if "status" in query_params and query_params["status"] == "NOT_CLOSED":
+            filters = query_params.copy()
+            
+            # Handle status filter
+            if "status" in filters and filters["status"] == "NOT_CLOSED":
                 not_closed = True                
-                del query_params["status"]
+                del filters["status"]
+                
+            # Handle limit and offset
+            if "limit" in filters:
+                del filters["limit"]
+            if "offset" in filters:
+                del filters["offset"]
+                
+            # Handle date filters
             if fromDate is not None:
-                del query_params["fromDate"]
+                del filters["fromDate"]
+                
             if toDate is not None:
-                del query_params["toDate"]
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
-            if limit is not None:
-                del query_params["limit"]
-            if offset is not None:
-                del query_params["offset"]
-            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'))
-            # 1. Prepariamo il foglio "Prenotazioni"
-            reservations_list = []
-            weighings_list = []
+                del filters["toDate"]
 
-            for res in data:
-                reservations_list.append({
-                    "ID": res.id,
-                    "Data creazione": datetime.strftime(res.date_created, "%d-%m-%Y %M:%H"),
-                    "Stato": res.status.value,
-                    "Numero pesate": f"{len(res.weighings)}/{res.number_weighings}",
-                    "Targa": res.vehicle.plate if res.vehicle else None,
-                    "Cliente/Fornitore": res.subject.social_reason if res.subject else None,
-                    "Vettore": res.vector.social_reason if res.vector else None,
-                    "Note": res.note,
-                    "Referenza documento": res.document_reference
+            data, total_rows = get_list_in_out(
+                filters=filters,
+                not_closed=not_closed,
+                fromDate=fromDate,
+                toDate=toDate,
+                limit=limit,
+                offset=offset,
+                order_by=('reservation.date_created', 'desc')
+            )
+
+            # Prepara lista per export
+            in_out_list = []
+            for inout in data:
+                weight1 = inout.weight1.weight if inout.weight1 else None
+                if weight1 is None and inout.weight2 and inout.weight2.tare > 0:
+                    weight1 = inout.weight2.tare
+                in_out_list.append({
+                    "Targa": inout.reservation.vehicle.plate if inout.reservation.vehicle else None,
+                    "Cliente/Fornitore": inout.reservation.subject.social_reason if inout.reservation.subject else None,
+                    "Vettore": inout.reservation.vector.social_reason if inout.reservation.vector else None,
+                    "Note": inout.reservation.note,
+                    "Referenza documento": inout.reservation.document_reference,
+                    "Materiale": inout.material.description if inout.material else None,
+                    "Data 1": datetime.strftime(inout.weight1.date, "%d-%m-%Y %H:%M") if inout.weight1 else None,
+                    "Data 2": datetime.strftime(inout.weight2.date, "%d-%m-%Y %H:%M") if inout.weight2 else None,
+                    "Pid 1": inout.weight1.pid if inout.weight1 else None,
+                    "Pid 2": inout.weight2.pid if inout.weight2 else None,
+                    "Peso 1 (kg)": weight1,
+                    "Peso 2 (kg)": inout.weight2.weight if inout.weight2 else None,
+                    "Netto (kg)": inout.net_weight if inout.net_weight is not None else None
                 })
 
-                for idx, w in enumerate(res.weighings, start=1):
-                    weighings_list.append({
-                        "ID Accesso": res.id,
-                        "Data pesata": datetime.strftime(w.date, "%d-%m-%Y %M:%H"),
-                        "Pesa": w.weigher,
-                        "Peso (kg)": w.weight,
-                        "Codice pesata": w.pid,
-                        "Tipo": w.type.value
-                    })
-
-            # 2. Creiamo DataFrame
-            df_reservations = pd.DataFrame(reservations_list)
-            df_weighings = pd.DataFrame(weighings_list)
-
-            # 3. Scriviamo su file Excel
+            # Crea DataFrame e esporta
+            df = pd.DataFrame(in_out_list)
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df_reservations.to_excel(writer, sheet_name="Accessi", index=False)
-                df_weighings.to_excel(writer, sheet_name="Pesate", index=False)
+                df.to_excel(writer, sheet_name="Pesate", index=False)
 
             output.seek(0)
             return StreamingResponse(
                 output,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": "attachment; filename=prenotazioni.xlsx"}
+                headers={"Content-Disposition": "attachment; filename=pesate.xlsx"}
             )
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
     async def exportListReservationsPdf(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
-                                    limit: Optional[int] = None, offset: Optional[int] = None, 
-                                    fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+                                      limit: Optional[int] = None, offset: Optional[int] = None,
+                                      fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
-            # Get data using the same logic as before
             not_closed = False
-            if "status" in query_params and query_params["status"] == "NOT_CLOSED":
+            filters = query_params.copy()
+            
+            # Handle status filter
+            if "status" in filters and filters["status"] == "NOT_CLOSED":
                 not_closed = True                
-                del query_params["status"]
-            if fromDate is not None:
-                del query_params["fromDate"]
-            if toDate is not None:
-                del query_params["toDate"]
-                toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
-            if limit is not None:
-                del query_params["limit"]
-            if offset is not None:
-                del query_params["offset"]
+                del filters["status"]
                 
-            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, 
-                                                limit, offset, ('date_created', 'desc'))
+            # Handle limit and offset
+            if "limit" in filters:
+                del filters["limit"]
+            if "offset" in filters:
+                del filters["offset"]
+                
+            # Handle date filters
+            if fromDate is not None:
+                del filters["fromDate"]
+                
+            if toDate is not None:
+                toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
+                del filters["toDate"]
 
-            # Create PDF buffer
+            data, total_rows = get_list_in_out(
+                filters=filters,
+                not_closed=not_closed,
+                fromDate=fromDate,
+                toDate=toDate,
+                limit=limit,
+                offset=offset,
+                order_by=('reservation.date_created', 'desc')
+            )
+
+            # Create PDF with smaller margins
             buffer = BytesIO()
-            doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=30, rightMargin=30)
+            doc = SimpleDocTemplate(buffer, 
+                                  pagesize=A4, 
+                                  leftMargin=15,  # Reduced margins
+                                  rightMargin=15,
+                                  topMargin=15,
+                                  bottomMargin=15)
             story = []
 
-            # Calculate available width
-            page_width = A4[0] - 60  # Total width minus left and right margins
-            
-            # Add title
+            # Add title with smaller spacing
             styles = getSampleStyleSheet()
-            title = Paragraph("Lista Accessi e Pesate", styles['Heading1'])
+            title = Paragraph("Lista Pesate", styles['Heading2'])  # Smaller heading
             story.append(title)
-            story.append(Spacer(1, 0.5*inch))
+            story.append(Spacer(1, 0.2*inch))  # Reduced spacing
 
-            # Define common style properties
-            common_font_size = 8  # Reduced font size for better fit
+            # Define table properties with smaller font
+            common_font_size = 6  # Reduced font size
             header_color = colors.grey
-            subheader_color = colors.lightgrey
 
-            # Define table header for reservations
-            headers = ['ID', 'Data', 'Stato', 'Targa', 'Cliente/Fornitore', 'Vettore', 'Note', 'Ref. Doc.']
+            # Define headers and column widths
+            headers = ['Targa', 'Cliente/Forn.', 'Vettore', 'Note', 'Ref.Doc', 'Materiale',
+                      'Data 1', 'Data 2', 'Pid 1', 'Pid 2', 'Peso 1 (kg)', 'Peso 2 (kg)', 'Netto (kg)']
             
-            # Calculate dynamic column widths with max-width constraints
-            # Define max widths for each column (in points)
-            max_widths = [25, 90, 45, 60, 120, 120, 100, 80]  # Total: 700 points
-            
-            # Scale widths to fit page if needed
-            total_max_width = sum(max_widths)
-            if total_max_width > page_width:
-                scale_factor = page_width / total_max_width
-                col_widths = [w * scale_factor for w in max_widths]
-            else:
-                col_widths = max_widths
+            # Updated widths to accommodate the new material column (reduced some widths to maintain A4 fit)
+            col_widths = [30, 55, 55, 55, 46, 46, 46, 46, 46, 46, 38, 38, 38]  
 
-            # Function to wrap text to fit in cell
-            def wrap_text(text, max_width, font_size=common_font_size):
-                if not text:
-                    return ""
-                # Estimate characters per line based on width and font size
-                # Increased multiplier for better estimation
-                chars_per_line = int(max_width / (font_size * 0.5))  # More generous estimation
-                if len(str(text)) <= chars_per_line:
-                    return str(text)
-                
-                # Break long text into multiple lines
-                words = str(text).split()
-                lines = []
-                current_line = ""
-                
-                for word in words:
-                    test_line = current_line + " " + word if current_line else word
-                    # More accurate width calculation
-                    if len(test_line) <= chars_per_line:
-                        current_line = test_line
-                    else:
-                        if current_line:
-                            lines.append(current_line)
-                        current_line = word
-                
-                if current_line:
-                    lines.append(current_line)
-                
-                return "\n".join(lines)
-
+            # Create table style with compact formatting
             table_style = TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), header_color),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 4),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-                ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                # Enable text wrapping
-                ('WORDWRAP', (0, 0), (-1, -1), 'WORD'),
-                ('SPLITLONGWORDS', (0, 0), (-1, -1), True),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),  # Reduced padding
+                ('TOPPADDING', (0, 0), (-1, -1), 4),     # Reduced padding
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Thinner grid
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('WORDWRAP', (0, 0), (-1, -1), True),
             ])
 
-            for res in data:
-                # Create reservation row with wrapped text
-                reservation_row = [
-                    str(res.id),
-                    datetime.strftime(res.date_created, '%d-%m-%Y %H:%M'),  # Kept in single line
-                    res.status.value,
-                    wrap_text(res.vehicle.plate if res.vehicle else "", col_widths[3]),
-                    wrap_text(res.subject.social_reason if res.subject else "", col_widths[4]),
-                    wrap_text(res.vector.social_reason if res.vector else "", col_widths[5]),
-                    wrap_text(res.note if res.note else "", col_widths[6]),
-                    wrap_text(res.document_reference if res.document_reference else "", col_widths[7])
+            # Prepare table data with compact date format
+            table_data = [headers]
+            for inout in data:
+                weight1 = inout.weight1.weight if inout.weight1 else None
+                if weight1 is None and inout.weight2 and inout.weight2.tare > 0:
+                    weight1 = inout.weight2.tare
+
+                # Use shorter date format
+                date1 = datetime.strftime(inout.weight1.date, "%d-%m-%y %H:%M") if inout.weight1 else None
+                date2 = datetime.strftime(inout.weight2.date, "%d-%m-%y %H:%M") if inout.weight2 else None
+
+                # Update row data to include material
+                row = [
+                    str(inout.reservation.vehicle.plate if inout.reservation.vehicle else '')[:6],      # Targa (32)
+                    str(inout.reservation.subject.social_reason if inout.reservation.subject else '')[:18],  # Cliente (50)
+                    str(inout.reservation.vector.social_reason if inout.reservation.vector else '')[:18],    # Vettore (50)
+                    str(inout.reservation.note or '')[:18],                                             # Note (50)
+                    str(inout.reservation.document_reference or '')[:12],                               # Ref.Doc (45)
+                    str(inout.material.description if inout.material else '')[:12],               # Materiale (45)
+                    date1,                                                                              # Data 1 (47)
+                    date2,                                                                              # Data 2 (47)
+                    str(inout.weight1.pid if inout.weight1 else '')[:12],                              # P1 (43)
+                    str(inout.weight2.pid if inout.weight2 else '')[:12],                              # P2 (43)
+                    str(weight1) if weight1 is not None else '',                                        # Peso 1 (28)
+                    str(inout.weight2.weight) if inout.weight2 else '',                                # Peso 2 (28)
+                    str(inout.net_weight) if inout.net_weight is not None else ''                      # Netto (28)
                 ]
-                
-                table_data = [headers, reservation_row]
-                t = Table(table_data, colWidths=col_widths, repeatRows=1)
-                t.setStyle(table_style)
-                story.append(t)
-                
-                # Add weighings as a sub-table if there are any
-                if res.weighings:
-                    weighing_headers = ['Data pesata', 'Pesa', 'Peso (kg)', 'Tipo']
-                    weighing_data = [weighing_headers]
-                    
-                    # Calculate weighing table column widths
-                    weighing_col_widths = [75, 35, 53, 35]  # Total: 360 points
-                    weighing_total = sum(weighing_col_widths)
-                    if weighing_total > page_width:
-                        weighing_scale = page_width / weighing_total
-                        weighing_col_widths = [w * weighing_scale for w in weighing_col_widths]
-                    
-                    weighing_style = TableStyle([
-                        ('BACKGROUND', (0, 0), (-1, 0), subheader_color),
-                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
-                        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
-                        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                        ('TOPPADDING', (0, 0), (-1, -1), 4),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                        ('WORDWRAP', (0, 0), (-1, -1), 'WORD'),
-                        ('SPLITLONGWORDS', (0, 0), (-1, -1), True),
-                    ])
-                    
-                    for w in res.weighings:
-                        weighing_row = [
-                            datetime.strftime(w.date, '%d-%m-%Y %H:%M'),  # Kept in single line
-                            wrap_text(str(w.weigher), weighing_col_widths[1]),
-                            str(w.weight),
-                            w.type.value
-                        ]
-                        weighing_data.append(weighing_row)
-                    
-                    w_table = Table(weighing_data, colWidths=weighing_col_widths, repeatRows=1)
-                    w_table.setStyle(weighing_style)
-                    story.append(Spacer(1, 0.1*inch))
-                    story.append(w_table)
-                
-                story.append(Spacer(1, 0.2*inch))
+                table_data.append(row)
+
+            # Create and style table
+            t = Table(table_data, colWidths=col_widths, repeatRows=1)
+            t.setStyle(table_style)
+            story.append(t)
 
             # Build PDF
             doc.build(story)
@@ -352,7 +304,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             return StreamingResponse(
                 buffer,
                 media_type="application/pdf",
-                headers={"Content-Disposition": "attachment; filename=prenotazioni.pdf"}
+                headers={"Content-Disposition": "attachment; filename=pesate.pdf"}
             )
             
         except Exception as e:
@@ -389,14 +341,14 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setReservation(self, request: Request, id: int, body: SetReservationDTO):
+    async def setReservation(self, request: Request, id: int, body: SetReservationDTO, idInOut: Optional[int] = None):
         locked_data = None
         try:
             if request:
                 locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
                 if not locked_data:
                     raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
-            data = update_reservation(id, body)
+            data = update_reservation(id, body, idInOut)
             get_reservation_data = get_data_by_id("reservation", data["id"])
             reservation = Reservation(**get_reservation_data)
             await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation.json()})
@@ -452,21 +404,33 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             raise HTTPException(status_code=status_code, detail=detail)
         
     async def deleteLastWeighing(self, request: Request, id: int):
+        import libs.lb_log as lb_log
         locked_data = None
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
             delete_last_weighing_of_reservation(id)
-            data = get_data_by_id("reservation", id)
-            number_weighings_executed = len(data["weighings"])
-            if number_weighings_executed < data["number_weighings"] and number_weighings_executed > 0:
-                data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
-            elif number_weighings_executed < data["number_weighings"] and number_weighings_executed == 0:
-                data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
-            reservation = Reservation(**data).json()
-            await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
-            return reservation
+            data = get_reservation_by_id(id)
+            import libs.lb_log as lb_log
+            if data:
+                number_in_out_executed = len(data.in_out)
+                if number_in_out_executed > 0:
+                    lb_log.warning("1")
+                    data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
+                    lb_log.warning(data)
+                    lb_log.warning("-----------")
+                elif number_in_out_executed == 0:
+                    lb_log.warning("2")
+                    data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
+                    lb_log.warning(data)
+                reservation = Reservation(**data).json()
+                lb_log.warning(reservation)
+                await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
+                return reservation
+            # else:
+            #     await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
+            return None
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))

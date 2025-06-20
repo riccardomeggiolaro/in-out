@@ -72,7 +72,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		else:
 			reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
 				**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
-				"number_weighings": 1,
+				"number_in_out": 1,
 				"type": "TEST",
 				"hidden": True
 			}))
@@ -101,7 +101,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		else:
 			reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
                 	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
-                 	"number_weighings": 1,
+                 	"number_in_out": 1,
                   	"type": "MANUALLY",
                    	"hidden": True
                 }))
@@ -132,14 +132,9 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			if not idReservation:
 				reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
 					**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
-					"number_weighings": 1
+					"number_in_out": 1
 				}))
 				idReservation = reservation.id
-			else:
-				await self.setReservation(request=None, id=idReservation, body=SetReservationDTO(**{
-					**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
-					"number_weighings": 1
-				}))
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 

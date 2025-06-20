@@ -18,7 +18,7 @@ def add_reservation(data: AddReservationDTO):
                 "idVector": data.vector.id,
                 "idDriver": data.driver.id,
                 "idVehicle": data.vehicle.id,
-                "number_weighings": data.number_weighings,
+                "number_in_out": data.number_in_out,
                 "note": data.note,
                 "status": ReservationStatus.WAITING,
                 "document_reference": data.document_reference,

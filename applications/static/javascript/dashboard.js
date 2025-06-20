@@ -172,12 +172,6 @@ async function getInstanceWeigher(path) {
         maxWeightValue = obj.max_weight;
         division.textContent = obj.division;
         divisionValue = obj.division;
-        obj.events.weighing.cams.forEach(cam => {
-            const img = document.createElement('img');
-            img.classList.toggle('cam');
-            img.src = cam.live;
-            cams.appendChild(img);
-        });
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -231,7 +225,6 @@ async function populateListIn() {
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
             let content = item.in_out.length > 0 ? item.in_out[0].weight1.pid : item.id;
             if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
-            if (item.subject && item.subject.social_reason) content += ` - ${item.subject.social_reason}`;
             li.textContent = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');

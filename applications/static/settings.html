@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/css/setup.css"></link>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <button style="width: fit-content;">Aggiungi connessione</button>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+
+    <script>
+        fetch('/api/config-weigher/all/instances')
+        .then(res => res.json())
+        .then(data => {
+            console.log(data);
+        });
+    </script>
+</body>
+</html>

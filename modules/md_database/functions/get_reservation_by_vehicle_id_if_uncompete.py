@@ -29,10 +29,10 @@ def get_reservation_by_vehicle_id_if_incomplete(id: int):
         ).filter(
             Vehicle.id == id,
             Reservation.selected == False,  # Non già selezionata
-            # Filtro per il numero di pesate: o nessuna pesata (NULL) o conteggio < number_weighings
+            # Filtro per il numero di pesate: o nessuna pesata (NULL) o conteggio < number_in_out
             (
-                (weighing_count_subquery.c.weighing_count == None) & (Reservation.number_weighings > 0) |
-                (weighing_count_subquery.c.weighing_count < Reservation.number_weighings)
+                (weighing_count_subquery.c.weighing_count == None) & (Reservation.number_in_out > 0) |
+                (weighing_count_subquery.c.weighing_count < Reservation.number_in_out)
             )
         ).order_by(
             Reservation.date_created.desc()  # Ordina per data di creazione decrescente

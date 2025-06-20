@@ -16,7 +16,7 @@ def select_reservation_if_uncomplete(reservation_id: int):
 			InOut.idReservation == reservation_id
 		).scalar()
 
-		if weighing_count == reservation.number_weighings and reservation.in_out[-1].idWeight2:
+		if weighing_count == reservation.number_in_out and reservation.in_out[-1].idWeight2:
 			# Numero di pesate uguale o superiore al previsto, genera errore
 			raise ValueError(f"Reservation {reservation_id} already is just closed")
 

@@ -1,12 +1,13 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Reservation, ReservationStatus, TypeSubjectEnum
 from modules.md_database.interfaces.reservation import SetReservationDTO
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_incomplete
+from modules.md_database.functions.update_data import update_data
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
 import libs.lb_log as lb_log
 
-def update_reservation(id: int, data: SetReservationDTO):
+def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
     """
     Aggiunge un record a una tabella specificata dinamicamente con gestione dei conflitti per SQLite.
     """
@@ -100,15 +101,44 @@ def update_reservation(id: int, data: SetReservationDTO):
                 plate = existing["plate"]
                 raise ValueError(f"E' presente una prenotazione con la targa '{plate}' ancora da chiudere")
 
+            current_model = Material
+            material = None
+            if idInOut and data.material.id in [None, -1]:
+                add_material = {
+                    "description": data.material.description if data.material.description != "" else None
+                }
+                if has_non_none_value(add_material):
+                    data_to_check = data.material.dict()
+                    material = current_model(**add_material)
+                    session.add(material)
+                    session.flush()
+                    # Find the correct in_out object by id and update its material
+                    for in_out in reservation.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idMaterial = material.id
+                            break
+                elif data.material.id == -1:
+                    # Find the correct in_out object by id and set material to None
+                    for in_out in reservation.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idMaterial = None
+                            break
+            elif idInOut:
+                # Find the correct in_out object by id and update its material
+                for in_out in reservation.in_out:
+                    if in_out.id == idInOut:
+                        in_out.idMaterial = data.material.id
+                        break
+
             if data.typeSubject:
                 reservation.typeSubject = TypeSubjectEnum[data.typeSubject]
 
-            if data.number_weighings:
-                if len(reservation.in_out) > data.number_weighings:
+            if data.number_in_out:
+                if len(reservation.in_out) > data.number_in_out:
                     raise ValueError("Non puoi assegnare un numero di pesate inferiore a quelle già effettuate")
-                reservation.number_weighings = data.number_weighings
+                reservation.number_in_out = data.number_in_out
                 if len(reservation.in_out) > 0:
-                    reservation.status = ReservationStatus.CLOSED if len(reservation.in_out) == reservation.number_weighings else ReservationStatus.ENTERED
+                    reservation.status = ReservationStatus.CLOSED if len(reservation.in_out) == reservation.number_in_out and reservation.in_out[-1].idWeight2 else ReservationStatus.ENTERED
                 else:
                     reservation.status = ReservationStatus.WAITING
 

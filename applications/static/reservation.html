@@ -48,11 +48,11 @@
     <div class="table-container">
         <div class="title">
             <h2>Accessi</h2>
-            <!-- <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
+            <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
                 <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
                 <button class="register-button" onclick="addRow()">Prenota accesso</button>
-            </div> -->
+            </div>
         </div>
         <table>
             <thead>
@@ -72,7 +72,7 @@
                             <option value="CLOSED">Chiusa</option>
                         </select>
                     </th>
-                    <th name="number_weighings">N. Pesate</th>
+                    <th name="number_in_out">N. Operazioni</th>
                     <th name="waiting">Attesa</th>
                     <th name="subject.social_reason">
                         <input id="filter.subject.social_reason" name="subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
@@ -120,7 +120,7 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'edit-inout-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
         <h3>Prenota accesso:</h3>
@@ -279,7 +279,7 @@
 
             <div>
                 <div class="item">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" autocomplete="new-password" required
+                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
                         oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
@@ -476,7 +476,7 @@
 
             <div>
                 <div class="item">
-                    <input placeholder="Numero pesate" id="number_weighings" name="number_weighings" type="number" pattern="\d*" autocomplete="new-password" required
+                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
                         oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
 
@@ -495,6 +495,37 @@
         </div>
     </div>
 
+    <div id="edit-inout-popup" class="modal-content popup">
+        <h3>Modifica materiale:</h3>
+        <form id="edit-inout" class="content form-content" oninput="document.querySelector('#edit-inout-popup .save-btn').disabled = !this.checkValidity()">
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId id">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            if (document.querySelector('#edit-inout-popup #material\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-inout-popup #material\\.id').value, 'material');
+                                document.querySelector('#edit-inout-popup #material\\.id').value = '';
+                                document.querySelector('#edit-inout-popup #material\\.description').disabled = false;
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-inout-popup #material\\.id').value) {
+                                populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-inout-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" onclick="confirm_exec_funct()">Avanti</button><br>
+        </div>
+    </div>
+    
     <div id="delete-popup" class="modal-content popup">
         <div id="delete">
             <h3>Elimina accesso:</h3>
@@ -504,7 +535,7 @@
             <p><b>Autista:</b> <u><em><span id="driver.social_reason"></span></em></u></p>
             <p><b>Targa:</b> <u><em><span id="vehicle.plate"></span></em></u></p>
             <p><b>Stato:</b> <u><em><span id="status"></span></em></u></p>
-            <p><b>Numero pesate:</b> <u><em><span id="number_weighings"></span></em></u></p>
+            <p><b>Numero operazioni:</b> <u><em><span id="number_in_out"></span></em></u></p>
             <div class="container-buttons right">                
                 <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
                 <button id="save-btn" class="delete-save-btn">Elimina</button><br>
@@ -730,7 +761,45 @@
             openPopup('confirm-popup');
         }
 
-        function deleteLastWeighing(idReservation, plate, weighing, pid, bil) {
+        function updateWeighingMaterial(idReservation, idInOut, idMaterial, descriptionMaterial) {
+            confirm_exec_funct = () => {
+                const id = document.querySelector("#material\\.id").value || -1;
+                const description = document.querySelector("#material\\.description").value || null;
+                const body = JSON.stringify({
+                    material: {
+                        id,
+                        description
+                    }
+                });
+                console.log(idMaterial, descriptionMaterial)
+                fetch(`/api/anagrafic/reservation/${idReservation}?idInOut=${idInOut}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body
+                })
+                .then(async res => {
+                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+                    return ({
+                        data,
+                        status
+                    });
+                })
+                .then(res => {
+                    if (res.status !== 200) {
+                        showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                    }
+                    closePopups(['edit-inout-popup'], false);
+                })
+            }
+            document.querySelector("#edit-inout-popup #material\\.id").value = idMaterial;
+            document.querySelector('#edit-inout-popup #material\\.description').value = descriptionMaterial;
+            selectAnagrafic(idReservation, "UPDATE", "reservation", null, true);
+            currentId = idReservation;
+        }
+
+        function deleteLastWeighing(idReservation, plate, pid) {
             confirm_exec_funct = () => {
                 fetch(`/api/anagrafic/reservation/last-weighing/${idReservation}`, {
                     method: 'DELETE',
@@ -754,15 +823,7 @@
             }
             document.querySelector('#confirm-title').textContent = "Attenzione!";
             document.querySelector('#confirm-content').innerHTML = `
-                Sei sicuro di voler eliminare l'ultima pesata effettuata dal veicolo '${plate}'?'.
-                <br><br>
-                <h4><u>Dettagli pesata</u></h4>
-                <br>
-                <b>Peso:</b> <em><u>${weighing}</u></em>
-                <br><br>
-                <b>PID:</b> <em><u>${pid}</u></em>
-                <br><br>
-                <b>Bilancia:</b> <em><u>${bil}</u></em>
+                Sei sicuro di voler eliminare l'ultima pesata effettuata dal veicolo '${plate}' con pid '${pid}?'
             `;
             selectAnagrafic(idReservation, "DELETE", "reservation", null, true);
             currentId = idReservation;
@@ -778,76 +839,48 @@
 
         function populateDetailTr(item) {
             let content = `<ul class="list-detail-tr">`;
-            let lengthWighings = item.in_out.length;
+            let lengthWeighings = item.in_out.length;
             item.in_out.reverse().forEach(weighing => {
-                // Pulsante Elimina
-                const deleteWeighingButton = document.createElement("button");
-                deleteWeighingButton.style.visibility = 'hidden';
-                deleteWeighingButton.textContent = "🗑️";
-                deleteWeighingButton.onclick = (e) => {
-                    e.preventDefault();
-                };
-
-                let weight1 = '';
-                if (weighing.weight1) {
-                    weight1 = `
-                        <b>Data 1: </b> ${new Date(weighing.weight1.date).toLocaleString('it-IT', options)}.
-                        <b>Peso 1: </b> ${weighing.weight1.weight} kg.
-                        <b>Pid 1: </b> ${weighing.weight1.pid}.
-                        <b>Bil: </b> ${weighing.weight1.weigher}.
-                    `;
-                }
-
-                let weight2 = '';
-                if (weighing.weight2) {
-                    weight2 = `
-                        <b>Data 2: </b> ${new Date(weighing.weight2.date).toLocaleString('it-IT', options)}.
-                        <b>Peso 2: </b> ${weighing.weight2.weight} kg.
-                        <b>Pid 2: </b> ${weighing.weight2.pid} kg.
-                        <b>Bil: </b> ${weighing.weight2.weigher}.
-                    `;
-                }
-
-                let netWeight = '';
-                if (weighing.net_weight >= 0) {
-                    netWeight = `<b>Netto: </b> ${weighing.net_weight} kg.`;
-                }
-
-                let material = '';
-                if (weighing.material) {
-                    material = `<b>Materiale: </b> ${weighing.material.description}.`;
-                }
-
-                let img1 = '';
-                
-
-                weighing.weight1
-
                 content += `
                     <li>
                         <p>
-                            ${weight1}
-                            ${weight2}
-                            ${netWeight}
-                            ${material}
+                            <b>DATA 1: </b> ${weighing.weight1 ? new Date(weighing.weight1.date).toLocaleString('it-IT', options) : ''}.
+                            <b>DATA 2: </b> ${weighing.weight2 ? new Date(weighing.weight2.date).toLocaleString('it-IT', options) : ''}.
+                            <b>PID 1: </b> ${weighing.weight1 ? weighing.weight1.pid : ''}.
+                            <b>PID 2: </b> ${weighing.weight2 ? weighing.weight2.pid : ''}.
+                            <b>PESO 1: </b> <u>${weighing.weight1 ? weighing.weight1.weight : ''} kg</u>.
+                            <b>PESO 2: </b> <u>${weighing.weight2 ? weighing.weight2.weight : ''} kg</u>.
+                            <b>NETTO: </b> <u>${weighing.net_weight !== null ? weighing.net_weight : ''} kg</u>.
+                            <b>MATERIALE: </B> <u>${weighing.material ? weighing.material.description : ''}</u>`;
+
+                content += `<button onclick="updateWeighingMaterial(${item.id}, ${weighing.id}, ${weighing.material ? weighing.material.id : null}, '${weighing.material ? weighing.material.description : ''}')">✏️</button>`;
+
+                if (lengthWeighings === item.in_out.length) {
+                    content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight2 ? weighing.weight2.pid : weighing.weight1.pid}')">🗑️</button>`;
+                }
+
+                content += `
                         </p>
-                    </li>
-                `;
+                        <div class="imgs">`;
 
-                // if (lengthWighings === item.in_out.length) {
-                //     content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight}', '${weighing.pid}', '${weighing.weigher}')">🗑️</button>`;
-                // }
-                
-                // content += `<div class="imgs">`;
+                // Add images to the .imgs div
+                if (weighing.weight1) {
+                    weighing.weight1.weighing_pictures.forEach(picture => {
+                        content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                    });
+                }
 
-                // // Add images to the .imgs div
-                // weighing.weighing_pictures.forEach(picture => {
-                //     content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
-                // });
+                if (weighing.weight2) {
+                    weighing.weight2.weighing_pictures.forEach(picture => {
+                        content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                    });
+                }
+
+                content += `
+                        </div>
+                    </li>`;
                 
-                // // Close the div and li tags
-                // content += `</div></li>`;
-                // lengthWighings--;
+                lengthWeighings--;
             })
             content += `</ul>`;
             return content;
@@ -902,6 +935,12 @@
                                 document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                                 document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                             }
+                        } else if (anagrafic === 'material') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #material\\.id`).value = item.id;
+                                document.querySelector(`${popup} #material\\.description`).value = item.description;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
                         }
                         if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
                     };
@@ -954,6 +993,12 @@
                             document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                             document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                         }
+                    } else {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #material\\.id`).value = item.id;
+                            document.querySelector(`${popup} #material\\.description`).value = item.description;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
                     }
                     if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
                 }
@@ -973,6 +1018,9 @@
             document.querySelectorAll('#vehicle\\.id').forEach(input => {
                 if (input.value != '') deselectAnagrafic(input.value, "vehicle");
             });
+            document.querySelectorAll('#material\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "material");
+            })
         }
     </script>
 </body>

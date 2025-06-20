@@ -7,10 +7,12 @@ from modules.md_database.functions.get_reservation_by_id import get_reservation_
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.add_material_if_not_exist import add_material_if_not_exists
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.interfaces.subject import SubjectDataDTO
 from modules.md_database.interfaces.vector import VectorDataDTO
 from modules.md_database.interfaces.driver import DriverDataDTO
 from modules.md_database.interfaces.vehicle import VehicleDataDTO
+from modules.md_database.interfaces.reservation import Reservation
 import datetime as dt
 from applications.router.weigher.types import ReportVariables
 from libs.lb_capture_camera import capture_camera_image
@@ -123,10 +125,12 @@ class CallbackWeigher(Functions, WebSocket):
 			last_in_out = reservation.in_out[-1] if len(reservation.in_out) > 0 else None
 			len_in_out = len(reservation.in_out)
 			is_test = reservation.type == TypeReservation.TEST
-			update_data("reservation", last_pesata.data_assigned, {
-				"status": ReservationStatus.CLOSED if len_in_out == reservation.number_weighings and last_in_out.idWeight2 or is_test else ReservationStatus.ENTERED,
+			updated_reservation = update_data("reservation", last_pesata.data_assigned, {
+				"status": ReservationStatus.CLOSED if len_in_out == reservation.number_in_out and last_in_out.idWeight2 or is_test else ReservationStatus.ENTERED,
 				"hidden": False
 			})
+			reservation_data_json = Reservation(**updated_reservation).json()
+			self.broadcastUpdateAnagrafic("reservation", {"weighing": reservation_data_json})
 			############################
 			# RIMUOVE TUTTI I DATA IN EXECUTION
 			self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
@@ -165,7 +169,7 @@ class CallbackWeigher(Functions, WebSocket):
 			# 	variables.weight1.weight = last_pesata.weight_executed.gross_weight
 			# 	variables.weight1.type = None
 			# reservation_update = None
-			# if reservation["number_weighings"] == len(reservation["weighings"]):
+			# if reservation["number_in_out"] == len(reservation["weighings"]):
 			# 	reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.CLOSED})
 			# else:
 			# 	reservation_update = update_data("reservation", last_pesata.data_assigned.id_selected.id, {"status": ReservationStatus.ENTERED})

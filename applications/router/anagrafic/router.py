@@ -13,6 +13,7 @@ from modules.md_database.functions.unlock_record_by_attributes import unlock_rec
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.unlock_all_record_by_websocket import unlock_all_record_by_websocket
 from modules.md_database.functions.unlock_all_record import unlock_all_record
+from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 import json
 from applications.middleware.auth import get_user
 from applications.utils.utils import just_locked_message
@@ -48,7 +49,11 @@ class AnagraficRouter:
 			if success is False:
 				message = just_locked_message(type, table_name, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
 				return {"action": "lock", "success": False, "anagrafic": table_name, "error": message, "idRecord": idRecord, "type": type, "idRequest": idRequest}
-			data = get_data_by_id(table_name, idRecord)
+			data = None
+			if table_name == "reservation":
+				data = get_reservation_by_id(idRecord)
+			else:
+				data = get_data_by_id(table_name, idRecord)
 			return {"action": "lock", "success": True, "anagrafic": table_name, "data": data, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 		except Exception as e:
 			return {"action": "lock", "success": False, "anagrafic": table_name, "error": str(e), "idRecord": idRecord, "type": type, "idRequest": idRequest}
