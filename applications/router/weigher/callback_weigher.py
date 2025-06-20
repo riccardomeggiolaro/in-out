@@ -130,7 +130,7 @@ class CallbackWeigher(Functions, WebSocket):
 				"hidden": False
 			})
 			reservation_data_json = Reservation(**updated_reservation).json()
-			self.broadcastUpdateAnagrafic("reservation", {"weighing": reservation_data_json})
+			asyncio.run(self.broadcastUpdateAnagrafic("reservation", {"weighing": reservation_data_json}))
 			############################
 			# RIMUOVE TUTTI I DATA IN EXECUTION
 			self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
