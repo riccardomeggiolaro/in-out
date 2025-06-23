@@ -67,6 +67,7 @@ function isValidDate(dateStr) {
 
 async function updateTable() {
     let queryParams = '';
+    if (itemName === "reservation") queryParams += `excludeTestWeighing=true&`;
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.value) {

@@ -10,6 +10,7 @@
             "username": null
         },
         "path_database": "/var/lib/in-out/database.db",
+        "path_pdf": "/var/lib/in-out/pdf",
         "path_reports": "/var/lib/in-out/reports",
         "path_weighing_pictures": "/var/lib/in-out/images",
         "port": 80,
@@ -136,7 +137,7 @@
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "port_rele": null,
-                        "printer_name": null,
+                        "printer_name": "Canon_iR_ADV_C5235_5240",
                         "run": true,
                         "terminal": "egt-af03"
                     }

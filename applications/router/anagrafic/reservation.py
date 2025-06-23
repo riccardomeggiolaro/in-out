@@ -18,6 +18,7 @@ from modules.md_database.functions.get_reservation_by_id import get_reservation_
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
+from applications.router.weigher.manager_weighers_data import broadcastMessageWebSocket
 from datetime import datetime
 import pandas as pd
 from io import BytesIO
@@ -355,6 +356,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 await self.broadcastAddAnagrafic("driver", {"driver": reservation.driver.json()})
             if not body.vehicle.id and reservation.idVehicle:
                 await self.broadcastAddAnagrafic("vehicle", {"vehicle": reservation.vehicle.json()})
+
+            await broadcastMessageWebSocket({"reservation": {}})
+
             return reservation
         except Exception as e:
             # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
@@ -381,6 +385,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 await self.broadcastAddAnagrafic("driver", {"driver": reservation.driver.json()})
             if body.vehicle.id in [None, -1] and reservation.idVehicle:
                 await self.broadcastAddAnagrafic("vehicle", {"vehicle": reservation.vehicle.json()})
+
+            await broadcastMessageWebSocket({"reservation": {}})
+
             return reservation
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -403,6 +410,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è assegnata a delle pesate salvate")
             data = delete_data("reservation", id)
             await self.broadcastDeleteAnagrafic("reservation", {"reservation": Reservation(**data).json()})
+
+            await broadcastMessageWebSocket({"reservation": {}})
+
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -416,6 +426,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         try:
             deleted_count = delete_all_data("reservation")
             await self.broadcastDeleteAnagrafic("reservation", None)
+
+            await broadcastMessageWebSocket({"reservation": {}})
+
             return {
                 "deleted_count": deleted_count,
             }
@@ -425,7 +438,6 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             raise HTTPException(status_code=status_code, detail=detail)
         
     async def deleteLastWeighing(self, request: Request, id: int):
-        import libs.lb_log as lb_log
         locked_data = None
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
@@ -433,21 +445,17 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
             delete_last_weighing_of_reservation(id)
             data = get_reservation_by_id(id)
-            import libs.lb_log as lb_log
             if data:
                 number_in_out_executed = len(data.in_out)
                 if number_in_out_executed > 0:
-                    lb_log.warning("1")
                     data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
-                    lb_log.warning(data)
-                    lb_log.warning("-----------")
                 elif number_in_out_executed == 0:
-                    lb_log.warning("2")
                     data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
-                    lb_log.warning(data)
                 reservation = Reservation(**data).json()
-                lb_log.warning(reservation)
                 await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
+
+                await broadcastMessageWebSocket({"reservation": {}})
+
                 return reservation
             # else:
             #     await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})

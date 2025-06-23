@@ -604,6 +604,8 @@ function updateUIRealtime(e) {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
+    } else if (obj.reservation) {
+        populateListIn();
     } else if (obj.tare) {
         data_weight_realtime = obj;
         document.getElementById('tare').innerText = data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : 'N/A';

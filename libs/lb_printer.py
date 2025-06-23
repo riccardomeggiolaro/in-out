@@ -116,6 +116,7 @@ class HTMLPrinter:
             return None
 
     def print_html(self, html_content, printer_name: str):
+        pdf_bytes = None
         job_id = None
         message1 = None
         message2 = None
@@ -124,42 +125,39 @@ class HTMLPrinter:
         if not printer_name:
             message1 = "Stampante non specificata."
             message2 = "Stampa non inviata."
-            return job_id, message1, message2
+            return pdf_bytes, job_id, message1, message2
 
         try:
             printers = self.conn.getPrinters()
             if printer_name not in printers:
                 message1 = f"Stampante '{printer_name}' non trovata."
                 message2 = "Stampa non inviata."
-                return job_id, message1, message2
+                return pdf_bytes, job_id, message1, message2
 
-            # Controlla lo stato della stampante
             printer_status = printers[printer_name].get('printer-state', None)
-
-            # Gestione stampante offline
             if printer_status == cups.IPP_PRINTER_STOPPED:
                 message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline. La stampa rimarrà in coda."
 
-            # Crea file temporanei per HTML e PDF
             with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as html_file, \
-                 tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
+                tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
                 
-                # Salva il contenuto HTML
                 html_file.write(html_content.encode('utf-8'))
                 html_file.flush()
 
                 try:
-                    # Converti HTML in PDF
+                    # Converti HTML in PDF (scrive su file)
                     HTML(filename=html_file.name).write_pdf(pdf_file.name)
 
-                    # Imposta le opzioni di stampa
+                    # Leggi i bytes del PDF generato
+                    with open(pdf_file.name, "rb") as f:
+                        pdf_bytes = f.read()
+
                     options = {
-                        'orientation-requested': '3',  # 3 = portrait (verticale)
-                        'landscape': '0',             # 0 = disabilita orientamento orizzontale
-                        'fit-to-page': 'true'        # Adatta alla pagina
+                        'orientation-requested': '3',
+                        'landscape': '0',
+                        'fit-to-page': 'true'
                     }
 
-                    # Stampa il PDF
                     job_id = self.conn.printFile(
                         printer_name,
                         pdf_file.name,
@@ -172,7 +170,6 @@ class HTMLPrinter:
                     message2 = f"Errore durante la conversione/stampa: {e}"
                 
                 finally:
-                    # Rimuovi i file temporanei
                     os.unlink(html_file.name)
                     os.unlink(pdf_file.name)
 
@@ -180,6 +177,6 @@ class HTMLPrinter:
             message1 = f"Errore nella gestione delle stampanti: {e}"
             message2 = "Stampa non inviata."
 
-        return job_id, message1, message2
+        return pdf_bytes, job_id, message1, message2
     
 printer = HTMLPrinter()

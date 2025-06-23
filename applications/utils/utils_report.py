@@ -1,5 +1,6 @@
 from jinja2 import Environment, FileSystemLoader, meta
 import libs.lb_config as lb_config
+import os
 
 def convert_none_to_empty(data):
     """Recursively converts None values to empty strings in dictionaries and lists"""
@@ -35,3 +36,10 @@ def generate_report(report_name_file, v=None):
         
     except Exception as e:
         raise e
+
+def save_file_dir(dir, name_file, bytes_file):
+    os.makedirs(dir, exist_ok=True)
+    pdf_path = os.path.join(dir, name_file)
+    with open(pdf_path, "wb") as f:
+        f.write(bytes_file)
+    return pdf_path

@@ -34,8 +34,14 @@ class Weight(BaseModel):
 	date: Optional[datetime] = None
 	pid: Optional[str] = None
     
+class Weight1(Weight):
+    type: Optional[str] = None
+
+class Weight2(Weight):
+    pass
+    
 class ReportVariables(DataInExecution):
 	material: MaterialDTO = MaterialDTO(**{})
-	weight1: Weight = Weight(**{})
-	weight2: Weight = Weight(**{})
+	weight1: Weight1 = Weight1(**{})
+	weight2: Weight2 = Weight2(**{})
 	net_weight: Union[int, float] = None
