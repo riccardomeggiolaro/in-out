@@ -1,24 +1,21 @@
-from sqlalchemy import func, or_, and_, alias, case, literal, select, exists
-from sqlalchemy.orm import selectinload, aliased
-from modules.md_database.md_database import SessionLocal, Weighing, InOut, Reservation, ReservationStatus
-from datetime import datetime, date
+from sqlalchemy import func, or_, and_, alias, case
+from sqlalchemy.orm import selectinload
+from modules.md_database.md_database import SessionLocal, Weighing, InOut, Reservation, ReservationStatus, TypeReservation
 
-def get_list_in_out(filters=None, not_closed=True, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, is_last=False):
+def get_list_in_out(
+    filters=None,
+    not_closed=True,
+    fromDate=None,
+    toDate=None,
+    limit=None,
+    offset=None,
+    order_by=None,
+    is_last=False,
+    excludeTestWeighing=False,
+    filterDateReservation=False
+):
     """
     Gets a list of InOut records with optional filtering.
-    
-    Args:
-        filters (dict): Dictionary of filters including:
-            - InOut field filters
-            - Reservation field filters (e.g. "reservation.subject.social_reason": "Company%")
-            - weight1.date_from/weight1.date_to: For first weighing date range
-            - weight2.date_from/weight2.date_to: For second weighing date range
-        not_closed (bool): If True, only returns pesate for non-closed reservations
-        fromDate (datetime): Start date to filter weighings (applies to weight1 if exists, otherwise weight2)
-        toDate (datetime): End date to filter weighings (applies to weight2 if exists, otherwise weight1)
-        limit (int): Maximum number of rows to return
-        offset (int): Number of rows to skip
-        order_by (tuple): Tuple containing (column_name, direction) for ordering
     """
     session = SessionLocal()
     try:
@@ -55,28 +52,40 @@ def get_list_in_out(filters=None, not_closed=True, fromDate=None, toDate=None, l
             selectinload(InOut.material)
         )
 
-        # Handle fromDate filter
-        if fromDate:
-            query = query.outerjoin(weight1_alias, InOut.idWeight1 == weight1_alias.c.id)\
-                        .outerjoin(weight2_alias, InOut.idWeight2 == weight2_alias.c.id)
-            query = query.filter(
-                or_(
-                    and_(InOut.idWeight1.isnot(None), weight1_alias.c.date >= fromDate),
-                    and_(InOut.idWeight1.is_(None), InOut.idWeight2.isnot(None), weight2_alias.c.date >= fromDate)
-                )
-            )
+        # Escludi le reservation di tipo TEST se richiesto
+        if excludeTestWeighing:
+            query = query.join(InOut.reservation).filter(Reservation.type != TypeReservation.TEST)
 
-        # Handle toDate filter
-        if toDate:
-            if not fromDate:  # Only add joins if not already added
-                query = query.outerjoin(weight2_alias, InOut.idWeight2 == weight2_alias.c.id)\
-                            .outerjoin(weight1_alias, InOut.idWeight1 == weight1_alias.c.id)
-            query = query.filter(
-                or_(
-                    and_(InOut.idWeight2.isnot(None), weight2_alias.c.date <= toDate),
-                    and_(InOut.idWeight2.is_(None), InOut.idWeight1.isnot(None), weight1_alias.c.date <= toDate)
+        # Gestione filtro data su Reservation.date_created se richiesto
+        if filterDateReservation and (fromDate or toDate):
+            query = query.join(InOut.reservation)
+            if fromDate:
+                query = query.filter(Reservation.date_created >= fromDate)
+            if toDate:
+                query = query.filter(Reservation.date_created <= toDate)
+        else:
+            # Handle fromDate filter sulle pesate
+            if fromDate:
+                query = query.outerjoin(weight1_alias, InOut.idWeight1 == weight1_alias.c.id)\
+                            .outerjoin(weight2_alias, InOut.idWeight2 == weight2_alias.c.id)
+                query = query.filter(
+                    or_(
+                        and_(InOut.idWeight1.isnot(None), weight1_alias.c.date >= fromDate),
+                        and_(InOut.idWeight1.is_(None), InOut.idWeight2.isnot(None), weight2_alias.c.date >= fromDate)
+                    )
                 )
-            )
+
+            # Handle toDate filter sulle pesate
+            if toDate:
+                if not fromDate:  # Only add joins if not already added
+                    query = query.outerjoin(weight2_alias, InOut.idWeight2 == weight2_alias.c.id)\
+                                .outerjoin(weight1_alias, InOut.idWeight1 == weight1_alias.c.id)
+                query = query.filter(
+                    or_(
+                        and_(InOut.idWeight2.isnot(None), weight2_alias.c.date <= toDate),
+                        and_(InOut.idWeight2.is_(None), InOut.idWeight1.isnot(None), weight1_alias.c.date <= toDate)
+                    )
+                )
 
         if filters:
             for key, value in filters.items():
@@ -164,9 +173,8 @@ def get_list_in_out(filters=None, not_closed=True, fromDate=None, toDate=None, l
         results = query.all()
         data = []
         for inout, is_last in results:
-            inout_dict = inout
-            inout_dict.is_last = is_last
-            data.append(inout_dict)
+            inout.is_last = is_last
+            data.append(inout)
             
         return data, total_rows
 

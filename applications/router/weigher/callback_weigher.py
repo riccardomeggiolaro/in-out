@@ -7,7 +7,6 @@ from modules.md_database.functions.get_reservation_by_id import get_reservation_
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.add_material_if_not_exist import add_material_if_not_exists
-from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.interfaces.subject import SubjectDataDTO
 from modules.md_database.interfaces.vector import VectorDataDTO
 from modules.md_database.interfaces.driver import DriverDataDTO
@@ -86,12 +85,9 @@ class CallbackWeigher(Functions, WebSocket):
 			description_material = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"]["material"]["description"]
 			if not id_material and description_material is not None:
 				material = add_material_if_not_exists(description_material)
-				import libs.lb_log as lb_log
-				lb_log.warning(material)
-				lb_log.warning(description_material)
 				id_material = material["id"]
 			############################
-			# ASSOCIAZIONE DELLA PESATA SALVATA ALL COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
+			# ASSOCIAZIONE DELLA PESATA SALVATA ALLA COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
 			last_in_out = reservation.in_out[-1] if len(reservation.in_out) > 0 else None
 			if last_in_out and not last_in_out.idWeight2:
 				weight1 = last_in_out.weight1.weight
@@ -120,13 +116,23 @@ class CallbackWeigher(Functions, WebSocket):
 					"net_weight": net_weight if tare > 0 else None
 				})
 			############################
-			# AGGIORNAMENTO DELL'ACCESSO
+			# RECUPERO L'ACCESSO CON IL NUOVO IN-OUT CREATO
 			reservation = get_reservation_by_id(last_pesata.data_assigned)
 			last_in_out = reservation.in_out[-1] if len(reservation.in_out) > 0 else None
 			len_in_out = len(reservation.in_out)
 			is_test = reservation.type == TypeReservation.TEST
+			is_to_close = len_in_out == reservation.number_in_out and last_in_out.idWeight2 or is_test
+   			############################
+			# CREO L'IN-OUT SUCCESSIVO PER L'ASSEGNAZIONE DEL MATERIALE SE L'ACCESSO NON E' STATO CHIUSO E HA PIU' DI UNA OPERAZIONE
+			if not is_to_close and last_in_out.idWeight2 and not is_test:
+				add_data("in_out", {
+					"idReservation": reservation.id,
+					"idWeight1": last_in_out.idWeight2
+				})
+			############################
+			# AGGIORNAMENTO DELL'ACCESSO
 			updated_reservation = update_data("reservation", last_pesata.data_assigned, {
-				"status": ReservationStatus.CLOSED if len_in_out == reservation.number_in_out and last_in_out.idWeight2 or is_test else ReservationStatus.ENTERED,
+				"status": ReservationStatus.CLOSED if is_to_close else ReservationStatus.ENTERED,
 				"hidden": False
 			})
 			reservation_data_json = Reservation(**updated_reservation).json()

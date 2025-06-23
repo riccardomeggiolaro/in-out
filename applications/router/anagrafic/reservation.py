@@ -45,7 +45,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         self.router.add_api_route('/call/{id}', self.callReservation, methods=["GET"])
         self.router.add_api_route('/cancel-call/{id}', self.cancelCallReservation, methods=["GET"])
         
-    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False):
         try:
             not_closed = False
             if "status" in query_params and query_params["status"] == "NOT_CLOSED":
@@ -60,7 +60,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'))
+            if "excludeTestWeighing" in query_params:
+                del query_params["excludeTestWeighing"]
+            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing)
             return {
                 "data": data,
                 "total_rows": total_rows,
@@ -115,7 +117,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         
     async def exportListReservationsXlsx(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
                                    limit: Optional[int] = None, offset: Optional[int] = None,
-                                   fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+                                   fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
+                                   excludeTestWeighing: bool = False, filterDateReservation: bool = False):
         try:
             not_closed = False
             filters = query_params.copy()
@@ -139,6 +142,12 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
                 del filters["toDate"]
 
+            if "excludeTestWeighing" in query_params:
+                del filters["excludeTestWeighing"]
+
+            if "filterDateReservation" in query_params:
+                del filters["filterDateReservation"]
+
             data, total_rows = get_list_in_out(
                 filters=filters,
                 not_closed=not_closed,
@@ -146,7 +155,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 toDate=toDate,
                 limit=limit,
                 offset=offset,
-                order_by=('reservation.date_created', 'desc')
+                order_by=('reservation.date_created', 'desc'),
+                excludeTestWeighing=excludeTestWeighing,
+                filterDateReservation=filterDateReservation
             )
 
             # Prepara lista per export
@@ -188,7 +199,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
     async def exportListReservationsPdf(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
                                       limit: Optional[int] = None, offset: Optional[int] = None,
-                                      fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+                                      fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
+                                      excludeTestWeighing: bool = False, filterDateReservation: bool = False):
         try:
             not_closed = False
             filters = query_params.copy()
@@ -212,6 +224,13 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
                 del filters["toDate"]
 
+            # Prima di chiamare get_list_in_out
+            if "excludeTestWeighing" in filters:
+                del filters["excludeTestWeighing"]
+
+            if "filterDateReservation" in query_params:
+                del filters["filterDateReservation"]
+
             data, total_rows = get_list_in_out(
                 filters=filters,
                 not_closed=not_closed,
@@ -219,7 +238,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 toDate=toDate,
                 limit=limit,
                 offset=offset,
-                order_by=('reservation.date_created', 'desc')
+                order_by=('reservation.date_created', 'desc'),
+                excludeTestWeighing=excludeTestWeighing,
+                filterDateReservation=filterDateReservation
             )
 
             # Create PDF with smaller margins

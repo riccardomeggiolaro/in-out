@@ -34,7 +34,7 @@ class Functions:
 	def getData(self, instance_name: str, weigher_name: str):
 		return lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]
 
-	def setDataInExecution(self, instance_name: str, weigher_name: str, source: DataInExecutionDTO):
+	def setDataInExecution(self, instance_name: str, weigher_name: str, source: DataInExecutionDTO, idReservation: int = None):
 		# Per ogni chiave dei nuovi dati passati controlla se è un oggetto o None
 		for key, value in vars(source).items():
 			if isinstance(value, str) or isinstance(value, int):
@@ -64,6 +64,7 @@ class Functions:
 							sub_value = None
 						lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key][sub_key] = sub_value
 						lb_config.saveconfig()
+							
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteDataInExecution(self, instance_name: str, weigher_name: str):

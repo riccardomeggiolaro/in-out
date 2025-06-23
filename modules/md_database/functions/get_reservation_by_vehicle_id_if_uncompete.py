@@ -1,11 +1,10 @@
-from sqlalchemy import func
+from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload
-from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle
+from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation
 
 def get_reservation_by_vehicle_id_if_incomplete(id: int):
     session = SessionLocal()
     try:
-        # Crea una subquery che conta le pesate per ogni prenotazione
         weighing_count_subquery = (
             session.query(
                 InOut.idReservation,
@@ -14,8 +13,28 @@ def get_reservation_by_vehicle_id_if_incomplete(id: int):
             .group_by(InOut.idReservation)
             .subquery()
         )
-        
-        # Trova la prenotazione tramite la targa e che soddisfa i criteri di pesate
+
+        last_inout_subq = (
+            session.query(
+                InOut.idReservation,
+                func.max(InOut.id).label("last_inout_id")
+            )
+            .group_by(InOut.idReservation)
+            .subquery()
+        )
+
+        last_inout_weight2_subq = (
+            session.query(
+                InOut.idReservation,
+                InOut.idWeight2
+            )
+            .join(last_inout_subq, and_(
+                InOut.idReservation == last_inout_subq.c.idReservation,
+                InOut.id == last_inout_subq.c.last_inout_id
+            ))
+            .subquery()
+        )
+
         reservation = session.query(Reservation).options(
             joinedload(Reservation.subject),
             joinedload(Reservation.vector),
@@ -23,32 +42,37 @@ def get_reservation_by_vehicle_id_if_incomplete(id: int):
             joinedload(Reservation.vehicle)
         ).join(
             Vehicle, Reservation.idVehicle == Vehicle.id
-        ).outerjoin(  # Utilizziamo outerjoin per includere prenotazioni senza pesate
+        ).outerjoin(
             weighing_count_subquery,
             Reservation.id == weighing_count_subquery.c.idReservation
+        ).outerjoin(
+            last_inout_weight2_subq,
+            Reservation.id == last_inout_weight2_subq.c.idReservation
         ).filter(
-            Vehicle.id == id,
-            Reservation.selected == False,  # Non già selezionata
-            # Filtro per il numero di pesate: o nessuna pesata (NULL) o conteggio < number_in_out
-            (
-                (weighing_count_subquery.c.weighing_count == None) & (Reservation.number_in_out > 0) |
-                (weighing_count_subquery.c.weighing_count < Reservation.number_in_out)
+           Vehicle.id == id,
+            Reservation.type != TypeReservation.TEST.name,
+            or_(
+                # weighing_count is NULL (nessun InOut)
+                weighing_count_subquery.c.weighing_count == None,
+                # weighing_count < number_in_out
+                weighing_count_subquery.c.weighing_count < Reservation.number_in_out,
+                # weighing_count == number_in_out AND last_inout_weight2_subq.c.idWeight2 == None
+                and_(
+                    weighing_count_subquery.c.weighing_count == Reservation.number_in_out,
+                    last_inout_weight2_subq.c.idWeight2 == None
+                )
             )
         ).order_by(
-            Reservation.date_created.desc()  # Ordina per data di creazione decrescente
+            Reservation.date_created.desc()
         ).first()
-        
-        # Verifica che la prenotazione esista
+
         if not reservation:
-            # raise ValueError(f"No reservation found with vehicle plate {plate} that has incomplete weighings")
             return None
-        
+
         session.commit()
-        
-        # Esegui refresh per assicurarti che tutti gli attributi siano aggiornati
         session.refresh(reservation)
         return reservation.__dict__
-        
+
     except Exception as e:
         session.rollback()
         raise e

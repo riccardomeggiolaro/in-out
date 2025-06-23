@@ -94,7 +94,7 @@ async function updateTable() {
 }
 
 async function exportTable(type) {
-    let queryParams = '';
+    let queryParams = 'excludeTestWeighing=true&filterDateReservation=true&';
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.value) {

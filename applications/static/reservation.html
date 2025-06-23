@@ -64,12 +64,12 @@
                     </th>
                     <th name="status">
                         <select id="filter.status" name="status" onchange="updateTable()">
-                            <option value="">Stato</option>
-                            <option value="NOT_CLOSED" selected>Non chiusa</option>
-                            <option value="WAITING">Attesa</option>
-                            <option value="CALLED">Chiamato</option>
-                            <option value="ENTERED">Entrato</option>
-                            <option value="CLOSED">Chiusa</option>
+                            <option value="">Stato (Tutti)</option>
+                            <option value="NOT_CLOSED" selected>Aperti</option>
+                            <option value="WAITING">In Attesa</option>
+                            <option value="CALLED">Chiamati</option>
+                            <option value="ENTERED">Entrati</option>
+                            <option value="CLOSED">Chiusi</option>
                         </select>
                     </th>
                     <th name="number_in_out">N. Operazioni</th>
@@ -589,7 +589,7 @@
             itemName = 'reservation';
             lastChar = 'a';
             canAlwaysDelete = true;
-            listUrlPath = '/api/anagrafic/reservation/list';
+            listUrlPath = '/api/anagrafic/reservation/list?excludeTestWeighing=true';
             exportUrlPath = '/api/anagrafic/reservation/export'
             addUrlPath = '/api/anagrafic/reservation';
             setUrlPath = '/api/anagrafic/reservation';
@@ -610,7 +610,8 @@
                 "veicolo con targa": "vehicle.plate",
                 "veicolo con descrizione": "vehicle.description",
                 "materiale": "material.description",
-                "pesata con il veicolo": "weighing.vehicle.plate"
+                "pesata con il veicolo": "weighing.reservation.vehicle.plate",
+                "pesata con id": "weighing.id"
             }
             init();
             setInterval(updateElapsedTimes, 1000); // aggiorna ogni minuto

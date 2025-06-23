@@ -289,13 +289,17 @@ function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
             }
         });
     } else if (key) {
-        requestBody = JSON.stringify({
+        const data = {
             data_in_execution: {
                 [anagrafic]: {
                     [key]: value
                 }
             }
-        })
+        }
+        if (key !== "id" && value === "") {
+            data.data_in_execution[anagrafic]["id"] = -1;
+        }
+        requestBody = JSON.stringify(data);
     } else {
         requestBody = JSON.stringify({
             data_in_execution: {
@@ -760,15 +764,14 @@ async function handlePesata() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.command_details.command_executed == true) {
-        showSnackbarDashboard("Pesando...");
-    } else {
-        showSnackbarDashboard(r.command_details.error_message);
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) {
+        const message = r.detail || r.command_details.error_message;
+        showSnackbar(message, 'rgb(255, 208, 208)', 'black')
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    }
+    } else if (r.command_details.command_executed == true) showSnackbarDashboard("Pesando...");
 }
 
 async function handlePesata2() {
