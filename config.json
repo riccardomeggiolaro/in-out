@@ -50,6 +50,7 @@
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
+                        "cams": {},
                         "data": {
                             "data_in_execution": {
                                 "document_reference": null,
@@ -84,48 +85,27 @@
                             },
                             "id_selected": {
                                 "id": null
-                            }
+                            },
+                            "number_in_out": 1
                         },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "1": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "1": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
-                                "cams": [
-                                    {
-                                        "active": true,
-                                        "live": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/102/httpPreview",
-                                        "picture": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/1/picture"
-                                    }
-                                ],
-                                "reports": {
-                                    "in": "weight_in.html",
-                                    "out": "weight_out.html"
-                                },
-                                "set_rele": [
-                                    {
-                                        "1": 0
-                                    }
-                                ]
+                                "cams": [],
+                                "set_rele": []
                             }
                         },
                         "list_port_rele": {
-                            "1": 1,
+                            "1": 0,
                             "2": 0,
                             "3": 0,
                             "4": 0
@@ -133,16 +113,15 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_weight": 50000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": true,
                         "node": null,
                         "port_rele": null,
-                        "printer_name": "Canon_iR_ADV_C5235_5240",
                         "run": true,
                         "terminal": "egt-af03"
                     }
                 },
-                "time_between_actions": 0.5
+                "time_between_actions": 0.3
             }
         }
     },

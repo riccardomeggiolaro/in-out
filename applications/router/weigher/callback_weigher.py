@@ -31,26 +31,29 @@ class CallbackWeigher(Functions, WebSocket):
 	# ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
 	def Callback_Realtime(self, instance_name: str, weigher_name: str, pesa_real_time: Realtime):
-		gross_weight = pesa_real_time.gross_weight
-		float_gross_weight = None
 		try:
-			float_gross_weight = float(gross_weight)
+			gross_weight = pesa_real_time.gross_weight
+			float_gross_weight = None
+			try:
+				float_gross_weight = float(gross_weight)
+			except:
+				pass
+			if type(float_gross_weight) is float:
+				if float_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [0, None]:
+					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
+						key, value = next(iter(rele.items()))
+						modope = "CLOSERELE" if value == 0 else "OPENRELE"
+						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+					self.switch_to_call = 1
+				elif float_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [1, None]:
+					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]:
+						key, value = next(iter(rele.items()))
+						modope = "CLOSERELE" if value == 0 else "OPENRELE"
+						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+					self.switch_to_call = 0
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
 		except:
 			pass
-		if type(float_gross_weight) is float:
-			if float_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [0, None]:
-				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
-					key, value = next(iter(rele.items()))
-					modope = "CLOSERELE" if value == 0 else "OPENRELE"
-					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
-				self.switch_to_call = 1
-			elif float_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [1, None]:
-				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]:
-					key, value = next(iter(rele.items()))
-					modope = "CLOSERELE" if value == 0 else "OPENRELE"
-					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
-				self.switch_to_call = 0
-		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
 	def Callback_Diagnostic(self, instance_name: str, weigher_name: str, diagnostic: Diagnostic):

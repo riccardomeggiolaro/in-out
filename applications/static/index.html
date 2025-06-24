@@ -18,13 +18,13 @@
                                 populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
                             }
                         "
-                        onblur="closeSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
                     <div id="suggestions.material.description" class="suggestions"></div>
                 </div>
             </div>
         </form>
         <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['edit-inout-popup'])">Indietro</button>
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Indietro</button>
             <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
         </div>
     </div>
