@@ -10,6 +10,7 @@ import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.reservation import ReservationRouter
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
+from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.interfaces.reservation import AddReservationDTO, SetReservationDTO
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
@@ -94,8 +95,14 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def In(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
-		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
-			error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
+		current_id = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
+		status_modope = None
+		command_executed = None
+		error_message = None
+		if current_id:
+			reservation = get_reservation_by_id(current_id)
+			if len(reservation.in_out) > 0:
+				error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
 		elif tare != "0":
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		else:
@@ -105,11 +112,13 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
                   	"type": "MANUALLY",
                    	"hidden": True
                 }))
+			current_id = reservation.id
+		if not error_message:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
 				modope="WEIGHING", 
-	          	data_assigned=reservation.id
+				data_assigned=reservation.id
 			)
 		return {
 			"instance": instance,

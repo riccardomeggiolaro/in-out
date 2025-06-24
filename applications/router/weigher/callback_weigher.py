@@ -156,6 +156,7 @@ class CallbackWeigher(Functions, WebSocket):
 				if name_file:
 					name_file += "_"
 				name_file += last_in_out.weight2.pid
+			name_file += ".pdf"
 			variables = ReportVariables(**{})
 			variables.typeSubject = reservation.typeSubject.value
 			variables.subject = reservation.subject.__dict__ if reservation.subject else SubjectDataDTO(**{})

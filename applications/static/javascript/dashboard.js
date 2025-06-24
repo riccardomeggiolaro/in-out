@@ -17,6 +17,7 @@ let selectedIdVector;
 let selectedIdMaterial;
 
 let selectedIdWeight;
+let numberInOutSelectedIdWeight;
 let dataInExecution;
 
 let isRefreshing = false;
@@ -247,6 +248,7 @@ async function populateListIn() {
                 .then(res => res.json())
                 .then(res => {
                     if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    else numberInOutSelectedIdWeight = item.in_out.length;
                 });
             })
             listIn.appendChild(li);
@@ -632,8 +634,13 @@ function updateUIRealtime(e) {
                 tareButton.disabled = false;
                 // zeroButton.disabled = true;
                 presetTareButton.disabled = false;
-                inButton.disabled = true;
-                outButton.disabled = false;
+                if (numberInOutSelectedIdWeight > 0) {
+                    inButton.disabled = true;
+                    outButton.disabled = false;
+                } else {
+                    inButton.disabled = false;
+                    outButton.disabled = true;
+                }
                 if (selectedIdWeight !== null) {
                     printButton.disabled = true;
                 } else {
