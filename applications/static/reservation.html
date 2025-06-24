@@ -497,7 +497,7 @@
 
     <div id="edit-inout-popup" class="modal-content popup">
         <h3>Modifica materiale:</h3>
-        <form id="edit-inout" class="content form-content" oninput="document.querySelector('#edit-inout-popup .save-btn').disabled = !this.checkValidity()">
+        <form id="edit-inout" class="content form-content">
             <div>
                 <div class="item">
                     <input id="material.id" name="material.id" type="number" class="suggestionId id">
@@ -796,6 +796,7 @@
             }
             document.querySelector("#edit-inout-popup #material\\.id").value = idMaterial;
             document.querySelector('#edit-inout-popup #material\\.description').value = descriptionMaterial;
+            document.querySelector('#edit-inout-popup .save-btn').disabled = false;
             selectAnagrafic(idReservation, "UPDATE", "reservation", null, true);
             currentId = idReservation;
         }
@@ -940,7 +941,7 @@
                             callback_select_anagrafic = () => {
                                 document.querySelector(`${popup} #material\\.id`).value = item.id;
                                 document.querySelector(`${popup} #material\\.description`).value = item.description;
-                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                                // document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                             }
                         }
                         if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
@@ -998,7 +999,7 @@
                         callback_select_anagrafic = () => {
                             document.querySelector(`${popup} #material\\.id`).value = item.id;
                             document.querySelector(`${popup} #material\\.description`).value = item.description;
-                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            // document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                         }
                     }
                     if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);

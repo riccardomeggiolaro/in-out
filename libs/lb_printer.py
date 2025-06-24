@@ -115,68 +115,84 @@ class HTMLPrinter:
             lb_log.error(f"Errore nella ricerca della stampante predefinita: {e}")
             return None
 
-    def print_html(self, html_content, printer_name: str):
+    def generate_pdf_from_html(self, html_content):
+        """
+        Genera un PDF a partire da una stringa HTML e restituisce i bytes del PDF.
+        """
+        import tempfile
+        import os
+        from weasyprint import HTML
+
         pdf_bytes = None
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as html_file, \
+            tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
+            html_file.write(html_content.encode('utf-8'))
+            html_file.flush()
+            try:
+                HTML(filename=html_file.name).write_pdf(pdf_file.name)
+                with open(pdf_file.name, "rb") as f:
+                    pdf_bytes = f.read()
+            finally:
+                os.unlink(html_file.name)
+                os.unlink(pdf_file.name)
+        return pdf_bytes
+
+    def print_pdf(self, pdf_bytes, printer_name: str):
+        """
+        Invia un file PDF (bytes) alla stampante specificata.
+        """
+        import tempfile
+        import os
+
         job_id = None
         message1 = None
         message2 = None
 
-        # Gestione del caso in cui printer_name è None
         if not printer_name:
             message1 = "Stampante non specificata."
             message2 = "Stampa non inviata."
-            return pdf_bytes, job_id, message1, message2
+            return job_id, message1, message2
 
         try:
             printers = self.conn.getPrinters()
             if printer_name not in printers:
                 message1 = f"Stampante '{printer_name}' non trovata."
                 message2 = "Stampa non inviata."
-                return pdf_bytes, job_id, message1, message2
+                return job_id, message1, message2
 
             printer_status = printers[printer_name].get('printer-state', None)
             if printer_status == cups.IPP_PRINTER_STOPPED:
                 message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline. La stampa rimarrà in coda."
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as html_file, \
-                tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
-                
-                html_file.write(html_content.encode('utf-8'))
-                html_file.flush()
-
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
+                pdf_file.write(pdf_bytes)
+                pdf_file.flush()
                 try:
-                    # Converti HTML in PDF (scrive su file)
-                    HTML(filename=html_file.name).write_pdf(pdf_file.name)
-
-                    # Leggi i bytes del PDF generato
-                    with open(pdf_file.name, "rb") as f:
-                        pdf_bytes = f.read()
-
                     options = {
                         'orientation-requested': '3',
                         'landscape': '0',
                         'fit-to-page': 'true'
                     }
-
                     job_id = self.conn.printFile(
                         printer_name,
                         pdf_file.name,
-                        "HTML to PDF Print Job",
+                        "PDF Print Job",
                         options
                     )
                     message2 = f"Stampa inviata alla stampante '{printer_name}' con successo."
-                
-                except Exception as e:
-                    message2 = f"Errore durante la conversione/stampa: {e}"
-                
                 finally:
-                    os.unlink(html_file.name)
                     os.unlink(pdf_file.name)
 
         except Exception as e:
             message1 = f"Errore nella gestione delle stampanti: {e}"
             message2 = "Stampa non inviata."
 
+        return job_id, message1, message2
+
+    # Esempio di nuovo print_html che usa le due funzioni sopra
+    def print_html(self, html_content, printer_name: str):
+        pdf_bytes = self.generate_pdf_from_html(html_content)
+        job_id, message1, message2 = self.print_pdf(pdf_bytes, printer_name)
         return pdf_bytes, job_id, message1, message2
     
 printer = HTMLPrinter()

@@ -183,25 +183,34 @@ class CallbackWeigher(Functions, WebSocket):
 				variables.weight2.weight = last_in_out.weight2.weight if last_in_out.idWeight2 else ""
 			variables.net_weight = last_in_out.net_weight
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
-			if printer_name and template:
+			pdf = None
+			if template:
 				report = generate_report(template, v=variables.dict())
-				pdf, _, _, _ = printer.print_html(html_content=report, printer_name=printer_name)
-				save_file_dir(lb_config.g_config["app_api"]["path_pdf"], name_file, pdf)
+				pdf = printer.generate_pdf_from_html(html_content=report)
+				job_id, message1, message2 = printer.print_pdf(pdf_bytes=report, printer_name=printer_name)
+			# SALVA COPIA PDF
+			path_pdf = lb_config.g_config["app_api"]["path_pdf"]
+			import libs.lb_log as lb_log
+			lb_log.warning(pdf is None)
+			if path_pdf and pdf:
+				save_file_dir(path_pdf, name_file, pdf)
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
 					key, value = next(iter(rele.items()))
 					modope = "CLOSERELE" if value == 0 else "OPENRELE"
 					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+				i = 1
 				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 					if cam["active"]:
 						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 						if image_captured_details["image"]:
 							base_folder_path = lb_config.g_config["app_api"]["path_weighing_pictures"]
 							sub_folder_path = structure_folder_rule()
-							file_name = f"{last_pesata.weight_executed.pid}.png"
+							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
 							save_bytes_to_file(image_captured_details["image"], file_name, f"{base_folder_path}{sub_folder_path}")
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
+							i = i + 1
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		for instance in weighers_data:
 			for weigher in weighers_data[instance]:

@@ -72,7 +72,7 @@ class ConfigWeigher(CallbackWeigher):
         del weigher_created[setup.name]["terminal_data"]
         del weigher_created[setup.name]["status"]
         weigher_created[setup.name]["data"] = Data(**{}).dict()
-        weigher_created[setup.name]["cams"] = {}
+        weigher_created[setup.name]["printer_name"] = None
         weigher_created[setup.name]["events"] = {
             "realtime": {
                 "over_min": {
@@ -83,6 +83,10 @@ class ConfigWeigher(CallbackWeigher):
                 }
             },
             "weighing": {
+                "reports": {
+                    "in": "weight_in.html",
+                    "out": "weight_out.html"
+                },
                 "set_rele": [],
                 "cams": []
             }

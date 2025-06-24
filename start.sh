@@ -51,7 +51,7 @@ else
     echo "CUPS e libcups2-dev sono già installati, procedo..."
 fi
 
-cd /etc/in-out
+# cd /etc/in-out
 
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".env" ]]; then
