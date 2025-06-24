@@ -13,8 +13,10 @@ from modules.md_database.functions.unlock_record_by_attributes import unlock_rec
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.unlock_all_record_by_websocket import unlock_all_record_by_websocket
 from modules.md_database.functions.unlock_all_record import unlock_all_record
+from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 import json
 from applications.middleware.auth import get_user
+from applications.utils.utils import just_locked_message
   
 class AnagraficRouter:
 	def __init__(self):
@@ -43,10 +45,15 @@ class AnagraficRouter:
 		try:
 			if table_name not in manager_anagrafics:
 				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Anagrafic {table_name} does not exist", "idRecord": idRecord, "type": type, "idRequest": idRequest}
-			success, locked_record, locked_table_name = lock_record(table_name=table_name, idRecord=idRecord, type=type, websocket_identifier=websocket_identifier, user_id=user_id)
+			success, locked_record, error = lock_record(table_name=table_name, idRecord=idRecord, type=type, websocket_identifier=websocket_identifier, user_id=user_id, weigher_name=None)
 			if success is False:
-				return {"action": "lock", "success": False, "anagrafic": table_name, "error": f"Record con id '{idRecord}' nella tabella '{locked_table_name if locked_table_name else table_name}' bloccato dall'utente '{locked_record.user.username}'", "idRecord": idRecord, "type": type, "idRequest": idRequest}
-			data = get_data_by_id(table_name, idRecord)
+				message = just_locked_message(type, table_name, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
+				return {"action": "lock", "success": False, "anagrafic": table_name, "error": message, "idRecord": idRecord, "type": type, "idRequest": idRequest}
+			data = None
+			if table_name == "reservation":
+				data = get_reservation_by_id(idRecord)
+			else:
+				data = get_data_by_id(table_name, idRecord)
 			return {"action": "lock", "success": True, "anagrafic": table_name, "data": data, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 		except Exception as e:
 			return {"action": "lock", "success": False, "anagrafic": table_name, "error": str(e), "idRecord": idRecord, "type": type, "idRequest": idRequest}
@@ -55,7 +62,7 @@ class AnagraficRouter:
 		try:
 			if table_name not in manager_anagrafics:
 				return {"action": "unlock", "success": False, "anagrafic": table_name, "error": f"Anagrafic {table_name} does not exist", "idRecord": idRecord, "type": type, "idRequest": idRequest}
-			success = unlock_record_by_attributes(table_name=table_name, idRecord=idRecord, websocket_identifier=websocket_identifier)
+			success = unlock_record_by_attributes(table_name=table_name, idRecord=idRecord, websocket_identifier=websocket_identifier, weigher_name=None)
 			return {"action": "unlock", "success": success, "anagrafic": table_name, "data": {}, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 		except Exception as e:
 			return {"action": "unlock", "success": False, "anagrafic": table_name, "error": e, "idRecord": idRecord, "type": type, "idRequest": idRequest}

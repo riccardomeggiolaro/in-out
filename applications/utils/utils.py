@@ -1,7 +1,6 @@
-from fastapi import Request, Depends, HTTPException
+from fastapi import Request, HTTPException
 from typing import Dict, Union
-import modules.md_weigher.md_weigher as md_weigher
-import libs.lb_log as lb_log
+from libs.multi_language_messages import multi_language_data
 
 async def get_query_params(request: Request) -> Dict[str, Union[str, int]]:
 	"""
@@ -17,3 +16,13 @@ async def validate_time(time: Union[int, float]) -> Union[int, float]:
 
 def has_non_none_value(d):
     return any(value not in [None, ""] for value in d.values())
+
+def just_locked_message(action_to_do, table_name, username, weigher_name):
+    action_to_do = multi_language_data["actions"][action_to_do]["it"]["endless"]
+    table = multi_language_data["table_names"][table_name]["it"]["with_article"]
+    message = f"Non puoi {action_to_do} {table} perchè"
+    if username:
+        message += f" ci sono delle modifiche in corso da parte di '{username}'"
+    if weigher_name:
+        message += f" è in uso sulla pesa '{weigher_name}'"
+    return message

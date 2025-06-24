@@ -8,6 +8,7 @@ from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetu
 from typing import Union
 from libs.lb_system import SerialPort, Tcp
 from applications.router.weigher.types import Data
+from applications.middleware.super_admin import is_super_admin
 
 class ConfigWeigher(CallbackWeigher):
     def __init__(self):
@@ -17,15 +18,15 @@ class ConfigWeigher(CallbackWeigher):
     
         self.router_config_weigher.add_api_route('/all/instance', self.GetAllInstance, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance', self.GetInstance, methods=['GET'])
-        self.router_config_weigher.add_api_route('/instance', self.AddInstance, methods=['POST'])
-        self.router_config_weigher.add_api_route('/instance', self.DeleteInstance, methods=['DELETE'])
+        self.router_config_weigher.add_api_route('/instance', self.AddInstance, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/instance', self.DeleteInstance, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/instance/node', self.GetInstanceWeigher, methods=['GET'])
-        self.router_config_weigher.add_api_route('/instance/node', self.AddInstanceWeigher, methods=['POST'])
-        self.router_config_weigher.add_api_route('/instance/node', self.SetInstanceWeigher, methods=['PATCH'])
-        self.router_config_weigher.add_api_route('/instance/node', self.DeleteInstanceWeigher, methods=['DELETE'])
-        self.router_config_weigher.add_api_route('/instance/connection', self.SetInstanceConnection, methods=['PATCH'])
-        self.router_config_weigher.add_api_route('/instance/connection', self.DeleteInstanceConnection, methods=['DELETE'])
-        self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'])
+        self.router_config_weigher.add_api_route('/instance/node', self.AddInstanceWeigher, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/instance/node', self.SetInstanceWeigher, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/instance/node', self.DeleteInstanceWeigher, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/instance/connection', self.SetInstanceConnection, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/instance/connection', self.DeleteInstanceConnection, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 
     async def GetAllInstance(self):
         return md_weigher.module_weigher.getAllInstance()
@@ -71,7 +72,7 @@ class ConfigWeigher(CallbackWeigher):
         del weigher_created[setup.name]["terminal_data"]
         del weigher_created[setup.name]["status"]
         weigher_created[setup.name]["data"] = Data(**{}).dict()
-        weigher_created[setup.name]["cams"] = {}
+        weigher_created[setup.name]["printer_name"] = None
         weigher_created[setup.name]["events"] = {
             "realtime": {
                 "over_min": {
@@ -82,6 +83,10 @@ class ConfigWeigher(CallbackWeigher):
                 }
             },
             "weighing": {
+                "reports": {
+                    "in": "weight_in.html",
+                    "out": "weight_out.html"
+                },
                 "set_rele": [],
                 "cams": []
             }

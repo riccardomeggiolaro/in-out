@@ -14,10 +14,10 @@ let selectedIdVehicle;
 let selectedIdTypeSubject;
 let selectedIdSubject;
 let selectedIdVector;
-let selectedIdDriver;
 let selectedIdMaterial;
 
 let selectedIdWeight;
+let numberInOutSelectedIdWeight;
 let dataInExecution;
 
 let isRefreshing = false;
@@ -74,6 +74,7 @@ const minWeight = document.getElementById('minWeight');
 const maxWeight = document.getElementById('maxWeight');
 const division = document.getElementById('division');
 const cams = document.querySelector('#cams');
+const reconnectionButton = document.getElementById('reconnectionButton');
 // Usa un MutationObserver per rilevare i cambiamenti nei contenuti
 const observer = new MutationObserver(() => updateStyle());
 
@@ -172,12 +173,6 @@ async function getInstanceWeigher(path) {
         maxWeightValue = obj.max_weight;
         division.textContent = obj.division;
         divisionValue = obj.division;
-        obj.events.weighing.cams.forEach(cam => {
-            const img = document.createElement('img');
-            img.classList.toggle('cam');
-            img.src = cam.live;
-            cams.appendChild(img);
-        });
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -197,14 +192,11 @@ async function getData(path) {
         selectedIdTypeSubject = obj.typeSubject;
         selectedIdSubject = obj.subject.id;
         selectedIdVector = obj.vector.id;
-        selectedIdDriver = obj.driver.id;
         selectedIdMaterial = obj.material.id;
-        document.querySelector('#currentDescriptionVehicle').value = obj.vehicle.description ? obj.vehicle.description : '';
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.vector.social_reason ? obj.vector.social_reason : '';
-        document.querySelector('#currentSocialReasonDriver').value = obj.driver.social_reason ? obj.driver.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
@@ -232,9 +224,8 @@ async function populateListIn() {
         data.data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
-            let content = item.weighings.length > 0 ? item.weighings[0].pid : item.id;
+            let content = item.in_out.length > 0 ? item.in_out[0].weight1.pid : item.id;
             if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
-            if (item.subject && item.subject.social_reason) content += ` - ${item.subject.social_reason}`;
             li.textContent = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');
@@ -255,7 +246,10 @@ async function populateListIn() {
                     body: JSON.stringify(obj)
                 })
                 .then(res => res.json())
-                .catch(error => console.error(error));                    
+                .then(res => {
+                    if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    else numberInOutSelectedIdWeight = item.in_out.length;
+                });
             })
             listIn.appendChild(li);
         })
@@ -284,16 +278,30 @@ function scrollToSelectedItem() {
     }
 }
 
-function setDataInExecutionOnCLick(anagrafic, key, value) {
+function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
     let requestBody;
-    if (key) {
+    const suggestionsList = document.getElementById(showList);
+    if (suggestionsList && suggestionsList.children.length === 1 && suggestionsList.children[0].textContent === value) {
+        id = suggestionsList.children[0].dataset.id;
         requestBody = JSON.stringify({
+            data_in_execution: {
+                [anagrafic]: {
+                    id
+                }
+            }
+        });
+    } else if (key) {
+        const data = {
             data_in_execution: {
                 [anagrafic]: {
                     [key]: value
                 }
             }
-        })
+        }
+        if (key !== "id" && value === "") {
+            data.data_in_execution[anagrafic]["id"] = -1;
+        }
+        requestBody = JSON.stringify(data);
     } else {
         requestBody = JSON.stringify({
             data_in_execution: {
@@ -301,9 +309,6 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
             }
         })
     }
-    try {
-        closePopup();
-    } catch (err) {}
     fetch(`/api/data${currentWeigherPath}`, {
         method: 'PATCH',
         headers: {
@@ -312,7 +317,10 @@ function setDataInExecutionOnCLick(anagrafic, key, value) {
         body: requestBody
     })
     .then(res => res.json())
-    .catch(error => console.error('Errore nella fetch:', error));
+    .then(res => {
+        if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+        else closePopup();
+    });
 }
 
 function isDate(string) {
@@ -328,7 +336,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
     let anagrafic_to_set;
 
     // Opzionale: salva l'ID dell'elemento selezionato
-    if (showList === 'suggestionsListPlateVehicle' || showList === 'suggestionsListDescriptionVehicle') {
+    if (showList === 'suggestionsListPlateVehicle') {
         currentId = selectedIdVehicle;
         anagrafic_to_set = 'vehicle';
     } else if (showList === 'suggestionsListSocialReasonSubject') {
@@ -337,9 +345,6 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
     } else if (showList === 'suggestionsListSocialReasonVector') {
         currentId = selectedIdVector;
         anagrafic_to_set = 'vector';
-    } else if (showList === 'suggestionsListSocialReasonDriver') {
-        currentId = selectedIdDriver;
-        anagrafic_to_set = 'driver';
     } else if (showList === 'suggestionsListMaterial') {
         currentId = selectedIdMaterial;
         anagrafic_to_set = 'material';
@@ -359,7 +364,6 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
             const li = document.createElement("li");
 
             li.onclick = () => {
-                closePopup();
                 fetch(`/api/data${currentWeigherPath}`, {
                     method: 'PATCH',
                     headers: {
@@ -374,7 +378,10 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                     })
                 })
                 .then(res => res.json())
-                .catch(error => console.error(error));
+                .then(res => {
+                    if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    else closePopup();
+                });
             };
 
             let text = highlightText(suggestion, inputValue, filter);
@@ -461,8 +468,8 @@ myNumberInput.onkeydown = function(event) {
 };
 
 // script.js
-function showSnackbar(message) {
-    const snackbar = document.getElementById("snackbar");
+function showSnackbarDashboard(message) {
+    const snackbar = document.getElementById("snackbar-dashboard");
     snackbar.textContent = message; // Imposta il messaggio
     snackbar.className = "show"; // Aggiungi la classe "show"
 
@@ -487,24 +494,29 @@ function openPopup(name, input) {
     popup.style.display = "flex"; // Mostra il popup
     setTimeout(() => {
         popupContent.classList.add("show"); // Aggiungi la classe per mostrare
+        if (input) popupContent.querySelector("input").focus(); // Imposta il focus sull'input
     }, 10); // Breve ritardo per assicurarsi che il display sia impostato
 }
 
 function closePopup() {
-    const popup = document.getElementById(currentPopup);
-    const popupContent = popup.querySelector(".popup-content");
-    
-    const input = document.getElementById(currentInput);
-    input.value = "";
+    if (currentPopup) {
+        const popup = document.getElementById(currentPopup);
+        const popupContent = popup.querySelector(".popup-content");
+        const buttons = popup.querySelectorAll("button");
+        
+        const input = document.getElementById(currentInput);
+        if (input) input.value = "";
 
-    // Rimuovi la classe per nascondere
-    popupContent.classList.remove("show");
-    
-    // Aspetta il tempo di transizione prima di nascondere il popup
-    setTimeout(() => {
-        popup.style.display = "none"; // Nascondi il popup
-        myNumberInput.value = "";
-    }, 300); // Tempo della transizione
+        // Rimuovi la classe per nascondere
+        popupContent.classList.remove("show");
+        
+        // Aspetta il tempo di transizione prima di nascondere il popup
+        setTimeout(() => {
+            popup.style.display = "none"; // Nascondi il popup
+            myNumberInput.value = "";
+            buttons.forEach(button => button.disabled = false);
+        }, 300); // Tempo della transizione
+    }
 }
 
 function connectWebSocket(path, exe) {
@@ -516,6 +528,8 @@ function connectWebSocket(path, exe) {
     // Costruisci l'URL WebSocket
     const websocketUrl = `${baseUrl}/${path}`;
 
+    closeWebSocket(); // Chiude la connessione WebSocket precedente se esiste
+
     _data = new WebSocket(websocketUrl);
 
     _data.addEventListener('message', (e) => {
@@ -524,32 +538,38 @@ function connectWebSocket(path, exe) {
 
     _data.addEventListener('open', () => {
         enableAllElements();
+        reconnectionButton.disabled = true;
+        closePopup('reconnectionPopup');
     })
 
     _data.addEventListener('error', () => {
         if (!isRefreshing) {
-            attemptReconnect(path);
+            closeWebSocket();
             disableAllElements();
+            reconnectionButton.disabled = false;
+            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+            openPopup('reconnectionPopup');
         }
     });
 
     _data.addEventListener('close', () => {
         if (!isRefreshing) {
-            attemptReconnect(path);
             disableAllElements();
+            reconnectionButton.disabled = false;
+            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+            openPopup('reconnectionPopup');
         }
     });
 }
 
-function attemptReconnect(path) {
+function attemptReconnect() {
+    reconnectionButton.disabled = true;
     closeWebSocket();
-    reconnectTimeout = setTimeout(() => {
-        connectWebSocket(path, updateUIRealtime);
-    }, 3000);
+    document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
+    connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
 }
 
 function closeWebSocket() {
-    clearTimeout(reconnectTimeout);
     if (_data) {
         _data.close(); // Chiude la connessione WebSocket
         _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
@@ -563,11 +583,11 @@ function isNumeric(value) {
 function updateUIRealtime(e) {
     const obj = JSON.parse(e.data);
     if (obj.command_in_executing) {
-        if (obj.command_in_executing == "TARE") showSnackbar("Tara");
-        if (obj.command_in_executing == "PRESETTARE") showSnackbar("Preset tara");
-        if (obj.command_in_executing == "ZERO") showSnackbar("Zero");
+        if (obj.command_in_executing == "TARE") showSnackbarDashboard("Tara");
+        if (obj.command_in_executing == "PRESETTARE") showSnackbarDashboard("Preset tara");
+        if (obj.command_in_executing == "ZERO") showSnackbarDashboard("Zero");
         if (obj.command_in_executing == "WEIGHING") {
-            showSnackbar("Pesando...");
+            showSnackbarDashboard("Pesando...");
             buttons.forEach(button => {
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
@@ -577,15 +597,17 @@ function updateUIRealtime(e) {
         if (obj.weight_executed.gross_weight != "") {
             let message = `Pesata eseguita! Bilancia: ${obj.weigher_name}.`;
             if (obj.weight_executed.pid != "") message += ` Pid: ${obj.weight_executed.pid}`;
-            showSnackbar(message);
+            showSnackbarDashboard(message);
             populateListIn();
         } else { 
-            showSnackbar("Pesata fallita!");
+            showSnackbarDashboard("Pesata fallita!");
         }
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
+    } else if (obj.reservation) {
+        populateListIn();
     } else if (obj.tare) {
         data_weight_realtime = obj;
         document.getElementById('tare').innerText = data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : 'N/A';
@@ -612,8 +634,13 @@ function updateUIRealtime(e) {
                 tareButton.disabled = false;
                 // zeroButton.disabled = true;
                 presetTareButton.disabled = false;
-                inButton.disabled = true;
-                outButton.disabled = false;
+                if (numberInOutSelectedIdWeight > 0) {
+                    inButton.disabled = true;
+                    outButton.disabled = false;
+                } else {
+                    inButton.disabled = false;
+                    outButton.disabled = true;
+                }
                 if (selectedIdWeight !== null) {
                     printButton.disabled = true;
                 } else {
@@ -639,16 +666,13 @@ function updateUIRealtime(e) {
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;
         selectedIdSubject = obj.data_in_execution.subject.id;
         selectedIdVector = obj.data_in_execution.vector.id;
-        selectedIdDriver = obj.data_in_execution.driver.id;
         selectedIdMaterial = obj.data_in_execution.material.id;
         if (obj.data_in_execution.typeSubject === 'Cliente') obj.data_in_execution.typeSubject = 'CUSTOMER';
         else if (obj.data_in_execution.typeSubject === 'Fornitore') obj.data_in_execution.typeSubject = 'SUPPLIER';
-        document.querySelector('#currentDescriptionVehicle').value = obj.data_in_execution.vehicle.description ? obj.data_in_execution.vehicle.description : '';
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
-        document.querySelector('#currentSocialReasonDriver').value = obj.data_in_execution.driver.social_reason ? obj.data_in_execution.driver.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
@@ -665,24 +689,23 @@ function updateUIRealtime(e) {
                 });
             }
         }
-        if (obj.id_selected.id === null) {
-            // Seleziona tutti i pulsanti e gli input
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            // Disabilita ogni elemento trovato
-            buttonsAndInputs.forEach(element => {
-                element.disabled = false;
-            });
-        } else {
-            // Seleziona tutti i pulsanti e gli input
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            // Disabilita ogni elemento trovato
-            buttonsAndInputs.forEach(element => {
-                element.disabled = true;
-            });
-        }
+        // if (obj.id_selected.id === null) {
+        //     // Seleziona tutti i pulsanti e gli input
+        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+        //     // Disabilita ogni elemento trovato
+        //     buttonsAndInputs.forEach(element => {
+        //         element.disabled = false;
+        //     });
+        // } else {
+        //     // Seleziona tutti i pulsanti e gli input
+        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+        //     // Disabilita ogni elemento trovato
+        //     buttonsAndInputs.forEach(element => {
+        //         element.disabled = true;
+        //     });
+        // }
     } else if (obj.message) {
-        console.log("iwebhfiwuefuoi")
-        showSnackbar(obj.message);
+        showSnackbarDashboard(obj.message);
     }
 }
 
@@ -720,9 +743,9 @@ async function handleStampa() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...");
+        showSnackbarDashboard("Pesando...");
     } else {
-        showSnackbar(r.command_details.error_message);
+        showSnackbarDashboard(r.command_details.error_message);
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -750,15 +773,14 @@ async function handlePesata() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...");
-    } else {
-        showSnackbar(r.command_details.error_message);
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) {
+        const message = r.detail || r.command_details.error_message;
+        showSnackbar(message, 'rgb(255, 208, 208)', 'black')
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    }
+    } else if (r.command_details.command_executed == true) showSnackbarDashboard("Pesando...");
 }
 
 async function handlePesata2() {
@@ -780,9 +802,9 @@ async function handlePesata2() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...");
+        showSnackbarDashboard("Pesando...");
     } else {
-        showSnackbar(r.command_details.error_message);
+        showSnackbarDashboard(r.command_details.error_message);
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -808,4 +830,23 @@ function enableAllElements() {
     buttonsAndInputs.forEach(element => {
         element.disabled = false;
     });
+}
+
+function validatePlate(input) {
+    // Convert to uppercase
+    input.value = input.value.toUpperCase();
+    
+    // Show suggestions
+    showSuggestions('vehicle', 'plateVehicleInput', 'plate', input.value, 
+        ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle');
+    
+    // Validate plate format
+    const platePattern = /^[A-Z]{2}\d{3}[A-Z]{2}$/;
+    const isValid = platePattern.test(input.value) || input.value === '';
+
+    // Get the submit button
+    const submitButton = document.getElementById('plateSubmitButton');
+    
+    // Enable/disable button based on validation
+    submitButton.disabled = !isValid;
 }

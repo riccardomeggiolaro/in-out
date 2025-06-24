@@ -9,14 +9,14 @@ function showSnackbar(text, backgroundColor, color) {
     void snackbar.offsetWidth; // Forza il reflow per riavviare l'animazione
     snackbar.style.animation = ""; // Rimuove il reset e permette di riapplicare le animazioni
 
-    snackbar.classList.add("show");
+    snackbar.classList.add("show-snackbar");
 
     if (currentShowSnackbar !== null) clearTimeout(currentShowSnackbar);
 
     currentShowSnackbar = setTimeout(() => {
         snackbar.addEventListener("animationend", function handler(event) {
             if (event.animationName === "fadeout") {
-                snackbar.classList.remove("show");
+                snackbar.classList.remove("show-snackbar");
                 snackbar.removeEventListener("animationend", handler);
             }
         });

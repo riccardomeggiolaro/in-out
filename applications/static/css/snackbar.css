@@ -16,7 +16,7 @@
 }
 
 /* Animazione di fade in/out */
-.show {
+.show-snackbar {
     visibility: visible !important;
     animation: fadein 0.5s forwards, fadeout 0.5s 2.5s forwards;
 }

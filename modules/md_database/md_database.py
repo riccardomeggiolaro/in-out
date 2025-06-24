@@ -55,7 +55,7 @@ class Driver(Base):
     telephone = Column(String(collation="NOCASE"), index=True, unique=True, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
-    reservations = relationship("Reservation", back_populates="driver", cascade="all, delete")  # Fixed typo: resservations -> reservations
+    reservations = relationship("Reservation", back_populates="driver", cascade="all, delete")
 
 # Model for Vehicle table
 class Vehicle(Base):
@@ -74,6 +74,24 @@ class Material(Base):
     description = Column(String(collation="NOCASE"), index=True, unique=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
+    in_out = relationship("InOut", back_populates="material", cascade="all, delete")
+
+# Model for Weighing table
+class Weighing(Base):
+    __tablename__ = 'weighing'
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(DateTime, server_default=func.now(), default=datetime.now)
+    weigher = Column(String, nullable=True)
+    pid = Column(String, index=True, unique=True, nullable=True)
+    is_preset_tare = Column(Boolean, default=False, nullable=True)
+    tare = Column(Integer, nullable=True)
+    weight = Column(Integer, nullable=True)
+
+    # Relationships
+    weighing_pictures = relationship("WeighingPicture", back_populates="weighing", cascade="all, delete")
+    in_out_weight1 = relationship("InOut", foreign_keys="InOut.idWeight1", back_populates="weight1")
+    in_out_weight2 = relationship("InOut", foreign_keys="InOut.idWeight2", back_populates="weight2")
+
 class WeighingPicture(Base):
     __tablename__ = 'weighing_picture'
     id = Column(Integer, primary_key=True, index=True)
@@ -82,25 +100,6 @@ class WeighingPicture(Base):
 
     weighing = relationship("Weighing", back_populates="weighing_pictures")
 
-class TypeWeightEnum(PyEnum):
-    PRESETTARE = "PT"
-    TARE = "Tara"
-    WEIGHT = "Peso"
-
-# Model for Weighing table
-class Weighing(Base):
-    __tablename__ = 'weighing'
-    id = Column(Integer, primary_key=True, index=True)
-    weight = Column(Integer, nullable=True)
-    date = Column(DateTime, server_default=func.now(), default=datetime.now)
-    pid = Column(String, index=True, unique=True, nullable=True)
-    weigher = Column(String, nullable=True)
-    type = Column(Enum(TypeWeightEnum), default=None, nullable=None)
-    idReservation = Column(Integer, ForeignKey('reservation.id'))    
-
-    reservation = relationship("Reservation", back_populates="weighings")
-    weighing_pictures = relationship("WeighingPicture", back_populates="weighing", cascade="all, delete")
-    
 class TypeSubjectEnum(PyEnum):
     CUSTOMER = "Cliente"
     SUPPLIER = "Fornitore"
@@ -111,6 +110,11 @@ class ReservationStatus(PyEnum):
     ENTERED = "Entrato"
     CLOSED = "Chiusa"
 
+class TypeReservation(PyEnum):
+    RESERVATION = "Prenotazione"
+    MANUALLY = "Manuale"
+    TEST = "Test"
+
 # Model for Reservation table
 class Reservation(Base):
     __tablename__ = 'reservation'
@@ -120,19 +124,36 @@ class Reservation(Base):
     idVector = Column(Integer, ForeignKey('vector.id'))
     idDriver = Column(Integer, ForeignKey('driver.id'))
     idVehicle = Column(Integer, ForeignKey('vehicle.id'))
-    number_weighings = Column(Integer, default=0, nullable=False)
+    number_in_out = Column(Integer, default=0, nullable=False)
     note = Column(String, nullable=True)
     selected = Column(Boolean, index=True, default=False)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
     status = Column(Enum(ReservationStatus), default=ReservationStatus.WAITING)
     document_reference = Column(String, nullable=True)
+    type = Column(Enum(TypeReservation), default=TypeReservation.MANUALLY)
+    hidden = Column(Boolean, default=False)
 
     # Relationships
     subject = relationship("Subject", back_populates="reservations")
     vector = relationship("Vector", back_populates="reservations")
     driver = relationship("Driver", back_populates="reservations")
     vehicle = relationship("Vehicle", back_populates="reservations")
-    weighings = relationship("Weighing", back_populates="reservation", cascade="all, delete")
+    in_out = relationship("InOut", back_populates="reservation", cascade="all, delete")
+
+class InOut(Base):
+    __tablename__ = 'in_out'
+    id = Column(Integer, primary_key=True, index=True)
+    idReservation = Column(Integer, ForeignKey('reservation.id'))
+    idMaterial = Column(Integer, ForeignKey('material.id'), nullable=True)
+    idWeight1 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
+    idWeight2 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
+    net_weight = Column(Integer, nullable=True)
+
+    # Relationships
+    reservation = relationship("Reservation", back_populates="in_out")    
+    material = relationship("Material", back_populates="in_out")
+    weight1 = relationship("Weighing", foreign_keys=[idWeight1], back_populates="in_out_weight1")  # FIXED: added foreign_keys
+    weight2 = relationship("Weighing", foreign_keys=[idWeight2], back_populates="in_out_weight2")  # FIXED: added foreign_keys
 
 class LockRecordType(PyEnum):
     SELECT = "select"
@@ -148,7 +169,8 @@ class LockRecord(Base):
     idRecord = Column(Integer, nullable=False)
     type = Column(Enum(LockRecordType), default=LockRecordType.SELECT)
     websocket_identifier = Column(String, nullable=True)
-    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    weigher_name = Column(String, nullable=True)
 
     user = relationship("User", back_populates="lock_records")
 
@@ -163,42 +185,52 @@ table_models = {
     'weighing': Weighing,
     'reservation': Reservation,
     'lock_record': LockRecord,
-    'weighing_picture': WeighingPicture
+    'weighing_picture': WeighingPicture,
+    'in_out': InOut  # ADDED: missing from original
 }
 
 upload_file_datas_required_columns = {
-	"subject": {"social_reason": str, "telephone": str, "cfpiva": str},
-	"vector": {"social_reason": str, "telephone": str, "cfpiva": str},
+    "subject": {"social_reason": str, "telephone": str, "cfpiva": str},
+    "vector": {"social_reason": str, "telephone": str, "cfpiva": str},
     "driver": {"social_reason": str, "telephone": str},
-	"vehicle": {"plate": str, "description": str},
-	"material": {"description": str},
-	"reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_weighings": int, "note": str}
+    "vehicle": {"plate": str, "description": str},
+    "material": {"description": str},
+    "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str}
 }
 
+# Create tables
 Base.metadata.create_all(engine)
 
-# Esegui la funzione per creare l'utente admin se non esiste
-with SessionLocal() as db_session:
-    # Controlla se l'utente admin esiste già
-    admin_user = db_session.query(User).filter(User.username == "admin").first()
+# Create default users
+def create_default_users():
+    with SessionLocal() as db_session:
+        # Check if admin user exists
+        admin_user = db_session.query(User).filter(User.username == "admin").first()
 
-    if admin_user is None:
-        admin_user = User(
-            username="admin",
-            password=hash_password("admin"),  # Sostituisci con una password sicura
-            level=3,  # Imposta il livello appropriato, ad esempio 1 per admin
-            description="Administrator"
-        )
-        db_session.add(admin_user)
-        db_session.commit()
+        if admin_user is None:
+            admin_user = User(
+                username="admin",
+                password=hash_password("admin"),  # Change to a secure password in production
+                level=3,
+                description="Administrator"
+            )
+            db_session.add(admin_user)
+            db_session.commit()
+            print("Admin user created")
+            
+        # Check if cam capture user exists
+        cam_capture_plate_user = db_session.query(User).filter(User.username == "camcaptureplate").first()
         
-    cam_capture_plate_user = db_session.query(User).filter(User.username == "camcaptureplate").first()
-    
-    if cam_capture_plate_user is None:
-        cam_capture_plate_user = User(
-            username="camcaptureplate",
-            level=0,
-            description="Cam Capture Plate"
-        )
-        db_session.add(cam_capture_plate_user)
-        db_session.commit()
+        if cam_capture_plate_user is None:
+            cam_capture_plate_user = User(
+                username="camcaptureplate",
+                password=None,  # FIXED: explicitly set password to None
+                level=0,
+                description="Cam Capture Plate"
+            )
+            db_session.add(cam_capture_plate_user)
+            db_session.commit()
+            print("Cam capture user created")
+
+# Execute the function to create default users
+create_default_users()

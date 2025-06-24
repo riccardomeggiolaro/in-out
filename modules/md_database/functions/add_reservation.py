@@ -1,10 +1,9 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, InOut, ReservationStatus, TypeSubjectEnum, TypeReservation
 from modules.md_database.interfaces.reservation import AddReservationDTO
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_incomplete
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
-import libs.lb_log as lb_log
 
 def add_reservation(data: AddReservationDTO):
     """
@@ -19,10 +18,12 @@ def add_reservation(data: AddReservationDTO):
                 "idVector": data.vector.id,
                 "idDriver": data.driver.id,
                 "idVehicle": data.vehicle.id,
-                "number_weighings": data.number_weighings,
+                "number_in_out": data.number_in_out,
                 "note": data.note,
                 "status": ReservationStatus.WAITING,
-                "document_reference": data.document_reference
+                "document_reference": data.document_reference,
+                "type": TypeReservation[data.type],
+                "hidden": data.hidden
             }
 
             current_model = Subject
@@ -111,8 +112,6 @@ def add_reservation(data: AddReservationDTO):
                 # Può contenere vincoli multipli separati da virgole
                 constraint_parts = table_part.split(',')
 
-                lb_log.warning(constraint_parts)
-                
                 for part in constraint_parts:
                     part = part.strip()
                     # Verifichiamo se contiene un punto che separa nome tabella e colonna
@@ -130,7 +129,6 @@ def add_reservation(data: AddReservationDTO):
                 unique_columns = [column.name for column in current_model.__table__.columns if column.unique]
                 for column in unique_columns:
                     if column in data_to_check:
-                        lb_log.warning(column)
                         # Verifichiamo se questo valore esiste già nel database
                         existing = session.query(current_model).filter(getattr(current_model, column) == data_to_check[column]).first()
                         if existing:

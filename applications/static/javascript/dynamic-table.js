@@ -17,6 +17,7 @@ let callback_populate_table = null;
 let callback_call_anagrafic = null;
 let populate_detail_tr = null;
 let currentId = null;
+let currentIdInOut = null;
 let confirm_exec_funct = null;
 let currentRowExtended = null;
 let websocket_connection = null;
@@ -66,6 +67,7 @@ function isValidDate(dateStr) {
 
 async function updateTable() {
     let queryParams = '';
+    if (itemName === "reservation") queryParams += `excludeTestWeighing=true&`;
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.value) {
@@ -93,7 +95,7 @@ async function updateTable() {
 }
 
 async function exportTable(type) {
-    let queryParams = '';
+    let queryParams = 'excludeTestWeighing=true&filterDateReservation=true&';
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.value) {
@@ -200,15 +202,37 @@ function populateTable(data) {
     const obj = getTableColumns();
     obj.table.innerHTML = ""; // Pulisce la tabella esistente
     data.forEach(item => {
-        if (item.weighings && item.number_weighings) item.number_weighings = `${item.weighings.length}/${item.number_weighings}`;
-        createRow(obj.table, obj.columns, item)
+        let date1;
+        let date2;
+        let idInOut;
+        if (item.in_out && item.number_in_out) item.number_in_out = `${item.in_out.length}/${item.number_in_out}`;
+        if (item.weight1 && item.weight1.date && isValidDate(item.weight1.date)) {
+            date1 = new Date(item.weight1.date).toLocaleString('it-IT', options);
+            item.reservation.date_created = date1;
+        }
+        if (item.weight2 && item.weight2.date && isValidDate(item.weight2.date)) {
+            date2 = new Date(item.weight2.date).toLocaleString('it-IT', options);
+            if (date1 && date2) item.reservation.date_created += ` - ${date2}`;
+            else if (!date1 && date2) item.reservation.date_created = date2;
+        }
+        if (!item.weight1 && item.weight2) {
+            item.weight1 = {
+                weight: item.weight2.tare
+            };
+        }
+        if (item.reservation && item.reservation.id) {
+            item.id = item.reservation.id;
+            idInOut = item.id;
+        }
+        createRow(obj.table, obj.columns, item, idInOut);
     });
     if (callback_populate_table) callback_populate_table();
 }
 
-function createRow(table, columns, item) {
+function createRow(table, columns, item, idInout) {
     const row = document.createElement("tr");
     row.dataset.id = item.id;
+    if (idInout) row.dataset.idInOut = idInout;
     // Create cells for each column
     for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
         row.insertCell();
@@ -265,6 +289,7 @@ function createRow(table, columns, item) {
         ) toggleExpandRow(row);
         selectAnagrafic(item.id, "UPDATE", itemName);
         currentId = item.id;
+        currentIdInOut = idInout;
     };
     // Pulsante Elimina
     const deleteButton = document.createElement("button");
@@ -281,7 +306,9 @@ function createRow(table, columns, item) {
         currentId = item.id;
     };
     actionsCell.appendChild(editButton);
-    actionsCell.appendChild(deleteButton);
+    if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
+    else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
+    else if (!idInout && !item.in_out) actionsCell.appendChild(deleteButton);
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga
     row.addEventListener("mouseenter", () => {
@@ -424,7 +451,8 @@ function addRow() {
 const editPopup = document.getElementById('edit-popup');
 editPopup.querySelector('#save-btn').addEventListener('click', () => {
     const data = getFormData(editPopup.querySelector('form'));
-    fetch(`${setUrlPath}/${currentId}`, {
+    let queryParamasIdInOut = currentIdInOut ? `?idInOut=${currentIdInOut}` : '';
+    fetch(`${setUrlPath}/${currentId}${queryParamasIdInOut}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -484,6 +512,7 @@ function editRow(item) {
     const funct = () => {
         if (callback_populate_select) callback_populate_select('#edit', item);
         currentId = item.id;
+        if (currentIdInOut) item.material = item.in_out.find(in_out => in_out.id === currentIdInOut).material;
         document.getElementById('overlay').classList.add('active');
         editPopup.classList.add('active');
         for (let key in item) {
@@ -517,7 +546,7 @@ function editRow(item) {
         }
         triggerEventsForAll('.id');
     }
-    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0) {
+    if (item.reservations ? item.reservations.length > 0 : item.in_out.length > 0) {
         const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
         confirm_exec_funct = funct;
         document.querySelector('#confirm-title').textContent = "Attenzione!";
@@ -558,6 +587,7 @@ function deleteRow(item) {
     const funct = () => {
         if (callback_populate_select) callback_populate_select('#delete', item);
         currentId = item.id;
+        if (currentIdInOut) item.material = item.in_out.find(in_out => in_out.id === currentIdInOut).material;
         document.getElementById('overlay').classList.add('active');
         deletePopup.classList.add('active');
         for (key in item) {
@@ -576,7 +606,7 @@ function deleteRow(item) {
             }
         }
     }
-    if (item.reservations ? item.reservations.length > 0 : item.weighings.length > 0 && !canAlwaysDelete) {
+    if (item.reservations ? item.reservations.length > 0 : item.in_out.length > 0 && !canAlwaysDelete) {
         const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').textContent = `
@@ -669,15 +699,17 @@ function connectWebSocket() {
                 for (let [key, value] of objectEntriesParams) {
                     let current = structuredClone(data.data);
                     const keys = value.split(".");
-                    for (let i = 0; i < keys.length; i++) {
-                        if (current && current.hasOwnProperty(keys[i])) {
-                            current = current[keys[i]];
-                            if (typeof (current) === 'string' || typeof (current) === 'number') {
-                                specific = `${key} "${current}"`;
+                    if (keys[0] == firstKey) {
+                        for (let i = 0; i < keys.length; i++) {
+                            if (current && current.hasOwnProperty(keys[i])) {
+                                current = current[keys[i]];
+                                if (typeof (current) === 'string' || typeof (current) === 'number') {
+                                    specific = `${key} "${current}"`;
+                                }
                             }
                         }
                     }
-                    if (specific) {
+                    else if (specific) {
                         break; // Interrompe il ciclo principale quando si trova una corrispondenza
                     }
                 }
@@ -793,8 +825,10 @@ function connectWebSocket() {
                         if (data.type === "UPDATE") {
                             request = getWebSocketRequest(data.idRequest);
                             removeWebSocketRequest(data.idRequest);
-                            if (request.custom_execute_callback) openPopup("confirm-popup");
-                            else editRow(data.data);
+                            if (request.custom_execute_callback) {
+                                if (data.anagrafic === "reservation") openPopup("edit-inout-popup");
+                                else openPopup("confirm-popup");
+                            } else editRow(data.data);
                         } else if (data.type === "DELETE") {
                             request = getWebSocketRequest(data.idRequest);
                             removeWebSocketRequest(data.idRequest);

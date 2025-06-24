@@ -313,7 +313,7 @@ fetch('/api/config-weigher/all/instance')
                     console.log(res)
                     const newTimeBetweenActions = Number(editModeSerial.querySelector('input[name="time_between_actions"]').value);
                     if (newTimeBetweenActions != currentTimeBetweenActions) {
-                        fetch(`/api/config-weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
+                        fetch(`/api/config-weigher/instance/time-between-actions/${newTimeBetweenActions}?instance_name=${key}`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -442,7 +442,7 @@ fetch('/api/config-weigher/all/instance')
                 .then(res => {
                     const newTimeBetweenActions = Number(editModeTcp.querySelector('input[name="time_between_actions"]').value);
                     if (newTimeBetweenActions != currentTimeBetweenActions) {
-                        fetch(`/api/config-weigher/instance/time_between_actions/${newTimeBetweenActions}?instance_name=${key}`, {
+                        fetch(`/api/config-weigher/instance/time-between-actions/${newTimeBetweenActions}?instance_name=${key}`, {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -764,7 +764,7 @@ fetch('/api/config-weigher/all/instance')
                 });
 
                 if (Object.keys(changedData).length > 0) {
-                    let url_patch = `/config-weigher/instance/node?instance_name=${key}`;
+                    let url_patch = `/api/config-weigher/instance/node?instance_name=${key}`;
                     if (weigher.name) url_patch += `&weigher_name=${weigher.name}`;
                     fetch(url_patch, {
                         method: 'PATCH',
@@ -831,7 +831,7 @@ fetch('/api/config-weigher/all/instance')
 
             deleteWeigherModal.querySelector('.modalDeleteWeigherConfirm').addEventListener('click', () => {
                 console.log(weigher)
-                let delete_url = `/config-weigher/instance/node?instance_name=${key}`;
+                let delete_url = `/api/config-weigher/instance/node?instance_name=${key}`;
                 if (weigher.name !== null) {
                     delete_url += `&weigher_name=${weigher.name}`;
                 }

@@ -1,4 +1,5 @@
 export let dataUser = {};
+window.dataUser = dataUser;
 
 async function auth() {
     const token = localStorage.getItem('token');
@@ -15,6 +16,7 @@ async function auth() {
             window.location.href = '/login';
         } else {
             dataUser = data;
+            window.dataUser = data;
         }
     })
     .catch(error => {

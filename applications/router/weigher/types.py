@@ -4,7 +4,6 @@ from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
-from modules.md_database.md_database import TypeWeightEnum
 from typing import Union, Optional, List
 from datetime import datetime
 
@@ -24,7 +23,7 @@ class IdSelected(BaseModel):
 class Data(BaseModel):
 	data_in_execution: DataInExecution = DataInExecution(**{})
 	id_selected: IdSelected = IdSelected(**{})
-	number_weighings: Optional[int] = 1
+	number_in_out: Optional[int] = 1
     
 class EventAction(BaseModel):
     take_picture: List[int] = []
@@ -32,12 +31,17 @@ class EventAction(BaseModel):
     
 class Weight(BaseModel):
 	weight: Union[int, float] = None
-	type: Optional[TypeWeightEnum] = None
 	date: Optional[datetime] = None
 	pid: Optional[str] = None
     
+class Weight1(Weight):
+    type: Optional[str] = None
+
+class Weight2(Weight):
+    pass
+    
 class ReportVariables(DataInExecution):
 	material: MaterialDTO = MaterialDTO(**{})
-	weight1: Weight = Weight(**{})
-	weight2: Weight = Weight(**{})
+	weight1: Weight1 = Weight1(**{})
+	weight2: Weight2 = Weight2(**{})
 	net_weight: Union[int, float] = None

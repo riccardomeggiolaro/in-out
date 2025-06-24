@@ -195,7 +195,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.callback_rele = lambda: cb_rele(self.self_config.name, weigher_name, self.port_rele)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: int = 0, data_assigned: Any = None, port_rele: int = None):
+	def setModope(self, mod: str, presettare: int = 0, data_assigned: int = None, port_rele: int = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None

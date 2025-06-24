@@ -1,4 +1,5 @@
-from modules.md_database.md_database import table_models, SessionLocal
+from modules.md_database.md_database import table_models, SessionLocal, Reservation, Weighing
+from sqlalchemy import func
 
 def get_data_by_attributes(table_name, attributes_dict):
 	"""Ottiene un record specifico da una tabella tramite più attributi.
@@ -74,9 +75,9 @@ def get_reservations_with_incomplete_weighings():
 			)
 			.filter(
 				# Caso 1: Nessuna pesata trovata (NULL nella subquery)
-				(weighing_count_subquery.c.actual_count == None) & (Reservation.number_weighings > 0) |
+				(weighing_count_subquery.c.actual_count == None) & (Reservation.number_in_out > 0) |
 				# Caso 2: Numero di pesate inferiore al previsto
-				(weighing_count_subquery.c.actual_count < Reservation.number_weighings)
+				(weighing_count_subquery.c.actual_count < Reservation.number_in_out)
 			)
 		)
 
@@ -99,8 +100,8 @@ def select_reservation_if_incomplete(reservation_id: int):
 			Weighing.idReservation == reservation_id
 		).scalar()
 
-		# Verifica se il numero di pesate è inferiore al campo number_weighings
-		if weighing_count < reservation.number_weighings:
+		# Verifica se il numero di pesate è inferiore al campo number_in_out
+		if weighing_count < reservation.number_in_out:
 			# Verifica che la prenotazione non sia già in uso da un'altra pesa
 			if reservation.selected == True:
 				raise ValueError(f"Reservation with ID {reservation_id} is already in use by another weigher")
@@ -111,7 +112,7 @@ def select_reservation_if_incomplete(reservation_id: int):
 		else:
 			# Numero di pesate uguale o superiore al previsto, genera errore
 			raise ValueError(f"Reservation {reservation_id} already is just closed "
-						    f"({weighing_count}/{reservation.number_weighings})")
+						    f"({weighing_count}/{reservation.number_in_out})")
             
 	except Exception as e:
 		session.rollback()

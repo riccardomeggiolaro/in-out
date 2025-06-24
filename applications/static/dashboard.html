@@ -7,6 +7,7 @@
     <title>Dashboard Peso</title>
     <meta name="description" content="About this app" />
     <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
 </head>
 <!-- Rest of your HTML remains unchanged -->
 </style>
@@ -24,42 +25,37 @@
                     <hr>
 
                     <div>
-                        <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')" >
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>AUTOMEZZO</strong></p>
+                        <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
-                        <input placeholder="Descrizione veicolo" id="currentDescriptionVehicle" type="text" name="description" onclick="showSuggestions('vehicle', 'descriptionVehicleInput', 'description', '', ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle'); openPopup('descriptionVehiclePopup', 'descriptionVehicleInput')" >
-                    </div>
-
-                    <div>
-                        <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)">
-                            <option value="CUSTOMER">Cliente</option>
-                            <option value="SUPPLIER">Fornitore</option>
+                        <p></p>
+                        <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)" style="font-weight: bold;">
+                            <option value="CUSTOMER">CLIENTE</option>
+                            <option value="SUPPLIER">FORNITORE</option>
                         </select>
+                        <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
-                        <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')" >
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>VETTORE</strong></p>
+                        <input placeholder="Vettore" id="currentSocialReasonVector" type="text" name="social_reason" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
-                        <input placeholder="Vettore" id="currentSocialReasonVector" type="text" name="social_reason" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')" >
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>MATERIALE</strong></p>
+                        <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
-                        <input placeholder="Autista" id="currentSocialReasonDriver" type="text" name="social_reason" onclick="showSuggestions('driver', 'socialReasonDriverInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonDriverPopup', 'suggestionsListSocialReasonDriver'); openPopup('socialReasonDriverPopup', 'socialReasonDriverInput')" >
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>NOTE</strong></p>
+                        <input placeholder="Note" id="currentNote" type="text" name="note" onclick="openPopup('notePopup', 'myNoteInput')" oninput="this.value = ''" >
                     </div>
 
                     <div>
-                        <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')" >
-                    </div>
-
-                    <div>
-                        <input placeholder="Note" id="currentNote" type="text" name="note" onclick="openPopup('notePopup', 'myNoteInput')" >
-                    </div>
-
-                    <div>
-                        <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" >
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>DOCUMENTO</strong></p>
+                        <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" oninput="this.value = ''" >
                     </div>
                 </div>
                 <div class="display item">
@@ -106,7 +102,7 @@
             </div>
         </div>
 
-        <div id="snackbar"></div>
+        <div id="snackbar-dashboard"></div>
 
         <div id="presetTare" class="popup">
             <div class="popup-content">
@@ -122,11 +118,11 @@
         <div id="plateVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Targa:</h2>
-                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase(); showSuggestions('vehicle', 'plateVehicleInput', 'plate', this.value, ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle');">
+                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="validatePlate(this); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="plate-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', plateVehicleInput.value)">OK</button>
+                    <button id="plateSubmitButton" class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', plateVehicleInput.value, 'suggestionsListPlateVehicle')">OK</button>
                 </div>
             </div>
         </div>
@@ -134,11 +130,11 @@
         <div id="descriptionVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Descrizione:</h2>
-                <input type="text" id="descriptionVehicleInput" autocomplete="off" class="input" oninput="showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <input type="text" id="descriptionVehicleInput" autocomplete="off" class="input" oninput="validatePlate(this); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
                 <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'description', descriptionVehicleInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'description', descriptionVehicleInput.value, 'suggestionsListDescriptionVehicle')">OK</button>
                 </div>
             </div>
         </div>
@@ -150,7 +146,7 @@
                 <ul id="suggestionsListSocialReasonSubject" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('subject', 'social_reason', socialReasonSubjectInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('subject', 'social_reason', socialReasonSubjectInput.value, 'suggestionsListSocialReasonSubject')">OK</button>
                 </div>
             </div>
         </div>
@@ -162,7 +158,7 @@
                 <ul id="suggestionsListSocialReasonVector" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vector', 'social_reason', socialReasonVectorInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vector', 'social_reason', socialReasonVectorInput.value, 'suggestionsListSocialReasonVector')">OK</button>
                 </div>
             </div>
         </div>
@@ -174,7 +170,7 @@
                 <ul id="suggestionsListSocialReasonDriver" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('driver', 'social_reason', socialReasonDriverInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('driver', 'social_reason', socialReasonDriverInput.value, 'suggestionsListSocialReasonDriver')">OK</button>
                 </div>
             </div>
         </div>
@@ -186,7 +182,7 @@
                 <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('material', 'description', myDescriptionMaterialInput.value)">OK</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('material', 'description', myDescriptionMaterialInput.value, 'suggestionsListMaterial')">OK</button>
                 </div>
             </div>
         </div>
@@ -212,11 +208,24 @@
                 </div>
             </div>
         </div>
+
+        <div id="reconnectionPopup" class="popup">
+            <div class="popup-content">
+                <h2>Connessione al server pesa perso</h2>
+                <p>Clicca ok per riconnettere...</p>
+                <div class="footer-buttons reconnection-footer-buttons">
+                    <button id="reconnectionButton" class="p-tare-button" onclick="attemptReconnect()">OK</button>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
+    <div id="snackbar"></div>
+
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
     <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dashboard.js"></script>
 </body>
 </html>

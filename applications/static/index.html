@@ -1,0 +1,30 @@
+    <div id="edit-inout-popup" class="modal-content popup">
+        <h3>Modifica materiale:</h3>
+        <form id="edit-inout" class="content form-content" oninput="document.querySelector('#edit-inout-popup .save-btn').disabled = !this.checkValidity()">
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId id">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            if (document.querySelector('#edit-inout-popup #material\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-inout-popup #material\\.id').value, 'material');
+                                document.querySelector('#edit-inout-popup #material\\.id').value = '';
+                                document.querySelector('#edit-inout-popup #material\\.description').disabled = false;
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-inout-popup #material\\.id').value) {
+                                populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
+        </div>
+    </div>

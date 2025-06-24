@@ -6,7 +6,6 @@ from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
-from modules.md_database.functions.select_reservation_if_uncomplete import select_reservation_if_uncomplete
 
 class DataInExecutionDTO(CustomBaseModel):
 	typeSubject: Optional[str] = "CUSTOMER"
@@ -36,12 +35,6 @@ class DataInExecutionDTO(CustomBaseModel):
 
 class IdSelectedDTO(CustomBaseModel):
 	id: Optional[int] = None
-
-	@validator('id', pre=True, always=True)
-	def check_id(cls, v, values):
-		if v not in [None, -1]:
-			data = select_reservation_if_uncomplete(v)
-		return v
 
 class DataDTO(BaseModel):
     data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})

@@ -1,6 +1,6 @@
 from modules.md_database.md_database import LockRecord, SessionLocal
 
-def unlock_record_by_attributes(table_name, idRecord, websocket_identifier):
+def unlock_record_by_attributes(table_name, idRecord, websocket_identifier, weigher_name):
     """
     Sblocca un record eliminando il lock specificato dall'ID
     
@@ -26,6 +26,9 @@ def unlock_record_by_attributes(table_name, idRecord, websocket_identifier):
                 
             if websocket_identifier:
                 record = record.filter_by(websocket_identifier=websocket_identifier)
+                
+            if weigher_name:
+                record = record.filter_by(weigher_name=weigher_name)
             
             record = record.one_or_none()
             

@@ -50,10 +50,6 @@ fetch('/api/auth/users')
             <select name="level" required></select><br>
             Descrizione:<br>
             <input type="text" name="description" value="" required><br>
-            Stampante associata:<br>
-            <select name="printer_name">
-                <option></option>
-            </select><br>
         `;
         errorAddUser.innerHTML = '';
 
@@ -68,14 +64,6 @@ fetch('/api/auth/users')
         if (dataUser.level > 2) {
             levelSelect.appendChild(option2);
         }
-
-        const printerSelect = addUserForm.querySelector('select[name="printer_name"]');
-        list_printer_names.forEach(printer => {
-            const option = document.createElement('option');
-            option.value = printer.nome;
-            option.textContent = printer.nome;
-            printerSelect.appendChild(option);
-        })
     }        
     populateAddContent();
     addUserModal.querySelector('.cancel-btn').addEventListener('click', () => {
@@ -108,7 +96,7 @@ fetch('/api/auth/users')
             }
         })
 
-        fetch(`/auth/register`, {
+        fetch(`/api/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -145,6 +133,7 @@ fetch('/api/auth/users')
     const ul = document.createElement('ul');
     ul.style.marginLeft = '0px';
     const addUser = (data) => {
+        console.log(data)
         const li = document.createElement('li');
         li.classList.toggle('borders');
         let level;
@@ -152,23 +141,30 @@ fetch('/api/auth/users')
             level = 'Super amministratore';
         } else if (data.level === 2) {
             level = 'Amministratore';
-        } else {
+        } else if (data.level === 1) {
             level = 'Utente';
+        } else {
+            level = 'Cam';
         }
         li.innerHTML = `
         <h4>${data.username}</h4>
             <p>Livello: ${level}</p>
             <p>Descrizione: ${data.description}</p>
-            <p>Stampante associata: ${data.printer_name ? data.printer_name : ''}</p>
         `;
 
         if (data.username !== dataUser.username && data.level < dataUser.level) {
             li.innerHTML += `
                 <div class="container-buttons">
-                    <button class="delete-btn">${deleteButtonContent}</button>
+            `;
+
+            if (data.level !== 0) li.innerHTML += `<button class="delete-btn">${deleteButtonContent}</button>`;
+
+            li.innerHTML += `
                     <button class="edit-btn">${recoveryPasswordButtonContent}</button>
                 </div>
             `;
+                
+            const deleteBtn = li.querySelector('.delete-btn');
 
             const deleteUserModal = document.createElement('div');
 
@@ -191,7 +187,7 @@ fetch('/api/auth/users')
             })
 
             deleteUserModal.querySelector('.confirm-btn').addEventListener('click', () => {
-                fetch(`/auth/user/${data.id}`, {
+                fetch(`/api/auth/user/${data.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -214,9 +210,11 @@ fetch('/api/auth/users')
                 });
             })
 
-            li.querySelector('.delete-btn').addEventListener('click', () => {
-                deleteUserModal.style.display = 'block';
-            })
+            if (deleteBtn) {
+                li.querySelector('.delete-btn').addEventListener('click', () => {
+                    deleteUserModal.style.display = 'block';
+                })
+            }
 
             const editUserModal = document.createElement('div');
 
@@ -247,9 +245,11 @@ fetch('/api/auth/users')
             }
 
             const populateEditContent = () => {
-                editUserForm.innerHTML = `
-                    <input type="password" name="password" minlength="8" required><br>
-                `;
+                if (deleteBtn) {
+                    editUserForm.innerHTML = `
+                        <input type="password" name="password" minlength="8" required><br>
+                    `;
+                }
                 editUserModal.querySelector('.save-btn').disabled = true;
             }
 
@@ -261,7 +261,7 @@ fetch('/api/auth/users')
             })
 
             saveEditBtn.addEventListener('click', () => {
-                fetch(`/auth/user/${data.id}`, {
+                fetch(`/api/auth/user/${data.id}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -310,7 +310,8 @@ fetch('/api/auth/users')
         ul.appendChild(li);
         ul.appendChild(br);
     }
-    res.forEach(user => {
+    res[0].forEach(user => {
+        console.log(user)
         addUser(user);
     })
     div.appendChild(ul);

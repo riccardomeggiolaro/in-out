@@ -11,8 +11,12 @@ class WebSocket:
         await manager_anagrafics[anagrafic].broadcast(message)
         
     async def broadcastUpdateAnagrafic(self, anagrafic: str, data: any):
-        message = Message("update", data).__dict__
-        await manager_anagrafics[anagrafic].broadcast(message)
+        try:
+            message = Message("update", data).__dict__
+            await manager_anagrafics[anagrafic].broadcast(message)
+        except Exception as e:
+            import libs.lb_log as lb_log
+            lb_log.error(e)
         
     async def broadcastDeleteAnagrafic(self, anagrafic: str, data: any):
         message = Message("delete", data).__dict__

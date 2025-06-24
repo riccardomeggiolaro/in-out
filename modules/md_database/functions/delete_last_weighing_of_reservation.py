@@ -1,50 +1,75 @@
 from sqlalchemy import desc
-from sqlalchemy.exc import SQLAlchemyError
-from modules.md_database.md_database import SessionLocal, Weighing
+from modules.md_database.md_database import SessionLocal, InOut, Weighing, Reservation, TypeReservation
 
-def delete_last_weighing_of_reservation(reservation_id, web_socket=None):
+def delete_last_weighing_of_reservation(reservation_id):
     """
-    Elimina la pesata più recente per una specifica prenotazione.
-    
-    Args:
-        session: La sessione SQLAlchemy da utilizzare
-        idReservation: L'ID della prenotazione di cui eliminare l'ultima pesata
-    
-    Returns:
-        tuple: (success, message)
-            - success: Boolean che indica se l'operazione è avvenuta con successo
-            - message: Messaggio di esito o di errore
-            - deleted_weighing: L'oggetto pesata eliminato (o None in caso di errore)
+    Rimuove il riferimento all'ultima pesata solo dall'InOut più recente associato 
+    alla prenotazione specificata.
     """
-    # Crea una sessione
     with SessionLocal() as session:
         try:
-            # Trova la pesata più recente per la prenotazione specificata
-            latest_weighing = session.query(Weighing).filter(
-                Weighing.idReservation == reservation_id
-            ).order_by(desc(Weighing.date), desc(Weighing.id)).first()
+            # Trova l'ultimo InOut per la prenotazione
+            latest_inout = session.query(InOut).filter(
+                InOut.idReservation == reservation_id
+            ).order_by(desc(InOut.id)).first()
+
+            if not latest_inout:
+                raise ValueError(f"No InOut records found for reservation {reservation_id}")
             
-            # Se non esiste nessuna pesata per questa prenotazione
-            if not latest_weighing:
-                raise ValueError(f"Weighing with idReservation {reservation_id} not found")
+            # Ottieni gli ID delle pesate (weight1 e weight2)
+            weight1_id = latest_inout.idWeight1
+            weight2_id = latest_inout.idWeight2
             
-            # Salva i dati della pesata prima di eliminarla (per eventuale riferimento)
+            # Determina quale è l'ultima pesata basandosi sulla data
+            last_weight = None
+            last_weight_field = None
+            if weight1_id and weight2_id:
+                weight1 = session.query(Weighing).get(weight1_id)
+                weight2 = session.query(Weighing).get(weight2_id)
+                if weight2.date > weight1.date:
+                    last_weight = weight2
+                    last_weight_field = 'idWeight2'
+                else:
+                    last_weight = weight1
+                    last_weight_field = 'idWeight1'
+            elif weight1_id:
+                last_weight = session.query(Weighing).get(weight1_id)
+                last_weight_field = 'idWeight1'
+            elif weight2_id:
+                last_weight = session.query(Weighing).get(weight2_id)
+                last_weight_field = 'idWeight2'
+            else:
+                raise ValueError("No weighings found for this InOut")
+
+            # Salva i dati della pesata prima di rimuovere il riferimento
             deleted_weighing = {
-                'id': latest_weighing.id,
-                'weight': latest_weighing.weight,
-                'date': latest_weighing.date,
-                'pid': latest_weighing.pid,
-                'weigher': latest_weighing.weigher
+                'id': last_weight.id,
+                'weight': last_weight.weight,
+                'date': last_weight.date,
+                'pid': last_weight.pid,
+                'weigher': last_weight.weigher
             }
             
-            # Imposta idReservation a None invece di eliminare il record
-            latest_weighing.idReservation = None
+            # Rimuovi il riferimento solo dall'ultimo InOut
+            if last_weight_field == 'idWeight1':
+                latest_inout.idWeight1 = None
+            elif last_weight_field == 'idWeight2':
+                latest_inout.idWeight2 = None
+
+            # Se l'InOut non ha più pesate associate, eliminalo
+            if latest_inout.idWeight1 is None and latest_inout.idWeight2 is None:
+                # Se la reservation è MANUALLY elimina anche la reservation
+                # reservation = session.query(Reservation).get(latest_inout.idReservation)
+                # if reservation and reservation.type != TypeReservation.RESERVATION:
+                #     session.delete(reservation)
+                session.delete(latest_inout)
+            else:
+                # Altrimenti, resetta solo il peso netto
+                latest_inout.net_weight = None
+
             session.commit()
-            
             return deleted_weighing
+
         except Exception as e:
             session.rollback()
             raise e
-        finally:
-            # Chiudi la sessione dopo aver finito
-            session.close()

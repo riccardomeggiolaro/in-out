@@ -155,6 +155,38 @@
     padding-bottom: 0px !important;
     border-bottom: none !important;
 }
+
+.user-details {
+    margin-top: 0px !important; 
+    text-align: center !important; 
+    position: absolute !important; 
+    bottom: 0 !important; 
+    margin-bottom: 20px !important; 
+    border-top: 1px solid #ddd !important; 
+    display: flex !important; 
+    justify-content: space-between !important; 
+    align-items: center !important; 
+    width: 90% !important; 
+    left: auto !important; 
+    right: auto !important;
+}
+
+.user.details p {
+    max-width: 80% !important; 
+    white-space: nowrap !important; 
+    overflow: hidden !important; 
+    text-overflow: ellipsis !important;
+    margin-top: 0px;
+}
+
+.user-details button {
+    box-shadow: none !important; 
+    background-color: transparent !important; 
+    flex: none !important;
+    font-size: 1.3rem !important;
+    border: none !important;
+    color: #1362b8 !important;
+}
 </style>
 
 <div class="overlay-navbar" onclick="removeMenu(this)"></div>
@@ -182,6 +214,10 @@
                 <li class="li-navbar li-last"><a class="a-navbar" href="/material">Materiali</a></li>
             </ul>
         </li>
-        <li class="li-navbar"><a class="a-navbar" href="/setup">Impostazioni</a></li>
+        <li id="page-of-setup" class="li-navbar"><a class="a-navbar" href="/setup">Impostazioni</a></li>
     </ul>
+    <div class="user-details">
+        <p id="hi-session-user"></p>
+        <button onclick="logout()">⏻</button>
+    </div>
 </div>
