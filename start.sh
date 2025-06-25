@@ -51,7 +51,34 @@ else
     echo "CUPS e libcups2-dev sono già installati, procedo..."
 fi
 
-# cd /etc/in-out
+# Installa le dipendenze necessarie per WeasyPrint
+if ! is_installed libpango-1.0-0 || ! is_installed libcairo2 || ! is_installed libgdk-pixbuf2.0-0; then
+    echo "Installazione di libpango, libcairo e libgdk-pixbuf..."
+    sudo apt update
+    sudo apt install -y libpango-1.0-0 libcairo2 libgdk-pixbuf2.0-0
+else
+    echo "Le librerie necessarie per WeasyPrint sono già installate, procedo..."
+fi
+
+# Installa le altre dipendenze di sviluppo per Python
+if ! is_installed libjpeg-dev || ! is_installed libxml2-dev || ! is_installed libxslt1-dev; then
+    echo "Installazione delle librerie di sviluppo per Python..."
+    sudo apt update
+    sudo apt install -y libjpeg-dev libxml2-dev libxslt1-dev
+else
+    echo "Le librerie di sviluppo per Python sono già installate, procedo..."
+fi
+
+# Installa le dipendenze necessarie per WeasyPrint
+if ! is_installed libpango-1.0-0 || ! is_installed libcairo2 || ! is_installed libgdk-pixbuf2.0-0 || ! is_installed libpangoft2-1.0-0; then
+    echo "Installazione di libpango, libcairo, libgdk-pixbuf e libpangoft2..."
+    sudo apt update
+    sudo apt install -y libpango-1.0-0 libcairo2 libgdk-pixbuf2.0-0 libpangoft2-1.0-0
+else
+    echo "Le librerie necessarie per WeasyPrint sono già installate, procedo..."
+fi
+
+cd /etc/in-out
 
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".env" ]]; then
