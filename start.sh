@@ -6,6 +6,10 @@ is_installed() {
     dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
 }
 
+# Ottieni la directory del file script e spostati lì
+SCRIPT_DIR="$(dirname "$0")"
+cd "$SCRIPT_DIR"
+
 # Installa sudo se non è presente
 if ! command -v sudo &>/dev/null; then
     echo "Installazione di sudo..."
@@ -77,8 +81,6 @@ if ! is_installed libpango-1.0-0 || ! is_installed libcairo2 || ! is_installed l
 else
     echo "Le librerie necessarie per WeasyPrint sono già installate, procedo..."
 fi
-
-cd /etc/in-out
 
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".env" ]]; then
