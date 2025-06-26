@@ -606,8 +606,6 @@ function updateUIRealtime(e) {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    } else if (obj.reservation) {
-        populateListIn();
     } else if (obj.tare) {
         data_weight_realtime = obj;
         document.getElementById('tare').innerText = data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : 'N/A';
@@ -634,13 +632,8 @@ function updateUIRealtime(e) {
                 tareButton.disabled = false;
                 // zeroButton.disabled = true;
                 presetTareButton.disabled = false;
-                if (numberInOutSelectedIdWeight > 0) {
-                    inButton.disabled = true;
-                    outButton.disabled = false;
-                } else {
-                    inButton.disabled = false;
-                    outButton.disabled = true;
-                }
+                inButton.disabled = true;
+                outButton.disabled = false;
                 if (selectedIdWeight !== null) {
                     printButton.disabled = true;
                 } else {
@@ -649,16 +642,14 @@ function updateUIRealtime(e) {
             }
         } else if (numeric && minWeightValue >= gross_weight) {
             tareButton.disabled = true;
-            zeroButton.disabled = false;
+            // zeroButton.disabled = false;
             presetTareButton.disabled = false;
-            printButton.disabled = true;
             inButton.disabled = true;
             outButton.disabled = true;
         } else {
             tareButton.disabled = true;
-            zeroButton.disabled = true;
+            // zeroButton.disabled = true;
             presetTareButton.disabled = true;
-            printButton.disabled = true;
             inButton.disabled = true;
             outButton.disabled = true;
         }
