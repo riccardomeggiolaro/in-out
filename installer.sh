@@ -11,8 +11,23 @@ if ! command -v sudo &>/dev/null; then
     echo "Installazione di sudo..."
     apt update
     apt install -y sudo
+    sudo chmod 644 /etc/sudo.conf
+    sudo chmod 440 /etc/sudoers
 else
     echo "sudo è già installato, procedo..."
+fi
+
+# Aggiungi l'utente baronpesi al gruppo sudo se esiste
+if id "baronpesi" &>/dev/null; then
+    if ! groups baronpesi | grep -q sudo; then
+        echo "Aggiunta dell'utente baronpesi al gruppo sudo..."
+        sudo usermod -aG sudo baronpesi
+        echo "Utente baronpesi aggiunto al gruppo sudo."
+    else
+        echo "L'utente baronpesi è già nel gruppo sudo."
+    fi
+else
+    echo "ATTENZIONE: L'utente baronpesi non esiste sul sistema."
 fi
 
 # Installa python3.11-venv se non è presente
@@ -51,13 +66,35 @@ else
     echo "CUPS e libcups2-dev sono già installati, procedo..."
 fi
 
-# Installa le dipendenze necessarie per WeasyPrint
-if ! is_installed libpango-1.0-0 || ! is_installed libcairo2 || ! is_installed libgdk-pixbuf2.0-0; then
-    echo "Installazione di libpango, libcairo e libgdk-pixbuf..."
+# Installa TUTTE le dipendenze necessarie per WeasyPrint
+echo "Controllo e installazione delle dipendenze per WeasyPrint..."
+WEASYPRINT_DEPS=(
+    "libpango-1.0-0"
+    "libpangoft2-1.0-0"
+    "libpangocairo-1.0-0"
+    "libcairo2"
+    "libgdk-pixbuf2.0-0"
+    "libffi-dev"
+    "shared-mime-info"
+    "libcairo2-dev"
+    "libpango1.0-dev"
+    "libgdk-pixbuf2.0-dev"
+)
+
+INSTALL_NEEDED=false
+for dep in "${WEASYPRINT_DEPS[@]}"; do
+    if ! is_installed "$dep"; then
+        echo "Dipendenza mancante: $dep"
+        INSTALL_NEEDED=true
+    fi
+done
+
+if [ "$INSTALL_NEEDED" = true ]; then
+    echo "Installazione delle dipendenze per WeasyPrint..."
     sudo apt update
-    sudo apt install -y libpango-1.0-0 libcairo2 libgdk-pixbuf2.0-0
+    sudo apt install -y "${WEASYPRINT_DEPS[@]}"
 else
-    echo "Le librerie necessarie per WeasyPrint sono già installate, procedo..."
+    echo "Tutte le dipendenze per WeasyPrint sono già installate, procedo..."
 fi
 
 # Installa le altre dipendenze di sviluppo per Python
@@ -88,6 +125,21 @@ if ! sudo ufw status | grep -q "Status: active"; then
     sudo ufw --force enable
 else
     echo "ufw è già attivo."
+fi
+
+# Crea le cartelle necessarie (senza errori se già esistono)
+mkdir -p /var/lib/in-out
+mkdir -p /var/lib/in-out/images
+mkdir -p /var/lib/in-out/reports
+mkdir -p /var/lib/in-out/pdf
+
+# Copia tutti i file dalla cartella template (accanto a installer.sh) nella cartella reports
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -d "$SCRIPT_DIR/template_reports" ]; then
+    sudo cp -r "$SCRIPT_DIR/template/." /var/lib/in-out/reports/
+    echo "Template copiati in /var/lib/in-out/reports/"
+else
+    echo "ATTENZIONE: la cartella template non esiste nella directory dello script!"
 fi
 
 # Crea il servizio systemd se non esiste

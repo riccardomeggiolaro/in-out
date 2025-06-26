@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        body { font-family: Arial, sans-serif; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .weight-data { margin: 20px; }
+        .vehicle-info { margin: 20px; }
+        .footer { text-align: center; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 8px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <img src="https://www.fomet.it/images/stories/svgs/Logo.svg" style="max-width: 250px;">
+
+    <br>
+
+    <table>
+        <tr style="background-color: lightgray;">
+            <th colspan="2" style="text-align: left;">Dati</th>
+        </tr>
+        <tr>
+            <td>Targa: {{ vehicle.plate }}</th>
+            <td>Vettore: {{ vector.social_reason }}</td>
+        </tr>
+        <tr>
+            <td>Materiale: {{ material.description }}</td>
+            <td>{{ typeSubject|default('Cliente', true) }}: {{ subject.social_reason }}</td>
+        </tr>
+        <tr>
+            <td>Note: {{ note }}</td>
+            <td>Bolla: {{ document_reference }}</td>
+        </tr>
+    </table>
+
+    <br>
+
+    <table>
+        <tr style="background-color: lightgray;">
+            <th style="text-align: left;">Pesata in entrata</th>
+            <th style="text-align: left;">Pesata in uscita</th>
+        </tr>
+        <tr>
+            <td>Data ora: {{ weight1.date }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>Pid: {{ weight1.pid }}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; font-weight: bold; font-size: larger;">{{ weight1.weight }} kg</td>
+            <td style="text-align: center; font-weight: bold; font-size: larger;"></td>
+        </tr>
+    </table>
+
+    <br>
+
+    <table>
+        <tr style="background-color: lightgrey;">
+            <th style="text-align: left;">Peso netto</th>
+        </tr>
+        <tr>
+            <td style="text-align: center; font-weight: bold; font-size: larger;"></td>
+        </tr>
+    </table>
+</body>
+</html>
