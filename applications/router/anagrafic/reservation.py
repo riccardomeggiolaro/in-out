@@ -402,9 +402,10 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
     async def deleteReservation(self, request: Request, id: int):
         locked_data = None
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
-            if not locked_data:
-                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
+            if request:
+                locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+                if not locked_data:
+                    raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
             check_reservation_weighings = get_data_by_id("reservation", id)
             if check_reservation_weighings and len(check_reservation_weighings["in_out"]) > 0:
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è assegnata a delle pesate salvate")
