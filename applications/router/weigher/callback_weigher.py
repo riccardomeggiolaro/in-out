@@ -6,6 +6,7 @@ from modules.md_database.md_database import ReservationStatus, TypeReservation
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
+from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.add_material_if_not_exist import add_material_if_not_exists
 from modules.md_database.interfaces.subject import SubjectDataDTO
 from modules.md_database.interfaces.vector import VectorDataDTO
@@ -211,6 +212,9 @@ class CallbackWeigher(Functions, WebSocket):
 							save_bytes_to_file(image_captured_details["image"], file_name, f"{base_folder_path}{sub_folder_path}")
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
+		elif not last_pesata.weight_executed.executed and last_pesata.data_assigned:
+			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
+			delete_data("reservation", last_pesata.data_assigned)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		for instance in weighers_data:
 			for weigher in weighers_data[instance]:
