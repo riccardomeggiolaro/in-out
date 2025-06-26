@@ -97,16 +97,19 @@ async function updateTable() {
 async function exportTable(type) {
     let queryParams = 'excludeTestWeighing=true&filterDateReservation=true&';
     const filters = document.querySelector('#filters');
+    let name;
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.value) {
-            if (input.type == 'text') queryParams += `${input.name}=${input.value}%&`;
-            else if (input.type == 'number') queryParams += `${input.name}=${input.value}&`;
-            else if (input.type == 'date') queryParams += `${input.name}=${input.value}&`;
+            name = itemName === "reservation" ? `${itemName}.${input.name}` : input.name;
+            if (input.type == 'text') queryParams += `${name}=${input.value}%&`;
+            else if (input.type == 'number') queryParams += `${name}=${input.value}&`;
+            else if (input.type == 'date') queryParams += `${name}=${input.value}&`;
         }
     })
     filters.querySelectorAll('select').forEach(select => {
+        name = itemName === "reservation" ? `${itemName}.${select.name}` : input.name;
         if (select.value) {
-            queryParams += `${select.name}=${select.value}&`;
+            queryParams += `${name}=${select.value}&`;
         }
     })
     const offset = (currentPage - 1) * rowsPerPage;

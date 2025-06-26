@@ -137,9 +137,9 @@ class HTMLPrinter:
                 os.unlink(pdf_file.name)
         return pdf_bytes
 
-    def print_pdf(self, pdf_bytes, printer_name: str):
+    def print_pdf(self, pdf_bytes, printer_name: str, number_of_prints: int = 1):
         """
-        Invia un file PDF (bytes) alla stampante specificata.
+        Invia un file PDF (bytes) alla stampante specificata, per number_of_print copie.
         """
         import tempfile
         import os
@@ -171,7 +171,8 @@ class HTMLPrinter:
                     options = {
                         'orientation-requested': '3',
                         'landscape': '0',
-                        'fit-to-page': 'true'
+                        'fit-to-page': 'true',
+                        'copies': str(number_of_prints)  # <-- aggiunto qui
                     }
                     job_id = self.conn.printFile(
                         printer_name,
@@ -179,7 +180,7 @@ class HTMLPrinter:
                         "PDF Print Job",
                         options
                     )
-                    message2 = f"Stampa inviata alla stampante '{printer_name}' con successo."
+                    message2 = f"Stampa inviata alla stampante '{printer_name}' con successo ({number_of_prints} copie)."
                 finally:
                     os.unlink(pdf_file.name)
 
@@ -189,10 +190,9 @@ class HTMLPrinter:
 
         return job_id, message1, message2
 
-    # Esempio di nuovo print_html che usa le due funzioni sopra
-    def print_html(self, html_content, printer_name: str):
+    def print_html(self, html_content, printer_name: str, number_of_prints: int = 1):
         pdf_bytes = self.generate_pdf_from_html(html_content)
-        job_id, message1, message2 = self.print_pdf(pdf_bytes, printer_name)
+        job_id, message1, message2 = self.print_pdf(pdf_bytes, printer_name, number_of_prints)
         return pdf_bytes, job_id, message1, message2
     
 printer = HTMLPrinter()

@@ -92,37 +92,25 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "1": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "1": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
-                                "cams": [
-                                    {
-                                        "active": true,
-                                        "live": null,
-                                        "picture": null
-                                    }
-                                ],
+                                "cams": [],
                                 "reports": {
-                                    "in": "weight_in.html",
-                                    "out": "weight_out.html"
-                                },
-                                "set_rele": [
-                                    {
-                                        "1": 0
+                                    "in": {
+                                        "active": true,
+                                        "template": "weight_in.html"
+                                    },
+                                    "out": {
+                                        "active": true,
+                                        "template": "weight_out.html"
                                     }
-                                ]
+                                },
+                                "set_rele": []
                             }
                         },
                         "list_port_rele": {
@@ -137,6 +125,7 @@
                         "need_take_of_weight_before_weighing": false,
                         "need_take_of_weight_on_startup": false,
                         "node": null,
+                        "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
                         "run": true,
