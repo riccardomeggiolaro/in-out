@@ -1,7 +1,7 @@
 import socket
 
 # Indirizzo IP e porta del server
-SERVER_IP = '10.0.5.177'
+SERVER_IP = '10.0.5.178'
 SERVER_PORT = 4001
 
 def main():
@@ -13,8 +13,8 @@ def main():
             print(f"Connesso a {SERVER_IP}:{SERVER_PORT}")
 
             # Esempio di invio dati
-            message = "Ciao dal client!"
-            s.sendall(message.encode('utf-8'))
+            message = ("REXT" + chr(13)+chr(10)).encode()
+            s.sendall(message)
             print(f"Inviato: {message}")
 
             # Ricezione di una risposta

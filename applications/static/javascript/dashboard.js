@@ -649,14 +649,16 @@ function updateUIRealtime(e) {
             }
         } else if (numeric && minWeightValue >= gross_weight) {
             tareButton.disabled = true;
-            // zeroButton.disabled = false;
+            zeroButton.disabled = false;
             presetTareButton.disabled = false;
+            printButton.disabled = true;
             inButton.disabled = true;
             outButton.disabled = true;
         } else {
             tareButton.disabled = true;
-            // zeroButton.disabled = true;
+            zeroButton.disabled = true;
             presetTareButton.disabled = true;
+            printButton.disabled = true;
             inButton.disabled = true;
             outButton.disabled = true;
         }

@@ -69,6 +69,8 @@ def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=
                     else:
                         raise ValueError(f"Column '{key}' not found in Reservation table.")
 
+        query = query.filter(Reservation.hidden == False)
+
         # Filtro per status NOT_CLOSED
         if not_closed:
             query = query.filter(Reservation.status != ReservationStatus.CLOSED)

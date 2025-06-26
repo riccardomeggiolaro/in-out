@@ -83,17 +83,17 @@ else
 fi
 
 # Controlla e crea l'ambiente virtuale se non esiste
-if [[ ! -d ".env" ]]; then
-    echo "Creazione dell'ambiente virtuale .env..."
-    python3 -m venv .env
+if [[ ! -d ".venv" ]]; then
+    echo "Creazione dell'ambiente virtuale .venv..."
+    python3 -m venv .venv
     VENV_NUOVO=true
 else
     VENV_NUOVO=false
-    echo "L'ambiente virtuale .env esiste già, procedo..."
+    echo "L'ambiente virtuale .venv esiste già, procedo..."
 fi
 
 # Attiva l'ambiente virtuale
-source .env/bin/activate
+source .venv/bin/activate
 
 # Controlla se `pip`, `setuptools` e `wheel` sono aggiornati
 if ! python -c "import pkg_resources; pkg_resources.require(['pip', 'setuptools', 'wheel'])" &>/dev/null; then
