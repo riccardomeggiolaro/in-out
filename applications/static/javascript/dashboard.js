@@ -218,7 +218,7 @@ async function populateListIn() {
 
     listIn.innerHTML = '';
 
-    await fetch('/api/anagrafic/reservation/list?status=NOT_CLOSED')
+    await fetch('/api/anagrafic/reservation/list?excludeTestWeighing=true&status=NOT_CLOSED')
     .then(res => res.json())
     .then(data => {
         data.data.forEach(item => {
