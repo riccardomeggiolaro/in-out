@@ -136,7 +136,7 @@ mkdir -p /var/lib/in-out/pdf
 # Copia tutti i file dalla cartella template (accanto a installer.sh) nella cartella reports
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -d "$SCRIPT_DIR/template_reports" ]; then
-    sudo cp -r "$SCRIPT_DIR/template/." /var/lib/in-out/reports/
+    sudo cp -r "$SCRIPT_DIR/template_reports/." /var/lib/in-out/reports/
     echo "Template copiati in /var/lib/in-out/reports/"
 else
     echo "ATTENZIONE: la cartella template non esiste nella directory dello script!"
