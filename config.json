@@ -122,12 +122,12 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_weight": 50000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": true,
                         "node": null,
-                        "number_of_prints": 1,
+                        "number_of_prints": 2,
                         "port_rele": null,
-                        "printer_name": null,
+                        "printer_name": "Canon_iR_ADV_C5235_5240",
                         "run": true,
                         "terminal": "egt-af03"
                     }

@@ -53,6 +53,7 @@ class SetupWeigher(CustomBaseModel):
 	terminal: str
 	run: bool
 	name: Optional[str] = None
+	printer_name: Optional[str] = None
 
 class Configuration(CustomBaseModel):
 	nodes: Optional[Dict[str, SetupWeigher]] = {}

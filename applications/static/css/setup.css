@@ -250,3 +250,7 @@ hr {
 .gray {
     color: gray;
 }
+
+.modal select {
+    width: 100%;
+}

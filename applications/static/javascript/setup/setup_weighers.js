@@ -1,4 +1,4 @@
-import { list_serial_ports, deleteButtonContent, editButtonContent } from "./setup_utils.js";
+import { list_serial_ports, list_printer_names, deleteButtonContent, editButtonContent } from "./setup_utils.js";
 
 const weighers_config = document.getElementById('weighers_config');
 
@@ -571,6 +571,12 @@ fetch('/api/config-weigher/all/instance')
         }
 
         const populateAddContent = () => {
+            // Genera le option per le stampanti
+            let printerOptions = '';
+            for (const printer of list_printer_names) {
+                printerOptions += `<option value="${printer.nome}">${printer.nome}</option>`;
+            }
+
             addWeigherForm.innerHTML = 
                 `Nome:<br>
                 <input type="text" name="name" value="" required><br>
@@ -587,12 +593,20 @@ fetch('/api/config-weigher/all/instance')
                     <option value="dgt1" selected>dgt1</option>
                     <option value="egt-af03">egt-af03</option>
                 </select><br>
+                <label for="printer_name">Stampante:</label><br>
+                <select id="printer_name" name="printer_name" required>
+                    ${printerOptions}
+                </select><br>
+                Numero di stampe: <br>
+                <input type="number" name="number_of_prints" min="1" max="5" value="1" required><br>
+                Stampa all'entrata: <input type="checkbox" name="run"><br>
+                Stampa all'uscita: <input type="checkbox" name="run"><br>
                 In esecuzione: <input type="checkbox" name="run" checked><br>
                 Scaricare la pesa dopo pesata effettuata: <input type="checkbox" name="need_take_of_weight_before_weighing" checked><br>
                 Scaricare la pesa dopo l'avvio del programma: <input type="checkbox" name="need_take_of_weight_on_startup" checked><br>`;
-        
+            
             errorAddWeigher.innerHTML = '';
-        }        
+        }
         
         populateAddContent();
 
@@ -679,6 +693,8 @@ fetch('/api/config-weigher/all/instance')
                     <p class="gray"><em>Peso massimo: ${data.max_weight}</em> <strong>-</strong> <em>Peso minimo: ${data.min_weight}</em> <strong>-</strong> <em>Divisione: ${data.division}</em><br></p>
                     <p class="gray"><em>Pesate multiple: ${data.need_take_of_weight_before_weighing ? 'Si' : 'No'}</em> <strong>-</strong> <em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em> <strong>-</strong> <em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
                     <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
+                    <p class="gray"><em>Stampante: ${data.printer_name ? data.printer_name : 'Nessuna'}</em></p>
+                    <p class="gray"><em>Numero di stampe: ${data.number_of_prints}</em></p>
                 `;
             }
 
@@ -694,23 +710,37 @@ fetch('/api/config-weigher/all/instance')
                 <div class="errors"></div>
             `;
 
-            const populateEditContent = (data) => {
-                editMode.querySelector('.content').innerHTML = `
-                    <input type="text" name="name" value="${data.name}" class="h4-input" required><br>
-                    Nodo: <input type="text" name="node" value="${data.node ? data.node : ''}"><br>
-                    Peso massimo: <input type="number" name="max_weight" value="${data.max_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Peso minimo: <input type="number" name="min_weight" value="${data.min_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Divisione: <input type="number" name="division" value="${data.division}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Terminale:<br>
-                    <select name="terminal" required>
-                        <option value="dgt1" ${data.terminal === "dgt1" ? 'selected': ''}>dgt1</option>
-                        <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected': ''}>egt-af03</option>
-                    </select><br>
-                    In esecuzione: <input type="checkbox" name="run" ${data.run ? 'checked' : ''} required><br>
-                    Scaricare la pesa dopo pesata effettuata: <input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''} required><br>
-                    Scaricare la pesa dopo l'avvio del programma: <input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''} required<br>
-                `;
+        const populateEditContent = (data) => {
+            // Genera le option per le stampanti
+            let printerOptions = '';
+            for (const printer of list_printer_names) {
+                printerOptions += `<option value="${printer.nome}" ${data.printer_name === printer.nome ? 'selected' : ''}>${printer.nome}</option>`;
             }
+
+            editMode.querySelector('.content').innerHTML = `
+                <input type="text" name="name" value="${data.name}" class="h4-input" required><br>
+                Nodo: <input type="text" name="node" value="${data.node ? data.node : ''}"><br>
+                Peso massimo: <input type="number" name="max_weight" value="${data.max_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                Peso minimo: <input type="number" name="min_weight" value="${data.min_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                Divisione: <input type="number" name="division" value="${data.division}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
+                Terminale:
+                <select name="terminal" required>
+                    <option value="dgt1" ${data.terminal === "dgt1" ? 'selected': ''}>dgt1</option>
+                    <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected': ''}>egt-af03</option>
+                </select><br>
+                <label for="printer_name">Stampante:</label>
+                <select id="printer_name" name="printer_name" required>
+                    ${printerOptions}
+                </select><br>
+                Numero di stampe: <br>
+                <input type="number" name="number_of_prints" min="1" max="5" value="${data.number_of_prints}" required><br>
+                Stampa all'entrata: <input type="checkbox" name="run" ${data.events.weighing.reports.in.active ? 'checked' : ''} required><br>
+                Stampa all'uscita: <input type="checkbox" name="run" ${data.events.weighing.reports.out.active ? 'checked' : ''} required><br>
+                In esecuzione: <input type="checkbox" name="run" ${data.run ? 'checked' : ''} required><br>
+                Scaricare la pesa dopo pesata effettuata: <input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''} required><br>
+                Scaricare la pesa dopo l'avvio del programma: <input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''} required><br>
+            `;
+        }
 
             populateEditContent(weigher);
 

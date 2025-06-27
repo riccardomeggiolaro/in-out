@@ -18,6 +18,10 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	node: Optional[str] = "undefined"
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
+	printer_name: Optional[str] = None
+	number_of_prints: Optional[int] = 1
+	print_on_in: Optional[bool] = True
+	print_on_out: Optional[bool] = True
 
 	@root_validator(pre=True)
 	def set_node_default(cls, values):
@@ -53,6 +57,10 @@ class SetupWeigherDTO(BaseModel):
 	node: Optional[Union[str, None]] = None
 	terminal: str
 	run: Optional[bool] = True
+	printer_name: Optional[str] = None
+	number_of_prints: Optional[int] = 1
+	print_on_in: Optional[bool] = True
+	print_on_out: Optional[bool] = True
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):

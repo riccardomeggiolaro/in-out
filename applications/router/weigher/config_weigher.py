@@ -29,7 +29,7 @@ class ConfigWeigher(CallbackWeigher):
         self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 
     async def GetAllInstance(self):
-        return md_weigher.module_weigher.getAllInstance()
+        return lb_config.g_config["app_api"]["weighers"]
 
     async def GetInstance(self, instance: InstanceNameDTO = Depends(get_query_params_name)):
         return md_weigher.module_weigher.getInstance(instance_name=instance.instance_name)
@@ -71,8 +71,8 @@ class ConfigWeigher(CallbackWeigher):
         weigher_created = response.copy()
         del weigher_created[setup.name]["terminal_data"]
         del weigher_created[setup.name]["status"]
-        weigher_created[setup.name]["printer_name"] = None
-        weigher_created[setup.name]["number_of_prints"] = 1
+        weigher_created[setup.name]["printer_name"] = setup.printer_name
+        weigher_created[setup.name]["number_of_prints"] = setup.number_of_prints
         weigher_created[setup.name]["data"] = Data(**{}).dict()
         weigher_created[setup.name]["events"] = {
             "realtime": {
@@ -86,11 +86,11 @@ class ConfigWeigher(CallbackWeigher):
             "weighing": {
                 "reports": {
                     "in": {
-                        "active": True,
+                        "active": setup.print_on_in,
                         "template": "weight_in.html"
                     },
                     "out": {
-                        "active": True,
+                        "active": setup.print_on_out,
                         "template": "weight_out.html"
                     }
                 },
@@ -127,6 +127,12 @@ class ConfigWeigher(CallbackWeigher):
         del weigher_set[weigher_name]["status"]
         for key, value in weigher_set[weigher_name].items():
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name][key] = value
+        if setup.printer_name:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"] = setup.printer_name
+        if setup.number_of_prints:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"] = setup.number_of_prints
+        response[instance.weigher_name]["printer_name"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"]
+        response[instance.weigher_name]["number_of_prints"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"]
         lb_config.saveconfig()
         return response
 
