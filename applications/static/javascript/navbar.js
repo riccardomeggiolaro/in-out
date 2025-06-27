@@ -14,6 +14,10 @@ fetch('navbar.html')
             const setup = document.getElementById("page-of-setup");
             setup.style.display = "none";
         }
+        if (res.level < 2) {
+            const users = document.getElementById("page-of-users");
+            users.style.display = "none";
+        }
         const p = document.getElementById("hi-session-user");
         p.textContent = `Ciao, ${res.username}`;
     });
