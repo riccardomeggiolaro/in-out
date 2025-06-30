@@ -9,26 +9,12 @@
 </head>
 <body>
     <div id="navbar-container"></div>
-    <div id="setup">
-        <div id="config">
-            <div id="weighers_config">
-                <h3>PESE</h3>
-            </div>
-        </div>
+    <div id="config">
+        <h3>CONFIGURAZIONE</h3>
     </div>
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
     <script src="/static/javascript/navbar.js"></script>
-    <script type="module" src="/static/javascript/setup/setup_utils.js"></script>
-    <script type="module" src="/static/javascript/setup/setup_weighers.js"></script>
-    <script>
-        const weighersConfig = document.querySelector('#weighers_config');
-
-        const liWeighers = document.querySelector('#weighers');
-
-        liWeighers.addEventListener('click', () => {
-            weighersConfig.style.display = 'block';
-        });
-    </script>
+    <script src="/static/javascript/setup.js"></script>
 </body>
 </html>

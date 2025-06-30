@@ -12,15 +12,19 @@ class GenericRouter:
         self.router.add_api_route('/create/cam-capture-plate-access-token', self.createCamCapturePlateAccessToken)
 
     async def getSerialPorts(self):
-        """Restituisce una lista delle porte seriali disponibili."""
+        """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
+        import time
+        start_time = time.time()
         try:
             status, data = lb_system.list_serial_port()
+            elapsed = time.time() - start_time
             if status:
-                return {"list_serial_ports": data}
+                return {"list_serial_ports": data, "elapsed_seconds": elapsed}
             else:
                 raise HTTPException(status_code=400, detail="Unable to retrieve serial ports")
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+            elapsed = time.time() - start_time
+            raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)} (elapsed: {elapsed:.3f}s)")
         
     async def createCamCapturePlateAccessToken(self):
         try:

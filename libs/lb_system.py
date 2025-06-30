@@ -329,7 +329,7 @@ class ConfigConnection():
 		self.connection = Connection(**{})
 		return self.getConnection()
 
-# ==== FUNZIONE RICHIAMBILI FUORI DALLA LIBRERIA ===============
+# ==== FUNZIONI RICHIAMBILI FUORI DALLA LIBRERIA ===============
 def enable_serial_port(port_name):
 	result = False
 	message = None
@@ -351,10 +351,7 @@ def list_serial_port():
 def serial_port_is_just_in_use(port_name):
 	result = False
 	message = None
-	if is_linux():
-		result, message = serial_port_is_just_in_use_linux(port_name)
-	elif is_windows():
-		result, message = serial_port_is_just_in_use_windows(port_name)
+	result, message = is_serial_port_in_use(port_name)
 	return result, message
 
 def exist_serial_port(port_name):
@@ -450,30 +447,21 @@ def enable_serial_port_windows(port_name):
 		return False, f"Unexpected error enabling port: {str(e)}"
 
 
-def is_port_in_use(port):
-    if os.name == 'nt':  # Windows
-        try:
-            port_handle = open(port, 'w')
-            port_handle.close()
-            return False  # non in uso
-        except PermissionError:  # se non possiamo accedere in scrittura, è in uso
-            return True
-    else:  # Linux
-        try:
-            # Usa lsof per vedere se qualche processo sta usando la porta
-            cmd = ['lsof', port]
-            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-            return True  # se lsof trova qualcosa, la porta è in uso
-        except subprocess.CalledProcessError:  # se lsof non trova nulla
-            return False
-        except FileNotFoundError:  # se lsof non è installato
-            try:
-                # Fallback: prova ad accedere al device in scrittura
-                port_handle = open(port, 'w')
-                port_handle.close()
-                return False
-            except PermissionError:
-                return True
+def is_serial_port_in_use(serial_port_name):
+    """
+    Controlla se la porta seriale è in uso provando ad aprirla in scrittura.
+    """
+    try:
+        port_handle = open(serial_port_name, 'w')
+        port_handle.close()
+        message = f"Port {serial_port_name} is not in use"
+        return False, message
+    except PermissionError:
+        message = f"Port {serial_port_name} is in use"
+        return True, message
+    except Exception as e:
+        message = f"Error checking port {serial_port_name}: {e}"
+        return False, message
 
 def list_serial_port_linux():
 	try:
@@ -483,7 +471,7 @@ def list_serial_port_linux():
 		for port_info in sorted(ports):	
 			port_data = {
                 "port": port_info.device,
-                "using": is_port_in_use(port_info.device)
+                "using": is_serial_port_in_use(port_info.device)
             }
 			serial_ports.append(port_data)
 		return True, serial_ports
@@ -498,56 +486,12 @@ def list_serial_port_windows():
 		for port_info in sorted(ports):
 			port_data = {
                 "port": port_info.device,
-                "using": is_port_in_use(port_info.device)
+                "using": is_serial_port_in_use(port_info.device)
             }
 			serial_ports.append(port_data)
 		return True, serial_ports
 	except Exception as e:
 		return False, e
-
-def serial_port_is_just_in_use_linux(port_name):
-	"""
-	Checks if the specified serial port is in use using `fuser`.
-
-	Args:
-		port_name: The serial port to check (e.g., "/dev/ttyS0").
-
-	Returns:
-		(bool, str): Tuple where the first value is True if the port is in use,
-					 and the second value is the appropriate message.
-	"""
-	try:
-		# Execute fuser with options to check serial port usage
-		subprocess.run(["fuser", "-s", port_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-		# If fuser does not raise an error, the port is in use
-		message = f"Port {port_name} is in use"
-		return True, message
-	except subprocess.CalledProcessError:
-		# If fuser raises an exception, the port is not in use
-		message = f"Port {port_name} is not in use"
-		return False, message
-	except FileNotFoundError:
-		# Handle case where `fuser` is not available
-		message = "'fuser' command not found. Please install it to check port usage."
-		return False, message
-
-def serial_port_is_just_in_use_windows(port_name):
-    """
-    Funzione per verificare se una porta seriale è in uso utilizzando pyserial.
-    Tenta di aprire la porta in modalità esclusiva e gestisce eventuali errori.
-    """
-    try:
-        # Proviamo ad aprire la porta in modalità esclusiva per vedere se è in uso
-        with serial.Serial(port_name, timeout=1) as ser:
-            return False, f"Port {port_name} is available for use."  # Se non ci sono errori, la porta è disponibile
-    except serial.SerialException as e:
-        # Se la porta è in uso, solitamente si ottiene un errore di tipo SerialException
-        if 'could not open port' in str(e):
-            return True, f"Port {port_name} is currently in use or could not be opened: {e}"  # La porta è in uso
-        else:
-            return False, f"Error opening port {port_name}: {e}"  # Un altro tipo di errore, la porta potrebbe non essere disponibile
-    except Exception as e:
-        return False, f"Unexpected error while checking port {port_name}: {str(e)}"  # Gestiamo eventuali errori imprevisti
 
 def exist_serial_port_linux(port_name):
 	try:
