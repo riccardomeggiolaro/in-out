@@ -234,6 +234,14 @@ select {
     margin: 0;
 }
 
+#potential_net_weight {
+    position: absolute;
+    left: 3px;
+    top: 0;
+    font-size: 2rem;
+    margin: 0;
+}
+
 #netWeight {
     margin: 1.5rem 0px 0px 0px;
 }

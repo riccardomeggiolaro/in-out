@@ -77,7 +77,7 @@ class Functions:
 		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
-	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int):
+	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int, weight1: int):
 		if new_id == -1:
 			new_id = None
 		else:
@@ -85,7 +85,10 @@ class Functions:
 			if success is False:
 				message = just_locked_message("SELECT", "reservation", locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
 				raise HTTPException(status_code=400, detail=message)
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"] = new_id
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"] = {
+			"id": new_id,
+			"weight1": weight1
+		}
 		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
@@ -93,7 +96,10 @@ class Functions:
 		current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"]
 		if current_id is not None:
 			unlock_record_by_attributes("reservation", current_id, None, weigher_name)
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"] = None
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"] = {
+			"id": None,
+			"weight1": None
+		}
 		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 

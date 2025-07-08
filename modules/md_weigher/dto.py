@@ -10,18 +10,19 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	max_weight: Optional[int] = None
 	min_weight: Optional[int] = None
 	division: Optional[int] = None
+	max_theshold: Optional[int] = -1
 	maintaine_session_realtime_after_command: Optional[bool] = None
 	diagnostic_has_priority_than_realtime: Optional[bool] = None
 	always_execute_realtime_in_undeground: Optional[bool] = None
-	need_take_of_weight_on_startup: Optional[bool] = True
+	need_take_of_weight_on_startup: Optional[bool] = None
 	need_take_of_weight_before_weighing: Optional[bool] = None
 	node: Optional[str] = "undefined"
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
 	printer_name: Optional[str] = None
 	number_of_prints: Optional[int] = 1
-	print_on_in: Optional[bool] = True
-	print_on_out: Optional[bool] = True
+	print_on_in: Optional[bool] = None
+	print_on_out: Optional[bool] = None
 
 	@root_validator(pre=True)
 	def set_node_default(cls, values):
@@ -49,6 +50,7 @@ class SetupWeigherDTO(BaseModel):
 	max_weight: int
 	min_weight: int
 	division: int
+	max_theshold: Optional[int] = None
 	maintaine_session_realtime_after_command: Optional[bool] = True
 	diagnostic_has_priority_than_realtime: Optional[bool] = True
 	always_execute_realtime_in_undeground: Optional[bool] = True

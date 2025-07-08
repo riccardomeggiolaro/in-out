@@ -52,6 +52,7 @@ class ConfigWeigher(CallbackWeigher):
 
     async def GetInstanceWeigher(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         instance_weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+        instance_weigher[instance.instance_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["max_theshold"]
         instance_weigher[instance.instance_name]["events"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]
         return instance_weigher
 
@@ -74,6 +75,7 @@ class ConfigWeigher(CallbackWeigher):
         weigher_created[setup.name]["printer_name"] = setup.printer_name
         weigher_created[setup.name]["number_of_prints"] = setup.number_of_prints
         weigher_created[setup.name]["data"] = Data(**{}).dict()
+        weigher_created[setup.name]["max_theshold"] = setup.max_theshold
         weigher_created[setup.name]["events"] = {
             "realtime": {
                 "over_min": {
@@ -86,11 +88,11 @@ class ConfigWeigher(CallbackWeigher):
             "weighing": {
                 "reports": {
                     "in": {
-                        "active": setup.print_on_in,
+                        "active": setup.print_on_in if setup.print_on_in is not None else False,
                         "template": "weight_in.html"
                     },
                     "out": {
-                        "active": setup.print_on_out,
+                        "active": setup.print_on_out if setup.print_on_out is not None else False,
                         "template": "weight_out.html"
                     }
                 },
@@ -131,8 +133,16 @@ class ConfigWeigher(CallbackWeigher):
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"] = setup.printer_name
         if setup.number_of_prints:
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"] = setup.number_of_prints
+        if setup.print_on_in is not None:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]["active"] = setup.print_on_in
+        if setup.print_on_out is not None:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]["active"] = setup.print_on_out
+        if setup.max_theshold != -1:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"] = setup.max_theshold
         response[instance.weigher_name]["printer_name"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"]
         response[instance.weigher_name]["number_of_prints"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"]
+        response[instance.weigher_name]["events"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]
+        response[instance.weigher_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"]
         lb_config.saveconfig()
         return response
 

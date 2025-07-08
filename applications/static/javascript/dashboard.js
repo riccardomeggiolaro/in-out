@@ -38,7 +38,9 @@ let data_weight_realtime = {
     net_weight: undefined,
     gross_weight: undefined,
     tare: undefined,
-    unite_measure: undefined
+    unite_measure: undefined,
+    potential_net_weight: null,
+    over_max_theshold: null
 };
 
 let _data;
@@ -55,6 +57,9 @@ let serialNumberValue;
 let minWeightValue;
 let maxWeightValue;
 let divisionValue;
+let maxThesholdValue;
+
+let confirmWeighing;
 
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
@@ -173,6 +178,7 @@ async function getInstanceWeigher(path) {
         maxWeightValue = obj.max_weight;
         division.textContent = obj.division;
         divisionValue = obj.division;
+        maxThesholdValue = obj.max_theshold;
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -612,6 +618,7 @@ function updateUIRealtime(e) {
         document.getElementById('netWeight').innerText = data_weight_realtime.net_weight !== undefined ? data_weight_realtime.net_weight : "N/A";
         document.getElementById('uniteMisure').innerText = data_weight_realtime.unite_measure !== undefined ? data_weight_realtime.unite_measure : 'N/A';
         document.getElementById('status').innerText = data_weight_realtime.status !== undefined ? data_weight_realtime.status : 'N/A';
+        document.getElementById('potential_net_weight').innerHTML = data_weight_realtime.potential_net_weight !== null ? `NT <strong>${data_weight_realtime.potential_net_weight}</strong>` : '';
         const numeric = isNumeric(data_weight_realtime.gross_weight);
         const gross_weight = Number(data_weight_realtime.gross_weight);
         const tare_weight = Number(data_weight_realtime.tare);
@@ -703,9 +710,10 @@ function updateUIRealtime(e) {
 }
 
 async function handleTara() {
-    await fetch(`${pathname}/api/command-weigher/tare${currentWeigherPath}`)
+    const r = await fetch(`${pathname}/api/command-weigher/tare${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbarDashboard(r.detail || r.command_details.error_message);
 }
 
 async function handleZero() {
@@ -717,12 +725,13 @@ async function handleZero() {
 async function handlePTara() {
     let preset_tare = 0;
     if (myNumberInput.value) preset_tare = myNumberInput.value;
-    await fetch(`${pathname}/api/command-weigher/tare/preset${currentWeigherPath}&tare=${preset_tare}`)
+    const r = await fetch(`${pathname}/api/command-weigher/tare/preset${currentWeigherPath}&tare=${preset_tare}`)
     .then(res => {
         closePopup();
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbarDashboard(r.detail || r.command_details.error_message);
 }
 
 async function handleStampa() {
@@ -746,7 +755,8 @@ async function handleStampa() {
     }            
 }
 
-async function handlePesata() {
+async function inWeighing() {
+    closePopup();
     buttons.forEach(button => {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
@@ -773,10 +783,19 @@ async function handlePesata() {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    } else if (r.command_details.command_executed == true) showSnackbarDashboard("Pesando...");
+    } else if (r.command_details.command_executed == true) showSnackbarDashboard("Pesando...");       
 }
 
-async function handlePesata2() {
+async function handlePesata() {
+    if (data_weight_realtime.over_max_theshold) {
+        confirmWeighing = inWeighing;
+        document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
+        openPopup('confirmPopup');
+    } else await inWeighing();
+}
+
+async function outWeighing () {
+    closePopup();
     buttons.forEach(button => {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
@@ -803,6 +822,14 @@ async function handlePesata2() {
             button.classList.remove("disabled-button"); // Aggi
         });
     }                
+}
+
+async function handlePesata2() {
+    if (data_weight_realtime.over_max_theshold) {
+        confirmWeighing = outWeighing;
+        document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
+        openPopup('confirmPopup');
+    } else await outWeighing();
 }
 
 function disableAllElements() {

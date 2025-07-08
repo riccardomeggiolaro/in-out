@@ -79,6 +79,7 @@
                         <p id="uniteMisure">--</p>
                         <p id="tare">------</p>
                         <p id="status">--</p>
+                        <p id="potential_net_weight"></p>
                     </div>
 
                     <select class="list-weigher">
@@ -214,7 +215,17 @@
                 <h2>Connessione al server pesa perso</h2>
                 <p>Clicca ok per riconnettere...</p>
                 <div class="footer-buttons reconnection-footer-buttons">
-                    <button id="reconnectionButton" class="p-tare-button" onclick="attemptReconnect()">OK</button>
+                    <button id="reconnectionButton" class="p-tare-button" onclick="confirmWeighing()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="confirmPopup" class="popup">
+            <div class="popup-content">
+                <h3 id="over_max_theshold_description"></h2>
+                <div class="footer-buttons reconnection-footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button id="reconnectionButton" class="p-tare-button" onclick="confirmWeighing()">OK</button>
                 </div>
             </div>
         </div>

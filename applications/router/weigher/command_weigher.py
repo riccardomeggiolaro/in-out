@@ -188,7 +188,12 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			return HTTPException(status_code=500, detail=str(e))
 
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="TARE")
+		status_modope, command_executed, error_message = 500, False, ""
+		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
+		if data_id_selected["id"] and data_id_selected["weight1"]:
+			error_message = "Non puoi effettuare la tara perchè il mezzo ha già effettuato una entrata."
+		else:
+			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="TARE")
 		return {
 			"instance": instance,
 			"command_details": {
@@ -199,7 +204,12 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		}
 
 	async def PresetTare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), tare: Optional[int] = 0):
-		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
+		status_modope, command_executed, error_message = 500, False, ""
+		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
+		if data_id_selected["id"] and data_id_selected["weight1"]:
+			error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
+		else:
+			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
 		return {
 			"instance": instance,
 			"command_details": {

@@ -13,6 +13,8 @@ class Realtime(BaseModel):
 	gross_weight: str
 	tare: str
 	unite_measure: str
+	potential_net_weight: Optional[Union[int, float]] = None
+	over_max_theshold: Optional[bool] = False
 	
 class Diagnostic(CustomBaseModel):
 	status: int

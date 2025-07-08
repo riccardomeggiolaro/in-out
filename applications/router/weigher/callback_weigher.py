@@ -34,26 +34,39 @@ class CallbackWeigher(Functions, WebSocket):
 	def Callback_Realtime(self, instance_name: str, weigher_name: str, pesa_real_time: Realtime):
 		try:
 			gross_weight = pesa_real_time.gross_weight
-			float_gross_weight = None
+			numeric_gross_weight = None
 			try:
-				float_gross_weight = float(gross_weight)
+				if "," in gross_weight or "." in gross_weight:
+					numeric_gross_weight = float(gross_weight)
+				else:
+					numeric_gross_weight = int(gross_weight)
 			except:
 				pass
-			if type(float_gross_weight) is float:
-				if float_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [0, None]:
+			if type(numeric_gross_weight) in [float, int]:
+				if numeric_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [0, None]:
 					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
 						key, value = next(iter(rele.items()))
 						modope = "CLOSERELE" if value == 0 else "OPENRELE"
 						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
 					self.switch_to_call = 1
-				elif float_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [1, None]:
+				elif numeric_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [1, None]:
 					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]:
 						key, value = next(iter(rele.items()))
 						modope = "CLOSERELE" if value == 0 else "OPENRELE"
 						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
 					self.switch_to_call = 0
+				weight1 = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["weight1"]
+				if pesa_real_time.status == "ST" and weight1:
+					pesa_real_time.potential_net_weight = numeric_gross_weight - weight1 if numeric_gross_weight > weight1 else weight1 - numeric_gross_weight
+				else:
+					pesa_real_time.potential_net_weight = None
+				max_theshold = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["max_theshold"]
+				if max_theshold is not None and numeric_gross_weight > max_theshold:
+					pesa_real_time.over_max_theshold = True
+				else:
+					pesa_real_time.over_max_theshold = False
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
-		except:
+		except Exception as e:
 			pass
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica

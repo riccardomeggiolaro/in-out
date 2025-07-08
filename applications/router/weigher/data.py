@@ -39,6 +39,9 @@ class DataRouter(ConfigWeigher):
 			await self.DeleteData(instance=instance)
 			if data_dto.id_selected.id != -1:
 				reservation = get_reservation_by_id(data_dto.id_selected.id)
+				weight1 = None
+				if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1:
+					weight1 = reservation.in_out[-1].weight1.weight
 				id_material = None
 				description_material = None
 				if len(reservation.in_out) > 0 and reservation.in_out[-1].idMaterial:
@@ -75,7 +78,7 @@ class DataRouter(ConfigWeigher):
 					"note": reservation.note,
 					"document_reference": reservation.document_reference
 				})
-				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id)
+				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idReservation=data_dto.id_selected.id)
 		else:
 			self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)

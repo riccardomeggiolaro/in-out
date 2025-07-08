@@ -606,33 +606,72 @@ async function loadSetupWeighers() {
                     printerOptions += `<option value="${printer.nome}">${printer.nome}</option>`;
                 }
 
-                addWeigherForm.innerHTML = 
-                    `Nome:<br>
-                    <input type="text" name="name" value="" required><br>
-                    Nodo: (facoltativo)<br>
-                    <input type="text" name="node" value=""><br>
-                    Peso massimo:<br>
-                    <input type="number" name="max_weight" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Peso minimo:<br>
-                    <input type="number" name="min_weight" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Divisione:<br>
-                    <input type="number" name="division" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Terminale:<br>
-                    <select name="terminal" required>
-                        <option value="dgt1" selected>dgt1</option>
-                        <option value="egt-af03">egt-af03</option>
-                    </select><br>
-                    <label for="printer_name">Stampante:</label><br>
-                    <select id="printer_name" name="printer_name" required>
-                        ${printerOptions}
-                    </select><br>
-                    Numero di stampe: <br>
-                    <input type="number" name="number_of_prints" min="1" max="5" value="1" required><br>
-                    Stampa all'entrata: <input type="checkbox" name="run"><br>
-                    Stampa all'uscita: <input type="checkbox" name="run"><br>
-                    In esecuzione: <input type="checkbox" name="run" checked><br>
-                    Scaricare la pesa dopo pesata effettuata: <input type="checkbox" name="need_take_of_weight_before_weighing" checked><br>
-                    Scaricare la pesa dopo l'avvio del programma: <input type="checkbox" name="need_take_of_weight_on_startup" checked><br>`;
+                addWeigherForm.innerHTML = `
+                    <div style="display: flex; gap: 16px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="name">Nome pesa:</label>
+                            <input type="text" name="name" id="name" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="terminal">Terminale:</label>
+                            <select name="terminal" id="terminal" required>
+                                <option value="dgt1" selected>dgt1</option>
+                                <option value="egt-af03">egt-af03</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="node">Nodo (facoltativo):</label>
+                            <input type="text" name="node" id="node">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 16px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="max_weight">Peso massimo:</label>
+                            <input type="number" name="max_weight" id="max_weight" min="1" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="min_weight">Peso minimo:</label>
+                            <input type="number" name="min_weight" id="min_weight" min="1" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="division">Divisione:</label>
+                            <input type="number" name="division" id="division" min="1" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="max_theshold">Soglia massima:</label>
+                            <input type="number" name="max_theshold" id="max_theshold" min="1" required>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 16px; align-items: flex-end;">
+                        <div class="form-group" style="flex: 2;">
+                            <label for="printer_name">Stampante:</label>
+                            <select id="printer_name" name="printer_name" required>
+                                ${printerOptions}
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="number_of_prints">Numero di stampe:</label>
+                            <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="1" required>
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Stampa all'entrata</label><br>
+                            <input type="checkbox" name="print_on_in">
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Stampa all'uscita</label><br>
+                            <input type="checkbox" name="print_on_out">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="run" checked> In esecuzione</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="need_take_of_weight_before_weighing" checked> Scaricare la pesa dopo pesata effettuata</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="need_take_of_weight_on_startup" checked> Scaricare la pesa dopo l'avvio del programma</label>
+                    </div>
+                `;
                 
                 errorAddWeigher.innerHTML = '';
             }
@@ -719,11 +758,15 @@ async function loadSetupWeighers() {
                 const populateViewContent = (data) => {
                     viewMode.querySelector('.content').innerHTML = `
                         <h4>${data.name} <span class="gray">${data.terminal}</span></h4>
-                        <p class="gray"><em>Peso massimo: ${data.max_weight}</em> <strong>-</strong> <em>Peso minimo: ${data.min_weight}</em> <strong>-</strong> <em>Divisione: ${data.division}</em><br></p>
-                        <p class="gray"><em>Pesate multiple: ${data.need_take_of_weight_before_weighing ? 'Si' : 'No'}</em> <strong>-</strong> <em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em> <strong>-</strong> <em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
+                        <p class="gray"><em>Peso massimo: ${data.max_weight}</em> <strong>-</strong> <em>Peso minimo: ${data.min_weight}</em> <strong>-</strong> <em>Divisione: ${data.division}</em><br></p>
+                        <p class="gray"><em>Soglia massima: ${data.max_theshold ? data.max_theshold : 'Nessuna'}</em></p>
+                        <p class="gray"><em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Scaricare pesa dopo pesata effettuata: ${data.need_take_of_weight_before_weighing ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Stampante: ${data.printer_name ? data.printer_name : 'Nessuna'}</em></p>
                         <p class="gray"><em>Numero di stampe: ${data.number_of_prints}</em></p>
+                        <p class="gray"><em>Stampa all'entrata: ${data.events.weighing.reports.in.active ? 'Si' : 'No'}</em> <strong>-</strong> <em>Stampa all'entrata: ${data.events.weighing.reports.out.active ? 'Si' : 'No'}</em></p>
                     `;
                 }
 
@@ -747,27 +790,70 @@ async function loadSetupWeighers() {
                 }
 
                 editMode.querySelector('.content').innerHTML = `
-                    <input type="text" name="name" value="${data.name}" class="h4-input" required><br>
-                    Nodo: <input type="text" name="node" value="${data.node ? data.node : ''}"><br>
-                    Peso massimo: <input type="number" name="max_weight" value="${data.max_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Peso minimo: <input type="number" name="min_weight" value="${data.min_weight}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Divisione: <input type="number" name="division" value="${data.division}" min="1" oninput="this.value = this.value && this.value > 0 ? Math.abs(this.value) : ''" required><br>
-                    Terminale:
-                    <select name="terminal" required>
-                        <option value="dgt1" ${data.terminal === "dgt1" ? 'selected': ''}>dgt1</option>
-                        <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected': ''}>egt-af03</option>
-                    </select><br>
-                    <label for="printer_name">Stampante:</label>
-                    <select id="printer_name" name="printer_name" required>
-                        ${printerOptions}
-                    </select><br>
-                    Numero di stampe: <br>
-                    <input type="number" name="number_of_prints" min="1" max="5" value="${data.number_of_prints}" required><br>
-                    Stampa all'entrata: <input type="checkbox" name="run" ${data.events.weighing.reports.in.active ? 'checked' : ''} required><br>
-                    Stampa all'uscita: <input type="checkbox" name="run" ${data.events.weighing.reports.out.active ? 'checked' : ''} required><br>
-                    In esecuzione: <input type="checkbox" name="run" ${data.run ? 'checked' : ''} required><br>
-                    Scaricare la pesa dopo pesata effettuata: <input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''} required><br>
-                    Scaricare la pesa dopo l'avvio del programma: <input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''} required><br>
+    <div style="display: flex; gap: 16px;">
+        <div class="form-group" style="flex: 1;">
+            <label for="name">Nome pesa:</label><br>
+            <input type="text" name="name" id="name" value="${data.name || ''}" required>
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label for="terminal">Terminale:</label><br>
+            <select name="terminal" id="terminal" required>
+                <option value="dgt1" ${data.terminal === "dgt1" ? 'selected' : ''}>dgt1</option>
+                <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected' : ''}>egt-af03</option>
+            </select>
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label for="node">Nodo (facoltativo):</label><br>
+            <input type="text" name="node" id="node" value="${data.node || ''}">
+        </div>
+    </div>
+    <div style="display: flex; gap: 16px;">
+        <div class="form-group" style="flex: 1;">
+            <label for="max_weight">Peso massimo:</label><br>
+            <input type="number" name="max_weight" id="max_weight" min="1" value="${data.max_weight || ''}" required>
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label for="min_weight">Peso minimo:</label><br>
+            <input type="number" name="min_weight" id="min_weight" min="1" value="${data.min_weight || ''}" required>
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label for="division">Divisione:</label><br>
+            <input type="number" name="division" id="division" min="1" value="${data.division || ''}" required>
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label for="max_theshold">Soglia massima:</label><br>
+            <input type="number" name="max_theshold" id="max_theshold" min="1" value="${data.max_theshold || ''}" required>
+        </div>
+    </div>
+    <div style="display: flex; gap: 16px; align-items: flex-end;">
+        <div class="form-group" style="flex: 2;">
+            <label for="printer_name">Stampante:</label><br>
+            <select id="printer_name" name="printer_name" required>
+                ${printerOptions}
+            </select>
+        </div>
+        <div class="form-group" style="flex: 1;">
+            <label for="number_of_prints">Numero di stampe:</label><br>
+            <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="${data.number_of_prints || 1}" required>
+        </div>
+        <div class="form-group" style="flex: 1; text-align: center;">
+            <label>Stampa all'entrata</label><br>
+            <input type="checkbox" name="print_on_in" ${data.events?.weighing?.reports?.in?.active ? 'checked' : ''}>
+        </div>
+        <div class="form-group" style="flex: 1; text-align: center;">
+            <label>Stampa all'uscita</label><br>
+            <input type="checkbox" name="print_on_out" ${data.events?.weighing?.reports?.out?.active ? 'checked' : ''}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label><input type="checkbox" name="run" ${data.run ? 'checked' : ''}> In esecuzione</label>
+    </div>
+    <div class="form-group">
+        <label><input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''}> Scaricare la pesa dopo pesata effettuata</label>
+    </div>
+    <div class="form-group">
+        <label><input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa dopo l'avvio del programma</label>
+    </div>
                 `;
             }
 

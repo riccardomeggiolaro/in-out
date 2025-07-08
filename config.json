@@ -83,7 +83,8 @@
                                 }
                             },
                             "id_selected": {
-                                "id": null
+                                "id": null,
+                                "weight1": null
                             },
                             "number_in_out": 1
                         },
@@ -102,11 +103,11 @@
                                 "cams": [],
                                 "reports": {
                                     "in": {
-                                        "active": true,
+                                        "active": false,
                                         "template": "weight_in.html"
                                     },
                                     "out": {
-                                        "active": true,
+                                        "active": false,
                                         "template": "weight_out.html"
                                     }
                                 },
@@ -120,10 +121,11 @@
                             "4": 0
                         },
                         "maintaine_session_realtime_after_command": true,
+                        "max_theshold": 6000,
                         "max_weight": 50000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
