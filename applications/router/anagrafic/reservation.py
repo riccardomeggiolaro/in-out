@@ -72,39 +72,44 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
         
-    async def getListInOut(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+    async def getListInOut(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False):
         try:
             not_closed = False
-            filters = query_params.copy()
             
             # Handle status filter
-            if "status" in filters and filters["status"] == "NOT_CLOSED":
+            if "status" in query_params and query_params["status"] == "NOT_CLOSED":
                 not_closed = True                
-                del filters["status"]
+                del query_params["status"]
                 
             # Handle limit and offset
-            if "limit" in filters:
-                del filters["limit"]
-            if "offset" in filters:
-                del filters["offset"]
+            if "limit" in query_params:
+                del query_params["limit"]
+            if "offset" in query_params:
+                del query_params["offset"]
                 
-            # Handle date filters for weights
+            # Handle date query_params for weights
             if fromDate is not None:
-                del filters["fromDate"]
+                del query_params["fromDate"]
                 
             if toDate is not None:
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
-                del filters["toDate"]
+                del query_params["toDate"]
+
+            if "excludeTestWeighing" in query_params:
+                import libs.lb_log as lb_log
+                lb_log.warning(query_params["excludeTestWeighing"])
+                del query_params["excludeTestWeighing"]
                 
-            # Call get_list_in_out with prepared filters
+            # Call get_list_in_out with prepared query_params
             data, total_rows = get_list_in_out(
-                filters=filters,
+                filters=query_params,
                 not_closed=not_closed,
                 fromDate=fromDate,
                 toDate=toDate,
                 limit=limit,
                 offset=offset,
-                order_by=('id', 'desc')
+                order_by=('id', 'desc'),
+                excludeTestWeighing=excludeTestWeighing
             )
             
             return {
@@ -438,7 +443,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
         
-    async def deleteLastWeighing(self, request: Request, id: int):
+    async def deleteLastWeighing(self, request: Request, id: int, deleteReservationIfislastInOut: Optional[bool] = False):
         locked_data = None
         try:
             locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
@@ -451,7 +456,10 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 if number_in_out_executed > 0:
                     data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
                 elif number_in_out_executed == 0:
-                    data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
+                    if deleteReservationIfislastInOut:
+                        data = delete_data("reservation", id)
+                    else:
+                        data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
                 reservation = Reservation(**data).json()
                 await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
 

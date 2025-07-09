@@ -98,16 +98,17 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		current_id = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
+		reservation = None
 		status_modope = None
 		command_executed = None
 		error_message = None
 		if current_id:
 			reservation = get_reservation_by_id(current_id)
-			if len(reservation.in_out) > 0:
-				error_message = "Deselezionare l'id per effettuare l'entrata del mezzo."
+		if reservation and len(reservation.in_out) > 0:
+			error_message = "Il mezzo ha già effettuato l'entrata."
 		elif tare != "0":
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
-		else:
+		elif not reservation:
 			reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
                 	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
                  	"number_in_out": 1,
@@ -137,13 +138,21 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		idReservation = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
+		reservation = None
+		if idReservation:
+			reservation = get_reservation_by_id(idReservation)
 		just_created = False
-		if idReservation and tare != "0":
-			error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
-		elif not idReservation and tare == "0":
-			error_message = "Nessun id impostato per effettuare l'uscita."
-		else:
-			if not idReservation:
+		if reservation:
+			if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1 and tare != "0":
+				error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
+			elif len(reservation.in_out) == 0 and tare == "0":
+				error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
+			elif len(reservation.in_out) > 0 and not reservation.in_out[-1].idWeight1 and tare == "0":
+				error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
+		if not reservation:
+			if tare == "0":
+				error_message = "Nessun id impostato per effettuare l'uscita."
+			else:
 				reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
 					**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
 					"number_in_out": 1,
@@ -151,13 +160,14 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				}))
 				idReservation = reservation.id
 				just_created = True
+		if idReservation and not error_message:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
 				modope="WEIGHING", 
 				data_assigned=idReservation)
-			if error_message and just_created:
-				await self.deleteReservation(request=None, id=idReservation)
+		if error_message and just_created:
+			await self.deleteReservation(request=None, id=idReservation)
 		return {
 			"instance": instance,
 			"command_details": {

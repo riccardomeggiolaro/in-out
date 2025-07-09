@@ -4,7 +4,7 @@
         <link rel="icon" href="/static/content/baronpesi_favicon.png">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Autisti</title>
+        <title>Pid</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -16,17 +16,13 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Autisti</h2>
-            <button class="register-button" onclick="addRow()">Registra</button>
+            <h2>Pid</h2>
         </div>
         <table>
             <thead>
                 <tr id="filters">
-                    <th name="social_reason">
-                        <input id="filter.social_reason" name="social_reason" type="text" placeholder="Nome" oninput="updateTable()" autocomplete="new-password">
-                    </th>
-                    <th name="telephone">
-                        <input id="filter.telephone" name="telephone" type="text" placeholder="Telefono" oninput="this.value = this.value.replace(/\D/g, ''); updateTable()" autocomplete="new-password">
+                    <th name="pid">
+                        <input id="filter.description" name="description" type="text" placeholder="Descrizione" oninput="updateTable()" autocomplete="off">
                     </th>
                     <th></th>
                 </tr>
@@ -35,7 +31,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4" style="text-align: center;">
+                    <td colspan="3" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -56,12 +52,9 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Nuovo vettore:</h3>
+        <h3>Nuovo materiale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
-            Nome:<br>
-            <input type="text" id="social_reason" name="social_reason" autocomplete="new-password" required>
-            Cell: (Opzionale)<br>
-            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="new-password">
+            <input type="text" id="description" name="description" autocomplete="off" required>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -70,13 +63,11 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica vettore:</h3>
+        <h3>Modifica materiale:</h3>
         <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
-            Nome:<br>
-            <input type="text" id="social_reason" name="social_reason" autocomplete="new-password" required>
-            Cell: (Opzionale)<br>
-            <input type="text" id="telephone" name="telephone" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="new-password">
+            <input type="text" id="description" name="description" autocomplete="off" required>
         </form>
+        <div class="errors"></div>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
             <button id="save-btn" class="edit-save-btn">Salva</button><br>
@@ -84,9 +75,8 @@
     </div>
 
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina vettore:</h3>
-        <p><b>Nome:</b> <u><em><span id="social_reason"></span></em></u></p>
-        <p><b>Cell:</b> <u><em><span id="telephone"></span></em></u></p>
+        <h3>Elimina materiale:</h3>
+        <p><u><em><span id="description"></span></em></u></p>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
             <button id="save-btn" class="delete-save-btn">Elimina</button><br>
@@ -112,16 +102,15 @@
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'driver';
-            nextElementSibling = false;
-            listUrlPath = '/api/anagrafic/driver/list';
-            addUrlPath = '/api/anagrafic/driver';
-            setUrlPath = '/api/anagrafic/driver';
-            deleteUrlPath = '/api/anagrafic/driver';
-            websocketUrlPath = '/api/anagrafic/driver';
+            itemName = 'material';
+            listUrlPath = '/api/anagrafic/material/list';
+            addUrlPath = '/api/anagrafic/material';
+            setUrlPath = '/api/anagrafic/material';
+            deleteUrlPath = '/api/anagrafic/material';
+            websocketUrlPath = '/api/anagrafic/material';
             params = {
-                'autista': 'driver.social_reason',
-            };
+                'materiale': 'material.description'
+            }
             init();
         });
     </script>

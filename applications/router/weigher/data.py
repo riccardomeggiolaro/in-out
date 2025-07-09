@@ -9,6 +9,7 @@ from modules.md_database.functions.update_reservation import update_reservation
 from modules.md_database.interfaces.reservation import SetReservationDTO
 import libs.lb_config as lb_config
 import json
+import modules.md_weigher.md_weigher as md_weigher
 
 class DataRouter(ConfigWeigher):
 	def __init__(self):
@@ -24,6 +25,9 @@ class DataRouter(ConfigWeigher):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
 	async def SetData(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		if tare != "0" and data_dto.id_selected.id not in [-1, None]:
+			raise HTTPException(status_code=400, detail="E' necessario rimuovere la tara per selezionare il mezzo perchè ha già effettuato l'entrata.")
 		if data_dto.data_in_execution.vehicle.id:
 			reservation = get_reservation_by_vehicle_id_if_incomplete(data_dto.data_in_execution.vehicle.id)
 			if reservation:

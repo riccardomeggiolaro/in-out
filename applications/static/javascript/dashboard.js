@@ -588,11 +588,11 @@ function isNumeric(value) {
 function updateUIRealtime(e) {
     const obj = JSON.parse(e.data);
     if (obj.command_in_executing) {
-        if (obj.command_in_executing == "TARE") showSnackbarDashboard("Tara");
-        if (obj.command_in_executing == "PRESETTARE") showSnackbarDashboard("Preset tara");
-        if (obj.command_in_executing == "ZERO") showSnackbarDashboard("Zero");
+        if (obj.command_in_executing == "TARE") showSnackbar("Tara", 'rgb(208, 255, 208)', 'black');
+        if (obj.command_in_executing == "PRESETTARE") showSnackbar("Preset tara", 'rgb(208, 255, 208)', 'black');
+        if (obj.command_in_executing == "ZERO") showSnackbar("Zero", 'rgb(208, 255, 208)', 'black');
         if (obj.command_in_executing == "WEIGHING") {
-            showSnackbarDashboard("Pesando...");
+            showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
             buttons.forEach(button => {
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
@@ -602,10 +602,10 @@ function updateUIRealtime(e) {
         if (obj.weight_executed.gross_weight != "") {
             let message = `Pesata eseguita! Bilancia: ${obj.weigher_name}.`;
             if (obj.weight_executed.pid != "") message += ` Pid: ${obj.weight_executed.pid}`;
-            showSnackbarDashboard(message);
+            showSnackbar(message, 'rgb(208, 255, 208)', 'black');
             populateListIn();
         } else { 
-            showSnackbarDashboard("Pesata fallita!");
+            showSnackbar("Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
         buttons.forEach(button => {
             button.disabled = false;
@@ -613,52 +613,60 @@ function updateUIRealtime(e) {
         });
     } else if (obj.tare) {
         data_weight_realtime = obj;
+        net = [undefined, '0'].includes(data_weight_realtime.tare);
         document.getElementById('tare').innerText = data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : 'N/A';
         document.getElementById('netWeight').innerText = data_weight_realtime.net_weight !== undefined ? data_weight_realtime.net_weight : "N/A";
         document.getElementById('uniteMisure').innerText = data_weight_realtime.unite_measure !== undefined ? data_weight_realtime.unite_measure : 'N/A';
         document.getElementById('status').innerText = data_weight_realtime.status !== undefined ? data_weight_realtime.status : 'N/A';
-        document.getElementById('potential_net_weight').innerHTML = data_weight_realtime.potential_net_weight !== null ? `NT <strong>${data_weight_realtime.potential_net_weight}</strong>` : '';
+        document.getElementById('potential_net_weight').innerHTML = data_weight_realtime.potential_net_weight !== null ? `NET ${data_weight_realtime.potential_net_weight}` : !net ? 'NET' : '';
+        if (!net) {
+            document.getElementById('potential_net_weight').style.top = '3rem';
+            document.getElementById('potential_net_weight').style.fontWeight = 'bold';
+        } else {
+            document.getElementById('potential_net_weight').style.top = '0';
+            document.getElementById('potential_net_weight').style.fontWeight = 'normal';
+        }
         const numeric = isNumeric(data_weight_realtime.gross_weight);
         const gross_weight = Number(data_weight_realtime.gross_weight);
         const tare_weight = Number(data_weight_realtime.tare);
-        if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
-            if (tare_weight == 0 && selectedIdWeight === null) {
-                tareButton.disabled = false;
-                // zeroButton.disabled = true;
-                presetTareButton.disabled = false;
-                inButton.disabled = false;
-                printButton.disabled = false;
-            } else if (tare_weight !== 0 && selectedIdWeight !== null) {
-                tareButton.disabled = true;
-                // zeroButton.disabled = true;
-                presetTareButton.disabled = true;
-                inButton.disabled = true;
-                printButton.disabled = true;
-            } else {
-                tareButton.disabled = false;
-                // zeroButton.disabled = true;
-                presetTareButton.disabled = false;
-                inButton.disabled = true;
-                outButton.disabled = false;
-                if (selectedIdWeight !== null) {
-                    printButton.disabled = true;
-                } else {
-                    printButton.disabled = false;
-                }
-            }
-        } else if (numeric && minWeightValue >= gross_weight) {
-            tareButton.disabled = true;
-            // zeroButton.disabled = false;
-            presetTareButton.disabled = false;
-            inButton.disabled = true;
-            outButton.disabled = true;
-        } else {
-            tareButton.disabled = true;
-            // zeroButton.disabled = true;
-            presetTareButton.disabled = true;
-            inButton.disabled = true;
-            outButton.disabled = true;
-        }
+        // if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
+        //     if (tare_weight == 0 && selectedIdWeight === null) {
+        //         tareButton.disabled = false;
+        //         // zeroButton.disabled = true;
+        //         presetTareButton.disabled = false;
+        //         inButton.disabled = false;
+        //         printButton.disabled = false;
+        //     } else if (tare_weight !== 0 && selectedIdWeight !== null) {
+        //         tareButton.disabled = true;
+        //         // zeroButton.disabled = true;
+        //         presetTareButton.disabled = true;
+        //         inButton.disabled = true;
+        //         printButton.disabled = true;
+        //     } else {
+        //         tareButton.disabled = false;
+        //         // zeroButton.disabled = true;
+        //         presetTareButton.disabled = false;
+        //         inButton.disabled = true;
+        //         outButton.disabled = false;
+        //         if (selectedIdWeight !== null) {
+        //             printButton.disabled = true;
+        //         } else {
+        //             printButton.disabled = false;
+        //         }
+        //     }
+        // } else if (numeric && minWeightValue >= gross_weight) {
+        //     tareButton.disabled = true;
+        //     // zeroButton.disabled = false;
+        //     presetTareButton.disabled = false;
+        //     inButton.disabled = true;
+        //     outButton.disabled = true;
+        // } else {
+        //     tareButton.disabled = true;
+        //     // zeroButton.disabled = true;
+        //     presetTareButton.disabled = true;
+        //     inButton.disabled = true;
+        //     outButton.disabled = true;
+        // }
     } else if (obj.data_in_execution) {
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
@@ -708,7 +716,7 @@ function updateUIRealtime(e) {
     } else if (obj.reservation) {
         populateListIn();       
     } else if (obj.message) {
-        showSnackbarDashboard(obj.message);
+        showSnackbar(obj.message, 'rgb(208, 255, 208)', 'black');
     }
 }
 
@@ -716,7 +724,7 @@ async function handleTara() {
     const r = await fetch(`${pathname}/api/command-weigher/tare${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbarDashboard(r.detail || r.command_details.error_message);
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar(r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
 }
 
 async function handleZero() {
@@ -734,7 +742,7 @@ async function handlePTara() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbarDashboard(r.detail || r.command_details.error_message);
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar(r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
 }
 
 async function handleStampa() {
@@ -748,9 +756,9 @@ async function handleStampa() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbarDashboard("Pesando...");
+        showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
     } else {
-        showSnackbarDashboard(r.command_details.error_message);
+        showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -779,14 +787,15 @@ async function inWeighing() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.detail || (r.command_details && r.command_details.command_executed === false)) {
-        const message = r.detail || r.command_details.error_message;
-        showSnackbar(message, 'rgb(255, 208, 208)', 'black')
+    if (r.command_details.command_executed == true) {
+        showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+    } else {
+        showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    } else if (r.command_details.command_executed == true) showSnackbarDashboard("Pesando...");       
+    }                
 }
 
 async function handlePesata() {
@@ -817,9 +826,9 @@ async function outWeighing () {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbarDashboard("Pesando...");
+        showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
     } else {
-        showSnackbarDashboard(r.command_details.error_message);
+        showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi

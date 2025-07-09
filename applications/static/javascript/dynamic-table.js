@@ -2,6 +2,7 @@ let currentPage = 1;
 let rowsPerPage = 10;
 let totalRows = 0; // Aggiungi questa variabile per tenere traccia del numero totale di righe
 let itemName = null;
+let nextElementSibling = null;
 let lastChar = 'o';
 let canAlwaysDelete = false;
 let listUrlPath = null;
@@ -208,7 +209,19 @@ function populateTable(data) {
         let date1;
         let date2;
         let idInOut;
-        if (item.in_out && item.number_in_out) item.number_in_out = `${item.in_out.length}/${item.number_in_out}`;
+        if (item.in_out && item.number_in_out) {
+            item.number_in_out = `${item.in_out.length}/${item.number_in_out}`;
+            item.in_out.forEach(in_out => {
+                if (!in_out.weight1 && in_out.weight2) {
+                    in_out.weight1 = {
+                        "weight": in_out.weight2.is_preset_tare ? `PT ${in_out.weight2.tare}` : `TARE ${in_out.weight2.tare}`,
+                        "date": in_out.weight2.date,
+                        "pid": "",
+                        "weighing_pictures": []
+                    }
+                }
+            })
+        }
         if (item.weight1 && item.weight1.date && isValidDate(item.weight1.date)) {
             date1 = new Date(item.weight1.date).toLocaleString('it-IT', options);
             item.reservation.date_created = date1;
@@ -224,8 +237,8 @@ function populateTable(data) {
             };
         }
         if (item.reservation && item.reservation.id) {
-            item.id = item.reservation.id;
             idInOut = item.id;
+            item.id = item.reservation.id;
         }
         createRow(obj.table, obj.columns, item, idInOut);
     });
@@ -364,12 +377,12 @@ function updateRow(table, columns, item) {
 }
 
 function isExpandedRow() {
-    return currentRowExtended && currentRowExtended.style.display === "table-row" ;
+    return currentRowExtended && currentRowExtended.style.display === "table-row";
 }
 
 // Funzione per espandere/collassare la riga
 function toggleExpandRow(row) {
-    if (!row.nextElementSibling) return;
+    if (!nextElementSibling || !row.nextElementSibling) return;
     if (currentRowExtended && currentRowExtended !== row.nextElementSibling) {
         // Se già espanso, nascondi
         currentRowExtended.style.display = "none";
@@ -515,7 +528,12 @@ function editRow(item) {
     const funct = () => {
         if (callback_populate_select) callback_populate_select('#edit', item);
         currentId = item.id;
-        if (currentIdInOut) item.material = item.in_out.find(in_out => in_out.id === currentIdInOut).material;
+        if (currentIdInOut) {
+            let current_in_out = item.in_out.find(in_out => in_out.id === currentIdInOut);
+            console.log(currentIdInOut, current_in_out);
+            console.log(item);
+            item.material = current_in_out ? current_in_out.material : '';
+        }
         document.getElementById('overlay').classList.add('active');
         editPopup.classList.add('active');
         for (let key in item) {
@@ -564,7 +582,8 @@ function editRow(item) {
 
 const deletePopup = document.getElementById('delete-popup');
 deletePopup.querySelector('#save-btn').addEventListener('click', () => {
-    fetch(`${deleteUrlPath}/${currentId}`, {
+    let queryParams = !nextElementSibling && itemName === "reservation" ? 'deleteReservationIfislastInOut=true' : '';
+    fetch(`${deleteUrlPath}/${currentId}?${queryParams}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
