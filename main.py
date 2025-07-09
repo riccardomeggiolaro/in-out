@@ -14,6 +14,8 @@ import libs.lb_config as lb_config  # Importa il modulo per la configurazione
 import libs.lb_log as lb_log  # Importa il modulo per il logger
 # ==============================================================
 
+print("ciao")
+
 # ==== MAINPRGLOOP =============================================
 # Configura globale e lo stato del programma.
 # Carica moduli esterni e avvia i thread corrispondenti.

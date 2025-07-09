@@ -1,5 +1,5 @@
-#/usr/bin/bash
-source .env/bin/activate
+#!/bin/bash
+source .venv/bin/activate
 pip install -r requirements.txt
 # Linux
 pyinstaller --onefile \
