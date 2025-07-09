@@ -222,11 +222,10 @@ async function getData(path) {
 async function populateListIn() {
     const listIn = document.querySelector('.list-in');
 
-    listIn.innerHTML = '';
-
     await fetch('/api/anagrafic/reservation/list?excludeTestWeighing=true&status=NOT_CLOSED')
     .then(res => res.json())
     .then(data => {
+        listIn.innerHTML = '';
         data.data.forEach(item => {
             const li = document.createElement('li');
             if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
@@ -688,6 +687,8 @@ function updateUIRealtime(e) {
                     inline: 'start'
                 });
             }
+        } else {
+            populateListIn();
         }
         // if (obj.id_selected.id === null) {
         //     // Seleziona tutti i pulsanti e gli input
@@ -704,6 +705,8 @@ function updateUIRealtime(e) {
         //         element.disabled = true;
         //     });
         // }
+    } else if (obj.reservation) {
+        populateListIn();       
     } else if (obj.message) {
         showSnackbarDashboard(obj.message);
     }

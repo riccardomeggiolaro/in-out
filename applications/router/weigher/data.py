@@ -8,6 +8,7 @@ from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete im
 from modules.md_database.functions.update_reservation import update_reservation
 from modules.md_database.interfaces.reservation import SetReservationDTO
 import libs.lb_config as lb_config
+import json
 
 class DataRouter(ConfigWeigher):
 	def __init__(self):
@@ -35,6 +36,9 @@ class DataRouter(ConfigWeigher):
 			if reservation and len(reservation.in_out) > 0:
 				idInOut = reservation.in_out[-1].id
 			update_reservation(id_selected, body, idInOut)
+			if data_dto.id_selected.id != -1:
+				data = json.dumps({"id": id_selected})
+				await self.broadcastUpdateAnagrafic("reservation", {"reservation": data})
 		if data_dto.id_selected.id:
 			await self.DeleteData(instance=instance)
 			if data_dto.id_selected.id != -1:

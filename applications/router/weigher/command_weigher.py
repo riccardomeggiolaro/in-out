@@ -146,7 +146,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			if not idReservation:
 				reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
 					**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
-					"number_in_out": 1
+					"number_in_out": 1,
+					"hidden": True
 				}))
 				idReservation = reservation.id
 				just_created = True

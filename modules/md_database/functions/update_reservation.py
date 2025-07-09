@@ -73,8 +73,8 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
             else:
                 reservation.idDriver = data.driver.id
 
-            if data.vehicle.id and reservation.idVehicle and reservation.idVehicle != data.vehicle.id and len(reservation.in_out) > 0:
-                raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
+            # if data.vehicle.id and reservation.idVehicle and reservation.idVehicle != data.vehicle.id and len(reservation.in_out) > 0:
+            #     raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
 
             current_model = Vehicle
             vehicle = None
