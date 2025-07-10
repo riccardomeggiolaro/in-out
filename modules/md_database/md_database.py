@@ -86,6 +86,7 @@ class Weighing(Base):
     is_preset_tare = Column(Boolean, default=False, nullable=True)
     tare = Column(Integer, nullable=True)
     weight = Column(Integer, nullable=True)
+    log = Column(String, nullable=True)
 
     # Relationships
     weighing_pictures = relationship("WeighingPicture", back_populates="weighing", cascade="all, delete")

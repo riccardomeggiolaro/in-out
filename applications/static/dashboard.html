@@ -62,6 +62,10 @@
                     <div id="cams" class="cams">
                     </div>
 
+                    <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
+                        <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="printLastInOut()">🖨️</button>
+                    </div>
+
                     <div class="weight">
                         <h2 id="netWeight">------</h2>
                         <div class="info-container" id="info-container">
@@ -89,9 +93,9 @@
                         <button onclick="handleTara()" id="tareButton">Tara</button>
                         <button onclick="handleZero()" id="zeroButton">Zero</button>
                         <button onclick="openPopup('presetTare', 'myNumberInput')" id="pTareButton">P Tara</button>
-                        <button onclick="handlePesata()" id="inButton">In</button>
-                        <button onclick="handleStampa()" id="printButton">Stampa</button>
-                        <button onclick="handlePesata2()" id="outButton">Out</button>
+                        <button onclick="handlePesata()" id="inButton">Peso 1</button>
+                        <button onclick="handleStampa()" id="printButton">Generico</button>
+                        <button onclick="handlePesata2()" id="outButton">Peso 2</button>
                     </div>            
                 </div>
                 <div class="item ins">
@@ -210,12 +214,22 @@
             </div>
         </div>
 
+        <div id="logPopup" class="popup">
+            <div class="popup-content">
+                <h2>Log</h2>
+                <div></div>
+                <div class="footer-buttons reconnection-footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                </div>
+            </div>
+        </div>
+
         <div id="reconnectionPopup" class="popup">
             <div class="popup-content">
                 <h2>Connessione al server pesa perso</h2>
                 <p>Clicca ok per riconnettere...</p>
                 <div class="footer-buttons reconnection-footer-buttons">
-                    <button id="reconnectionButton" class="p-tare-button" onclick="confirmWeighing()">OK</button>
+                    <button id="reconnectionButton" class="p-tare-button" onclick="attemptReconnect()">OK</button>
                 </div>
             </div>
         </div>

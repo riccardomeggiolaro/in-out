@@ -240,6 +240,7 @@ function populateTable(data) {
             idInOut = item.id;
             item.id = item.reservation.id;
         }
+        if (item.log) item.pid = item.log;
         createRow(obj.table, obj.columns, item, idInOut);
     });
     if (callback_populate_table) callback_populate_table();
@@ -321,10 +322,12 @@ function createRow(table, columns, item, idInout) {
         selectAnagrafic(item.id, "DELETE", itemName);
         currentId = item.id;
     };
-    actionsCell.appendChild(editButton);
-    if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
-    else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
-    else if (!idInout && !item.in_out) actionsCell.appendChild(deleteButton);
+    if (itemName !== "pid") {
+        actionsCell.appendChild(editButton);
+        if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
+        else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
+        else if (!idInout && !item.in_out) actionsCell.appendChild(deleteButton);
+    }
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga
     row.addEventListener("mouseenter", () => {

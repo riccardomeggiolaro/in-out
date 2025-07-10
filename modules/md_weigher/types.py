@@ -37,6 +37,7 @@ class WeightExecuted(BaseModel):
 	bil: str
 	status: str
 	executed: bool
+	log: str
 
 class Weight(BaseModel):
 	weight_executed: WeightExecuted

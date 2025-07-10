@@ -7,6 +7,7 @@ from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.get_list_reservations import get_list_reservations
 from modules.md_database.functions.get_list_in_out import get_list_in_out
+from modules.md_database.functions.get_list_weighings import get_list_weighings
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.delete_last_weighing_of_reservation import delete_last_weighing_of_reservation
@@ -15,6 +16,7 @@ from modules.md_database.functions.update_reservation import update_reservation
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
+from modules.md_database.functions.get_last_in_out_by_weigher import get_last_in_out_by_weigher
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
@@ -36,6 +38,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
         self.router.add_api_route('/in-out/list', self.getListInOut, methods=['GET'])
+        self.router.add_api_route('/in-out/print-last/{weigher_name}', self.printLastInOut, methods=['GET'])
+        self.router.add_api_route('/weighing/list', self.getListWeighing, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
         self.router.add_api_route('/export/pdf', self.exportListReservationsPdf, methods=['GET'])
         self.router.add_api_route('', self.addReservation, methods=['POST'])
@@ -110,6 +114,52 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 offset=offset,
                 order_by=('id', 'desc'),
                 excludeTestWeighing=excludeTestWeighing
+            )
+            
+            return {
+                "data": data,
+                "total_rows": total_rows,
+                "buffer": self.buffer
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"{e}")
+
+    async def printLastInOut(self, weigher_name: str):
+        in_out = get_last_in_out_by_weigher(weigher_name=weigher_name)
+        if not in_out:
+            raise HTTPException(status_code=404, detail="Pesata non esistente")
+        return in_out
+
+    async def getListWeighing(self, query_params: Dict[str, Union[str, Union[str, int]]] = Depends(get_query_params), weigher_name: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
+        try:
+            # Handle weigher_name
+            if "weigher_name" in query_params:
+                del query_params["weigher_name"]
+
+            # Handle limit and offset
+            if "limit" in query_params:
+                del query_params["limit"]
+            if "offset" in query_params:
+                del query_params["offset"]
+                
+            # Handle date query_params for weights
+            if fromDate is not None:
+                del query_params["fromDate"]
+                
+            if toDate is not None:
+                toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
+                del query_params["toDate"]
+
+            # Call get_list_in_out with prepared query_params
+            data, total_rows = get_list_weighings(
+                filters=query_params,
+                weigher_name=weigher_name,
+                fromDate=fromDate,
+                toDate=toDate,
+                limit=limit,
+                offset=offset,
+                order_by=('id', 'desc'),
             )
             
             return {

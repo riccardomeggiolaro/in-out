@@ -179,7 +179,6 @@ class EgtAf03(Terminal):
 					self.pesa_real_time.unite_measure = ""
 				######### Se in esecuzione pesata pid ###############################################################################
 				elif self.modope == "WEIGHING":
-					lb_log.warning(response)
 					# Controlla formato stringa pesata pid, se corretta aggiorna oggetto
 					if length_split_response == 5 and (length_response == 48 or length_response == 38):
 						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
@@ -194,6 +193,7 @@ class EgtAf03(Terminal):
 						self.weight.weight_executed.bil = split_response[1]
 						self.weight.weight_executed.status = split_response[0]
 						self.weight.weight_executed.executed = True
+						self.weight.weight_executed.log = response
 						self.diagnostic.status = 200
 						self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
@@ -209,6 +209,7 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.bil = ""
 					self.weight.weight_executed.status = ""
 					self.weight.weight_executed.executed = False
+					self.weight.weight_executed.log = None
 					self.weight.data_assigned = None
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:
@@ -265,6 +266,7 @@ class EgtAf03(Terminal):
 			self.weight.weight_executed.pid = ""
 			self.weight.weight_executed.bil = ""
 			self.weight.weight_executed.status = ""
+			self.weight.weight_executed.log = None
 			self.weight.data_assigned = None
 			self.ok_value = ""
 			# Impostare tutti i valori a 0 usando una funzione ternaria (in realtà non cambia molto rispetto a un normale ciclo)

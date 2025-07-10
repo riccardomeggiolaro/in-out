@@ -48,6 +48,7 @@ let reconnectTimeout;
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
+let weigherName = null;
 
 let instances = {};
 
@@ -98,11 +99,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (option.value === currentWeigherPath) {
                     option.selected = true
                     selected = true;
+                    weigherName = weigher;
                 };
                 selectedIdWeigher.appendChild(option);
             }
         }
-        if (selected === false) selectedIdWeigher.selectedIndex = 0;
+        if (selected === false) {
+            selectedIdWeigher.selectedIndex = 0;
+        }
         // Innesca l'evento 'change' manualmente
         selectedIdWeigher.dispatchEvent(new Event('change'));
         instances = res;
@@ -114,6 +118,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 selectedIdWeigher.addEventListener('change', (event) => {
     currentWeigherPath = event.target.value;
+    Array.from(event.target.children).forEach(e => {
+        if (e.value === currentWeigherPath) weigherName = e.textContent;
+    });
     if (currentWeigherPath) {
         closeWebSocket();
         document.getElementById('netWeight').innerText = "N/A";
@@ -718,6 +725,14 @@ function updateUIRealtime(e) {
     } else if (obj.message) {
         showSnackbar(obj.message, 'rgb(208, 255, 208)', 'black');
     }
+}
+
+async function printLastInOut() {
+    const r = await fetch(`${pathname}/api/anagrafic/reservation/in-out/print-last/${weigherName}`)
+    .then(res => res.json())
+    .catch(error => console.error('Errore nella fetch:', error));
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar(r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+    else showSnackbar(obj.message, 'rgb(208, 255, 208)', 'black');
 }
 
 async function handleTara() {

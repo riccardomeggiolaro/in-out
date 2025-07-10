@@ -128,8 +128,6 @@ class Dgt1(Terminal):
 				length_response = len(response) # ottengo la lunghezza della stringa della risposta
 				######### Se in esecuzione peso in tempo reale ######################################################################
 				if self.modope == "REALTIME":
-					import libs.lb_log as lb_log
-					lb_log.warning(response)
 					# Controlla formato stringa del peso in tempo reale, se corretta aggiorna oggetto e chiama callback
 					if length_split_response == 10 and length_response == 63:
 						nw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
@@ -192,6 +190,7 @@ class Dgt1(Terminal):
 						self.weight.weight_executed.bil = split_response[1]
 						self.weight.weight_executed.status = split_response[0]
 						self.weight.weight_executed.executed = True
+						self.weight.weight_executed.log = response
 						self.diagnostic.status = 200
 						self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
@@ -207,6 +206,7 @@ class Dgt1(Terminal):
 					self.weight.weight_executed.bil = ""
 					self.weight.weight_executed.status = ""
 					self.weight.weight_executed.executed = False
+					self.weight.weight_executed.log = None
 					self.weight.data_assigned = None
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:
@@ -262,6 +262,7 @@ class Dgt1(Terminal):
 			self.weight.weight_executed.pid = ""
 			self.weight.weight_executed.bil = ""
 			self.weight.weight_executed.status = ""
+			self.weight.weight_executed.log = None
 			self.weight.data_assigned = None
 			self.ok_value = ""
 			self.port_rele = None

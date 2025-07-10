@@ -91,7 +91,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"pid": "",
 				"bil": "",
 				"status": "",
-				"executed": False
+				"executed": False,
+				"log": ""
 			},
 			"data_assigned": None
 		})

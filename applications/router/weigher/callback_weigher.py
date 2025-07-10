@@ -94,6 +94,7 @@ class CallbackWeigher(Functions, WebSocket):
 				"tare": tare,
 				"is_preset_tare": is_preset_tare,
 				"weight": gross_weight,
+				"log": last_pesata.weight_executed.log
 			}
 			weighing_stored_db = add_data("weighing", weighing)
 			############################
@@ -201,10 +202,11 @@ class CallbackWeigher(Functions, WebSocket):
 				variables.weight2.weight = last_in_out.weight2.weight if last_in_out.idWeight2 else ""
 			variables.net_weight = last_in_out.net_weight
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
-			if report_active and report_template:
+			if report_template:
 				html = generate_report(report_template, v=variables.dict())
 				pdf = printer.generate_pdf_from_html(html_content=html)
-				job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
+				if report_active:
+					job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
 				# SALVA COPIA PDF
 				if path_pdf and pdf:
 					save_file_dir(path_pdf, name_file, pdf)

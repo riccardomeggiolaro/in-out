@@ -22,9 +22,9 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		self.router_action_weigher.add_api_route('/realtime', self.StartRealtime, methods=['GET'])
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostics, methods=['GET'])
 		self.router_action_weigher.add_api_route('/stop-all-command', self.StopAllCommand, methods=['GET'])
-		self.router_action_weigher.add_api_route('/print', self.Print, methods=['GET'])
-		self.router_action_weigher.add_api_route('/in', self.In, methods=['POST'])
-		self.router_action_weigher.add_api_route('/out', self.Out, methods=['POST'])
+		self.router_action_weigher.add_api_route('/print', self.Generic, methods=['GET'])
+		self.router_action_weigher.add_api_route('/in', self.Weight1, methods=['POST'])
+		self.router_action_weigher.add_api_route('/out', self.Weight2, methods=['POST'])
 		self.router_action_weigher.add_api_route('/out/plate', self.OutByPlate, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
@@ -66,7 +66,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			}
 		}
 
-	async def Print(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def Generic(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
@@ -94,7 +94,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			}
 		}
 
-	async def In(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def Weight1(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		current_id = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
@@ -134,7 +134,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			}
 		}
 
-	async def Out(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def Weight2(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		idReservation = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
@@ -186,7 +186,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				if current_weigher_data["id_selected"]["id"] != reservation.id:
 					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"Targa '{plate_dto.plate}' selezionata da {specific}'{request.client.host}'")
 					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation.id}}), instance=instance)
-				result = await self.Out(instance=instance)
+				result = await self.Weight2(instance=instance)
 				if result["command_details"]["error_message"]:
 					error = result["command_details"]["error_message"]
 					error_message = f"Errore effettuando pesata da {specific}'{request.client.host}': {error}"
