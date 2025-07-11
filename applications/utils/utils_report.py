@@ -43,3 +43,13 @@ def save_file_dir(dir, name_file, bytes_file):
     with open(pdf_path, "wb") as f:
         f.write(bytes_file)
     return pdf_path
+
+def find_file_in_directory(directory, filename):
+    # Cammina attraverso la directory
+    for root, dirs, files in os.walk(directory):
+        if filename in files:
+            file_path = os.path.join(root, filename)
+            # Apre il file in modalità lettura binaria e ritorna i bytes
+            with open(file_path, 'rb') as f:
+                return f.read()  # Restituisce i byte del file
+    return None

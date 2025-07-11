@@ -48,7 +48,6 @@ let reconnectTimeout;
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
-let weigherName = null;
 
 let instances = {};
 
@@ -66,6 +65,7 @@ const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
 const container = document.querySelector('.ins');
 const listIn = document.querySelector('.list-in');
+const reprint = document.querySelector('#reprint');
 const selectedIdWeigher = document.querySelector('.list-weigher');
 const tareButton = document.getElementById('tareButton');
 const zeroButton = document.getElementById('zeroButton');
@@ -99,14 +99,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (option.value === currentWeigherPath) {
                     option.selected = true
                     selected = true;
-                    weigherName = weigher;
                 };
                 selectedIdWeigher.appendChild(option);
             }
         }
-        if (selected === false) {
-            selectedIdWeigher.selectedIndex = 0;
-        }
+        if (selected === false) selectedIdWeigher.selectedIndex = 0;
         // Innesca l'evento 'change' manualmente
         selectedIdWeigher.dispatchEvent(new Event('change'));
         instances = res;
@@ -118,9 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 selectedIdWeigher.addEventListener('change', (event) => {
     currentWeigherPath = event.target.value;
-    Array.from(event.target.children).forEach(e => {
-        if (e.value === currentWeigherPath) weigherName = e.textContent;
-    });
     if (currentWeigherPath) {
         closeWebSocket();
         document.getElementById('netWeight').innerText = "N/A";
@@ -186,6 +180,8 @@ async function getInstanceWeigher(path) {
         division.textContent = obj.division;
         divisionValue = obj.division;
         maxThesholdValue = obj.max_theshold;
+        if (!obj.events.weighing.print.in && !obj.events.weighing.print.out) reprint.style.display = 'none';
+        else reprint.style.display = 'flex';
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -728,11 +724,11 @@ function updateUIRealtime(e) {
 }
 
 async function printLastInOut() {
-    const r = await fetch(`${pathname}/api/anagrafic/reservation/in-out/print-last/${weigherName}`)
+    const r = await fetch(`${pathname}/api/anagrafic/reservation/in-out/print-last${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar(r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
-    else showSnackbar(obj.message, 'rgb(208, 255, 208)', 'black');
+    else showSnackbar(r.message, 'rgb(208, 255, 208)', 'black');
 }
 
 async function handleTara() {

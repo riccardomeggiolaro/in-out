@@ -18,6 +18,8 @@ from modules.md_database.functions.unlock_record_by_id import unlock_record_by_i
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.functions.get_last_in_out_by_weigher import get_last_in_out_by_weigher
 from applications.utils.utils import get_query_params
+from applications.utils.utils_weigher import get_query_params_name_node, InstanceNameWeigherDTO
+from applications.utils.utils_report import find_file_in_directory
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
 from applications.router.weigher.manager_weighers_data import broadcastMessageWebSocket
@@ -29,6 +31,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
+import libs.lb_config as lb_config
+from libs.lb_printer import printer
 
 class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -38,7 +42,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
         self.router.add_api_route('/in-out/list', self.getListInOut, methods=['GET'])
-        self.router.add_api_route('/in-out/print-last/{weigher_name}', self.printLastInOut, methods=['GET'])
+        self.router.add_api_route('/in-out/print-last', self.printLastInOut, methods=['GET'])
         self.router.add_api_route('/weighing/list', self.getListWeighing, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
         self.router.add_api_route('/export/pdf', self.exportListReservationsPdf, methods=['GET'])
@@ -125,11 +129,26 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def printLastInOut(self, weigher_name: str):
-        in_out = get_last_in_out_by_weigher(weigher_name=weigher_name)
+    async def printLastInOut(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+        path_pdf = lb_config.g_config["app_api"]["path_pdf"]
+        printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
+        number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
+        in_out = get_last_in_out_by_weigher(weigher_name=instance.weigher_name)
         if not in_out:
             raise HTTPException(status_code=404, detail="Pesata non esistente")
-        return in_out
+        file_name = f"{instance.weigher_name}"
+        if in_out.weight1:
+            file_name += f"_{in_out.weight1.pid}"
+        if in_out.weight2:
+            file_name += f"_{in_out.weight2.pid}"
+        file_name += ".pdf"
+        file = find_file_in_directory(path_pdf, file_name)
+        if not file:
+            raise HTTPException(status_code=404, detail="Report non trovato")
+        job_id, message1, message2 = printer.print_pdf(file, printer_name, number_of_prints)
+        if not job_id:
+            raise HTTPException(status_code=404, detail=f"{message1} {message2}")
+        return { "message": message2 }
 
     async def getListWeighing(self, query_params: Dict[str, Union[str, Union[str, int]]] = Depends(get_query_params), weigher_name: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:

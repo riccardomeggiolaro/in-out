@@ -718,7 +718,7 @@ function connectWebSocket() {
             const data = JSON.parse(e.data);
             if (data.data) {
                 const firstKey = Object.keys(data.data)[0];
-                data.data[firstKey] = data.data[firstKey] ? JSON.parse(data.data[firstKey]) : null;
+                data.data[firstKey] = data.data[firstKey] && isJsonString(data.data[firstKey]) ? JSON.parse(data.data[firstKey]) : data.data[firstKey];
                 let specific = '';
                 const objectEntriesParams = Object.entries(params);
                 for (let [key, value] of objectEntriesParams) {
@@ -967,4 +967,13 @@ async function deselectAnagrafic(idRecord, anagrafic = itemName, callback_anagra
 
 function init() {
     connectWebSocket();
+}
+
+function isJsonString(str) {
+    try {
+        const parsed = JSON.parse(str);
+        return typeof parsed === "object" || Array.isArray(parsed);
+    } catch (e) {
+        return false;
+    }
 }

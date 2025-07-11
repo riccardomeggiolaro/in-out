@@ -40,6 +40,8 @@
             "ssh_port": 10022,
             "user": "root"
         },
+        "template_in": "weight_in.html",
+        "template_out": "weight_out.html",
         "weighers": {
             "1": {
                 "connection": {
@@ -100,16 +102,15 @@
                                 }
                             },
                             "weighing": {
-                                "cams": [],
-                                "reports": {
-                                    "in": {
+                                "cams": [
+                                    {
                                         "active": false,
-                                        "template": "weight_in.html"
-                                    },
-                                    "out": {
-                                        "active": false,
-                                        "template": "weight_out.html"
+                                        "picture": "http://0.0.0.0/capture"
                                     }
+                                ],
+                                "print": {
+                                    "in": false,
+                                    "out": false
                                 },
                                 "set_rele": []
                             }

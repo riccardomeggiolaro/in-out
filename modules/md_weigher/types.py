@@ -38,6 +38,7 @@ class WeightExecuted(BaseModel):
 	status: str
 	executed: bool
 	log: str
+	serial_number: str
 
 class Weight(BaseModel):
 	weight_executed: WeightExecuted

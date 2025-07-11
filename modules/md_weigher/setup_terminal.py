@@ -92,7 +92,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"bil": "",
 				"status": "",
 				"executed": False,
-				"log": ""
+				"log": "",
+				"serial_number": ""
 			},
 			"data_assigned": None
 		})

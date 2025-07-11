@@ -620,7 +620,7 @@ async function loadSetupWeighers() {
                             </select>
                         </div>
                         <div class="form-group" style="flex: 1;">
-                            <label for="node">Nodo (facoltativo):</label>
+                            <label for="node">Nodo: (facoltativo)</label>
                             <input type="text" name="node" id="node">
                         </div>
                     </div>
@@ -638,8 +638,8 @@ async function loadSetupWeighers() {
                             <input type="number" name="division" id="division" min="1" required>
                         </div>
                         <div class="form-group" style="flex: 1;">
-                            <label for="max_theshold">Soglia massima:</label>
-                            <input type="number" name="max_theshold" id="max_theshold" min="1" required>
+                            <label for="max_theshold">Soglia massima: (facoltativo)</label>
+                            <input type="number" name="max_theshold" id="max_theshold" min="1">
                         </div>
                     </div>
                     <div style="display: flex; gap: 16px; align-items: flex-end;">
@@ -766,7 +766,7 @@ async function loadSetupWeighers() {
                         <p class="gray"><em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Stampante: ${data.printer_name ? data.printer_name : 'Nessuna'}</em></p>
                         <p class="gray"><em>Numero di stampe: ${data.number_of_prints}</em></p>
-                        <p class="gray"><em>Stampa all'entrata: ${data.events.weighing.reports.in.active ? 'Si' : 'No'}</em> <strong>-</strong> <em>Stampa all'entrata: ${data.events.weighing.reports.out.active ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Stampa all'entrata: ${data.events.weighing.print.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Stampa all'entrata: ${data.events.weighing.print.out ? 'Si' : 'No'}</em></p>
                     `;
                 }
 
@@ -790,70 +790,70 @@ async function loadSetupWeighers() {
                 }
 
                 editMode.querySelector('.content').innerHTML = `
-    <div style="display: flex; gap: 16px;">
-        <div class="form-group" style="flex: 1;">
-            <label for="name">Nome pesa:</label><br>
-            <input type="text" name="name" id="name" value="${data.name || ''}" required>
-        </div>
-        <div class="form-group" style="flex: 1;">
-            <label for="terminal">Terminale:</label><br>
-            <select name="terminal" id="terminal" required>
-                <option value="dgt1" ${data.terminal === "dgt1" ? 'selected' : ''}>dgt1</option>
-                <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected' : ''}>egt-af03</option>
-            </select>
-        </div>
-        <div class="form-group" style="flex: 1;">
-            <label for="node">Nodo (facoltativo):</label><br>
-            <input type="text" name="node" id="node" value="${data.node || ''}">
-        </div>
-    </div>
-    <div style="display: flex; gap: 16px;">
-        <div class="form-group" style="flex: 1;">
-            <label for="max_weight">Peso massimo:</label><br>
-            <input type="number" name="max_weight" id="max_weight" min="1" value="${data.max_weight || ''}" required>
-        </div>
-        <div class="form-group" style="flex: 1;">
-            <label for="min_weight">Peso minimo:</label><br>
-            <input type="number" name="min_weight" id="min_weight" min="1" value="${data.min_weight || ''}" required>
-        </div>
-        <div class="form-group" style="flex: 1;">
-            <label for="division">Divisione:</label><br>
-            <input type="number" name="division" id="division" min="1" value="${data.division || ''}" required>
-        </div>
-        <div class="form-group" style="flex: 1;">
-            <label for="max_theshold">Soglia massima:</label><br>
-            <input type="number" name="max_theshold" id="max_theshold" min="1" value="${data.max_theshold || ''}" required>
-        </div>
-    </div>
-    <div style="display: flex; gap: 16px; align-items: flex-end;">
-        <div class="form-group" style="flex: 2;">
-            <label for="printer_name">Stampante:</label><br>
-            <select id="printer_name" name="printer_name" required>
-                ${printerOptions}
-            </select>
-        </div>
-        <div class="form-group" style="flex: 1;">
-            <label for="number_of_prints">Numero di stampe:</label><br>
-            <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="${data.number_of_prints || 1}" required>
-        </div>
-        <div class="form-group" style="flex: 1; text-align: center;">
-            <label>Stampa all'entrata</label><br>
-            <input type="checkbox" name="print_on_in" ${data.events?.weighing?.reports?.in?.active ? 'checked' : ''}>
-        </div>
-        <div class="form-group" style="flex: 1; text-align: center;">
-            <label>Stampa all'uscita</label><br>
-            <input type="checkbox" name="print_on_out" ${data.events?.weighing?.reports?.out?.active ? 'checked' : ''}>
-        </div>
-    </div>
-    <div class="form-group">
-        <label><input type="checkbox" name="run" ${data.run ? 'checked' : ''}> In esecuzione</label>
-    </div>
-    <div class="form-group">
-        <label><input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''}> Scaricare la pesa dopo pesata effettuata</label>
-    </div>
-    <div class="form-group">
-        <label><input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa dopo l'avvio del programma</label>
-    </div>
+                    <div style="display: flex; gap: 16px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="name">Nome pesa:</label><br>
+                            <input type="text" name="name" id="name" value="${data.name || ''}" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="terminal">Terminale:</label><br>
+                            <select name="terminal" id="terminal" required>
+                                <option value="dgt1" ${data.terminal === "dgt1" ? 'selected' : ''}>dgt1</option>
+                                <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected' : ''}>egt-af03</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="node">Nodo: (facoltativo)</label><br>
+                            <input type="text" name="node" id="node" value="${data.node || ''}">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 16px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="max_weight">Peso massimo:</label><br>
+                            <input type="number" name="max_weight" id="max_weight" min="1" value="${data.max_weight || ''}" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="min_weight">Peso minimo:</label><br>
+                            <input type="number" name="min_weight" id="min_weight" min="1" value="${data.min_weight || ''}" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="division">Divisione:</label><br>
+                            <input type="number" name="division" id="division" min="1" value="${data.division || ''}" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="max_theshold">Soglia massima: (facoltativo)</label><br>
+                            <input type="number" name="max_theshold" id="max_theshold" min="1" value="${data.max_theshold || ''}" required>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 16px; align-items: flex-end;">
+                        <div class="form-group" style="flex: 2;">
+                            <label for="printer_name">Stampante:</label><br>
+                            <select id="printer_name" name="printer_name" required>
+                                ${printerOptions}
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="number_of_prints">Numero di stampe:</label><br>
+                            <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="${data.number_of_prints || 1}" required>
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Stampa all'entrata</label><br>
+                            <input type="checkbox" name="print_on_in" ${data.events?.weighing?.print?.in ? 'checked' : ''}>
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Stampa all'uscita</label><br>
+                            <input type="checkbox" name="print_on_out" ${data.events?.weighing?.print?.out ? 'checked' : ''}>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="run" ${data.run ? 'checked' : ''}> In esecuzione</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''}> Scaricare la pesa dopo pesata effettuata</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa dopo l'avvio del programma</label>
+                    </div>
                 `;
             }
 

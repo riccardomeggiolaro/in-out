@@ -86,15 +86,9 @@ class ConfigWeigher(CallbackWeigher):
                 }
             },
             "weighing": {
-                "reports": {
-                    "in": {
-                        "active": setup.print_on_in if setup.print_on_in is not None else False,
-                        "template": "weight_in.html"
-                    },
-                    "out": {
-                        "active": setup.print_on_out if setup.print_on_out is not None else False,
-                        "template": "weight_out.html"
-                    }
+                "print": {
+                    "in": setup.print_on_in if setup.print_on_in is not None else False,
+                    "out": setup.print_on_out if setup.print_on_out is not None else False
                 },
                 "set_rele": [],
                 "cams": []
@@ -134,9 +128,9 @@ class ConfigWeigher(CallbackWeigher):
         if setup.number_of_prints:
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"] = setup.number_of_prints
         if setup.print_on_in is not None:
-            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["in"]["active"] = setup.print_on_in
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["in"] = setup.print_on_in
         if setup.print_on_out is not None:
-            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["reports"]["out"]["active"] = setup.print_on_out
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["out"] = setup.print_on_out
         if setup.max_theshold != -1:
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"] = setup.max_theshold
         response[instance.weigher_name]["printer_name"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"]

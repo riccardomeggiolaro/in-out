@@ -82,6 +82,7 @@ class Weighing(Base):
     id = Column(Integer, primary_key=True, index=True)
     date = Column(DateTime, server_default=func.now(), default=datetime.now)
     weigher = Column(String, nullable=True)
+    weigher_serial_number = Column(String, nullable=True)
     pid = Column(String, index=True, unique=True, nullable=True)
     is_preset_tare = Column(Boolean, default=False, nullable=True)
     tare = Column(Integer, nullable=True)

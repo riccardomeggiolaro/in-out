@@ -191,6 +191,7 @@ class Dgt1(Terminal):
 						self.weight.weight_executed.status = split_response[0]
 						self.weight.weight_executed.executed = True
 						self.weight.weight_executed.log = response
+						self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 						self.diagnostic.status = 200
 						self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
@@ -207,6 +208,7 @@ class Dgt1(Terminal):
 					self.weight.weight_executed.status = ""
 					self.weight.weight_executed.executed = False
 					self.weight.weight_executed.log = None
+					self.weight.weight_executed.serial_number = None
 					self.weight.data_assigned = None
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:
@@ -263,6 +265,7 @@ class Dgt1(Terminal):
 			self.weight.weight_executed.bil = ""
 			self.weight.weight_executed.status = ""
 			self.weight.weight_executed.log = None
+			self.weight.weight_executed.serial_number = None
 			self.weight.data_assigned = None
 			self.ok_value = ""
 			self.port_rele = None
