@@ -19,6 +19,7 @@ class DataInExecution(BaseModel):
 
 class IdSelected(BaseModel):
 	id: Optional[int] = None
+	weight1: Optional[int] = None
 
 class Data(BaseModel):
 	data_in_execution: DataInExecution = DataInExecution(**{})

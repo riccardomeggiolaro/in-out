@@ -40,8 +40,7 @@
             "ssh_port": 10022,
             "user": "root"
         },
-        "template_in": "weight_in.html",
-        "template_out": "weight_out.html",
+        "template": "in_weight.html",
         "weighers": {
             "1": {
                 "connection": {
@@ -95,7 +94,11 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "1": 0
+                                        }
+                                    ]
                                 },
                                 "under_min": {
                                     "set_rele": []
@@ -105,7 +108,8 @@
                                 "cams": [
                                     {
                                         "active": false,
-                                        "picture": "http://0.0.0.0/capture"
+                                        "live": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/102/httpPreview",
+                                        "picture": "http://admin:Baronpesi2023@10.0.5.172/ISAPI/Streaming/channels/1/picture"
                                     }
                                 ],
                                 "print": {

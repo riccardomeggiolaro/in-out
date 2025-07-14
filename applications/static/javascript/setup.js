@@ -31,6 +31,37 @@ async function loadSetupWeighers() {
 
     await getPrintersList();
 
+    const addCam = (e, className, cam) => {
+        if (e) e.preventDefault();
+        document.querySelector(`.${className}`).innerHTML += `
+            <div class="cam">
+                <input type="url" placeholder="http://0.0.0.0/" value="${cam.picture ? cam.picture : ''}" required>
+                <input type="checkbox" ${cam.active ? 'checked' : ''}> <span>Attiva</span>
+            </div>
+        `;
+    }
+
+    const addRele = (e, className, rele) => {
+        e.preventDefault();
+        document.querySelector(`.${className}`).innerHTML += `
+            <div class="rele">
+                <span>Numero: </span> <input type="number" min="1" style="width: 50px">
+                <select style="width: 75px">
+                    <option value="1" selected>Apri</option>
+                    <option value="0">Chiudi</option>
+                </select>
+                <select style="width: 150px">
+                    <option value="over_min" selected>Sopra peso minimo</option>
+                    <option value="under_min">Sotto peso minimo</option>
+                    <option value="weighing">Dopo la pesata</option>
+                </select>
+            </div>
+        `;
+    }
+
+    window.addCam = addCam;
+    window.addRele = addRele;
+    
     await fetch('/api/config-weigher/all/instance')
     .then(res => res.json())
     .then(data => {
@@ -599,6 +630,9 @@ async function loadSetupWeighers() {
                 addWeigherModal.querySelector('.save-btn').disabled = !addWeigherForm.checkValidity();
             }
 
+            const addCamClass = `cams-${key}`;
+            const addReleClass = `rele-${key}`;
+
             const populateAddContent = () => {
                 // Genera le option per le stampanti
                 let printerOptions = '';
@@ -671,8 +705,16 @@ async function loadSetupWeighers() {
                     <div class="form-group">
                         <label><input type="checkbox" name="need_take_of_weight_on_startup" checked> Scaricare la pesa dopo l'avvio del programma</label>
                     </div>
+                    <div class="form-group">
+                        <label>Telecamere: <button onclick="addCam(event, '${addCamClass}', ${addWeigherForm.checkValidity()})">Aggiungi</button></label>
+                        <div class="${addCamClass}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Relè: <button onclick="addRele(event, '${addReleClass}', ${addWeigherForm.checkValidity()})">Aggiungi</button></label>
+                        <div class="${addReleClass}"></div>
+                    </div>
                 `;
-                
+
                 errorAddWeigher.innerHTML = '';
             }
             
@@ -684,7 +726,14 @@ async function loadSetupWeighers() {
             });
 
             addWeigherModal.querySelector('.save-btn').addEventListener('click', () => {
-                let data = {};
+                let data = {
+                    cams: [],
+                    set_rele: {
+                        over_min: [],
+                        under_min: [],
+                        weighing: []
+                    }
+                };
                     
                 const inputs = addWeigherModal.querySelectorAll('input');
                 inputs.forEach(input => {
@@ -698,12 +747,30 @@ async function loadSetupWeighers() {
                         currentValue = input.value !== '' ? input.value : null;
                     }
 
-                    data[input.name] = currentValue;
+                    if (input.name) data[input.name] = currentValue;
                 });
 
                 const selections = addWeigherModal.querySelectorAll('select');
                 selections.forEach(selection => {
-                    data[selection.name] = selection.value;
+                    if (selection.name) data[selection.name] = selection.value;
+                })
+
+                document.querySelector(`.${addCamClass}`).querySelectorAll(".cam").forEach(element => {
+                    const inputs = element.querySelectorAll("input");
+                    const cam = {
+                        "picture": inputs[0].value,
+                        "active": inputs[1].value === "on" ? true : false
+                    }
+                    if (cam.picture) data["cams"].push(cam);
+                })
+
+                document.querySelector(`.${addReleClass}`).querySelectorAll(".rele").forEach(element => {
+                    const input = element.querySelector("input");
+                    const selects = element.querySelectorAll("select");
+                    const rele = {
+                        [input.value]: selects[0].value
+                    }
+                    if (input.value) data["set_rele"][selects[1].value].push(rele);
                 })
 
                 fetch(`/api/config-weigher/instance/node?instance_name=${key}`, {
@@ -756,7 +823,14 @@ async function loadSetupWeighers() {
                 `;
 
                 const populateViewContent = (data) => {
-                    viewMode.querySelector('.content').innerHTML = `
+                    const viewModeCFontent = viewMode.querySelector('.content');
+                    const cams = data.events.weighing.cams;
+                    const rele = {
+                        over_min: data.events.realtime.over_min.set_rele,
+                        under_min: data.events.realtime.under_min.set_rele,
+                        weighing: data.events.weighing.set_rele
+                    }
+                    viewModeCFontent.innerHTML = `
                         <h4>${data.name} <span class="gray">${data.terminal}</span></h4>
                         <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
                         <p class="gray"><em>Peso massimo: ${data.max_weight}</em> <strong>-</strong> <em>Peso minimo: ${data.min_weight}</em> <strong>-</strong> <em>Divisione: ${data.division}</em><br></p>
@@ -768,6 +842,33 @@ async function loadSetupWeighers() {
                         <p class="gray"><em>Numero di stampe: ${data.number_of_prints}</em></p>
                         <p class="gray"><em>Stampa all'entrata: ${data.events.weighing.print.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Stampa all'entrata: ${data.events.weighing.print.out ? 'Si' : 'No'}</em></p>
                     `;
+                    if (cams.length > 0) {
+                        viewModeCFontent.innerHTML += '<h5 class="gray"><em>TELECAMERE</em></h5>';
+                        cams.forEach(cam => {
+                            viewModeCFontent.innerHTML += `<p class="gray"><em>${cam.picture}</em> <strong>-</strong> ${cam.active ? '<em>Attiva</em>' : '<em>Disattiva</em>'}</p>`;
+                        });
+                    }
+                    if (rele.over_min.length > 0 || rele.under_min.length > 0 || rele.weighing.length > 0) {
+                        viewModeCFontent.innerHTML += '<h5 class="gray"><em>RELE</em></h5>';
+                        rele.weighing.forEach(r => {
+                            let entries = Object.entries(r)[0];
+                            viewModeCFontent.innerHTML += `
+                                <p class="gray"><em>${entries[1] ? 'Apri' : 'Chiudi'} relè ${entries[0]} dopo la pesata</em></p>
+                            `;
+                        });
+                        rele.over_min.forEach(r => {
+                            let entries = Object.entries(r)[0];
+                            viewModeCFontent.innerHTML += `
+                                <p class="gray"><em>${entries[1] ? 'Apri' : 'Chiudi'} relè ${entries[0]} sopra il peso minimo</em></p>
+                            `;
+                        });
+                        rele.under_min.forEach(r => {
+                            let entries = Object.entries(r)[0];
+                            viewModeCFontent.innerHTML += `
+                                <p class="gray"><em>${entries[1] ? 'Apri' : 'Chiudi'} relè ${entries[0]} sotto il peso minimo</em></p>
+                            `;
+                        });
+                    }
                 }
 
                 populateViewContent(weigher);
@@ -782,82 +883,95 @@ async function loadSetupWeighers() {
                     <div class="errors"></div>
                 `;
 
-            const populateEditContent = (data) => {
-                // Genera le option per le stampanti
-                let printerOptions = '';
-                for (const printer of list_printer_names) {
-                    printerOptions += `<option value="${printer.nome}" ${data.printer_name === printer.nome ? 'selected' : ''}>${printer.nome}</option>`;
+                const addCamWeigher = `cams-${key}-${weigher.name}`;
+                const addReleWeigher = `rele-${key}-${weigher.name}`;
+
+                const populateEditContent = (data) => {
+                    // Genera le option per le stampanti
+                    let printerOptions = '';
+                    for (const printer of list_printer_names) {
+                        printerOptions += `<option value="${printer.nome}" ${data.printer_name === printer.nome ? 'selected' : ''}>${printer.nome}</option>`;
+                    }
+
+                    editMode.querySelector('.content').innerHTML = `
+                        <div style="display: flex; gap: 16px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="name">Nome pesa:</label><br>
+                                <input type="text" name="name" id="name" value="${data.name || ''}" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="terminal">Terminale:</label><br>
+                                <select name="terminal" id="terminal" required>
+                                    <option value="dgt1" ${data.terminal === "dgt1" ? 'selected' : ''}>dgt1</option>
+                                    <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected' : ''}>egt-af03</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="node">Nodo: (facoltativo)</label><br>
+                                <input type="text" name="node" id="node" value="${data.node || ''}">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 16px;">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="max_weight">Peso massimo:</label><br>
+                                <input type="number" name="max_weight" id="max_weight" min="1" value="${data.max_weight || ''}" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="min_weight">Peso minimo:</label><br>
+                                <input type="number" name="min_weight" id="min_weight" min="1" value="${data.min_weight || ''}" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="division">Divisione:</label><br>
+                                <input type="number" name="division" id="division" min="1" value="${data.division || ''}" required>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="max_theshold">Soglia massima: (facoltativo)</label><br>
+                                <input type="number" name="max_theshold" id="max_theshold" min="1" value="${data.max_theshold || ''}" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 16px; align-items: flex-end;">
+                            <div class="form-group" style="flex: 2;">
+                                <label for="printer_name">Stampante:</label><br>
+                                <select id="printer_name" name="printer_name" required>
+                                    ${printerOptions}
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="number_of_prints">Numero di stampe:</label><br>
+                                <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="${data.number_of_prints || 1}" required>
+                            </div>
+                            <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Stampa all'entrata</label><br>
+                                <input type="checkbox" name="print_on_in" ${data.events?.weighing?.print?.in ? 'checked' : ''}>
+                            </div>
+                            <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Stampa all'uscita</label><br>
+                                <input type="checkbox" name="print_on_out" ${data.events?.weighing?.print?.out ? 'checked' : ''}>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" name="run" ${data.run ? 'checked' : ''}> In esecuzione</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''}> Scaricare la pesa dopo pesata effettuata</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa dopo l'avvio del programma</label>
+                        </div>
+                        <div class="form-group">
+                            <label>Telecamere: <button onclick="addCam(event, '${addCamWeigher}', ${editMode.querySelector("form").checkValidity()})">Aggiungi</button></label>
+                            <div class="${addCamWeigher}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Relè: <button onclick="addRele(event, '${addReleWeigher}', ${editMode.querySelector("form").checkValidity()})">Aggiungi</button></label>
+                            <div class="${addReleWeigher}"></div>
+                        </div>
+                    `;
+
+                    data.events.weighing.cams.forEach(cam => {
+                        addCam(null, addCamWeigher, cam);
+                    });
                 }
-
-                editMode.querySelector('.content').innerHTML = `
-                    <div style="display: flex; gap: 16px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="name">Nome pesa:</label><br>
-                            <input type="text" name="name" id="name" value="${data.name || ''}" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="terminal">Terminale:</label><br>
-                            <select name="terminal" id="terminal" required>
-                                <option value="dgt1" ${data.terminal === "dgt1" ? 'selected' : ''}>dgt1</option>
-                                <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected' : ''}>egt-af03</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="node">Nodo: (facoltativo)</label><br>
-                            <input type="text" name="node" id="node" value="${data.node || ''}">
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 16px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="max_weight">Peso massimo:</label><br>
-                            <input type="number" name="max_weight" id="max_weight" min="1" value="${data.max_weight || ''}" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="min_weight">Peso minimo:</label><br>
-                            <input type="number" name="min_weight" id="min_weight" min="1" value="${data.min_weight || ''}" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="division">Divisione:</label><br>
-                            <input type="number" name="division" id="division" min="1" value="${data.division || ''}" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="max_theshold">Soglia massima: (facoltativo)</label><br>
-                            <input type="number" name="max_theshold" id="max_theshold" min="1" value="${data.max_theshold || ''}" required>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 16px; align-items: flex-end;">
-                        <div class="form-group" style="flex: 2;">
-                            <label for="printer_name">Stampante:</label><br>
-                            <select id="printer_name" name="printer_name" required>
-                                ${printerOptions}
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="number_of_prints">Numero di stampe:</label><br>
-                            <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="${data.number_of_prints || 1}" required>
-                        </div>
-                        <div class="form-group" style="flex: 1; text-align: center;">
-                            <label>Stampa all'entrata</label><br>
-                            <input type="checkbox" name="print_on_in" ${data.events?.weighing?.print?.in ? 'checked' : ''}>
-                        </div>
-                        <div class="form-group" style="flex: 1; text-align: center;">
-                            <label>Stampa all'uscita</label><br>
-                            <input type="checkbox" name="print_on_out" ${data.events?.weighing?.print?.out ? 'checked' : ''}>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="run" ${data.run ? 'checked' : ''}> In esecuzione</label>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="need_take_of_weight_before_weighing" ${data.need_take_of_weight_before_weighing ? 'checked' : ''}> Scaricare la pesa dopo pesata effettuata</label>
-                    </div>
-                    <div class="form-group">
-                        <label><input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa dopo l'avvio del programma</label>
-                    </div>
-                `;
-            }
-
-                populateEditContent(weigher);
 
                 const errorEditWeigher = editMode.querySelector('.errors');
 
@@ -868,6 +982,7 @@ async function loadSetupWeighers() {
                 viewMode.querySelector('.edit-btn').addEventListener('click', () => {
                     viewMode.style.display = 'none';
                     editMode.style.display = 'block';
+                    populateEditContent(weigher);
                 });
 
                 editMode.querySelector('.cancel-btn').addEventListener('click', () => {
@@ -878,7 +993,14 @@ async function loadSetupWeighers() {
                 });
 
                 editMode.querySelector('.save-btn').addEventListener('click', () => {
-                    let changedData = {};
+                    let changedData = {
+                        cams: [],
+                        set_rele: {
+                            over_min: [],
+                            under_min: [],
+                            weighing: []
+                        }
+                    };
                     
                     const inputs = editMode.querySelectorAll('input');
                     inputs.forEach(input => {
@@ -908,6 +1030,24 @@ async function loadSetupWeighers() {
                         }
                     });
 
+                    document.querySelector(`.${addCamWeigher}`).querySelectorAll(".cam").forEach(element => {
+                        const inputs = element.querySelectorAll("input");
+                        const cam = {
+                            "picture": inputs[0].value,
+                            "active": inputs[1].value === "on" ? true : false
+                        }
+                        if (cam.picture) changedData["cams"].push(cam);
+                    })
+
+                    document.querySelector(`.${addReleWeigher}`).querySelectorAll(".rele").forEach(element => {
+                        const input = element.querySelector("input");
+                        const selects = element.querySelectorAll("select");
+                        const rele = {
+                            [input.value]: selects[0].value
+                        }
+                        if (input.value) changedData["set_rele"][selects[1].value].push(rele);
+                    })
+                    
                     if (Object.keys(changedData).length > 0) {
                         let url_patch = `/api/config-weigher/instance/node?instance_name=${key}`;
                         if (weigher.name) url_patch += `&weigher_name=${weigher.name}`;
@@ -930,6 +1070,7 @@ async function loadSetupWeighers() {
                                 Object.assign(weigher, response_formatted);
 
                                 populateViewContent(response_formatted);
+                                populateEditContent(response_formatted);
 
                                 errorEditWeigher.innerHTML = '';
                                 viewMode.style.display = 'block';
@@ -946,7 +1087,7 @@ async function loadSetupWeighers() {
                         .catch(error => {
                             console.error('Error:', error);
                             alert(`Errore durante il salvataggio delle modifiche: ${error}`);
-                        });
+                        })
                     } else {
                         errorEditWeigher.innerHTML = '';
                         viewMode.style.display = 'block';
