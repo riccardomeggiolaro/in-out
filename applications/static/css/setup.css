@@ -113,6 +113,7 @@ input[type="checkbox"] {
     max-width: none;
 }
 button {
+
     padding: 5px;
     border-radius: 5px;
     border: 1px solid #ddd;
@@ -197,4 +198,18 @@ select {
     width: -moz-available;  
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
     transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+}
+.serial,
+.tcp {
+    width: auto;
+}
+.cams,
+.reles {
+    background-color: lightgray; 
+    max-height: 200px; 
+    overflow-y: auto;
+}
+.cam,
+.rele {
+    margin: 1rem;
 }

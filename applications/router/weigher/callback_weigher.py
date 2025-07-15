@@ -45,15 +45,13 @@ class CallbackWeigher(Functions, WebSocket):
 			if type(numeric_gross_weight) in [float, int]:
 				if numeric_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [0, None]:
 					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
-						key, value = next(iter(rele.items()))
-						modope = "CLOSERELE" if value == 0 else "OPENRELE"
-						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
+						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=rele["rele"])
 					self.switch_to_call = 1
 				elif numeric_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [1, None]:
 					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]:
-						key, value = next(iter(rele.items()))
-						modope = "CLOSERELE" if value == 0 else "OPENRELE"
-						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
+						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=rele["rele"])
 					self.switch_to_call = 0
 				weight1 = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["weight1"]
 				if pesa_real_time.status == "ST" and weight1:
@@ -215,9 +213,10 @@ class CallbackWeigher(Functions, WebSocket):
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
-					key, value = next(iter(rele.items()))
-					modope = "CLOSERELE" if value == 0 else "OPENRELE"
-					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=key)
+					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
+					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=str(rele["rele"]))
+					import libs.lb_log as lb_log
+					lb_log.warning(r)
 				i = 1
 				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 					if cam["active"]:
@@ -267,6 +266,7 @@ class CallbackWeigher(Functions, WebSocket):
 	def Callback_Rele(self, instance_name: str, weigher_name: str, port_rele: tuple):
 		key, value = port_rele
 		result = {"rele": key, "status": value}
+		# lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["list_port_rele"][key][value]
 		try:
 			if asyncio.get_event_loop().is_running():
 				asyncio.create_task(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))

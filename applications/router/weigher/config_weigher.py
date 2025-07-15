@@ -65,7 +65,7 @@ class ConfigWeigher(CallbackWeigher):
             cb_weighing=self.Callback_Weighing,
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_action_in_execution=self.Callback_ActionInExecution,
-            cb_rele=self.Callback_Rele
+            cb_rele=self.Callback_Rele,
         )
         data = Data(**{})
         self.addInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=setup.name, data=data)
@@ -79,10 +79,10 @@ class ConfigWeigher(CallbackWeigher):
         weigher_created[setup.name]["events"] = {
             "realtime": {
                 "over_min": {
-                    "set_rele": []
+                    "set_rele": [rele.dict() for rele in setup.over_min]
                 },
                 "under_min": {
-                    "set_rele": []
+                    "set_rele": [rele.dict() for rele in setup.under_min]
                 }
             },
             "weighing": {
@@ -90,8 +90,8 @@ class ConfigWeigher(CallbackWeigher):
                     "in": setup.print_on_in if setup.print_on_in is not None else False,
                     "out": setup.print_on_out if setup.print_on_out is not None else False
                 },
-                "set_rele": [],
-                "cams": []
+                "set_rele": [rele.dict() for rele in setup.weighing],
+                "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
             }
         }
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][setup.name] = weigher_created[setup.name]
@@ -133,10 +133,28 @@ class ConfigWeigher(CallbackWeigher):
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["out"] = setup.print_on_out
         if setup.max_theshold != -1:
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"] = setup.max_theshold
-        response[instance.weigher_name]["printer_name"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"]
-        response[instance.weigher_name]["number_of_prints"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"]
-        response[instance.weigher_name]["events"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]
-        response[instance.weigher_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"]
+        lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"] = {
+            "realtime": {
+                "over_min": {
+                    "set_rele": [rele.dict() for rele in setup.over_min]
+                },
+                "under_min": {
+                    "set_rele": [rele.dict() for rele in setup.under_min]
+                }
+            },
+            "weighing": {
+                "print": {
+                    "in": setup.print_on_in if setup.print_on_in is not None else False,
+                    "out": setup.print_on_out if setup.print_on_out is not None else False
+                },
+                "set_rele": [rele.dict() for rele in setup.weighing],
+                "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
+            }
+        }
+        response[weigher_name]["printer_name"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"]
+        response[weigher_name]["number_of_prints"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"]
+        response[weigher_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"]
+        response[weigher_name]["events"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]
         lb_config.saveconfig()
         return response
 

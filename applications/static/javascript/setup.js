@@ -6,6 +6,12 @@ const editButtonContent = "✏️"
 
 const deleteButtonContent = "🗑️";
 
+// Creiamo e dispatchiamo l'evento manualmente
+const event = new Event('input', {
+    bubbles: true,
+    cancelable: true,
+});
+
 async function getSerialPortsList() {
     await fetch('/api/generic/list/serial-ports')
     .then(res => res.json())
@@ -31,32 +37,62 @@ async function loadSetupWeighers() {
 
     await getPrintersList();
 
-    const addCam = (e, className, cam) => {
+    const addCam = (e, classNameForm, className, picture, active) => {
+        const form = document.querySelector(classNameForm);
+
         if (e) e.preventDefault();
-        document.querySelector(`.${className}`).innerHTML += `
-            <div class="cam">
-                <input type="url" placeholder="http://0.0.0.0/" value="${cam.picture ? cam.picture : ''}" required>
-                <input type="checkbox" ${cam.active ? 'checked' : ''}> <span>Attiva</span>
-            </div>
+        
+        const divCam = document.createElement("div");
+        divCam.className = "cam";
+        divCam.innerHTML = `
+            <button class="delete-btn">${deleteButtonContent}</button>
+            <input type="url" placeholder="http://0.0.0.0/" value="${picture ? picture : ''}" required>
+            <input type="checkbox" ${active === undefined || active === true ? 'checked' : ''}> <span>Attiva</span>
         `;
+        
+        // Aggiungi l'event listener al pulsante
+        const deleteButton = divCam.querySelector('.delete-btn');
+        deleteButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            divCam.remove();
+            form.dispatchEvent(event);
+        });
+        
+        document.querySelector(`.${className}`).append(divCam);
+        form.dispatchEvent(event);
     }
 
-    const addRele = (e, className, rele) => {
-        e.preventDefault();
-        document.querySelector(`.${className}`).innerHTML += `
-            <div class="rele">
-                <span>Numero: </span> <input type="number" min="1" style="width: 50px">
-                <select style="width: 75px">
-                    <option value="1" selected>Apri</option>
-                    <option value="0">Chiudi</option>
-                </select>
-                <select style="width: 150px">
-                    <option value="over_min" selected>Sopra peso minimo</option>
-                    <option value="under_min">Sotto peso minimo</option>
-                    <option value="weighing">Dopo la pesata</option>
-                </select>
-            </div>
+    const addRele = (e, classNameForm, className, number_rele, status, on_event) => {
+        const form = document.querySelector(classNameForm);
+
+        if (e) e.preventDefault();
+        
+        const divRele = document.createElement("div");
+        divRele.className = "rele";
+        divRele.innerHTML = `
+            <button class="delete-btn">${deleteButtonContent}</button>
+            <span>Numero: </span> <input type="number" min="1" value="${number_rele ? number_rele : ''}" style="width: 50px" required>
+            <select style="width: 75px">
+                <option value="1" ${status === 1 ? 'selected' : ''}>Apri</option>
+                <option value="0" ${status === 0 ? 'selected' : ''}>Chiudi</option>
+            </select>
+            <select style="width: 150px">
+                <option value="weighing" ${on_event === "weighing" ? 'selected' : ''}>Dopo la pesata</option>
+                <option value="over_min" ${on_event === "over_min" ? 'selected' : ''}>Sopra peso minimo</option>
+                <option value="under_min" ${on_event === "under_min" ? 'selected' : ''}>Sotto peso minimo</option>
+            </select>
         `;
+        
+        // Aggiungi l'event listener al pulsante
+        const deleteButton = divRele.querySelector('.delete-btn');
+        deleteButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            divRele.remove();
+            form.dispatchEvent(event);
+        });
+        
+        document.querySelector(`.${className}`).append(divRele);
+        form.dispatchEvent(event);
     }
 
     window.addCam = addCam;
@@ -613,7 +649,7 @@ async function loadSetupWeighers() {
             addWeigherModal.innerHTML = `
                 <div class="modal-content">
                     <h3>Aggiungi pesa</h3>
-                    <form class="content">
+                    <form class="content" id="add-form">
                     </form>
                     <div class="errors"></div>
                     <div class="container-buttons right">
@@ -706,16 +742,18 @@ async function loadSetupWeighers() {
                         <label><input type="checkbox" name="need_take_of_weight_on_startup" checked> Scaricare la pesa dopo l'avvio del programma</label>
                     </div>
                     <div class="form-group">
-                        <label>Telecamere: <button onclick="addCam(event, '${addCamClass}', ${addWeigherForm.checkValidity()})">Aggiungi</button></label>
-                        <div class="${addCamClass}"></div>
+                        <label>Telecamere: <button onclick="addCam(event, '#add-form', '${addCamClass}')">Aggiungi</button></label>
+                        <div class="form-group cams ${addCamClass}"></div>
                     </div>
                     <div class="form-group">
-                        <label>Relè: <button onclick="addRele(event, '${addReleClass}', ${addWeigherForm.checkValidity()})">Aggiungi</button></label>
-                        <div class="${addReleClass}"></div>
+                        <label>Relè: <button onclick="addRele(event, '#add-form', '${addReleClass}')">Aggiungi</button></label>
+                        <div class="form-group reles ${addReleClass}"></div>
                     </div>
                 `;
 
                 errorAddWeigher.innerHTML = '';
+
+                addWeigherForm.dispatchEvent(event);
             }
             
             populateAddContent();
@@ -728,11 +766,9 @@ async function loadSetupWeighers() {
             addWeigherModal.querySelector('.save-btn').addEventListener('click', () => {
                 let data = {
                     cams: [],
-                    set_rele: {
-                        over_min: [],
-                        under_min: [],
-                        weighing: []
-                    }
+                    over_min: [],
+                    under_min: [],
+                    weighing: []
                 };
                     
                 const inputs = addWeigherModal.querySelectorAll('input');
@@ -768,9 +804,10 @@ async function loadSetupWeighers() {
                     const input = element.querySelector("input");
                     const selects = element.querySelectorAll("select");
                     const rele = {
-                        [input.value]: selects[0].value
+                        "rele": input.value,
+                        "set": Number(selects[0].value)
                     }
-                    if (input.value) data["set_rele"][selects[1].value].push(rele);
+                    if (input.value) data[selects[1].value].push(rele);
                 })
 
                 fetch(`/api/config-weigher/instance/node?instance_name=${key}`, {
@@ -823,13 +860,12 @@ async function loadSetupWeighers() {
                 `;
 
                 const populateViewContent = (data) => {
+                    console.log(data);
                     const viewModeCFontent = viewMode.querySelector('.content');
                     const cams = data.events.weighing.cams;
-                    const rele = {
-                        over_min: data.events.realtime.over_min.set_rele,
-                        under_min: data.events.realtime.under_min.set_rele,
-                        weighing: data.events.weighing.set_rele
-                    }
+                    const over_min = data.events.realtime.over_min.set_rele;
+                    const under_min = data.events.realtime.under_min.set_rele;
+                    const weighing = data.events.weighing.set_rele;
                     viewModeCFontent.innerHTML = `
                         <h4>${data.name} <span class="gray">${data.terminal}</span></h4>
                         <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
@@ -848,24 +884,21 @@ async function loadSetupWeighers() {
                             viewModeCFontent.innerHTML += `<p class="gray"><em>${cam.picture}</em> <strong>-</strong> ${cam.active ? '<em>Attiva</em>' : '<em>Disattiva</em>'}</p>`;
                         });
                     }
-                    if (rele.over_min.length > 0 || rele.under_min.length > 0 || rele.weighing.length > 0) {
+                    if (over_min.length > 0 || under_min.length > 0 || weighing.length > 0) {
                         viewModeCFontent.innerHTML += '<h5 class="gray"><em>RELE</em></h5>';
-                        rele.weighing.forEach(r => {
-                            let entries = Object.entries(r)[0];
+                        weighing.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${entries[1] ? 'Apri' : 'Chiudi'} relè ${entries[0]} dopo la pesata</em></p>
+                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} dopo la pesata</em></p>
                             `;
                         });
-                        rele.over_min.forEach(r => {
-                            let entries = Object.entries(r)[0];
+                        over_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${entries[1] ? 'Apri' : 'Chiudi'} relè ${entries[0]} sopra il peso minimo</em></p>
+                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} sopra il peso minimo</em></p>
                             `;
                         });
-                        rele.under_min.forEach(r => {
-                            let entries = Object.entries(r)[0];
+                        under_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${entries[1] ? 'Apri' : 'Chiudi'} relè ${entries[0]} sotto il peso minimo</em></p>
+                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} sotto il peso minimo</em></p>
                             `;
                         });
                     }
@@ -873,8 +906,10 @@ async function loadSetupWeighers() {
 
                 populateViewContent(weigher);
 
+                const idEditForm = `edit-form-${key}-${weigher.name}`;
+
                 editMode.innerHTML = `
-                    <form class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
+                    <form id="${idEditForm}" class="content">
                     </form>
                     <div class="container-buttons">                
                         <button class="cancel-btn">Annulla</button>
@@ -882,6 +917,14 @@ async function loadSetupWeighers() {
                     </div>
                     <div class="errors"></div>
                 `;
+
+                const editWeigherForm = editMode.querySelector('form');
+
+                console.log(editWeigherForm)
+
+                editWeigherForm.oninput = () => {
+                    editMode.querySelector('.save-btn').disabled = !editWeigherForm.checkValidity();
+                }
 
                 const addCamWeigher = `cams-${key}-${weigher.name}`;
                 const addReleWeigher = `rele-${key}-${weigher.name}`;
@@ -926,7 +969,7 @@ async function loadSetupWeighers() {
                             </div>
                             <div class="form-group" style="flex: 1;">
                                 <label for="max_theshold">Soglia massima: (facoltativo)</label><br>
-                                <input type="number" name="max_theshold" id="max_theshold" min="1" value="${data.max_theshold || ''}" required>
+                                <input type="number" name="max_theshold" id="max_theshold" min="1" value="${data.max_theshold || ''}">
                             </div>
                         </div>
                         <div style="display: flex; gap: 16px; align-items: flex-end;">
@@ -959,18 +1002,32 @@ async function loadSetupWeighers() {
                             <label><input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa dopo l'avvio del programma</label>
                         </div>
                         <div class="form-group">
-                            <label>Telecamere: <button onclick="addCam(event, '${addCamWeigher}', ${editMode.querySelector("form").checkValidity()})">Aggiungi</button></label>
-                            <div class="${addCamWeigher}"></div>
+                            <label>Telecamere: <button onclick="addCam(event, '#${idEditForm}', '${addCamWeigher}')">Aggiungi</button></label>
+                            <div class="form-group cams ${addCamWeigher}"></div>
                         </div>
                         <div class="form-group">
-                            <label>Relè: <button onclick="addRele(event, '${addReleWeigher}', ${editMode.querySelector("form").checkValidity()})">Aggiungi</button></label>
-                            <div class="${addReleWeigher}"></div>
+                            <label>Relè: <button onclick="addRele(event, '#${idEditForm}', '${addReleWeigher}')">Aggiungi</button></label>
+                            <div class="form-group reles ${addReleWeigher}"></div>
                         </div>
                     `;
 
                     data.events.weighing.cams.forEach(cam => {
-                        addCam(null, addCamWeigher, cam);
+                        addCam(null, `#${idEditForm}`, addCamWeigher, cam.picture, cam.active);
                     });
+
+                    data.events.weighing.set_rele.forEach(rele => {
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.status, "weighing");
+                    });
+
+                    data.events.realtime.over_min.set_rele.forEach(rele => {
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.status, "over_min");
+                    })
+
+                    data.events.realtime.under_min.set_rele.forEach(rele => {
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.status, "under_min");
+                    })
+
+                    editWeigherForm.dispatchEvent(event);
                 }
 
                 const errorEditWeigher = editMode.querySelector('.errors');
@@ -995,11 +1052,9 @@ async function loadSetupWeighers() {
                 editMode.querySelector('.save-btn').addEventListener('click', () => {
                     let changedData = {
                         cams: [],
-                        set_rele: {
-                            over_min: [],
-                            under_min: [],
-                            weighing: []
-                        }
+                        over_min: [],
+                        under_min: [],
+                        weighing: []
                     };
                     
                     const inputs = editMode.querySelectorAll('input');
@@ -1043,9 +1098,10 @@ async function loadSetupWeighers() {
                         const input = element.querySelector("input");
                         const selects = element.querySelectorAll("select");
                         const rele = {
-                            [input.value]: selects[0].value
+                            "rele": input.value,
+                            "set": Number(selects[0].value)
                         }
-                        if (input.value) changedData["set_rele"][selects[1].value].push(rele);
+                        if (input.value) changedData[selects[1].value].push(rele);
                     })
                     
                     if (Object.keys(changedData).length > 0) {
@@ -1128,7 +1184,6 @@ async function loadSetupWeighers() {
                     .then(response => {
                         if (response.deleted) {
                             li.remove();
-                            br.remove();
                         }
                     })
                     .catch(error => {
@@ -1139,145 +1194,10 @@ async function loadSetupWeighers() {
                     })
                 });
 
-                const eventWeigher = document.createElement('div');
-
-                const populateEventWeigher = () => {
-                    let list_event_weigher = [];
-
-                    const deleteItemModal = document.createElement('div');
-
-                    deleteItemModal.classList.toggle('modal');
-
-                    // Aggiungo il contenuto del modal tramite innerHTML
-                    deleteItemModal.innerHTML = `
-                        <div class="modal-content">
-                            <h3>Conferma eliminazione</h3>
-                            <p>Sei sicuro di voler eliminare l'azione?</p>
-                            <div class="container-buttons right">
-                                <button class="cancel-btn">Annulla</button>
-                                <button class="confirm-btn delete-btn">Conferma</button>
-                            </div>
-                        </div>
-                    `;
-
-                    weighers_config.appendChild(deleteItemModal);
-
-                    // Chiudi il modal se si clicca fuori
-                    window.addEventListener('click', (event) => {
-                        if (event.target === deleteItemModal) {
-                            deleteItemModal.style.display = 'none';
-                        }
-                    });
-                    
-                    fetch(list_event_weigher)
-                    .then(res => res.json())
-                    .then(res => {
-                        // Realtime over_min events (modificato per oggetti, non array)
-                        const overMinEvents = res.realtime.over_min;
-                        const underMinEvents = res.realtime.under_min;
-                        const weight1Events = res.weighing.weight1;
-                        const weight2Events = res.weighing.weight2;
-
-                        const populateListEvent = (h4, events, event) => {
-                            const title = document.createElement('h4');
-                            const ulRele = document.createElement('ul');
-                            const ulCam = document.createElement('ul');
-
-                            title.innerText = h4;
-
-                            const deleteItemEvent = (item, event, name, list, li) => {
-                                deleteItemModal.style.display = 'block';
-
-                                deleteConnectionModal.querySelector('.cancel-btn').addEventListener('click', () => {
-                                    deleteItemModal.style.display = 'none';
-                                });
-                        
-                                deleteItemModal.querySelector('.confirm-btn').addEventListener('click', () => {
-                                    let delete_cam_event = `/events/${name}/delete?instance_name=${key}`;
-                                    if (weigher.name !== null) {
-                                        delete_cam_event += `&weigher_name=${weigher.name}`;
-                                    }
-                                    fetch(delete_cam_event, {
-                                        method: 'DELETE',
-                                        headers: {
-                                            'Content-type': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            [name]: item,
-                                            event
-                                        })
-                                    })
-                                    .then(res => res.json())
-                                    .then(res => {
-                                        if (res.deleted) {
-                                            list.removeChild(li);
-                                            if (ulRele.childNodes.length === 0 && ulCam.childNodes.length === 0) {
-                                                eventWeigher.removeChild(title);
-                                                eventWeigher.removeChild(ulRele);
-                                                eventWeigher.removeChild(ulCam);                                        
-                                            }
-                                            deleteItemModal.style.display = 'none';
-                                        }
-                                    })
-                                });
-                            }
-
-                            if (events.set_rele && Array.isArray(events.set_rele)) {
-                                events.set_rele.forEach(item => {
-                                    const li = document.createElement('li');
-                                    const [key, value] = Object.entries(item)[0];
-                                    li.innerHTML = `
-                                        <div class="releConfiguration">
-                                            <p>${value === 0 ? 'Chiudi' : 'Apri'} relè ${key}</p>
-                                            <button class="delete-btn">${deleteButtonContent}</button>
-                                        </div>
-                                    `;
-                                    li.querySelector('button').addEventListener('click', () => deleteItemEvent({"name": key, "status": value}, event, 'rele', ulRele, li));
-                                    ulRele.appendChild(li);
-                                });
-                            }
-
-                            if (events.take_picture && Array.isArray(events.take_picture)) {
-                                events.take_picture.forEach(item => {
-                                    const li = document.createElement('li');
-                                    li.innerHTML = `
-                                        <div class="releConfiguration">
-                                            <p>Foto con ${item}</p>
-                                            <button class="delete-btn">${deleteButtonContent}</button>
-                                        </div>
-                                    `;
-                                    li.querySelector('button').addEventListener('click', () => deleteItemEvent(item, event, 'cam', ulCam, li));
-                                    ulCam.appendChild(li);
-                                });
-                            }
-
-                            if (ulRele.childNodes.length > 0 || ulCam.childNodes.length > 0) {
-                                eventWeigher.appendChild(title);
-                                eventWeigher.appendChild(ulRele);
-                                eventWeigher.appendChild(ulCam);
-                            }
-                        }
-
-                        populateListEvent('Peso sopra la soglia minima', overMinEvents, 'over_min');
-                        populateListEvent('Peso sotto la soglia minima', underMinEvents, 'under_min');
-                        populateListEvent('Dopo pesata 1 effettuata', weight1Events, 'weight1');
-                        populateListEvent('Dopo pesata 2 effettuata', weight2Events, 'weight2');
-                    })
-                    .catch(err => {
-                        console.error('Error fetching event data:', err);
-                    });
-                }            
-
-                populateEventWeigher();
-
-                const br = document.createElement('br');
-
                 li.appendChild(editMode);
                 li.appendChild(viewMode);
                 li.appendChild(deleteWeigherModal);
-                li.appendChild(eventWeigher);
                 ul.appendChild(li);
-                ul.appendChild(br);
 
                 // Chiudi il modal se si clicca fuori
                 window.addEventListener('click', (event) => {

@@ -1,9 +1,18 @@
-from pydantic import validator, BaseModel, root_validator
-from typing import Optional, Union
+from pydantic import validator, BaseModel, root_validator, AnyUrl
+from typing import Optional, Union, Literal
 from libs.lb_system import Connection, SerialPort, Tcp
 from libs.lb_utils import CustomBaseModel
 from modules.md_weigher.globals import terminalsClasses
 from pydantic import root_validator
+
+class CamDTO(BaseModel):
+	picture: AnyUrl
+	live: Optional[AnyUrl] = None
+	active: bool
+
+class ReleDTO(BaseModel):
+    rele: str
+    set: Literal[0, 1]
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	name: Optional[str] = "undefined"
@@ -23,6 +32,10 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	number_of_prints: Optional[int] = 1
 	print_on_in: Optional[bool] = None
 	print_on_out: Optional[bool] = None
+	cams: list[CamDTO] = []
+	weighing: list[ReleDTO] = []
+	over_min: list[ReleDTO] = []
+	under_min: list[ReleDTO] = []
 
 	@root_validator(pre=True)
 	def set_node_default(cls, values):
@@ -63,6 +76,10 @@ class SetupWeigherDTO(BaseModel):
 	number_of_prints: Optional[int] = 1
 	print_on_in: Optional[bool] = True
 	print_on_out: Optional[bool] = True
+	cams: list[CamDTO] = []
+	weighing: list[ReleDTO] = []
+	over_min: list[ReleDTO] = []
+	under_min: list[ReleDTO] = []
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):
