@@ -45,7 +45,7 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "ip": "10.0.5.179",
+                    "ip": "10.0.5.177",
                     "port": 4001,
                     "timeout": 1.0
                 },
@@ -95,10 +95,20 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "rele": "1",
+                                            "set": 1
+                                        }
+                                    ]
                                 },
                                 "under_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "rele": "1",
+                                            "set": 0
+                                        }
+                                    ]
                                 }
                             },
                             "weighing": {
@@ -107,7 +117,12 @@
                                     "in": false,
                                     "out": false
                                 },
-                                "set_rele": []
+                                "set_rele": [
+                                    {
+                                        "rele": "1",
+                                        "set": 0
+                                    }
+                                ]
                             }
                         },
                         "list_port_rele": {
@@ -120,8 +135,8 @@
                         "max_theshold": null,
                         "max_weight": 50000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
