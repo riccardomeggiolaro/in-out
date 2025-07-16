@@ -45,7 +45,7 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "ip": "10.0.5.177",
+                    "ip": "10.0.5.178",
                     "port": 4001,
                     "timeout": 1.0
                 },
@@ -125,12 +125,6 @@
                                 ]
                             }
                         },
-                        "list_port_rele": {
-                            "1": 0,
-                            "2": 0,
-                            "3": 0,
-                            "4": 0
-                        },
                         "maintaine_session_realtime_after_command": true,
                         "max_theshold": null,
                         "max_weight": 50000,
@@ -141,6 +135,9 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": "Canon_iR_ADV_C5235_5240",
+                        "rele": {
+                            "1": 0
+                        },
                         "run": true,
                         "terminal": "egt-af03"
                     }

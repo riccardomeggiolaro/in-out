@@ -7,7 +7,7 @@ from libs.lb_utils import sum_number
 class EgtAf03(Terminal):
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, {"1": 0, "2": 0, "3": 0, "4": 0})
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run)
     
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
@@ -58,7 +58,6 @@ class EgtAf03(Terminal):
 
 	def initialize_content(self):
 		try:
-			open = self.is_open()
 			self.setModope("VER")
 			self.command()
 			response = self.read()
@@ -239,11 +238,9 @@ class EgtAf03(Terminal):
 						if self.modope == "OPENRELE":
 							key, value = self.port_rele
 							self.port_rele = (key, 1)
-							self.list_port_rele[key] = 1
 						elif self.modope == "CLOSERELE":
 							key,value = self.port_rele
 							self.port_rele = (key, 0)
-							self.list_port_rele[key] = 0
 					# Se formato stringa non valido setto ok_value a None
 					else:
 						self.diagnostic.status = 201
@@ -272,8 +269,6 @@ class EgtAf03(Terminal):
 			self.weight.weight_executed.serial_number = None
 			self.weight.data_assigned = None
 			self.ok_value = ""
-			# Impostare tutti i valori a 0 usando una funzione ternaria (in realtà non cambia molto rispetto a un normale ciclo)
-			self.list_port_rele = {k: (0 if v == 1 else v) for k, v in self.list_port_rele.items()}
 			self.port_rele = None
 			self.diagnostic.status = 301
 			if self.modope == "WEIGHING":

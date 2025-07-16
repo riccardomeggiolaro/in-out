@@ -793,9 +793,10 @@ async function loadSetupWeighers() {
 
                 document.querySelector(`.${addCamClass}`).querySelectorAll(".cam").forEach(element => {
                     const inputs = element.querySelectorAll("input");
+                    console.log(inputs[1])
                     const cam = {
                         "picture": inputs[0].value,
-                        "active": inputs[1].value === "on" ? true : false
+                        "active": inputs[1].checked ? true : false
                     }
                     if (cam.picture) data["cams"].push(cam);
                 })
@@ -1089,7 +1090,7 @@ async function loadSetupWeighers() {
                         const inputs = element.querySelectorAll("input");
                         const cam = {
                             "picture": inputs[0].value,
-                            "active": inputs[1].value === "on" ? true : false
+                            "active": inputs[1].checked ? true : false
                         }
                         if (cam.picture) changedData["cams"].push(cam);
                     })

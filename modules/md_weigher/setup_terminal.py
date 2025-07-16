@@ -5,7 +5,7 @@ from libs.lb_utils import checkCallbackFormat, callCallback
 from typing import Callable, Any
 
 class __SetupWeigherConnection:
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, list_port_rele):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		self.self_config = self_config
 		self.max_weight = max_weight
 		self.min_weight = min_weight
@@ -18,7 +18,6 @@ class __SetupWeigherConnection:
 		self.node = node
 		self.terminal = terminal
 		self.run = run
-		self.list_port_rele = list_port_rele
 		self.take_of_weight_on_startup = True if need_take_of_weight_on_startup else False
 		self.take_of_weight_before_weighing = False
 
@@ -59,9 +58,9 @@ class __SetupWeigherConnection:
 		self.self_config.connection.connection = Connection(**{})
 
 class __SetupWeigher(__SetupWeigherConnection):
-	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, list_port_rele):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, list_port_rele)
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run)
 
 		self.pesa_real_time: Realtime = Realtime(**{
 			"status": "",
@@ -130,7 +129,6 @@ class __SetupWeigher(__SetupWeigherConnection):
 			},
 			"run": self.run,
    			"status": self.diagnostic.status,
-			"list_port_rele": self.list_port_rele,
 			"port_rele": self.port_rele,
 			"need_take_of_weight_on_startup": self.need_take_of_weight_on_startup,
 			"need_take_of_weight_before_weighing": self.need_take_of_weight_before_weighing
@@ -197,7 +195,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.callback_rele = lambda: cb_rele(self.self_config.name, weigher_name, self.port_rele)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: int = 0, data_assigned: int = None, port_rele: int = None):
+	def setModope(self, mod: str, presettare: int = 0, data_assigned: int = None, port_rele: tuple = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
@@ -219,23 +217,17 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.modope_to_execute = mod # se non si è verificata nessuna delle condizioni imposto REALTIME come comando da eseguire
 			return 100, None # ritorno il successo
 		if mod == "OPENRELE":
-			keys_port_rele = list(self.list_port_rele.keys())
 			if port_rele is None:
 				return 500, "Need port rele"
-			elif port_rele not in keys_port_rele:
-				return 500, f"Port Rele {port_rele} is not set in {keys_port_rele}"
 			self.modope_to_execute = mod
-			self.port_rele = (port_rele, self.list_port_rele[port_rele])
+			self.port_rele = port_rele
 			callCallback(self.callback_action_in_execution)
 			return 100, None
 		if mod == "CLOSERELE":
-			keys_port_rele = list(self.list_port_rele.keys())
 			if port_rele is None:
 				return 500, "Need port rele"
-			elif port_rele not in keys_port_rele:
-				return 500, f"Port Rele {port_rele} is not set in {keys_port_rele}"
 			self.modope_to_execute = mod
-			self.port_rele = (port_rele, self.list_port_rele[port_rele])
+			self.port_rele = port_rele
 			callCallback(self.callback_action_in_execution)
 			return 100, None
 		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING")
@@ -288,9 +280,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		return status
 
 class Terminal(__SetupWeigher):
-	def __init__(self, self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
+	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, list_port_rele, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run)
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run)
 
 	########################
 	# functions to overwrite

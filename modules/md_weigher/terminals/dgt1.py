@@ -6,7 +6,7 @@ from modules.md_weigher.setup_terminal import Terminal
 class Dgt1(Terminal):
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
 		# Chiama il costruttore della classe base
-		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run, {"1": 0, "2": 0})
+		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run)
     
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
@@ -236,10 +236,8 @@ class Dgt1(Terminal):
 						key, value = self.port_rele
 						if self.modope == "OPENRELE":
 							self.port_rele = (key, 1)
-							self.list_port_rele[key] = 1
 						elif self.modope == "CLOSERELE":
 							self.port_rele = (key, 0)
-							self.list_port_rele[key] = 0
 					# Se formato stringa non valido setto ok_value a None
 					else:
 						self.diagnostic.status = 201

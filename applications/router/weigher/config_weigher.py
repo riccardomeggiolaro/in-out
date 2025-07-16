@@ -72,6 +72,12 @@ class ConfigWeigher(CallbackWeigher):
         weigher_created = response.copy()
         del weigher_created[setup.name]["terminal_data"]
         del weigher_created[setup.name]["status"]
+        weigher_created[setup.name]["rele"] = []
+        reles = setup.over_min + setup.under_min + setup.weighing
+        for obj in reles:
+            rele = obj.rele
+            if rele not in weigher_created[setup.name]["rele"]:
+                weigher_created[setup.name]["rele"].append({[rele]: 0})
         weigher_created[setup.name]["printer_name"] = setup.printer_name
         weigher_created[setup.name]["number_of_prints"] = setup.number_of_prints
         weigher_created[setup.name]["data"] = Data(**{}).dict()
