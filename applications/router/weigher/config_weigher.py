@@ -72,12 +72,6 @@ class ConfigWeigher(CallbackWeigher):
         weigher_created = response.copy()
         del weigher_created[setup.name]["terminal_data"]
         del weigher_created[setup.name]["status"]
-        weigher_created[setup.name]["rele"] = []
-        reles = setup.over_min + setup.under_min + setup.weighing
-        for obj in reles:
-            rele = obj.rele
-            if rele not in weigher_created[setup.name]["rele"]:
-                weigher_created[setup.name]["rele"].append({[rele]: 0})
         weigher_created[setup.name]["printer_name"] = setup.printer_name
         weigher_created[setup.name]["number_of_prints"] = setup.number_of_prints
         weigher_created[setup.name]["data"] = Data(**{}).dict()
@@ -100,6 +94,12 @@ class ConfigWeigher(CallbackWeigher):
                 "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
             }
         }
+        weigher_created[setup.name]["rele"] = {}
+        reles = setup.over_min + setup.under_min + setup.weighing
+        for obj in reles:
+            rele = obj.rele
+            if rele not in weigher_created[setup.name]["rele"]:
+                weigher_created[setup.name]["rele"][rele] = 0
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][setup.name] = weigher_created[setup.name]
         lb_config.saveconfig()
         return response
@@ -117,6 +117,7 @@ class ConfigWeigher(CallbackWeigher):
             cb_rele=self.Callback_Rele
         )
         weigher_name = instance.weigher_name
+        is_changed_terminal = setup.terminal and setup.terminal != lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["terminal"]
         if setup.name != "undefined":
             data = Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"])
             self.deleteInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
@@ -157,6 +158,16 @@ class ConfigWeigher(CallbackWeigher):
                 "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
             }
         }
+        reles = setup.over_min + setup.under_min + setup.weighing
+        number_reles = [rele.rele for rele in reles]
+        config_json_reles = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["rele"].copy()
+        for key, value in config_json_reles.items():
+            if key not in number_reles:
+                del lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["rele"][key]
+        for obj in reles:
+            rele = obj.rele
+            if rele not in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["rele"] or is_changed_terminal:
+                lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["rele"][rele] = 0
         response[weigher_name]["printer_name"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"]
         response[weigher_name]["number_of_prints"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"]
         response[weigher_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"]

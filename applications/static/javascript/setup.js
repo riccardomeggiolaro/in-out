@@ -63,6 +63,7 @@ async function loadSetupWeighers() {
     }
 
     const addRele = (e, classNameForm, className, number_rele, status, on_event) => {
+        console.log(status);
         const form = document.querySelector(classNameForm);
 
         if (e) e.preventDefault();
@@ -887,11 +888,6 @@ async function loadSetupWeighers() {
                     }
                     if (over_min.length > 0 || under_min.length > 0 || weighing.length > 0) {
                         viewModeCFontent.innerHTML += '<h5 class="gray"><em>RELE</em></h5>';
-                        weighing.forEach(r => {
-                            viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} dopo la pesata</em></p>
-                            `;
-                        });
                         over_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
                                 <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} sopra il peso minimo</em></p>
@@ -900,6 +896,11 @@ async function loadSetupWeighers() {
                         under_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
                                 <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} sotto il peso minimo</em></p>
+                            `;
+                        });
+                        weighing.forEach(r => {
+                            viewModeCFontent.innerHTML += `
+                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} dopo la pesata</em></p>
                             `;
                         });
                     }
@@ -1016,17 +1017,17 @@ async function loadSetupWeighers() {
                         addCam(null, `#${idEditForm}`, addCamWeigher, cam.picture, cam.active);
                     });
 
-                    data.events.weighing.set_rele.forEach(rele => {
-                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.status, "weighing");
-                    });
-
                     data.events.realtime.over_min.set_rele.forEach(rele => {
-                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.status, "over_min");
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "over_min");
                     })
 
                     data.events.realtime.under_min.set_rele.forEach(rele => {
-                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.status, "under_min");
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "under_min");
                     })
+
+                    data.events.weighing.set_rele.forEach(rele => {
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "weighing");
+                    });
 
                     editWeigherForm.dispatchEvent(event);
                 }
