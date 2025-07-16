@@ -103,7 +103,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.preset_tare: int = 0
 		self.port_rele: int = None
 		self.callback_realtime: str = ""
-		self.callback_diagnostics: str = ""
+		self.callback_diagnostic: str = ""
 		self.callback_weighing: str = ""
 		self.callback_tare_ptare_zero: str = ""
 		self.callback_data_in_execution: str = ""
@@ -111,6 +111,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_rele: str = ""
 		self.commands = ["VER", "SN", "OK"]
 		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING", "CLOSERELE", "OPENRELE"]
+		self.rele_commands = ["OPENRELE", "CLOSERELE"]
 
 	def getSetup(self):
 		return {
@@ -176,8 +177,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 		if check_cb_realtime: # se è richiamabile assegna alla globale callback_realtime la funzione passata come parametro
 			self.callback_realtime = lambda: cb_realtime(self.self_config.name, weigher_name, self.pesa_real_time)
 		check_cb_diagnostic = checkCallbackFormat(cb_diagnostic) # controllo se la funzione cb_diagnostic è richiamabile
-		if check_cb_diagnostic: # se è richiamabile assegna alla globale callback_diagnostics la funzione passata come parametro
-			self.callback_diagnostics = lambda: cb_diagnostic(self.self_config.name, weigher_name, self.diagnostic)
+		if check_cb_diagnostic: # se è richiamabile assegna alla globale callback_diagnostic la funzione passata come parametro
+			self.callback_diagnostic = lambda: cb_diagnostic(self.self_config.name, weigher_name, self.diagnostic)
 		check_cb_weighing = checkCallbackFormat(cb_weighing) # controllo se la funzione cb_weighing è richiamabile
 		if check_cb_weighing: # se è richiamabile assegna alla globale callback_weighing la funzione passata come parametro
 			self.callback_weighing = lambda: cb_weighing(self.self_config.name, weigher_name, self.weight)
@@ -199,24 +200,26 @@ class __SetupWeigher(__SetupWeigherConnection):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
-		if self.diagnostic.status in [301, 305] and mod != "REALTIME" and mod != "DIAGNOSTICS" and mod != "OK":
+		if self.diagnostic.status in [301, 305] and mod != "REALTIME" and mod != "DIAGNOSTIC" and mod != "OK":
 			error_message = "Connection not set"
 			if self.diagnostic.status == 305:
 				error_message = "Node not exist"
 			return 500, error_message
 		# se passo una stringa vuota imposta a stringa vuota il comando da eseguire dopo, quindi non verranno più eseguiti comandi diretti sulla pesa
 		# se passo DIAGNOSTICS lo imposto come comando da eseguire, se c'era qualsiasi altro comando viene sovrascritto perchè la diagnostica ha la precedenza
-		if mod == "DIAGNOSTICS":
+		if mod == "DIAGNOSTIC":
 			self.modope_to_execute = mod # imposto la diagnostica
 			return 100, None # ritorno il successo
 		# se passo REALTIME
 		if mod == "REALTIME":
 			# se il comando in esecuzione o il comando che dovrà essere eseguito è la diagnostica ed ha la priorità ritorno errore
-			if self.modope_to_execute == "DIAGNOSTICS" and self.diagnostic_has_priority_than_realtime:
+			if self.modope_to_execute == "DIAGNOSTIC" and self.diagnostic_has_priority_than_realtime:
 				return 400, "Diagnostica in esecuzione"
 			self.modope_to_execute = mod # se non si è verificata nessuna delle condizioni imposto REALTIME come comando da eseguire
 			return 100, None # ritorno il successo
 		if mod == "OPENRELE":
+			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
+				return 400, f"Settaggio del rele {port_rele[0]} già in esecuzione"
 			if port_rele is None:
 				return 500, "Need port rele"
 			self.modope_to_execute = mod
@@ -224,6 +227,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			callCallback(self.callback_action_in_execution)
 			return 100, None
 		if mod == "CLOSERELE":
+			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
+				return 400, f"Settaggio del rele {port_rele[0]} già in esecuzione"
 			if port_rele is None:
 				return 500, "Need port rele"
 			self.modope_to_execute = mod
@@ -233,7 +238,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		# se il mod passato è un comando diretto verso la pesa ("TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING")
 		elif mod in self.direct_commands:
     			# controllo se il comando attualmente in esecuzione in loop è DIAGNOSTICS e se si ritorno errore
-			if self.modope == "DIAGNOSTICS":
+			if self.modope == "DIAGNOSTIC":
 				return 400, "Diagnostica in esecuzione"
 			# controllo se c'è qualche comando diretto verso la pesa attualmente in esecuzione e se si ritorno errore
 			elif self.modope in self.commands or self.modope in self.direct_commands:
@@ -265,7 +270,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire
 					callCallback(self.callback_action_in_execution)
 					return 100, None # ritorno il successo
-				elif self.modope_to_execute == "DIAGNOSTICS":
+				elif self.modope_to_execute == "DIAGNOSTIC":
 					return 400, "Diagnostica in esecuzione"
 				elif self.modope_to_execute in self.commands or self.modope_to_execute in self.direct_commands:
 					return 405, f"{self.modope} in esecuzione"

@@ -54,6 +54,7 @@ class ConfigWeigher(CallbackWeigher):
         instance_weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
         instance_weigher[instance.instance_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["max_theshold"]
         instance_weigher[instance.instance_name]["events"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]
+        instance_weigher[instance.instance_name]["rele"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"]
         return instance_weigher
 
     async def AddInstanceWeigher(self, setup: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):

@@ -107,8 +107,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Innesca l'evento 'change' manualmente
         selectedIdWeigher.dispatchEvent(new Event('change'));
         instances = res;
-        if (selectedIdWeigher.children.length <= 1) {
-            selectedIdWeigher.style.visibility = 'hidden';
+        if (selectedIdWeigher.children.length > 1) {
+            selectedIdWeigher.style.visibility = 'visible';
         } 
     });
 });

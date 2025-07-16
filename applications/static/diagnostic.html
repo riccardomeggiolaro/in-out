@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Peso</title>
+    <meta name="description" content="About this app" />
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <link rel="stylesheet" href="/static/css/diagnostic.css">
+</head>
+<!-- Rest of your HTML remains unchanged -->
+</style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <div id="snackbar"></div>
+
+    <div>
+        <div id="rele">
+
+        </div>
+
+        <div>
+            <table>
+                <tr>
+                    <th>Firmware</th>
+                    <td id="firmware"></td>
+                </tr>
+                <tr>
+                    <th>Model-Name</th>
+                    <td id="model-name"></td>
+                </tr>
+                <tr>
+                    <th>Serial-Number</th>
+                    <td id="serial-number"></td>
+                </tr>
+                <tr>
+                    <th>RZ</th>
+                    <td id="rz"></td>
+                </tr>
+                <tr>
+                    <th>VL</th>
+                    <td id="vl"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <select class="list-weigher">
+    </select>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script>
+        let isRefreshing = false;
+        let pathname = '';
+        pathname = '/gateway';
+        let lastSlashIndex = window.location.pathname.lastIndexOf('/');
+        pathname = lastSlashIndex !== -1 ? pathname.substring(0, lastSlashIndex) : pathname;
+        let snackbarTimeout;
+        const rele = document.querySelector('#rele');
+        const firmware = document.querySelector('#firmware');
+        const modelName = document.querySelector('#model-name');
+        const serialNumber = document.querySelector('#serial-number');
+        const rz = document.querySelector('#rz');
+        const vl = document.querySelector('#vl');
+        const selectedIdWeigher = document.querySelector('.list-weigher');
+        let currentWeigherPath;
+        let _data;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            fetch('/api/config-weigher/all/instance')
+            .then(res => res.json())
+            .then(res => {
+                currentWeigherPath = localStorage.getItem('currentWeigherPath');
+                let selected = false;
+                for (let instance in res) {
+                    for (let weigher in res[instance]["nodes"]) {
+                        const option = document.createElement('option');
+                        option.value = `?instance_name=${instance}&weigher_name=${weigher}`;
+                        option.innerText = `${weigher}`;
+                        if (option.value === currentWeigherPath) {
+                            option.selected = true
+                            selected = true;
+                        };
+                        selectedIdWeigher.appendChild(option);
+                    }
+                }
+                if (selected === false) selectedIdWeigher.selectedIndex = 0;
+                // Innesca l'evento 'change' manualmente
+                selectedIdWeigher.dispatchEvent(new Event('change'));
+                instances = res;
+                if (selectedIdWeigher.children.length > 1) {
+                    selectedIdWeigher.style.visibility = 'visible';
+                } 
+            });
+        });
+
+        selectedIdWeigher.addEventListener('change', (event) => {
+            currentWeigherPath = event.target.value;
+            if (currentWeigherPath) {
+                closeWebSocket();
+                firmware.textContent = "N/A";
+                modelName.textContent = "N/A";
+                serialNumber.textContent = "N/A";
+                rz.textContent = "N/A";
+                vl.textContent = "N/A";
+                connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime)
+                getInstanceWeigher(currentWeigherPath)
+                .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
+            }
+        });
+       
+        async function getInstanceWeigher(path) {
+            await fetch(`/api/config-weigher/instance/node${path}`)
+            .then(res => {
+                if (res.status === 404) {
+                    alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
+                }
+                return res.json();        
+            })
+            .then(res => {
+                const obj = Object.values(res)[0];
+                console.log(obj)
+                firmware.textContent = obj.terminal_data.firmware || "N/A";
+                modelName.textContent = obj.terminal_data.model_name || "N/A";
+                serialNumber.textContent = obj.terminal_data.serial_number || "N/A";
+                if (obj.rele) {
+                    Object.entries(obj.rele).forEach(([key, value]) => {
+                        const buttonRele = document.createElement("button");
+                        buttonRele.id = `rele-${key}`;
+                        buttonRele.innerHTML = `<strong>${key}</strong> - ${value === 0 ? 'Chiuso' : 'Aperto'}`;
+                        buttonRele.onclick = () => {
+                            fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);
+                        }
+                        rele.appendChild(buttonRele);
+                    });
+                }
+            })
+            .catch(error => console.error('Errore nella fetch:', error));
+        }
+
+        function connectWebSocket(path, exe) {
+            // Ottieni la base URL del dominio corrente
+            let baseUrl = window.location.origin + pathname;
+
+            baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
+
+            // Costruisci l'URL WebSocket
+            const websocketUrl = `${baseUrl}/${path}`;
+
+            closeWebSocket(); // Chiude la connessione WebSocket precedente se esiste
+
+            _data = new WebSocket(websocketUrl);
+
+            _data.addEventListener('message', (e) => {
+                exe(e);
+            });
+
+            _data.addEventListener('open', () => {
+                // enableAllElements();
+                // reconnectionButton.disabled = true;
+                // closePopup('reconnectionPopup');
+            })
+
+            _data.addEventListener('error', () => {
+                if (!isRefreshing) {
+                    closeWebSocket();
+                    // disableAllElements();
+                    // reconnectionButton.disabled = false;
+                    // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+                    // openPopup('reconnectionPopup');
+                }
+            });
+
+            _data.addEventListener('close', () => {
+                if (!isRefreshing) {
+                    // disableAllElements();
+                    // reconnectionButton.disabled = false;
+                    // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+                    // openPopup('reconnectionPopup');
+                }
+            });
+        }
+
+        function attemptReconnect() {
+            // reconnectionButton.disabled = true;
+            closeWebSocket();
+            // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
+            connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime);
+        }
+
+        function closeWebSocket() {
+            if (_data) {
+                _data.close(); // Chiude la connessione WebSocket
+                _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
+            }
+        }
+
+        function updateUIRealtime(e) {
+            const obj = JSON.parse(e.data);
+            const firstKey = Object.keys(obj)[0];
+            const isDigit = /^\d+$/.test(Object.keys(obj)[0]);
+            if (obj.firmware) {
+                firmware.textContent = obj.firmware;
+                modelName.textContent = obj.model_name;
+                serialNumber.textContent = obj.serial_number;
+                rz.textContent = obj.rz;
+                vl.textContent = obj.vl;
+            } else if (isDigit) {
+                const buttonRele = document.querySelector(`#rele-${firstKey}`);
+                buttonRele.innerHTML = `<strong>${firstKey}</strong> - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}`;
+            }
+        }
+    </script>
+</body>
+</html>

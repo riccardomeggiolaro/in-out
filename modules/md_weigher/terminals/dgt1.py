@@ -11,7 +11,7 @@ class Dgt1(Terminal):
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
 		# in base al valore del modope scrive un comando specifico nella conn
-		if self.modope == "DIAGNOSTICS":
+		if self.modope == "DIAGNOSTIC":
 			if self.valore_alterno == 1: # se valore alterno uguale a 1 manda MVOL per ottnere determinati dati riguardanti la diagnostica
 				self.write("MVOL")
 			elif self.valore_alterno == 2: # altrimenti se valore alterno uguale a 2 manda RAZF per ottnere altri determinati dati riguardanti la diagnostica
@@ -155,10 +155,10 @@ class Dgt1(Terminal):
 						self.diagnostic.rz = ""
 					callCallback(self.callback_realtime) # chiamo callback
 				######### Se in esecuzione la diagnostica ###########################################################################
-				elif self.modope == "DIAGNOSTICS":
+				elif self.modope == "DIAGNOSTIC":
 					# Controlla formato stringa della diagnostica, se corretta aggiorna oggetto e chiama callback
 					if length_split_response == 4 and length_response == 19:
-						self.pesa_real_time.status = "diagnostics in progress"
+						self.pesa_real_time.status = "diagnostic in progress"
 						if split_response[1] == "VL":
 							self.diagnostic.vl = str(split_response[2]).lstrip() + " " + str(split_response[3])
 						elif split_response[1] == "RZ":
@@ -167,7 +167,7 @@ class Dgt1(Terminal):
 					# Se formato stringa della diagnostica non corretto, manda a video errore
 					else:
 						self.diagnostic.status = 201
-					callCallback(self.callback_diagnostics) # chiamo callback
+					callCallback(self.callback_diagnostic) # chiamo callback
 					self.pesa_real_time.status = "D"
 					self.pesa_real_time.type = ""
 					self.pesa_real_time.net_weight = ""

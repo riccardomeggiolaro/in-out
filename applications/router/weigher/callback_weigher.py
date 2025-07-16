@@ -266,17 +266,20 @@ class CallbackWeigher(Functions, WebSocket):
 		
 	def Callback_Rele(self, instance_name: str, weigher_name: str, port_rele: tuple):
 		key, value = port_rele
-		result = {"rele": key, "status": value}
+		result = {key: value}
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][key] = value
 		lb_config.saveconfig()
 		try:
 			if asyncio.get_event_loop().is_running():
 				asyncio.create_task(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+				asyncio.create_task(weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(result))
 			else:
 				loop = asyncio.get_event_loop()
 				loop.run_until_complete(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+				loop.run_until_complete(weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(result))
 		except RuntimeError:
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(result))
    
 	def Callback_Message(self, instance_name: str, weigher_name: str, message: str):
 		result = {"message": message}

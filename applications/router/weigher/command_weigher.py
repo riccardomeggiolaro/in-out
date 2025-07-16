@@ -20,7 +20,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		self.router_action_weigher = APIRouter()
 
 		self.router_action_weigher.add_api_route('/realtime', self.StartRealtime, methods=['GET'])
-		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostics, methods=['GET'])
+		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/stop-all-command', self.StopAllCommand, methods=['GET'])
 		self.router_action_weigher.add_api_route('/print', self.Generic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/in', self.Weight1, methods=['POST'])
@@ -29,8 +29,10 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
+		self.router_action_weigher.add_api_route('/rele', self.Rele, methods=['GET'])
 
-		self.router_action_weigher.add_api_websocket_route('/realtime', self.websocket_endpoint)
+		self.router_action_weigher.add_api_websocket_route('/realtime', self.websocket_endpoint_realtime)
+		self.router_action_weigher.add_api_websocket_route('/diagnostic', self.websocket_endpoint_diagnostic)
 
 	async def StartRealtime(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
@@ -44,8 +46,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			}
 		}
 
-	async def StartDiagnostics(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="DIAGNOSTICS")
+	async def StartDiagnostic(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="DIAGNOSTIC")
 		return {
 			"instance": instance,
 			"command_details": {
@@ -240,25 +242,50 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				"error_message": error_message
 			}
 		}
+
+	async def Rele(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), rele: Optional[str] = None):
+		if not rele:
+			raise HTTPException(status_code=400, detail="Need to insert a rele")
+		reles = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"].copy()
+		if rele not in reles:
+			raise HTTPException(status_code=400, detail="Rele doesn't exist in configuration")
+		rele = (rele, lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"][rele])
+		modope = "OPENRELE" if rele[1] == 0 else "CLOSERELE"
+		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope, port_rele=rele)
+		return {
+			"instance": instance,
+			"command_details": {
+				"status_modope": status_modope,
+				"command_executed": command_executed,
+				"error_message": error_message
+			}
+		}
   
-	async def websocket_endpoint(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def websocket_endpoint_realtime(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.connect(websocket)
 		while instance.instance_name in weighers_data and instance.weigher_name in weighers_data[instance.instance_name]:
+			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+			status = weigher["status"]
+			always_execute_realtime_in_undeground = weigher["always_execute_realtime_in_undeground"]
+			modope_on_close = "REALTIME" if always_execute_realtime_in_undeground else "OK"
 			if websocket not in weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections:
+				if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) == 0:
+					await self.StopAllCommand(instance=instance)
+					md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
 			if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) > 0:
-				status = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]["status"]
 				if status == 200:
 					modope_in_execution = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-					if modope_in_execution in ["OK", "DIAGNOSTICS"]:
-						if modope_in_execution == "DIAGNOSTICS":
+					if modope_in_execution in ["OK", "DIAGNOSTIC"]:
+						if modope_in_execution == "DIAGNOSTIC":
 							await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
-								"status":"--",
+								"status":"Diagnostica in corso",
 								"type":"--",
-								"net_weight": "Diagnostica in corso",
+								"net_weight": "--",
 								"gross_weight":"--",
 								"tare":"--",
-								"unite_measure": "--"
+								"unite_measure": "--",
+								"potential_net_weight": None
 							})
 						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
 				else:
@@ -273,9 +300,48 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						"net_weight": message,
 						"gross_weight":"--",
 						"tare":"--",
-						"unite_measure": str(status)
+						"unite_measure": str(status),
+						"potential_net_weight": None
 					})
 			else:
-				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="OK")
+				await self.StopAllCommand(instance=instance)
+				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
+				break
+			await asyncio.sleep(1)
+
+	async def websocket_endpoint_diagnostic(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.connect(websocket)
+		while instance.instance_name in weighers_data and instance.weigher_name in weighers_data[instance.instance_name]:
+			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+			status = weigher["status"]
+			diagnostic_has_priority_than_realtime = weigher["diagnostic_has_priority_than_realtime"]
+			always_execute_realtime_in_undeground = weigher["always_execute_realtime_in_undeground"]
+			modope_on_close = "REALTIME" if always_execute_realtime_in_undeground else "OK"
+			if websocket not in weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.active_connections:
+				if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.active_connections) == 0:
+					await self.StopAllCommand(instance=instance)
+					md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
+				break
+			if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.active_connections) > 0:
+				if status == 200:
+					modope_in_execution = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+					if modope_in_execution in ["OK", "REALTIME"]:
+						if modope_in_execution == "REALTIME" and not diagnostic_has_priority_than_realtime:
+							await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.broadcast({
+								"status": "Realtime in esecuzione"
+							})
+						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="DIAGNOSTIC")
+				else:
+					message = "Pesa scollegata"
+					if status == 301:
+						message = "Connessione non settata"
+					elif status == 201:
+						message = "Protocollo pesa non valido"
+					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.broadcast({
+						"status": message
+					})
+			else:
+				await self.StopAllCommand(instance=instance)
+				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
 			await asyncio.sleep(1)
