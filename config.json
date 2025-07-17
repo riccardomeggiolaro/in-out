@@ -81,7 +81,9 @@
                                 "vehicle": {
                                     "description": null,
                                     "id": null,
-                                    "plate": null
+                                    "plate": null,
+                                    "tare": null,
+                                    "white_list": null
                                 }
                             },
                             "id_selected": {
@@ -114,8 +116,8 @@
                             "weighing": {
                                 "cams": [],
                                 "print": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
                                 "set_rele": [
                                     {
@@ -136,7 +138,7 @@
                         "port_rele": null,
                         "printer_name": "Canon_iR_ADV_C5235_5240",
                         "rele": {
-                            "1": 1
+                            "1": 0
                         },
                         "run": true,
                         "terminal": "egt-af03"

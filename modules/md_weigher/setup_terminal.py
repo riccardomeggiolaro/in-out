@@ -2,7 +2,7 @@ from modules.md_weigher.types import Realtime, Diagnostic, Weight
 from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
 from libs.lb_utils import checkCallbackFormat, callCallback
-from typing import Callable, Any
+from typing import Callable, Union
 
 class __SetupWeigherConnection:
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
@@ -196,7 +196,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.callback_rele = lambda: cb_rele(self.self_config.name, weigher_name, self.port_rele)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: int = 0, data_assigned: int = None, port_rele: tuple = None):
+	def setModope(self, mod: str, presettare: Union[int, float] = 0, data_assigned: int = None, port_rele: tuple = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
@@ -250,7 +250,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 					# se passo PRESETTARE
 					if mod == "PRESETTARE" and mod:
 						# controllo che la presettare passata sia un numero e maggiore o uguale di 0
-						if str(presettare).isdigit() and int(presettare) >= 0:
+						if str(presettare).replace(".", "").isdigit() and float(presettare) >= 0:
 							self.preset_tare = presettare # imposto la presettare
 						else:
 							return 500, "La tara deve essere di almeno 0 kg" # ritorno errore se la presettare non era valida

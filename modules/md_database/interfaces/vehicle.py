@@ -2,10 +2,13 @@ from pydantic import BaseModel, validator, root_validator, field_validator
 from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from datetime import datetime
+from typing import Union
 
 class Vehicle(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
+	tare: Optional[Union[int, float]] = None
+	white_list: Optional[bool] = None
 	date_created: Optional[datetime] = None
 	reservations: List[any] = []
 	id: Optional[int] = None
@@ -17,6 +20,8 @@ class Vehicle(BaseModel):
 class VehicleDataDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
+	tare: Optional[Union[int, float]] = None
+	white_list: Optional[bool] = None
 	id: Optional[int] = None
  
 	@validator('id', pre=True, always=True)
@@ -29,6 +34,8 @@ class VehicleDataDTO(BaseModel):
 class VehicleDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
+	tare: Optional[Union[int, float]] = None
+	white_list: Optional[bool] = None
 	id: Optional[int] = None
 
 	@validator('id', pre=True, always=True)
@@ -40,6 +47,8 @@ class VehicleDTO(BaseModel):
 			else:
 				values['description'] = data.get('description')
 				values['plate'] = data.get('plate')
+				values['tare'] = data.get('tare')
+				values['white_list'] = data.get('white_list')
 		return v
 
 	class Config:
@@ -47,28 +56,46 @@ class VehicleDTO(BaseModel):
 		arbitrary_types_allowed = True
 
 class AddVehicleDTO(BaseModel):
-    plate: str
-    description: Optional[str] = None
+	plate: str
+	description: Optional[str] = None
+	tare: int = None
+	white_list: Optional[bool] = None
 
-    @field_validator('*', mode='before')
-    @classmethod
-    def empty_str_to_none(cls, value, info):
-        if isinstance(value, str) and value == "":
-            return None
-        return value
+	@validator('tare', pre=True, always=True)
+	def check_plate(cls, v):
+		if v and v <= 0:
+			raise ValueError('Plate must be greater than 0')
+		return v
+
+	@field_validator('*', mode='before')
+	@classmethod
+	def empty_str_to_none(cls, value, info):
+		if isinstance(value, str) and value == "":
+			return None
+		return value
 
 class SetVehicleDTO(BaseModel):
-    plate: Optional[str] = None
-    description: Optional[str] = None
+	plate: Optional[str] = None
+	description: Optional[str] = None
+	tare: int = None
+	white_list: Optional[bool] = None
 
-    @root_validator(pre=True)
-    def check_at_least_one_field(cls, values):
-        plate = values.get('plate')
-        description = values.get('description')
-        if not description and not plate:
-            raise ValueError('At least one of "description" or "plate" must be provided.')
-        return values
+	@validator('tare', pre=True, always=True)
+	def check_plate(cls, v):
+		if v and v < -1 or v == 0:
+			raise ValueError('Plate must be greater than 0')
+		return v
+
+	@root_validator(pre=True)
+	def check_at_least_one_field(cls, values):
+		plate = values.get('plate')
+		description = values.get('description')
+		if not description and not plate:
+			raise ValueError('At least one of "description" or "plate" must be provided.')
+		return values
     
 class FilterVehicleDTO(BaseModel):
     plate: Optional[str] = None
     description: Optional[str] = None
+    tare: Optional[Union[int, float]] = None
+    white_list: Optional[bool] = None

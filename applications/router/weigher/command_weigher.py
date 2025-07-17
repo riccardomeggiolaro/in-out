@@ -12,6 +12,7 @@ from applications.router.anagrafic.reservation import ReservationRouter
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.interfaces.reservation import AddReservationDTO
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
 	def __init__(self):
@@ -182,20 +183,38 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def OutByPlate(self, request: Request, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		try:
 			reservation = get_reservation_by_plate_if_uncomplete(plate=plate_dto.plate)
+			if not reservation:
+				vehicle = await get_data_by_attributes("vehicle", {"plate": plate_dto.plate})
+				if vehicle and vehicle["white_list"]:
+					reservation = await self.addReservation(request=request, body=AddReservationDTO(**{
+						"plate": plate_dto.plate,
+						"number_in_out": 1,
+						"type": "WHITELIST",
+						"hidden": True
+					}))
 			if reservation:
 				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				specific = "telecamera " if request.state.user.level == 0 else ""
 				if current_weigher_data["id_selected"]["id"] != reservation.id:
 					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"Targa '{plate_dto.plate}' selezionata da {specific}'{request.client.host}'")
 					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation.id}}), instance=instance)
-				result = await self.Weight2(instance=instance)
-				if result["command_details"]["error_message"]:
-					error = result["command_details"]["error_message"]
-					error_message = f"Errore effettuando pesata da {specific}'{request.client.host}': {error}"
+				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+					instance_name=instance.instance_name, 
+					weigher_name=instance.weigher_name, 
+					modope="WEIGHING", 
+					data_assigned=reservation.id)
+				if error_message:
+					error_message = f"Errore effettuando pesata da {specific}'{request.client.host}': {error_message}"
 					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=error_message)
-				# if result["command_details"]["command_executed"] is False:
-				# 	await self.DeleteData(instance=instance)
-				return result
+				return {
+					"instance": instance,
+					"command_details": {
+						"status_modope": status_modope,
+						"command_executed": command_executed,
+						"error_message": error_message
+					}
+				}
+			raise HTTPException(status_code=404, detail=f"Reservation not found for plate '{plate_dto.plate}'")
 		except Exception as e:
 			lb_log.error(e)
 			return HTTPException(status_code=500, detail=str(e))

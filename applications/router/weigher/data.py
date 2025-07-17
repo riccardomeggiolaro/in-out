@@ -78,6 +78,8 @@ class DataRouter(ConfigWeigher):
 						"id": reservation.vehicle.id if reservation.vehicle else None,
 						"plate": reservation.vehicle.plate if reservation.vehicle else None,
 						"description": reservation.vehicle.description if reservation.vehicle else None,
+						"tare": reservation.vehicle.tare if reservation.vehicle else None,
+						"white_list": reservation.vehicle.white_list if reservation.vehicle else None,
 					},
 					"material": {
 						"id": id_material,
@@ -90,7 +92,12 @@ class DataRouter(ConfigWeigher):
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idReservation=data_dto.id_selected.id)
 		else:
 			self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
-		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		tare = data["data_in_execution"]["vehicle"]["tare"]
+		if data["id_selected"]["weight1"] is None and tare is not None:
+			if data_dto.data_in_execution.vehicle.plate is not None or data_dto.id_selected.id not in [-1, None]:
+				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
+		return data
 
 	async def DeleteData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		self.deleteDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)

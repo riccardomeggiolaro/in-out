@@ -1,10 +1,11 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, Numeric
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from enum import Enum as PyEnum
 from datetime import datetime
 import libs.lb_config as lb_config
 from libs.lb_utils import hash_password
+from typing import Union
 
 # Database connection
 Base = declarative_base()
@@ -63,6 +64,8 @@ class Vehicle(Base):
     id = Column(Integer, primary_key=True, index=True)
     plate = Column(String(collation="NOCASE"), index=True, unique=True)
     description = Column(String, nullable=True)
+    tare = Column(Integer, nullable=True)
+    white_list = Column(Boolean, default=False)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
@@ -195,7 +198,7 @@ upload_file_datas_required_columns = {
     "subject": {"social_reason": str, "telephone": str, "cfpiva": str},
     "vector": {"social_reason": str, "telephone": str, "cfpiva": str},
     "driver": {"social_reason": str, "telephone": str},
-    "vehicle": {"plate": str, "description": str},
+    "vehicle": {"plate": str, "description": str, "tare": int, "white_list": bool},
     "material": {"description": str},
     "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str}
 }

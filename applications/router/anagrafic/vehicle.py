@@ -36,6 +36,11 @@ class VehicleRouter(WebSocket):
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
+            if "white_list" in query_params:
+                if query_params["white_list"] == "true":
+                    query_params["white_list"] = True
+                elif query_params["white_list"] == "false":
+                    query_params["white_list"] = False
             data, total_rows = filter_data("vehicle", query_params, limit, offset, None, None, ('date_created', 'desc'))
             return {
                 "data": data,

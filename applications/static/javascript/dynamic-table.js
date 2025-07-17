@@ -71,10 +71,11 @@ async function updateTable() {
     if (itemName === "reservation") queryParams += `excludeTestWeighing=true&`;
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
-        if (input.name && input.value) {
+        if (input.name && input.type != "checkbox" && input.value || input.name && input.type == "checkbox" && input.checked) {
             if (input.type == 'text') queryParams += `${input.name}=${input.value}%&`;
             else if (input.type == 'number') queryParams += `${input.name}=${input.value}&`;
             else if (input.type == 'date') queryParams += `${input.name}=${input.value}&`;
+            else if (input.type == 'checkbox') queryParams += `${input.name}=${input.checked}&`;
         }
     })
     filters.querySelectorAll('select').forEach(select => {
@@ -396,7 +397,7 @@ function toggleExpandRow(row) {
     currentId = isExpanded ? null : row.dataset.id;
 }
 
-function getFormData(form) {
+function getFormData(form, set_minus_one) {
     const formData = {};
     const elements = form.elements;
     for (let element of elements) {
@@ -411,7 +412,7 @@ function getFormData(form) {
                     if (element.type === 'checkbox') currentObj[key] = element.checked;
                     else if (element.type === 'radio' && element.checked) currentObj[key] = element.value;
                     else if (element.type === 'text') currentObj[key] = element.value;
-                    else if (element.type === 'number') currentObj[key] = element.value !== "" ? Number(element.value) : -1;
+                    else if (element.type === 'number') currentObj[key] = element.value !== "" ? Number(element.value) : set_minus_one ? -1 : null;
                 } else {
                     // Se non siamo all'ultimo livello, assicurarsi che l'oggetto esista
                     if (!currentObj[key]) currentObj[key] = {}; // Crea un oggetto vuoto se non esiste
@@ -432,7 +433,7 @@ function removeNullValues(obj) {
 
 const addPopup = document.getElementById('add-popup');
 addPopup.querySelector('#save-btn').addEventListener('click', () => {
-    const data = getFormData(addPopup.querySelector('form'));
+    const data = getFormData(addPopup.querySelector('form'), false);
     const nonNullableData = removeNullValues(data);
     fetch(`${addUrlPath}`, {
         method: 'POST',
@@ -469,7 +470,7 @@ function addRow() {
 
 const editPopup = document.getElementById('edit-popup');
 editPopup.querySelector('#save-btn').addEventListener('click', () => {
-    const data = getFormData(editPopup.querySelector('form'));
+    const data = getFormData(editPopup.querySelector('form'), true);
     let queryParamasIdInOut = currentIdInOut ? `?idInOut=${currentIdInOut}` : '';
     fetch(`${setUrlPath}/${currentId}${queryParamasIdInOut}`, {
         method: 'PATCH',
@@ -548,7 +549,19 @@ function editRow(item) {
                     annidate_value = sub_value;
                     const keyInput = editPopup.querySelector(annidate_key);
                     if (keyInput) {
-                        keyInput.value = annidate_value;
+                        if (keyInput.type === "radio") {
+                            if (annidate_value === "Cliente") annidate_value = "CUSTOMER";
+                            else if (annidate_value === "Fornitore") annidate_value = "SUPPLIER";
+                            document.querySelectorAll(annidate_key).forEach(input => {
+                                if (input.value === annidate_value) {
+                                    input.checked = true;
+                                }
+                            });
+                        } else if (keyInput.type === "checkbox") {
+                            keyInput.checked = annidate_value;
+                        } else {
+                            keyInput.value = annidate_value;
+                        }
                     }
                 })
             } else {
@@ -562,6 +575,8 @@ function editRow(item) {
                                 input.checked = true;
                             }
                         });
+                    } else if (keyInput.type === "checkbox") {
+                        keyInput.checked = annidate_value;
                     } else {
                         keyInput.value = annidate_value;
                     }
