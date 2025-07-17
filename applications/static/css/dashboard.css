@@ -733,3 +733,7 @@ hr {
 .list-weigher {
     visibility: hidden;
 }
+
+#diagnosticPopup .content iframe {
+    height: 241px !important;
+}

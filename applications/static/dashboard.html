@@ -62,8 +62,9 @@
                     <div id="cams" class="cams">
                     </div>
 
-                    <div id="reprint" style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
-                        <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
+                    <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
+                        <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="diagnostic()">⚡ Diagnostica</button>
+                        <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
                     </div>
 
                     <div class="weight">
@@ -240,6 +241,15 @@
                 <div class="footer-buttons reconnection-footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button id="reconnectionButton" class="p-tare-button" onclick="confirmWeighing()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="diagnosticPopup" class="popup" onclick="closeDiagnostic()">
+            <div class="popup-content" onclick="event.stopPropagation();">
+                <div class="content"></div>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closeDiagnostic()">Chiudi</button>
                 </div>
             </div>
         </div>

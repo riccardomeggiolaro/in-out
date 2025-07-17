@@ -43,9 +43,9 @@
         "template_in": "weight_in.html",
         "template_out": "weight_out.html",
         "weighers": {
-            "1": {
+            "2": {
                 "connection": {
-                    "ip": "10.0.5.178",
+                    "ip": "10.0.5.177",
                     "port": 4001,
                     "timeout": 1.0
                 },
@@ -114,8 +114,8 @@
                             "weighing": {
                                 "cams": [],
                                 "print": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "set_rele": [
                                     {

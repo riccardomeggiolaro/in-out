@@ -6,66 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Peso</title>
     <meta name="description" content="About this app" />
-    <style>
-        html,
-        body {
-            margin: 0px;
-        }
-
-        * {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            font-size: 20px;
-        }
-
-        p {
-            margin-top: 0px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        #rele {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        hr {
-            margin-top: 0px;
-            margin-bottom: 15px;
-        }
-
-        button {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-            transition: box-shadow 0.3s ease;
-            background-color: #1362b8;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            border-color: #1362b8;
-            cursor: pointer;
-            flex: 1;
-            height: 2rem;
-        }
-
-        button:active {
-            background-color: #00346b;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-</style>
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <link rel="stylesheet" href="/static/css/diagnostic.css">
 </head>
 <!-- Rest of your HTML remains unchanged -->
 </style>
 </head>
 <body>
+    <div id="navbar-container"></div>
+
+    <div id="snackbar"></div>
+
     <div>
-        <p><strong>Relè:</strong></p>
+        <div id="rele">
 
-        <div id="rele"></div>
-
-        <hr>
+        </div>
 
         <div>
             <table>
@@ -93,8 +48,13 @@
         </div>
     </div>
 
+    <select class="list-weigher">
+    </select>
+
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
     <script>
         let isRefreshing = false;
         let pathname = '';
@@ -108,15 +68,53 @@
         const serialNumber = document.querySelector('#serial-number');
         const rz = document.querySelector('#rz');
         const vl = document.querySelector('#vl');
+        const selectedIdWeigher = document.querySelector('.list-weigher');
         let currentWeigherPath;
         let _data;
         
         document.addEventListener('DOMContentLoaded', async () => {
-            currentWeigherPath = localStorage.getItem('currentWeigherPath');
-            getInstanceWeigher(currentWeigherPath);
-            connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime);
+            fetch('/api/config-weigher/all/instance')
+            .then(res => res.json())
+            .then(res => {
+                currentWeigherPath = localStorage.getItem('currentWeigherPath');
+                let selected = false;
+                for (let instance in res) {
+                    for (let weigher in res[instance]["nodes"]) {
+                        const option = document.createElement('option');
+                        option.value = `?instance_name=${instance}&weigher_name=${weigher}`;
+                        option.innerText = `${weigher}`;
+                        if (option.value === currentWeigherPath) {
+                            option.selected = true
+                            selected = true;
+                        };
+                        selectedIdWeigher.appendChild(option);
+                    }
+                }
+                if (selected === false) selectedIdWeigher.selectedIndex = 0;
+                // Innesca l'evento 'change' manualmente
+                selectedIdWeigher.dispatchEvent(new Event('change'));
+                instances = res;
+                if (selectedIdWeigher.children.length > 1) {
+                    selectedIdWeigher.style.visibility = 'visible';
+                } 
+            });
         });
 
+        selectedIdWeigher.addEventListener('change', (event) => {
+            currentWeigherPath = event.target.value;
+            if (currentWeigherPath) {
+                closeWebSocket();
+                firmware.textContent = "N/A";
+                modelName.textContent = "N/A";
+                serialNumber.textContent = "N/A";
+                rz.textContent = "N/A";
+                vl.textContent = "N/A";
+                connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime)
+                getInstanceWeigher(currentWeigherPath)
+                .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
+            }
+        });
+       
         async function getInstanceWeigher(path) {
             await fetch(`/api/config-weigher/instance/node${path}`)
             .then(res => {
@@ -135,7 +133,7 @@
                     Object.entries(obj.rele).forEach(([key, value]) => {
                         const buttonRele = document.createElement("button");
                         buttonRele.id = `rele-${key}`;
-                        buttonRele.innerHTML = `<strong>${key} - ${value === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+                        buttonRele.innerHTML = `<strong>${key}</strong> - ${value === 0 ? 'Chiuso' : 'Aperto'}`;
                         buttonRele.onclick = () => {
                             fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);
                         }
@@ -215,7 +213,7 @@
                 vl.textContent = obj.vl;
             } else if (isDigit) {
                 const buttonRele = document.querySelector(`#rele-${firstKey}`);
-                buttonRele.innerHTML = `<strong>${firstKey} - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+                buttonRele.innerHTML = `<strong>${firstKey}</strong> - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}`;
             }
         }
     </script>

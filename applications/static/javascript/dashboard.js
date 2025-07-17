@@ -181,7 +181,7 @@ async function getInstanceWeigher(path) {
         divisionValue = obj.division;
         maxThesholdValue = obj.max_theshold;
         if (!obj.events.weighing.print.in && !obj.events.weighing.print.out) reprint.style.display = 'none';
-        else reprint.style.display = 'flex';
+        else reprint.style.display = 'block';
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -721,6 +721,66 @@ function updateUIRealtime(e) {
     } else if (obj.message) {
         showSnackbar(obj.message, 'rgb(208, 255, 208)', 'black');
     }
+}
+
+async function diagnostic() {
+    try {
+        const response = await fetch(`${pathname}/diagnostic.html`);
+        
+        if (response.status === 404) {
+            alert("La pagina di diagnostica non è disponibile.");
+            return;
+        }
+        
+        const diagnosticPopup = document.getElementById('diagnosticPopup');
+        const popupContent = diagnosticPopup.querySelector('.popup-content');
+        const content = diagnosticPopup.querySelector('.content');
+        
+        // Crea iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = `${pathname}/diagnostic.html`;
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.id = 'diagnosticIframe'; // Aggiungi un ID per riferimento
+        
+        // Svuota il contenuto e aggiungi iframe e pulsante
+        popupContent.style.position = 'relative'; // Per posizionare il pulsante
+        content.innerHTML = '';
+        content.appendChild(iframe);
+        
+        // Mostra popup
+        diagnosticPopup.style.display = "flex";
+        popupContent.classList.add("show");
+        
+    } catch (error) {
+        console.error('Errore nel caricamento della diagnostica:', error);
+        alert("Errore nel caricamento della pagina di diagnostica.");
+    }
+}
+
+function closeDiagnostic() {
+    const diagnosticPopup = document.getElementById('diagnosticPopup');
+    const popupContent = diagnosticPopup.querySelector('.popup-content');
+    const content = diagnosticPopup.querySelector('.content');
+    const iframe = document.getElementById('diagnosticIframe');
+    
+    if (iframe) {
+        // Ferma tutti i processi JavaScript nell'iframe
+        iframe.src = 'about:blank'; // Carica una pagina vuota per fermare tutto
+        
+        // Oppure rimuovi completamente l'iframe
+        // iframe.remove();
+    }
+    
+    // Rimuovi la classe per nascondere con animazione
+    popupContent.classList.remove("show");
+    
+    // Nascondi il popup dopo l'animazione
+    setTimeout(() => {
+        diagnosticPopup.style.display = "none";
+        content.innerHTML = ''; // Pulisci tutto il contenuto
+    }, 300); // Tempo della transizione
 }
 
 async function printLastInOut() {
