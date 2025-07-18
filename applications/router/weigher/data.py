@@ -26,7 +26,20 @@ class DataRouter(ConfigWeigher):
 
 	async def SetData(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
-		if tare != "0" and data_dto.id_selected.id not in [-1, None]:
+		weight1 = None
+		id_material = None
+		description_material = None
+		if data_dto.id_selected.id not in [-1, None]:
+			reservation = get_reservation_by_id(data_dto.id_selected.id)
+			weight1 = None
+			if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1:
+				weight1 = reservation.in_out[-1].weight1.weight
+			id_material = None
+			description_material = None
+			if len(reservation.in_out) > 0 and reservation.in_out[-1].idMaterial:
+				id_material = reservation.in_out[-1].material.id
+				description_material = reservation.in_out[-1].material.description
+		if tare != "0" and data_dto.id_selected.id not in [-1, None] and weight1:
 			raise HTTPException(status_code=400, detail="E' necessario rimuovere la tara per selezionare il mezzo perchè ha già effettuato l'entrata.")
 		if data_dto.data_in_execution.vehicle.id:
 			reservation = get_reservation_by_vehicle_id_if_incomplete(data_dto.data_in_execution.vehicle.id)
@@ -46,15 +59,6 @@ class DataRouter(ConfigWeigher):
 		if data_dto.id_selected.id:
 			await self.DeleteData(instance=instance)
 			if data_dto.id_selected.id != -1:
-				reservation = get_reservation_by_id(data_dto.id_selected.id)
-				weight1 = None
-				if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1:
-					weight1 = reservation.in_out[-1].weight1.weight
-				id_material = None
-				description_material = None
-				if len(reservation.in_out) > 0 and reservation.in_out[-1].idMaterial:
-					id_material = reservation.in_out[-1].material.id
-					description_material = reservation.in_out[-1].material.description
 				data_in_execution = DataInExecutionType(**{
 					"typeSubject": reservation.typeSubject.name,
 					"subject": {

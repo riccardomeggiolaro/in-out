@@ -58,7 +58,7 @@ class VehicleDTO(BaseModel):
 class AddVehicleDTO(BaseModel):
 	plate: str
 	description: Optional[str] = None
-	tare: int = None
+	tare: Optional[int] = None
 	white_list: Optional[bool] = None
 
 	@validator('tare', pre=True, always=True)

@@ -5,7 +5,6 @@ from enum import Enum as PyEnum
 from datetime import datetime
 import libs.lb_config as lb_config
 from libs.lb_utils import hash_password
-from typing import Union
 
 # Database connection
 Base = declarative_base()
