@@ -16,6 +16,8 @@ class ConfigWeigher(CallbackWeigher):
         
         self.router_config_weigher = APIRouter()
     
+        self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
+        self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/all/instance', self.GetAllInstance, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance', self.GetInstance, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance', self.AddInstance, methods=['POST'], dependencies=[Depends(is_super_admin)])
@@ -27,6 +29,14 @@ class ConfigWeigher(CallbackWeigher):
         self.router_config_weigher.add_api_route('/instance/connection', self.SetInstanceConnection, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/instance/connection', self.DeleteInstanceConnection, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+
+    async def GetAllConfiguration(self):
+        return lb_config.g_config["app_api"]
+
+    async def SetReturnCopyPdfWeighing(self, return_pdf_copy_after_weighing: bool):
+        lb_config.g_config["app_api"]["return_pdf_copy_after_weighing"] = return_pdf_copy_after_weighing
+        lb_config.saveconfig()
+        return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
 
     async def GetAllInstance(self):
         return lb_config.g_config["app_api"]["weighers"]

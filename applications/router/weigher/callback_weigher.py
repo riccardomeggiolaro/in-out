@@ -20,7 +20,7 @@ from applications.router.weigher.functions import Functions
 from libs.lb_folders import structure_folder_rule, save_bytes_to_file
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.weigher.manager_weighers_data import weighers_data
-from applications.utils.utils_report import generate_report, save_file_dir
+from applications.utils.utils_report import generate_html_report, save_file_dir
 from libs.lb_printer import printer
 
 class CallbackWeigher(Functions, WebSocket):
@@ -156,6 +156,7 @@ class CallbackWeigher(Functions, WebSocket):
 			})
 			reservation_data_json = Reservation(**updated_reservation).json()
 			asyncio.run(self.broadcastUpdateAnagrafic("reservation", {"weighing": reservation_data_json}))
+			last_pesata.data_assigned = reservation_data_json
 			############################
 			# RIMUOVE TUTTI I DATA IN ESECUZIONE E L'ID SELEZIONATO SULLA DASHBAORD
 			self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
@@ -164,11 +165,12 @@ class CallbackWeigher(Functions, WebSocket):
 			# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
-			template_in = lb_config.g_config["app_api"]["template_in"]
-			template_out = lb_config.g_config["app_api"]["template_out"]
+			reports_dir = lb_config.g_config["app_api"]["path_reports"]
+			report_in = lb_config.g_config["app_api"]["report_in"]
+			report_out = lb_config.g_config["app_api"]["report_out"]
 			print_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["in"]
 			print_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["out"]
-			template = template_out if tare > 0 or last_in_out.idWeight2 else template_in
+			report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
 			print = print_out if tare > 0 or last_in_out.idWeight2 else print_in
 			path_pdf = lb_config.g_config["app_api"]["path_pdf"]
 			name_file = weigher_name
@@ -204,8 +206,8 @@ class CallbackWeigher(Functions, WebSocket):
 				variables.weight2.weight = last_in_out.weight2.weight if last_in_out.idWeight2 else ""
 			variables.net_weight = last_in_out.net_weight
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
-			if template:
-				html = generate_report(template, v=variables.dict())
+			if report:
+				html = generate_html_report(reports_dir, report, v=variables.dict())
 				pdf = printer.generate_pdf_from_html(html_content=html)
 				if print:
 					job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)

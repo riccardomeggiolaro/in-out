@@ -71,6 +71,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 
 	async def Generic(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
+		reservation_id = None
 		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
 		else:
@@ -86,6 +87,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				modope="WEIGHING", 
 	          	data_assigned=reservation.id
 			)
+			reservation_id = reservation.id
 			if error_message:
 				await self.deleteReservation(request=None, id=reservation.id)
 		return {
@@ -94,7 +96,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				"status_modope": status_modope,
 				"command_executed": command_executed,
 				"error_message": error_message
-			}
+			},
+			"reservation_id": reservation_id
 		}
 
 	async def Weight1(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
@@ -134,7 +137,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				"status_modope": status_modope,
 				"command_executed": command_executed,
 				"error_message": error_message
-			}
+			},
+			"reservation_id": current_id
 		}
 
 	async def Weight2(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
@@ -177,7 +181,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				"status_modope": status_modope,
 				"command_executed": command_executed,
 				"error_message": error_message
-			}
+			},
+			"reservation_id": idReservation
 		}
 
 	async def OutByPlate(self, request: Request, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
@@ -217,7 +222,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						"status_modope": status_modope,
 						"command_executed": command_executed,
 						"error_message": error_message
-					}
+					},
+					"reservation_id": reservation["id"]
 				}
 			raise HTTPException(status_code=404, detail=f"Reservation not found for plate '{plate_dto.plate}'")
 		except Exception as e:

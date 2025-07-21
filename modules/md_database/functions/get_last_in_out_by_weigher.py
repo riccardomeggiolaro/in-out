@@ -1,5 +1,5 @@
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, Weighing, InOut
+from modules.md_database.md_database import SessionLocal, Weighing, InOut, Reservation
 
 def get_last_in_out_by_weigher(weigher_name=None):
     """
@@ -24,7 +24,12 @@ def get_last_in_out_by_weigher(weigher_name=None):
         if id_in_out:
             in_out = session.query(InOut
                     ).options(
-                        selectinload(InOut.reservation),
+                        selectinload(InOut.reservation).options(
+                            selectinload(Reservation.vehicle),
+                            selectinload(Reservation.driver),
+                            selectinload(Reservation.subject),
+                            selectinload(Reservation.vector)
+                        ),
                         selectinload(InOut.material),
                         selectinload(InOut.weight1),
                         selectinload(InOut.weight2)

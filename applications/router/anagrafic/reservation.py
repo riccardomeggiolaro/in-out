@@ -3,6 +3,10 @@ from fastapi.responses import StreamingResponse
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import ReservationStatus, LockRecordType
 from modules.md_database.interfaces.reservation import Reservation, AddReservationDTO, SetReservationDTO
+from modules.md_database.interfaces.subject import SubjectDataDTO
+from modules.md_database.interfaces.vector import VectorDataDTO
+from modules.md_database.interfaces.driver import DriverDataDTO
+from modules.md_database.interfaces.vehicle import VehicleDataDTO
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.get_list_reservations import get_list_reservations
@@ -17,6 +21,7 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.functions.get_last_in_out_by_weigher import get_last_in_out_by_weigher
+from modules.md_database.functions.get_in_out_by_id import get_last_in_out_by_id
 from applications.utils.utils import get_query_params
 from applications.utils.utils_weigher import get_query_params_name_node, InstanceNameWeigherDTO
 from applications.utils.utils_report import find_file_in_directory
@@ -33,6 +38,8 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 import libs.lb_config as lb_config
 from libs.lb_printer import printer
+from applications.router.weigher.types import ReportVariables
+from applications.utils.utils_report import generate_html_report, save_file_dir
 
 class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -42,6 +49,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         
         self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
         self.router.add_api_route('/in-out/list', self.getListInOut, methods=['GET'])
+        self.router.add_api_route('/in-out/pdf/{id}', self.pdfInOut, methods=['GET'])
         self.router.add_api_route('/in-out/print-last', self.printLastInOut, methods=['GET'])
         self.router.add_api_route('/weighing/list', self.getListWeighing, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
@@ -129,27 +137,72 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
+    async def get_data_variables(self, in_out):
+        report_in = lb_config.g_config["app_api"]["report_in"]
+        report_out = lb_config.g_config["app_api"]["report_out"]
+        report = report_out if in_out.idWeight2 else report_in
+        name_file = ""
+        variables = ReportVariables(**{})
+        variables.typeSubject = in_out.reservation.typeSubject.value
+        variables.subject = in_out.reservation.subject if in_out.reservation.subject else SubjectDataDTO(**{})
+        variables.vector = in_out.reservation.vector if in_out.reservation.vector else VectorDataDTO(**{})
+        variables.driver = in_out.reservation.driver if in_out.reservation.driver else DriverDataDTO(**{})
+        variables.vehicle = in_out.reservation.vehicle if in_out.reservation.vehicle else VehicleDataDTO(**{})
+        variables.note = in_out.reservation.note
+        variables.document_reference = in_out.reservation.document_reference
+        if in_out.idWeight1:
+            name_file = f"{in_out.weight1.weigher}_{in_out.weight1.pid}"
+            variables.weight1.date = in_out.weight1.date.strftime("%d/%m/%Y %H:%M")
+            variables.weight1.pid = in_out.weight1.pid
+            variables.weight1.weight = in_out.weight1.weight
+        if in_out.idWeight2:
+            if in_out.weight2.tare > 0:
+                name_file = f"{in_out.weight2.weigher}_{in_out.weight2.pid}"
+                variables.weight1.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M")
+                variables.weight1.pid = in_out.weight2.pid
+                variables.weight1.weight = in_out.weight2.tare
+                variables.weight1.type = "PT" if in_out.weight2.is_preset_tare else "Tara"
+            else:
+                name_file = f"{in_out.weight2.weigher}_{in_out.weight1.pid}_{in_out.weight2.pid}"
+            variables.weight2.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M") if in_out.idWeight2 else ""
+            variables.weight2.pid = in_out.weight2.pid if in_out.idWeight2 else ""
+            variables.weight2.weight = in_out.weight2.weight if in_out.idWeight2 else ""
+        variables.net_weight = in_out.net_weight
+        name_file += ".pdf"
+        return name_file, variables, report
+
+    async def pdfInOut(self, id: int):
+        in_out = get_last_in_out_by_id(id)
+        reports_dir = lb_config.g_config["app_api"]["path_reports"]
+        name_file, variables, report = await self.get_data_variables(in_out)
+        html = generate_html_report(reports_dir, report, v=variables.dict())
+        pdf = printer.generate_pdf_from_html(html_content=html)
+        return StreamingResponse(
+            BytesIO(pdf),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={name_file}"}
+        )
+
     async def printLastInOut(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         path_pdf = lb_config.g_config["app_api"]["path_pdf"]
+        reports_dir = lb_config.g_config["app_api"]["path_reports"]
         printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
         number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
         in_out = get_last_in_out_by_weigher(weigher_name=instance.weigher_name)
         if not in_out:
             raise HTTPException(status_code=404, detail="Pesata non esistente")
-        file_name = f"{instance.weigher_name}"
-        if in_out.weight1:
-            file_name += f"_{in_out.weight1.pid}"
-        if in_out.weight2:
-            file_name += f"_{in_out.weight2.pid}"
-        file_name += ".pdf"
-        file = find_file_in_directory(path_pdf, file_name)
+        name_file, variables, report = await self.get_data_variables(in_out)
+        file = find_file_in_directory(path_pdf, name_file)
         if not file:
-            raise HTTPException(status_code=404, detail="Report non trovato")
+            html = generate_html_report(reports_dir, report, v=variables.dict())
+            pdf = printer.generate_pdf_from_html(html_content=html)
+            save_file_dir(path_pdf, name_file, pdf)
+            file = find_file_in_directory(path_pdf, name_file)
         job_id, message1, message2 = printer.print_pdf(file, printer_name, number_of_prints)
         if not job_id:
             raise HTTPException(status_code=404, detail=f"{message1} {message2}")
         return { "message": message2 }
-
+    
     async def getListWeighing(self, query_params: Dict[str, Union[str, Union[str, int]]] = Depends(get_query_params), weigher_name: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None):
         try:
             # Handle weigher_name

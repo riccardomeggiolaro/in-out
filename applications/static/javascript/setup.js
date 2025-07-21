@@ -99,9 +99,45 @@ async function loadSetupWeighers() {
     window.addCam = addCam;
     window.addRele = addRele;
     
-    await fetch('/api/config-weigher/all/instance')
+    await fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(data => {
+        data = data["weighers"];
+        const labelReturnPdfCopyAfterWeighing = document.createElement('label');
+        labelReturnPdfCopyAfterWeighing.textContent = "Ritorna copia pdf all'utente che effettua la pesata ";
+        const returnPdfCopyAfterWeighing = document.createElement('input');
+        returnPdfCopyAfterWeighing.type = 'checkbox';
+        returnPdfCopyAfterWeighing.onchange = (e) => {
+            const checked = e.target.checked;
+            fetch(`/api/config-weigher/configuration/return-pdf-copy-after-weighing/${checked}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+        }
+        weighers_config.appendChild(labelReturnPdfCopyAfterWeighing);
+        weighers_config.appendChild(returnPdfCopyAfterWeighing);
+        const br = document.createElement('br');
+        const labelSavePdfPath = document.createElement('label');
+        labelSavePdfPath.textContent = "Directory salvataggio pesata in pdf ";
+        const savePdfPath = document.createElement('input');
+        savePdfPath.type = 'text';
+        savePdfPath.value = data.save_pdf_path ? data.save_pdf_path : '';
+        savePdfPath.onblur = (e) => {
+            const value = e.target.value;
+            fetch(`/api/config-weigher/configuration/save-pdf-path/${value}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+        }
+        weighers_config.appendChild(br);
+        weighers_config.appendChild(labelSavePdfPath);
+        weighers_config.appendChild(savePdfPath);
         const addInstance = document.createElement('button');
         addInstance.classList.toggle('container-buttons');
         addInstance.classList.toggle('add-btn');

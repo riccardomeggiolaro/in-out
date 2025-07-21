@@ -49,6 +49,8 @@ let reconnectTimeout;
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
 
+let return_pdf_copy_after_weighing = false;
+
 let instances = {};
 
 let firmwareValue;
@@ -60,6 +62,8 @@ let divisionValue;
 let maxThesholdValue;
 
 let confirmWeighing;
+
+let reservation_id;
 
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
@@ -86,13 +90,14 @@ const observer = new MutationObserver(() => updateStyle());
 
 document.addEventListener('DOMContentLoaded', async () => {
     updateStyle();
-    fetch('/api/config-weigher/all/instance')
+    fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(res => {
         currentWeigherPath = localStorage.getItem('currentWeigherPath');
+        return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         let selected = false;
-        for (let instance in res) {
-            for (let weigher in res[instance]["nodes"]) {
+        for (let instance in res["weighers"]) {
+            for (let weigher in res["weighers"][instance]["nodes"]) {
                 const option = document.createElement('option');
                 option.value = `?instance_name=${instance}&weigher_name=${weigher}`;
                 option.innerText = `${weigher}`;
@@ -106,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (selected === false) selectedIdWeigher.selectedIndex = 0;
         // Innesca l'evento 'change' manualmente
         selectedIdWeigher.dispatchEvent(new Event('change'));
-        instances = res;
+        instances = res["weighers"];
         if (selectedIdWeigher.children.length > 1) {
             selectedIdWeigher.style.visibility = 'visible';
         } 
@@ -608,12 +613,40 @@ function updateUIRealtime(e) {
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight != "") {
             let message = `Pesata eseguita! Bilancia: ${obj.weigher_name}.`;
-            if (obj.weight_executed.pid != "") message += ` Pid: ${obj.weight_executed.pid}`;
+            if (obj.weight_executed.pid != "") {
+                message += ` Pid: ${obj.weight_executed.pid}`;
+                obj.data_assigned = JSON.parse(obj.data_assigned);
+                if (obj.data_assigned.id === reservation_id) {
+                    const id_in_out = obj.data_assigned.in_out[obj.data_assigned.in_out.length-1]["id"]
+                    fetch(`/api/anagrafic/reservation/in-out/pdf/${id_in_out}`)
+                    .then(res => {
+                        // Prendi il nome file dall'header Content-Disposition
+                        const disposition = res.headers.get('Content-Disposition');
+                        let filename = 'export.pdf';
+                        if (disposition && disposition.indexOf('filename=') !== -1) {
+                            filename = disposition
+                                .split('filename=')[1]
+                                .replace(/["']/g, '')
+                                .trim();
+                        }
+                        return res.blob().then(blob => ({ blob, filename }));
+                    })
+                    .then(({ blob, filename }) => {
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = window.URL.createObjectURL(blob);
+                        downloadLink.download = filename;
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    });
+                }
+            }
             showSnackbar(message, 'rgb(208, 255, 208)', 'black');
             populateListIn();
         } else { 
             showSnackbar("Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
+        reservation_id = null;
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -832,6 +865,7 @@ async function handleStampa() {
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
         showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+        if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
     } else {
         showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
@@ -864,6 +898,7 @@ async function inWeighing() {
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
         showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+        if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
     } else {
         showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
@@ -902,6 +937,7 @@ async function outWeighing () {
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
         showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+        if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
     } else {
         showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
