@@ -8,19 +8,14 @@ from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.add_material_if_not_exist import add_material_if_not_exists
-from modules.md_database.interfaces.subject import SubjectDataDTO
-from modules.md_database.interfaces.vector import VectorDataDTO
-from modules.md_database.interfaces.driver import DriverDataDTO
-from modules.md_database.interfaces.vehicle import VehicleDataDTO
 from modules.md_database.interfaces.reservation import Reservation
 import datetime as dt
-from applications.router.weigher.types import ReportVariables
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
 from libs.lb_folders import structure_folder_rule, save_bytes_to_file
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.weigher.manager_weighers_data import weighers_data
-from applications.utils.utils_report import generate_html_report, save_file_dir
+from applications.utils.utils_report import get_data_variables, generate_html_report, generate_csv_report, save_file_dir
 from libs.lb_printer import printer
 
 class CallbackWeigher(Functions, WebSocket):
@@ -141,6 +136,7 @@ class CallbackWeigher(Functions, WebSocket):
 			len_in_out = len(reservation.in_out)
 			is_test = reservation.type == TypeReservation.TEST
 			is_to_close = len_in_out == reservation.number_in_out and last_in_out.idWeight2 or is_test
+			last_in_out.reservation = reservation
    			############################
 			# CREO L'IN-OUT SUCCESSIVO PER L'ASSEGNAZIONE DEL MATERIALE SE L'ACCESSO NON E' STATO CHIUSO E HA PIU' DI UNA OPERAZIONE
 			if not is_to_close and last_in_out.idWeight2 and not is_test:
@@ -166,45 +162,11 @@ class CallbackWeigher(Functions, WebSocket):
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
 			reports_dir = lb_config.g_config["app_api"]["path_reports"]
-			report_in = lb_config.g_config["app_api"]["report_in"]
-			report_out = lb_config.g_config["app_api"]["report_out"]
 			print_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["in"]
 			print_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["out"]
-			report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
 			print = print_out if tare > 0 or last_in_out.idWeight2 else print_in
 			path_pdf = lb_config.g_config["app_api"]["path_pdf"]
-			name_file = weigher_name
-			if last_in_out.idWeight1:
-				if name_file:
-					name_file += "_"
-				name_file += last_in_out.weight1.pid
-			if last_in_out.idWeight2:
-				if name_file:
-					name_file += "_"
-				name_file += last_in_out.weight2.pid
-			name_file += ".pdf"
-			variables = ReportVariables(**{})
-			variables.typeSubject = reservation.typeSubject.value
-			variables.subject = reservation.subject.__dict__ if reservation.subject else SubjectDataDTO(**{})
-			variables.vector = reservation.vector.__dict__ if reservation.vector else VectorDataDTO(**{})
-			variables.driver = reservation.driver.__dict__ if reservation.driver else DriverDataDTO(**{})
-			variables.vehicle = reservation.vehicle.__dict__ if reservation.vehicle else VehicleDataDTO(**{})
-			variables.note = reservation.note
-			variables.document_reference = reservation.document_reference
-			if tare > 0:
-				variables.weight1.date = last_in_out.weight2.date.strftime("%d/%m/%Y %H:%M")
-				variables.weight1.pid = last_in_out.weight2.pid
-				variables.weight1.weight = last_in_out.weight2.tare
-				variables.weight1.type = "PT" if last_in_out.weight2.is_preset_tare else "Tara"
-			else:
-				variables.weight1.date = last_in_out.weight1.date.strftime("%d/%m/%Y %H:%M")
-				variables.weight1.pid = last_in_out.weight1.pid
-				variables.weight1.weight = last_in_out.weight1.weight
-			if last_in_out.idWeight2:
-				variables.weight2.date = last_in_out.weight2.date.strftime("%d/%m/%Y %H:%M") if last_in_out.idWeight2 else ""
-				variables.weight2.pid = last_in_out.weight2.pid if last_in_out.idWeight2 else ""
-				variables.weight2.weight = last_in_out.weight2.weight if last_in_out.idWeight2 else ""
-			variables.net_weight = last_in_out.net_weight
+			name_file, variables, report = get_data_variables(last_in_out)
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
 			if report:
 				html = generate_html_report(reports_dir, report, v=variables.dict())
@@ -214,6 +176,11 @@ class CallbackWeigher(Functions, WebSocket):
 				# SALVA COPIA PDF
 				if path_pdf and pdf:
 					save_file_dir(path_pdf, name_file, pdf)
+			path_csv = lb_config.g_config["app_api"]["path_csv"]
+			if path_csv:
+				# SALVA I DATI DELLA PESATA IN UN FILE CSV
+				csv_data_line = generate_csv_report(variables)
+				save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv_data_line)
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:

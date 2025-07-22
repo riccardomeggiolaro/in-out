@@ -128,6 +128,10 @@ def init():
 
 	# Monta la cartella 'static' nella rotta '/static'
 	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+
+	directory = None
 	
-	# Monta la cartella 'images' nella rotto dedicata al salvataggio delle immagini delle pesate nella direcotry specificata sul file config.json
-	app.mount("/images", StaticFiles(directory=lb_config.g_config["app_api"]["path_img"]), name="images")
+	if os.path.exists(lb_config.g_config["app_api"]["path_img"]):
+		directory = lb_config.g_config["app_api"]["path_img"]
+
+	app.mount("/images", StaticFiles(directory=directory), name="images")

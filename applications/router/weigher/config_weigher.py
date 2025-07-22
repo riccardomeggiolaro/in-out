@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends
+from fastapi.staticfiles import StaticFiles
+from fastapi.routing import Mount
 from applications.router.weigher.callback_weigher import CallbackWeigher
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import InstanceNameDTO, InstanceNameWeigherDTO, get_query_params_name, get_query_params_name_node
@@ -55,9 +57,19 @@ class ConfigWeigher(CallbackWeigher):
         return { "path_csv": path }
 
     async def SavePathImg(self, body: PathDTO):
-        path = body.path
+        from applications.app_api import app
+        path = body.path if body.path else ''
         lb_config.g_config["app_api"]["path_img"] = path
         lb_config.saveconfig()
+        for route in app.routes:
+            if route.path == "/images":
+                list_path_images = []
+                if path:
+                    list_path_images.append(path)
+                route._base_app.directory = path
+                route._base_app.all_directories = list_path_images
+                route.app.directory = path
+                route.app.all_directories = list_path_images
         return { "path_img": path }
 
     async def GetAllInstance(self):

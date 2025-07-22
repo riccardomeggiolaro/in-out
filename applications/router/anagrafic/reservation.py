@@ -3,10 +3,6 @@ from fastapi.responses import StreamingResponse
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import ReservationStatus, LockRecordType
 from modules.md_database.interfaces.reservation import Reservation, AddReservationDTO, SetReservationDTO
-from modules.md_database.interfaces.subject import SubjectDataDTO
-from modules.md_database.interfaces.vector import VectorDataDTO
-from modules.md_database.interfaces.driver import DriverDataDTO
-from modules.md_database.interfaces.vehicle import VehicleDataDTO
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.get_list_reservations import get_list_reservations
@@ -38,8 +34,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 import libs.lb_config as lb_config
 from libs.lb_printer import printer
-from applications.router.weigher.types import ReportVariables
-from applications.utils.utils_report import generate_html_report, save_file_dir
+from applications.utils.utils_report import get_data_variables, generate_html_report, save_file_dir
 
 class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -112,8 +107,6 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 del query_params["toDate"]
 
             if "excludeTestWeighing" in query_params:
-                import libs.lb_log as lb_log
-                lb_log.warning(query_params["excludeTestWeighing"])
                 del query_params["excludeTestWeighing"]
                 
             # Call get_list_in_out with prepared query_params
@@ -137,44 +130,10 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def get_data_variables(self, in_out):
-        report_in = lb_config.g_config["app_api"]["report_in"]
-        report_out = lb_config.g_config["app_api"]["report_out"]
-        report = report_out if in_out.idWeight2 else report_in
-        name_file = ""
-        variables = ReportVariables(**{})
-        variables.typeSubject = in_out.reservation.typeSubject.value
-        variables.subject = in_out.reservation.subject if in_out.reservation.subject else SubjectDataDTO(**{})
-        variables.vector = in_out.reservation.vector if in_out.reservation.vector else VectorDataDTO(**{})
-        variables.driver = in_out.reservation.driver if in_out.reservation.driver else DriverDataDTO(**{})
-        variables.vehicle = in_out.reservation.vehicle if in_out.reservation.vehicle else VehicleDataDTO(**{})
-        variables.note = in_out.reservation.note
-        variables.document_reference = in_out.reservation.document_reference
-        if in_out.idWeight1:
-            name_file = f"{in_out.weight1.weigher}_{in_out.weight1.pid}"
-            variables.weight1.date = in_out.weight1.date.strftime("%d/%m/%Y %H:%M")
-            variables.weight1.pid = in_out.weight1.pid
-            variables.weight1.weight = in_out.weight1.weight
-        if in_out.idWeight2:
-            if in_out.weight2.tare > 0:
-                name_file = f"{in_out.weight2.weigher}_{in_out.weight2.pid}"
-                variables.weight1.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M")
-                variables.weight1.pid = in_out.weight2.pid
-                variables.weight1.weight = in_out.weight2.tare
-                variables.weight1.type = "PT" if in_out.weight2.is_preset_tare else "Tara"
-            else:
-                name_file = f"{in_out.weight2.weigher}_{in_out.weight1.pid}_{in_out.weight2.pid}"
-            variables.weight2.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M") if in_out.idWeight2 else ""
-            variables.weight2.pid = in_out.weight2.pid if in_out.idWeight2 else ""
-            variables.weight2.weight = in_out.weight2.weight if in_out.idWeight2 else ""
-        variables.net_weight = in_out.net_weight
-        name_file += ".pdf"
-        return name_file, variables, report
-
     async def pdfInOut(self, id: int):
         in_out = get_last_in_out_by_id(id)
         reports_dir = lb_config.g_config["app_api"]["path_reports"]
-        name_file, variables, report = await self.get_data_variables(in_out)
+        name_file, variables, report = get_data_variables(in_out)
         html = generate_html_report(reports_dir, report, v=variables.dict())
         pdf = printer.generate_pdf_from_html(html_content=html)
         return StreamingResponse(

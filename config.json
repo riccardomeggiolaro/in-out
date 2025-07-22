@@ -9,15 +9,15 @@
             "timeout": 5,
             "username": null
         },
-        "path_csv": null,
+        "path_csv": "/var/lib/in-out/csv",
         "path_database": "/var/lib/in-out/database.db",
         "path_img": "/var/lib/in-out/images",
-        "path_pdf": null,
+        "path_pdf": "/var/lib/in-out/pdf",
         "path_reports": "/var/lib/in-out/reports",
         "port": 80,
         "report_in": "weight_in.html",
         "report_out": "weight_out.html",
-        "return_pdf_copy_after_weighing": false,
+        "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -140,7 +140,7 @@
                         "port_rele": null,
                         "printer_name": "Canon_iR_ADV_C5235_5240",
                         "rele": {
-                            "1": 1
+                            "1": 0
                         },
                         "run": true,
                         "terminal": "egt-af03"
