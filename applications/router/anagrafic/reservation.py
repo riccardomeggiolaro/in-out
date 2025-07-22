@@ -150,7 +150,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         in_out = get_last_in_out_by_weigher(weigher_name=instance.weigher_name)
         if not in_out:
             raise HTTPException(status_code=404, detail="Pesata non esistente")
-        name_file, variables, report = await self.get_data_variables(in_out)
+        name_file, variables, report = get_data_variables(in_out)
         file = find_file_in_directory(path_pdf, name_file)
         if not file:
             html = generate_html_report(reports_dir, report, v=variables.dict())

@@ -17,7 +17,7 @@
         "port": 80,
         "report_in": "weight_in.html",
         "report_out": "weight_out.html",
-        "return_pdf_copy_after_weighing": true,
+        "return_pdf_copy_after_weighing": false,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -118,8 +118,8 @@
                             "weighing": {
                                 "cams": [],
                                 "print": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "set_rele": [
                                     {
@@ -140,7 +140,7 @@
                         "port_rele": null,
                         "printer_name": "Canon_iR_ADV_C5235_5240",
                         "rele": {
-                            "1": 0
+                            "1": 1
                         },
                         "run": true,
                         "terminal": "egt-af03"
