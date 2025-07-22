@@ -9,6 +9,7 @@ from typing import Union
 from libs.lb_system import SerialPort, Tcp
 from applications.router.weigher.types import Data
 from applications.middleware.super_admin import is_super_admin
+from applications.router.weigher.dto import PathDTO
 
 class ConfigWeigher(CallbackWeigher):
     def __init__(self):
@@ -18,6 +19,9 @@ class ConfigWeigher(CallbackWeigher):
     
         self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
         self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/path-img', self.SavePathImg, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/all/instance', self.GetAllInstance, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance', self.GetInstance, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance', self.AddInstance, methods=['POST'], dependencies=[Depends(is_super_admin)])
@@ -37,6 +41,24 @@ class ConfigWeigher(CallbackWeigher):
         lb_config.g_config["app_api"]["return_pdf_copy_after_weighing"] = return_pdf_copy_after_weighing
         lb_config.saveconfig()
         return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
+
+    async def SavePathPdf(self, body: PathDTO):
+        path = body.path
+        lb_config.g_config["app_api"]["path_pdf"] = path
+        lb_config.saveconfig()
+        return { "path_pdf": path }
+
+    async def SavePathCsv(self, body: PathDTO):
+        path = body.path
+        lb_config.g_config["app_api"]["path_csv"] = path
+        lb_config.saveconfig()
+        return { "path_csv": path }
+
+    async def SavePathImg(self, body: PathDTO):
+        path = body.path
+        lb_config.g_config["app_api"]["path_img"] = path
+        lb_config.saveconfig()
+        return { "path_img": path }
 
     async def GetAllInstance(self):
         return lb_config.g_config["app_api"]["weighers"]

@@ -9,10 +9,11 @@
             "timeout": 5,
             "username": null
         },
+        "path_csv": null,
         "path_database": "/var/lib/in-out/database.db",
-        "path_pdf": "/var/lib/in-out/pdf",
+        "path_img": "/var/lib/in-out/images",
+        "path_pdf": null,
         "path_reports": "/var/lib/in-out/reports",
-        "path_weighing_pictures": "/var/lib/in-out/images",
         "port": 80,
         "report_in": "weight_in.html",
         "report_out": "weight_out.html",
@@ -46,7 +47,7 @@
         "weighers": {
             "2": {
                 "connection": {
-                    "ip": "10.0.5.178",
+                    "ip": "10.0.5.177",
                     "port": 4001,
                     "timeout": 1.0
                 },

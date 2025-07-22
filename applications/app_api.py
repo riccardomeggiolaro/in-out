@@ -130,4 +130,4 @@ def init():
 	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 	
 	# Monta la cartella 'images' nella rotto dedicata al salvataggio delle immagini delle pesate nella direcotry specificata sul file config.json
-	app.mount("/images", StaticFiles(directory=lb_config.g_config["app_api"]["path_weighing_pictures"]), name="images")
+	app.mount("/images", StaticFiles(directory=lb_config.g_config["app_api"]["path_img"]), name="images")

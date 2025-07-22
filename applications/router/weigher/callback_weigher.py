@@ -225,7 +225,7 @@ class CallbackWeigher(Functions, WebSocket):
 					if cam["active"]:
 						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 						if image_captured_details["image"]:
-							base_folder_path = lb_config.g_config["app_api"]["path_weighing_pictures"]
+							base_folder_path = lb_config.g_config["app_api"]["path_img"]
 							sub_folder_path = structure_folder_rule()
 							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
 							save_bytes_to_file(image_captured_details["image"], file_name, f"{base_folder_path}{sub_folder_path}")
