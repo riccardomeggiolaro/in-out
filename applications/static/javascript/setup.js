@@ -2,6 +2,10 @@ let list_serial_ports = []
 
 let list_printer_names = []
 
+let template_report_in = new DataTransfer();
+
+let template_report_out = new DataTransfer();
+
 const editButtonContent = "✏️"
 
 const deleteButtonContent = "🗑️";
@@ -28,6 +32,46 @@ async function getPrintersList() {
     });
 }
 
+async function getReportIn() {
+    const response = await fetch('/api/generic/report-in');
+    const blob = await response.blob();
+    
+    // Extrair filename do cabeçalho Content-Disposition
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'report.pdf'; // nome padrão
+    
+    if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+            filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+    }
+    
+    // Criar novo blob com nome
+    const namedBlob = new File([blob], filename, { type: blob.type });
+    template_report_in.items.add(namedBlob);
+}
+
+async function getReportOut() {
+    const response = await fetch('/api/generic/report-out');
+    blob = await response.blob();
+
+    // Extrair filename do cabeçalho Content-Disposition
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'report.pdf';
+
+    if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+            filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+    }
+
+    // Criar novo blob com nome   
+    const namedBlob = new File([blob], filename, { type: blob.type });
+    template_report_out.items.add(namedBlob);
+}
+
 document.addEventListener("DOMContentLoaded", loadSetupWeighers);
 
 async function loadSetupWeighers() {
@@ -36,6 +80,10 @@ async function loadSetupWeighers() {
     await getSerialPortsList();
 
     await getPrintersList();
+
+    await getReportIn();
+
+    await getReportOut();
 
     const addCam = (e, classNameForm, className, picture, active) => {
         const form = document.querySelector(classNameForm);
@@ -229,6 +277,30 @@ async function loadSetupWeighers() {
                 }
             })
         }
+        const labelReportInt = document.createElement('label');
+        const reportIn = document.createElement('input');
+        const saveReportIn = document.createElement('button');
+        labelReportInt.textContent = "Template di stampa alla pesata di entrata: ";
+        reportIn.type = 'file';
+        reportIn.accept = '.html';
+        reportIn.files = template_report_in.files;
+        reportIn.onchange = (e) => {
+            saveReportIn.disabled = false;
+        }
+        saveReportIn.disabled = true;
+        saveReportIn.textContent = 'Salva';
+        const labelReportOut = document.createElement('label');
+        const reportOut = document.createElement('input');
+        const saveReportOut = document.createElement('button');
+        labelReportOut.textContent = "Template di stampa alla pesata di uscita: ";
+        reportOut.type = 'file';
+        reportOut.accept = '.html';
+        reportOut.files = template_report_out.files;
+        reportOut.onchange = (e) => {
+            saveReportOut.disabled = false;
+        }
+        saveReportOut.disabled = true;
+        saveReportOut.textContent = 'Salva';
         weighers_config.appendChild(br.cloneNode(true));
         weighers_config.appendChild(labelReturnPdfCopyAfterWeighing);
         weighers_config.appendChild(returnPdfCopyAfterWeighing);
@@ -248,6 +320,15 @@ async function loadSetupWeighers() {
         weighers_config.appendChild(saveImgPath);
         weighers_config.appendChild(saveImgPathButton);
         weighers_config.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(labelReportInt);
+        weighers_config.appendChild(reportIn);
+        weighers_config.appendChild(saveReportIn);
+        weighers_config.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(labelReportOut);
+        weighers_config.appendChild(reportOut);
+        weighers_config.appendChild(saveReportOut);
         data = data["weighers"];
         const addInstance = document.createElement('button');
         addInstance.classList.toggle('container-buttons');

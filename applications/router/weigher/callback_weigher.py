@@ -161,7 +161,7 @@ class CallbackWeigher(Functions, WebSocket):
 			# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
-			reports_dir = lb_config.g_config["app_api"]["path_reports"]
+			reports_dir = lb_config.g_config["app_api"]["path_report"]
 			print_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["in"]
 			print_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["out"]
 			print = print_out if tare > 0 or last_in_out.idWeight2 else print_in

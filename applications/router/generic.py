@@ -2,6 +2,9 @@ from fastapi import APIRouter, HTTPException
 import libs.lb_system as lb_system
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from applications.utils.utils_auth import create_access_token
+import libs.lb_config as lb_config
+from fastapi.responses import FileResponse
+import os
 
 class GenericRouter:
     def __init__(self):
@@ -10,6 +13,8 @@ class GenericRouter:
         # Aggiungi le rotte
         self.router.add_api_route('/list/serial-ports', self.getSerialPorts)
         self.router.add_api_route('/create/cam-capture-plate-access-token', self.createCamCapturePlateAccessToken)
+        self.router.add_api_route('/report-in', self.getReportIn)
+        self.router.add_api_route('/report-out', self.getReportOut)
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -44,3 +49,13 @@ class GenericRouter:
                 status_code=status_code,
                 detail=detail
             )
+            
+    async def getReportIn(self):
+        name_report_in = lb_config.g_config["app_api"]["report_in"]
+        path = f"{lb_config.g_config['app_api']['path_report']}/{name_report_in}"
+        return FileResponse(path, media_type="text/html", filename=name_report_in) if os.path.exists(path) else None
+
+    async def getReportOut(self):
+        name_report_out = lb_config.g_config["app_api"]["report_out"]
+        path = f"{lb_config.g_config['app_api']['path_report']}/{name_report_out}"
+        return FileResponse(path, media_type="text/html", filename=name_report_out) if os.path.exists(path) else None
