@@ -38,7 +38,7 @@ async function getReportIn() {
     
     // Extrair filename do cabeçalho Content-Disposition
     const contentDisposition = response.headers.get('Content-Disposition');
-    let filename = 'report.pdf'; // nome padrão
+    let filename = '';
     
     if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -54,11 +54,11 @@ async function getReportIn() {
 
 async function getReportOut() {
     const response = await fetch('/api/generic/report-out');
-    blob = await response.blob();
+    const blob = await response.blob();
 
     // Extrair filename do cabeçalho Content-Disposition
     const contentDisposition = response.headers.get('Content-Disposition');
-    let filename = 'report.pdf';
+    let filename = '';
 
     if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -279,28 +279,184 @@ async function loadSetupWeighers() {
         }
         const labelReportInt = document.createElement('label');
         const reportIn = document.createElement('input');
-        const saveReportIn = document.createElement('button');
+        const deleteReportIn = document.createElement('button');
+        const downloadReportIn = document.createElement('a');
+        const previewReportIn = document.createElement('a');
         labelReportInt.textContent = "Template di stampa alla pesata di entrata: ";
         reportIn.type = 'file';
         reportIn.accept = '.html';
         reportIn.files = template_report_in.files;
         reportIn.onchange = (e) => {
-            saveReportIn.disabled = false;
+            if (e.target.files.length === 0) {
+                reportIn.files = template_report_in.files;
+            } else {
+                const formData = new FormData();
+                const file = e.target.files[0];
+                template_report_in.items.remove(0);
+                template_report_in.items.add(file);
+                reportIn.files = template_report_in.files;
+                formData.append('file', reportIn.files[0]);
+                console.log(formData.get('file'));
+                fetch('/api/generic/report-in', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => {
+                    if (res.ok) {
+                        console.log("ihbweibdeib");
+                    }
+                })
+            }
         }
-        saveReportIn.disabled = true;
-        saveReportIn.textContent = 'Salva';
+        deleteReportIn.textContent = '🗑️';
+        deleteReportIn.onclick = (e) => {
+            const removeReportIn = (e) => {
+                fetch('/api/generic/report-in', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => {
+                    if (res.ok) {
+                        template_report_in = new DataTransfer();
+                        reportIn.files = template_report_in.files;
+                    } else {
+                        res = res.json();
+                        showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    }
+                })
+            }
+            if (confirm("Vuoi rimuovere il template di pesata all'entrata?")) {
+                removeReportIn();
+            }
+        }
+        downloadReportIn.style.textDecoration = "underline";
+        downloadReportIn.style.color = "blue";
+        downloadReportIn.style.marginLeft = "10px";
+        downloadReportIn.style.marginRight = "10px";
+        downloadReportIn.textContent = 'Scarica';
+        downloadReportIn.onmouseover = (e) => {
+            downloadReportIn.style.cursor = "pointer";
+        }
+        downloadReportIn.onclick = (e) => {
+            if (template_report_in.files.length > 0) {
+                const file = template_report_in.files[0];
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                showSnackbar("Nessun file da scaricare", 'rgb(255, 208, 208)', 'black');
+            }
+        };
+        previewReportIn.style.textDecoration = "underline";
+        previewReportIn.style.color = "blue";
+        previewReportIn.textContent = 'Anteprima';
+        previewReportIn.onmouseover = (e) => {
+            previewReportIn.style.cursor = "pointer";
+        }
+        previewReportIn.onclick = async (e) => {
+            if (template_report_in.files.length > 0) {
+                // Assicurati che esista un endpoint che accetti il file HTML e restituisca il PDF
+                const response = await fetch('/api/generic/report-in/preview');
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                    // Puoi eventualmente revocare l'URL dopo un timeout
+                    setTimeout(() => URL.revokeObjectURL(url), 10000);
+                } else {
+                    showSnackbar("Errore nella generazione dell'anteprima PDF", 'rgb(255, 208, 208)', 'black');
+                }
+            } else {
+                showSnackbar("Nessun file selezionato", 'rgb(255, 208, 208)', 'black');
+            }
+        };
         const labelReportOut = document.createElement('label');
         const reportOut = document.createElement('input');
-        const saveReportOut = document.createElement('button');
+        const deleteReportOut = document.createElement('button');
+        const downloadReportOut = document.createElement('a');
+        const previewReportOut = document.createElement('a');
         labelReportOut.textContent = "Template di stampa alla pesata di uscita: ";
         reportOut.type = 'file';
         reportOut.accept = '.html';
         reportOut.files = template_report_out.files;
-        reportOut.onchange = (e) => {
-            saveReportOut.disabled = false;
+        deleteReportOut.textContent = '🗑️';
+        deleteReportOut.onclick = (e) => {
+            const removeReportOut = (e) => {
+                fetch('/api/generic/report-out', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => {
+                    if (res.ok) {
+                        template_report_out = new DataTransfer();
+                        reportOut.files = template_report_out.files;
+                    } else {
+                        res = res.json();
+                        showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    }
+                })
+            }
+            if (confirm("Vuoi eliminare il template di pesata all'uscita?")) {
+                removeReportOut();
+            }
         }
-        saveReportOut.disabled = true;
-        saveReportOut.textContent = 'Salva';
+        downloadReportOut.style.textDecoration = "underline";
+        downloadReportOut.style.color = "blue";
+        downloadReportOut.style.marginLeft = "10px";
+        downloadReportOut.style.marginRight = "10px";
+        downloadReportOut.textContent = ' Scarica ';
+        downloadReportOut.onmouseover = (e) => {
+            downloadReportOut.style.cursor = "pointer";
+        }
+        downloadReportOut.onclick = (e) => {
+            if (template_report_out.files.length > 0) {
+                const file = template_report_out.files[0];
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                showSnackbar("Nessun file da scaricare", 'rgb(255, 208, 208)', 'black');
+            }
+        };
+        previewReportOut.style.textDecoration = "underline";
+        previewReportOut.style.color = "blue";
+        previewReportOut.textContent = 'Anteprima';
+        previewReportOut.onmouseover = (e) => {
+            previewReportOut.style.cursor = "pointer";
+        }
+        previewReportOut.onclick = async (e) => {
+            if (template_report_in.files.length > 0) {
+                // Assicurati che esista un endpoint che accetti il file HTML e restituisca il PDF
+                const response = await fetch('/api/generic/report-out/preview');
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                    // Puoi eventualmente revocare l'URL dopo un timeout
+                    setTimeout(() => URL.revokeObjectURL(url), 10000);
+                } else {
+                    showSnackbar("Errore nella generazione dell'anteprima PDF", 'rgb(255, 208, 208)', 'black');
+                }
+            } else {
+                showSnackbar("Nessun file selezionato", 'rgb(255, 208, 208)', 'black');
+            }
+        };
         weighers_config.appendChild(br.cloneNode(true));
         weighers_config.appendChild(labelReturnPdfCopyAfterWeighing);
         weighers_config.appendChild(returnPdfCopyAfterWeighing);
@@ -323,12 +479,16 @@ async function loadSetupWeighers() {
         weighers_config.appendChild(br.cloneNode(true));
         weighers_config.appendChild(labelReportInt);
         weighers_config.appendChild(reportIn);
-        weighers_config.appendChild(saveReportIn);
+        weighers_config.appendChild(deleteReportIn);
+        weighers_config.appendChild(downloadReportIn);
+        weighers_config.appendChild(previewReportIn);
         weighers_config.appendChild(br.cloneNode(true));
         weighers_config.appendChild(br.cloneNode(true));
         weighers_config.appendChild(labelReportOut);
         weighers_config.appendChild(reportOut);
-        weighers_config.appendChild(saveReportOut);
+        weighers_config.appendChild(deleteReportOut);
+        weighers_config.appendChild(downloadReportOut);
+        weighers_config.appendChild(previewReportOut);
         data = data["weighers"];
         const addInstance = document.createElement('button');
         addInstance.classList.toggle('container-buttons');

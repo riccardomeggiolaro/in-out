@@ -1,10 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 import libs.lb_system as lb_system
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from applications.utils.utils_auth import create_access_token
 import libs.lb_config as lb_config
 from fastapi.responses import FileResponse
 import os
+from libs.lb_printer import printer
+from applications.utils.utils_report import generate_html_report
+from io import BytesIO
+import shutil
 
 class GenericRouter:
     def __init__(self):
@@ -13,8 +18,12 @@ class GenericRouter:
         # Aggiungi le rotte
         self.router.add_api_route('/list/serial-ports', self.getSerialPorts)
         self.router.add_api_route('/create/cam-capture-plate-access-token', self.createCamCapturePlateAccessToken)
+        self.router.add_api_route('/report-in', self.saveReportIn, methods=['POST'])
         self.router.add_api_route('/report-in', self.getReportIn)
+        self.router.add_api_route('/report-in/preview', self.getReportInPreview)
+        self.router.add_api_route('/report-out', self.saveReportOut, methods=['POST'])
         self.router.add_api_route('/report-out', self.getReportOut)
+        self.router.add_api_route('/report-out/preview', self.getReportOutPreview)
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -49,13 +58,99 @@ class GenericRouter:
                 status_code=status_code,
                 detail=detail
             )
+
+    async def saveReportIn(self, file: UploadFile = File(None)):
+        path = lb_config.g_config['app_api']['path_report']
+        name_report_in = lb_config.g_config["app_api"]["report_in"]
+        full_path = os.path.join(path, name_report_in)
+        try:
+            if file is None:
+                # Elimina il file se esiste
+                if os.path.exists(full_path):
+                    os.remove(full_path)
+                return {"message": "Report eliminato correttamente"}
+            else:
+                # Controlla che sia un file HTML
+                if not file.filename.lower().endswith('.html'):
+                    raise HTTPException(status_code=400, detail="Il file deve essere in formato .html")
+                if file.content_type not in ["text/html", "application/octet-stream"]:
+                    raise HTTPException(status_code=400, detail="Il file deve essere di tipo text/html")
+                with open(full_path, "wb") as buffer:
+                    shutil.copyfileobj(file.file, buffer)
+                return {"message": "Report salvato correttamente"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore nel salvataggio/eliminazione del report: {str(e)}")
             
     async def getReportIn(self):
+        path = lb_config.g_config['app_api']['path_report']
         name_report_in = lb_config.g_config["app_api"]["report_in"]
-        path = f"{lb_config.g_config['app_api']['path_report']}/{name_report_in}"
-        return FileResponse(path, media_type="text/html", filename=name_report_in) if os.path.exists(path) else None
+        full_path = os.path.join(path, name_report_in)
+        if name_report_in and os.path.exists(full_path):
+            return FileResponse(
+                full_path,
+                media_type="text/html",
+                headers={"Content-Disposition": f"attachment; filename={name_report_in}"}
+            )
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    async def getReportInPreview(self):
+        path = lb_config.g_config['app_api']['path_report']
+        name_report_in = lb_config.g_config["app_api"]["report_in"]
+        full_path = os.path.join(path, name_report_in)
+        if name_report_in and os.path.exists(full_path):
+            html = generate_html_report(path, name_report_in)
+            pdf = printer.generate_pdf_from_html(html)
+            return StreamingResponse(
+                BytesIO(pdf),
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename={name_report_in}"}
+            )
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    async def saveReportOut(self, file: UploadFile = File(None)):
+        path = lb_config.g_config['app_api']['path_report']
+        name_report_out = lb_config.g_config["app_api"]["report_out"]
+        full_path = os.path.join(path, name_report_out)
+        try:
+            if file is None:
+                # Elimina il file se esiste
+                if os.path.exists(full_path):
+                    os.remove(full_path)
+                return {"message": "Report eliminato correttamente"}
+            else:
+                # Controlla che sia un file HTML
+                if not file.filename.lower().endswith('.html'):
+                    raise HTTPException(status_code=400, detail="Il file deve essere in formato .html")
+                if file.content_type not in ["text/html", "application/octet-stream"]:
+                    raise HTTPException(status_code=400, detail="Il file deve essere di tipo text/html")
+                with open(full_path, "wb") as buffer:
+                    shutil.copyfileobj(file.file, buffer)
+                return {"message": "Report salvato correttamente"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore nel salvataggio/eliminazione del report: {str(e)}")
 
     async def getReportOut(self):
+        path = lb_config.g_config['app_api']['path_report']
         name_report_out = lb_config.g_config["app_api"]["report_out"]
-        path = f"{lb_config.g_config['app_api']['path_report']}/{name_report_out}"
-        return FileResponse(path, media_type="text/html", filename=name_report_out) if os.path.exists(path) else None
+        full_path = os.path.join(path, name_report_out)
+        if name_report_out and os.path.exists(full_path):
+            return FileResponse(
+                full_path,
+                media_type="text/html",
+                headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
+            )
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    async def getReportOutPreview(self):
+        path = lb_config.g_config['app_api']['path_report']
+        name_report_out = lb_config.g_config["app_api"]["report_out"]
+        full_path = os.path.join(path, name_report_out)
+        if name_report_out and os.path.exists(full_path):
+            html = generate_html_report(path, name_report_out)
+            pdf = printer.generate_pdf_from_html(html)
+            return StreamingResponse(
+                BytesIO(pdf),
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
+            )
+        raise HTTPException(status_code=404, detail="Report not found")
