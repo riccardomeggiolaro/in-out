@@ -162,8 +162,8 @@ class CallbackWeigher(Functions, WebSocket):
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
 			reports_dir = lb_config.g_config["app_api"]["path_report"]
-			print_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["in"]
-			print_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["out"]
+			print_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
+			print_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
 			print = print_out if tare > 0 or last_in_out.idWeight2 else print_in
 			path_pdf = lb_config.g_config["app_api"]["path_pdf"]
 			name_file, variables, report = get_data_variables(last_in_out)

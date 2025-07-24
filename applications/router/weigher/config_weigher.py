@@ -99,6 +99,7 @@ class ConfigWeigher(CallbackWeigher):
         instance_weigher[instance.instance_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["max_theshold"]
         instance_weigher[instance.instance_name]["events"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]
         instance_weigher[instance.instance_name]["rele"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"]
+        instance_weigher[instance.instance_name]["printer_name"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
         return instance_weigher
 
     async def AddInstanceWeigher(self, setup: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
@@ -131,9 +132,9 @@ class ConfigWeigher(CallbackWeigher):
                 }
             },
             "weighing": {
-                "print": {
-                    "in": setup.print_on_in if setup.print_on_in is not None else False,
-                    "out": setup.print_on_out if setup.print_on_out is not None else False
+                "report": {
+                    "in": setup.report_on_in if setup.report_on_in is not None else False,
+                    "out": setup.report_on_out if setup.report_on_out is not None else False
                 },
                 "set_rele": [rele.dict() for rele in setup.weighing],
                 "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
@@ -175,16 +176,15 @@ class ConfigWeigher(CallbackWeigher):
         del weigher_set[weigher_name]["status"]
         for key, value in weigher_set[weigher_name].items():
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name][key] = value
-        if setup.printer_name:
-            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"] = setup.printer_name
         if setup.number_of_prints:
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["number_of_prints"] = setup.number_of_prints
-        if setup.print_on_in is not None:
-            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["in"] = setup.print_on_in
-        if setup.print_on_out is not None:
-            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["print"]["out"] = setup.print_on_out
+        if setup.report_on_in is not None:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"] = setup.report_on_in
+        if setup.report_on_out is not None:
+            lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"] = setup.report_on_out
         if setup.max_theshold != -1:
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"] = setup.max_theshold
+        lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"] = setup.printer_name
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"] = {
             "realtime": {
                 "over_min": {
@@ -195,9 +195,9 @@ class ConfigWeigher(CallbackWeigher):
                 }
             },
             "weighing": {
-                "print": {
-                    "in": setup.print_on_in if setup.print_on_in is not None else False,
-                    "out": setup.print_on_out if setup.print_on_out is not None else False
+                "report": {
+                    "in": setup.report_on_in if setup.report_on_in is not None else False,
+                    "out": setup.report_on_out if setup.report_on_out is not None else False
                 },
                 "set_rele": [rele.dict() for rele in setup.weighing],
                 "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]

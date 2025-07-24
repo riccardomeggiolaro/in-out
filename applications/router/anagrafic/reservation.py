@@ -132,9 +132,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
     async def pdfInOut(self, id: int):
         in_out = get_last_in_out_by_id(id)
-        reports_dir = lb_config.g_config["app_api"]["path_reports"]
+        report_dir = lb_config.g_config["app_api"]["path_report"]
         name_file, variables, report = get_data_variables(in_out)
-        html = generate_html_report(reports_dir, report, v=variables.dict())
+        html = generate_html_report(report_dir, report, v=variables.dict())
         pdf = printer.generate_pdf_from_html(html_content=html)
         return StreamingResponse(
             BytesIO(pdf),
@@ -144,7 +144,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
     async def printLastInOut(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         path_pdf = lb_config.g_config["app_api"]["path_pdf"]
-        reports_dir = lb_config.g_config["app_api"]["path_reports"]
+        report_dir = lb_config.g_config["app_api"]["path_report"]
         printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
         number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
         in_out = get_last_in_out_by_weigher(weigher_name=instance.weigher_name)
@@ -153,7 +153,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         name_file, variables, report = get_data_variables(in_out)
         file = find_file_in_directory(path_pdf, name_file)
         if not file:
-            html = generate_html_report(reports_dir, report, v=variables.dict())
+            html = generate_html_report(report_dir, report, v=variables.dict())
             pdf = printer.generate_pdf_from_html(html_content=html)
             save_file_dir(path_pdf, name_file, pdf)
             file = find_file_in_directory(path_pdf, name_file)

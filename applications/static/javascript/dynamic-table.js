@@ -52,6 +52,32 @@ document.querySelectorAll('thead th').forEach((th, index) => {
     }
 });
 
+async function exportReportWeighing(idWeighing) {
+    const response = await fetch(`/api/anagrafic/reservation/in-out/pdf/${idWeighing}`);
+    if (response.ok) {
+        const blob = await response.blob();
+        // Prendi il nome file dall'header Content-Disposition
+        const disposition = response.headers.get('Content-Disposition');
+        let filename = 'report.pdf';
+        if (disposition && disposition.indexOf('filename=') !== -1) {
+            filename = disposition
+                .split('filename=')[1]
+                .replace(/["']/g, '')
+                .trim();
+        }
+        // Download con nome corretto
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+    } else {
+        showSnackbar("Errore nella generazione del PDF", 'rgb(255, 208, 208)', 'black');
+    }
+}
+
 function isValidDate(dateStr) {
     // Verifica se la stringa corrisponde al formato ISO 8601
     const regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)?$/;
@@ -294,6 +320,18 @@ function createRow(table, columns, item, idInout) {
         callButton.style.visibility = "hidden";
         actionsCell.appendChild(callButton);
     }
+    let pdfButton;
+    if (itemName === "reservation" && idInout) {
+        pdfButton = document.createElement("button");
+        pdfButton.style.visibility = 'hidden';
+        pdfButton.textContent = "📄";
+        pdfButton.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            exportReportWeighing(idInout);
+        }
+        actionsCell.appendChild(pdfButton);
+    }
     // Pulsante Modifica
     const editButton = document.createElement("button");
     editButton.style.visibility = 'hidden';
@@ -336,12 +374,14 @@ function createRow(table, columns, item, idInout) {
         editButton.style.visibility = 'inherit';
         deleteButton.style.visibility = 'inherit';
         if (callButton) callButton.style.visibility = 'inherit';
+        if (pdfButton) pdfButton.style.visibility = 'inherit';
     });
     row.addEventListener("mouseleave", () => {
         row.style.backgroundColor = 'white';
         editButton.style.visibility = 'hidden';
         deleteButton.style.visibility = 'hidden';
         if (callButton) callButton.style.visibility = 'hidden';
+        if (pdfButton) pdfButton.style.visibility = 'hidden';
     });
     table.appendChild(row);
     if (populate_detail_tr) {

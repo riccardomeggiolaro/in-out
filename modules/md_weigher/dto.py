@@ -30,8 +30,8 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	run: Optional[bool] = None
 	printer_name: Optional[str] = None
 	number_of_prints: Optional[int] = 1
-	print_on_in: Optional[bool] = None
-	print_on_out: Optional[bool] = None
+	report_on_in: Optional[bool] = None
+	report_on_out: Optional[bool] = None
 	cams: list[CamDTO] = []
 	weighing: list[ReleDTO] = []
 	over_min: list[ReleDTO] = []
@@ -74,8 +74,8 @@ class SetupWeigherDTO(BaseModel):
 	run: Optional[bool] = True
 	printer_name: Optional[str] = None
 	number_of_prints: Optional[int] = 1
-	print_on_in: Optional[bool] = True
-	print_on_out: Optional[bool] = True
+	report_on_in: Optional[bool] = True
+	report_on_out: Optional[bool] = True
 	cams: list[CamDTO] = []
 	weighing: list[ReleDTO] = []
 	over_min: list[ReleDTO] = []

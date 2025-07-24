@@ -185,7 +185,7 @@ async function getInstanceWeigher(path) {
         division.textContent = obj.division;
         divisionValue = obj.division;
         maxThesholdValue = obj.max_theshold;
-        if (!obj.events.weighing.print.in && !obj.events.weighing.print.out) reprint.style.display = 'none';
+        if (obj.printer_name === null || !obj.events.weighing.report.in && !obj.events.weighing.report.out) reprint.style.display = 'none';
         else reprint.style.display = 'block';
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -618,27 +618,31 @@ function updateUIRealtime(e) {
                 obj.data_assigned = JSON.parse(obj.data_assigned);
                 if (obj.data_assigned.id === reservation_id) {
                     const id_in_out = obj.data_assigned.in_out[obj.data_assigned.in_out.length-1]["id"]
-                    fetch(`/api/anagrafic/reservation/in-out/pdf/${id_in_out}`)
-                    .then(res => {
-                        // Prendi il nome file dall'header Content-Disposition
-                        const disposition = res.headers.get('Content-Disposition');
-                        let filename = 'export.pdf';
-                        if (disposition && disposition.indexOf('filename=') !== -1) {
-                            filename = disposition
-                                .split('filename=')[1]
-                                .replace(/["']/g, '')
-                                .trim();
-                        }
-                        return res.blob().then(blob => ({ blob, filename }));
-                    })
-                    .then(({ blob, filename }) => {
-                        const downloadLink = document.createElement('a');
-                        downloadLink.href = window.URL.createObjectURL(blob);
-                        downloadLink.download = filename;
-                        document.body.appendChild(downloadLink);
-                        downloadLink.click();
-                        document.body.removeChild(downloadLink);
-                    });
+                    const typeOfWeight = obj.data_assigned.in_out[obj.data_assigned.in_out.length-1]["idWeight2"] === null ? "in" : "out";
+                    const inOutPdf = instances[obj.instance_name]["nodes"][obj.weigher_name]["events"]["weighing"]["report"][typeOfWeight];
+                    if (inOutPdf) {
+                        fetch(`/api/anagrafic/reservation/in-out/pdf/${id_in_out}`)
+                        .then(res => {
+                            // Prendi il nome file dall'header Content-Disposition
+                            const disposition = res.headers.get('Content-Disposition');
+                            let filename = 'export.pdf';
+                            if (disposition && disposition.indexOf('filename=') !== -1) {
+                                filename = disposition
+                                    .split('filename=')[1]
+                                    .replace(/["']/g, '')
+                                    .trim();
+                            }
+                            return res.blob().then(blob => ({ blob, filename }));
+                        })
+                        .then(({ blob, filename }) => {
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = window.URL.createObjectURL(blob);
+                            downloadLink.download = filename;
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                        });
+                    }
                 }
             }
             showSnackbar(message, 'rgb(208, 255, 208)', 'black');

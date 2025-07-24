@@ -15,9 +15,9 @@
         "path_pdf": "/var/lib/in-out/pdf",
         "path_report": "./applications/static/report",
         "port": 80,
-        "report_in": null,
-        "report_out": null,
-        "return_pdf_copy_after_weighing": false,
+        "report_in": "weight_in.html",
+        "report_out": "weight_out.html",
+        "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -92,7 +92,7 @@
                                 "id": null,
                                 "weight1": null
                             },
-                            "number_in_out": null
+                            "number_in_out": 1
                         },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
@@ -117,7 +117,7 @@
                             },
                             "weighing": {
                                 "cams": [],
-                                "print": {
+                                "report": {
                                     "in": true,
                                     "out": true
                                 },
@@ -138,9 +138,9 @@
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
-                        "printer_name": "Canon_iR_ADV_C5235_5240",
+                        "printer_name": null,
                         "rele": {
-                            "1": 1
+                            "1": 0
                         },
                         "run": true,
                         "terminal": "egt-af03"

@@ -763,6 +763,32 @@
             openPopup('confirm-popup');
         }
 
+        async function exportReportWeighing(idWeighing) {
+            const response = await fetch(`/api/anagrafic/reservation/in-out/pdf/${idWeighing}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                // Prendi il nome file dall'header Content-Disposition
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = 'report.pdf';
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    filename = disposition
+                        .split('filename=')[1]
+                        .replace(/["']/g, '')
+                        .trim();
+                }
+                // Download con nome corretto
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+            } else {
+                showSnackbar("Errore nella generazione del PDF", 'rgb(255, 208, 208)', 'black');
+            }
+        }
+
         function updateWeighingMaterial(idReservation, idInOut, idMaterial, descriptionMaterial) {
             confirm_exec_funct = () => {
                 const id = document.querySelector("#material\\.id").value || -1;
@@ -855,6 +881,8 @@
                             <b>PESO 2: </b> <u>${weighing.weight2 ? weighing.weight2.weight : ''} kg</u>.
                             <b>NETTO: </b> <u>${weighing.net_weight !== null ? weighing.net_weight : ''} kg</u>.
                             <b>MATERIALE: </B> <u>${weighing.material ? weighing.material.description : ''}</u>`;
+
+                content += `<button onclick="exportReportWeighing(${weighing.id})">📄</button>`;
 
                 content += `<button onclick="updateWeighingMaterial(${item.id}, ${weighing.id}, ${weighing.material ? weighing.material.id : null}, '${weighing.material ? weighing.material.description : ''}')">✏️</button>`;
 

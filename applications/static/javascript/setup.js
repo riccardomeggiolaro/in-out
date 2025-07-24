@@ -157,7 +157,7 @@ async function loadSetupWeighers() {
     .then(res => res.json())
     .then(data => {
         const labelReturnPdfCopyAfterWeighing = document.createElement('label');
-        labelReturnPdfCopyAfterWeighing.textContent = "Ritorna copia pdf all'utente che effettua la pesata ";
+        labelReturnPdfCopyAfterWeighing.textContent = "Ritorna copia report pesata sul browser all'utente che effettua la pesata ";
         const returnPdfCopyAfterWeighing = document.createElement('input');
         returnPdfCopyAfterWeighing.type = 'checkbox';
         returnPdfCopyAfterWeighing.checked = data.return_pdf_copy_after_weighing ? true : false;
@@ -176,7 +176,7 @@ async function loadSetupWeighers() {
         const savePdfPath = document.createElement('input');
         const savePdfPathButton = document.createElement('button');
         let originalPathPdf = data.path_pdf ? data.path_pdf : '';
-        labelSavePdfPath.textContent = "Directory salvataggio pesata in pdf: ";
+        labelSavePdfPath.textContent = "Directory salvataggio report pesata in pdf: ";
         savePdfPath.type = 'text';
         savePdfPath.value = data.path_pdf ? data.path_pdf : '';
         savePdfPathButton.textContent = 'Salva';
@@ -1068,7 +1068,7 @@ async function loadSetupWeighers() {
             addWeigherModal.innerHTML = `
                 <div class="modal-content">
                     <h3>Aggiungi pesa</h3>
-                    <form class="content" id="add-form">
+                    <form class="content" id="add-form" style="width: 950px; max-width: 100%">
                     </form>
                     <div class="errors"></div>
                     <div class="container-buttons right">
@@ -1091,6 +1091,7 @@ async function loadSetupWeighers() {
             const populateAddContent = () => {
                 // Genera le option per le stampanti
                 let printerOptions = '';
+                printerOptions += `<option value="">--- Nessuna ---</button>`;
                 for (const printer of list_printer_names) {
                     printerOptions += `<option value="${printer.nome}">${printer.nome}</option>`;
                 }
@@ -1132,23 +1133,23 @@ async function loadSetupWeighers() {
                         </div>
                     </div>
                     <div style="display: flex; gap: 16px; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Genera report all'entrata</label><br>
+                            <input type="checkbox" name="report_on_in">
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Genera report all'uscita</label><br>
+                            <input type="checkbox" name="report_on_out">
+                        </div>
                         <div class="form-group" style="flex: 2;">
-                            <label for="printer_name">Stampante:</label>
-                            <select id="printer_name" name="printer_name" required>
+                            <label for="printer_name">Stampa su:</label>
+                            <select id="printer_name" name="printer_name">
                                 ${printerOptions}
                             </select>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label for="number_of_prints">Numero di stampe:</label>
                             <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="1" required>
-                        </div>
-                        <div class="form-group" style="flex: 1; text-align: center;">
-                            <label>Stampa all'entrata</label><br>
-                            <input type="checkbox" name="print_on_in">
-                        </div>
-                        <div class="form-group" style="flex: 1; text-align: center;">
-                            <label>Stampa all'uscita</label><br>
-                            <input type="checkbox" name="print_on_out">
                         </div>
                     </div>
                     <div class="form-group">
@@ -1207,7 +1208,7 @@ async function loadSetupWeighers() {
 
                 const selections = addWeigherModal.querySelectorAll('select');
                 selections.forEach(selection => {
-                    if (selection.name) data[selection.name] = selection.value;
+                    if (selection.name) data[selection.name] = selection.value !== '' ? selection.value : null;
                 })
 
                 document.querySelector(`.${addCamClass}`).querySelectorAll(".cam").forEach(element => {
@@ -1294,9 +1295,9 @@ async function loadSetupWeighers() {
                         <p class="gray"><em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Scaricare pesa dopo pesata effettuata: ${data.need_take_of_weight_before_weighing ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em></p>
-                        <p class="gray"><em>Stampante: ${data.printer_name ? data.printer_name : 'Nessuna'}</em></p>
+                        <p class="gray"><em>Genera report all'entrata: ${data.events.weighing.report.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Genera report all'entrata: ${data.events.weighing.report.out ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Stampa su: ${data.printer_name ? data.printer_name : 'Nessuna'}</em></p>
                         <p class="gray"><em>Numero di stampe: ${data.number_of_prints}</em></p>
-                        <p class="gray"><em>Stampa all'entrata: ${data.events.weighing.print.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Stampa all'entrata: ${data.events.weighing.print.out ? 'Si' : 'No'}</em></p>
                     `;
                     if (cams.length > 0) {
                         viewModeCFontent.innerHTML += '<h5 class="gray"><em>TELECAMERE</em></h5>';
@@ -1352,6 +1353,7 @@ async function loadSetupWeighers() {
                 const populateEditContent = (data) => {
                     // Genera le option per le stampanti
                     let printerOptions = '';
+                    printerOptions += `<option value="">--- Nessuna ---</button>`;
                     for (const printer of list_printer_names) {
                         printerOptions += `<option value="${printer.nome}" ${data.printer_name === printer.nome ? 'selected' : ''}>${printer.nome}</option>`;
                     }
@@ -1393,23 +1395,23 @@ async function loadSetupWeighers() {
                             </div>
                         </div>
                         <div style="display: flex; gap: 16px; align-items: flex-end;">
+                            <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Genera report all'entrata</label><br>
+                                <input type="checkbox" name="report_on_in" ${data.events?.weighing?.report?.in ? 'checked' : ''}>
+                            </div>
+                            <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Genera report all'uscita</label><br>
+                                <input type="checkbox" name="report_on_out" ${data.events?.weighing?.report?.out ? 'checked' : ''}>
+                            </div>
                             <div class="form-group" style="flex: 2;">
-                                <label for="printer_name">Stampante:</label><br>
-                                <select id="printer_name" name="printer_name" required>
+                                <label for="printer_name">Stampa su:</label><br>
+                                <select id="printer_name" name="printer_name">
                                     ${printerOptions}
                                 </select>
                             </div>
                             <div class="form-group" style="flex: 1;">
                                 <label for="number_of_prints">Numero di stampe:</label><br>
                                 <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="${data.number_of_prints || 1}" required>
-                            </div>
-                            <div class="form-group" style="flex: 1; text-align: center;">
-                                <label>Stampa all'entrata</label><br>
-                                <input type="checkbox" name="print_on_in" ${data.events?.weighing?.print?.in ? 'checked' : ''}>
-                            </div>
-                            <div class="form-group" style="flex: 1; text-align: center;">
-                                <label>Stampa all'uscita</label><br>
-                                <input type="checkbox" name="print_on_out" ${data.events?.weighing?.print?.out ? 'checked' : ''}>
                             </div>
                         </div>
                         <div class="form-group">
@@ -1501,7 +1503,7 @@ async function loadSetupWeighers() {
                         const currentValue = selection.value;
 
                         if (currentValue !== originalValue) {
-                            changedData[selection.name] = currentValue;
+                            changedData[selection.name] = currentValue !== '' ? currentValue : null;
                         }
                     });
 
