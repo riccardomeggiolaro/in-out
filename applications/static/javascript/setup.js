@@ -34,6 +34,9 @@ async function getPrintersList() {
 
 async function getReportIn() {
     const response = await fetch('/api/generic/report-in');
+
+    if (!response.ok) return;
+
     const blob = await response.blob();
     
     // Extrair filename do cabeçalho Content-Disposition
@@ -54,6 +57,9 @@ async function getReportIn() {
 
 async function getReportOut() {
     const response = await fetch('/api/generic/report-out');
+
+    if (!response.ok) return;
+
     const blob = await response.blob();
 
     // Extrair filename do cabeçalho Content-Disposition
@@ -292,22 +298,22 @@ async function loadSetupWeighers() {
             } else {
                 const formData = new FormData();
                 const file = e.target.files[0];
-                template_report_in.items.remove(0);
-                template_report_in.items.add(file);
-                reportIn.files = template_report_in.files;
-                formData.append('file', reportIn.files[0]);
-                console.log(formData.get('file'));
+                formData.append('file', file);
                 fetch('/api/generic/report-in', {
                     method: 'POST',
                     body: formData
                 })
                 .then(res => {
                     if (res.ok) {
-                        console.log("ihbweibdeib");
+                        template_report_in.items.remove(0);
+                        template_report_in.items.add(file);
+                        deleteReportIn.disabled = false;
                     }
+                    reportIn.files = template_report_in.files;
                 })
             }
         }
+        reportIn.files.length > 0 ? deleteReportIn.disabled = false : deleteReportIn.disabled = true;
         deleteReportIn.textContent = '🗑️';
         deleteReportIn.onclick = (e) => {
             const removeReportIn = (e) => {
@@ -321,6 +327,7 @@ async function loadSetupWeighers() {
                     if (res.ok) {
                         template_report_in = new DataTransfer();
                         reportIn.files = template_report_in.files;
+                        deleteReportIn.disabled = true;
                     } else {
                         res = res.json();
                         showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
@@ -387,6 +394,28 @@ async function loadSetupWeighers() {
         reportOut.type = 'file';
         reportOut.accept = '.html';
         reportOut.files = template_report_out.files;
+        reportOut.onchange = (e) => {
+            if (e.target.files.length === 0) {
+                reportOut.files = template_report_in.files;
+            } else {
+                const formData = new FormData();
+                const file = e.target.files[0];
+                formData.append('file', file);
+                fetch('/api/generic/report-out', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => {
+                    if (res.ok) {
+                        template_report_out.items.remove(0);
+                        template_report_out.items.add(file);
+                        deleteReportOut.disabled = false;
+                    }
+                    reportOut.files = template_report_out.files;
+                })
+            }
+        }
+        reportOut.files.length > 0 ? deleteReportOut.disabled = false : deleteReportOut.disabled = true;
         deleteReportOut.textContent = '🗑️';
         deleteReportOut.onclick = (e) => {
             const removeReportOut = (e) => {
@@ -400,6 +429,7 @@ async function loadSetupWeighers() {
                     if (res.ok) {
                         template_report_out = new DataTransfer();
                         reportOut.files = template_report_out.files;
+                        deleteReportOut.disabled = true;
                     } else {
                         res = res.json();
                         showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
@@ -440,7 +470,7 @@ async function loadSetupWeighers() {
             previewReportOut.style.cursor = "pointer";
         }
         previewReportOut.onclick = async (e) => {
-            if (template_report_in.files.length > 0) {
+            if (template_report_out.files.length > 0) {
                 // Assicurati che esista un endpoint che accetti il file HTML e restituisca il PDF
                 const response = await fetch('/api/generic/report-out/preview');
 

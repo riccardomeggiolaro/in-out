@@ -62,19 +62,28 @@ class GenericRouter:
     async def saveReportIn(self, file: UploadFile = File(None)):
         path = lb_config.g_config['app_api']['path_report']
         name_report_in = lb_config.g_config["app_api"]["report_in"]
-        full_path = os.path.join(path, name_report_in)
+        if file and file.filename == lb_config.g_config["app_api"]["report_out"]:
+            raise HTTPException(status_code=400, detail="File with this name just exists")
         try:
-            if file is None:
+            if name_report_in is not None:
+                full_path = os.path.join(path, name_report_in)
                 # Elimina il file se esiste
                 if os.path.exists(full_path):
                     os.remove(full_path)
-                return {"message": "Report eliminato correttamente"}
-            else:
+                    lb_config.g_config["app_api"]["report_in"] = None
+                    lb_config.saveconfig()
+                if file is None:
+                    return {"message": "Report eliminato correttamente"}
+            if file is not None:
                 # Controlla che sia un file HTML
                 if not file.filename.lower().endswith('.html'):
                     raise HTTPException(status_code=400, detail="Il file deve essere in formato .html")
                 if file.content_type not in ["text/html", "application/octet-stream"]:
                     raise HTTPException(status_code=400, detail="Il file deve essere di tipo text/html")
+                lb_config.g_config["app_api"]["report_in"] = file.filename
+                lb_config.saveconfig()
+                name_report_in = lb_config.g_config["app_api"]["report_in"]
+                full_path = os.path.join(path, name_report_in)
                 with open(full_path, "wb") as buffer:
                     shutil.copyfileobj(file.file, buffer)
                 return {"message": "Report salvato correttamente"}
@@ -84,45 +93,56 @@ class GenericRouter:
     async def getReportIn(self):
         path = lb_config.g_config['app_api']['path_report']
         name_report_in = lb_config.g_config["app_api"]["report_in"]
-        full_path = os.path.join(path, name_report_in)
-        if name_report_in and os.path.exists(full_path):
-            return FileResponse(
-                full_path,
-                media_type="text/html",
-                headers={"Content-Disposition": f"attachment; filename={name_report_in}"}
-            )
+        if name_report_in:
+            full_path = os.path.join(path, name_report_in)
+            if os.path.exists(full_path):
+                return FileResponse(
+                    full_path,
+                    media_type="text/html",
+                    headers={"Content-Disposition": f"attachment; filename={name_report_in}"}
+                )
         raise HTTPException(status_code=404, detail="Report not found")
 
     async def getReportInPreview(self):
         path = lb_config.g_config['app_api']['path_report']
         name_report_in = lb_config.g_config["app_api"]["report_in"]
-        full_path = os.path.join(path, name_report_in)
-        if name_report_in and os.path.exists(full_path):
-            html = generate_html_report(path, name_report_in)
-            pdf = printer.generate_pdf_from_html(html)
-            return StreamingResponse(
-                BytesIO(pdf),
-                media_type="application/pdf",
-                headers={"Content-Disposition": f"attachment; filename={name_report_in}"}
-            )
+        if name_report_in:
+            full_path = os.path.join(path, name_report_in)
+            if os.path.exists(full_path):
+                html = generate_html_report(path, name_report_in)
+                pdf = printer.generate_pdf_from_html(html)
+                return StreamingResponse(
+                    BytesIO(pdf),
+                    media_type="application/pdf",
+                    headers={"Content-Disposition": f"attachment; filename={name_report_in}"}
+                )
         raise HTTPException(status_code=404, detail="Report not found")
 
     async def saveReportOut(self, file: UploadFile = File(None)):
         path = lb_config.g_config['app_api']['path_report']
         name_report_out = lb_config.g_config["app_api"]["report_out"]
-        full_path = os.path.join(path, name_report_out)
+        if file and file.filename == lb_config.g_config["app_api"]["report_in"]:
+            raise HTTPException(status_code=400, detail="File with this name just exists")
         try:
-            if file is None:
+            if name_report_out is not None:
+                full_path = os.path.join(path, name_report_out)
                 # Elimina il file se esiste
                 if os.path.exists(full_path):
                     os.remove(full_path)
-                return {"message": "Report eliminato correttamente"}
-            else:
+                    lb_config.g_config["app_api"]["report_out"] = None
+                    lb_config.saveconfig()
+                if file is None:
+                    return {"message": "Report eliminato correttamente"}
+            if file is not None:
                 # Controlla che sia un file HTML
                 if not file.filename.lower().endswith('.html'):
                     raise HTTPException(status_code=400, detail="Il file deve essere in formato .html")
                 if file.content_type not in ["text/html", "application/octet-stream"]:
                     raise HTTPException(status_code=400, detail="Il file deve essere di tipo text/html")
+                lb_config.g_config["app_api"]["report_out"] = file.filename
+                lb_config.saveconfig()
+                name_report_out = lb_config.g_config["app_api"]["report_out"]
+                full_path = os.path.join(path, name_report_out)
                 with open(full_path, "wb") as buffer:
                     shutil.copyfileobj(file.file, buffer)
                 return {"message": "Report salvato correttamente"}
@@ -132,25 +152,27 @@ class GenericRouter:
     async def getReportOut(self):
         path = lb_config.g_config['app_api']['path_report']
         name_report_out = lb_config.g_config["app_api"]["report_out"]
-        full_path = os.path.join(path, name_report_out)
-        if name_report_out and os.path.exists(full_path):
-            return FileResponse(
-                full_path,
-                media_type="text/html",
-                headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
-            )
+        if name_report_out:
+            full_path = os.path.join(path, name_report_out)
+            if os.path.exists(full_path):
+                return FileResponse(
+                    full_path,
+                    media_type="text/html",
+                    headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
+                )
         raise HTTPException(status_code=404, detail="Report not found")
     
     async def getReportOutPreview(self):
         path = lb_config.g_config['app_api']['path_report']
         name_report_out = lb_config.g_config["app_api"]["report_out"]
-        full_path = os.path.join(path, name_report_out)
-        if name_report_out and os.path.exists(full_path):
-            html = generate_html_report(path, name_report_out)
-            pdf = printer.generate_pdf_from_html(html)
-            return StreamingResponse(
-                BytesIO(pdf),
-                media_type="application/pdf",
-                headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
-            )
+        if name_report_out:
+            full_path = os.path.join(path, name_report_out)
+            if os.path.exists(full_path):
+                html = generate_html_report(path, name_report_out)
+                pdf = printer.generate_pdf_from_html(html)
+                return StreamingResponse(
+                    BytesIO(pdf),
+                    media_type="application/pdf",
+                    headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
+                )
         raise HTTPException(status_code=404, detail="Report not found")
