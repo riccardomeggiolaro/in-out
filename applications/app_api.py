@@ -29,28 +29,6 @@ def mainprg():
 	global base_dir_templates
 	global templates
  
-	@app.get('/{filename:path}', response_class=HTMLResponse)
-	async def Static(request: Request, filename: str):
-		lb_log.warning(f"Richiesta di file statico: {filename}")
-
-		"""Gestisce le richieste di file statici (HTML, CSS, JS)."""
-		if filename is None or filename == "":
-			return RedirectResponse(url="/dashboard")
-
-		# Verifica se il file esiste nella directory templates
-		file_path = base_dir_templates / filename
-		if file_path.is_file():
-			return templates.TemplateResponse(filename, {"request": request})
-
-		# Prova ad aggiungere l'estensione ".html" se non è stato fornito
-		filename_html = f"{filename}.html"
-		file_path_html = base_dir_templates / filename_html
-		if file_path_html.is_file():
-			return templates.TemplateResponse(filename_html, {"request": request})
-
-		# Se il file non esiste, fai un redirect alla home
-		return RedirectResponse(url="/not-found")
-
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================
 
@@ -114,6 +92,8 @@ def init():
 	printer_router = PrinterRouter()
 	tunnel_connections_router = TunnelConnectionsRouter()
 
+	directory = lb_config.g_config["app_api"]["path_img"] if os.path.exists(lb_config.g_config["app_api"]["path_img"]) else None
+
 	app.include_router(weigher_router.router, prefix="/api")
 
 	app.include_router(anagrafic_router.router, prefix="/api")
@@ -129,9 +109,32 @@ def init():
 	# Monta la cartella 'static' nella rotta '/static'
 	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
-	directory = None
-	
-	if os.path.exists(lb_config.g_config["app_api"]["path_img"]):
-		directory = lb_config.g_config["app_api"]["path_img"]
-
 	app.mount("/images", StaticFiles(directory=directory), name="images")
+
+	@app.get("/access", response_class=HTMLResponse)
+	async def Access(request: Request):
+		use_reservation = lb_config.g_config["app_api"]["use_reservation"]
+		file_name = "access.html"
+		if use_reservation:
+			file_name = "reservation.html"
+		return templates.TemplateResponse(file_name, {"request": request})
+ 
+	@app.get('/{filename:path}', response_class=HTMLResponse)
+	async def Static(request: Request, filename: str):
+		"""Gestisce le richieste di file statici (HTML, CSS, JS)."""
+		if filename is None or filename == "":
+			return RedirectResponse(url="/dashboard")
+
+		# Verifica se il file esiste nella directory templates
+		file_path = base_dir_templates / filename
+		if file_path.is_file():
+			return templates.TemplateResponse(filename, {"request": request})
+
+		# Prova ad aggiungere l'estensione ".html" se non è stato fornito
+		filename_html = f"{filename}.html"
+		file_path_html = base_dir_templates / filename_html
+		if file_path_html.is_file():
+			return templates.TemplateResponse(filename_html, {"request": request})
+
+		# Se il file non esiste, fai un redirect alla home
+		return RedirectResponse(url="/not-found")
