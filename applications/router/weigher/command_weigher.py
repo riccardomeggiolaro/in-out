@@ -188,7 +188,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def OutByPlate(self, request: Request, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		try:
 			reservation = get_reservation_by_plate_if_uncomplete(plate=plate_dto.plate)
-			if not reservation:
+			allow_white_list = lb_config.g_config["app_api"]["use_white_list"]
+			if not reservation and allow_white_list:
 				vehicle = get_data_by_attributes("vehicle", {"plate": plate_dto.plate})
 				if vehicle and vehicle["white_list"]:
 					data = AddReservationDTO(**{

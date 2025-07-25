@@ -882,7 +882,7 @@
                             <b>NETTO: </b> <u>${weighing.net_weight !== null ? weighing.net_weight : ''} kg</u>.
                             <b>MATERIALE: </B> <u>${weighing.material ? weighing.material.description : ''}</u>`;
 
-                content += `<button onclick="exportReportWeighing(${weighing.id})">📄</button>`;
+                if (!weighing.weight2 && report.in || weighing.weight2 && report.out) content += `<button onclick="exportReportWeighing(${weighing.id})">📄</button>`;
 
                 content += `<button onclick="updateWeighingMaterial(${item.id}, ${weighing.id}, ${weighing.material ? weighing.material.id : null}, '${weighing.material ? weighing.material.description : ''}')">✏️</button>`;
 

@@ -28,6 +28,10 @@ let typeSelect; // update or delete
 let params = {};
 let requestIdCounter = 0;
 let buffer = "";
+let report = {
+    in: false,
+    out: false
+}
 // Track pending requests
 const pendingRequests = new Map();
 const columns = {};
@@ -44,13 +48,28 @@ window.onbeforeunload = function () {
     clearTimeout(reconnectTimeout);
 };
 
-
 document.querySelectorAll('thead th').forEach((th, index) => {
     const columnName = th.attributes["name"];
     if (columnName && columnName.value) {
         columns[columnName.value] = index;
     }
 });
+
+async function configuration() {
+    const response = await fetch('/api/config-weigher/configuration');
+    if (response.ok) {
+        response.json()
+        .then(res => {
+            Object.keys(res.weighers).forEach(i => {
+                const instance = res.weighers[i];
+                Object.keys(instance.nodes).forEach(weigher => {
+                    report.in = instance.nodes[weigher].events.weighing.report.in;
+                    report.out = instance.nodes[weigher].events.weighing.report.out;
+                });
+            });
+        });
+    }
+}
 
 async function exportReportWeighing(idWeighing) {
     const response = await fetch(`/api/anagrafic/reservation/in-out/pdf/${idWeighing}`);
@@ -322,15 +341,17 @@ function createRow(table, columns, item, idInout) {
     }
     let pdfButton;
     if (itemName === "reservation" && idInout) {
-        pdfButton = document.createElement("button");
-        pdfButton.style.visibility = 'hidden';
-        pdfButton.textContent = "📄";
-        pdfButton.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            exportReportWeighing(idInout);
+        if (!item.weight2 && report.in || item.weight2 && report.out) {
+            pdfButton = document.createElement("button");
+            pdfButton.style.visibility = 'hidden';
+            pdfButton.textContent = "📄";
+            pdfButton.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                exportReportWeighing(idInout);
+            }
+            actionsCell.appendChild(pdfButton);
         }
-        actionsCell.appendChild(pdfButton);
     }
     // Pulsante Modifica
     const editButton = document.createElement("button");
@@ -1020,10 +1041,6 @@ async function deselectAnagrafic(idRecord, anagrafic = itemName, callback_anagra
     }
 }
 
-function init() {
-    connectWebSocket();
-}
-
 function isJsonString(str) {
     try {
         const parsed = JSON.parse(str);
@@ -1031,4 +1048,9 @@ function isJsonString(str) {
     } catch (e) {
         return false;
     }
+}
+
+function init() {
+    configuration();
+    connectWebSocket();
 }

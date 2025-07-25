@@ -17,7 +17,7 @@
         "port": 80,
         "report_in": "weight_in.html",
         "report_out": "weight_out.html",
-        "return_pdf_copy_after_weighing": true,
+        "return_pdf_copy_after_weighing": false,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -44,6 +44,9 @@
             "ssh_port": 10022,
             "user": "root"
         },
+        "use_reservation": true,
+        "use_tag": true,
+        "use_white_list": true,
         "weighers": {
             "2": {
                 "connection": {

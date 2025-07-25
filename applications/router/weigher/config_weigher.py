@@ -20,6 +20,9 @@ class ConfigWeigher(CallbackWeigher):
         self.router_config_weigher = APIRouter()
     
         self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
+        self.router_config_weigher.add_api_route('/configuration/use-reservation/{use_reservation}', self.SetUseReservation, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/use-white-list/{use_white_list}', self.SetUseWhiteList, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/use-tag/{use_tag}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -43,6 +46,21 @@ class ConfigWeigher(CallbackWeigher):
         lb_config.g_config["app_api"]["return_pdf_copy_after_weighing"] = return_pdf_copy_after_weighing
         lb_config.saveconfig()
         return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
+
+    async def SetUseReservation(self, use_reservation: bool):
+        lb_config.g_config["app_api"]["use_reservation"] = use_reservation
+        lb_config.saveconfig()
+        return { "use_reservation": use_reservation }
+
+    async def SetUseWhiteList(self, use_white_list: bool):
+        lb_config.g_config["app_api"]["use_white_list"] = use_white_list
+        lb_config.saveconfig()
+        return { "use_white_list": use_white_list }
+
+    async def SetUseTag(self, use_tag: bool):
+        lb_config.g_config["app_api"]["use_tag"] = use_tag
+        lb_config.saveconfig()
+        return { "use_tag": use_tag }
 
     async def SavePathPdf(self, body: PathDTO):
         path = body.path

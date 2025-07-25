@@ -156,9 +156,51 @@ async function loadSetupWeighers() {
     await fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(data => {
+        const labelReservation = document.createElement('label');
+        const reservation = document.createElement('input');
+        labelReservation.textContent = "Usa le prenotazioni: ";
+        reservation.type = 'checkbox';
+        reservation.checked = data.use_reservation ? true : false;
+        reservation.onchange = (e) => {
+            const checked = e.target.checked;
+            fetch(`/api/config-weigher/configuration/use-reservation/${checked}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+        }
+        const labelWhiteList = document.createElement('label');
+        const whiteList = document.createElement('input');
+        labelWhiteList.textContent = "Usa white list per i veicoli: "
+        whiteList.type = 'checkbox';
+        whiteList.checked = data.use_white_list ? true : false;
+        whiteList.onchange = (e) => {
+            const checked = e.target.checked;
+            fetch(`/api/config-weigher/configuration/use-white-list/${checked}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+        }
+        const labelTag = document.createElement('label');
+        const tag = document.createElement('input');
+        labelTag.textContent = "Usa tag sui veicoli per riconoscimento multiplo tramite tessere e targhe: ";
+        tag.type = 'checkbox';
+        tag.checked = data.use_tag ? true : false;
+        tag.onchange = (e) => {
+            const checked = e.target.checked;
+            fetch(`/api/config-weigher/configuration/use-tag/${checked}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+        }       
         const labelReturnPdfCopyAfterWeighing = document.createElement('label');
-        labelReturnPdfCopyAfterWeighing.textContent = "Ritorna copia report pesata sul browser all'utente che effettua la pesata ";
         const returnPdfCopyAfterWeighing = document.createElement('input');
+        labelReturnPdfCopyAfterWeighing.textContent = "Ritorna copia report pesata sul browser all'utente che effettua la pesata: ";
         returnPdfCopyAfterWeighing.type = 'checkbox';
         returnPdfCopyAfterWeighing.checked = data.return_pdf_copy_after_weighing ? true : false;
         returnPdfCopyAfterWeighing.onchange = (e) => {
@@ -170,118 +212,6 @@ async function loadSetupWeighers() {
                 }
             })
             .then(res => res.json())
-        }
-        const br = document.createElement('br');
-        const labelSavePdfPath = document.createElement('label');
-        const savePdfPath = document.createElement('input');
-        const savePdfPathButton = document.createElement('button');
-        let originalPathPdf = data.path_pdf ? data.path_pdf : '';
-        labelSavePdfPath.textContent = "Directory salvataggio report pesata in pdf: ";
-        savePdfPath.type = 'text';
-        savePdfPath.value = data.path_pdf ? data.path_pdf : '';
-        savePdfPathButton.textContent = 'Salva';
-        savePdfPathButton.disabled = true;
-        savePdfPath.oninput = (e) => {
-            const value = e.target.value;
-            if (value !== originalPathPdf) {
-                savePdfPathButton.disabled = false;
-            } else {
-                savePdfPathButton.disabled = true;
-            }
-        }
-        savePdfPathButton.onclick = (e) => {
-            const value = savePdfPath.value;
-            fetch(`/api/config-weigher/configuration/path-pdf`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ path: value ? value : null })
-            })
-            .then(res => {
-                if (res.ok) {
-                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
-                    savePdfPathButton.disabled = true;
-                    originalPathPdf = value;
-                } else {
-                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
-                    savePdfPath.value = originalPathPdf;
-                }
-            })
-        }
-        const labelSaveCsvPath = document.createElement('label');
-        const saveCsvPath = document.createElement('input');
-        const saveCsvPathButton = document.createElement('button');
-        let originalPathCsv = data.path_csv ? data.path_csv : '';
-        labelSaveCsvPath.textContent = "Directory salvataggio pesata in csv: ";
-        saveCsvPath.type = 'text';
-        saveCsvPath.value = data.path_csv ? data.path_csv : '';
-        saveCsvPathButton.textContent = 'Salva';
-        saveCsvPathButton.disabled = true;
-        saveCsvPath.oninput = (e) => {
-            const value = e.target.value;
-            if (value !== originalPathCsv) {
-                saveCsvPathButton.disabled = false;
-            } else {
-                saveCsvPathButton.disabled = true;
-            }
-        }
-        saveCsvPathButton.onclick = (e) => {
-            const value = saveCsvPath.value;
-            fetch(`/api/config-weigher/configuration/path-csv`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ path: value ? value : null})
-            })
-            .then(res => {
-                if (res.ok) {
-                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
-                    saveCsvPathButton.disabled = true;
-                    originalPathCsv = value;
-                } else {
-                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
-                    saveCsvPath.value = originalPathCsv;
-                }
-            })
-        }
-        const labelSaveImgPath = document.createElement('label');
-        const saveImgPath = document.createElement('input');
-        const saveImgPathButton = document.createElement('button');
-        let originalPathImg = data.path_img ? data.path_img : '';
-        labelSaveImgPath.textContent = "Directory salvataggio immagini: ";
-        saveImgPath.type = 'text';
-        saveImgPath.value = data.path_img ? data.path_img : '';
-        saveImgPathButton.textContent = 'Salva';
-        saveImgPathButton.disabled = true;
-        saveImgPath.oninput = (e) => {
-            const value = e.target.value;
-            if (value !== originalPathImg) {
-                saveImgPathButton.disabled = false;
-            } else {
-                saveImgPathButton.disabled = true;
-            }
-        }
-        saveImgPathButton.onclick = (e) => {
-            const value = saveImgPath.value;
-            fetch(`/api/config-weigher/configuration/path-img`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ path: value ? value : null })
-            })
-            .then(res => {
-                if (res.ok) {
-                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
-                    saveImgPathButton.disabled = true;
-                    originalPathImg = value;
-                } else {
-                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
-                    saveImgPath.value = originalPathImg;
-                }
-            })
         }
         const labelReportInt = document.createElement('label');
         const reportIn = document.createElement('input');
@@ -487,38 +417,212 @@ async function loadSetupWeighers() {
                 showSnackbar("Nessun file selezionato", 'rgb(255, 208, 208)', 'black');
             }
         };
+        const br = document.createElement('br');
+        const labelSavePdfPath = document.createElement('label');
+        const savePdfPath = document.createElement('input');
+        const savePdfPathButton = document.createElement('button');
+        let originalPathPdf = data.path_pdf ? data.path_pdf : '';
+        labelSavePdfPath.textContent = "Directory salvataggio report pesata in pdf: ";
+        savePdfPath.type = 'text';
+        savePdfPath.value = data.path_pdf ? data.path_pdf : '';
+        savePdfPathButton.textContent = 'Salva';
+        savePdfPathButton.disabled = true;
+        savePdfPath.oninput = (e) => {
+            const value = e.target.value;
+            if (value !== originalPathPdf) {
+                savePdfPathButton.disabled = false;
+            } else {
+                savePdfPathButton.disabled = true;
+            }
+        }
+        savePdfPathButton.onclick = (e) => {
+            const value = savePdfPath.value;
+            fetch(`/api/config-weigher/configuration/path-pdf`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ path: value ? value : null })
+            })
+            .then(res => {
+                if (res.ok) {
+                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
+                    savePdfPathButton.disabled = true;
+                    originalPathPdf = value;
+                } else {
+                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
+                    savePdfPath.value = originalPathPdf;
+                }
+            })
+        }
+        const labelSaveCsvPath = document.createElement('label');
+        const saveCsvPath = document.createElement('input');
+        const saveCsvPathButton = document.createElement('button');
+        let originalPathCsv = data.path_csv ? data.path_csv : '';
+        labelSaveCsvPath.textContent = "Directory salvataggio pesata in csv: ";
+        saveCsvPath.type = 'text';
+        saveCsvPath.value = data.path_csv ? data.path_csv : '';
+        saveCsvPathButton.textContent = 'Salva';
+        saveCsvPathButton.disabled = true;
+        saveCsvPath.oninput = (e) => {
+            const value = e.target.value;
+            if (value !== originalPathCsv) {
+                saveCsvPathButton.disabled = false;
+            } else {
+                saveCsvPathButton.disabled = true;
+            }
+        }
+        saveCsvPathButton.onclick = (e) => {
+            const value = saveCsvPath.value;
+            fetch(`/api/config-weigher/configuration/path-csv`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ path: value ? value : null})
+            })
+            .then(res => {
+                if (res.ok) {
+                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
+                    saveCsvPathButton.disabled = true;
+                    originalPathCsv = value;
+                } else {
+                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
+                    saveCsvPath.value = originalPathCsv;
+                }
+            })
+        }
+        const labelSaveImgPath = document.createElement('label');
+        const saveImgPath = document.createElement('input');
+        const saveImgPathButton = document.createElement('button');
+        let originalPathImg = data.path_img ? data.path_img : '';
+        labelSaveImgPath.textContent = "Directory salvataggio immagini: ";
+        saveImgPath.type = 'text';
+        saveImgPath.value = data.path_img ? data.path_img : '';
+        saveImgPathButton.textContent = 'Salva';
+        saveImgPathButton.disabled = true;
+        saveImgPath.oninput = (e) => {
+            const value = e.target.value;
+            if (value !== originalPathImg) {
+                saveImgPathButton.disabled = false;
+            } else {
+                saveImgPathButton.disabled = true;
+            }
+        }
+        saveImgPathButton.onclick = (e) => {
+            const value = saveImgPath.value;
+            fetch(`/api/config-weigher/configuration/path-img`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ path: value ? value : null })
+            })
+            .then(res => {
+                if (res.ok) {
+                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
+                    saveImgPathButton.disabled = true;
+                    originalPathImg = value;
+                } else {
+                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
+                    saveImgPath.value = originalPathImg;
+                }
+            })
+        }
         weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(labelReturnPdfCopyAfterWeighing);
-        weighers_config.appendChild(returnPdfCopyAfterWeighing);
+        // CONFIGURAZIONE DEGLI ACCESSI
+        const divAccess = document.createElement('div');
+        const h1Access = document.createElement('h3');
+        divAccess.classList.toggle("borders");
+        divAccess.classList.toggle("aliceblue");
+        h1Access.textContent = 'Accessi';
+        divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(h1Access);
+        divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(labelReservation);
+        divAccess.appendChild(reservation);
+        divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(divAccess);
+        //////////////////////////////////////////////////////
         weighers_config.appendChild(br.cloneNode(true));
+        // CONFIGURATION OF VEHICLE
+        const divVehicle = document.createElement('div');
+        const h1Vehicle = document.createElement('h3');
+        divVehicle.classList.toggle("borders");
+        divVehicle.classList.toggle("aliceblue");
+        h1Vehicle.textContent = "Veicoli";
+        divVehicle.appendChild(br.cloneNode(true));
+        divVehicle.appendChild(h1Vehicle);
+        divVehicle.appendChild(br.cloneNode(true));
+        divVehicle.appendChild(labelWhiteList);
+        divVehicle.appendChild(whiteList);
+        divVehicle.appendChild(br.cloneNode(true));
+        divVehicle.appendChild(br.cloneNode(true));
+        divVehicle.appendChild(labelTag);
+        divVehicle.appendChild(tag);
+        divVehicle.appendChild(br.cloneNode(true));
+        divVehicle.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(divVehicle);
+        //////////////////////////////////////////////////////
         weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(labelSavePdfPath);
-        weighers_config.appendChild(savePdfPath);
-        weighers_config.appendChild(savePdfPathButton);
+        // CONFIGURATION OF REPORT
+        const divReport = document.createElement('div');
+        const h1Report = document.createElement('h3');
+        divReport.classList.toggle("borders");
+        divReport.classList.toggle("aliceblue");
+        h1Report.textContent = 'Report';
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(h1Report);
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(labelReturnPdfCopyAfterWeighing);
+        divReport.appendChild(returnPdfCopyAfterWeighing);
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(labelReportInt);
+        divReport.appendChild(reportIn);
+        divReport.appendChild(deleteReportIn);
+        divReport.appendChild(downloadReportIn);
+        divReport.appendChild(previewReportIn);
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(labelReportOut);
+        divReport.appendChild(reportOut);
+        divReport.appendChild(deleteReportOut);
+        divReport.appendChild(downloadReportOut);
+        divReport.appendChild(previewReportOut);
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(divReport);
+        //////////////////////////////////////////////////////
         weighers_config.appendChild(br.cloneNode(true));
+        // CONFIGURATION OF DIRECTORIES
+        const divDirectories = document.createElement('div');
+        const h1Directories = document.createElement('h3');
+        divDirectories.classList.toggle("borders");
+        divDirectories.classList.toggle("aliceblue");
+        h1Directories.textContent = 'Percosi di salvataggio';
+        divDirectories.appendChild(br.cloneNode(true));
+        divDirectories.appendChild(h1Directories);
+        divDirectories.appendChild(br.cloneNode(true));
+        divDirectories.appendChild(labelSavePdfPath);
+        divDirectories.appendChild(savePdfPath);
+        divDirectories.appendChild(savePdfPathButton);
+        divDirectories.appendChild(br.cloneNode(true));
+        divDirectories.appendChild(br.cloneNode(true));
+        divDirectories.appendChild(labelSaveCsvPath);
+        divDirectories.appendChild(saveCsvPath);
+        divDirectories.appendChild(saveCsvPathButton);
+        divDirectories.appendChild(br.cloneNode(true));
+        divDirectories.appendChild(br.cloneNode(true));
+        divDirectories.appendChild(labelSaveImgPath);
+        divDirectories.appendChild(saveImgPath);
+        divDirectories.appendChild(saveImgPathButton);
+        divDirectories.appendChild(br.cloneNode(true));
+        divDirectories.appendChild(br.cloneNode(true));
+        weighers_config.appendChild(divDirectories);
+        //////////////////////////////////////////////////////
         weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(labelSaveCsvPath);
-        weighers_config.appendChild(saveCsvPath);
-        weighers_config.appendChild(saveCsvPathButton);
-        weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(labelSaveImgPath);
-        weighers_config.appendChild(saveImgPath);
-        weighers_config.appendChild(saveImgPathButton);
-        weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(labelReportInt);
-        weighers_config.appendChild(reportIn);
-        weighers_config.appendChild(deleteReportIn);
-        weighers_config.appendChild(downloadReportIn);
-        weighers_config.appendChild(previewReportIn);
-        weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(labelReportOut);
-        weighers_config.appendChild(reportOut);
-        weighers_config.appendChild(deleteReportOut);
-        weighers_config.appendChild(downloadReportOut);
-        weighers_config.appendChild(previewReportOut);
         data = data["weighers"];
         const addInstance = document.createElement('button');
         addInstance.classList.toggle('container-buttons');
