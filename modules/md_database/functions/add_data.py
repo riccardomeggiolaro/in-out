@@ -63,6 +63,7 @@ def add_data(table_name: str, data):
             
             # Lista per tenere traccia di tutti i conflitti trovati
             conflicts = []
+            conflicts_without_null = []
             
             # Cerchiamo tutti i vincoli di unicità violati
             if "UNIQUE constraint failed:" in error_message:
@@ -81,6 +82,8 @@ def add_data(table_name: str, data):
                             column_name = table_column[1].strip()
                             if column_name in data:
                                 conflicts.append(f"{column_name}: {data[column_name]}")
+                                if data[column_name] is not None:
+                                    conflicts_without_null.append(f"{column_name}: {data[column_name]}")
             
             # Se non siamo riusciti a estrarre i conflitti con il metodo precedente
             # proviamo con un approccio alternativo
@@ -92,9 +95,11 @@ def add_data(table_name: str, data):
                         existing = session.query(model).filter(getattr(model, column) == data[column]).first()
                         if existing:
                             conflicts.append(f"{column}: {data[column]}")
+                            if data[column] is not None:
+                                conflicts_without_null.append(f"{column}: {data[column]}")
             
             if conflicts:
-                conflict_details = ', '.join(conflicts)
+                conflict_details = ', '.join(conflicts_without_null)
                 raise HTTPException(
                     status_code=400,
                     detail=f"Conflitto sui vincoli di unicità. I seguenti valori sono duplicati: {conflict_details}"

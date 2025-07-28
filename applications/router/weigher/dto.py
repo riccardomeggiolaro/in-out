@@ -71,7 +71,7 @@ class DataDTO(BaseModel):
     data_in_execution: Optional[DataInExecutionDTO] = DataInExecutionDTO(**{})
     id_selected: Optional[IdSelectedDTO] = IdSelectedDTO(**{})
 
-class TagDTO(BaseModel):
+class IdentifyDTO(BaseModel):
     identify: str
 
 class CamDTO(BaseModel):
