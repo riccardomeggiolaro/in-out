@@ -3,6 +3,7 @@ from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from datetime import datetime
 from typing import Union
+import libs.lb_config as lb_config
 
 class Vehicle(BaseModel):
 	plate: Optional[str] = None
@@ -38,6 +39,18 @@ class VehicleDTO(BaseModel):
 	white_list: Optional[bool] = None
 	id: Optional[int] = None
 
+	@validator('tare', pre=True, always=True)
+	def check_plate(cls, v):
+		if v and v < -1 or v == 0:
+			raise ValueError('Plate must be greater than 0')
+		return v
+
+	@validator('white_list', pre=True, always=True)
+	def check_white_list(cls, v):
+		if v is not None and lb_config.g_config["app_api"]["use_white_list"] == False:
+			raise ("White list is not enabled")
+		return v
+
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
 		if v not in (None, -1):
@@ -67,6 +80,12 @@ class AddVehicleDTO(BaseModel):
 			raise ValueError('Plate must be greater than 0')
 		return v
 
+	@validator('white_list', pre=True, always=True)
+	def check_white_list(cls, v):
+		if v is not None and lb_config.g_config["app_api"]["use_white_list"] == False:
+			raise ("White list is not enabled")
+		return v
+
 	@field_validator('*', mode='before')
 	@classmethod
 	def empty_str_to_none(cls, value, info):
@@ -84,6 +103,12 @@ class SetVehicleDTO(BaseModel):
 	def check_plate(cls, v):
 		if v and v < -1 or v == 0:
 			raise ValueError('Plate must be greater than 0')
+		return v
+
+	@validator('white_list', pre=True, always=True)
+	def check_white_list(cls, v):
+		if v is not None and lb_config.g_config["app_api"]["use_white_list"] == False:
+			raise ("White list is not enabled")
 		return v
 
 	@root_validator(pre=True)

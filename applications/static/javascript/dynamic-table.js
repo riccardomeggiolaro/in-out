@@ -66,6 +66,14 @@ async function configuration() {
                     report.in = instance.nodes[weigher].events.weighing.report.in;
                     report.out = instance.nodes[weigher].events.weighing.report.out;
                 });
+                if (!res.use_white_list) {
+                    document.querySelectorAll(".white_list").forEach(input => {
+                        if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {
+                            input.previousElementSibling.style.display = 'none';
+                        }
+                        input.style.display = 'none';
+                    });
+                }
             });
         });
     }

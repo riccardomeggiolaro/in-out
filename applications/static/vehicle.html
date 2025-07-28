@@ -24,7 +24,7 @@
                 <tr>
                     <td colspan="4">
                         <label for="filter.white_list">Solo white list</label>
-                        <input id="filter.white_list" name="white_list" type="checkbox" onchange="updateTable()">
+                        <input id="filter.white_list" class="white_list" name="white_list" type="checkbox" onchange="updateTable()">
                     </td>
                 </tr>
                 <tr>
@@ -73,8 +73,8 @@
             <input type="text" id="description" name="description" autocomplete="off">
             Tara: (Opzionale)<br>
             <input type="number" id="tare" name="tare" min="0" step="0.01" autocomplete="off">
-            Whitelist:
-            <input id="white_list" name="white_list" type="checkbox">
+            <label for="white_list">Whitelist: </label>
+            <input id="white_list" class="white_list" name="white_list" type="checkbox">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -91,8 +91,8 @@
             <input type="text" id="description" name="description" autocomplete="off">
             Tara: (Opzionale)<br>
             <input type="number" id="tare" name="tare" min="0" step="0.01" autocomplete="off">
-            Whitelist:
-            <input id="white_list" name="white_list" type="checkbox">
+            <label for="white_list">Whitelist: </label>
+            <input id="white_list" class="white_list" name="white_list" type="checkbox">
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
