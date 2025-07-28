@@ -493,6 +493,7 @@ function toggleExpandRow(row) {
     currentRowExtended = row.nextElementSibling; // Dettagli subito dopo la riga
     const isExpanded = currentRowExtended.style.display === "table-row";
     currentRowExtended.style.display = isExpanded ? "none" : "table-row";
+    currentRowExtended.style.backgroundColor = isExpanded ? "white" : "aliceblue";
     currentId = isExpanded ? null : row.dataset.id;
 }
 
