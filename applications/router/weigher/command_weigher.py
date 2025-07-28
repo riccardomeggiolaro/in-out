@@ -190,7 +190,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			reservation = get_reservation_by_identify_if_uncomplete(type=type, identify=identify_dto.identify)
 			allow_white_list = lb_config.g_config["app_api"]["use_white_list"]
 			if not reservation and allow_white_list:
-				vehicle = get_data_by_attributes("vehicle", {"plate": identify_dto.identify})
+				vehicle = get_data_by_attributes("vehicle", {type: identify_dto.identify})
 				if vehicle and vehicle["white_list"]:
 					data = AddReservationDTO(**{
 						"vehicle": VehicleDataDTO(**vehicle)

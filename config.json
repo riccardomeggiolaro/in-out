@@ -87,6 +87,7 @@
                                     "description": null,
                                     "id": null,
                                     "plate": null,
+                                    "tag": null,
                                     "tare": null,
                                     "white_list": null
                                 }
@@ -143,7 +144,7 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 1
+                            "1": 0
                         },
                         "run": true,
                         "terminal": "egt-af03"
