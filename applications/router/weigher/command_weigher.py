@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends, WebSocket, HTTPException, Request
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 import modules.md_weigher.md_weigher as md_weigher
-from applications.router.weigher.dto import PlateDTO, DataDTO
+from applications.router.weigher.dto import TagDTO, DataDTO
 from typing import Optional
 import asyncio
-import libs.lb_log as lb_log
 from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.reservation import ReservationRouter
-from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
+from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_tag_if_uncomplete
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.interfaces.reservation import AddReservationDTO, VehicleDataDTO
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
@@ -26,7 +25,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		self.router_action_weigher.add_api_route('/print', self.Generic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/in', self.Weight1, methods=['POST'])
 		self.router_action_weigher.add_api_route('/out', self.Weight2, methods=['POST'])
-		self.router_action_weigher.add_api_route('/out/plate', self.OutByPlate, methods=['POST'])
+		self.router_action_weigher.add_api_route('/out/auto', self.OutByTag, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
@@ -185,12 +184,12 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			"reservation_id": idReservation
 		}
 
-	async def OutByPlate(self, request: Request, plate_dto: PlateDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def OutByTag(self, request: Request, tag_dto: TagDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		try:
-			reservation = get_reservation_by_plate_if_uncomplete(plate=plate_dto.plate)
+			reservation = get_reservation_by_tag_if_uncomplete(tag=tag_dto.identify)
 			allow_white_list = lb_config.g_config["app_api"]["use_white_list"]
 			if not reservation and allow_white_list:
-				vehicle = get_data_by_attributes("vehicle", {"plate": plate_dto.plate})
+				vehicle = get_data_by_attributes("vehicle", {"plate": tag_dto.identify})
 				if vehicle and vehicle["white_list"]:
 					data = AddReservationDTO(**{
 						"vehicle": VehicleDataDTO(**vehicle)
@@ -206,7 +205,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				specific = "telecamera " if request.state.user.level == 0 else ""
 				if current_weigher_data["id_selected"]["id"] != reservation["id"]:
-					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"Targa '{plate_dto.plate}' selezionata da {specific}'{request.client.host}'")
+					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"'{tag_dto.identify}' selezionata da {specific}'{request.client.host}'")
 					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
 					await asyncio.sleep(1)
 				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
@@ -226,7 +225,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 					},
 					"reservation_id": reservation["id"]
 				}
-			raise HTTPException(status_code=404, detail=f"Reservation not found for plate '{plate_dto.plate}'")
+			raise HTTPException(status_code=404, detail=f"Reservation not found for plate '{tag_dto.identify}'")
 		except Exception as e:
 			status_code = getattr(e, 'status_code', 400)
 			detail = getattr(e, 'detail', str(e))

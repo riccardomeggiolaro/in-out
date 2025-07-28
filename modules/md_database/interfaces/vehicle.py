@@ -50,14 +50,17 @@ class VehicleDTO(BaseModel):
 
 	@validator('white_list', pre=True, always=True)
 	def check_white_list(cls, v):
-		if v is not None and lb_config.g_config["app_api"]["use_white_list"] == False:
+		if lb_config.g_config["app_api"]["use_white_list"] == False and v is True:
 			raise ValueError("Mode white list is not enabled")
 		return v
 
 	@validator('tag', pre=True, always=True)
-	def check_white_list(cls, v):
-		if v is not None and lb_config.g_config["app_api"]["use_tag"] == False:
-			raise ValueError("Mode tag is not enabled")
+	def check_white_list(cls, v, values):
+		if lb_config.g_config["app_api"]["use_tag"] == False:
+			if v is not None:
+				raise ValueError("Mode tag is not enabled")
+			else:
+				values['tag'] = values['plate']
 		return v
 
 	@validator('id', pre=True, always=True)
@@ -93,14 +96,17 @@ class AddVehicleDTO(BaseModel):
 
 	@validator('white_list', pre=True, always=True)
 	def check_white_list(cls, v):
-		if v is not None and lb_config.g_config["app_api"]["use_white_list"] == False:
+		if lb_config.g_config["app_api"]["use_white_list"] == False and v is True:
 			raise ("White list is not enabled")
 		return v
 
 	@validator('tag', pre=True, always=True)
-	def check_white_list(cls, v):
-		if v is not None and lb_config.g_config["app_api"]["use_tag"] == False:
-			raise ValueError("Mode tag is not enabled")
+	def check_white_list(cls, v, values):
+		if lb_config.g_config["app_api"]["use_tag"] == False:
+			if v is not None:
+				raise ValueError("Mode tag is not enabled")
+			else:
+				values['tag'] = values['plate']
 		return v
 
 	@field_validator('*', mode='before')
@@ -125,14 +131,17 @@ class SetVehicleDTO(BaseModel):
 
 	@validator('white_list', pre=True, always=True)
 	def check_white_list(cls, v):
-		if v is not None and lb_config.g_config["app_api"]["use_white_list"] == False:
+		if lb_config.g_config["app_api"]["use_white_list"] == False and v is True:
 			raise ("White list is not enabled")
 		return v
 
 	@validator('tag', pre=True, always=True)
-	def check_white_list(cls, v):
-		if v is not None and lb_config.g_config["app_api"]["use_tag"] == False:
-			raise ValueError("Mode tag is not enabled")
+	def check_white_list(cls, v, values):
+		if lb_config.g_config["app_api"]["use_tag"] == False:
+			if v is not None:
+				raise ValueError("Mode tag is not enabled")
+			else:
+				values['tag'] = values['plate']
 		return v
 
 	@root_validator(pre=True)
@@ -148,3 +157,4 @@ class FilterVehicleDTO(BaseModel):
     description: Optional[str] = None
     tare: Optional[Union[int, float]] = None
     white_list: Optional[bool] = None
+    tag: Optional[str] = None

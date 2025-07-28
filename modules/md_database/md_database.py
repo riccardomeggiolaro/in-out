@@ -65,7 +65,7 @@ class Vehicle(Base):
     description = Column(String, nullable=True)
     tare = Column(Integer, nullable=True)
     white_list = Column(Boolean, default=False)
-    tag = Column(String(collation="NOCASE"), index=True, unique=True)
+    tag = Column(String(collation="NOCASE"), index=True, unique=True, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")

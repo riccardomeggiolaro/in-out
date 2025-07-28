@@ -2,7 +2,7 @@ from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation
 
-def get_reservation_by_plate_if_uncomplete(plate: str):
+def get_reservation_by_tag_if_uncomplete(tag: str):
     session = SessionLocal()
     try:
         weighing_count_subquery = (
@@ -52,7 +52,7 @@ def get_reservation_by_plate_if_uncomplete(plate: str):
             last_inout_weight2_subq,
             Reservation.id == last_inout_weight2_subq.c.idReservation
         ).filter(
-            Vehicle.plate == plate,
+            Vehicle.tag == tag,
             Reservation.type != TypeReservation.TEST.name,
             or_(
                 # weighing_count is NULL (nessun InOut)
