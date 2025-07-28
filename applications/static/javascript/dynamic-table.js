@@ -66,6 +66,36 @@ async function configuration() {
                     report.in = instance.nodes[weigher].events.weighing.report.in;
                     report.out = instance.nodes[weigher].events.weighing.report.out;
                 });
+                if (!res.use_tag) {
+                    document.querySelectorAll(".tag").forEach(input => {
+                        if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {
+                            input.previousElementSibling.style.display = 'none';
+                        }
+                        if (input.tagName === 'TH') {
+                            // Rimuovi la colonna dalla tabella
+                            const th = input;
+                            const table = th.closest('table');
+                            if (table) {
+                                const index = Array.from(th.parentNode.children).indexOf(th);
+                                // Rimuovi la cella header
+                                th.parentNode.removeChild(th);
+                                // Rimuovi tutte le celle della colonna corrispondente
+                                table.querySelectorAll('tbody tr').forEach(tr => {
+                                    if (tr.children[index]) tr.removeChild(tr.children[index]);
+                                });
+                                // Decrementa tutti i colspan
+                                table.querySelectorAll('[colspan]').forEach(cell => {
+                                    let colspan = parseInt(cell.getAttribute('colspan'), 10);
+                                    if (colspan > 1) {
+                                        cell.setAttribute('colspan', colspan - 1);
+                                    }
+                                });
+                            }
+                        } else {
+                            input.style.display = 'none';
+                        }
+                    });
+                }
                 if (!res.use_white_list) {
                     document.querySelectorAll(".white_list").forEach(input => {
                         if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {

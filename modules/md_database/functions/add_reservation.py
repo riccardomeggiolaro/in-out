@@ -72,7 +72,8 @@ def add_reservation(data: AddReservationDTO):
             if not data.vehicle.id:
                 add_vehicle = {
                     "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
-                    "description": data.vehicle.description if data.vehicle.description != "" else None
+                    "description": data.vehicle.description if data.vehicle.description != "" else None,
+                    "tag": data.vehicle.tag if data.vehicle.tag != "" else None
                 }
                 if has_non_none_value(add_vehicle):
                     data_to_check = data.vehicle.dict()
@@ -86,7 +87,7 @@ def add_reservation(data: AddReservationDTO):
             if existing:
                 existing = existing["vehicle"].__dict__
                 plate = existing["plate"]
-                raise Exception(f"E' presente una prenotazione con la targa '{plate}' ancora da chiudere")
+                raise Exception(f"E' presente una prenotazione con il veicolo '{plate}' ancora da chiudere")
 
             current_model = Reservation
             data_to_check = data.dict()

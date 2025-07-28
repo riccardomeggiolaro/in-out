@@ -57,23 +57,12 @@
         <table>
             <thead>
                 <tr id="filters">
-                    <th name="date_created">
-                        <input type="text" id="dateRange" placeholder="Data accettazione" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
-                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
-                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                    <th name="vehicle.tag" class="tag">
+                        <input id="filter.vehicle.tag" class="tag" name="vehicle.tag" type="text" placeholder="TAG" oninput="updateTable()" autocomplete="off">
                     </th>
-                    <th name="status">
-                        <select id="filter.status" name="status" onchange="updateTable()">
-                            <option value="">Stato (Tutti)</option>
-                            <option value="NOT_CLOSED" selected>Aperti</option>
-                            <option value="WAITING">In Attesa</option>
-                            <option value="CALLED">Chiamati</option>
-                            <option value="ENTERED">Entrati</option>
-                            <option value="CLOSED">Chiusi</option>
-                        </select>
+                    <th name="vehicle.plate">
+                        <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
                     </th>
-                    <th name="number_in_out">N. Operazioni</th>
-                    <th name="waiting">Attesa</th>
                     <th name="subject.social_reason">
                         <input id="filter.subject.social_reason" name="subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
                     </th>
@@ -86,15 +75,29 @@
                     <th name="driver.telephone">
                         <input id="filter.driver.telephone" name="driver.telephone" type="text" placeholder="Tel. Autista" oninput="updateTable()">
                     </th>
-                    <th name="vehicle.plate">
-                        <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
-                    </th>
                     <th name="note">
                         <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
                     <th name="document_reference">
                         <input id="filter.document_reference" name="document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
                     </th>
+                    <th name="number_in_out">N. Operazioni</th>
+                    <th name="status">
+                        <select id="filter.status" name="status" onchange="updateTable()">
+                            <option value="">Stato (Tutti)</option>
+                            <option value="NOT_CLOSED" selected>Aperti</option>
+                            <option value="WAITING">In Attesa</option>
+                            <option value="CALLED">Chiamati</option>
+                            <option value="ENTERED">Entrati</option>
+                            <option value="CLOSED">Chiusi</option>
+                        </select>
+                    </th>
+                    <th name="date_created">
+                        <input type="text" id="dateRange" placeholder="Data accettazione" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
+                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                    </th>
+                    <th name="waiting">Attesa</th>
                     <th></th>
                 </tr>
             </thead>
@@ -102,7 +105,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="12" style="text-align: center;">
+                    <td colspan="13" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -125,6 +128,44 @@
     <div id="add-popup" class="modal-content popup">
         <h3>Prenota accesso:</h3>
         <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
+            <h4>Veicolo</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password" required
+                        oninput="
+                            this.value = this.value.toUpperCase();
+                            populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#add-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'vehicle');
+                                document.querySelector('#add-popup #vehicle\\.id').value = '';
+                                document.querySelector('#add-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#add-popup #vehicle\\.description').value = '';
+                                document.querySelector('#add-popup #vehicle\\.tag').disabled = false;
+                                document.querySelector('#add-popup #vehicle\\.tag').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#add-popup #vehicle\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
+                </div>
+
+                <div class="item" class="tag">
+                    <input placeholder="TAG" id="vehicle.tag" name="vehicle.tag" type="text" oninput="this.value = this.value.toUpperCase()" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
             <h4>Soggetto</h4>
 
             <div class="radio">
@@ -245,50 +286,18 @@
 
             <hr>
 
-            <h4>Veicolo</h4>
-
             <div>
-                <div class="item-25">
-                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password" required
-                        oninput="
-                            this.value = this.value.toUpperCase();
-                            populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            if (document.querySelector('#add-popup #vehicle\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'vehicle');
-                                document.querySelector('#add-popup #vehicle\\.id').value = '';
-                                document.querySelector('#add-popup #vehicle\\.description').disabled = false;
-                                document.querySelector('#add-popup #vehicle\\.description').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#add-popup #vehicle\\.id').value) {
-                                populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
-                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <div>
-                <div class="item">
-                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
-                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                </div>
-
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
                 </div>
     
                 <div class="item-25">
                     <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
+                </div>
+
+                <div class="item">
+                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
+                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
             </div>
         </form>
@@ -301,6 +310,50 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica accesso:</h3>
         <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+            <h4>Veicolo</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
+                                document.querySelector('#edit-popup #vehicle\\.tag').disabled = true;
+                            }
+                        ">
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
+                        oninput="
+                            this.value = this.value.toUpperCase();
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
+                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.tag').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.tag').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #vehicle\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
+                </div>
+
+                <div class="item tag">
+                    <input placeholder="TAG" id="vehicle.tag" name="vehicle.tag" type="text" oninput="this.value = this.value.toUpperCase()" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
             <h4>Soggetto</h4>
 
             <div class="radio">
@@ -437,55 +490,18 @@
 
             <hr>
 
-            <h4>Veicolo</h4>
-
             <div>
-                <div class="item-25">
-                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId id"
-                        oninput="
-                            if (this.value != '') {
-                                document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
-                            }
-                        ">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
-                        oninput="
-                            this.value = this.value.toUpperCase();
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
-                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
-                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
-                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#edit-popup #vehicle\\.id').value) {
-                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
-                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <div>
-                <div class="item">
-                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
-                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                </div>
-
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
                 </div>
     
                 <div class="item-25">
                     <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
+                </div>
+
+                <div class="item">
+                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
+                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
                 </div>
             </div>
         </form>
@@ -964,6 +980,8 @@
                                 document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
                                 document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
                                 document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                                document.querySelector(`${popup} #vehicle\\.tag`).value = item.tag;
+                                document.querySelector(`${popup} #vehicle\\.tag`).disabled = true;
                                 document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                             }
                         } else if (anagrafic === 'material') {
@@ -1022,6 +1040,8 @@
                             document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
                             document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
                             document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                            document.querySelector(`${popup} #vehicle\\.tag`).value = item.tag;
+                            document.querySelector(`${popup} #vehicle\\.tag`).disabled = true;
                             document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                         }
                     } else {

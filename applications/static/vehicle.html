@@ -22,12 +22,15 @@
         <table>
             <thead id="filters">
                 <tr>
-                    <td colspan="4">
+                    <td colspan="5">
                         <label for="filter.white_list">Solo white list</label>
                         <input id="filter.white_list" class="white_list" name="white_list" type="checkbox" onchange="updateTable()">
                     </td>
                 </tr>
                 <tr>
+                    <th name="tag" class="tag">
+                        <input id="filter.tag" name="tag" type="text" placeholder="TAG" oninput="updateTable()" autocomplete="off">
+                    </th>
                     <th name="plate">
                         <input id="filter.plate" name="plate" type="text" placeholder="Targa" oninput="this.value = this.value.toUpperCase(); updateTable()" autocomplete="off">
                     </th>
@@ -35,7 +38,7 @@
                         <input id="filter.description" name="description" type="text" placeholder="Descrizione" oninput="updateTable()" autocomplete="off">
                     </th>
                     <th name="tare">
-                        Tara
+                        Tara (kg)
                     </th>
                     <th></th>
                 </tr>
@@ -44,7 +47,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="4" style="text-align: center;">
+                    <td colspan="5" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -73,6 +76,8 @@
             <input type="text" id="description" name="description" autocomplete="off">
             Tara: (Opzionale)<br>
             <input type="number" id="tare" name="tare" min="0" step="0.01" autocomplete="off">
+            <label for="tag">TAG: (Opzionale)</label>
+            <input type="text" id="tag" class="tag" name="tag" oninput="this.value = this.value.toUpperCase()" autocomplete="off"><br>
             <label for="white_list">Whitelist: </label>
             <input id="white_list" class="white_list" name="white_list" type="checkbox">
         </form>
@@ -91,6 +96,8 @@
             <input type="text" id="description" name="description" autocomplete="off">
             Tara: (Opzionale)<br>
             <input type="number" id="tare" name="tare" min="0" step="0.01" autocomplete="off">
+            <label for="tag">TAG: (Opzionale)</label>
+            <input type="text" id="tag" class="tag" name="tag" oninput="this.value = this.value.toUpperCase()" autocomplete="off">
             <label for="white_list">Whitelist: </label>
             <input id="white_list" class="white_list" name="white_list" type="checkbox">
         </form>
