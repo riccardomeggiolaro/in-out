@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="it">
+    <head>
+        <link rel="icon" href="/static/content/baronpesi_favicon.png">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Accessi</title>
+        <meta name="description" content="About this app" />
+        <link rel="stylesheet" href="/static/css/dynamic-table.css">
+        <link rel="stylesheet" href="/static/css/snackbar.css">
+        <style>
+            .table-container {
+                max-width: 1600px;
+            }
+            #dateRange {
+                width: 200px;
+            }
+            .popup.active {
+                max-width: 800px !important;
+            }
+            .detail-cell {
+                padding: 0px;
+            }
+            .detail-cell img:hover {
+                cursor: pointer;
+            }
+            .list-detail-tr li {
+                list-style-type: disc;
+            }
+            .imgs {
+                display: flex;
+                gap: 10px;
+            }
+            .imgs img {
+                width: 100px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </head>
+<body>
+    <div id="navbar-container"></div>
+
+    <br>
+
+    <div class="table-container">
+        <div class="title">
+            <h2>Prenotazioni</h2>
+            <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
+                <!-- <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
+                <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button> -->
+                <button class="register-button" onclick="addRow()">Prenota accesso</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr id="filters">
+                    <th name="vehicle.tag" class="tag">
+                        <input id="filter.vehicle.tag" class="tag" name="vehicle.tag" type="text" placeholder="TAG" oninput="updateTable()" autocomplete="off">
+                    </th>
+                    <th name="vehicle.plate">
+                        <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
+                    </th>
+                    <th name="subject.social_reason">
+                        <input id="filter.subject.social_reason" name="subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
+                    </th>
+                    <th name="vector.social_reason">
+                        <input id="filter.vector.social_reason" name="vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
+                    </th>
+                    <th name="driver.social_reason">
+                        <input id="filter.driver.social_reason" name="driver.social_reason" type="text" placeholder="Autista" oninput="updateTable()">
+                    </th>
+                    <th name="driver.telephone">
+                        <input id="filter.driver.telephone" name="driver.telephone" type="text" placeholder="Tel. Autista" oninput="updateTable()">
+                    </th>
+                    <th name="note">
+                        <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
+                    </th>
+                    <th name="document_reference">
+                        <input id="filter.document_reference" name="document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
+                    </th>
+                    <th name="number_in_out">N. Operazioni</th>
+                    <th name="status">
+                        <select id="filter.status" name="status" onchange="updateTable()">
+                            <option value="">Stato (Tutti)</option>
+                            <option value="NOT_CLOSED" selected>Aperti</option>
+                            <option value="WAITING">In Attesa</option>
+                            <option value="CALLED">Chiamati</option>
+                            <option value="ENTERED">Entrati</option>
+                            <option value="CLOSED">Chiusi</option>
+                        </select>
+                    </th>
+                    <th name="date_created">
+                        <input type="text" id="dateRange" placeholder="Data accettazione" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
+                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                    </th>
+                    <th name="waiting">Attesa</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="13" style="text-align: center;">
+                        <label for="rows-per-page">Righe per pagina:</label>
+                        <select id="rows-per-page" onchange="changeRowsPerPage()">
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <button id="previous-page" onclick="previousPage()">&laquo; Precedente</button>
+                        <select id="page-select" onchange="goToPage()"></select>
+                        <button id="next-page" onclick="nextPage()">Successiva &raquo;</button>
+                        <span id="total-rows" style="margin-left: 20px;"></span> <!-- Aggiungi il numero totale di righe qui -->
+                    </td>
+                </tr>
+            </tfoot>            
+        </table>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'edit-inout-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
+    
+    <div id="add-popup" class="modal-content popup">
+        <h3>Prenota:</h3>
+        <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
+            <h4>Veicolo</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password" required
+                        oninput="
+                            this.value = this.value.toUpperCase();
+                            populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#add-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'vehicle');
+                                document.querySelector('#add-popup #vehicle\\.id').value = '';
+                                document.querySelector('#add-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#add-popup #vehicle\\.description').value = '';
+                                document.querySelector('#add-popup #vehicle\\.tag').disabled = false;
+                                document.querySelector('#add-popup #vehicle\\.tag').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#add-popup #vehicle\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
+                </div>
+
+                <div class="item" class="tag">
+                    <input placeholder="TAG" id="vehicle.tag" name="vehicle.tag" type="text" oninput="this.value = this.value.toUpperCase()" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Soggetto</h4>
+
+            <div class="radio">
+                <div class="radio-option left">
+                  <label class="flexRadio">
+                    <input id="customer" type="radio" name="typeSubject" value="CUSTOMER" checked>
+                    Cliente
+                  </label>
+                </div>
+                <div class="radio-option right">
+                  <label class="flexRadio">
+                    <input id="supplier" type="radio" name="typeSubject" value="SUPPLIER">
+                    Fornitore
+                  </label>
+                </div>
+            </div>
+
+            <div>
+                <div class="item">
+                    <input id="subject.id" name="subject.id" type="number" class="suggestionId">
+                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            if (document.querySelector('#add-popup #subject\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#add-popup #subject\\.id').value, 'subject');
+                                document.querySelector('#add-popup #subject\\.id').value = '';
+                                document.querySelector('#add-popup #subject\\.telephone').disabled = false;
+                                document.querySelector('#add-popup #subject\\.telephone').value = '';
+                                document.querySelector('#add-popup #subject\\.cfpiva').disabled = false;
+                                document.querySelector('#add-popup #subject\\.cfpiva').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#add-popup #subject\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
+                    <div id="suggestions.subject.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="new-password">
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Vettore</h4>
+
+            <div>
+                <div class="item">
+                    <input id="vector.id" name="vector.id" type="number" class="suggestionId">
+                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#add-popup', '#register', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            if (document.querySelector('#add-popup #vector\\.id').value != '') {
+                                deselectAnagrafic('#add-popup', document.querySelector('#add-popup #vector\\.id').value, 'vector');
+                                document.querySelector('#add-popup #vector\\.id').value = '';
+                                document.querySelector('#add-popup #vector\\.telephone').disabled = false;
+                                document.querySelector('#add-popup #vector\\.telephone').value = '';
+                                document.querySelector('#add-popup #vector\\.cfpiva').disabled = false;
+                                document.querySelector('#add-popup #vector\\.cfpiva').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#add-popup #vector\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
+                    <div id="suggestions.vector.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Autista</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="driver.id" name="driver.id" type="number" class="suggestionId">
+                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            if (document.querySelector('#add-popup #driver\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#add-popup #driver\\.id').value, 'driver');
+                                document.querySelector('#add-popup #driver\\.id').value = '';
+                                document.querySelector('#add-popup #driver\\.telephone').disabled = false;
+                                document.querySelector('#add-popup #driver\\.telephone').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#add-popup #driver\\.id').value) {
+                                populateSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
+                    <div id="suggestions.driver.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <div>
+                <div class="item-25">
+                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
+                </div>
+
+                <div class="item">
+                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
+                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                </div>
+            </div>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['add-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
+        </div>
+    </div>
+
+    <div id="edit-popup" class="modal-content popup">
+        <h3>Modifica accesso:</h3>
+        <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+            <h4>Veicolo</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
+                                document.querySelector('#edit-popup #vehicle\\.tag').disabled = true;
+                            }
+                        ">
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
+                        oninput="
+                            this.value = this.value.toUpperCase();
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
+                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.tag').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.tag').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #vehicle\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
+                </div>
+
+                <div class="item tag">
+                    <input placeholder="TAG" id="vehicle.tag" name="vehicle.tag" type="text" oninput="this.value = this.value.toUpperCase()" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Soggetto</h4>
+
+            <div class="radio">
+                <div class="radio-option left">
+                  <label class="flexRadio">
+                    <input type="radio" id="typeSubject" name="typeSubject" value="CUSTOMER">
+                    Cliente
+                  </label>
+                </div>
+                <div class="radio-option right">
+                  <label class="flexRadio">
+                    <input type="radio" id="typeSubject" name="typeSubject" value="SUPPLIER">
+                    Fornitore
+                  </label>
+                </div>
+            </div>
+
+            <div>
+                <div class="item">
+                    <input id="subject.id" name="subject.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #subject\\.telephone').disabled = true;
+                                document.querySelector('#edit-popup #subject\\.cfpiva').disabled = true;
+                            }">
+                    <input placeholder="Ragione Sociale" id="subject.social_reason" name="subject.social_reason" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            if (document.querySelector('#edit-popup #subject\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #subject\\.id').value, 'subject');
+                                document.querySelector('#edit-popup #subject\\.id').value = '';
+                                document.querySelector('#edit-popup #subject\\.telephone').disabled = false;
+                                document.querySelector('#edit-popup #subject\\.telephone').value = '';
+                                document.querySelector('#edit-popup #subject\\.cfpiva').disabled = false;
+                                document.querySelector('#edit-popup #subject\\.cfpiva').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #subject\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.subject\\.social_reason', 'social_reason', 'subject', this.value)">
+                    <div id="suggestions.subject.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="subject.telephone" name="subject.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '')" autocomplete="new-password">
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="subject.cfpiva" name="subject.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Vettore</h4>
+
+            <div>
+                <div class="item">
+                    <input id="vector.id" name="vector.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #vector\\.telephone').disabled = true;
+                                document.querySelector('#edit-popup #vector\\.cfpiva').disabled = true;
+                            }">
+                    <input placeholder="Ragione Sociale" id="vector.social_reason" name="vector.social_reason" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            if (document.querySelector('#edit-popup #vector\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #vector\\.id').value, 'vector');
+                                document.querySelector('#edit-popup #vector\\.id').value = '';
+                                document.querySelector('#edit-popup #vector\\.telephone').disabled = false;
+                                document.querySelector('#edit-popup #vector\\.telephone').value = '';
+                                document.querySelector('#edit-popup #vector\\.cfpiva').disabled = false;
+                                document.querySelector('#edit-popup #vector\\.cfpiva').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #vector\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vector\\.social_reason', 'social_reason', 'vector', this.value)">
+                    <div id="suggestions.vector.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="vector.telephone" name="vector.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
+                </div>
+                    
+                <div class="item-25">
+                    <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Autista</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="driver.id" name="driver.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #driver\\.telephone').disabled = true;
+                            }                           
+                        ">
+                    <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            if (document.querySelector('#edit-popup #driver\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #driver\\.id').value, 'driver');
+                                document.querySelector('#edit-popup #driver\\.id').value = '';
+                                document.querySelector('#edit-popup #driver\\.telephone').disabled = false;
+                                document.querySelector('#edit-popup #driver\\.telephone').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #driver\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
+                    <div id="suggestions.driver.social_reason" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" autocomplete="new-password"
+                        oninput="this.value = this.value.replace(/\D/g, '');">
+                </div>
+            </div>
+
+            <hr>
+
+            <div>
+                <div class="item-25">
+                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
+                </div>
+
+                <div class="item">
+                    <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
+                        oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                </div>
+            </div>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
+        </div>
+    </div>
+
+    <div id="edit-inout-popup" class="modal-content popup">
+        <h3>Modifica materiale:</h3>
+        <form id="edit-inout" class="content form-content">
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId id">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            if (document.querySelector('#edit-inout-popup #material\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-inout-popup #material\\.id').value, 'material');
+                                document.querySelector('#edit-inout-popup #material\\.id').value = '';
+                                document.querySelector('#edit-inout-popup #material\\.description').disabled = false;
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-inout-popup #material\\.id').value) {
+                                populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-inout-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" onclick="confirm_exec_funct()">Avanti</button><br>
+        </div>
+    </div>
+    
+    <div id="delete-popup" class="modal-content popup">
+        <div id="delete">
+            <h3>Elimina accesso:</h3>
+            <p><b>Tipo soggetto:</b> <u><em><span id="typeSubject"></span></em></u></p>
+            <p><b>Soggetto:</b> <u><em><span id="subject.social_reason"></span></em></u></p>
+            <p><b>Vettore:</b> <u><em><span id="vector.social_reason"></span></em></u></p>
+            <p><b>Autista:</b> <u><em><span id="driver.social_reason"></span></em></u></p>
+            <p><b>Targa:</b> <u><em><span id="vehicle.plate"></span></em></u></p>
+            <p><b>Stato:</b> <u><em><span id="status"></span></em></u></p>
+            <p><b>Numero operazioni:</b> <u><em><span id="number_in_out"></span></em></u></p>
+            <div class="container-buttons right">                
+                <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+                <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-popup" class="modal-content popup">
+        <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+            <button id="save-btn" class="confirm-btn">Ok</button><br>
+        </div>
+    </div>
+
+    <div id="img-popup" class="modal-content popup preview-image">
+        <img id="confirm-content" src="" alt="">
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['img-popup'])">Chiudi</button>
+            <button id="download-btn" class="confirm-btn" onclick="
+                // Prende l'elemento <img> e il suo src
+                const img = document.querySelector('#img-popup img');
+                const url = img.src;
+                // Crea un link invisibile per il download
+                const link = document.createElement('a');
+                link.href = url;
+                // Nome file da salvare (se vuoi usare un nome fisso o dinamico)
+                link.download = img.alt;
+                // Simula il click per scaricare
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            ">Scarica</button><br>
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar"></div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script src="/static/javascript/dynamic-table.js"></script>
+    <script>
+        const fromDate = document.querySelector('#filter\\.fromDate');
+        const toDate = document.querySelector('#filter\\.toDate');
+
+        document.addEventListener("DOMContentLoaded", () => {
+            itemName = 'reservation';
+            customQueryParams = "type=RESERVATION&";
+            nextElementSibling = true;
+            lastChar = 'a';
+            canAlwaysDelete = true;
+            listUrlPath = '/api/anagrafic/reservation/list';
+            exportUrlPath = '/api/anagrafic/reservation/export'
+            addUrlPath = '/api/anagrafic/reservation';
+            setUrlPath = '/api/anagrafic/reservation';
+            deleteUrlPath = '/api/anagrafic/reservation';
+            websocketUrlPath = '/api/anagrafic/reservation';
+            callback_populate_select = populateForm;
+            callback_close_popups = deselectAllAnagrafic;
+            populate_detail_tr = populateDetailTr;
+            callback_populate_table = updateElapsedTimes;
+            callback_call_anagrafic = callReservation;
+            params = {
+                "accesso con targa": "reservation.vehicle.plate",
+                "accesso con id": "reservation.id",
+                "soggetto": "subject.social_reason",
+                "vettore": "vector.social_reason",
+                "autista": "driver.social_reason",
+                "autista": "driver.telephone",
+                "veicolo con targa": "vehicle.plate",
+                "veicolo con descrizione": "vehicle.description",
+                "materiale": "material.description",
+                "pesata con il veicolo": "weighing.reservation.vehicle.plate",
+                "pesata con id": "weighing.id"
+            }
+            init();
+            setInterval(updateElapsedTimes, 1000); // aggiorna ogni minuto
+        });
+
+        flatpickr("#dateRange", {
+            locale: {
+                rangeSeparator: ' / '
+            },
+            mode: 'range',
+            // allowInput: true,
+            dateFormat: "d-m-Y", // Formato della data
+            onClose: function(selectedDates, dateStr, instance) {
+                document.querySelector('#dateRange').setSelectionRange(0, 0);
+                const firstDay = selectedDates[0];
+                let secondDay = selectedDates[1];
+                // Verifica se una data è selezionata o meno
+                if (firstDay && secondDay === undefined) {
+                    secondDay = new Date(Date.now());
+                    secondDay.setHours(12, 0, 0, 0);
+                } else if (selectedDates.length === 2 && firstDay == secondDay) {
+                    secondDay.setHours(12, 0, 0, 0);
+                }
+                // Imposta l'istanza flatpickr con le date selezionate
+                instance.setDate([firstDay, secondDay]);
+                const adjustedFirstDay = new Date(firstDay);
+                adjustedFirstDay.setHours(12, 0, 0, 0);
+                const adjustedSecondDay = new Date(secondDay);
+                adjustedSecondDay.setHours(12, 0, 0, 0);
+                fromDate.valueAsDate = adjustedFirstDay;
+                toDate.valueAsDate = adjustedSecondDay;
+                updateTable();
+            }
+        });
+
+        function updateElapsedTimes() {
+            const rows = document.querySelectorAll("table tr");
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll("td");
+
+                if (cells.length >= 2) {
+                    const datetimeCell = cells[0]; // primo td = data di creazione
+                    const statusCell = cells[1]; // secondo td = stato della prenotazione
+                    const elapsedCell = cells[3]; // terzo td = tempo trascorso
+                    const buttonsCell = cells[11];
+
+                    if (statusCell.dataset.value === "Attesa") {
+                        const startDate = new Date(datetimeCell.dataset.value);
+                        const now = new Date();
+                        const diffMs = now - startDate;
+
+                        if (isNaN(diffMs) || diffMs < 0) {
+                            elapsedCell.textContent = '—';
+                            return;
+                        }
+
+                        const totalMinutes = Math.floor(diffMs / 60000);
+                        const days = Math.floor(totalMinutes / (60 * 24));
+                        const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+                        const minutes = totalMinutes % 60;
+
+                        let displayText = '';
+
+                        if (days > 0) {
+                            displayText += `${days}d `;
+                        }
+                        if (hours > 0 || days > 0) {
+                            displayText += `${hours}h `;
+                        }
+                        displayText += `${minutes}min`;
+
+                        elapsedCell.textContent = displayText.trim();
+                    } else {
+                        elapsedCell.textContent = "";
+                    }
+                }
+            });
+        }
+        
+        function populateForm(idForm, item={typeSocialReason: 0, idSocialReason: null, idVector: null, idVehicle: null, idMaterial: null}) {
+            if (idForm !== '#delete') {
+            }
+        }
+
+        // function highlightText(suggestion, input, filter) {
+        //     const regex = new RegExp(`(${input})`, 'gi'); // Regex per evidenziare
+        //     return suggestion[filter] ? suggestion[filter].replace(regex, `<span class="highlight">$1</span>`) : '';
+        // }
+
+        function highlightText(suggestion, input, filter) {
+            // Creiamo un'espressione regolare che cerca l'input solo all'inizio della stringa
+            const regex = new RegExp(`^(${input})`, 'i');
+            if (suggestion[filter]) {
+                // Se c'è una corrispondenza all'inizio, evidenziala
+                if (regex.test(suggestion[filter])) {
+                    return suggestion[filter].replace(regex, '<span class="highlight">$1</span>');
+                }
+                // Altrimenti, restituisci la stringa originale senza evidenziazioni
+                return suggestion[filter];
+            }
+            return '';
+        }
+
+        function callReservation(type, reservation) {
+            let url;
+            let popupTitle;
+            let popupContent;
+            let messageSnackbar;
+            if (type === "CALL") {
+                url = `/api/anagrafic/reservation/call/${reservation["id"]}`;
+                popupTitle = "Conferma chiamata!";
+                popupContent = `Chiamare il veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
+                messageSnackbar = `Chiamando il veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
+            } else {
+                url = `/api/anagrafic/reservation/cancel-call/${reservation["id"]}`;
+                popupTitle = "Conferma annullamento chiamata!";
+                popupContent = `Annullare la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
+                messageSnackbar = `Annullando la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
+            }
+            confirm_exec_funct = () => {
+                showSnackbar(messageSnackbar, 'rgb(208, 255, 208)', 'black');
+                fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(async res => {
+                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+                    return ({
+                        data,
+                        status
+                    });
+                })
+                .then(res => {
+                    if (res.data.detail) {
+                        showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+                    } else {
+                        showSnackbar(res.data, 'rgb(255, 208, 208)', 'black');
+                    }
+                })
+                .finally(_ => {
+                    deselectAnagrafic(reservation["id"]);
+                });
+            }
+            document.querySelector('#confirm-title').textContent = popupTitle;
+            document.querySelector('#confirm-content').innerHTML = popupContent;
+            openPopup('confirm-popup');
+        }
+
+        async function exportReportWeighing(idWeighing) {
+            const response = await fetch(`/api/anagrafic/reservation/in-out/pdf/${idWeighing}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                // Prendi il nome file dall'header Content-Disposition
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = 'report.pdf';
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    filename = disposition
+                        .split('filename=')[1]
+                        .replace(/["']/g, '')
+                        .trim();
+                }
+                // Download con nome corretto
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+            } else {
+                showSnackbar("Errore nella generazione del PDF", 'rgb(255, 208, 208)', 'black');
+            }
+        }
+
+        function updateWeighingMaterial(idReservation, idInOut, idMaterial, descriptionMaterial) {
+            confirm_exec_funct = () => {
+                const id = document.querySelector("#material\\.id").value || -1;
+                const description = document.querySelector("#material\\.description").value || null;
+                const body = JSON.stringify({
+                    material: {
+                        id,
+                        description
+                    }
+                });
+                console.log(idMaterial, descriptionMaterial)
+                fetch(`/api/anagrafic/reservation/${idReservation}?idInOut=${idInOut}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body
+                })
+                .then(async res => {
+                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+                    return ({
+                        data,
+                        status
+                    });
+                })
+                .then(res => {
+                    if (res.status !== 200) {
+                        showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                    }
+                    closePopups(['edit-inout-popup'], false);
+                })
+            }
+            document.querySelector("#edit-inout-popup #material\\.id").value = idMaterial;
+            document.querySelector('#edit-inout-popup #material\\.description').value = descriptionMaterial;
+            document.querySelector('#edit-inout-popup .save-btn').disabled = false;
+            selectAnagrafic(idReservation, "UPDATE", "reservation", null, true);
+            currentId = idReservation;
+        }
+
+        function deleteLastWeighing(idReservation, plate, pid) {
+            confirm_exec_funct = () => {
+                fetch(`/api/anagrafic/reservation/last-weighing/${idReservation}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(async res => {
+                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+                    return ({
+                        data,
+                        status
+                    });
+                })
+                .then(res => {
+                    if (res.status !== 200) {
+                        showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                    }
+                    closePopups(['delete-popup'], false);
+                })
+            }
+            document.querySelector('#confirm-title').textContent = "Attenzione!";
+            document.querySelector('#confirm-content').innerHTML = `
+                Sei sicuro di voler eliminare l'ultima pesata effettuata dal veicolo '${plate}' con pid '${pid}?'
+            `;
+            selectAnagrafic(idReservation, "DELETE", "reservation", null, true);
+            currentId = idReservation;
+        }
+
+        function getImageWeighing(imageUrl) {
+            const imgElement = document.querySelector('#img-popup img');
+            const fileName = imageUrl.split("/").at(-1);
+            imgElement.src = imageUrl;
+            imgElement.alt = fileName;
+            openPopup('img-popup');
+        }
+
+        function populateDetailTr(item) {
+            let content = `<ul class="list-detail-tr">`;
+            let lengthWeighings = item.in_out.length;
+            item.in_out.reverse().forEach(weighing => {
+                content += `
+                    <li>
+                        <p>
+                            <b>DATA 1: </b> ${weighing.weight1 ? new Date(weighing.weight1.date).toLocaleString('it-IT', options) : ''}.
+                            <b>DATA 2: </b> ${weighing.weight2 ? new Date(weighing.weight2.date).toLocaleString('it-IT', options) : ''}.
+                            <b>PID 1: </b> ${weighing.weight1 ? weighing.weight1.pid : ''}.
+                            <b>PID 2: </b> ${weighing.weight2 ? weighing.weight2.pid : ''}.
+                            <b>PESO 1: </b> <u>${weighing.weight1 ? weighing.weight1.weight : ''} kg</u>.
+                            <b>PESO 2: </b> <u>${weighing.weight2 ? weighing.weight2.weight : ''} kg</u>.
+                            <b>NETTO: </b> <u>${weighing.net_weight !== null ? weighing.net_weight : ''} kg</u>.
+                            <b>MATERIALE: </B> <u>${weighing.material ? weighing.material.description : ''}</u>`;
+
+                if (!weighing.weight2 && report.in || weighing.weight2 && report.out) content += `<button onclick="exportReportWeighing(${weighing.id})">📄</button>`;
+
+                content += `<button onclick="updateWeighingMaterial(${item.id}, ${weighing.id}, ${weighing.material ? weighing.material.id : null}, '${weighing.material ? weighing.material.description : ''}')">✏️</button>`;
+
+                if (lengthWeighings === item.in_out.length) {
+                    content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight2 ? weighing.weight2.pid : weighing.weight1.pid}')">🗑️</button>`;
+                }
+
+                content += `
+                        </p>
+                        <div class="imgs">`;
+
+                // Add images to the .imgs div
+                if (weighing.weight1) {
+                    weighing.weight1.weighing_pictures.forEach(picture => {
+                        content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                    });
+                }
+
+                if (weighing.weight2) {
+                    weighing.weight2.weighing_pictures.forEach(picture => {
+                        content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                    });
+                }
+
+                content += `
+                        </div>
+                    </li>`;
+                
+                lengthWeighings--;
+            })
+            content += `</ul>`;
+            return content;
+        }
+
+        function populateSuggestions(popup, suggestions, key, anagrafic, value) {
+            let currentSuggestions = document.querySelector(suggestions);
+            fetch(`/api/anagrafic/${anagrafic}/list?${key}=${value}%`)
+            .then(res => res.json())
+            .then(res => {
+                currentSuggestions.innerHTML = '';
+                res.data.forEach(item => {
+                    const option = document.createElement('p');
+                    option.innerHTML = highlightText(item, value, key);
+                    option.id = item.id;
+                    option.dataset.item = JSON.stringify(item);
+                    option.onmousedown = (e) => {
+                        let callback_select_anagrafic;
+                        if (anagrafic === 'subject') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                                document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                                document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                                document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'vector') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                                document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                                document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                                document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'driver') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #driver\\.id`).value = item.id;
+                                document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
+                                document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'vehicle') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                                document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                                document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                                document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                                document.querySelector(`${popup} #vehicle\\.tag`).value = item.tag;
+                                document.querySelector(`${popup} #vehicle\\.tag`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'material') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #material\\.id`).value = item.id;
+                                document.querySelector(`${popup} #material\\.description`).value = item.description;
+                                // document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        }
+                        if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
+                    };
+                    currentSuggestions.appendChild(option);  
+                });
+                currentSuggestions.style.display = 'block';
+            });
+        }        
+
+        function closeSuggestions(popup, suggestions, key, anagrafic, value) {
+            const currentSuggestions = document.querySelector(suggestions);
+            currentSuggestions.style.display = 'none';
+            const options = currentSuggestions.querySelectorAll('p');
+            let continues = false;
+            if (options.length === 1) {
+                const item = JSON.parse(options[0].dataset.item);
+                if (item[key].toLowerCase() == value.toLowerCase()) {
+                    let callback_select_anagrafic;
+                    if (anagrafic === 'subject' && document.querySelector(`${popup} #subject\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                            document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                        }
+                    } else if (anagrafic === 'vector' && document.querySelector(`${popup} #vector\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                        }
+                    } else if (anagrafic === 'driver' && document.querySelector(`${popup} #driver\\.id`).value != item.id && document.querySelector(`${popup} #driver\\.telephone`).value === item.telephone) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #driver\\.id`).value = item.id;
+                            document.querySelector(`${popup} #driver\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #driver\\.telephone`).value = item.telephone;                            
+                            document.querySelector(`${popup} #driver\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
+                    } else if (anagrafic === 'vehicle' && document.querySelector(`${popup} #vehicle\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                            document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                            document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                            document.querySelector(`${popup} #vehicle\\.tag`).value = item.tag;
+                            document.querySelector(`${popup} #vehicle\\.tag`).disabled = true;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
+                    } else {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #material\\.id`).value = item.id;
+                            document.querySelector(`${popup} #material\\.description`).value = item.description;
+                            // document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
+                    }
+                    if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
+                }
+            }
+        }
+
+        function deselectAllAnagrafic() {
+            document.querySelectorAll('#subject\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "subject");
+            });
+            document.querySelectorAll('#vector\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "vector");
+            });
+            document.querySelectorAll('#driver\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "driver");
+            });
+            document.querySelectorAll('#vehicle\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "vehicle");
+            });
+            document.querySelectorAll('#material\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "material");
+            })
+        }
+    </script>
+</body>
+</html>

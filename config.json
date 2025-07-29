@@ -17,7 +17,7 @@
         "port": 80,
         "report_in": "weight_in.html",
         "report_out": "weight_out.html",
-        "return_pdf_copy_after_weighing": false,
+        "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -46,11 +46,11 @@
         },
         "use_reservation": true,
         "use_tag": true,
-        "use_white_list": true,
+        "use_white_list": false,
         "weighers": {
             "2": {
                 "connection": {
-                    "ip": "10.0.5.177",
+                    "ip": "10.0.5.178",
                     "port": 4001,
                     "timeout": 1.0
                 },
@@ -142,9 +142,9 @@
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
-                        "printer_name": null,
+                        "printer_name": "HP_Andrea_Meggiolaro_8720",
                         "rele": {
-                            "1": 0
+                            "1": 1
                         },
                         "run": true,
                         "terminal": "egt-af03"

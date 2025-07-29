@@ -32,6 +32,7 @@ let report = {
     in: false,
     out: false
 }
+let customQueryParams = "";
 // Track pending requests
 const pendingRequests = new Map();
 const columns = {};
@@ -151,7 +152,7 @@ function isValidDate(dateStr) {
 
 async function updateTable() {
     let queryParams = '';
-    if (itemName === "reservation") queryParams += `excludeTestWeighing=true&`;
+    if (itemName === "reservation") queryParams += customQueryParams;
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.type != "checkbox" && input.value || input.name && input.type == "checkbox" && input.checked) {

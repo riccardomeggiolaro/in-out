@@ -253,6 +253,8 @@ class TcpWithoutControls(Connection):
 			status = True
 		except socket.error as e:
 			pass
+		except Exception as e:
+			pass
 		return status
 		
 	def read(self):
