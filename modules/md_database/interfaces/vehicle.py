@@ -3,14 +3,11 @@ from typing import Optional, List
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from datetime import datetime
 from typing import Union
-import libs.lb_config as lb_config
 
 class Vehicle(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: Optional[Union[int, float]] = None
-	white_list: Optional[bool] = None
-	tag: Optional[str] = None
 	date_created: Optional[datetime] = None
 	reservations: List[any] = []
 	id: Optional[int] = None
@@ -23,13 +20,17 @@ class VehicleDataDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: Optional[Union[int, float]] = None
-	white_list: Optional[bool] = None
-	tag: Optional[str] = None
 	id: Optional[int] = None
  
+	@validator('tare', pre=True, always=True)
+	def check_tare(cls, v, values):
+		if v and v <= 0:
+			raise ValueError('Plate must to be greater than 0')
+		return v
+
 	@validator('id', pre=True, always=True)
 	def check_id(cls, v, values):
-		if v not in (None, -1):
+		if v not in [None, -1]:
 			if not get_data_by_id('vehicle', v):
 				raise ValueError('Id not exist in vehicle')
 		return v
@@ -38,26 +39,12 @@ class VehicleDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: Optional[Union[int, float]] = None
-	white_list: Optional[bool] = None
-	tag: Optional[str] = None
 	id: Optional[int] = None
 
 	@validator('tare', pre=True, always=True)
 	def check_plate(cls, v):
 		if v and v < -1 or v == 0:
-			raise ValueError('Plate must be greater than 0')
-		return v
-
-	@validator('white_list', pre=True, always=True)
-	def check_white_list(cls, v):
-		if lb_config.g_config["app_api"]["use_white_list"] == False and v is True:
-			raise ValueError("Mode white list is not enabled")
-		return v
-
-	@validator('tag', pre=True, always=True)
-	def check_white_list(cls, v, values):
-		if lb_config.g_config["app_api"]["use_tag"] == False and v is not None:
-			raise ValueError("Mode tag is not enabled")
+			raise ValueError('Plate must to be greater than 0')
 		return v
 
 	@validator('id', pre=True, always=True)
@@ -70,8 +57,6 @@ class VehicleDTO(BaseModel):
 				values['description'] = data.get('description')
 				values['plate'] = data.get('plate')
 				values['tare'] = data.get('tare')
-				values['white_list'] = data.get('white_list')
-				values['tag'] = data.get('tag')
 		return v
 
 	class Config:
@@ -82,25 +67,11 @@ class AddVehicleDTO(BaseModel):
 	plate: str
 	description: Optional[str] = None
 	tare: Optional[int] = None
-	white_list: Optional[bool] = None
-	tag: Optional[str] = None
 
 	@validator('tare', pre=True, always=True)
 	def check_plate(cls, v):
 		if v and v <= 0:
-			raise ValueError('Plate must be greater than 0')
-		return v
-
-	@validator('white_list', pre=True, always=True)
-	def check_white_list(cls, v):
-		if lb_config.g_config["app_api"]["use_white_list"] == False and v is True:
-			raise ("White list is not enabled")
-		return v
-
-	@validator('tag', pre=True, always=True)
-	def check_white_list(cls, v, values):
-		if lb_config.g_config["app_api"]["use_tag"] == False and v is not None:
-			raise ValueError("Mode tag is not enabled")
+			raise ValueError('Plate must to be greater than 0')
 		return v
 
 	@field_validator('*', mode='before')
@@ -114,25 +85,11 @@ class SetVehicleDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: int = None
-	white_list: Optional[bool] = None
-	tag: Optional[str] = None
 
 	@validator('tare', pre=True, always=True)
 	def check_plate(cls, v):
 		if v and v < -1 or v == 0:
-			raise ValueError('Plate must be greater than 0')
-		return v
-
-	@validator('white_list', pre=True, always=True)
-	def check_white_list(cls, v):
-		if lb_config.g_config["app_api"]["use_white_list"] == False and v is True:
-			raise ("White list is not enabled")
-		return v
-
-	@validator('tag', pre=True, always=True)
-	def check_white_list(cls, v, values):
-		if lb_config.g_config["app_api"]["use_tag"] == False and v is not None:
-			raise ValueError("Mode tag is not enabled")
+			raise ValueError('Plate must to be greater than 0')
 		return v
 
 	@root_validator(pre=True)
@@ -140,12 +97,10 @@ class SetVehicleDTO(BaseModel):
 		plate = values.get('plate')
 		description = values.get('description')
 		if not description and not plate:
-			raise ValueError('At least one of "description" or "plate" must be provided.')
+			raise ValueError('At least one of "description" or "plate" must to be provided.')
 		return values
     
 class FilterVehicleDTO(BaseModel):
     plate: Optional[str] = None
     description: Optional[str] = None
     tare: Optional[Union[int, float]] = None
-    white_list: Optional[bool] = None
-    tag: Optional[str] = None

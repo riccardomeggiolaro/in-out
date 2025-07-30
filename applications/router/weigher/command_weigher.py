@@ -8,10 +8,11 @@ from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.reservation import ReservationRouter
-from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_identify_if_uncomplete
+from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.interfaces.reservation import AddReservationDTO, VehicleDataDTO
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
 	def __init__(self):
@@ -149,12 +150,12 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			reservation = get_reservation_by_id(idReservation)
 		just_created = False
 		if reservation:
-			if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1 and tare != "0":
+			if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1 and reservation.in_out[-1].idWeight2 and tare != "0":
 				error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
 			elif len(reservation.in_out) == 0 and tare == "0":
 				error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
-			elif len(reservation.in_out) > 0 and not reservation.in_out[-1].idWeight1 and tare == "0":
-				error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
+			# elif len(reservation.in_out) > 0 and not reservation.in_out[-1].idWeight1 and tare == "0":
+			# 	error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
 		if not reservation:
 			if tare == "0":
 				error_message = "Nessun id impostato per effettuare l'uscita."
@@ -187,7 +188,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def OutAutoIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		try:
 			type = "tag" if lb_config.g_config["app_api"]["use_tag"] else "plate"
-			reservation = get_reservation_by_identify_if_uncomplete(type=type, identify=identify_dto.identify)
+			reservation = get_reservation_by_plate_if_uncomplete(plate=identify_dto.identify)
 			allow_white_list = lb_config.g_config["app_api"]["use_white_list"]
 			if not reservation and allow_white_list:
 				vehicle = get_data_by_attributes("vehicle", {type: identify_dto.identify})
@@ -235,9 +236,15 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
+		execution = True
 		if data_id_selected["id"] and data_id_selected["weight1"]:
-			error_message = "Non puoi effettuare la tara perchè il mezzo ha già effettuato una entrata."
-		else:
+			last_in_out = get_reservation_by_id(data_id_selected["id"])
+			if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
+				error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
+				execution = False
+			else:
+				execution = True
+		if execution:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="TARE")
 		return {
 			"instance": instance,
@@ -251,9 +258,15 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def PresetTare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), tare: Optional[int] = 0):
 		status_modope, command_executed, error_message = 500, False, ""
 		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
+		execution = True
 		if data_id_selected["id"] and data_id_selected["weight1"]:
-			error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
-		else:
+			last_in_out = get_reservation_by_id(data_id_selected["id"])
+			if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
+				error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
+				execution = False
+			else:
+				execution = True
+		if execution:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
 		return {
 			"instance": instance,

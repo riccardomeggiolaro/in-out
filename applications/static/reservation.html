@@ -57,8 +57,8 @@
         <table>
             <thead>
                 <tr id="filters">
-                    <th name="vehicle.tag" class="tag">
-                        <input id="filter.vehicle.tag" class="tag" name="vehicle.tag" type="text" placeholder="TAG" oninput="updateTable()" autocomplete="off">
+                    <th name="tag" class="tag">
+                        <input id="filter.tag" class="tag" name="tag" type="text" placeholder="TAG" oninput="updateTable()" autocomplete="off">
                     </th>
                     <th name="vehicle.plate">
                         <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
@@ -142,8 +142,8 @@
                                 document.querySelector('#add-popup #vehicle\\.id').value = '';
                                 document.querySelector('#add-popup #vehicle\\.description').disabled = false;
                                 document.querySelector('#add-popup #vehicle\\.description').value = '';
-                                document.querySelector('#add-popup #vehicle\\.tag').disabled = false;
-                                document.querySelector('#add-popup #vehicle\\.tag').value = '';
+                                document.querySelector('#add-popup #vehicle\\.tare').disabled = false;
+                                document.querySelector('#add-popup #vehicle\\.tare').value = '';
                             }
                         "
                         onfocus="
@@ -159,8 +159,8 @@
                     <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
                 </div>
 
-                <div class="item" class="tag">
-                    <input placeholder="TAG" id="vehicle.tag" name="vehicle.tag" type="text" oninput="this.value = this.value.toUpperCase()" autocomplete="new-password">
+                <div class="item">
+                    <input placeholder="Tara (kg)" id="vehicle.tare" name="vehicle.tare" type="number" min="1" autocomplete="new-password">
                 </div>
             </div>
 
@@ -318,20 +318,22 @@
                         oninput="
                             if (this.value != '') {
                                 document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
-                                document.querySelector('#edit-popup #vehicle\\.tag').disabled = true;
+                                document.querySelector('#edit-popup #vehicle\\.tare').disabled = true;
                             }
                         ">
                     <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
                         oninput="
-                            this.value = this.value.toUpperCase();
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
-                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
-                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
-                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
-                                document.querySelector('#edit-popup #vehicle\\.tag').disabled = false;
-                                document.querySelector('#edit-popup #vehicle\\.tag').value = '';
+                            if (this.value != '') {
+                                this.value = this.value.toUpperCase();
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                                if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
+                                    deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
+                                    document.querySelector('#edit-popup #vehicle\\.id').value = '';
+                                    document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
+                                    document.querySelector('#edit-popup #vehicle\\.description').value = '';
+                                    document.querySelector('#edit-popup #vehicle\\.tare').disabled = false;
+                                    document.querySelector('#edit-popup #vehicle\\.tare').value = '';
+                                }
                             }
                         "
                         onfocus="
@@ -347,8 +349,8 @@
                     <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
                 </div>
 
-                <div class="item tag">
-                    <input placeholder="TAG" id="vehicle.tag" name="vehicle.tag" type="text" oninput="this.value = this.value.toUpperCase()" autocomplete="new-password">
+                <div class="item">
+                    <input placeholder="Tara (kg)" id="vehicle.tare" name="vehicle.tare" type="number" min="1" autocomplete="new-password">
                 </div>
             </div>
 
@@ -980,8 +982,8 @@
                                 document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
                                 document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
                                 document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
-                                document.querySelector(`${popup} #vehicle\\.tag`).value = item.tag;
-                                document.querySelector(`${popup} #vehicle\\.tag`).disabled = true;
+                                document.querySelector(`${popup} #vehicle\\.tare`).value = item.tare;
+                                document.querySelector(`${popup} #vehicle\\.tare`).disabled = true;
                                 document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                             }
                         } else if (anagrafic === 'material') {
@@ -1040,8 +1042,8 @@
                             document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
                             document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
                             document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
-                            document.querySelector(`${popup} #vehicle\\.tag`).value = item.tag;
-                            document.querySelector(`${popup} #vehicle\\.tag`).disabled = true;
+                            document.querySelector(`${popup} #vehicle\\.tare`).value = item.tare;
+                            document.querySelector(`${popup} #vehicle\\.tare`).disabled = true;
                             document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                         }
                     } else {

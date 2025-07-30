@@ -82,8 +82,7 @@ class DataRouter(ConfigWeigher):
 						"id": reservation.vehicle.id if reservation.vehicle else None,
 						"plate": reservation.vehicle.plate if reservation.vehicle else None,
 						"description": reservation.vehicle.description if reservation.vehicle else None,
-						"tare": reservation.vehicle.tare if reservation.vehicle else None,
-						"white_list": reservation.vehicle.white_list if reservation.vehicle else None,
+						"tare": reservation.vehicle.tare if reservation.vehicle else None
 					},
 					"material": {
 						"id": id_material,

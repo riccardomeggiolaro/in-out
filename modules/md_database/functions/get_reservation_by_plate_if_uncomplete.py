@@ -2,7 +2,7 @@ from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation
 
-def get_reservation_by_identify_if_uncomplete(type: str, identify: str):
+def get_reservation_by_plate_if_uncomplete(plate: str):
     session = SessionLocal()
     try:
         weighing_count_subquery = (
@@ -35,14 +35,6 @@ def get_reservation_by_identify_if_uncomplete(type: str, identify: str):
             .subquery()
         )
 
-        # Scegli il filtro in base a type
-        if type == "plate":
-            vehicle_filter = (Vehicle.plate == identify)
-        elif type == "tag":
-            vehicle_filter = (Vehicle.tag == identify)
-        else:
-            raise ValueError("type deve essere 'plate' o 'tag'")
-
         reservation = session.query(Reservation).options(
             selectinload(Reservation.subject),
             selectinload(Reservation.vector),
@@ -60,7 +52,7 @@ def get_reservation_by_identify_if_uncomplete(type: str, identify: str):
             last_inout_weight2_subq,
             Reservation.id == last_inout_weight2_subq.c.idReservation
         ).filter(
-            vehicle_filter,
+            Vehicle.plate == plate,
             Reservation.type != TypeReservation.TEST.name,
             or_(
                 weighing_count_subquery.c.weighing_count == None,

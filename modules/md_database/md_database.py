@@ -64,8 +64,6 @@ class Vehicle(Base):
     plate = Column(String(collation="NOCASE"), index=True, unique=True)
     description = Column(String, nullable=True)
     tare = Column(Integer, nullable=True)
-    white_list = Column(Boolean, default=False)
-    tag = Column(String(collation="NOCASE"), index=True, unique=True, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
@@ -198,7 +196,7 @@ upload_file_datas_required_columns = {
     "subject": {"social_reason": str, "telephone": str, "cfpiva": str},
     "vector": {"social_reason": str, "telephone": str, "cfpiva": str},
     "driver": {"social_reason": str, "telephone": str},
-    "vehicle": {"plate": str, "description": str, "tare": int, "white_list": bool, "tag": str},
+    "vehicle": {"plate": str, "description": str, "tare": int},
     "material": {"description": str},
     "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str}
 }
