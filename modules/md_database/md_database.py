@@ -134,6 +134,7 @@ class Reservation(Base):
     status = Column(Enum(ReservationStatus), default=ReservationStatus.WAITING)
     document_reference = Column(String, nullable=True)
     type = Column(Enum(TypeReservation), default=TypeReservation.MANUALLY)
+    badge = Column(String(collation='NOCASE'), index=True, unique=True, nullable=True)
     hidden = Column(Boolean, default=False)
 
     # Relationships
@@ -198,7 +199,7 @@ upload_file_datas_required_columns = {
     "driver": {"social_reason": str, "telephone": str},
     "vehicle": {"plate": str, "description": str, "tare": int},
     "material": {"description": str},
-    "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str}
+    "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str}
 }
 
 # Create tables

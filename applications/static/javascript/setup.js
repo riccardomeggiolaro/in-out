@@ -170,28 +170,14 @@ async function loadSetupWeighers() {
                 }
             })
         }
-        const labelWhiteList = document.createElement('label');
-        const whiteList = document.createElement('input');
-        labelWhiteList.textContent = "Usa white list per i veicoli: "
-        whiteList.type = 'checkbox';
-        whiteList.checked = data.use_white_list ? true : false;
-        whiteList.onchange = (e) => {
+        const labelBadge = document.createElement('label');
+        const badge = document.createElement('input');
+        labelBadge.textContent = "Usa badge per riconoscimento multiplo tramite tessere e targhe: ";
+        badge.type = 'checkbox';
+        badge.checked = data.use_badge ? true : false;
+        badge.onchange = (e) => {
             const checked = e.target.checked;
-            fetch(`/api/config-weigher/configuration/use-white-list/${checked}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-        }
-        const labelTag = document.createElement('label');
-        const tag = document.createElement('input');
-        labelTag.textContent = "Usa tag sui veicoli per riconoscimento multiplo tramite tessere e targhe: ";
-        tag.type = 'checkbox';
-        tag.checked = data.use_tag ? true : false;
-        tag.onchange = (e) => {
-            const checked = e.target.checked;
-            fetch(`/api/config-weigher/configuration/use-tag/${checked}`, {
+            fetch(`/api/config-weigher/configuration/use-badge/${checked}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -543,27 +529,11 @@ async function loadSetupWeighers() {
         divAccess.appendChild(reservation);
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(labelBadge);
+        divAccess.appendChild(badge);
+        divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(br.cloneNode(true));
         weighers_config.appendChild(divAccess);
-        //////////////////////////////////////////////////////
-        weighers_config.appendChild(br.cloneNode(true));
-        // CONFIGURATION OF VEHICLE
-        const divVehicle = document.createElement('div');
-        const h1Vehicle = document.createElement('h3');
-        divVehicle.classList.toggle("borders");
-        divVehicle.classList.toggle("aliceblue");
-        h1Vehicle.textContent = "Veicoli";
-        divVehicle.appendChild(br.cloneNode(true));
-        divVehicle.appendChild(h1Vehicle);
-        divVehicle.appendChild(br.cloneNode(true));
-        divVehicle.appendChild(labelWhiteList);
-        divVehicle.appendChild(whiteList);
-        divVehicle.appendChild(br.cloneNode(true));
-        divVehicle.appendChild(br.cloneNode(true));
-        divVehicle.appendChild(labelTag);
-        divVehicle.appendChild(tag);
-        divVehicle.appendChild(br.cloneNode(true));
-        divVehicle.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(divVehicle);
         //////////////////////////////////////////////////////
         weighers_config.appendChild(br.cloneNode(true));
         // CONFIGURATION OF REPORT

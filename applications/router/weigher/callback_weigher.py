@@ -146,10 +146,13 @@ class CallbackWeigher(Functions, WebSocket):
 				})
 			############################
 			# AGGIORNAMENTO FINALE DELLO STATO DELL'ACCESSO
-			updated_reservation = update_data("reservation", last_pesata.data_assigned, {
+			changed = {
 				"status": ReservationStatus.CLOSED if is_to_close else ReservationStatus.ENTERED,
 				"hidden": False
-			})
+			}
+			if is_to_close:
+				changed["badge"] = ""
+			updated_reservation = update_data("reservation", last_pesata.data_assigned, changed)
 			reservation_data_json = Reservation(**updated_reservation).json()
 			asyncio.run(self.broadcastUpdateAnagrafic("reservation", {"weighing": reservation_data_json}))
 			last_pesata.data_assigned = reservation_data_json

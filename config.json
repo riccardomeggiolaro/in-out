@@ -44,8 +44,8 @@
             "ssh_port": 10022,
             "user": "root"
         },
+        "use_badge": false,
         "use_reservation": true,
-        "use_tag": false,
         "use_white_list": false,
         "weighers": {
             "2": {
@@ -142,7 +142,7 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 0
+                            "1": 1
                         },
                         "run": true,
                         "terminal": "egt-af03"

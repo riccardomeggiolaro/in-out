@@ -22,7 +22,7 @@ class ConfigWeigher(CallbackWeigher):
         self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
         self.router_config_weigher.add_api_route('/configuration/use-reservation/{use_reservation}', self.SetUseReservation, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-white-list/{use_white_list}', self.SetUseWhiteList, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
-        self.router_config_weigher.add_api_route('/configuration/use-tag/{use_tag}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/use-badge/{use_badge}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -57,10 +57,10 @@ class ConfigWeigher(CallbackWeigher):
         lb_config.saveconfig()
         return { "use_white_list": use_white_list }
 
-    async def SetUseTag(self, use_tag: bool):
-        lb_config.g_config["app_api"]["use_tag"] = use_tag
+    async def SetUseTag(self, use_badge: bool):
+        lb_config.g_config["app_api"]["use_badge"] = use_badge
         lb_config.saveconfig()
-        return { "use_tag": use_tag }
+        return { "use_badge": use_badge }
 
     async def SavePathPdf(self, body: PathDTO):
         path = body.path

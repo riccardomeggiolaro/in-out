@@ -24,8 +24,8 @@ class VehicleDataDTO(BaseModel):
  
 	@validator('tare', pre=True, always=True)
 	def check_tare(cls, v, values):
-		if v and v <= 0:
-			raise ValueError('Plate must to be greater than 0')
+		if v and v < -1 or v == 0:
+			raise ValueError('Tare must to be greater than 0')
 		return v
 
 	@validator('id', pre=True, always=True)

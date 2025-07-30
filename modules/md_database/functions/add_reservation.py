@@ -1,6 +1,6 @@
 from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, InOut, ReservationStatus, TypeSubjectEnum, TypeReservation
 from modules.md_database.interfaces.reservation import AddReservationDTO
-from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_incomplete
+from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_Uncomplete
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
@@ -23,6 +23,7 @@ def add_reservation(data: AddReservationDTO):
                 "status": ReservationStatus.WAITING,
                 "document_reference": data.document_reference,
                 "type": TypeReservation[data.type],
+                "badge": data.badge,
                 "hidden": data.hidden
             }
 
@@ -82,7 +83,7 @@ def add_reservation(data: AddReservationDTO):
                     session.flush()
                     add_reservation["idVehicle"] = vehicle.id
 
-            existing = get_reservation_by_vehicle_id_if_incomplete(add_reservation["idVehicle"])
+            existing = get_reservation_by_vehicle_id_if_Uncomplete(add_reservation["idVehicle"])
 
             if existing:
                 existing = existing["vehicle"].__dict__

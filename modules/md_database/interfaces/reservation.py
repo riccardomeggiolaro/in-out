@@ -7,6 +7,7 @@ from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
 from modules.md_database.interfaces.material import MaterialDataDTO
 from modules.md_database.interfaces.in_out import InOut
 from datetime import datetime
+import libs.lb_config as lb_config
 
 class Reservation(BaseModel):
     id: Optional[int] = None
@@ -21,6 +22,7 @@ class Reservation(BaseModel):
     document_reference: Optional[str] = None
     date_created: Optional[datetime] = None
     type: Optional[str] = None
+    badge: Optional[str] = None
     hidden: Optional[bool] = None
 
     subject: Optional[Subject] = None
@@ -39,6 +41,7 @@ class AddReservationDTO(BaseModel):
     note: Optional[str] = None
     document_reference: Optional[str] = None
     type: str = "RESERVATION"
+    badge: Optional[str] = None
     hidden: Optional[bool] = False
 
     @validator('typeSubject', pre=True, always=True)
@@ -52,6 +55,12 @@ class AddReservationDTO(BaseModel):
         if v in ['RESERVATION', 'MANUALLY', 'TEST']:
             return v
         raise ValueError("type is not a valid string")
+
+    @validator('badge', pre=True, always=True)
+    def check_badge(cls, v, values):
+        if lb_config.g_config["app_api"]["use_badge"] == False and v is not None:
+            raise ValueError("Mode badge is not enabled")
+        return v
     
 class SetReservationDTO(BaseModel):
     typeSubject: Optional[str] = None
@@ -63,6 +72,7 @@ class SetReservationDTO(BaseModel):
     number_in_out: Optional[int] = None
     note: Optional[str] = None
     document_reference: Optional[str] = None
+    badge: Optional[str] = None
 
     @validator('typeSubject', pre=True, always=True)
     def check_type_subject(cls, v, values):
@@ -71,4 +81,10 @@ class SetReservationDTO(BaseModel):
                 return v
             else:
                 raise ValueError("typeSubject is not a valid string")
+        return v
+    
+    @validator('badge', pre=True, always=True)
+    def check_badge(cls, v, values):
+        if lb_config.g_config["app_api"]["use_badge"] == False and v is not None:
+            raise ValueError("Mode badge is not enabled")
         return v

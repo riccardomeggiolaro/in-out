@@ -9,6 +9,7 @@ import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.reservation import ReservationRouter
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
+from modules.md_database.functions.get_reservation_by_badge_if_uncomplete import get_reservation_by_identify_if_uncomplete
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.interfaces.reservation import AddReservationDTO, VehicleDataDTO
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
@@ -187,8 +188,11 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 
 	async def OutAutoIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		try:
-			type = "tag" if lb_config.g_config["app_api"]["use_tag"] else "plate"
-			reservation = get_reservation_by_plate_if_uncomplete(plate=identify_dto.identify)
+			reservation = None
+			if lb_config.g_config["app_api"]["use_badge"]:
+				reservation = get_reservation_by_identify_if_uncomplete(identify=identify_dto.identify)
+			else:
+				reservation = get_reservation_by_plate_if_uncomplete(plate=identify_dto.identify)
 			allow_white_list = lb_config.g_config["app_api"]["use_white_list"]
 			if not reservation and allow_white_list:
 				vehicle = get_data_by_attributes("vehicle", {type: identify_dto.identify})

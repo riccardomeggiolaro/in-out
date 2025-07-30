@@ -413,11 +413,6 @@ input:invalid {
     width: 100%;
 }
 
-/* Soluzione moderna con :has() */
-table:has(th.tag:nth-child(1)) tbody td:nth-child(1) {
-    background-color: aliceblue;
-}
-
 .detail-cell {
     background-color: white !important;
 }

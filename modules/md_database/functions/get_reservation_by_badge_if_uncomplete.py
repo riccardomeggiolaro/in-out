@@ -1,8 +1,8 @@
 from sqlalchemy import func, and_, or_
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation
 
-def get_reservation_by_vehicle_id_if_Uncomplete(id: int):
+def get_reservation_by_identify_if_uncomplete(identify: str):
     session = SessionLocal()
     try:
         weighing_count_subquery = (
@@ -36,10 +36,13 @@ def get_reservation_by_vehicle_id_if_Uncomplete(id: int):
         )
 
         reservation = session.query(Reservation).options(
-            joinedload(Reservation.subject),
-            joinedload(Reservation.vector),
-            joinedload(Reservation.driver),
-            joinedload(Reservation.vehicle)
+            selectinload(Reservation.subject),
+            selectinload(Reservation.vector),
+            selectinload(Reservation.driver),
+            selectinload(Reservation.vehicle),
+            selectinload(Reservation.in_out).selectinload(InOut.weight1),
+            selectinload(Reservation.in_out).selectinload(InOut.weight2),
+            selectinload(Reservation.in_out).selectinload(InOut.material)
         ).join(
             Vehicle, Reservation.idVehicle == Vehicle.id
         ).outerjoin(
@@ -49,14 +52,14 @@ def get_reservation_by_vehicle_id_if_Uncomplete(id: int):
             last_inout_weight2_subq,
             Reservation.id == last_inout_weight2_subq.c.idReservation
         ).filter(
-           Vehicle.id == id,
+            or_(
+                Reservation.badge == identify,
+                Vehicle.plate == identify
+            ),
             Reservation.type != TypeReservation.TEST.name,
             or_(
-                # weighing_count is NULL (nessun InOut)
                 weighing_count_subquery.c.weighing_count == None,
-                # weighing_count < number_in_out
                 weighing_count_subquery.c.weighing_count < Reservation.number_in_out,
-                # weighing_count == number_in_out AND last_inout_weight2_subq.c.idWeight2 == None
                 and_(
                     weighing_count_subquery.c.weighing_count == Reservation.number_in_out,
                     last_inout_weight2_subq.c.idWeight2 == None

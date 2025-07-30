@@ -1,6 +1,6 @@
 from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Reservation, ReservationStatus, TypeSubjectEnum
 from modules.md_database.interfaces.reservation import SetReservationDTO
-from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_incomplete
+from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_Uncomplete
 from modules.md_database.functions.update_data import update_data
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
@@ -95,7 +95,7 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
             else:
                 reservation.idVehicle = data.vehicle.id
 
-            existing = get_reservation_by_vehicle_id_if_incomplete(reservation.idVehicle)
+            existing = get_reservation_by_vehicle_id_if_Uncomplete(reservation.idVehicle)
 
             if existing and existing["id"] != reservation.id and existing["idVehicle"]:
                 existing = existing["vehicle"].__dict__
@@ -148,6 +148,9 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
 
             if data.document_reference is not None:
                 reservation.document_reference = data.document_reference if data.document_reference != "" else None
+
+            if data.badge is not None:
+                reservation.badge = data.badge if data.badge != "" else None
 
             session.commit()
 
