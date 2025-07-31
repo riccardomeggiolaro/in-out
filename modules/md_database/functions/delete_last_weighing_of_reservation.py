@@ -64,23 +64,8 @@ def delete_last_weighing_of_reservation(reservation_id):
                 #     session.delete(reservation)
                 session.delete(latest_inout)
             else:
-                # Resetta il peso netto
+                # Altrimenti, resetta solo il peso netto
                 latest_inout.net_weight = None
-                
-                # Controllo aggiuntivo: se è stato eliminato weight2, controlla se weight1 
-                # è uguale a weight2 dell'InOut precedente
-                if last_weight_field == 'idWeight2' and latest_inout.idWeight1 is not None:
-                    # Trova l'InOut precedente della stessa prenotazione
-                    previous_inout = session.query(InOut).filter(
-                        InOut.idReservation == reservation_id,
-                        InOut.id < latest_inout.id
-                    ).order_by(desc(InOut.id)).first()
-                    
-                    if previous_inout and previous_inout.idWeight2 is not None:
-                        # Controlla se weight1 dell'ultimo InOut è uguale a weight2 del precedente
-                        if latest_inout.idWeight1 == previous_inout.idWeight2:
-                            # Elimina tutto l'InOut corrente
-                            session.delete(latest_inout)
 
             session.commit()
             return deleted_weighing
