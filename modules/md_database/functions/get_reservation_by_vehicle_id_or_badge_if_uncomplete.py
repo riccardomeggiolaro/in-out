@@ -2,7 +2,7 @@ from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation
 
-def get_reservation_by_vehicle_id_if_uncomplete(id: int):
+def get_reservation_by_vehicle_id_or_badge_if_uncomplete(vehicle_id: int, badge: str, reservation_id: int = None):
     session = SessionLocal()
     try:
         weighing_count_subquery = (
@@ -35,6 +35,16 @@ def get_reservation_by_vehicle_id_if_uncomplete(id: int):
             .subquery()
         )
 
+        filters = or_(
+            Vehicle.id == vehicle_id
+        )
+        
+        if badge:
+            filters = or_(
+                Reservation.badge == badge,
+                Vehicle.id == vehicle_id
+            )
+
         reservation = session.query(Reservation).options(
             joinedload(Reservation.subject),
             joinedload(Reservation.vector),
@@ -49,7 +59,8 @@ def get_reservation_by_vehicle_id_if_uncomplete(id: int):
             last_inout_weight2_subq,
             Reservation.id == last_inout_weight2_subq.c.idReservation
         ).filter(
-           Vehicle.id == id,
+            Reservation.id != reservation_id,
+            filters,
             Reservation.type != TypeReservation.TEST.name,
             or_(
                 # weighing_count is NULL (nessun InOut)
