@@ -69,10 +69,10 @@ async function configuration() {
                 });
                 if (!res.use_badge) {
                     document.querySelectorAll(".badge").forEach(input => {
-                        if (input.previousElementSibling && input.previousElementSibling.badgeName === 'LABEL') {
+                        if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {
                             input.previousElementSibling.style.display = 'none';
                         }
-                        if (input.badgeName === 'TH') {
+                        if (input.tagName === 'TH') {
                             // Rimuovi la colonna dalla tabella
                             const th = input;
                             const table = th.closest('table');
@@ -81,7 +81,7 @@ async function configuration() {
                                 // Rimuovi la cella header
                                 th.parentNode.removeChild(th);
                                 // Rimuovi tutte le celle della colonna corrispondente
-                                table.querySelectorAll('tbody tr, tfoot').forEach(tr => {
+                                table.querySelectorAll('tbody tr').forEach(tr => {
                                     if (tr.children[index]) tr.removeChild(tr.children[index]);
                                 });
                                 // Decrementa tutti i colspan
@@ -99,7 +99,7 @@ async function configuration() {
                 }
                 if (!res.use_white_list) {
                     document.querySelectorAll(".white_list").forEach(input => {
-                        if (input.previousElementSibling && input.previousElementSibling.badgeName === 'LABEL') {
+                        if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {
                             input.previousElementSibling.style.display = 'none';
                         }
                         input.style.display = 'none';

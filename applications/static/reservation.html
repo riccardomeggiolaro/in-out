@@ -58,7 +58,8 @@
             <thead>
                 <tr id="filters">
                     <th name="badge" class="badge">
-                        <input id="filter.badge" class="badge" name="badge" type="text" placeholder="Badge" oninput="updateTable()" autocomplete="off">
+                        <input id="filter.badge" class="badge" name="badge" type="text" placeholder="Badge" autocomplete="off"
+                            oninput="this.value = this.value.toUpperCase(); updateTable()">
                     </th>
                     <th name="vehicle.plate">
                         <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
@@ -131,7 +132,8 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
-                        <input placeholder="BADGE (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password">
+                        <input placeholder="BADGE (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password" 
+                            oninput="this.value = this.value.toUpperCase();">
                     </div>
                 </div>
             </div>
@@ -325,7 +327,8 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
-                        <input placeholder="BADGE (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password">
+                        <input placeholder="BADGE (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
+                            oninput="this.value = this.value.toUpperCase();">
                     </div>
                 </div>
             </div>
