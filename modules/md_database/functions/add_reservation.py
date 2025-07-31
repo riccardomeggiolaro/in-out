@@ -1,6 +1,6 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum, TypeReservation
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, InOut, ReservationStatus, TypeSubjectEnum, TypeReservation
 from modules.md_database.interfaces.reservation import AddReservationDTO
-from modules.md_database.functions.get_reservation_by_vehicle_id_or_badge_if_uncomplete import get_reservation_by_vehicle_id_or_badge_if_uncomplete
+from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
@@ -74,7 +74,7 @@ def add_reservation(data: AddReservationDTO):
                 add_vehicle = {
                     "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
                     "description": data.vehicle.description if data.vehicle.description != "" else None,
-                    "tare": data.vehicle.tare if data.vehicle.tare is not None and data.vehicle.tare > 0 else None
+                    "tare": data.vehicle.tare if data.vehicle.tare and data.vehicle.tare > 0 else None
                 }
                 if has_non_none_value(add_vehicle):
                     data_to_check = data.vehicle.dict()
@@ -83,21 +83,23 @@ def add_reservation(data: AddReservationDTO):
                     session.flush()
                     add_reservation["idVehicle"] = vehicle.id
 
-            existing = get_reservation_by_vehicle_id_or_badge_if_uncomplete(add_reservation["idVehicle"], add_reservation["badge"])
+            existing = get_reservation_by_vehicle_id_if_uncomplete(add_reservation["idVehicle"])
 
             if existing:
-                existing_vehicle = existing["vehicle"].__dict__
-                id = existing_vehicle["id"]
-                plate = existing_vehicle["plate"]
-                badge = existing["badge"]
-                message = ""
-                if badge and badge == add_reservation["badge"]:
-                    message += f"con il badge '{badge}'"
-                if plate and id == add_reservation["idVehicle"]:
-                    if message:
-                        message += " e "
-                    message += f"con la targa '{plate}'"
-                raise Exception(f"E' già presente una prenotazione {message}")
+                existing = existing["vehicle"].__dict__
+                plate = existing["plate"]
+                raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
+
+            badge = data.badge
+            if badge is not None:
+                # Controllo per duplicati badge (escludendo la prenotazione corrente)
+                if badge != "":
+                    existing_badge = session.query(Reservation).filter(
+                        Reservation.badge == badge
+                    ).first()
+                    
+                    if existing_badge:
+                        raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso")
 
             current_model = Reservation
             data_to_check = data.dict()

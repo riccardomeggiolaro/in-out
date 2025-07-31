@@ -49,9 +49,10 @@ def get_reservation_by_vehicle_id_if_uncomplete(id: int):
             last_inout_weight2_subq,
             Reservation.id == last_inout_weight2_subq.c.idReservation
         ).filter(
-           Vehicle.id == id,
+            Vehicle.id == id,
             Reservation.type != TypeReservation.TEST.name,
             or_(
+                Reservation.number_in_out == None,
                 # weighing_count is NULL (nessun InOut)
                 weighing_count_subquery.c.weighing_count == None,
                 # weighing_count < number_in_out

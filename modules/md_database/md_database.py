@@ -127,7 +127,7 @@ class Reservation(Base):
     idVector = Column(Integer, ForeignKey('vector.id'))
     idDriver = Column(Integer, ForeignKey('driver.id'))
     idVehicle = Column(Integer, ForeignKey('vehicle.id'))
-    number_in_out = Column(Integer, default=0, nullable=False)
+    number_in_out = Column(Integer, nullable=True)
     note = Column(String, nullable=True)
     selected = Column(Boolean, index=True, default=False)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)

@@ -476,7 +476,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
             return reservation
         except Exception as e:
-            status_code = getattr(e, 'status_code', 404)
+            status_code = getattr(e, 'status_code', 400)
             detail = getattr(e, 'detail', str(e))
             if status_code == 400:
                 locked_data = None

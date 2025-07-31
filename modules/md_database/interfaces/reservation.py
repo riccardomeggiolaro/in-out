@@ -37,11 +37,12 @@ class AddReservationDTO(BaseModel):
     vector: VectorDataDTO = VectorDataDTO(**{})
     driver: DriverDataDTO = DriverDataDTO(**{})
     vehicle: VehicleDataDTO = VehicleDataDTO(**{})
-    number_in_out: int = 2
+    number_in_out: Optional[int] = None
     note: Optional[str] = None
     document_reference: Optional[str] = None
     type: str = "RESERVATION"
     badge: Optional[str] = None
+    permanent: Optional[bool] = False
     hidden: Optional[bool] = False
 
     @validator('typeSubject', pre=True, always=True)
@@ -73,6 +74,7 @@ class SetReservationDTO(BaseModel):
     note: Optional[str] = None
     document_reference: Optional[str] = None
     badge: Optional[str] = None
+    permanent: Optional[bool] = None
 
     @validator('typeSubject', pre=True, always=True)
     def check_type_subject(cls, v, values):

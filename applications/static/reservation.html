@@ -132,7 +132,7 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
-                        <input placeholder="BADGE (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password" 
+                        <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password" 
                             oninput="this.value = this.value.toUpperCase();">
                     </div>
                 </div>
@@ -141,8 +141,10 @@
             <hr class="badge">
 
             <div class="item">
-                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
+                <input placeholder="Numero operazioni (lasciare vuoto per permanente)" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password"
                     oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                <!-- <label for="permanent">Permanente: </label>
+                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#register')"> -->
             </div>
 
             <hr>
@@ -327,7 +329,7 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
-                        <input placeholder="BADGE (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
+                        <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
                             oninput="this.value = this.value.toUpperCase();">
                     </div>
                 </div>
@@ -336,8 +338,10 @@
             <hr class="badge">
 
             <div class="item">
-                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
+                <input placeholder="Numero operazioni (lasciare vuoto per permanente)" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password"
                     oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                <!-- <label for="permanent">Permanente: </label>
+                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#edit')"> -->
             </div>
 
             <hr>
@@ -760,6 +764,19 @@
                 return suggestion[filter];
             }
             return '';
+        }
+
+        function disabledInputNumberInOut(event, form) {
+            const input = document.querySelector(`${form} #number_in_out`);
+            if (event.target.checked) {
+                input.required = false;
+                input.disabled = true;
+                input.style.color = 'transparent';
+            } else {
+                input.required = true;
+                input.disabled = false;
+                input.style.color = 'black';
+            }
         }
 
         function callReservation(type, reservation) {
