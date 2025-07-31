@@ -141,10 +141,10 @@
             <hr class="badge">
 
             <div class="item">
-                <input placeholder="Numero operazioni (lasciare vuoto per permanente)" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password"
+                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
                     oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                <!-- <label for="permanent">Permanente: </label>
-                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#register')"> -->
+                <label for="permanent">Permanente: </label>
+                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#register')">
             </div>
 
             <hr>
@@ -338,10 +338,10 @@
             <hr class="badge">
 
             <div class="item">
-                <input placeholder="Numero operazioni (lasciare vuoto per permanente)" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password"
+                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
                     oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                <!-- <label for="permanent">Permanente: </label>
-                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#edit')"> -->
+                <label for="permanent">Permanente: </label>
+                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#edit')">
             </div>
 
             <hr>
@@ -766,17 +766,27 @@
             return '';
         }
 
-        function disabledInputNumberInOut(event, form) {
-            const input = document.querySelector(`${form} #number_in_out`);
+        function disabledInputNumberInOut(event, id) {
+            const form = document.querySelector(id);
+            const input = form.querySelector(`#number_in_out`);
             if (event.target.checked) {
                 input.required = false;
                 input.disabled = true;
-                input.style.color = 'transparent';
+                input.value = null;
             } else {
-                input.required = true;
-                input.disabled = false;
-                input.style.color = 'black';
+                if (input.dataset.in_out) {
+                    if (input.dataset.in_out == 0) {
+                        input.disabled = false;
+                    } else {
+                        input.value = input.dataset.in_out;
+                    }
+                    input.required = true;
+                } else {
+                    input.required = true;
+                    input.disabled = false;
+                }
             }
+            form.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         function callReservation(type, reservation) {

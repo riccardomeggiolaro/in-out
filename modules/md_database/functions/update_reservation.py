@@ -1,11 +1,9 @@
 from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Reservation, ReservationStatus, TypeSubjectEnum
 from modules.md_database.interfaces.reservation import SetReservationDTO
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
-from modules.md_database.functions.update_data import update_data
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
-import libs.lb_log as lb_log
 
 def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
     """

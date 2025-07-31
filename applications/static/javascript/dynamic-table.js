@@ -641,6 +641,9 @@ function editRow(item) {
         }
         document.getElementById('overlay').classList.add('active');
         editPopup.classList.add('active');
+        if ("number_in_out" in item) {
+            item["permanent"] = item["number_in_out"] !== null ? false : true;
+        }
         for (let key in item) {
             let annidate_key = `#${key}`;
             let annidate_value = item[key];
@@ -679,6 +682,13 @@ function editRow(item) {
                     } else if (keyInput.type === "checkbox") {
                         keyInput.checked = annidate_value;
                     } else {
+                        if (keyInput.id === "number_in_out" && item["permanent"] == true) {
+                            const length = item["in_out"].length;
+                            keyInput.dataset.in_out = length;
+                            keyInput.min = length;
+                            keyInput.disabled = true;
+                            keyInput.required = false;
+                        }
                         keyInput.value = annidate_value;
                     }
                 }
@@ -801,7 +811,12 @@ function closePopups(idPopups, deselectCurrentId = true) {
         inputs.forEach(input => {
             if (input.disabled) input.disabled = false;
             if (input.type !== 'radio') input.value = '';
+            if (input.type === 'checkbox') input.checked = false;
             if (input.dataset.id) input.dataset.id = '';
+            if (idPopup == "add-popup" && itemName == "reservation") {
+                document.querySelector(`#${idPopup} #number_in_out`).required = true;
+                document.querySelector(`#${idPopup} #number_in_out`).color = 'black';
+            }
         });
     });
 

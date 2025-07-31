@@ -1,4 +1,4 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, InOut, ReservationStatus, TypeSubjectEnum, TypeReservation
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum, TypeReservation
 from modules.md_database.interfaces.reservation import AddReservationDTO
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
 from sqlalchemy.exc import IntegrityError
@@ -23,7 +23,7 @@ def add_reservation(data: AddReservationDTO):
                 "status": ReservationStatus.WAITING,
                 "document_reference": data.document_reference,
                 "type": TypeReservation[data.type],
-                "badge": data.badge,
+                "badge": data.badge if data.badge != "" else None,
                 "hidden": data.hidden
             }
 
