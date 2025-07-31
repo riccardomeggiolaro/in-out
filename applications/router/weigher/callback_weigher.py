@@ -139,11 +139,11 @@ class CallbackWeigher(Functions, WebSocket):
 			last_in_out.reservation = reservation
    			############################
 			# CREO L'IN-OUT SUCCESSIVO PER L'ASSEGNAZIONE DEL MATERIALE SE L'ACCESSO NON E' STATO CHIUSO E HA PIU' DI UNA OPERAZIONE
-			if tare == 0 and not is_to_close and last_in_out.idWeight2 and not is_test:
-				add_data("in_out", {
-					"idReservation": reservation.id,
-					"idWeight1": last_in_out.idWeight2
-				})
+			# if tare == 0 and not is_to_close and last_in_out.idWeight2 and not is_test:
+			# 	add_data("in_out", {
+			# 		"idReservation": reservation.id,
+			# 		"idWeight1": last_in_out.idWeight2
+			# 	})
 			############################
 			# AGGIORNAMENTO FINALE DELLO STATO DELL'ACCESSO
 			changed = {

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import StreamingResponse
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import ReservationStatus, LockRecordType
+from modules.md_database.md_database import ReservationStatus, LockRecordType, TypeReservation
 from modules.md_database.interfaces.reservation import Reservation, AddReservationDTO, SetReservationDTO
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
@@ -536,7 +536,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 number_in_out_executed = len(data.in_out)
                 if number_in_out_executed > 0:
                     data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
-                elif number_in_out_executed == 0:
+                elif lb_config.g_config["app_api"]["use_reservation"] == False and data.type != TypeReservation.RESERVATION and number_in_out_executed == 0:
                     if deleteReservationIfislastInOut:
                         data = delete_data("reservation", id)
                     else:
