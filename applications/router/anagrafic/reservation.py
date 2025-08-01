@@ -533,21 +533,16 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             delete_last_weighing_of_reservation(id)
             data = get_reservation_by_id(id)
             if data:
-                import libs.lb_log as lb_log
                 number_in_out_executed = len(data.in_out)
                 if number_in_out_executed > 0:
                     data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
-                    lb_log.warning("1")
                 elif lb_config.g_config["app_api"]["use_reservation"] == False and data.type != TypeReservation.RESERVATION and number_in_out_executed == 0:
                     if deleteReservationIfislastInOut:
                         data = delete_data("reservation", id)
-                        lb_log.warning("2")
                     else:
                         data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
-                        lb_log.warning("3")
                 else:
                     data = update_data("reservation", id, {})
-                lb_log.warning(data)
                 reservation = Reservation(**data).json()
                 await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
 

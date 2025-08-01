@@ -2,6 +2,7 @@ from modules.md_database.md_database import SessionLocal, Subject, Vector, Drive
 from modules.md_database.interfaces.reservation import SetReservationDTO
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
 
@@ -13,10 +14,15 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
         data_to_check = None
         try:
             # Recupera il record specifico in base all'ID
-            reservation = session.query(Reservation).filter_by(id=id).one_or_none()
+            reservation = session.query(Reservation).options(
+                    selectinload(Reservation.vehicle).selectinload(Vehicle.reservations),
+                ).filter_by(id=id).one_or_none()
             
             if reservation is None:
                 raise ValueError(f"Record con ID {id} non trovato nella tabella '{Reservation.__tablename__}'.")
+
+            if reservation.vehicle and reservation.vehicle.reservations[-1].id != id and data.number_in_out and data.number_in_out is not None and data.number_in_out != reservation.number_in_out:
+                raise ValueError(f"Puoi modificare il numero di operazioni solo sull'ultimo accesso con la targa '{reservation.vehicle.plate}'")
 
             current_model = Subject
             if data.subject.id in [None, -1]:
@@ -95,7 +101,7 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
             else:
                 reservation.idVehicle = data.vehicle.id
 
-            if current_reservation_vehicle != data.vehicle.id:
+            if reservation.status != ReservationStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
                 existing = get_reservation_by_vehicle_id_if_uncomplete(reservation.idVehicle)
 
                 if existing and existing["id"] != reservation.id and existing["idVehicle"]:

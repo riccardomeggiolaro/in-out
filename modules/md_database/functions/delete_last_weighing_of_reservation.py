@@ -1,7 +1,6 @@
 from sqlalchemy import desc
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Weighing, Reservation, TypeReservation
-import libs.lb_log as lb_log
+from modules.md_database.md_database import SessionLocal, InOut, Weighing, Reservation, Vehicle
 
 def delete_last_weighing_of_reservation(reservation_id):
     """
@@ -12,6 +11,7 @@ def delete_last_weighing_of_reservation(reservation_id):
         try:
             # Trova l'ultimo InOut per la prenotazione
             latest_inout = session.query(InOut).options(
+                    selectinload(InOut.reservation).selectinload(Reservation.vehicle).selectinload(Vehicle.reservations),
                     selectinload(InOut.weight1).selectinload(Weighing.in_out_weight1),
                     selectinload(InOut.weight1).selectinload(Weighing.in_out_weight2),
                     selectinload(InOut.weight2).selectinload(Weighing.in_out_weight1),
@@ -20,7 +20,8 @@ def delete_last_weighing_of_reservation(reservation_id):
                     InOut.idReservation == reservation_id
                 ).order_by(desc(InOut.id)).first()
 
-            # lb_log.warning(latest_inout.weight1.__dict__ if latest_inout.idWeight1 else None)
+            if latest_inout.reservation.vehicle and latest_inout.reservation.vehicle.reservations[-1].id != reservation_id:
+                raise ValueError(f"E' possibile cancellare l'ultima pesata fatta solo dell'ultimo accesso con la targa '{latest_inout.reservation.vehicle.plate}'")
 
             if not latest_inout:
                 raise ValueError(f"No InOut records found for reservation {reservation_id}")
