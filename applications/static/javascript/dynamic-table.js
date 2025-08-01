@@ -682,12 +682,14 @@ function editRow(item) {
                     } else if (keyInput.type === "checkbox") {
                         keyInput.checked = annidate_value;
                     } else {
-                        if (keyInput.id === "number_in_out" && item["permanent"] == true) {
+                        if (keyInput.id === "number_in_out") {
                             const length = item["in_out"].length;
+                            keyInput.min = length > 0 ? length : 1;
                             keyInput.dataset.in_out = length;
-                            keyInput.min = length;
-                            keyInput.disabled = true;
-                            keyInput.required = false;
+                            if (item["permanent"] == true) {
+                                keyInput.required = false;
+                                keyInput.disabled = true;
+                            } else keyInput.dataset.default_value = annidate_value;
                         }
                         keyInput.value = annidate_value;
                     }

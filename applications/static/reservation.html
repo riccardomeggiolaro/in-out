@@ -774,17 +774,10 @@
                 input.disabled = true;
                 input.value = null;
             } else {
-                if (input.dataset.in_out) {
-                    if (input.dataset.in_out == 0) {
-                        input.disabled = false;
-                    } else {
-                        input.value = input.dataset.in_out;
-                    }
-                    input.required = true;
-                } else {
-                    input.required = true;
-                    input.disabled = false;
-                }
+                input.required = true;
+                input.disabled = false;
+                if (input.dataset.default_value) input.value = input.dataset.default_value;
+                else input.value = input.dataset.in_out;
             }
             form.dispatchEvent(new Event('input', { bubbles: true }));
         }
