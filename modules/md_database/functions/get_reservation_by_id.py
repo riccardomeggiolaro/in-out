@@ -32,6 +32,9 @@ def get_reservation_by_id(reservation_id: int) -> Dict[str, Union[bool, str, dic
             .filter(Reservation.id == reservation_id)
             .first()
         )
+
+        if reservation:
+            reservation.__dict__['is_latest_for_vehicle'] = reservation.is_latest_for_vehicle
         
         return reservation
         

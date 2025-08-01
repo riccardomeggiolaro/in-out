@@ -696,6 +696,13 @@ function editRow(item) {
                 }
             }
         }
+        if ("is_latest_for_vehicle" in item && item["is_latest_for_vehicle"] === false) {
+            document.querySelectorAll('#edit [name="number_in_out"]').forEach(element => element.style.display = "none");
+            document.querySelectorAll('#edit [name="permanent"]').forEach(element => element.style.display = "none");
+        } else {
+            document.querySelectorAll('#edit [name="number_in_out"]').forEach(element => element.style.display = "block");
+            document.querySelectorAll('#edit [name="permanent"]').forEach(element => element.style.display = "block");
+        }
         triggerEventsForAll('.id');
     }
     if (item.reservations ? item.reservations.length > 0 : item.in_out.length > 0) {
