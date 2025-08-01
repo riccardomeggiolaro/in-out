@@ -319,6 +319,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			modope_on_close = "REALTIME" if always_execute_realtime_in_undeground else "OK"
 			if websocket not in weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections:
 				if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) == 0:
+					await self.DeleteData(instance=instance)
 					await self.StopAllCommand(instance=instance)
 					md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
@@ -353,6 +354,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						"potential_net_weight": None
 					})
 			else:
+				await self.DeleteData(instance=instance)
 				await self.StopAllCommand(instance=instance)
 				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break

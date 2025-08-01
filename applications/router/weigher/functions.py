@@ -53,7 +53,7 @@ class Functions:
 						current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]["id"]
 						if current_id:
 							unlock_record_by_attributes(key, current_id, None, weigher_name)
-					if value.id:
+					if value.id and value.id not in [None, -1]:
 						success, locked_record, error = lock_record(key, value.id, "SELECT", None, None, weigher_name)
 						if success is False:
 							message = just_locked_message("SELECT", key, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)

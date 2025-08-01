@@ -10,10 +10,16 @@ from modules.md_database.interfaces.reservation import SetReservationDTO
 import libs.lb_config as lb_config
 import json
 import modules.md_weigher.md_weigher as md_weigher
+import asyncio
 
 class DataRouter(ConfigWeigher):
 	def __init__(self):
 		super().__init__()
+
+		for instance_name, instance in lb_config.g_config["app_api"]["weighers"].items():
+			for weigher_name, weigher in instance["nodes"].items():
+				instanceNameWeigher = InstanceNameWeigherDTO(**{"instance_name": instance_name, "weigher_name": weigher_name})
+				asyncio.run(self.DeleteData(instanceNameWeigher))
 		
 		self.router_data = APIRouter()
 	
