@@ -1,6 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, Numeric
-from sqlalchemy.sql import func
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, func
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship, object_session
+from sqlalchemy.ext.hybrid import hybrid_property
 from enum import Enum as PyEnum
 from datetime import datetime
 import libs.lb_config as lb_config
@@ -144,6 +144,25 @@ class Reservation(Base):
     vehicle = relationship("Vehicle", back_populates="reservations")
     in_out = relationship("InOut", back_populates="reservation", cascade="all, delete")
 
+    @hybrid_property  
+    def is_latest_for_vehicle(self):
+       if not self.idVehicle:
+           return False
+       
+       session = object_session(self)
+       if not session:
+           return False
+           
+       max_id = session.query(func.max(Reservation.id)).filter(
+           Reservation.idVehicle == self.idVehicle
+       ).scalar()
+       
+       return self.id == max_id
+
+    @is_latest_for_vehicle.expression
+    def is_latest_for_vehicle(cls):
+       return cls.id == func.max(cls.id).over(partition_by=cls.idVehicle)
+
 class InOut(Base):
     __tablename__ = 'in_out'
     id = Column(Integer, primary_key=True, index=True)
@@ -158,6 +177,25 @@ class InOut(Base):
     material = relationship("Material", back_populates="in_out")
     weight1 = relationship("Weighing", foreign_keys=[idWeight1], back_populates="in_out_weight1")  # FIXED: added foreign_keys
     weight2 = relationship("Weighing", foreign_keys=[idWeight2], back_populates="in_out_weight2")  # FIXED: added foreign_keys
+
+    @hybrid_property  
+    def is_last(self):
+        if not self.idReservation:
+            return False
+        
+        session = object_session(self)
+        if not session:
+            return False
+            
+        max_id = session.query(func.max(InOut.id)).filter(
+            InOut.idReservation == self.idReservation
+        ).scalar()
+        
+        return self.id == max_id
+
+    @is_last.expression
+    def is_last(cls):
+        return cls.id == func.max(cls.id).over(partition_by=cls.idReservation)
 
 class LockRecordType(PyEnum):
     SELECT = "select"

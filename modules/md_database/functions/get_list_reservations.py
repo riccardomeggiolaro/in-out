@@ -3,7 +3,7 @@ from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, ReservationStatus, TypeReservation, Weighing
 from datetime import datetime, date
 
-def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, exclude_test_reservation=False):
+def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, exclude_test_reservation=False, get_is_last_for_vehicle=False):
     """
     Gets a list of reservations with optional filtering for incomplete reservations
     and additional filters on any reservation field or related entities.
@@ -141,7 +141,15 @@ def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=
         if offset is not None:
             query = query.offset(offset)
 
+        import libs.lb_log as lb_log
+
         reservations = query.all()
+        if get_is_last_for_vehicle:
+            # Forza la valutazione della hybrid property
+            for res in reservations:
+                res.__dict__['is_latest_for_vehicle'] = res.is_latest_for_vehicle
+                for index, in_out in enumerate(res.in_out):
+                    res.__dict__['in_out'][index].__dict__['is_last'] = in_out.is_last
         return reservations, total_rows
 
     except Exception as e:

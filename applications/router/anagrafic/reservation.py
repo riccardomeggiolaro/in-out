@@ -74,7 +74,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 del query_params["offset"]
             if "excludeTestWeighing" in query_params:
                 del query_params["excludeTestWeighing"]
-            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing)
+            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing, True)
             return {
                 "data": data,
                 "total_rows": total_rows,
@@ -118,7 +118,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 limit=limit,
                 offset=offset,
                 order_by=('id', 'desc'),
-                excludeTestWeighing=excludeTestWeighing
+                excludeTestWeighing=excludeTestWeighing,
+                get_is_last=True
             )
             
             return {

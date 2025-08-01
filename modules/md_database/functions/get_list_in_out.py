@@ -1,4 +1,4 @@
-from sqlalchemy import func, or_, and_, alias, case
+from sqlalchemy import func, or_, and_, alias
 from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, Weighing, InOut, Reservation, ReservationStatus, TypeReservation
 
@@ -10,9 +10,9 @@ def get_list_in_out(
     limit=None,
     offset=None,
     order_by=None,
-    is_last=False,
     excludeTestWeighing=False,
-    filterDateReservation=False
+    filterDateReservation=False,
+    get_is_last=False
 ):
     """
     Gets a list of InOut records with optional filtering.
@@ -23,23 +23,8 @@ def get_list_in_out(
         weight1_alias = alias(Weighing, name='w1')
         weight2_alias = alias(Weighing, name='w2')
         
-        # Create a CTE for the latest InOut per reservation
-        latest_inout = session.query(
-            InOut.idReservation,
-            func.max(InOut.id).label('latest_id')
-        ).group_by(InOut.idReservation).cte('latest_inout')
-
-        # Create base query that includes is_last in the main SELECT
-        query = session.query(
-            InOut,
-            case(
-                (InOut.id == latest_inout.c.latest_id, True),
-                else_=False
-            ).label('is_last')
-        ).outerjoin(
-            latest_inout,
-            InOut.idReservation == latest_inout.c.idReservation
-        )
+        # Base query semplificata - rimossa la CTE e il case per is_last
+        query = session.query(InOut)
 
         # Add relationships
         query = query.options(
@@ -169,14 +154,17 @@ def get_list_in_out(
         if offset:
             query = query.offset(offset)
 
-        # Execute query and transform results
+        # Execute query - ora restituisce direttamente oggetti InOut
         results = query.all()
-        data = []
-        for inout, is_last in results:
-            inout.is_last = is_last
-            data.append(inout)
-            
-        return data, total_rows
+
+        if get_is_last:
+            # Forza la valutazione delle hybrid properties per la serializzazione
+            for inout in results:
+                inout.__dict__['is_last'] = inout.is_last
+                if inout.reservation:
+                    inout.reservation.__dict__['is_latest_for_vehicle'] = inout.reservation.is_latest_for_vehicle
+
+        return results, total_rows
 
     except Exception as e:
         session.rollback()
