@@ -333,6 +333,41 @@ function populateTable(data) {
     if (callback_populate_table) callback_populate_table();
 }
 
+function formatTime(totalSeconds) {
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    if (hours < 1) {
+        return `${minutes} m`;
+    } else if (hours < 24) {
+        return `${hours}:${minutes} h`;
+    } else {
+        return `${days} d`;
+    }
+}
+
+function startTimer(row, index, initialTimestamp) {
+    // Converte il timestamp in oggetto Date
+    const startTime = new Date(initialTimestamp);
+
+    const now = new Date();
+    // Calcola la differenza in millisecondi e converte in secondi
+    const elapsedSeconds = Math.floor((now - startTime) / 1000);
+    
+    row.cells[index].textContent = formatTime(elapsedSeconds);
+    
+    const timer = setInterval(() => {
+        const now = new Date();
+        // Calcola la differenza in millisecondi e converte in secondi
+        const elapsedSeconds = Math.floor((now - startTime) / 1000);
+        
+        row.cells[index].textContent = formatTime(elapsedSeconds);
+    }, 60000);
+    
+    return timer;
+}
+
 function createRow(table, columns, item, idInout) {
     const row = document.createElement("tr");
     row.dataset.id = item.id;
@@ -381,7 +416,11 @@ function createRow(table, columns, item, idInout) {
         actionsCell.appendChild(callButton);
     }
     let pdfButton;
-    if (itemName === "reservation" && idInout) {
+    if (itemName === "reservation" && "status" in item && item.status === "Attesa") {
+        const th = document.querySelector('th[name="waiting"]');
+        const index = Array.from(th.parentNode.children).indexOf(th);
+        startTimer(row, index, item.date_created);
+    } else if (itemName === "reservation" && idInout) {
         if (!item.weight2 && report.in || item.weight2 && report.out) {
             pdfButton = document.createElement("button");
             pdfButton.style.visibility = 'hidden';

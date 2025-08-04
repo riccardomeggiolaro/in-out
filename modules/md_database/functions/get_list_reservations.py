@@ -3,7 +3,7 @@ from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, ReservationStatus, TypeReservation, Weighing
 from datetime import datetime, date
 
-def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, exclude_test_reservation=False, get_is_last_for_vehicle=False):
+def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, exclude_test_reservation=False, permanent=None, get_is_last_for_vehicle=False):
     """
     Gets a list of reservations with optional filtering for incomplete reservations
     and additional filters on any reservation field or related entities.
@@ -79,6 +79,12 @@ def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=
         if exclude_test_reservation:
             query = query.filter(Reservation.type != TypeReservation.TEST.name)
 
+        if permanent is not None:
+            if permanent is True:
+                query = query.filter(Reservation.number_in_out == None)
+            elif permanent is False:
+                query = query.filter(Reservation.number_in_out != None)
+
         # Filtro per data di inizio
         if fromDate:
             if isinstance(fromDate, str):
@@ -140,8 +146,6 @@ def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=
             query = query.limit(limit)
         if offset is not None:
             query = query.offset(offset)
-
-        import libs.lb_log as lb_log
 
         reservations = query.all()
         if get_is_last_for_vehicle:

@@ -12,6 +12,9 @@
             .table-container {
                 max-width: 1600px;
             }
+            .permanentFilter {
+                padding-bottom: 10px;
+            }
             #dateRange {
                 width: 200px;
             }
@@ -55,11 +58,17 @@
             </div>
         </div>
         <table>
-            <thead>
-                <tr id="filters">
+            <thead id="filters">
+                <tr>
+                    <td colspan="13" name="permanent" class="permanentFilter">
+                        <input id="filter.permanent" name="permanent" type="checkbox" autocomplete="off" onchange="updateTable()">
+                        <span>Solo permanenti</span>
+                    </td>
+                </tr>
+                <tr>
                     <th name="badge" class="badge">
                         <input id="filter.badge" class="badge" name="badge" type="text" placeholder="Badge" autocomplete="off"
-                            oninput="this.value = this.value.toUpperCase(); updateTable()">
+                            oninput="if (this.value) this.value = this.value.toUpperCase(); updateTable()">
                     </th>
                     <th name="vehicle.plate">
                         <input id="filter.vehicle.plate" name="vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
@@ -133,7 +142,7 @@
                 <div class="item-25">
                     <div class="item">
                         <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password" 
-                            oninput="this.value = this.value.toUpperCase();">
+                            oninput="if (this.value) this.value = this.value.toUpperCase();">
                     </div>
                 </div>
             </div>
@@ -156,7 +165,7 @@
                     <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
                     <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password" required
                         oninput="
-                            this.value = this.value.toUpperCase();
+                            if (this.value) this.value = this.value.toUpperCase();
                             populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
                             if (document.querySelector('#add-popup #vehicle\\.id').value != '') {
                                 deselectAnagrafic(document.querySelector('#add-popup #vehicle\\.id').value, 'vehicle');
@@ -330,7 +339,7 @@
                 <div class="item-25">
                     <div class="item">
                         <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
-                            oninput="this.value = this.value.toUpperCase();">
+                            oninput="if (this.value) this.value = this.value.toUpperCase();">
                     </div>
                 </div>
             </div>
@@ -359,17 +368,15 @@
                         ">
                     <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
                         oninput="
-                            if (this.value != '') {
-                                this.value = this.value.toUpperCase();
-                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                                if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
-                                    deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
-                                    document.querySelector('#edit-popup #vehicle\\.id').value = '';
-                                    document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
-                                    document.querySelector('#edit-popup #vehicle\\.description').value = '';
-                                    document.querySelector('#edit-popup #vehicle\\.tare').disabled = false;
-                                    document.querySelector('#edit-popup #vehicle\\.tare').value = '';
-                                }
+                            if (this.value) this.value = this.value.toUpperCase();
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
+                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.tare').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.tare').value = '';
                             }
                         "
                         onfocus="
