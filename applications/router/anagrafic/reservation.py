@@ -539,13 +539,11 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 number_in_out_executed = len(data.in_out)
                 if number_in_out_executed > 0:
                     data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
-                elif lb_config.g_config["app_api"]["use_reservation"] == False and data.type != TypeReservation.RESERVATION and number_in_out_executed == 0:
-                    if deleteReservationIfislastInOut:
+                else:
+                    if deleteReservationIfislastInOut and lb_config.g_config["app_api"]["use_reservation"] == False and data.type != TypeReservation.RESERVATION:
                         data = delete_data("reservation", id)
                     else:
                         data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
-                else:
-                    data = update_data("reservation", id, {})
                 reservation = Reservation(**data).json()
                 await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
 
