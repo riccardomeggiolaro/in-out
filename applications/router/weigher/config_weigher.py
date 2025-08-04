@@ -122,8 +122,8 @@ class ConfigWeigher(CallbackWeigher):
 
     async def AddInstanceWeigher(self, setup: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
         nodes = []
-        for instance in lb_config.g_config["app_api"]["weighers"]:
-            for node in lb_config.g_config["app_api"]["weighers"][instance]["nodes"]:
+        for instance_name in lb_config.g_config["app_api"]["weighers"]:
+            for node in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"]:
                 nodes.append(node)
         if setup.name in nodes:
             details = [{"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}}]

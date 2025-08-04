@@ -101,34 +101,19 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "1",
-                                            "set": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "1",
-                                            "set": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
                                 "cams": [],
                                 "report": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
-                                "set_rele": [
-                                    {
-                                        "rele": "1",
-                                        "set": 0
-                                    }
-                                ]
+                                "set_rele": []
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -141,9 +126,7 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 1
-                        },
+                        "rele": {},
                         "run": true,
                         "terminal": "egt-af03"
                     }
