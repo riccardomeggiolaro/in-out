@@ -440,12 +440,15 @@ function createRow(table, columns, item, idInout) {
         selectAnagrafic(item.id, "DELETE", itemName);
         currentId = item.id;
     };
+    const permanentAccess = document.createElement("span");
+    permanentAccess.textContent = "⭐";
     if (itemName !== "pid") {
         if (item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
         if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
         else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out) actionsCell.appendChild(deleteButton);
+        if (!String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
     }
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga

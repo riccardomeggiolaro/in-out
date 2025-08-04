@@ -10,12 +10,22 @@
     <style>
         .form-group { margin-bottom: 12px; }
         .form-group label { font-weight: 500; }
+        .selected { background-color: #1362b8; color: white; }
     </style>
 </head>
 <body>
     <div id="navbar-container"></div>
     <div id="config">
         <h3>CONFIGURAZIONE</h3>
+        <br>
+        <div id="sub-menu">
+            <button class="menu-tab selected" onclick="changeSetupTab(event, 'settings')">SETTAGGI</button>
+            <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">TERMINALI</button>
+        </div>
+        <div id="tabs">
+            <div id="settings" class="tab"></div>
+            <div id="instances" class="tab"></div>
+        </div>
     </div>
 
     <!-- Snackbar -->
@@ -26,5 +36,15 @@
     <script src="/static/javascript/navbar.js"></script>
     <script src="/static/javascript/setup.js"></script>
     <script src="/static/javascript/snackbar.js"></script>
+    <script>
+        document.querySelector('#instances').style.display = "none";
+
+        function changeSetupTab(event, tab) {
+            document.querySelectorAll('.menu-tab').forEach(button => button.classList.remove("selected"));
+            document.querySelectorAll(".tab").forEach(div => div.style.display = 'none');
+            document.querySelector(`#${tab}`).style.display = "block";
+            event.target.classList.toggle("selected");
+        }
+    </script>
 </body>
 </html>

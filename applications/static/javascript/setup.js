@@ -83,6 +83,16 @@ document.addEventListener("DOMContentLoaded", loadSetupWeighers);
 async function loadSetupWeighers() {
     const weighers_config = document.getElementById('config');
 
+    const br = document.createElement("br");
+
+    const settings = weighers_config.querySelector('#settings');
+
+    const instances = weighers_config.querySelector('#instances');
+
+    weighers_config.appendChild(br.cloneNode(true));
+    weighers_config.appendChild(settings);
+    weighers_config.appendChild(instances);
+
     await getSerialPortsList();
 
     await getPrintersList();
@@ -515,7 +525,6 @@ async function loadSetupWeighers() {
                 }
             })
         }
-        weighers_config.appendChild(br.cloneNode(true));
         // CONFIGURAZIONE DEGLI ACCESSI
         const divAccess = document.createElement('div');
         const h1Access = document.createElement('h3');
@@ -533,9 +542,9 @@ async function loadSetupWeighers() {
         divAccess.appendChild(badge);
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(divAccess);
+        settings.appendChild(divAccess);
         //////////////////////////////////////////////////////
-        weighers_config.appendChild(br.cloneNode(true));
+        settings.appendChild(br.cloneNode(true));
         // CONFIGURATION OF REPORT
         const divReport = document.createElement('div');
         const h1Report = document.createElement('h3');
@@ -563,9 +572,9 @@ async function loadSetupWeighers() {
         divReport.appendChild(previewReportOut);
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(divReport);
+        settings.appendChild(divReport);
         //////////////////////////////////////////////////////
-        weighers_config.appendChild(br.cloneNode(true));
+        settings.appendChild(br.cloneNode(true));
         // CONFIGURATION OF DIRECTORIES
         const divDirectories = document.createElement('div');
         const h1Directories = document.createElement('h3');
@@ -590,9 +599,9 @@ async function loadSetupWeighers() {
         divDirectories.appendChild(saveImgPathButton);
         divDirectories.appendChild(br.cloneNode(true));
         divDirectories.appendChild(br.cloneNode(true));
-        weighers_config.appendChild(divDirectories);
+        settings.appendChild(divDirectories);
         //////////////////////////////////////////////////////
-        weighers_config.appendChild(br.cloneNode(true));
+        settings.appendChild(br.cloneNode(true));
         data = data["weighers"];
         const addInstance = document.createElement('button');
         addInstance.classList.toggle('container-buttons');
@@ -1727,13 +1736,13 @@ async function loadSetupWeighers() {
             div.appendChild(deleteConnectionModal);
             div.appendChild(addWeigherModal);
             div.appendChild(ul);
-            weighers_config.appendChild(div);
+            instances.appendChild(div);
         }
 
         populateInstanceModal();
 
-        weighers_config.appendChild(addInstance);
-        weighers_config.appendChild(addInstanceModal);
+        instances.appendChild(addInstance);
+        instances.appendChild(addInstanceModal);
 
         for (let key in data) {
             createInstance(key, data[key]);

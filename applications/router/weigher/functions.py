@@ -113,8 +113,6 @@ class Functions:
 			weighers_data[instance_name][node]["sockets"].manager_realtime = None
 			weighers_data[instance_name][node]["sockets"].manager_diagnostic.disconnect_all()
 			weighers_data[instance_name][node]["sockets"].manager_diagnostic = None
-			weighers_data[instance_name][node]["data"].data_in_execution.deleteAttribute()
-			weighers_data[instance_name][node]["data"].id_selected.deleteAttribute()
 		weighers_data.pop(instance_name)
 
 	def addInstanceWeigherSocket(self, instance_name: str, weigher_name: str, data: Data):

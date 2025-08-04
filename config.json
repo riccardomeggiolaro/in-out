@@ -48,7 +48,7 @@
         "use_reservation": true,
         "use_white_list": false,
         "weighers": {
-            "2": {
+            "1": {
                 "connection": {
                     "ip": "10.0.5.177",
                     "port": 4001,

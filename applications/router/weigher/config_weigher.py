@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.routing import Mount
 from applications.router.weigher.callback_weigher import CallbackWeigher
@@ -101,7 +101,7 @@ class ConfigWeigher(CallbackWeigher):
         self.addInstanceSocket(configuration.name)
         instance_to_save = response.copy()
         del instance_to_save[configuration.name]["connection"]["connected"]
-        lb_config.g_config["app_api"]["weighers"] = instance_to_save
+        lb_config.g_config["app_api"]["weighers"][configuration.name] = instance_to_save[configuration.name]
         lb_config.saveconfig()
         return response
 
@@ -121,6 +121,13 @@ class ConfigWeigher(CallbackWeigher):
         return instance_weigher
 
     async def AddInstanceWeigher(self, setup: SetupWeigherDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
+        nodes = []
+        for instance in lb_config.g_config["app_api"]["weighers"]:
+            for node in lb_config.g_config["app_api"]["weighers"][instance]["nodes"]:
+                nodes.append(node)
+        if setup.name in nodes:
+            details = [{"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}}]
+            raise HTTPException(status_code=400, detail=details)
         response = md_weigher.module_weigher.addInstanceWeigher(
             instance_name=instance.instance_name,
             setup=setup,
