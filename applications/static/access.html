@@ -147,6 +147,43 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica accesso:</h3>
         <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+            <h4>Veicolo</h4>
+
+            <div>
+                <div class="item-25">
+                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId id"
+                        oninput="
+                            if (this.value != '') {
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
+                            }
+                        ">
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
+                        oninput="
+                            this.value = this.value.toUpperCase();
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
+                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #vehicle\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
+                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
+                </div>
+    
+                <div class="item-25">
+                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
             <h4>Soggetto</h4>
 
             <div class="radio">
@@ -241,43 +278,6 @@
                     
                 <div class="item-25">
                     <input placeholder="CF/P.Iva" id="vector.cfpiva" name="vector.cfpiva" type="text" pattern="(^[A-Z0-9]{16}$|^\d{11}$)" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <h4>Veicolo</h4>
-
-            <div>
-                <div class="item-25">
-                    <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId id"
-                        oninput="
-                            if (this.value != '') {
-                                document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
-                            }
-                        ">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
-                        oninput="
-                            this.value = this.value.toUpperCase();
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            if (document.querySelector('#edit-popup #vehicle\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #vehicle\\.id').value, 'vehicle');
-                                document.querySelector('#edit-popup #vehicle\\.id').value = '';
-                                document.querySelector('#edit-popup #vehicle\\.description').disabled = false;
-                                document.querySelector('#edit-popup #vehicle\\.description').value = '';
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#edit-popup #vehicle\\.id').value) {
-                                populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value)">
-                    <div id="suggestions.vehicle.plate" class="suggestions"></div>
-                </div>
-    
-                <div class="item-25">
-                    <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
                 </div>
             </div>
 
