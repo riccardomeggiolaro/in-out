@@ -951,7 +951,7 @@
 
                 content += `<button onclick="updateWeighingMaterial(${item.id}, ${weighing.id}, ${weighing.material ? weighing.material.id : null}, '${weighing.material ? weighing.material.description : ''}')">✏️</button>`;
 
-                if (lengthWeighings === item.in_out.length && item.is_latest_for_vehicle) {
+                if (lengthWeighings === item.in_out.length && item.is_latest_for_vehicle !== false) {
                     content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight2 ? weighing.weight2.pid : weighing.weight1.pid}')">🗑️</button>`;
                 }
 

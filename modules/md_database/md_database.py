@@ -146,22 +146,22 @@ class Reservation(Base):
 
     @hybrid_property  
     def is_latest_for_vehicle(self):
-       if not self.idVehicle:
-           return False
-       
-       session = object_session(self)
-       if not session:
-           return False
-           
-       max_id = session.query(func.max(Reservation.id)).filter(
-           Reservation.idVehicle == self.idVehicle
-       ).scalar()
-       
-       return self.id == max_id
+        if not self.idVehicle:
+            return None
+        
+        session = object_session(self)
+        if not session:
+            return False
+            
+        max_id = session.query(func.max(Reservation.id)).filter(
+            Reservation.idVehicle == self.idVehicle
+        ).scalar()
+        
+        return self.id == max_id
 
     @is_latest_for_vehicle.expression
     def is_latest_for_vehicle(cls):
-       return cls.id == func.max(cls.id).over(partition_by=cls.idVehicle)
+        return cls.id == func.max(cls.id).over(partition_by=cls.idVehicle)
 
 class InOut(Base):
     __tablename__ = 'in_out'

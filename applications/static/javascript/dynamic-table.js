@@ -33,6 +33,7 @@ let report = {
     out: false
 }
 let customQueryParams = "";
+let typeUpdate = null;
 // Track pending requests
 const pendingRequests = new Map();
 const columns = {};
@@ -294,8 +295,9 @@ function populateTable(data) {
         let date1;
         let date2;
         let idInOut;
-        if (item.in_out && item.number_in_out) {
-            item.number_in_out = `${item.in_out.length}/${item.number_in_out}`;
+        if (item.in_out && "number_in_out" in item) {
+            if (item.number_in_out) item.number_in_out = `/${item.number_in_out}`;
+            item.number_in_out = item.in_out.length + item.number_in_out;
             item.in_out.forEach(in_out => {
                 if (!in_out.weight1 && in_out.weight2) {
                     in_out.weight1 = {
@@ -392,6 +394,22 @@ function createRow(table, columns, item, idInout) {
             actionsCell.appendChild(pdfButton);
         }
     }
+    // Pulsante Chiudi
+    const closeButton = document.createElement("button");
+    closeButton.style.visibility = 'hidden';
+    closeButton.textContent = "🚫";
+    closeButton.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!currentRowExtended 
+            || currentRowExtended !== row.nextElementSibling
+            || (currentRowExtended === row.nextElementSibling && currentRowExtended.style.display === "none")
+        ) toggleExpandRow(row);
+        selectAnagrafic(item.id, "UPDATE", itemName);
+        currentId = item.id;
+        currentIdInOut = idInout;
+        typeUpdate = "CLOSE";
+    };
     // Pulsante Modifica
     const editButton = document.createElement("button");
     editButton.style.visibility = 'hidden';
@@ -406,6 +424,7 @@ function createRow(table, columns, item, idInout) {
         selectAnagrafic(item.id, "UPDATE", itemName);
         currentId = item.id;
         currentIdInOut = idInout;
+        typeUpdate = "UPDATE";
     };
     // Pulsante Elimina
     const deleteButton = document.createElement("button");
@@ -422,6 +441,7 @@ function createRow(table, columns, item, idInout) {
         currentId = item.id;
     };
     if (itemName !== "pid") {
+        if (item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
         if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
         else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
@@ -431,6 +451,7 @@ function createRow(table, columns, item, idInout) {
     // Mostra i pulsanti solo all'hover della riga
     row.addEventListener("mouseenter", () => {
         row.style.backgroundColor = 'whitesmoke';
+        if (closeButton) closeButton.style.visibility = 'inherit';
         editButton.style.visibility = 'inherit';
         deleteButton.style.visibility = 'inherit';
         if (callButton) callButton.style.visibility = 'inherit';
@@ -438,6 +459,7 @@ function createRow(table, columns, item, idInout) {
     });
     row.addEventListener("mouseleave", () => {
         row.style.backgroundColor = 'white';
+        if (closeButton) closeButton.style.visibility = 'hidden';
         editButton.style.visibility = 'hidden';
         deleteButton.style.visibility = 'hidden';
         if (callButton) callButton.style.visibility = 'hidden';
@@ -626,6 +648,43 @@ function triggerEventsForAll(elements) {
             input.dispatchEvent(changeEvent);
         }
     });
+}
+
+function closeRow(item) {
+    const funct = () => {
+        const number_in_out = item.in_out.length;
+        fetch(`${setUrlPath}/${currentId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({number_in_out})
+        })
+        .then(async res => {
+            const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+            return ({
+                data,
+                status
+            });
+        })
+        .then(res => {
+            if (res.status === 404 || res.status === 403) {
+                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+                closePopups(['edit-popup'], false);
+            } else if (res.status === 400) {
+                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            } else {
+                closePopups(['edit-popup'], false);
+            }
+        })
+        .catch(error => console.error(error));
+    }
+    confirm_exec_funct = funct;
+    document.querySelector('#confirm-title').textContent = "Attenzione!";
+    document.querySelector('#confirm-content').innerHTML = `
+        Sei sicuro di voler chiudere questo accesso?
+    `;
+    openPopup('confirm-popup');
 }
 
 // Funzioni segnaposto per modifica ed eliminazione
@@ -993,7 +1052,10 @@ function connectWebSocket() {
                             if (request.custom_execute_callback) {
                                 if (data.anagrafic === "reservation") openPopup("edit-inout-popup");
                                 else openPopup("confirm-popup");
-                            } else editRow(data.data);
+                            } else {
+                                if (typeUpdate == "CLOSE") closeRow(data.data);
+                                else editRow(data.data);
+                            };
                         } else if (data.type === "DELETE") {
                             request = getWebSocketRequest(data.idRequest);
                             removeWebSocketRequest(data.idRequest);
