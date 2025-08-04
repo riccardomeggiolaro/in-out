@@ -9,7 +9,7 @@ from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_p
 import asyncio
 from modules.md_weigher import md_weigher
 
-async def WeighingAutoIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
     try:
         reservation = None
         if lb_config.g_config["app_api"]["use_badge"]:

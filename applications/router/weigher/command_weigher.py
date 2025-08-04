@@ -10,7 +10,7 @@ from applications.router.anagrafic.reservation import ReservationRouter
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.interfaces.reservation import AddReservationDTO
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
-from applications.router.weigher.weighing_by_identify import WeighingAutoIdentify
+from applications.router.weigher.weighing_by_identify import WeighingByIdentify
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
 	def __init__(self):
@@ -24,7 +24,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		self.router_action_weigher.add_api_route('/print', self.Generic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/in', self.Weight1, methods=['POST'])
 		self.router_action_weigher.add_api_route('/out', self.Weight2, methods=['POST'])
-		self.router_action_weigher.add_api_route('/out/auto', WeighingAutoIdentify, methods=['POST'])
+		self.router_action_weigher.add_api_route('/out/auto', WeighingByIdentify, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
