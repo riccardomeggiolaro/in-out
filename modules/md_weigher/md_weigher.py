@@ -308,8 +308,6 @@ class WeigherInstance:
 							else:
 								# se la globale conn è di tipo conn ed è aperta la chiude
 								self.connection.connection.close()
-					elif weigher.diagnostic.status in [305, 201]:
-						weigher.initialize()
 			if len(self.nodes) == 0:
 				time.sleep(1)
 	# ==============================================================

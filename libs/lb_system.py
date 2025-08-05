@@ -268,6 +268,10 @@ class TcpWithoutControls(Connection):
 						if not chunk:  # Connection closed by peer
 							break
 						message += chunk
+
+						# Check if message ends with CRLF
+						if message.endswith(b'\r\n'):
+							break
 						
 						# Check if we have more data to read
 						readable, _, _ = select.select([self.conn], [], [], 0.1)

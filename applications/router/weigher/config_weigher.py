@@ -137,7 +137,7 @@ class ConfigWeigher(CommandWeigherRouter):
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_action_in_execution=self.Callback_ActionInExecution,
             cb_rele=self.Callback_Rele,
-            cb_code_identify=self.CallbackWeighingByIdentify
+            cb_code_identify=self.Callback_WeighingByIdentify
         )
         data = Data(**{})
         self.addInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=setup.name, data=data)
@@ -187,7 +187,7 @@ class ConfigWeigher(CommandWeigherRouter):
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_action_in_execution=self.Callback_ActionInExecution,
             cb_rele=self.Callback_Rele,
-            cb_code_identify=self.CallbackWeighingByIdentify
+            cb_code_identify=self.Callback_WeighingByIdentify
         )
         weigher_name = instance.weigher_name
         is_changed_terminal = setup.terminal and setup.terminal != lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["terminal"]

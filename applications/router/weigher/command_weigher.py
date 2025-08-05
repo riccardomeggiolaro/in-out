@@ -208,9 +208,10 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 					reservation = reservation.dict() if reservation else reservation
 			if reservation:
 				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-				specific = "telecamera " if request.state.user.level == 0 else ""
+				specific = "telecamera " if request.state.user.level == 0 else "terminale "
+				client = request.client.host if request.client.host else instance.weigher_name
 				if current_weigher_data["id_selected"]["id"] != reservation["id"]:
-					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"'{identify_dto.identify}' selezionata da {specific}'{request.client.host}'")
+					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"'{identify_dto.identify}' selezionata da {specific}'{client}'")
 					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
 					await asyncio.sleep(1)
 				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
@@ -219,7 +220,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 					modope="WEIGHING", 
 					data_assigned=reservation["id"])
 				if error_message:
-					error_message = f"Errore effettuando pesata da {specific}'{request.client.host}': {error_message}"
+					error_message = f"Errore effettuando pesata da {specific}'{client}': {error_message}"
 					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=error_message)
 				return {
 					"instance": instance,
@@ -234,20 +235,20 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		except Exception as e:
 			status_code = getattr(e, 'status_code', 400)
 			detail = getattr(e, 'detail', str(e))
-			raise HTTPException(status_code=status_code, detail=detail)
+			if request:
+				raise HTTPException(status_code=status_code, detail=detail)
 
-	def CallbackWeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
+	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
 		instance = InstanceNameWeigherDTO(**{"instance_name": instance_name, "weigher_name": weigher_name})
 		identify_dto = IdentifyDTO(**{"identify": identify})
-		asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
-		# try:
-		# 	if asyncio.get_event_loop().is_running():
-		# 		asyncio.create_task(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
-		# 	else:
-		# 		loop = asyncio.get_event_loop()
-		# 		loop.run_until_complete(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
-		# except RuntimeError:
-		# 	asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+		try:
+			if asyncio.get_event_loop().is_running():
+				asyncio.create_task(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+			else:
+				loop = asyncio.get_event_loop()
+				loop.run_until_complete(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+		except RuntimeError:
+			asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
 
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""

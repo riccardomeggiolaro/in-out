@@ -29,7 +29,8 @@ class Functions:
 			cb_weighing=self.Callback_Weighing, 
 			cb_tare_ptare_zero=self.Callback_TarePTareZero,
 			cb_action_in_execution=self.Callback_ActionInExecution,
-			cb_rele=self.Callback_Rele
+			cb_rele=self.Callback_Rele,
+			cb_code_identify=self.Callback_WeighingByIdentify
 		)
 	
 	def getData(self, instance_name: str, weigher_name: str):

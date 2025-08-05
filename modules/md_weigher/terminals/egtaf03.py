@@ -58,6 +58,7 @@ class EgtAf03(Terminal):
 
 	def initialize_content(self):
 		try:
+			self.flush()
 			self.setModope("VER")
 			self.command()
 			response = self.read()
@@ -121,14 +122,20 @@ class EgtAf03(Terminal):
 	def main(self):
 		response, error = None, None
 		try:
-			if self.diagnostic.status in [200, 201]:
+			if self.diagnostic.status == 200:
 				self.command() # eseguo la funzione command() che si occupa di scrivere il comando sulla pesa in base al valore del modope_to_execute nel momento in cui ho chiamato la funzione
 				response = self.read()
 				split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
 				length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
 				length_response = len(response) # ottengo la lunghezza della stringa della risposta
+				######### Se arriva tag #############################################################################################
+				if length_split_response == 1 and length_response == 15 and "$" in response:
+					self.code_identify = response.replace("$", "").strip()
+					callCallback(self.callback_code_identify)
+					self.code_identify = ""
+					self.diagnostic.status = 200
 				######### Se in esecuzione peso in tempo reale ######################################################################
-				if self.modope == "REALTIME":
+				elif self.modope == "REALTIME":
 					# Controlla formato stringa del peso in tempo reale, se corretta aggiorna oggetto e chiama callback
 					if length_split_response == 7 and length_response == 53:
 						nw = split_response[2].lstrip()
@@ -147,6 +154,7 @@ class EgtAf03(Terminal):
 							self.take_of_weight_before_weighing = False
 					# Se formato stringa del peso in tempo reale non corretto, manda a video errore
 					else:
+						self.code_identify = ""
 						self.diagnostic.status = 201
 						self.pesa_real_time.type = ""
 						self.pesa_real_time.net_weight = ""
@@ -246,12 +254,7 @@ class EgtAf03(Terminal):
 						self.diagnostic.status = 201
 					callCallback(self.callback_rele)
 					self.port_rele = None
-				elif length_response == 16 and "$" in response:
-					self.diagnostic.status = 200
-					self.code_identify = response
-					callCallback(self.callback_code_identify)
-					self.code_identify = ""
-			elif self.diagnostic.status == 305:
+			elif self.diagnostic.status in [305, 201]:
 				self.initialize_content()
 		except TimeoutError as e:
 			error = e
