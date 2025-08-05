@@ -1,6 +1,7 @@
 from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum, TypeReservation
 from modules.md_database.interfaces.reservation import AddReservationDTO
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
+from modules.md_database.functions.get_reservation_by_identify_if_uncomplete import get_reservation_by_identify_if_uncomplete
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
@@ -89,6 +90,10 @@ def add_reservation(data: AddReservationDTO):
                 existing = existing["vehicle"].__dict__
                 plate = existing["plate"]
                 raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
+            else:
+                existing = get_reservation_by_identify_if_uncomplete(identify=data.vehicle.plate)
+                if existing:
+                    raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
 
             badge = data.badge
             if badge is not None:
@@ -100,6 +105,9 @@ def add_reservation(data: AddReservationDTO):
                     
                     if existing_badge:
                         raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso")
+                    existing = get_reservation_by_identify_if_uncomplete(identify=badge)
+                    if existing:
+                        raise ValueError(f"Il badge '{badge}' è già assegnato come TARGA ad un altro accesso ancora aperto")
 
             current_model = Reservation
             data_to_check = data.dict()
