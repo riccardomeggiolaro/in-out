@@ -60,6 +60,7 @@ def get_reservation_by_identify_if_uncomplete(identify: str):
             or_(
                 weighing_count_subquery.c.weighing_count == None,
                 weighing_count_subquery.c.weighing_count < Reservation.number_in_out,
+                Reservation.number_in_out == None,
                 and_(
                     weighing_count_subquery.c.weighing_count == Reservation.number_in_out,
                     last_inout_weight2_subq.c.idWeight2 == None

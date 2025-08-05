@@ -145,6 +145,7 @@ class Dgt1(Terminal):
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 					self.diagnostic.status = 200
 					self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
+					self.flush()
 					callCallback(self.callback_weighing) # chiamo callback
 					self.weight.weight_executed.net_weight = ""
 					self.weight.weight_executed.gross_weight = ""
@@ -161,6 +162,7 @@ class Dgt1(Terminal):
 				######### Se arriva tag #############################################################################################
 				elif length_split_response == 1 and length_response == 15 and "$" in response:
 					self.code_identify = response.replace("$", "").strip()
+					self.flush()
 					callCallback(self.callback_code_identify)
 					self.code_identify = ""
 					self.diagnostic.status = 200
