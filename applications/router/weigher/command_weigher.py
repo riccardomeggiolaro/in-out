@@ -186,6 +186,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		}
 
 	async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		import libs.lb_log as lb_log
+		lb_log.warning("bhwjubweib")
 		try:
 			reservation = None
 			if lb_config.g_config["app_api"]["use_badge"]:
@@ -208,12 +210,11 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 					reservation = reservation.dict() if reservation else reservation
 			if reservation:
 				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-				specific = "telecamera " if request.state.user.level == 0 else "terminale "
-				client = request.client.host if request.client.host else instance.weigher_name
+				specific = "telecamera " if request and request.state.user.level == 0 else "terminale "
+				client = request.client.host if request else instance.weigher_name
 				if current_weigher_data["id_selected"]["id"] != reservation["id"]:
 					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"'{identify_dto.identify}' selezionata da {specific}'{client}'")
 					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
-					await asyncio.sleep(1)
 				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 					instance_name=instance.instance_name, 
 					weigher_name=instance.weigher_name, 
@@ -237,6 +238,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			detail = getattr(e, 'detail', str(e))
 			if request:
 				raise HTTPException(status_code=status_code, detail=detail)
+			lb_log.warning(detail)
 
 	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
 		instance = InstanceNameWeigherDTO(**{"instance_name": instance_name, "weigher_name": weigher_name})

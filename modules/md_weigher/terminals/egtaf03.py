@@ -128,8 +128,38 @@ class EgtAf03(Terminal):
 				split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
 				length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
 				length_response = len(response) # ottengo la lunghezza della stringa della risposta
+				if length_split_response == 5 and (length_response == 48 or length_response == 38):
+					gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
+					t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
+					nw = str(int(gw) - int(t))
+					self.weight.weight_executed.net_weight = nw
+					self.weight.weight_executed.gross_weight = gw
+					self.weight.weight_executed.tare.value = t
+					self.weight.weight_executed.tare.is_preset_tare = True if "PT" in split_response[3]	else False
+					self.weight.weight_executed.unite_misure = split_response[2][-2:]
+					self.weight.weight_executed.pid = split_response[4]
+					self.weight.weight_executed.bil = split_response[1]
+					self.weight.weight_executed.status = split_response[0]
+					self.weight.weight_executed.executed = True
+					self.weight.weight_executed.log = response
+					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
+					self.diagnostic.status = 200
+					self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
+					callCallback(self.callback_weighing)
+					self.weight.weight_executed.net_weight = ""
+					self.weight.weight_executed.gross_weight = ""
+					self.weight.weight_executed.tare.value = ""
+					self.weight.weight_executed.tare.is_preset_tare = False
+					self.weight.weight_executed.unite_misure = ""
+					self.weight.weight_executed.pid = ""
+					self.weight.weight_executed.bil = ""
+					self.weight.weight_executed.status = ""
+					self.weight.weight_executed.executed = False
+					self.weight.weight_executed.log = None
+					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
+					self.weight.data_assigned = None
 				######### Se arriva tag #############################################################################################
-				if length_split_response == 1 and length_response == 15 and "$" in response:
+				elif length_split_response == 1 and length_response == 15 and "$" in response:
 					self.code_identify = response.replace("$", "").strip()
 					callCallback(self.callback_code_identify)
 					self.code_identify = ""
