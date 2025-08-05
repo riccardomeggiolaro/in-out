@@ -18,6 +18,7 @@ import libs.lb_config as lb_config
 from libs.lb_utils import createThread, startThread, closeThread
 from modules.md_tunnel_connections.connections.ssh_reverse_tunneling import ssh_tunnel
 from modules.md_tunnel_connections.dto import SshClientConnectionDTO
+import time
 # ==============================================================
 
 name_module = "md_ssh_reverse_tunneling"
@@ -30,7 +31,7 @@ def init():
 
 def start():
 	lb_log.info("start")
-	while lb_config.g_config.g_enabled:
+	while lb_config.g_enabled:
 		time.sleep(1)
 	lb_log.info("end")
 

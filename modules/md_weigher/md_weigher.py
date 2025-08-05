@@ -34,9 +34,12 @@ def init():
 
 def start():
 	lb_log.info("start")
-	while lb_config.g_config.g_enabled:
+	while lb_config.g_enabled:
 		time.sleep(1)
 	lb_log.info("end")
+
+def stop():
+    pass
 
 class WeigherModule:
 	def __init__(self):
