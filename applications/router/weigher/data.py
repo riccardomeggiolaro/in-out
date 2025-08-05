@@ -7,6 +7,7 @@ from modules.md_database.functions.get_reservation_by_id import get_reservation_
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.update_reservation import update_reservation
 from modules.md_database.interfaces.reservation import SetReservationDTO
+from modules.md_database.md_database import ReservationStatus
 import libs.lb_config as lb_config
 import json
 import modules.md_weigher.md_weigher as md_weigher
@@ -37,6 +38,8 @@ class DataRouter(CallbackWeigher):
 		description_material = None
 		if data_dto.id_selected.id not in [-1, None]:
 			reservation = get_reservation_by_id(data_dto.id_selected.id)
+			if reservation.status == ReservationStatus.CLOSED:
+				raise HTTPException(status_code=400, detail=f"Non puoi selezionare l'accesso con id '{data_dto.id_selected.id}' perchè è già chiuso")
 			weight1 = None
 			if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1:
 				weight1 = reservation.in_out[-1].weight1.weight
