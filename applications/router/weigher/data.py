@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 from applications.router.weigher.dto import DataDTO
 from applications.router.weigher.types import DataInExecution as DataInExecutionType
-from applications.router.weigher.config_weigher import ConfigWeigher
+from applications.router.weigher.callback_weigher import CallbackWeigher
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.update_reservation import update_reservation
@@ -12,7 +12,7 @@ import json
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
 
-class DataRouter(ConfigWeigher):
+class DataRouter(CallbackWeigher):
 	def __init__(self):
 		super().__init__()
 

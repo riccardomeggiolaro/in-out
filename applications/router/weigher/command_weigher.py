@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, WebSocket, HTTPException
+from fastapi import APIRouter, Depends, WebSocket, HTTPException, Request
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 import modules.md_weigher.md_weigher as md_weigher
 from typing import Optional
@@ -8,9 +8,11 @@ import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.reservation import ReservationRouter
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
-from modules.md_database.interfaces.reservation import AddReservationDTO
-from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
-from applications.router.weigher.weighing_by_identify import WeighingByIdentify
+from modules.md_database.interfaces.reservation import AddReservationDTO, VehicleDataDTO
+from applications.router.weigher.dto import IdentifyDTO, DataDTO
+from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
+from modules.md_database.functions.get_reservation_by_identify_if_uncomplete import get_reservation_by_identify_if_uncomplete
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
 	def __init__(self):
@@ -24,7 +26,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		self.router_action_weigher.add_api_route('/print', self.Generic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/in', self.Weight1, methods=['POST'])
 		self.router_action_weigher.add_api_route('/out', self.Weight2, methods=['POST'])
-		self.router_action_weigher.add_api_route('/out/auto', WeighingByIdentify, methods=['POST'])
+		self.router_action_weigher.add_api_route('/out/auto', self.WeighingByIdentify, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
@@ -182,6 +184,70 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			},
 			"reservation_id": idReservation
 		}
+
+	async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		try:
+			reservation = None
+			if lb_config.g_config["app_api"]["use_badge"]:
+				reservation = get_reservation_by_identify_if_uncomplete(identify=identify_dto.identify)
+			else:
+				reservation = get_reservation_by_plate_if_uncomplete(plate=identify_dto.identify)
+			allow_white_list = lb_config.g_config["app_api"]["use_white_list"]
+			if not reservation and allow_white_list:
+				vehicle = get_data_by_attributes("vehicle", {type: identify_dto.identify})
+				if vehicle and vehicle["white_list"]:
+					data = AddReservationDTO(**{
+						"vehicle": VehicleDataDTO(**vehicle)
+					})
+					reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
+							**data.dict(),
+							"number_in_out": 1,
+							"type": "RESERVATION",
+							"hidden": False
+						}))
+					reservation = reservation.dict() if reservation else reservation
+			if reservation:
+				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				specific = "telecamera " if request.state.user.level == 0 else ""
+				if current_weigher_data["id_selected"]["id"] != reservation["id"]:
+					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=f"'{identify_dto.identify}' selezionata da {specific}'{request.client.host}'")
+					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
+					await asyncio.sleep(1)
+				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+					instance_name=instance.instance_name, 
+					weigher_name=instance.weigher_name, 
+					modope="WEIGHING", 
+					data_assigned=reservation["id"])
+				if error_message:
+					error_message = f"Errore effettuando pesata da {specific}'{request.client.host}': {error_message}"
+					self.Callback_Message(instance_name=instance.instance_name, weigher_name=instance.weigher_name, message=error_message)
+				return {
+					"instance": instance,
+					"command_details": {
+						"status_modope": status_modope,
+						"command_executed": command_executed,
+						"error_message": error_message
+					},
+					"reservation_id": reservation["id"]
+				}
+			raise HTTPException(status_code=404, detail=f"Reservation not found for plate '{identify_dto.identify}'")
+		except Exception as e:
+			status_code = getattr(e, 'status_code', 400)
+			detail = getattr(e, 'detail', str(e))
+			raise HTTPException(status_code=status_code, detail=detail)
+
+	def CallbackWeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
+		instance = InstanceNameWeigherDTO(**{"instance_name": instance_name, "weigher_name": weigher_name})
+		identify_dto = IdentifyDTO(**{"identify": identify})
+		asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+		# try:
+		# 	if asyncio.get_event_loop().is_running():
+		# 		asyncio.create_task(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+		# 	else:
+		# 		loop = asyncio.get_event_loop()
+		# 		loop.run_until_complete(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+		# except RuntimeError:
+		# 	asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
 
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.routing import Mount
-from applications.router.weigher.callback_weigher import CallbackWeigher
+from applications.router.weigher.command_weigher import CommandWeigherRouter
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import InstanceNameDTO, InstanceNameWeigherDTO, get_query_params_name, get_query_params_name_node
 from applications.utils.utils import validate_time
@@ -13,7 +13,7 @@ from applications.router.weigher.types import Data
 from applications.middleware.super_admin import is_super_admin
 from applications.router.weigher.dto import PathDTO
 
-class ConfigWeigher(CallbackWeigher):
+class ConfigWeigher(CommandWeigherRouter):
     def __init__(self):
         super().__init__()
         
@@ -137,6 +137,7 @@ class ConfigWeigher(CallbackWeigher):
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_action_in_execution=self.Callback_ActionInExecution,
             cb_rele=self.Callback_Rele,
+            cb_code_identify=self.CallbackWeighingByIdentify
         )
         data = Data(**{})
         self.addInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=setup.name, data=data)
@@ -185,7 +186,8 @@ class ConfigWeigher(CallbackWeigher):
             cb_weighing=self.Callback_Weighing,
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_action_in_execution=self.Callback_ActionInExecution,
-            cb_rele=self.Callback_Rele
+            cb_rele=self.Callback_Rele,
+            cb_code_identify=self.CallbackWeighingByIdentify
         )
         weigher_name = instance.weigher_name
         is_changed_terminal = setup.terminal and setup.terminal != lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["terminal"]
