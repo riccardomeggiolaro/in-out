@@ -102,6 +102,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.valore_alterno: int = 1
 		self.preset_tare: int = 0
 		self.port_rele: int = None
+		self.code_identify: str = ""
 		self.callback_realtime: str = ""
 		self.callback_diagnostic: str = ""
 		self.callback_weighing: str = ""
@@ -109,6 +110,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_data_in_execution: str = ""
 		self.callback_action_in_execution: str = ""
 		self.callback_rele: str = ""
+		self.callback_code_identify: str = ""
 		self.commands = ["VER", "SN", "OK"]
 		self.direct_commands = ["TARE", "ZERO", "RESETTARE", "PRESETTARE", "WEIGHING", "CLOSERELE", "OPENRELE"]
 		self.rele_commands = ["OPENRELE", "CLOSERELE"]
@@ -172,7 +174,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 		cb_tare_ptare_zero: Callable[[str], any] = None,
   		cb_data_in_execution: Callable[[dict], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
-	    cb_rele: Callable[[str], any] = None):
+	    cb_rele: Callable[[str], any] = None,
+     	cb_code_identify: Callable[[str], any] = None):
 		check_cb_realtime = checkCallbackFormat(cb_realtime) # controllo se la funzione cb_realtime è richiamabile
 		if check_cb_realtime: # se è richiamabile assegna alla globale callback_realtime la funzione passata come parametro
 			self.callback_realtime = lambda: cb_realtime(self.self_config.name, weigher_name, self.pesa_real_time)
@@ -194,6 +197,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		check_cb_rele = checkCallbackFormat(cb_rele)
 		if check_cb_rele:
 			self.callback_rele = lambda: cb_rele(self.self_config.name, weigher_name, self.port_rele)
+		check_cb_code_identify = checkCallbackFormat(cb_code_identify)
+		if check_cb_code_identify:
+			self.callback_code_identify = lambda: cb_code_identify(self.self_config.name, weigher_name, self.code_identify)
 
 	# setta il modope_to_execute
 	def setModope(self, mod: str, presettare: Union[int, float] = 0, data_assigned: int = None, port_rele: tuple = None):

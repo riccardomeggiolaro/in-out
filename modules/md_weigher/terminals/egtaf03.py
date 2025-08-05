@@ -246,6 +246,11 @@ class EgtAf03(Terminal):
 						self.diagnostic.status = 201
 					callCallback(self.callback_rele)
 					self.port_rele = None
+				elif length_response == 16 and "$" in response:
+					self.diagnostic.status = 200
+					self.code_identify = response
+					callCallback(self.callback_code_identify)
+					self.code_identify = ""
 			elif self.diagnostic.status == 305:
 				self.initialize_content()
 		except TimeoutError as e:
