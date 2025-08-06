@@ -106,15 +106,6 @@ def show_permission_error():
 		separator = ttk.Separator(main_frame, orient='horizontal')
 		separator.pack(fill=tk.X, pady=(0, 15))
 		
-		# Soluzioni
-		solutions_label = ttk.Label(
-			main_frame,
-			text="Possibili soluzioni:\n• Esegui come amministratore: sudo ./main\n• Modifica la porta nel config.json\n• Usa capabilities: sudo setcap 'cap_net_bind_service=+ep' ./main\n• Controlla i log per dettagli specifici",
-			font=('Arial', 10),
-			justify=tk.LEFT
-		)
-		solutions_label.pack(pady=(0, 15))
-		
 		# Pulsante OK
 		ok_button = ttk.Button(
 			main_frame,
@@ -137,11 +128,6 @@ def show_permission_error():
 		# Fallback su console
 		print("=" * 50)
 		print("⚠️  ERRORE: PROBLEMA CON PERMESSI")
-		print("=" * 50)
-		print("Possibili soluzioni:")
-		print("  • sudo ./main")
-		print("  • Modifica porta nel config.json")
-		print("  • Controlla i log per dettagli")
 		print("=" * 50)
 
 def signal_handler(signum, frame):

@@ -1,7 +1,7 @@
 # ==============================================================
 # = Module......: md_desktop_interface                       =
 # = Description.: Interfaccia desktop per visualizzare IP   =
-# = Author......: Sistema BARON PESI                              =
+# = Author......: Sistema BARON                              =
 # = Last rev....: 0.0001                                     =
 # ==============================================================
 
@@ -226,68 +226,73 @@ class DesktopInterface:
         """Crea la finestra dell'interfaccia"""
         try:
             # Crea la finestra principale
-            app_name = getattr(lb_config, 'g_name', 'BARON PESI')
+            app_name = getattr(lb_config, 'g_name', 'BARON')
             self.window = tk.Tk()
-            self.window.title(f"BARON PESI {app_name}")
-            self.window.geometry("400x300")
-            self.window.resizable(False, False)
+            self.window.title(f"BARON {app_name}")
+            
+            # Dimensioni iniziali compatibili con TUTTI i PC
+            self.window.geometry("350x280")
+            self.window.resizable(True, True)  # RIDIMENSIONABILE dall'utente
+            self.window.minsize(300, 250)  # Dimensioni minime per funzionalità
+            # Nessun maxsize = può ingrandire quanto vuole
             
             # Configura lo stile
             style = ttk.Style()
             style.theme_use('clam')
             
-            # Frame principale
-            main_frame = ttk.Frame(self.window, padding="20")
+            # Frame principale con padding ridotto per PC piccoli
+            main_frame = ttk.Frame(self.window, padding="15")
             main_frame.pack(fill=tk.BOTH, expand=True)
             
             # FRAME SUPERIORE - contenuto fisso
             top_frame = ttk.Frame(main_frame)
-            top_frame.pack(fill=tk.X, pady=(0, 10))
+            top_frame.pack(fill=tk.X, pady=(0, 5))
             
-            # Titolo
+            # Titolo (font ridotto per PC piccoli)
             title_label = ttk.Label(
                 top_frame, 
-                text=f"BARON PESI {app_name}",
-                font=('Arial', 16, 'bold')
+                text=f"BARON {app_name}",
+                font=('Arial', 14, 'bold')
             )
             title_label.pack()
             
             # Etichetta IP
-            ip_title = ttk.Label(top_frame, text="Indirizzo IP:", font=('Arial', 12))
-            ip_title.pack(pady=(10, 0))
+            ip_title = ttk.Label(top_frame, text="Indirizzo IP:", font=('Arial', 10))
+            ip_title.pack(pady=(8, 0))
             
             self.ip_label = ttk.Label(
                 top_frame, 
                 text="Caricamento...",
-                font=('Arial', 20, 'bold'),
+                font=('Arial', 18, 'bold'),
                 foreground='blue'
             )
-            self.ip_label.pack(pady=(5, 10))
+            self.ip_label.pack(pady=(3, 8))
             
             # Separatore
             separator = ttk.Separator(top_frame, orient='horizontal')
-            separator.pack(fill=tk.X, pady=5)
+            separator.pack(fill=tk.X, pady=3)
             
-            # FRAME CENTRALE - status con altezza fissa
-            middle_frame = ttk.Frame(main_frame, height=60)
-            middle_frame.pack(fill=tk.X, pady=5)
-            middle_frame.pack_propagate(False)  # Mantieni altezza fissa
+            # FRAME CENTRALE - status che si espande con la finestra
+            middle_frame = ttk.Frame(main_frame)
+            middle_frame.pack(fill=tk.BOTH, expand=True, pady=3)  # Si espande
             
             self.status_label = ttk.Label(
                 middle_frame,
                 text="Inizializzazione...",
-                font=('Arial', 10),
-                justify=tk.CENTER
+                font=('Arial', 9),
+                justify=tk.CENTER,
+                wraplength=300,  # Si adatta al ridimensionamento
+                anchor='center'
             )
-            self.status_label.pack(expand=True)
+            self.status_label.pack(expand=True, fill=tk.BOTH)
             
-            # FRAME INFERIORE - pulsante SEMPRE visibile
+            # FRAME INFERIORE - pulsante SEMPRE in fondo
             bottom_frame = ttk.Frame(main_frame)
             bottom_frame.pack(fill=tk.X, side=tk.BOTTOM)
             
             # Separatore
             separator2 = ttk.Separator(bottom_frame, orient='horizontal')
-            separator2.pack(fill=tk.X, pady=(10, 0))
+            separator2.pack(fill=tk.X, pady=(5, 8))
             
             # Pulsante Spegni Programma - SEMPRE VISIBILE
             self.shutdown_button = ttk.Button(
@@ -295,24 +300,48 @@ class DesktopInterface:
                 text="🔴 Spegni Programma",
                 command=self._shutdown_program
             )
-            self.shutdown_button.pack(pady=(0, 10))
+            self.shutdown_button.pack(pady=(0, 5))
             
             # Posiziona la finestra al centro dello schermo
             self.window.update_idletasks()
-            x = (self.window.winfo_screenwidth() // 2) - (self.window.winfo_width() // 2)
-            y = (self.window.winfo_screenheight() // 2) - (self.window.winfo_height() // 2)
+            
+            # Ottieni dimensioni schermo
+            screen_width = self.window.winfo_screenwidth()
+            screen_height = self.window.winfo_screenheight()
+            
+            # Calcola posizione centrata
+            x = max(0, (screen_width - 350) // 2)
+            y = max(0, (screen_height - 280) // 2)
+            
+            # Se lo schermo è troppo piccolo, posiziona in alto a sinistra
+            if screen_width < 400 or screen_height < 320:
+                x, y = 10, 10
+            
             self.window.geometry(f"+{x}+{y}")
             
             # Gestione chiusura finestra
             self.window.protocol("WM_DELETE_WINDOW", self._on_closing)
             
-            lb_log.info("Interfaccia desktop creata con pulsante SEMPRE visibile")
+            # Bind evento ridimensionamento per aggiornare wraplength
+            self.window.bind('<Configure>', self._on_window_resize)
+            
+            lb_log.info(f"Interfaccia desktop ridimensionabile creata 350x280 su schermo {screen_width}x{screen_height}")
             
         except Exception as e:
             lb_log.error(f"Errore nella creazione interfaccia: {e}")
     
+    def _on_window_resize(self, event):
+        """Gestisce il ridimensionamento della finestra"""
+        try:
+            # Aggiorna il wraplength del testo in base alla larghezza della finestra
+            if event.widget == self.window and self.status_label:
+                new_width = max(200, self.window.winfo_width() - 60)  # Margine 60px
+                self.status_label.configure(wraplength=new_width)
+        except Exception as e:
+            pass  # Ignora errori durante il ridimensionamento
+    
     def _shutdown_program(self):
-        """Spegne completamente il programma BARON PESI"""
+        """Spegne completamente il programma BARON"""
         try:
             lb_log.info("Richiesta spegnimento programma dall'interfaccia desktop")
             
@@ -320,7 +349,7 @@ class DesktopInterface:
             from tkinter import messagebox
             result = messagebox.askyesno(
                 "Conferma Spegnimento",
-                "Sei sicuro di voler spegnere completamente il programma BARON PESI?",
+                "Sei sicuro di voler spegnere completamente il programma BARON?",
                 parent=self.window
             )
             
@@ -385,10 +414,10 @@ class DesktopInterface:
             
             if self.status_label:
                 # Ottieni nome e versione in modo sicuro
-                app_name = getattr(lb_config, 'g_name', 'BARON PESI')
+                app_name = getattr(lb_config, 'g_name', 'BARON')
                 app_version = getattr(lb_config, 'g_vers', '1.0')
                 
-                status_text = f"BARON PESI {app_name} v{app_version}\n"
+                status_text = f"BARON {app_name} v{app_version}\n"
                 status_text += f"Status: {'RUNNING' if lb_config.g_enabled else 'STOPPED'}\n"
                 if len(all_ips) > 1:
                     status_text += f"Altri IP: {', '.join(all_ips[1:])}"
