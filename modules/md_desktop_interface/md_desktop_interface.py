@@ -1,7 +1,7 @@
 # ==============================================================
 # = Module......: md_desktop_interface                       =
 # = Description.: Interfaccia desktop per visualizzare IP   =
-# = Author......: Sistema BARON                              =
+# = Author......: Sistema BARON PESI                              =
 # = Last rev....: 0.0001                                     =
 # ==============================================================
 
@@ -10,7 +10,6 @@ import time
 import tkinter as tk
 from tkinter import ttk
 import socket
-import threading
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 from libs.lb_utils import createThread, startThread, closeThread
@@ -227,10 +226,10 @@ class DesktopInterface:
         """Crea la finestra dell'interfaccia"""
         try:
             # Crea la finestra principale
-            app_name = getattr(lb_config, 'g_name', 'BARON')
+            app_name = getattr(lb_config, 'g_name', 'BARON PESI')
             self.window = tk.Tk()
-            self.window.title(f"BARON {app_name}")
-            self.window.geometry("400x200")
+            self.window.title(f"BARON PESI {app_name}")
+            self.window.geometry("400x300")
             self.window.resizable(False, False)
             
             # Configura lo stile
@@ -241,39 +240,62 @@ class DesktopInterface:
             main_frame = ttk.Frame(self.window, padding="20")
             main_frame.pack(fill=tk.BOTH, expand=True)
             
+            # FRAME SUPERIORE - contenuto fisso
+            top_frame = ttk.Frame(main_frame)
+            top_frame.pack(fill=tk.X, pady=(0, 10))
+            
             # Titolo
-            app_name = getattr(lb_config, 'g_name', 'BARON')
             title_label = ttk.Label(
-                main_frame, 
-                text=f"BARON {app_name}",
+                top_frame, 
+                text=f"BARON PESI {app_name}",
                 font=('Arial', 16, 'bold')
             )
-            title_label.pack(pady=(0, 10))
+            title_label.pack()
             
             # Etichetta IP
-            ip_title = ttk.Label(main_frame, text="Indirizzo IP:", font=('Arial', 12))
-            ip_title.pack()
+            ip_title = ttk.Label(top_frame, text="Indirizzo IP:", font=('Arial', 12))
+            ip_title.pack(pady=(10, 0))
             
             self.ip_label = ttk.Label(
-                main_frame, 
+                top_frame, 
                 text="Caricamento...",
                 font=('Arial', 20, 'bold'),
                 foreground='blue'
             )
-            self.ip_label.pack(pady=(5, 15))
+            self.ip_label.pack(pady=(5, 10))
             
             # Separatore
-            separator = ttk.Separator(main_frame, orient='horizontal')
-            separator.pack(fill=tk.X, pady=(0, 10))
+            separator = ttk.Separator(top_frame, orient='horizontal')
+            separator.pack(fill=tk.X, pady=5)
             
-            # Status
+            # FRAME CENTRALE - status con altezza fissa
+            middle_frame = ttk.Frame(main_frame, height=60)
+            middle_frame.pack(fill=tk.X, pady=5)
+            middle_frame.pack_propagate(False)  # Mantieni altezza fissa
+            
             self.status_label = ttk.Label(
-                main_frame,
+                middle_frame,
                 text="Inizializzazione...",
                 font=('Arial', 10),
                 justify=tk.CENTER
             )
-            self.status_label.pack()
+            self.status_label.pack(expand=True)
+            
+            # FRAME INFERIORE - pulsante SEMPRE visibile
+            bottom_frame = ttk.Frame(main_frame)
+            bottom_frame.pack(fill=tk.X, side=tk.BOTTOM)
+            
+            # Separatore
+            separator2 = ttk.Separator(bottom_frame, orient='horizontal')
+            separator2.pack(fill=tk.X, pady=(10, 0))
+            
+            # Pulsante Spegni Programma - SEMPRE VISIBILE
+            self.shutdown_button = ttk.Button(
+                bottom_frame,
+                text="🔴 Spegni Programma",
+                command=self._shutdown_program
+            )
+            self.shutdown_button.pack(pady=(0, 10))
             
             # Posiziona la finestra al centro dello schermo
             self.window.update_idletasks()
@@ -284,10 +306,45 @@ class DesktopInterface:
             # Gestione chiusura finestra
             self.window.protocol("WM_DELETE_WINDOW", self._on_closing)
             
-            lb_log.info("Interfaccia desktop creata")
+            lb_log.info("Interfaccia desktop creata con pulsante SEMPRE visibile")
             
         except Exception as e:
             lb_log.error(f"Errore nella creazione interfaccia: {e}")
+    
+    def _shutdown_program(self):
+        """Spegne completamente il programma BARON PESI"""
+        try:
+            lb_log.info("Richiesta spegnimento programma dall'interfaccia desktop")
+            
+            # Mostra dialog di conferma
+            from tkinter import messagebox
+            result = messagebox.askyesno(
+                "Conferma Spegnimento",
+                "Sei sicuro di voler spegnere completamente il programma BARON PESI?",
+                parent=self.window
+            )
+            
+            if result:  # Se l'utente clicca "Sì"
+                lb_log.info("Spegnimento confermato - avvio shutdown")
+                
+                # Ferma tutti i loop del sistema
+                lb_config.g_enabled = False
+                
+                # Forza chiusura interfaccia
+                self.enabled = False
+                
+                # Chiudi la finestra
+                if self.window:
+                    self.window.destroy()
+                
+                # Termina il programma
+                import os
+                os._exit(0)
+                
+        except Exception as e:
+            lb_log.error(f"Errore nello spegnimento: {e}")
+            import os
+            os._exit(1)
     
     def _update_ip_loop(self):
         """Loop di aggiornamento dell'IP"""
@@ -328,10 +385,10 @@ class DesktopInterface:
             
             if self.status_label:
                 # Ottieni nome e versione in modo sicuro
-                app_name = getattr(lb_config, 'g_name', 'BARON')
+                app_name = getattr(lb_config, 'g_name', 'BARON PESI')
                 app_version = getattr(lb_config, 'g_vers', '1.0')
                 
-                status_text = f"BARON {app_name} v{app_version}\n"
+                status_text = f"BARON PESI {app_name} v{app_version}\n"
                 status_text += f"Status: {'RUNNING' if lb_config.g_enabled else 'STOPPED'}\n"
                 if len(all_ips) > 1:
                     status_text += f"Altri IP: {', '.join(all_ips[1:])}"
