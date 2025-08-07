@@ -44,7 +44,7 @@ def mainprg():
 
 	APPS = [app_api]
 
-	MODULES = [md_weigher, md_tunnel_connections]
+	MODULES = [md_weigher]
 
 	# Carica thread per i mdouli esterni.
 
