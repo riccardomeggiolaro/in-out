@@ -150,7 +150,7 @@ window.onbeforeunload = function() {
 // Chiudi il popup quando si fa clic all'esterno
 window.onclick = function(event) {
     const popup = document.getElementById(currentPopup);
-    if (event.target === popup) {
+    if (event.target === popup && currentPopup !== "reconnectionPopup") {
         closePopup(currentPopup);
     }
 };
@@ -584,6 +584,8 @@ function attemptReconnect() {
     closeWebSocket();
     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+    getData(currentWeigherPath);
+    populateListIn(currentWeigherPath);
 }
 
 function closeWebSocket() {
