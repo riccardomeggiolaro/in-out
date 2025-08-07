@@ -14,6 +14,7 @@ from serial import SerialException
 import socket
 from typing import Optional, Union
 import select
+import time
 try:
 	import winreg
 	import wmi
@@ -84,14 +85,37 @@ class SerialPortWithoutControls(Connection):
 		error_message = None
 		try:
 			if isinstance(self.conn, serial.Serial) and self.conn.is_open:
+				# Salva il timeout originale
+				original_timeout = self.conn.timeout
+				
+				# Imposta un timeout breve per non bloccare
+				self.conn.timeout = 0.1
+				
+				# Svuota buffer di input
+				if self.conn.in_waiting > 0:
+					self.conn.reset_input_buffer()
+				
+				# Svuota buffer di output  
+				if self.conn.out_waiting > 0:
+					self.conn.reset_output_buffer()
+				
+				# Flush finale
 				self.conn.flush()
+				
+				# Leggi e scarta eventuali dati residui
+				while self.conn.in_waiting:
+					discarded = self.conn.read(self.conn.in_waiting)
+					lb_log.debug(f"Discarded {len(discarded)} bytes from buffer")
+					time.sleep(0.01)  # Piccola pausa
+					
+				# Ripristina timeout originale
+				self.conn.timeout = original_timeout
+				
 				status = True
 		except SerialException as e:
 			error_message = e
-			# lb_log.error(f"SerialException on flush: {error_message}")
 		except AttributeError as e:
 			error_message = e
-			# lb_log.error(f"AttributeError on flush: {error_message}")
 		except TypeError as e:
 			pass
 		return status, error_message
@@ -213,17 +237,35 @@ class TcpWithoutControls(Connection):
 		status = True
 		error_message = None
 		try:
-			buffer = b""			
-			# Ricevi i dati finché ce ne sono
+			if self.conn is None:
+				return False, "No connection"
+				
+			# Imposta socket non bloccante temporaneamente
+			self.conn.setblocking(False)
+			
+			buffer = b""
+			total_discarded = 0
+			
+			# Ricevi e scarta tutti i dati nel buffer
 			while True:
 				try:
-					data = self.conn.recv(5000)  # Ricevi fino a 1024 byte alla volta
+					data = self.conn.recv(4096)
 					if not data:
-						break  # Se non ci sono più dati nel buffer, esci dal ciclo
-					# Accumula i dati ricevuti nel buffer
-					buffer += data
+						break
+					total_discarded += len(data)
 				except BlockingIOError:
+					# Non ci sono più dati da leggere
 					break
+				except socket.timeout:
+					break
+					
+			if total_discarded > 0:
+				lb_log.debug(f"Flushed {total_discarded} bytes from TCP buffer")
+				
+			# Ripristina modalità bloccante con timeout
+			self.conn.setblocking(True)
+			self.conn.settimeout(self.timeout)
+			
 		except Exception as e:
 			status = False
 			error_message = e

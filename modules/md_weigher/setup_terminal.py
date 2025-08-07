@@ -3,6 +3,8 @@ from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
 from libs.lb_utils import checkCallbackFormat, callCallback
 from typing import Callable, Union
+import time
+import libs.lb_log as lb_log
 
 class __SetupWeigherConnection:
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):
@@ -56,6 +58,32 @@ class __SetupWeigherConnection:
 	def close_connection(self):
 		self.self_config.connection.connection.close()
 		self.self_config.connection.connection = Connection(**{})
+
+	def safe_initialize(self, max_attempts=3):
+		"""Inizializzazione con retry logic"""
+		for attempt in range(max_attempts):
+			try:
+				# Flush prima di iniziare
+				self.flush()
+				
+				# Se non è il primo tentativo, attendi un po'
+				if attempt > 0:
+					time.sleep(1)
+					lb_log.info(f"Initialization attempt {attempt + 1}/{max_attempts}")
+				
+				# Chiama il metodo di inizializzazione normale
+				result = self.initialize_content()
+				
+				# Se l'inizializzazione ha successo (status 200), esci
+				if self.diagnostic.status == 200:
+					return result
+					
+			except Exception as e:
+				lb_log.error(f"Initialization attempt {attempt + 1} failed: {e}")
+				
+		# Se tutti i tentativi falliscono
+		lb_log.error(f"Failed to initialize after {max_attempts} attempts")
+		return None
 
 class __SetupWeigher(__SetupWeigherConnection):
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, node, terminal, run):

@@ -287,32 +287,184 @@ class WeigherInstance:
 	# funzione che fa partire il modulo
 	# funzione che scrive e legge in loop conn e in base alla stringa ricevuta esegue funzioni specifiche
 	def start(self):
+		consecutive_errors = {}  # Traccia errori consecutivi per nodo
+		reconnection_attempts = 0
+		max_reconnection_attempts = 3
+		last_reconnection_time = 0
+		min_reconnection_interval = 10  # Secondi minimi tra riconnessioni
+		
 		while self.m_enabled:
-			for name, weigher in self.nodes.items():
-				if weigher.run:
-					time_start = time.time()
-					status, command, response, error = weigher.main()
-					time_end = time.time()
-					time_execute = time_end - time_start
-					timeout = max(0, self.time_between_actions - time_execute)
-					time.sleep(timeout)
-					lb_log.info(f"Node: {weigher.node}, Status: {status}, Command: {command}, Response; {response}, Error: {error}")
-					if weigher.diagnostic.status == 301:
-						self.connection.connection.close()
-						status, error_message = self.connection.connection.try_connection()
-						for n, w in self.nodes.items():
-							if status:
-								time_start = time.time()
-								w.initialize()
-								time_end = time.time()
-								time_execute = time_end - time_start
-								timeout = max(0, self.time_between_actions - time_execute)
-								time.sleep(timeout)
-							else:
-								# se la globale conn è di tipo conn ed è aperta la chiude
-								self.connection.connection.close()
+			# Se non ci sono nodi, attendi
 			if len(self.nodes) == 0:
 				time.sleep(1)
+				continue
+				
+			# Flag per tracciare se serve riconnessione
+			needs_reconnection = False
+			all_nodes_failing = True  # Assume che tutti falliscano finché non provato il contrario
+			
+			for name, weigher in self.nodes.items():
+				if not weigher.run:
+					continue
+					
+				# Inizializza contatore errori per questo nodo se non esiste
+				if name not in consecutive_errors:
+					consecutive_errors[name] = 0
+				
+				time_start = time.time()
+				status, command, response, error = weigher.main()
+				time_end = time.time()
+				time_execute = time_end - time_start
+				timeout = max(0, self.time_between_actions - time_execute)
+				time.sleep(timeout)
+				
+				lb_log.info(f"Node: {weigher.node}, Status: {status}, Command: {command}, Response: {response}, Error: {error}")
+				
+				# Gestione errori di comunicazione
+				if weigher.diagnostic.status == 301:  # Timeout error
+					consecutive_errors[name] += 1
+					
+					# Solo dopo N errori consecutivi tenta la riconnessione
+					if consecutive_errors[name] >= 3:
+						lb_log.warning(f"Node {name} has {consecutive_errors[name]} consecutive timeout errors")
+						
+				elif weigher.diagnostic.status == 305:  # Node not reachable
+					consecutive_errors[name] += 1
+					if consecutive_errors[name] >= 2:
+						lb_log.warning(f"Node {name} not reachable for {consecutive_errors[name]} attempts")
+						
+				elif weigher.diagnostic.status == 200:  # Success
+					consecutive_errors[name] = 0  # Reset error counter
+					reconnection_attempts = 0  # Reset reconnection attempts
+					all_nodes_failing = False  # Almeno un nodo funziona
+					
+				elif weigher.diagnostic.status == 201:  # Bad response format
+					consecutive_errors[name] += 1
+					if consecutive_errors[name] >= 5:
+						lb_log.warning(f"Node {name} returning bad format for {consecutive_errors[name]} attempts")
+			
+			# Determina se serve riconnessione: tutti i nodi attivi devono essere in errore
+			if all_nodes_failing and len(self.nodes) > 0:
+				active_nodes = [name for name, w in self.nodes.items() if w.run]
+				if active_nodes:
+					failing_nodes = [name for name in active_nodes if consecutive_errors.get(name, 0) >= 3]
+					if len(failing_nodes) == len(active_nodes):
+						needs_reconnection = True
+						lb_log.warning(f"All active nodes are failing: {failing_nodes}")
+			
+			# Controlla se è passato abbastanza tempo dall'ultima riconnessione
+			current_time = time.time()
+			time_since_last_reconnection = current_time - last_reconnection_time
+			
+			# Esegui riconnessione solo se necessario e con controllo temporale
+			if needs_reconnection and time_since_last_reconnection >= min_reconnection_interval:
+				if reconnection_attempts < max_reconnection_attempts:
+					lb_log.info(f"Attempting reconnection {reconnection_attempts + 1}/{max_reconnection_attempts}...")
+					if self._perform_reconnection():
+						# Reset error counters dopo riconnessione riuscita
+						for name in consecutive_errors:
+							consecutive_errors[name] = 0
+						reconnection_attempts = 0
+					else:
+						reconnection_attempts += 1
+					last_reconnection_time = current_time
+				else:
+					lb_log.error(f"Max reconnection attempts reached. Waiting {min_reconnection_interval} seconds...")
+					time.sleep(min_reconnection_interval)
+					reconnection_attempts = 0
+					
+			# except Exception as e:
+			# 	lb_log.error(f"Unexpected error in main loop: {e}")
+			# 	time.sleep(1)
+
+	def _perform_reconnection(self):
+		"""Gestisce la procedura di riconnessione in modo pulito"""
+		try:
+			lb_log.info("Starting reconnection procedure...")
+			
+			# 1. Prima prova a fare un flush pulito se la connessione è ancora aperta
+			try:
+				if self.connection.connection.is_open():
+					lb_log.info("Connection still open, flushing buffer...")
+					self.connection.connection.flush()
+					time.sleep(0.2)
+			except:
+				pass  # Se il flush fallisce, procedi comunque
+			
+			# 2. Chiudi la connessione esistente
+			lb_log.info("Closing connection...")
+			try:
+				self.connection.connection.close()
+			except Exception as e:
+				lb_log.warning(f"Error closing connection: {e}")
+			
+			# 3. Pausa per permettere al dispositivo di resettarsi
+			lb_log.info("Waiting for device reset...")
+			time.sleep(2)
+			
+			# 4. Riapri la connessione
+			lb_log.info("Opening new connection...")
+			status, error_message = self.connection.connection.try_connection()
+			
+			if not status:
+				lb_log.error(f"Failed to open connection: {error_message}")
+				return False
+				
+			lb_log.info("Connection opened successfully")
+			
+			# 5. Pausa per stabilizzazione
+			time.sleep(1)
+			
+			# 6. Flush iniziale per pulire eventuali dati residui
+			try:
+				self.connection.connection.flush()
+				time.sleep(0.2)
+			except:
+				pass
+			
+			# 7. Reinizializza tutti i nodi con verifica
+			lb_log.info("Reinitializing nodes...")
+			successful_inits = 0
+			
+			for name, weigher in self.nodes.items():
+				if not weigher.run:
+					continue
+					
+				try:
+					# Usa il metodo initialize esistente che già fa i controlli VER e SN
+					lb_log.info(f"Initializing node {name}...")
+					
+					# Flush prima di ogni inizializzazione
+					weigher.flush()
+					time.sleep(0.1)
+					
+					# Inizializza
+					init_result = weigher.initialize()
+					
+					# Verifica il risultato
+					if weigher.diagnostic.status == 200:
+						lb_log.info(f"Node {name} initialized successfully")
+						successful_inits += 1
+					else:
+						lb_log.warning(f"Node {name} initialization failed with status {weigher.diagnostic.status}")
+						
+					# Pausa tra inizializzazioni
+					time.sleep(self.time_between_actions)
+						
+				except Exception as e:
+					lb_log.error(f"Error initializing node {name}: {e}")
+			
+			# Verifica se almeno un nodo è stato inizializzato con successo
+			if successful_inits > 0:
+				lb_log.info(f"Reconnection successful: {successful_inits} nodes initialized")
+				return True
+			else:
+				lb_log.error("Reconnection failed: no nodes initialized successfully")
+				return False
+				
+		except Exception as e:
+			lb_log.error(f"Critical error during reconnection: {e}")
+			return False
 	# ==============================================================
 
 	def stop(self):
