@@ -584,6 +584,7 @@ function attemptReconnect() {
     closeWebSocket();
     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+    getInstanceWeigher(currentWeigherPath);
     getData(currentWeigherPath);
     populateListIn(currentWeigherPath);
 }
