@@ -71,7 +71,7 @@ class CallbackWeigher(Functions, WebSocket):
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
 		reservation = get_reservation_by_id(last_pesata.data_assigned)
-		if last_pesata.weight_executed.executed:
+		if last_pesata.weight_executed.executed and not "NO" in last_pesata.weight_executed.pid:
 			############################
 			# SALVATAGGIO DELLA PESATA
 			date = dt.datetime.now()
