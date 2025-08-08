@@ -105,14 +105,11 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
             if reservation.status != ReservationStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
                 existing = get_reservation_by_vehicle_id_if_uncomplete(reservation.idVehicle)
 
-                import libs.lb_log as lb_log
-                lb_log.warning("badge")
-
                 if existing and existing["id"] != reservation.id and existing["idVehicle"]:
                     existing = existing["vehicle"].__dict__
                     plate = existing["plate"]
                     raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
-                else:
+                elif existing is None and reservation.idVehicle is not None:
                     existing = get_reservation_by_identify_if_uncomplete(identify=data.vehicle.plate)
                     if existing and existing["id"] != reservation.id and existing["idVehicle"]:
                         raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
@@ -181,7 +178,7 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
                         raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso")
                     else:
                         existing_badge = get_reservation_by_identify_if_uncomplete(identify=badge)
-                        if existing_badge:
+                        if existing_badge and existing_badge["id"] != id:
                             raise ValueError(f"Il badge '{badge}' è già assegnato come TARGA ad un altro accesso ancora aperto")
                 
                 reservation.badge = badge if badge != "" else None

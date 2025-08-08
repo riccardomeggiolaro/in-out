@@ -24,6 +24,7 @@ class EgtAf03(Terminal):
 		elif self.modope == "OK":
 			self.write("DINT2710")
 		elif self.modope == "WEIGHING":
+			self.flush()
 			self.write("PID")
 			self.modope_to_execute = "OK" # setto modope_to_execute a stringa vuota per evitare che la stessa funzione venga eseguita anche nel prossimo ciclo
 			self.maintaineSessionRealtime() # eseguo la funzione che si occupa di mantenere la sessione del peso in tempo reale in base a come la ho settata
@@ -286,8 +287,8 @@ class EgtAf03(Terminal):
 						self.diagnostic.status = 201
 					callCallback(self.callback_rele)
 					self.port_rele = None
-			elif self.diagnostic.status in [305, 201]:
-				self.initialize_content()
+			# elif self.diagnostic.status in [305, 201]:
+			# 	self.initialize_content()
 		except TimeoutError as e:
 			error = e
 			self.diagnostic.vl = ""

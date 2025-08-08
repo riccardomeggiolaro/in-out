@@ -90,7 +90,7 @@ def add_reservation(data: AddReservationDTO):
                 existing = existing["vehicle"].__dict__
                 plate = existing["plate"]
                 raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
-            else:
+            elif existing is None and data.vehicle.plate is not None:
                 existing = get_reservation_by_identify_if_uncomplete(identify=data.vehicle.plate)
                 if existing:
                     raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")

@@ -487,7 +487,7 @@ function createRow(table, columns, item, idInout) {
         if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
         else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out) actionsCell.appendChild(deleteButton);
-        if (!String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
+        if (itemName === "reservation" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
     }
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga

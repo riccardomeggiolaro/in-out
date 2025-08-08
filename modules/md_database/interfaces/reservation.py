@@ -57,11 +57,11 @@ class AddReservationDTO(BaseModel):
             return v
         raise ValueError("type is not a valid string")
 
-    @validator('badge', pre=True, always=True)
-    def check_badge(cls, v, values):
-        if lb_config.g_config["app_api"]["use_badge"] == False and v is not None:
-            raise ValueError("Mode badge is not enabled")
-        return v
+    # @validator('badge', pre=True, always=True)
+    # def check_badge(cls, v, values):
+    #     if lb_config.g_config["app_api"]["use_badge"] == False and v is not None:
+    #         raise ValueError("Mode badge is not enabled")
+    #     return v
     
 class SetReservationDTO(BaseModel):
     typeSubject: Optional[str] = None
@@ -85,8 +85,8 @@ class SetReservationDTO(BaseModel):
                 raise ValueError("typeSubject is not a valid string")
         return v
     
-    @validator('badge', pre=True, always=True)
-    def check_badge(cls, v, values):
-        if lb_config.g_config["app_api"]["use_badge"] == False and v is not None:
-            raise ValueError("Mode badge is not enabled")
-        return v
+    # @validator('badge', pre=True, always=True)
+    # def check_badge(cls, v, values):
+    #     if lb_config.g_config["app_api"]["use_badge"] == False and v is not None:
+    #         raise ValueError("Mode badge is not enabled")
+    #     return v
