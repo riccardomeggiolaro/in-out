@@ -62,7 +62,7 @@
         <h3>Nuovo veicolo:</h3>
         <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
             Targa:<br>
-            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" autocomplete="off" required>
+            <input type="text" id="plate" name="plate" oninput="this.value = this.value.toUpperCase()" autocomplete="off" required>
             Descrizione: (Opzionale):<br>
             <input type="text" id="description" name="description" autocomplete="off">
             Tara: (Opzionale)<br>
@@ -78,7 +78,7 @@
         <h3>Modifica veicolo:</h3>
         <form id="edit" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
             Targa:<br>
-            <input type="text" id="plate" name="plate" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="this.value = this.value.toUpperCase()" autocomplete="off" required>
+            <input type="text" id="plate" name="plate" oninput="this.value = this.value.toUpperCase()" autocomplete="off" required>
             Descrizione: (Opzionale)<br>
             <input type="text" id="description" name="description" autocomplete="off">
             Tara: (Opzionale)<br>

@@ -124,7 +124,7 @@
         <div id="plateVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Targa:</h2>
-                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" oninput="validatePlate(this); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" oninput="this.value = this.value.toUpperCase(); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>

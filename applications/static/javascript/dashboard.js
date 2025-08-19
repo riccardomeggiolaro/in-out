@@ -981,22 +981,3 @@ function enableAllElements() {
         element.disabled = false;
     });
 }
-
-function validatePlate(input) {
-    // Convert to uppercase
-    input.value = input.value.toUpperCase();
-    
-    // Show suggestions
-    showSuggestions('vehicle', 'plateVehicleInput', 'plate', input.value, 
-        ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle');
-    
-    // Validate plate format
-    const platePattern = /^[A-Z]{2}\d{3}[A-Z]{2}$/;
-    const isValid = platePattern.test(input.value) || input.value === '';
-
-    // Get the submit button
-    const submitButton = document.getElementById('plateSubmitButton');
-    
-    // Enable/disable button based on validation
-    submitButton.disabled = !isValid;
-}

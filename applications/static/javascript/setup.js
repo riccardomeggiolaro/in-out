@@ -138,8 +138,8 @@ async function loadSetupWeighers() {
             <button class="delete-btn">${deleteButtonContent}</button>
             <span>Numero: </span> <input type="number" min="1" value="${number_rele ? number_rele : ''}" style="width: 50px" required>
             <select style="width: 75px">
-                <option value="1" ${status === 1 ? 'selected' : ''}>Apri</option>
-                <option value="0" ${status === 0 ? 'selected' : ''}>Chiudi</option>
+                <option value="1" ${status === 1 ? 'selected' : ''}>Attiva</option>
+                <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
             </select>
             <select style="width: 150px">
                 <option value="weighing" ${on_event === "weighing" ? 'selected' : ''}>Dopo la pesata</option>
@@ -1392,17 +1392,17 @@ async function loadSetupWeighers() {
                         viewModeCFontent.innerHTML += '<h5 class="gray"><em>RELE</em></h5>';
                         over_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} sopra il peso minimo</em></p>
+                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} sopra il peso minimo</em></p>
                             `;
                         });
                         under_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} sotto il peso minimo</em></p>
+                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} sotto il peso minimo</em></p>
                             `;
                         });
                         weighing.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Apri' : 'Chiudi'} relè ${r.rele} dopo la pesata</em></p>
+                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata</em></p>
                             `;
                         });
                     }

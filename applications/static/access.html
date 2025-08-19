@@ -157,7 +157,7 @@
                                 document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
                             }
                         ">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" autocomplete="new-password"
                         oninput="
                             this.value = this.value.toUpperCase();
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);

@@ -45,7 +45,7 @@
             "user": "root"
         },
         "use_badge": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_white_list": false,
         "weighers": {
             "1": {
@@ -113,7 +113,12 @@
                                     "in": false,
                                     "out": false
                                 },
-                                "set_rele": []
+                                "set_rele": [
+                                    {
+                                        "rele": "1",
+                                        "set": 1
+                                    }
+                                ]
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -126,7 +131,9 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {},
+                        "rele": {
+                            "1": 0
+                        },
                         "run": true,
                         "terminal": "egt-af03"
                     }

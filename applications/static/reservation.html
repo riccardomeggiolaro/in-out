@@ -163,7 +163,7 @@
             <div>
                 <div class="item-25">
                     <input id="vehicle.id" name="vehicle.id" type="number" class="suggestionId">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password" required
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" autocomplete="new-password" required
                         oninput="
                             if (this.value) this.value = this.value.toUpperCase();
                             populateSuggestions('#add-popup', '#register #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
@@ -366,7 +366,7 @@
                                 document.querySelector('#edit-popup #vehicle\\.tare').disabled = true;
                             }
                         ">
-                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" pattern="[A-Za-z]{2}\d{3}[A-Za-z]{2}" autocomplete="new-password"
+                    <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" autocomplete="new-password"
                         oninput="
                             if (this.value) this.value = this.value.toUpperCase();
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.vehicle\\.plate', 'plate', 'vehicle', this.value);
