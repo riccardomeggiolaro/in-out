@@ -13,12 +13,14 @@ from applications.router.weigher.dto import IdentifyDTO, DataDTO
 from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import get_reservation_by_plate_if_uncomplete
 from modules.md_database.functions.get_reservation_by_identify_if_uncomplete import get_reservation_by_identify_if_uncomplete
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from applications.middleware.auth import get_user
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
 	def __init__(self):
 		super().__init__()
 
 		self.router_action_weigher = APIRouter()
+		self.url_weighing_auto = '/weighing/auto'
 
 		self.router_action_weigher.add_api_route('/realtime', self.StartRealtime, methods=['GET'])
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostic, methods=['GET'])
@@ -26,7 +28,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		self.router_action_weigher.add_api_route('/print', self.Generic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/in', self.Weight1, methods=['POST'])
 		self.router_action_weigher.add_api_route('/out', self.Weight2, methods=['POST'])
-		self.router_action_weigher.add_api_route('/out/auto', self.WeighingByIdentify, methods=['POST'])
+		self.router_action_weigher.add_api_route(self.url_weighing_auto, self.WeighingByIdentify, methods=['POST'])
 		self.router_action_weigher.add_api_route('/tare', self.Tare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
@@ -185,7 +187,10 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			"reservation_id": idReservation
 		}
 
-	async def WeighingByIdentify(self, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def WeighingByIdentify(self, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None):
+		response = get_user(token=token)
+		if hasattr(response, "status_code"):
+			return response
 		status_modope, command_executed, error_message = 500, False, ""
 		reservation = get_reservation_by_identify_if_uncomplete(identify=identify_dto.identify)
 		if reservation:

@@ -17,7 +17,6 @@ class GenericRouter:
 
         # Aggiungi le rotte
         self.router.add_api_route('/list/serial-ports', self.getSerialPorts)
-        self.router.add_api_route('/create/cam-capture-plate-access-token', self.createCamCapturePlateAccessToken)
         self.router.add_api_route('/report-in', self.saveReportIn, methods=['POST'])
         self.router.add_api_route('/report-in', self.getReportIn)
         self.router.add_api_route('/report-in/preview', self.getReportInPreview)
@@ -40,25 +39,6 @@ class GenericRouter:
             elapsed = time.time() - start_time
             raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)} (elapsed: {elapsed:.3f}s)")
         
-    async def createCamCapturePlateAccessToken(self):
-        try:
-            cam_capture_plate = get_data_by_attribute("user", "username", "camcaptureplate")
-            cam_capture_plate["date_created"] = cam_capture_plate["date_created"].isoformat()
-            if cam_capture_plate:
-                return {
-                    "access_token": create_access_token(cam_capture_plate)
-                }
-            # Se la password è errata, restituisci un errore generico
-            raise HTTPException(status_code=404, detail="L'utente delle telecamere per l'acquisizione delle targhe non esiste")
-        except Exception as e:
-            status_code = getattr(e, 'status_code', 404)
-            detail = getattr(e, 'detail', str(e))
-            # Gestisce eventuali errori imprevisti (come la mancanza dell'utente)
-            raise HTTPException(
-                status_code=status_code,
-                detail=detail
-            )
-
     async def saveReportIn(self, file: UploadFile = File(None)):
         path = lb_config.g_config['app_api']['path_report']
         name_report_in = lb_config.g_config["app_api"]["report_in"]

@@ -10,6 +10,8 @@ const editButtonContent = "✏️"
 
 const deleteButtonContent = "🗑️";
 
+const autoWeighingButtonContent = "🔗";
+
 // Creiamo e dispatchiamo l'evento manualmente
 const event = new Event('input', {
     bubbles: true,
@@ -1360,6 +1362,7 @@ async function loadSetupWeighers() {
                     <div class="container-buttons">
                         <button class="delete-btn">${deleteButtonContent}</button>
                         <button class="edit-btn">${editButtonContent}</button>
+                        <button class="auto-weighing-btn">${autoWeighingButtonContent}</button>
                     </div>
                 `;
 
@@ -1546,6 +1549,43 @@ async function loadSetupWeighers() {
                     editMode.style.display = 'block';
                     populateEditContent(weigher);
                 });
+
+                viewMode.querySelector('.auto-weighing-btn').addEventListener('click', () => {
+                    fetch(`/api/config-weigher/instance/node/endpoint?instance_name=${key}&weigher_name=${weigher.name}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        // Crea il popup custom
+                        const modal = document.createElement('div');
+                        modal.classList.add('modal');
+                        modal.innerHTML = `
+                            <div class="modal-content">
+                                <h3>Stringa da copiare</h3>
+                                <p style="word-break: break-all;">${res}</p>
+                                <div class="container-buttons right">
+                                    <button class="close-btn">Chiudi</button>
+                                    <button class="copy-btn">Copia</button>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                        modal.style.display = 'block';
+                        modal.querySelector('.copy-btn').addEventListener('click', () => {
+                            navigator.clipboard.writeText(res);
+                            document.body.removeChild(modal);
+                            showSnackbar("Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
+                        });
+                        modal.querySelector('.close-btn').addEventListener('click', () => {
+                            modal.style.display = 'none';
+                            document.body.removeChild(modal);
+                        });
+                        window.addEventListener('click', (event) => {
+                            if (event.target === modal) {
+                                modal.style.display = 'none';
+                                document.body.removeChild(modal);
+                            }
+                        });
+                    });
+                })
 
                 editMode.querySelector('.cancel-btn').addEventListener('click', () => {
                     populateEditContent(weigher);

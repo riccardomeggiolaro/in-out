@@ -140,7 +140,8 @@ button:enabled {
     pointer-events: auto; /* Abilita il click */
 }
 .delete-btn,
-.edit-btn {
+.edit-btn,
+.auto-weighing-btn {
     background-color: transparent;
     padding: 0px !important;
 }

@@ -12,6 +12,9 @@ from libs.lb_system import SerialPort, Tcp
 from applications.router.weigher.types import Data
 from applications.middleware.super_admin import is_super_admin
 from applications.router.weigher.dto import PathDTO
+from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
+from applications.utils.utils_auth import create_access_token
+import socket
 
 class ConfigWeigher(CommandWeigherRouter):
     def __init__(self):
@@ -35,6 +38,7 @@ class ConfigWeigher(CommandWeigherRouter):
         self.router_config_weigher.add_api_route('/instance/node', self.AddInstanceWeigher, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/instance/node', self.SetInstanceWeigher, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/instance/node', self.DeleteInstanceWeigher, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/instance/node/endpoint', self.GetInstanceWeigherEndpoint, methods=['GET'])
         self.router_config_weigher.add_api_route('/instance/connection', self.SetInstanceConnection, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/instance/connection', self.DeleteInstanceConnection, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -255,6 +259,17 @@ class ConfigWeigher(CommandWeigherRouter):
         del lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]
         lb_config.saveconfig()
         return { "deleted": response }
+
+    async def GetInstanceWeigherEndpoint(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+        user = get_data_by_attribute("user", "username", "camcaptureplate")
+        user["date_created"] = user["date_created"].isoformat()
+        token = create_access_token(user)
+        # Crea una connessione fittizia per determinare l'IP locale
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0] if len(s.getsockname()) > 0 else "127.0.0.1"
+        s.close()
+        return f"http://{ip}/api/command-weigher{self.url_weighing_auto}?instance_name={instance.instance_name}&weigher_name={instance.weigher_name}&token={token}"
 
     async def SetInstanceConnection(self, connection: Union[SerialPort, Tcp], instance: InstanceNameDTO = Depends(get_query_params_name)):
         response = md_weigher.module_weigher.setInstanceConnection(instance_name=instance.instance_name, conn=connection)

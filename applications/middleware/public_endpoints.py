@@ -1,0 +1,1 @@
+PUBLIC_ENDPOINTS = ["/api/auth/login", "/api/command-weigher/weighing/auto"]
