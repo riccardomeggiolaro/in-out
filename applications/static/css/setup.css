@@ -156,7 +156,8 @@ button:enabled {
     width: fit-content;
 }
 .delete-btn,
-.edit-btn {
+.edit-btn,
+.auto-weighing-btn {
     border: none !important;
     width: auto !important;
     box-shadow: none !important;
