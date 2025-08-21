@@ -16,10 +16,10 @@ ul {
     margin: 0;
     padding: 0;
 }
-li {
+.margins{
     margin: 10px;
 }
-li div:first-child {
+.marginsdiv:first-child {
     max-width: 900px;
 }
 #config {
@@ -89,7 +89,7 @@ li div:first-child {
 .div_config > ul {
     margin-left: 20px;
 }
-li {
+.margins{
     gap: 20px;
 }
 h3 {

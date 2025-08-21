@@ -21,9 +21,6 @@
         <div class="container">
             <div class="display-wrapper">
                 <div class="item anagrafic">
-                    <img class="loading" src="/static/content/baronpesi_logo.png" alt="Logo Baron Pesi" style="max-height: 70px; width: fit-content;">
-                    <hr>
-
                     <div>
                         <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>AUTOMEZZO</strong></p>
                         <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')" oninput="this.value = ''" >
@@ -64,7 +61,7 @@
 
                     <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
                         <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="diagnostic()">⚡</button>
-                        <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
+                        <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
                     </div>
 
                     <div class="weight">
@@ -100,7 +97,7 @@
                     </div>            
                 </div>
                 <div class="item ins">
-                    <h2>Accessi</h3>
+                    <h2 style="padding-top: 10px; padding-bottom: 10px;">Accessi</h3>
                     <hr>
                     <ul class="list-in">
                     </ul>                    

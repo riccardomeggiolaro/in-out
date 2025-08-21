@@ -20,13 +20,15 @@ fetch('navbar.html')
         }
         const p = document.getElementById("hi-session-user");
         p.textContent = `Ciao, ${res.username}`;
+        const pDesktop = document.getElementById("hi-session-user-desktop");
+        pDesktop.textContent = `Ciao, ${res.username}`;
     });
     // Inserisci l'HTML modificato
     document.getElementById('navbar-container').innerHTML = data;
     // Colora il link attivo
     const currentPath = window.location.pathname;
     document.querySelectorAll('.side-menu-navbar li').forEach(li => {
-    const link = li.querySelector('a');
+        const link = li.querySelector('a');
         if (link && link.getAttribute('href') === currentPath) {
             link.classList.add('active-link-navbar');
             if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
@@ -35,6 +37,16 @@ fetch('navbar.html')
             }
         }
     })
+    document.querySelectorAll('.navbar-desktop li').forEach(li => {
+        const link = li.querySelector('a');
+        if (link && link.getAttribute('href') === currentPath) {
+            link.classList.add('active-link-navbar');
+            if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
+                document.querySelector('.arrow-dropdown-navbar').classList.toggle('up');
+                document.querySelector('.dropdown-navbar').classList.toggle('active');
+            }
+        }
+    });
 });
 
 function toggleMenu(element) {

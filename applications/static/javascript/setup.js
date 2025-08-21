@@ -1353,6 +1353,7 @@ async function loadSetupWeighers() {
             const addWeigher = (weigher) => {
                 const li = document.createElement('li');
                 li.classList.toggle('borders');
+                li.classList.toggle('margins');
                 const viewMode = document.createElement('div');
                 const editMode = document.createElement('div');
                 editMode.style.display = 'none';

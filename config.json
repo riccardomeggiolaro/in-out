@@ -17,7 +17,7 @@
         "port": 80,
         "report_in": "weight_in.html",
         "report_out": "weight_out.html",
-        "return_pdf_copy_after_weighing": false,
+        "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -110,15 +110,10 @@
                             "weighing": {
                                 "cams": [],
                                 "report": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
-                                "set_rele": [
-                                    {
-                                        "rele": "1",
-                                        "set": 1
-                                    }
-                                ]
+                                "set_rele": []
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -131,9 +126,7 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 0
-                        },
+                        "rele": {},
                         "run": true,
                         "terminal": "egt-af03"
                     }
