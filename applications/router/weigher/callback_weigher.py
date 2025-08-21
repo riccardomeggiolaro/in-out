@@ -237,6 +237,8 @@ class CallbackWeigher(Functions, WebSocket):
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 		
 	def Callback_Rele(self, instance_name: str, weigher_name: str, port_rele: tuple):
+		import libs.lb_log as lb_log
+		lb_log.warning(port_rele)
 		key, value = port_rele
 		result = {key: value}
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][key] = value

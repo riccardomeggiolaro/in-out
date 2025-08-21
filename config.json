@@ -50,9 +50,9 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "ip": "10.0.5.177",
+                    "ip": "192.168.8.154",
                     "port": 4001,
-                    "timeout": 1.0
+                    "timeout": 4.0
                 },
                 "nodes": {
                     "P1": {
@@ -101,10 +101,20 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "rele": "1",
+                                            "set": 0
+                                        }
+                                    ]
                                 },
                                 "under_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "rele": "1",
+                                            "set": 1
+                                        }
+                                    ]
                                 }
                             },
                             "weighing": {
@@ -113,7 +123,12 @@
                                     "in": true,
                                     "out": true
                                 },
-                                "set_rele": []
+                                "set_rele": [
+                                    {
+                                        "rele": "1",
+                                        "set": 1
+                                    }
+                                ]
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -126,8 +141,12 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {},
+                        "rele": {
+                            "1": 0
+                        },
                         "run": true,
+                        "take_of_weight_before_weighing": false,
+                        "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"
                     }
                 },

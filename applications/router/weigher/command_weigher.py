@@ -105,11 +105,18 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def Weight1(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
+		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
 		current_id = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
 		reservation = None
 		status_modope = None
 		command_executed = None
 		error_message = None
+		if take_of_weight_on_startup is True:
+			error_message = "Scaricare la pesa dopo l'avvio del programma"
+		if take_of_weight_before_weighing is True:
+			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
 		if current_id:
 			reservation = get_reservation_by_id(current_id)
 		if reservation and len(reservation.in_out) > 0:
@@ -146,37 +153,45 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 	async def Weight2(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
+		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
 		idReservation = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
 		reservation = None
-		if idReservation:
-			reservation = get_reservation_by_id(idReservation)
-		just_created = False
-		if reservation:
-			if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1 and reservation.in_out[-1].idWeight2 and tare != "0":
-				error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
-			elif len(reservation.in_out) == 0 and tare == "0":
-				error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
-			# elif len(reservation.in_out) > 0 and not reservation.in_out[-1].idWeight1 and tare == "0":
-			# 	error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
-		if not reservation:
-			if tare == "0":
-				error_message = "Nessun id impostato per effettuare l'uscita."
-			else:
-				reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
-					**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
-					"number_in_out": 1,
-					"hidden": True
-				}))
-				idReservation = reservation.id
-				just_created = True
-		if idReservation and not error_message:
-			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
-				instance_name=instance.instance_name, 
-				weigher_name=instance.weigher_name, 
-				modope="WEIGHING", 
-				data_assigned=idReservation)
-		if error_message and just_created:
-			await self.deleteReservation(request=None, id=idReservation)
+		if take_of_weight_on_startup is True:
+			error_message = "Scaricare la pesa dopo l'avvio del programma"
+		elif take_of_weight_before_weighing is True:
+			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
+		else:
+			if idReservation:
+				reservation = get_reservation_by_id(idReservation)
+			just_created = False
+			if reservation:
+				if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1 and reservation.in_out[-1].idWeight2 and tare != "0":
+					error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
+				elif len(reservation.in_out) == 0 and tare == "0":
+					error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
+				# elif len(reservation.in_out) > 0 and not reservation.in_out[-1].idWeight1 and tare == "0":
+				# 	error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
+			if not reservation:
+				if tare == "0":
+					error_message = "Nessun id impostato per effettuare l'uscita."
+				else:
+					reservation = await self.addReservation(request=None, body=AddReservationDTO(**{
+						**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
+						"number_in_out": 1,
+						"hidden": True
+					}))
+					idReservation = reservation.id
+					just_created = True
+			if idReservation and not error_message:
+				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+					instance_name=instance.instance_name, 
+					weigher_name=instance.weigher_name, 
+					modope="WEIGHING", 
+					data_assigned=idReservation)
+			if error_message and just_created:
+				await self.deleteReservation(request=None, id=idReservation)
 		return {
 			"instance": instance,
 			"command_details": {
@@ -192,16 +207,24 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		if hasattr(response, "status_code"):
 			return response
 		status_modope, command_executed, error_message = 500, False, ""
-		reservation = get_reservation_by_identify_if_uncomplete(identify=identify_dto.identify)
-		if reservation:
-			current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-			if current_weigher_data["id_selected"]["id"] != reservation["id"]:
-				await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
-			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
-				instance_name=instance.instance_name, 
-				weigher_name=instance.weigher_name, 
-				modope="WEIGHING", 
-				data_assigned=reservation["id"])
+		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
+		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
+		if take_of_weight_on_startup is True:
+			error_message = "Scaricare la pesa dopo l'avvio del programma"
+		elif take_of_weight_before_weighing is True:
+			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
+		else:
+			reservation = get_reservation_by_identify_if_uncomplete(identify=identify_dto.identify)
+			if reservation:
+				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				if current_weigher_data["id_selected"]["id"] != reservation["id"]:
+					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
+				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+					instance_name=instance.instance_name, 
+					weigher_name=instance.weigher_name, 
+					modope="WEIGHING", 
+					data_assigned=reservation["id"])
 		return {
 			"instance": instance,
 			"command_details": {

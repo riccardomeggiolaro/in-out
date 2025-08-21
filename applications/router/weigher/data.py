@@ -102,8 +102,6 @@ class DataRouter(CallbackWeigher):
 					"document_reference": reservation.document_reference,
 					"badge": reservation.badge
 				})
-				import libs.lb_log as lb_log
-				lb_log.warning(data_in_execution)
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idReservation=data_dto.id_selected.id)
 		else:

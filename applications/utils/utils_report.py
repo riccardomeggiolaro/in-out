@@ -30,8 +30,6 @@ def get_data_variables(in_out):
     if in_out.idWeight2:
         if in_out.weight2.tare > 0:
             name_file = f"{in_out.weight2.weigher}_{in_out.weight2.pid}"
-            variables.weight1.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M")
-            variables.weight1.pid = in_out.weight2.pid
             variables.weight1.weight = in_out.weight2.tare
             variables.weight1.type = "PT" if in_out.weight2.is_preset_tare else "Tara"
         else:

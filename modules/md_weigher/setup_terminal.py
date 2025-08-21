@@ -162,7 +162,9 @@ class __SetupWeigher(__SetupWeigherConnection):
    			"status": self.diagnostic.status,
 			"port_rele": self.port_rele,
 			"need_take_of_weight_on_startup": self.need_take_of_weight_on_startup,
-			"need_take_of_weight_before_weighing": self.need_take_of_weight_before_weighing
+			"need_take_of_weight_before_weighing": self.need_take_of_weight_before_weighing,
+			"take_of_weight_on_startup": self.take_of_weight_on_startup,
+			"take_of_weight_before_weighing": self.take_of_weight_before_weighing
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
