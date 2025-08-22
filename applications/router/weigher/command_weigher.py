@@ -14,6 +14,8 @@ from modules.md_database.functions.get_reservation_by_plate_if_uncomplete import
 from modules.md_database.functions.get_reservation_by_identify_if_uncomplete import get_reservation_by_identify_if_uncomplete
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from applications.middleware.auth import get_user
+import libs.lb_log as lb_log
+import threading
 
 class CommandWeigherRouter(DataRouter, ReservationRouter):
 	def __init__(self):
@@ -202,10 +204,11 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			"reservation_id": idReservation
 		}
 
-	async def WeighingByIdentify(self, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None):
-		response = get_user(token=token)
-		if hasattr(response, "status_code"):
-			return response
+	async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None):
+		if request is not None:
+			response = get_user(token=token)
+			if hasattr(response, "status_code"):
+				return response
 		status_modope, command_executed, error_message = 500, False, ""
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
@@ -232,13 +235,15 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 					weighing = False
 					timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
 					time_between_actions = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"]
-					import libs.lb_log as lb_log
 					while timeout > 0:
 						await asyncio.sleep(time_between_actions)
+						modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 						current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 						realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 						current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
-						if current_modope != "PRESETTARE" and current_tare == str(tare):
+						m = modope if request is not None else current_modope
+						if modope != "PRESETTARE" and current_modope != "PRESETTARE" and current_tare == str(tare):
+							lb_log.warning(modope)
 							lb_log.warning(current_modope)
 							weighing = True
 							break
@@ -248,6 +253,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
 				if weighing:
 					realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+					lb_log.warning(realtime.status)
 					if realtime.status != "ST":
 						error_message = "Errore durante la pesatura automatica. La pesa non è stabile."
 						await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
@@ -257,6 +263,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 							weigher_name=instance.weigher_name, 
 							modope="WEIGHING", 
 							data_assigned=reservation["id"])
+		lb_log.warning(error_message)
 		return {
 			"instance": instance,
 			"command_details": {
@@ -268,16 +275,14 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		}
 
 	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
-		instance = InstanceNameWeigherDTO(**{"instance_name": instance_name, "weigher_name": weigher_name})
-		identify_dto = IdentifyDTO(**{"identify": identify})
-		try:
-			if asyncio.get_event_loop().is_running():
-				asyncio.create_task(self.WeighingByIdentify(instance=instance, identify_dto=identify_dto))
-			else:
-				loop = asyncio.get_event_loop()
-				loop.run_until_complete(self.WeighingByIdentify(instance=instance, identify_dto=identify_dto))
-		except RuntimeError:
-			asyncio.run(self.WeighingByIdentify(instance=instance, identify_dto=identify_dto))
+		instance = InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)
+		identify_dto = IdentifyDTO(identify=identify)
+
+		def run_in_thread():
+			asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+
+		thread = threading.Thread(target=run_in_thread)
+		thread.start()
 
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""

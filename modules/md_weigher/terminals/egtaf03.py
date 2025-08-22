@@ -146,7 +146,11 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 					self.diagnostic.status = 200
 					self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
-					self.flush()
+					# if self.modope == "REALTIME":
+					# 	response = self.read()
+					# 	split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
+					# 	length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
+					# 	length_response = len(response) # ottengo la lunghezza della stringa della risposta
 					callCallback(self.callback_weighing)
 					self.weight.weight_executed.net_weight = ""
 					self.weight.weight_executed.gross_weight = ""
@@ -163,7 +167,12 @@ class EgtAf03(Terminal):
 				######### Se arriva tag #############################################################################################
 				elif length_split_response == 1 and length_response == 15 and "$" in response:
 					self.code_identify = response.replace("$", "").strip()
-					self.flush()
+					if self.modope == "REALTIME":
+						response = self.read()
+						split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
+						length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
+						length_response = len(response) # ottengo la lunghezza della stringa della risposta
+						# self.modope_to_execute = "OK"
 					callCallback(self.callback_code_identify)
 					self.code_identify = ""
 					self.diagnostic.status = 200
@@ -256,11 +265,14 @@ class EgtAf03(Terminal):
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:
 					if self.modope == "TARE":
-						self.pesa_real_time.status = "T"
+						# self.pesa_real_time.status = "T"
+						pass
 					if self.modope == "PRESETTARE":
-						self.pesa_real_time.status = "PT"						
+						# self.pesa_real_time.status = "PT"						
+						pass
 					elif self.modope == "ZERO":
-						self.pesa_real_time.status = "Z"
+						# self.pesa_real_time.status = "Z"
+						pass
 					callCallback(self.callback_tare_ptare_zero) # chiamo callback
 					self.diagnostic.status = 200
 				######### Se non è arrivata nessuna risposta ################################
