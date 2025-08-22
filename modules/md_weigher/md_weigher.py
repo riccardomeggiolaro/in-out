@@ -222,6 +222,9 @@ class WeigherModule:
 	def getModope(self, instance_name, weigher_name: str):
 		return self.instances[instance_name].getModope(weigher_name=weigher_name)
 
+	def getCurrentModope(self, instance_name, weigher_name: str):
+		return self.instances[instance_name].getCurrentModope(weigher_name=weigher_name)
+
 	def setModope(self, instance_name, weigher_name: str, modope, presettare=0, data_assigned: int = None, port_rele=None):
 		return self.instances[instance_name].setModope(weigher_name=weigher_name, modope=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele)
 
@@ -603,6 +606,9 @@ class WeigherInstance:
 
 	def getModope(self, weigher_name: str):
 		return self.nodes[weigher_name].modope_to_execute
+
+	def getCurrentModope(self, weigher_name: str):
+		return self.nodes[weigher_name].modope
 
 	def setModope(self, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None):
 		status_modope, error_message = self.nodes[weigher_name].setModope(mod=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele)
