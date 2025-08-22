@@ -278,6 +278,9 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		instance = InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)
 		identify_dto = IdentifyDTO(identify=identify)
 
+		# Lancia un thread separato siccome viene lanciata come callback all'interno del ciclo di lettura della pesa
+		# e non può essere bloccante altrimenti rimarrebbe bloccato tutto il ciclo di lettura della pesa
+		# su PRESETTARE in attesa della pesata automatica e non eseguirebbe WEIGHING
 		def run_in_thread():
 			asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
 
