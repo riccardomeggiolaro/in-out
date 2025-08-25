@@ -25,6 +25,9 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
             if reservation.vehicle and reservation.vehicle.reservations[-1].id != id and data.number_in_out and data.number_in_out is not None and data.number_in_out != reservation.number_in_out:
                 raise ValueError(f"Puoi modificare il numero di operazioni solo sull'ultimo accesso con la targa '{reservation.vehicle.plate}'")
 
+            if reservation.number_in_out is None and data.number_in_out is not None and data.number_in_out != -1:
+                raise ValueError(f"Non puoi modificare il numero di operazioni da illimitato a un numero specifico")
+
             current_model = Subject
             if data.subject.id in [None, -1]:
                 add_subject = {

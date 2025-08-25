@@ -111,7 +111,7 @@ class CallbackWeigher(Functions, WebSocket):
         			"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight
 	           })
-			elif last_in_out and last_in_out.idWeight2 and tare == 0:
+			elif last_in_out and last_in_out.idWeight2 and tare == 0 and reservation.number_in_out is not None:
 				weight1 = last_in_out.weight2.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
 				add_data("in_out", {
