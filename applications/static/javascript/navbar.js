@@ -14,7 +14,7 @@ fetch('navbar.html')
             const users = document.querySelectorAll(".page-of-users");
             users.forEach(user => user.style.display = "none");
         }
-        if (res.level < 3) {
+        if (res.level < 4) {
             const setups = document.querySelectorAll(".page-of-setup");
             setups.forEach(setup => setup.style.display = "none");
         }

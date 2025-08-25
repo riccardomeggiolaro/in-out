@@ -33,7 +33,6 @@
             flex-direction: row;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
         table {
             width: 100%;
@@ -255,8 +254,9 @@
             <input type="text" id="description" name="description" autocomplete="off" required>
             <label for="level">Livello:</label>
             <select id="level" name="level">
-                <option value=2>Amministratore</option>
-                <option value=1>Utente</option>
+                <option value=3>Amministratore</option>
+                <option value=2>Utente</option>
+                <option value=1>Utente solo lettura</option>
             </select>
             Password: (Min 8 caratteri)<br>
             <input type="password" id="password" name="password" autocomplete="off" minlength="8" required>
@@ -355,8 +355,9 @@
                 select.innerHTML = '';
                 // Crea opzioni solo per livelli inferiori a dataUser.level
                 const options = [];
-                if (dataUser.level > 2) options.push({ value: 2, label: "Amministratore" });
-                if (dataUser.level > 1) options.push({ value: 1, label: "Utente" });
+                if (dataUser.level > 3) options.push({ value: 3, label: "Amministratore" });
+                if (dataUser.level > 2) options.push({ value: 2, label: "Utente" });
+                if (dataUser.level > 1) options.push({ value: 1, label: "Utente solo lettura"});
                 // Trova la label associata (assume che la label sia subito prima del select)
                 let label = select.previousElementSibling;
                 console.log(label)
@@ -398,8 +399,9 @@
                     if (user.level > 0 && user.level <= dataUser.level) {
                         const tr = document.createElement("tr");
                         let level = "Super amministratore";
-                        if (user.level === 2) level = "Amministratore";
-                        else if (user.level === 1) level = "Utente";
+                        if (user.level === 3) level = "Amministratore";
+                        else if (user.level === 2) level = "Utente";
+                        else if (user.level === 1) level = "Utente solo lettura";
                         const buttons = `
                             <button onclick="editRow(${user.id}, '${user.username}', '${user.description}', ${user.level})">🔑</button>
                             <button onclick="deleteRow(${user.id}, '${user.username}')">🗑️</button>
