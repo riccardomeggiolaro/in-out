@@ -204,6 +204,11 @@ class CallbackWeigher(Functions, WebSocket):
 		elif not last_pesata.weight_executed.executed and last_pesata.data_assigned and reservation.hidden is True:
 			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
 			delete_data("reservation", last_pesata.data_assigned)
+		# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
+		if not last_pesata.weight_executed.executed and len(reservation.in_out) == 0 and reservation.hidden is False:
+			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE E NON C'E' NESSUN IN-OUT ELIMINA I DATI IN ESECUZIONE
+			self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
+			self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		for instance in weighers_data:
 			for weigher in weighers_data[instance]:

@@ -225,8 +225,9 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				error_message = f"Il peso deve essere maggiore di {min_weight} kg"
 			elif reservation:
 				current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				set_data = None
 				if current_weigher_data["id_selected"]["id"] != reservation["id"]:
-					await self.SetData(data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
+					set_data = await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
 				data = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]
 				tare = data["data_in_execution"]["vehicle"]["tare"]
 				weight1 = data["id_selected"]["weight1"]
@@ -243,8 +244,6 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
 						m = modope if request is not None else current_modope
 						if modope != "PRESETTARE" and current_modope != "PRESETTARE" and current_tare == str(tare):
-							lb_log.warning(modope)
-							lb_log.warning(current_modope)
 							weighing = True
 							break
 						timeout -= time_between_actions
@@ -253,7 +252,6 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
 				if weighing:
 					realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-					lb_log.warning(realtime.status)
 					if realtime.status != "ST":
 						error_message = "Errore durante la pesatura automatica. La pesa non è stabile."
 						await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
@@ -263,7 +261,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 							weigher_name=instance.weigher_name, 
 							modope="WEIGHING", 
 							data_assigned=reservation["id"])
-		lb_log.warning(error_message)
+		if error_message:
+			await self.DeleteData(instance=instance)
 		return {
 			"instance": instance,
 			"command_details": {

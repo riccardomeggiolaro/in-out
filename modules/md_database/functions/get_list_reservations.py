@@ -1,9 +1,10 @@
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql import exists, and_, or_
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, ReservationStatus, TypeReservation, Weighing
 from datetime import datetime, date
 
-def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, exclude_test_reservation=False, permanent=None, get_is_last_for_vehicle=False):
+def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, exclude_test_reservation=False, permanent=None, get_is_last_for_vehicle=False, onlyOpened=False):
     """
     Gets a list of reservations with optional filtering for incomplete reservations
     and additional filters on any reservation field or related entities.
@@ -103,6 +104,30 @@ def get_list_reservations(filters=None, not_closed=False, fromDate=None, toDate=
                             continue
             if isinstance(fromDate, (datetime, date)):
                 query = query.filter(Reservation.date_created >= fromDate)
+
+        if onlyOpened:
+            query = query.filter(weighing_count_subquery.c.weighing_count > 0)
+
+            # Filtro custom richiesto
+            query = query.filter(
+                or_(
+                    # Primo caso: almeno un in_out e number_in_out definito
+                    and_(
+                        exists().where(InOut.idReservation == Reservation.id),
+                        Reservation.number_in_out != None
+                    ),
+                    # Secondo caso: almeno un in_out senza idWeight2 e number_in_out == None
+                    and_(
+                        exists().where(
+                            and_(
+                                InOut.idReservation == Reservation.id,
+                                InOut.idWeight2 == None
+                            )
+                        ),
+                        Reservation.number_in_out == None
+                    )
+                )
+            )
 
         # Filtro per data di fine
         if toDate:

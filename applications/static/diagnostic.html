@@ -1,223 +1,224 @@
 <!DOCTYPE html>
 <html lang="it">
-<head>
-    <link rel="icon" href="/static/content/baronpesi_favicon.png">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Peso</title>
-    <meta name="description" content="About this app" />
-    <style>
-        html,
-        body {
-            margin: 0px;
-        }
+    <head>
+        <link rel="icon" href="/static/content/baronpesi_favicon.png">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard Peso</title>
+        <meta name="description" content="About this app" />
+        <style>
+            html,
+            body {
+                margin: 0px;
+            }
 
-        * {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            font-size: 20px;
-        }
+            * {
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                font-size: 20px;
+            }
 
-        p {
-            margin-top: 0px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
+            p {
+                margin-top: 0px;
+                margin-bottom: 15px;
+                text-align: center;
+            }
 
-        #rele {
-            text-align: center;
-            margin-bottom: 15px;
-        }
+            #rele {
+                text-align: center;
+                margin-bottom: 15px;
+            }
 
-        hr {
-            margin-top: 0px;
-            margin-bottom: 15px;
-        }
+            hr {
+                margin-top: 0px;
+                margin-bottom: 15px;
+            }
 
-        button {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-            transition: box-shadow 0.3s ease;
-            background-color: #1362b8;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            border-color: #1362b8;
-            cursor: pointer;
-            flex: 1;
-            height: 2rem;
-        }
+            button {
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+                transition: box-shadow 0.3s ease;
+                background-color: #1362b8;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                border-color: #1362b8;
+                cursor: pointer;
+                flex: 1;
+                height: 2rem;
+            }
 
-        button:active {
-            background-color: #00346b;
-        }
+            button:active {
+                background-color: #00346b;
+            }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-</style>
-</head>
-<!-- Rest of your HTML remains unchanged -->
-</style>
-</head>
-<body>
-    <div>
-        <p><strong>Relè:</strong></p>
-
-        <div id="rele"></div>
-
-        <hr>
-
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+        </style>
+    </head>
+    <body>
         <div>
-            <table>
-                <tr>
-                    <th>Firmware</th>
-                    <td id="firmware"></td>
-                </tr>
-                <tr>
-                    <th>Model-Name</th>
-                    <td id="model-name"></td>
-                </tr>
-                <tr>
-                    <th>Serial-Number</th>
-                    <td id="serial-number"></td>
-                </tr>
-                <tr>
-                    <th>RZ</th>
-                    <td id="rz"></td>
-                </tr>
-                <tr>
-                    <th>VL</th>
-                    <td id="vl"></td>
-                </tr>
-            </table>
+            <p class="rele"><strong>Relè:</strong></p>
+
+            <div id="rele" class="rele"></div>
+
+            <hr class="rele">
+
+            <div>
+                <table>
+                    <tr>
+                        <th>Firmware</th>
+                        <td id="firmware"></td>
+                    </tr>
+                    <tr>
+                        <th>Model-Name</th>
+                        <td id="model-name"></td>
+                    </tr>
+                    <tr>
+                        <th>Serial-Number</th>
+                        <td id="serial-number"></td>
+                    </tr>
+                    <tr>
+                        <th>RZ</th>
+                        <td id="rz"></td>
+                    </tr>
+                    <tr>
+                        <th>VL</th>
+                        <td id="vl"></td>
+                    </tr>
+                </table>
+            </div>
         </div>
-    </div>
 
-    <script type="module" src="/static/javascript/auth.js"></script>
-    <script type="module" src="/static/javascript/interceptor.js"></script>
-    <script>
-        let isRefreshing = false;
-        let pathname = '';
-        pathname = '/gateway';
-        let lastSlashIndex = window.location.pathname.lastIndexOf('/');
-        pathname = lastSlashIndex !== -1 ? pathname.substring(0, lastSlashIndex) : pathname;
-        let snackbarTimeout;
-        const rele = document.querySelector('#rele');
-        const firmware = document.querySelector('#firmware');
-        const modelName = document.querySelector('#model-name');
-        const serialNumber = document.querySelector('#serial-number');
-        const rz = document.querySelector('#rz');
-        const vl = document.querySelector('#vl');
-        let currentWeigherPath;
-        let _data;
-        
-        document.addEventListener('DOMContentLoaded', async () => {
-            currentWeigherPath = localStorage.getItem('currentWeigherPath');
-            getInstanceWeigher(currentWeigherPath);
-            connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime);
-        });
+        <script type="module" src="/static/javascript/auth.js"></script>
+        <script type="module" src="/static/javascript/interceptor.js"></script>
+        <script>
+            let isRefreshing = false;
+            let pathname = '';
+            pathname = '/gateway';
+            let lastSlashIndex = window.location.pathname.lastIndexOf('/');
+            pathname = lastSlashIndex !== -1 ? pathname.substring(0, lastSlashIndex) : pathname;
+            let snackbarTimeout;
+            const rele = document.querySelector('#rele');
+            const firmware = document.querySelector('#firmware');
+            const modelName = document.querySelector('#model-name');
+            const serialNumber = document.querySelector('#serial-number');
+            const rz = document.querySelector('#rz');
+            const vl = document.querySelector('#vl');
+            let currentWeigherPath;
+            let _data;
+            
+            document.addEventListener('DOMContentLoaded', async () => {
+                currentWeigherPath = localStorage.getItem('currentWeigherPath');
+                getInstanceWeigher(currentWeigherPath);
+                connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime);
+            });
 
-        async function getInstanceWeigher(path) {
-            await fetch(`/api/config-weigher/instance/node${path}`)
-            .then(res => {
-                if (res.status === 404) {
-                    alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
-                }
-                return res.json();        
-            })
-            .then(res => {
-                const obj = Object.values(res)[0];
-                console.log(obj)
-                firmware.textContent = obj.terminal_data.firmware || "N/A";
-                modelName.textContent = obj.terminal_data.model_name || "N/A";
-                serialNumber.textContent = obj.terminal_data.serial_number || "N/A";
-                if (obj.rele) {
-                    Object.entries(obj.rele).forEach(([key, value]) => {
-                        const buttonRele = document.createElement("button");
-                        buttonRele.id = `rele-${key}`;
-                        buttonRele.innerHTML = `<strong>${key} - ${value === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
-                        buttonRele.onclick = () => {
-                            fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);
+            async function getInstanceWeigher(path) {
+                await fetch(`/api/config-weigher/instance/node${path}`)
+                .then(res => {
+                    if (res.status === 404) {
+                        alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
+                    }
+                    return res.json();        
+                })
+                .then(res => {
+                    const obj = Object.values(res)[0];
+                    console.log(obj)
+                    firmware.textContent = obj.terminal_data.firmware || "N/A";
+                    modelName.textContent = obj.terminal_data.model_name || "N/A";
+                    serialNumber.textContent = obj.terminal_data.serial_number || "N/A";
+                    if (obj.rele) {
+                        const reles = Object.entries(obj.rele);
+                        reles.forEach(([key, value]) => {
+                            const buttonRele = document.createElement("button");
+                            buttonRele.id = `rele-${key}`;
+                            buttonRele.innerHTML = `<strong>${key} - ${value === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+                            buttonRele.onclick = () => {
+                                fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);
+                            }
+                            rele.appendChild(buttonRele);
+                        });
+                        if (reles.length === 0) {
+                            document.querySelectorAll('.rele').forEach(el => el.style.display = 'none');
                         }
-                        rele.appendChild(buttonRele);
-                    });
-                }
-            })
-            .catch(error => console.error('Errore nella fetch:', error));
-        }
+                    }
+                })
+                .catch(error => console.error('Errore nella fetch:', error));
+            }
 
-        function connectWebSocket(path, exe) {
-            // Ottieni la base URL del dominio corrente
-            let baseUrl = window.location.origin + pathname;
+            function connectWebSocket(path, exe) {
+                // Ottieni la base URL del dominio corrente
+                let baseUrl = window.location.origin + pathname;
 
-            baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
+                baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
 
-            // Costruisci l'URL WebSocket
-            const websocketUrl = `${baseUrl}/${path}`;
+                // Costruisci l'URL WebSocket
+                const websocketUrl = `${baseUrl}/${path}`;
 
-            closeWebSocket(); // Chiude la connessione WebSocket precedente se esiste
+                closeWebSocket(); // Chiude la connessione WebSocket precedente se esiste
 
-            _data = new WebSocket(websocketUrl);
+                _data = new WebSocket(websocketUrl);
 
-            _data.addEventListener('message', (e) => {
-                exe(e);
-            });
+                _data.addEventListener('message', (e) => {
+                    exe(e);
+                });
 
-            _data.addEventListener('open', () => {
-                // enableAllElements();
+                _data.addEventListener('open', () => {
+                    // enableAllElements();
+                    // reconnectionButton.disabled = true;
+                    // closePopup('reconnectionPopup');
+                })
+
+                _data.addEventListener('error', () => {
+                    if (!isRefreshing) {
+                        closeWebSocket();
+                        // disableAllElements();
+                        // reconnectionButton.disabled = false;
+                        // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+                        // openPopup('reconnectionPopup');
+                    }
+                });
+
+                _data.addEventListener('close', () => {
+                    if (!isRefreshing) {
+                        // disableAllElements();
+                        // reconnectionButton.disabled = false;
+                        // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
+                        // openPopup('reconnectionPopup');
+                    }
+                });
+            }
+
+            function attemptReconnect() {
                 // reconnectionButton.disabled = true;
-                // closePopup('reconnectionPopup');
-            })
-
-            _data.addEventListener('error', () => {
-                if (!isRefreshing) {
-                    closeWebSocket();
-                    // disableAllElements();
-                    // reconnectionButton.disabled = false;
-                    // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
-                    // openPopup('reconnectionPopup');
-                }
-            });
-
-            _data.addEventListener('close', () => {
-                if (!isRefreshing) {
-                    // disableAllElements();
-                    // reconnectionButton.disabled = false;
-                    // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
-                    // openPopup('reconnectionPopup');
-                }
-            });
-        }
-
-        function attemptReconnect() {
-            // reconnectionButton.disabled = true;
-            closeWebSocket();
-            // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
-            connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime);
-        }
-
-        function closeWebSocket() {
-            if (_data) {
-                _data.close(); // Chiude la connessione WebSocket
-                _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
+                closeWebSocket();
+                // document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
+                connectWebSocket(`api/command-weigher/diagnostic${currentWeigherPath}`, updateUIRealtime);
             }
-        }
 
-        function updateUIRealtime(e) {
-            const obj = JSON.parse(e.data);
-            const firstKey = Object.keys(obj)[0];
-            const isDigit = /^\d+$/.test(Object.keys(obj)[0]);
-            if (obj.firmware) {
-                firmware.textContent = obj.firmware;
-                modelName.textContent = obj.model_name;
-                serialNumber.textContent = obj.serial_number;
-                rz.textContent = obj.rz;
-                vl.textContent = obj.vl;
-            } else if (isDigit) {
-                const buttonRele = document.querySelector(`#rele-${firstKey}`);
-                buttonRele.innerHTML = `<strong>${firstKey} - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+            function closeWebSocket() {
+                if (_data) {
+                    _data.close(); // Chiude la connessione WebSocket
+                    _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
+                }
             }
-        }
-    </script>
-</body>
+
+            function updateUIRealtime(e) {
+                const obj = JSON.parse(e.data);
+                const firstKey = Object.keys(obj)[0];
+                const isDigit = /^\d+$/.test(Object.keys(obj)[0]);
+                if (obj.firmware) {
+                    firmware.textContent = obj.firmware;
+                    modelName.textContent = obj.model_name;
+                    serialNumber.textContent = obj.serial_number;
+                    rz.textContent = obj.rz;
+                    vl.textContent = obj.vl;
+                } else if (isDigit) {
+                    const buttonRele = document.querySelector(`#rele-${firstKey}`);
+                    buttonRele.innerHTML = `<strong>${firstKey} - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+                }
+            }
+        </script>
+    </body>
 </html>

@@ -736,5 +736,10 @@ hr {
 }
 
 #diagnosticPopup .content iframe {
-    height: 241px !important;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#diagnosticPopup .footer-buttons {
+    margin-top: 0px;
 }

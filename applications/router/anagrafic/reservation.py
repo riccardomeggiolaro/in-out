@@ -58,7 +58,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         self.router.add_api_route('/call/{id}', self.callReservation, methods=["GET"])
         self.router.add_api_route('/cancel-call/{id}', self.cancelCallReservation, methods=["GET"])
         
-    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, permanent: Optional[bool] = None):
+    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, permanent: Optional[bool] = None, onlyOpened: bool = None):
         try:
             not_closed = False
             if "status" in query_params and query_params["status"] == "NOT_CLOSED":
@@ -77,7 +77,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 del query_params["excludeTestWeighing"]
             if "permanent" in query_params:
                 del query_params["permanent"]
-            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing, permanent, True)
+            if "onlyOpened" in query_params:
+                del query_params["onlyOpened"]
+            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing, permanent, True, onlyOpened)
             return {
                 "data": data,
                 "total_rows": total_rows,

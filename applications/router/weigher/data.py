@@ -32,7 +32,7 @@ class DataRouter(CallbackWeigher):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
 	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		if request.state.user.level == 1:
+		if request is not None and request.state.user.level == 1:
 			continues = True
 			if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
 				continues = False
@@ -66,6 +66,7 @@ class DataRouter(CallbackWeigher):
 			reservation = get_reservation_by_vehicle_id_if_uncomplete(data_dto.data_in_execution.vehicle.id)
 			if reservation:
 				raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
+		updated = None
 		id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
 		if id_selected:
 			body = SetReservationDTO(**data_dto.data_in_execution.dict())
@@ -73,7 +74,7 @@ class DataRouter(CallbackWeigher):
 			idInOut = None
 			if reservation and len(reservation.in_out) > 0:
 				idInOut = reservation.in_out[-1].id
-			update_reservation(id_selected, body, idInOut)
+			updated = update_reservation(id_selected, body, idInOut)
 			if data_dto.id_selected.id != -1:
 				data = json.dumps({"id": id_selected})
 				await self.broadcastUpdateAnagrafic("reservation", {"reservation": data})
@@ -117,7 +118,11 @@ class DataRouter(CallbackWeigher):
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idReservation=data_dto.id_selected.id)
 		else:
-			self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
+			# FUNZIONE UTILE PER GLI AGGIORNAMENTI RAPIDI DEI DATI IN ESECUZIONE DALLA DASHBAORD
+			if request and updated:
+				await self.DeleteData(instance=instance)
+			else:
+				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		tare = data["data_in_execution"]["vehicle"]["tare"]
 		if data["id_selected"]["weight1"] is None and tare is not None:

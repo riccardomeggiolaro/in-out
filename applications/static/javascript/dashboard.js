@@ -230,7 +230,7 @@ async function getData(path) {
 async function populateListIn() {
     const listIn = document.querySelector('.list-in');
 
-    await fetch('/api/anagrafic/reservation/list?excludeTestWeighing=true&status=NOT_CLOSED')
+    await fetch('/api/anagrafic/reservation/list?excludeTestWeighing=true&status=NOT_CLOSED&onlyOpened=true')
     .then(res => res.json())
     .then(data => {
         listIn.innerHTML = '';
@@ -731,9 +731,15 @@ function updateUIRealtime(e) {
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
         if (obj.id_selected.id != selectedIdWeight) {
-            if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.remove('selected');
+            if (selectedIdWeight !== null) {
+                const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
+                if (previouslySelected) previouslySelected.classList.remove('selected');
+            }
             selectedIdWeight = obj.id_selected.id;                    
-            if (selectedIdWeight !== null) document.querySelector(`li[data-id="${selectedIdWeight}"]`).classList.add('selected');
+            if (selectedIdWeight !== null) {
+                const newlySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
+                if (newlySelected) newlySelected.classList.add('selected');
+            }
             const selected = document.querySelector('.list-in li.selected');
             if (selected) {
                 selected.scrollIntoView({
@@ -784,10 +790,23 @@ async function diagnostic() {
         const iframe = document.createElement('iframe');
         iframe.src = `${pathname}/diagnostic.html`;
         iframe.style.width = '100%';
-        iframe.style.height = '100%';
         iframe.style.border = 'none';
+        iframe.style.visibility = 'hidden'; // Nascondi inizialmente
         iframe.id = 'diagnosticIframe'; // Aggiungi un ID per riferimento
-        
+
+        // Imposta l'altezza dinamicamente dopo il caricamento
+        iframe.onload = function() {
+            try {
+                const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframe.style.height = innerDoc.documentElement.scrollHeight + 'px';
+            } catch (e) {
+                // In caso di problemi di CORS, fallback a 100%
+                iframe.style.height = '100%';
+            } finally {
+                iframe.style.visibility = 'visible'; // Mostra l'iframe dopo aver impostato l'altezza
+            }
+        };
+
         // Svuota il contenuto e aggiungi iframe e pulsante
         popupContent.style.position = 'relative'; // Per posizionare il pulsante
         content.innerHTML = '';

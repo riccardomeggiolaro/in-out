@@ -49,7 +49,11 @@
         "use_white_list": false,
         "weighers": {
             "1": {
-                "connection": {},
+                "connection": {
+                    "ip": "10.0.6.51",
+                    "port": 4001,
+                    "timeout": 4.0
+                },
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
@@ -97,20 +101,10 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "1",
-                                            "set": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "1",
-                                            "set": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
@@ -119,12 +113,7 @@
                                     "in": true,
                                     "out": true
                                 },
-                                "set_rele": [
-                                    {
-                                        "rele": "1",
-                                        "set": 1
-                                    }
-                                ]
+                                "set_rele": []
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -137,16 +126,14 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 1
-                        },
+                        "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"
                     }
                 },
-                "time_between_actions": 0.3
+                "time_between_actions": 0.5
             }
         }
     },
