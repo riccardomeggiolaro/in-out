@@ -1,6 +1,6 @@
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation
+from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation, ReservationStatus
 
 def get_reservation_by_identify_if_uncomplete(identify: str):
     session = SessionLocal()
@@ -57,6 +57,7 @@ def get_reservation_by_identify_if_uncomplete(identify: str):
                 Vehicle.plate == identify
             ),
             Reservation.type != TypeReservation.TEST.name,
+            Reservation.status != ReservationStatus.CLOSED.name,
             or_(
                 weighing_count_subquery.c.weighing_count == None,
                 weighing_count_subquery.c.weighing_count < Reservation.number_in_out,

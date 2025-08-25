@@ -1,6 +1,6 @@
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload
-from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation
+from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation, ReservationStatus
 
 def get_reservation_by_vehicle_id_if_uncomplete(id: int):
     session = SessionLocal()
@@ -51,6 +51,7 @@ def get_reservation_by_vehicle_id_if_uncomplete(id: int):
         ).filter(
             Vehicle.id == id,
             Reservation.type != TypeReservation.TEST.name,
+            Reservation.status != ReservationStatus.CLOSED.name,
             or_(
                 Reservation.number_in_out == None,
                 # weighing_count is NULL (nessun InOut)
@@ -61,7 +62,7 @@ def get_reservation_by_vehicle_id_if_uncomplete(id: int):
                 and_(
                     weighing_count_subquery.c.weighing_count == Reservation.number_in_out,
                     last_inout_weight2_subq.c.idWeight2 == None
-                )
+                ),
             )
         ).order_by(
             Reservation.date_created.desc()

@@ -75,6 +75,7 @@ class SetReservationDTO(BaseModel):
     document_reference: Optional[str] = None
     badge: Optional[str] = None
     permanent: Optional[bool] = None
+    close: Optional[bool] = None
 
     @validator('typeSubject', pre=True, always=True)
     def check_type_subject(cls, v, values):

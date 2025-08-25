@@ -52,6 +52,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         self.router.add_api_route('/export/pdf', self.exportListReservationsPdf, methods=['GET'])
         self.router.add_api_route('', self.addReservation, methods=['POST'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/close/{id}', self.closeReservation, methods=['GET'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('/last-weighing/{id}', self.deleteLastWeighing, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
@@ -486,6 +487,33 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             detail = getattr(e, 'detail', str(e))
             if status_code == 400:
                 locked_data = None
+            raise HTTPException(status_code=status_code, detail=detail)
+        finally:
+            if locked_data:
+                unlock_record_by_id(locked_data["id"])
+
+    async def closeReservation(self, request: Request, id: int):
+        try:
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            if not locked_data:
+                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
+            get_reservation_data = get_data_by_id("reservation", id)
+            if get_reservation_data["status"] == ReservationStatus.CLOSED:
+                raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è già chiusa")
+            elif len(get_reservation_data["in_out"]) == 0:
+                raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' non ha effettuato nessuna pesata")
+            elif len(get_reservation_data["in_out"]) > 0 and get_reservation_data["in_out"][-1]["idWeight2"] is None:
+                raise HTTPException(status_code=400, detail=f"L'ultima pesata della prenotazione con id '{id}' non è completa")
+            data_to_update = {"status": ReservationStatus.CLOSED}
+            if get_reservation_data["number_in_out"] is not None:
+                data_to_update["number_in_out"] = len(get_reservation_data["in_out"])
+            data = update_data("reservation", id, {"status": ReservationStatus.CLOSED})
+            reservation = Reservation(**data).json()
+            await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation})
+            return reservation
+        except Exception as e:
+            status_code = getattr(e, 'status_code', 404)
+            detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
         finally:
             if locked_data:

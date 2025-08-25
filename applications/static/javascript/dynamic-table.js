@@ -11,6 +11,7 @@ let listUrlPath = null;
 let exportUrlPath = null;
 let addUrlPath = null;
 let setUrlPath = null;
+let closeUrlPath = null;
 let deleteUrlPath = null;
 let websocketUrlPath = null;
 let callback_populate_select = null;
@@ -701,13 +702,11 @@ function triggerEventsForAll(elements) {
 
 function closeRow(item) {
     const funct = () => {
-        const number_in_out = item.in_out.length;
-        fetch(`${setUrlPath}/${currentId}`, {
-            method: 'PATCH',
+        fetch(`${closeUrlPath}/${currentId}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({number_in_out})
+            }
         })
         .then(async res => {
             const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
