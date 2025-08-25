@@ -49,11 +49,7 @@
         "use_white_list": false,
         "weighers": {
             "1": {
-                "connection": {
-                    "ip": "192.168.8.154",
-                    "port": 4001,
-                    "timeout": 4.0
-                },
+                "connection": {},
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,

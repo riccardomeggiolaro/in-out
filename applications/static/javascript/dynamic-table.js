@@ -1,4 +1,5 @@
 let dataUser = null;
+let config = null;
 let currentPage = 1;
 let rowsPerPage = 10;
 let totalRows = 0; // Aggiungi questa variabile per tenere traccia del numero totale di righe
@@ -63,6 +64,7 @@ async function configuration() {
     if (response.ok) {
         response.json()
         .then(res => {
+            config = res;
             Object.keys(res.weighers).forEach(i => {
                 const instance = res.weighers[i];
                 Object.keys(instance.nodes).forEach(weigher => {
@@ -501,7 +503,7 @@ function createRow(table, columns, item, idInout) {
         if (closeButton) closeButton.style.visibility = 'inherit';
         if (dataUser.level > 1) editButton.style.visibility = 'inherit';
         if (dataUser.level > 1) deleteButton.style.visibility = 'inherit';
-        if (callButton) callButton.style.visibility = 'inherit';
+        if (Object.keys(config.panel).length !== 0 && callButton) callButton.style.visibility = 'inherit';
         if (pdfButton) pdfButton.style.visibility = 'inherit';
     });
     row.addEventListener("mouseleave", () => {
