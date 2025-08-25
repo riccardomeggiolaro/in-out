@@ -35,6 +35,7 @@ from reportlab.lib.units import inch
 import libs.lb_config as lb_config
 from libs.lb_printer import printer
 from applications.utils.utils_report import get_data_variables, generate_html_report, save_file_dir
+from applications.middleware.writable_user import is_writable_user
 
 class ReservationRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -49,11 +50,11 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         self.router.add_api_route('/weighing/list', self.getListWeighing, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
         self.router.add_api_route('/export/pdf', self.exportListReservationsPdf, methods=['GET'])
-        self.router.add_api_route('', self.addReservation, methods=['POST'])
-        self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'])
-        self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'])
-        self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'])
-        self.router.add_api_route('/last-weighing/{id}', self.deleteLastWeighing, methods=['DELETE'])
+        self.router.add_api_route('', self.addReservation, methods=['POST'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/last-weighing/{id}', self.deleteLastWeighing, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('/call/{id}', self.callReservation, methods=["GET"])
         self.router.add_api_route('/cancel-call/{id}', self.cancelCallReservation, methods=["GET"])
         

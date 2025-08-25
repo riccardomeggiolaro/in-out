@@ -1,3 +1,4 @@
+let dataUser = null;
 let currentPage = 1;
 let rowsPerPage = 10;
 let totalRows = 0; // Aggiungi questa variabile per tenere traccia del numero totale di righe
@@ -289,6 +290,10 @@ function getTableColumns() {
 }
 
 function populateTable(data) {
+    if (dataUser.level === 1) {
+        const registerButton = document.querySelector(".register-button");
+        if (registerButton) registerButton.style.display = 'none';
+    }
     const obj = getTableColumns();
     obj.table.innerHTML = ""; // Pulisce la tabella esistente
     data.forEach(item => {
@@ -494,8 +499,8 @@ function createRow(table, columns, item, idInout) {
     row.addEventListener("mouseenter", () => {
         row.style.backgroundColor = 'whitesmoke';
         if (closeButton) closeButton.style.visibility = 'inherit';
-        editButton.style.visibility = 'inherit';
-        deleteButton.style.visibility = 'inherit';
+        if (dataUser.level > 1) editButton.style.visibility = 'inherit';
+        if (dataUser.level > 1) deleteButton.style.visibility = 'inherit';
         if (callButton) callButton.style.visibility = 'inherit';
         if (pdfButton) pdfButton.style.visibility = 'inherit';
     });
@@ -1219,6 +1224,14 @@ function isJsonString(str) {
 }
 
 function init() {
-    configuration();
-    connectWebSocket();
+    const token = localStorage.getItem('token');
+    fetch('/api/auth/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+    })
+    .then(res => res.json())
+    .then(res => dataUser = res)
+    .then(() => configuration())
+    .then(() => connectWebSocket());
 }

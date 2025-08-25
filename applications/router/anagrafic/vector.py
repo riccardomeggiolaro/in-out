@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
+from applications.middleware.writable_user import is_writable_user
 
 class VectorRouter(WebSocket):
     def __init__(self):
@@ -23,11 +24,11 @@ class VectorRouter(WebSocket):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListVectors, methods=['GET'])
-        self.router.add_api_route('', self.addVector, methods=['POST'])
-        self.router.add_api_route('/{id}', self.setVector, methods=['PATCH'])
-        self.router.add_api_route('/{id}', self.deleteVector, methods=['DELETE'])
-        self.router.add_api_route('', self.deleteAllVectors, methods=['DELETE'])
-        self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'])
+        self.router.add_api_route('', self.addVector, methods=['POST'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.setVector, methods=['PATCH'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.deleteVector, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('', self.deleteAllVectors, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'], dependencies=[Depends(is_writable_user)])
 
     async def getListVectors(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
         try:

@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
+from applications.middleware.writable_user import is_writable_user
 
 class MaterialRouter(WebSocket):
     def __init__(self):
@@ -22,11 +23,11 @@ class MaterialRouter(WebSocket):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListMaterials, methods=['GET'])
-        self.router.add_api_route('', self.addMaterial, methods=['POST'])
-        self.router.add_api_route('/{id}', self.setMaterial, methods=['PATCH'])
-        self.router.add_api_route('/{id}', self.deleteMaterial, methods=['DELETE'])
-        self.router.add_api_route('', self.deleteAllMaterials, methods=['DELETE'])
-        self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'])
+        self.router.add_api_route('', self.addMaterial, methods=['POST'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.setMaterial, methods=['PATCH'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.deleteMaterial, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('', self.deleteAllMaterials, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'], dependencies=[Depends(is_writable_user)])
 
     async def getListMaterials(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
         try:

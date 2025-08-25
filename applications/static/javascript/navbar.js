@@ -10,13 +10,13 @@ fetch('navbar.html')
     })
     .then(res => res.json())
     .then(res => {
-        if (res.level < 3) {
-            const setup = document.getElementById("page-of-setup");
-            setup.style.display = "none";
-        }
         if (res.level < 2) {
-            const users = document.getElementById("page-of-users");
-            users.style.display = "none";
+            const users = document.querySelectorAll(".page-of-users");
+            users.forEach(user => user.style.display = "none");
+        }
+        if (res.level < 3) {
+            const setups = document.querySelectorAll(".page-of-setup");
+            setups.forEach(setup => setup.style.display = "none");
         }
         const p = document.getElementById("hi-session-user");
         p.textContent = `Ciao, ${res.username}`;

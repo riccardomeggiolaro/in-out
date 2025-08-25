@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
+from applications.middleware.writable_user import is_writable_user
 
 class SubjectRouter(WebSocket):
     def __init__(self):
@@ -23,11 +24,11 @@ class SubjectRouter(WebSocket):
         self.router = APIRouter()
         
         self.router.add_api_route('/list', self.getListSubjects, methods=['GET'])
-        self.router.add_api_route('', self.addSubject, methods=['POST'])
-        self.router.add_api_route('/{id}', self.setSubject, methods=['PATCH'])
-        self.router.add_api_route('/{id}', self.deleteSubject, methods=['DELETE'])
-        self.router.add_api_route('', self.deleteAllSubjects, methods=['DELETE'])
-        self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'])
+        self.router.add_api_route('', self.addSubject, methods=['POST'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.setSubject, methods=['PATCH'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.deleteSubject, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('', self.deleteAllSubjects, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'], dependencies=[Depends(is_writable_user)])
 
     async def getListSubjects(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
         try:

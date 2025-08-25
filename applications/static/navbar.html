@@ -1,5 +1,6 @@
 <style>
-    * {
+    #navbar,
+    .dropdown {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
@@ -355,68 +356,70 @@
         }
     }
 </style>
-<!-- DESKTOP NAVBAR -->
-<nav class="navbar-desktop">
-    <div class="logo" style="width: 20%; max-height: 60px; text-align: center; display: flex; padding: 3px 3px 3px 5px;">
-        <img src="/static/content/baronpesi_logo.png" style="max-height: 60px;" alt="">
-    </div>
-    
-    <ul class="nav-links">
-        <li><a href="/dashboard" class="nav-link">Dashboard</a></li>
-        <li><a href="/access" class="nav-link">Accessi</a></li>
-        <li class="dropdown-parent">
-            <a href="#" class="nav-link">Anagrafiche</a>
-            <ul class="dropdown">
-                <li><a href="/vehicle">Veicoli</a></li>
-                <li><a href="/subject">Soggetti</a></li>
-                <li><a href="/vector">Vettori</a></li>
-                <li><a href="/driver">Autisti</a></li>
-                <li><a href="/material">Materiali</a></li>
-            </ul>
-        </li>
-        <li><a href="/pid" class="nav-link">Pid</a></li>
-        <li><a href="/users" class="nav-link page-of-users">Utenti</a></li>
-        <li><a href="/setup" class="nav-link page-of-setup">Configurazione</a></li>
-    </ul>
-    
-    <div class="user-section" style="width: 20%; max-height: 60px; padding-right: 5px;">
-        <p id="hi-session-user-desktop" style="flex: 1; text-align: right;"></p>
-        <button onclick="logout()">⏻</button>
-    </div>
-</nav>
+<div id="navbar">
+    <!-- DESKTOP NAVBAR -->
+    <nav class="navbar-desktop">
+        <div class="logo" style="width: 20%; max-height: 60px; text-align: center; display: flex; padding: 3px 3px 3px 5px;">
+            <img src="/static/content/baronpesi_logo.png" style="max-height: 60px;" alt="">
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="/dashboard" class="nav-link">Dashboard</a></li>
+            <li><a href="/access" class="nav-link">Accessi</a></li>
+            <li class="dropdown-parent">
+                <a href="#" class="nav-link">Anagrafiche</a>
+                <ul class="dropdown">
+                    <li><a href="/vehicle">Veicoli</a></li>
+                    <li><a href="/subject">Soggetti</a></li>
+                    <li><a href="/vector">Vettori</a></li>
+                    <li><a href="/driver">Autisti</a></li>
+                    <li><a href="/material">Materiali</a></li>
+                </ul>
+            </li>
+            <li><a href="/pid" class="nav-link">Pid</a></li>
+            <li><a href="/users" class="nav-link page-of-users">Utenti</a></li>
+            <li><a href="/setup" class="nav-link page-of-setup">Configurazione</a></li>
+        </ul>
+        
+        <div class="user-section" style="width: 20%; max-height: 60px; padding-right: 5px;">
+            <p id="hi-session-user-desktop" style="flex: 1; text-align: right;"></p>
+            <button onclick="logout()">⏻</button>
+        </div>
+    </nav>
 
-<!-- MOBILE NAVBAR -->
-<div class="overlay-navbar" onclick="removeMenu(this)"></div>
+    <!-- MOBILE NAVBAR -->
+    <div class="overlay-navbar" onclick="removeMenu(this)"></div>
 
-<div class="container-navbar" onclick="toggleMenu(this)">
-    <div class="hamburger-navbar">
-        <span></span>
-        <span></span>
-        <span></span>
+    <div class="container-navbar" onclick="toggleMenu(this)">
+        <div class="hamburger-navbar">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
     </div>
-</div>
 
-<div class="side-menu-navbar">
-    <ul class="ul-navbar">
-        <li class="li-navbar"><a class="a-navbar" href="/dashboard">Dashboard</a></li>
-        <li class="li-navbar"><a class="a-navbar" href="/access">Accessi</a></li>
-        <li class="li-navbar" onclick="toggleDropdown(event)">
-            <a class="a-navbar" href="#">Anagrafiche</a>
-            <span class="arrow-dropdown-navbar"></span>
-            <ul class="dropdown-navbar">
-                <li class="li-navbar"><a class="a-navbar" href="/vehicle">Veicoli</a></li>
-                <li class="li-navbar"><a class="a-navbar" href="/subject">Soggetti</a></li>
-                <li class="li-navbar"><a class="a-navbar" href="/vector">Vettori</a></li>
-                <li class="li-navbar"><a class="a-navbar" href="/driver">Autisti</a></li>
-                <li class="li-navbar li-last"><a class="a-navbar" href="/material">Materiali</a></li>
-            </ul>
-        </li>
-        <li class="li-navbar"><a class="a-navbar" href="/pid">Pid</a></li>
-        <li class="li-navbar page-of-users"><a class="a-navbar" href="/users">Utenti</a></li>
-        <li class="li-navbar page-of-setup"><a class="a-navbar" href="/setup">Configurazione</a></li>
-    </ul>
-    <div class="user-details">
-        <p id="hi-session-user"></p>
-        <button onclick="logout()">⏻</button>
+    <div class="side-menu-navbar">
+        <ul class="ul-navbar">
+            <li class="li-navbar"><a class="a-navbar" href="/dashboard">Dashboard</a></li>
+            <li class="li-navbar"><a class="a-navbar" href="/access">Accessi</a></li>
+            <li class="li-navbar" onclick="toggleDropdown(event)">
+                <a class="a-navbar" href="#">Anagrafiche</a>
+                <span class="arrow-dropdown-navbar"></span>
+                <ul class="dropdown-navbar">
+                    <li class="li-navbar"><a class="a-navbar" href="/vehicle">Veicoli</a></li>
+                    <li class="li-navbar"><a class="a-navbar" href="/subject">Soggetti</a></li>
+                    <li class="li-navbar"><a class="a-navbar" href="/vector">Vettori</a></li>
+                    <li class="li-navbar"><a class="a-navbar" href="/driver">Autisti</a></li>
+                    <li class="li-navbar li-last"><a class="a-navbar" href="/material">Materiali</a></li>
+                </ul>
+            </li>
+            <li class="li-navbar"><a class="a-navbar" href="/pid">Pid</a></li>
+            <li class="li-navbar page-of-users"><a class="a-navbar" href="/users">Utenti</a></li>
+            <li class="li-navbar page-of-setup"><a class="a-navbar" href="/setup">Configurazione</a></li>
+        </ul>
+        <div class="user-details">
+            <p id="hi-session-user"></p>
+            <button onclick="logout()">⏻</button>
+        </div>
     </div>
 </div>

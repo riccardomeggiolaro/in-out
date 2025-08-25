@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 from applications.router.weigher.dto import DataDTO
 from applications.router.weigher.types import DataInExecution as DataInExecutionType
@@ -31,7 +31,19 @@ class DataRouter(CallbackWeigher):
 	async def GetDataInExecution(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
-	async def SetData(self, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		if request.state.user.level == 1:
+			continues = True
+			if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
+				continues = False
+			if data_dto.data_in_execution.subject.social_reason and not data_dto.data_in_execution.subject.id:
+				continues = False
+			if data_dto.data_in_execution.vector.social_reason and not data_dto.data_in_execution.vector.id:
+				continues = False
+			if data_dto.data_in_execution.driver.social_reason and not data_dto.data_in_execution.driver.id:
+				continues = False
+			if not continues:
+				raise HTTPException(status_code=400, detail="Puoi utilizzare solo i dati registrati nelle anagrafiche per effettuare le pesate")
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		weight1 = None
 		id_material = None
