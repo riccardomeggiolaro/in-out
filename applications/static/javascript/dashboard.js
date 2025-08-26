@@ -791,28 +791,26 @@ async function diagnostic() {
         iframe.src = `${pathname}/diagnostic.html`;
         iframe.style.width = '100%';
         iframe.style.border = 'none';
-        iframe.style.visibility = 'hidden'; // Nascondi inizialmente
-        iframe.id = 'diagnosticIframe'; // Aggiungi un ID per riferimento
+        iframe.style.visibility = 'hidden';
+        iframe.id = 'diagnosticIframe';
 
-        // Imposta l'altezza dinamicamente dopo il caricamento
         iframe.onload = function() {
-            try {
-                const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-                iframe.style.height = innerDoc.documentElement.scrollHeight + 'px';
-            } catch (e) {
-                // In caso di problemi di CORS, fallback a 100%
-                iframe.style.height = '100%';
-            } finally {
-                iframe.style.visibility = 'visible'; // Mostra l'iframe dopo aver impostato l'altezza
-            }
+            setTimeout(() => {
+                try {
+                    const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    iframe.style.height = innerDoc.documentElement.scrollHeight + 'px';
+                } catch (e) {
+                    iframe.style.height = '100%';
+                } finally {
+                    iframe.style.visibility = 'visible';
+                }
+            }, 100); // Attendi 100ms dopo il caricamento
         };
 
-        // Svuota il contenuto e aggiungi iframe e pulsante
-        popupContent.style.position = 'relative'; // Per posizionare il pulsante
+        popupContent.style.position = 'relative';
         content.innerHTML = '';
         content.appendChild(iframe);
         
-        // Mostra popup
         diagnosticPopup.style.display = "flex";
         popupContent.classList.add("show");
         
