@@ -507,7 +507,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             data_to_update = {"status": ReservationStatus.CLOSED}
             if get_reservation_data["number_in_out"] is not None:
                 data_to_update["number_in_out"] = len(get_reservation_data["in_out"])
-            data = update_data("reservation", id, {"status": ReservationStatus.CLOSED})
+            data = update_data("reservation", id, data_to_update)
             reservation = Reservation(**data).json()
             await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation})
             return reservation
