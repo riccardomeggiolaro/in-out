@@ -587,8 +587,8 @@ class WeigherInstance:
 	def setConnection(self, conn: Union[SerialPort, Tcp]):
 		self.deleteConnection()
 		conn = self.connection.setConnection(connection=conn)
-		for name, weigher in self.nodes.items():
-			weigher.initialize()
+		# for name, weigher in self.nodes.items():
+		# 	weigher.initialize()
 		return conn
 
 	def deleteConnection(self):

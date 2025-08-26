@@ -207,7 +207,7 @@ class TcpWithoutControls(Connection):
 			status = None
 			with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 				sock.setblocking(False)
-				sock.settimeout(self.timeout)
+				sock.settimeout(0.1)
 				result = sock.connect_ex((self.ip, self.port))
 				if result == 0:
 					status = True

@@ -50,7 +50,7 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "ip": "10.0.6.51",
+                    "ip": "10.0.5.96",
                     "port": 4001,
                     "timeout": 4.0
                 },
