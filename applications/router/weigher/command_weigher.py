@@ -388,18 +388,18 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 							})
 						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
 				else:
-					message = "Pesa scollegata"
-					if status == 301:
-						message = "Connessione non settata"
+					message = "Errore di connessione"
+					if status == 305:
+						message = "Errore di raggiungimento della pesa"
 					elif status == 201:
-						message = "Protocollo pesa non valido"
+						message = "Errore di comunicazione con la pesa"
 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
-						"status":"--",
+						"status": message,
 						"type":"--",
-						"net_weight": message,
+						"net_weight": "--",
 						"gross_weight":"--",
 						"tare":"--",
-						"unite_measure": str(status),
+						"unite_measure": "--",
 						"potential_net_weight": None
 					})
 			else:
