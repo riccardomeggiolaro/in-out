@@ -253,7 +253,7 @@ def create_default_users():
             admin_user = User(
                 username="admin",
                 password=hash_password("admin"),  # Change to a secure password in production
-                level=3,
+                level=4,
                 description="Administrator"
             )
             db_session.add(admin_user)
