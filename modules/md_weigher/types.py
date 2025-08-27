@@ -25,8 +25,8 @@ class Diagnostic(CustomBaseModel):
 	rz: str
 
 class Tare(BaseModel):
-	value: str
-	is_preset_tare: bool
+	value: str = ""
+	is_preset_tare: bool = False
 
 class WeightExecuted(BaseModel):
 	net_weight: str

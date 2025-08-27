@@ -132,7 +132,7 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 0
+                            "1": 1
                         },
                         "run": true,
                         "take_of_weight_before_weighing": false,

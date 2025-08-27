@@ -1,4 +1,4 @@
-from modules.md_weigher.types import Realtime, Diagnostic, Weight
+from modules.md_weigher.types import Realtime, Diagnostic, Weight, Tare
 from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
 from libs.lb_utils import checkCallbackFormat, callCallback
@@ -110,10 +110,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 			"weight_executed": {
 				"net_weight": "",
 				"gross_weight": "",
-				"tare": {
+				"tare": Tare(**{
 					"value": "",
 					"is_preset_tare": False
-				},
+				}),
 				"unite_misure": "",
 				"pid": "",
 				"bil": "",
