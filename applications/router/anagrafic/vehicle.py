@@ -31,13 +31,15 @@ class VehicleRouter(WebSocket):
         self.router.add_api_route('', self.deleteAllVehicles, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'], dependencies=[Depends(is_writable_user)])
 
-    async def getListVehicles(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
+    async def getListVehicles(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, permanentAssociatedFirstToWeighing1: Optional[bool] = None):
         try:
             if limit is not None:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("vehicle", query_params, limit, offset, None, None, ('date_created', 'desc'))
+            if permanentAssociatedFirstToWeighing1 is not None:
+                del query_params["permanentAssociatedFirstToWeighing1"]
+            data, total_rows = filter_data("vehicle", query_params, limit, offset, None, None, ('date_created', 'desc'), permanentAssociatedFirstToWeighing1)
             return {
                 "data": data,
                 "total_rows": total_rows

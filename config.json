@@ -94,7 +94,8 @@
                                 "id": null,
                                 "weight1": null
                             },
-                            "number_in_out": 1
+                            "number_in_out": 1,
+                            "type": "MANUALLY"
                         },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
@@ -110,15 +111,10 @@
                             "weighing": {
                                 "cams": [],
                                 "report": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
-                                "set_rele": [
-                                    {
-                                        "rele": "1",
-                                        "set": 1
-                                    }
-                                ]
+                                "set_rele": []
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -131,16 +127,14 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 1
-                        },
+                        "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"
                     }
                 },
-                "time_between_actions": 0.5
+                "time_between_actions": 0.3
             }
         }
     },

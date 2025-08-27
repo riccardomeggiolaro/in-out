@@ -5,6 +5,7 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_weigher import md_weigher
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import NodeConnectionManager
+from modules.md_database.md_database import TypeReservation
 from modules.md_database.functions.unlock_record_by_attributes import unlock_record_by_attributes
 from modules.md_database.functions.lock_record import lock_record
 from applications.router.weigher.types import DataInExecution
@@ -68,6 +69,13 @@ class Functions:
 						lb_config.saveconfig()
 							
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
+
+	def deleteData(self, instance_name: str, weigher_name: str):
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["type"] = TypeReservation.MANUALLY.name
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["number_in_out"] = 1
+		lb_config.saveconfig()
+		self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
+		self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteDataInExecution(self, instance_name: str, weigher_name: str):
 		for key, value in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"].items():

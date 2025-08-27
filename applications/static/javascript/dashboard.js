@@ -200,6 +200,9 @@ async function getData(path) {
         return res.json();
     })
     .then(res => {
+        const type = res.type;
+        const number_in_out = res.number_in_out;
+        const weight1 = res.id_selected.weight1;
         dataInExecution = res["data_in_execution"];
         const obj = res["data_in_execution"];
         selectedIdVehicle = obj.vehicle.id;
@@ -207,6 +210,8 @@ async function getData(path) {
         selectedIdSubject = obj.subject.id;
         selectedIdVector = obj.vector.id;
         selectedIdMaterial = obj.material.id;
+        console.log(selectedIdWeight)
+        if (type === "RESERVATION" && number_in_out === null && weight1 === null) obj.vehicle.plate += "⭐";
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
@@ -230,7 +235,7 @@ async function getData(path) {
 async function populateListIn() {
     const listIn = document.querySelector('.list-in');
 
-    await fetch('/api/anagrafic/reservation/list?excludeTestWeighing=true&status=NOT_CLOSED&onlyOpened=true')
+    await fetch('/api/anagrafic/reservation/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
     .then(res => res.json())
     .then(data => {
         listIn.innerHTML = '';
@@ -367,9 +372,11 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
         anagrafic_to_set = 'material';
     }
 
-    let url = `/api/anagrafic/${name_list}/list`;
+    let url = `/api/anagrafic/${name_list}/list?`;
 
-    if (inputValue) url += `?${filter}=${inputValue}%`;
+    if (anagrafic_to_set === 'vehicle' && selectedIdWeight === null) url += `permanentAssociatedFirstToWeighing1=true&`;
+
+    if (inputValue) url += `${filter}=${inputValue}%`;
 
     // Eseguire una chiamata HTTP per ottenere la lista
     const response = await fetch(url)
@@ -407,6 +414,22 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
             }
 
             if (text) {
+                if (
+                    anagrafic_to_set === 'vehicle' && 
+                    selectedIdWeight === null && 
+                    "reservations" in suggestion && 
+                    suggestion.reservations.length > 0 && 
+                    suggestion.reservations[suggestion.reservations.length - 1].number_in_out === null &&
+                    suggestion.reservations[suggestion.reservations.length - 1].status !== 'Chiusa'
+                ) {
+                    if (suggestion.reservations[suggestion.reservations.length - 1].in_out.length === 0 ||
+                        suggestion.reservations[suggestion.reservations.length - 1].in_out.length > 0 && 
+                        suggestion.reservations[suggestion.reservations.length - 1].in_out[suggestion.reservations[suggestion.reservations.length - 1].in_out.length - 1].idWeight2 !== null
+                    ) {
+                        li.classList.add('permanent-associated');
+                        text = `<span>${text}</span><span>⭐</span>`;
+                    }
+                }
                 li.innerHTML = text; // Evidenzia il testo
                 li.dataset.id = suggestion.id
     
@@ -723,6 +746,7 @@ function updateUIRealtime(e) {
         selectedIdMaterial = obj.data_in_execution.material.id;
         if (obj.data_in_execution.typeSubject === 'Cliente') obj.data_in_execution.typeSubject = 'CUSTOMER';
         else if (obj.data_in_execution.typeSubject === 'Fornitore') obj.data_in_execution.typeSubject = 'SUPPLIER';
+        if (obj.type === "RESERVATION" && obj.number_in_out === null && obj.id_selected.weight1 === null) obj.data_in_execution.vehicle.plate += "⭐";
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
@@ -730,6 +754,15 @@ function updateUIRealtime(e) {
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
+        if (obj.type === "MANUALLY") {
+            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
+                element.disabled = false;
+            });
+        } else {
+            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
+                element.disabled = true;
+            });
+        }
         if (obj.id_selected.id != selectedIdWeight) {
             if (selectedIdWeight !== null) {
                 const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);

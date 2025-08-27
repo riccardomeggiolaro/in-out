@@ -4,6 +4,7 @@ from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
+from modules.md_database.md_database import TypeReservation
 from typing import Union, Optional, List
 from datetime import datetime
 
@@ -25,6 +26,7 @@ class Data(BaseModel):
 	data_in_execution: DataInExecution = DataInExecution(**{})
 	id_selected: IdSelected = IdSelected(**{})
 	number_in_out: Optional[int] = 1
+	type: Optional[str] = TypeReservation.MANUALLY.name
     
 class EventAction(BaseModel):
     take_picture: List[int] = []

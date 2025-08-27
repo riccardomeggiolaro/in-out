@@ -158,8 +158,7 @@ class CallbackWeigher(Functions, WebSocket):
 			last_pesata.data_assigned = reservation_data_json
 			############################
 			# RIMUOVE TUTTI I DATA IN ESECUZIONE E L'ID SELEZIONATO SULLA DASHBAORD
-			self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-			self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
+			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
 			############################
 			# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
@@ -207,8 +206,7 @@ class CallbackWeigher(Functions, WebSocket):
 		# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
 		if not last_pesata.weight_executed.executed and len(reservation.in_out) == 0 and reservation.hidden is False:
 			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE E NON C'E' NESSUN IN-OUT ELIMINA I DATI IN ESECUZIONE
-			self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-			self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
+			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		for instance in weighers_data:
 			for weigher in weighers_data[instance]:

@@ -7,7 +7,7 @@ from modules.md_database.functions.get_reservation_by_id import get_reservation_
 from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.update_reservation import update_reservation
 from modules.md_database.interfaces.reservation import SetReservationDTO
-from modules.md_database.md_database import ReservationStatus
+from modules.md_database.md_database import ReservationStatus, TypeReservation
 import libs.lb_config as lb_config
 import json
 import modules.md_weigher.md_weigher as md_weigher
@@ -62,13 +62,25 @@ class DataRouter(CallbackWeigher):
 				description_material = reservation.in_out[-1].material.description
 		if tare != "0" and data_dto.id_selected.id not in [-1, None] and weight1:
 			raise HTTPException(status_code=400, detail="E' necessario rimuovere la tara per selezionare il mezzo perchè ha già effettuato l'entrata.")
+		id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
+		type_current_reservation = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"]
 		if data_dto.data_in_execution.vehicle.id:
 			reservation = get_reservation_by_vehicle_id_if_uncomplete(data_dto.data_in_execution.vehicle.id)
 			if reservation:
-				raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
+				checked = False
+				if id_selected is None and reservation["number_in_out"] is None and reservation["status"] != ReservationStatus.CLOSED:
+					if len(reservation["in_out"]) == 0:
+						data_dto.id_selected.id = reservation["id"]
+						checked = True
+					elif len(reservation["in_out"]) > 0 and reservation["in_out"][-1].idWeight2 is not None:
+						data_dto.id_selected.id = reservation["id"]
+						checked = True
+				if checked is False:
+					raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
 		updated = None
-		id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
 		if id_selected:
+			if type_current_reservation != TypeReservation.MANUALLY.name and data_dto.id_selected.id is None:
+				raise HTTPException(status_code=400, detail=f"Non puoi modificare i dati di un accesso di tipo '{TypeReservation[type_current_reservation].value}'")
 			body = SetReservationDTO(**data_dto.data_in_execution.dict())
 			reservation = get_reservation_by_id(id_selected)
 			idInOut = None
@@ -113,14 +125,20 @@ class DataRouter(CallbackWeigher):
 					},
 					"note": reservation.note,
 					"document_reference": reservation.document_reference,
-					"badge": reservation.badge
+					"badge": reservation.badge,
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idReservation=data_dto.id_selected.id)
+				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"] = reservation.type.name
+				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["number_in_out"] = reservation.number_in_out
+				lb_config.saveconfig()
 		else:
 			# FUNZIONE UTILE PER GLI AGGIORNAMENTI RAPIDI DEI DATI IN ESECUZIONE DALLA DASHBAORD
 			if request and updated:
 				await self.DeleteData(instance=instance)
+				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"] = reservation.type.name
+				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["number_in_out"] = reservation.number_in_out
+				lb_config.saveconfig()
 			else:
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
@@ -133,4 +151,7 @@ class DataRouter(CallbackWeigher):
 	async def DeleteData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		self.deleteDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		self.deleteIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"] = TypeReservation.MANUALLY.name
+		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["number_in_out"] = 1
+		lb_config.saveconfig()
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)

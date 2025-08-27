@@ -1,5 +1,5 @@
 from sqlalchemy import func, and_, or_
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation, ReservationStatus
 
 def get_reservation_by_vehicle_id_if_uncomplete(id: int):
@@ -39,7 +39,8 @@ def get_reservation_by_vehicle_id_if_uncomplete(id: int):
             joinedload(Reservation.subject),
             joinedload(Reservation.vector),
             joinedload(Reservation.driver),
-            joinedload(Reservation.vehicle)
+            joinedload(Reservation.vehicle),
+            selectinload(Reservation.in_out)
         ).join(
             Vehicle, Reservation.idVehicle == Vehicle.id
         ).outerjoin(

@@ -94,6 +94,11 @@ body {
     max-width: 99%;
 }
 
+.anagrafic div input:disabled {
+    background-color: #f0f0f0;
+    color: #888;
+}
+
 input,
 .input, 
 select {
@@ -742,4 +747,9 @@ hr {
 
 #diagnosticPopup .footer-buttons {
     margin-top: 0px;
+}
+
+.permanent-associated {
+    display: flex;
+    justify-content: space-between;
 }

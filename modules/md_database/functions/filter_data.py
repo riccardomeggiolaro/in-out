@@ -1,8 +1,9 @@
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import table_models, SessionLocal
+from sqlalchemy import case, exists, and_, select, or_
+from modules.md_database.md_database import table_models, SessionLocal, Reservation, InOut
 from datetime import datetime, date
 
-def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None, toDate=None, order_by=None):
+def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None, toDate=None, order_by=None, permanentAssociatedFirstToWeighing1=None):
     """Esegue una ricerca filtrata su una tabella specifica con supporto per la paginazione
     e popola automaticamente le colonne di riferimenti con i dati delle tabelle correlate,
     incluse tutte le relazioni annidate.
@@ -166,14 +167,44 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
             column_name, direction = order_by
             if not hasattr(model, column_name):
                 raise ValueError(f"Colonna '{column_name}' non trovata nella tabella '{table_name}'.")
-            
+
             column = getattr(model, column_name)
-            if direction.lower() == 'asc':
-                query = query.order_by(column.asc())
-            elif direction.lower() == 'desc':
-                query = query.order_by(column.desc())
+
+            # Ordinamento custom per le targhe associate a Reservation con in_out == None e stato != "CLOSED"
+            if permanentAssociatedFirstToWeighing1 is True and table_name.lower() == "vehicle":
+                # Subquery: ultimo InOut per la Reservation
+                last_inout_subq = (
+                    select(InOut.idWeight2)
+                    .where(InOut.idReservation == Reservation.id)
+                    .order_by(InOut.id.desc())
+                    .limit(1)
+                )
+
+                reservation_priority = case(
+                    (
+                        exists().where(
+                            and_(
+                                Reservation.idVehicle == model.id,
+                                Reservation.status != "CLOSED",
+                                Reservation.number_in_out == None,
+                                or_(
+                                    ~exists().where(InOut.idReservation == Reservation.id),  # Nessun InOut associato
+                                    last_inout_subq.scalar_subquery() != None                # Ultimo InOut ha idWeight2 valorizzato
+                                )
+                            )
+                        ),
+                        0
+                    ),
+                    else_=1
+                )
+                query = query.order_by(reservation_priority.asc(), column.asc() if direction.lower() == 'asc' else column.desc())
             else:
-                raise ValueError("Direzione di ordinamento deve essere 'asc' o 'desc'.")
+                if direction.lower() == 'asc':
+                    query = query.order_by(column.asc())
+                elif direction.lower() == 'desc':
+                    query = query.order_by(column.desc())
+                else:
+                    raise ValueError("Direzione di ordinamento deve essere 'asc' o 'desc'.")
         
         # Esegui una query separata per ottenere il numero totale di righe
         total_rows = query.count()

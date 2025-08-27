@@ -121,7 +121,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
 		if current_id:
 			reservation = get_reservation_by_id(current_id)
-		if reservation and len(reservation.in_out) > 0:
+		if reservation and len(reservation.in_out) > 0 and lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["weight1"] is not None:
 			error_message = "Il mezzo ha già effettuato l'entrata."
 		elif tare != "0":
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
@@ -173,6 +173,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 					error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
 				elif len(reservation.in_out) == 0 and tare == "0":
 					error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
+				if len(reservation.in_out) > 0 and lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["weight1"] is None:
+					error_message = "E' necessario effettuare l'entrata del mezzo"
 				# elif len(reservation.in_out) > 0 and not reservation.in_out[-1].idWeight1 and tare == "0":
 				# 	error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
 			if not reservation:

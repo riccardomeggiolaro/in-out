@@ -121,7 +121,7 @@
         <div id="plateVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Targa:</h2>
-                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" oninput="this.value = this.value.toUpperCase(); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" oninput="this.value = this.value.toUpperCase(); showSuggestions('vehicle', 'descriptionVehicleInput', 'plate', this.value, ['plate', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle');">
                 <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
@@ -138,18 +138,6 @@
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'description', descriptionVehicleInput.value, 'suggestionsListDescriptionVehicle')">OK</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="socialReasonSubjectPopup" class="popup">
-            <div class="popup-content">
-                <h2>Soggetto:</h2>
-                <input type="text" id="socialReasonSubjectInput" autocomplete="off" class="input" oninput="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', this.value, ['telephone', 'cfpiva', 'date_created'], 'subjectPopup', 'suggestionsListSocialReasonSubject');">
-                <ul id="suggestionsListSocialReasonSubject" class="suggestions-list"></ul>
-                <div class="footer-buttons">
-                    <button class="close-button" onclick="closePopup()">Annulla</button>
-                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('subject', 'social_reason', socialReasonSubjectInput.value, 'suggestionsListSocialReasonSubject')">OK</button>
                 </div>
             </div>
         </div>
