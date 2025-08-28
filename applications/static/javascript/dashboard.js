@@ -308,7 +308,7 @@ function scrollToSelectedItem() {
 function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
     let requestBody;
     const suggestionsList = document.getElementById(showList);
-    if (suggestionsList && suggestionsList.children.length === 1 && suggestionsList.children[0].textContent === value) {
+    if (suggestionsList && suggestionsList.children.length === 1 && suggestionsList.children[0].textContent.replace("⭐", "") === value) {
         id = suggestionsList.children[0].dataset.id;
         requestBody = JSON.stringify({
             data_in_execution: {
