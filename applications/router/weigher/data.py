@@ -52,9 +52,10 @@ class DataRouter(CallbackWeigher):
 			reservation = get_reservation_by_id(data_dto.id_selected.id)
 			if reservation.status == ReservationStatus.CLOSED:
 				raise HTTPException(status_code=400, detail=f"Non puoi selezionare l'accesso con id '{data_dto.id_selected.id}' perchè è già chiuso")
-			weight1 = None
 			if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1:
 				weight1 = reservation.in_out[-1].weight1.weight
+			if len(reservation.in_out) >= 1 and reservation.number_in_out is not None and reservation.in_out[-1].idWeight2:
+				weight1 = reservation.in_out[-1].weight2.weight
 			id_material = None
 			description_material = None
 			if len(reservation.in_out) > 0 and reservation.in_out[-1].idMaterial:

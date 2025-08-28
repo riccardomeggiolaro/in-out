@@ -169,11 +169,13 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				reservation = get_reservation_by_id(idReservation)
 			just_created = False
 			if reservation:
-				if len(reservation.in_out) > 0 and reservation.in_out[-1].idWeight1 and reservation.in_out[-1].idWeight2 and tare != "0":
-					error_message = "Rimuovere la tara per effettuare l'uscite del mezzo tramite id."
+				if len(reservation.in_out) == 0 and reservation.number_in_out is not None and tare != "0":
+					error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
+				if len(reservation.in_out) > 0 and reservation.number_in_out is not None and reservation.in_out[-1].idWeight1 and reservation.in_out[-1].idWeight2 and tare != "0":
+					error_message = "Rimuovere la tara per effettuare l'uscita del mezzo tramite id."
 				elif len(reservation.in_out) == 0 and tare == "0":
 					error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
-				if len(reservation.in_out) > 0 and lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["weight1"] is None:
+				if len(reservation.in_out) > 0 and lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["weight1"] is None and tare == "0":
 					error_message = "E' necessario effettuare l'entrata del mezzo"
 				# elif len(reservation.in_out) > 0 and not reservation.in_out[-1].idWeight1 and tare == "0":
 				# 	error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
@@ -293,12 +295,12 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
 		execution = True
 		if data_id_selected["id"] and data_id_selected["weight1"]:
-			last_in_out = get_reservation_by_id(data_id_selected["id"])
-			if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
-				error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
-				execution = False
-			else:
-				execution = True
+			# last_in_out = get_reservation_by_id(data_id_selected["id"])
+			# if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
+			error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
+			execution = False
+			# else:
+			# 	execution = True
 		if execution:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="TARE")
 		return {
@@ -315,12 +317,12 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
 		execution = True
 		if data_id_selected["id"] and data_id_selected["weight1"]:
-			last_in_out = get_reservation_by_id(data_id_selected["id"])
-			if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
-				error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
-				execution = False
-			else:
-				execution = True
+			# last_in_out = get_reservation_by_id(data_id_selected["id"])
+			# if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
+			error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
+			execution = False
+			# else:
+			# 	execution = True
 		if execution:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
 		return {
