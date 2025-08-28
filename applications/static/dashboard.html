@@ -133,7 +133,7 @@
             </div>
         </div>
 
-        <div id="descriptionVehiclePopup" class="popup">
+        <!-- <div id="descriptionVehiclePopup" class="popup">
             <div class="popup-content">
                 <h2>Descrizione:</h2>
                 <input type="text" id="descriptionVehicleInput" autocomplete="off" class="input" oninput="validatePlate(this); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
@@ -141,6 +141,18 @@
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'description', descriptionVehicleInput.value, 'suggestionsListDescriptionVehicle')">OK</button>
+                </div>
+            </div>
+        </div> -->
+
+        <div id="socialReasonSubjectPopup" class="popup">
+            <div class="popup-content">
+                <h2>Soggetto:</h2>
+                <input type="text" id="socialReasonSubjectInput" autocomplete="off" class="input" oninput="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', this.value, ['telephone', 'cfpiva', 'date_created'], 'subjectPopup', 'suggestionsListSocialReasonSubject');">
+                <ul id="suggestionsListSocialReasonSubject" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('subject', 'social_reason', socialReasonSubjectInput.value, 'suggestionsListSocialReasonSubject')">OK</button>
                 </div>
             </div>
         </div>
