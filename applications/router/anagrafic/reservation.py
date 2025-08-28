@@ -89,15 +89,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
         
-    async def getListInOut(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False):
+    async def getListInOut(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, onlyInOutWithWeight2: bool = False, onlyInOutWithoutWeight2: bool = False):
         try:
-            not_closed = False
-            
-            # Handle status filter
-            if "status" in query_params and query_params["status"] == "NOT_CLOSED":
-                not_closed = True                
-                del query_params["status"]
-                
             # Handle limit and offset
             if "limit" in query_params:
                 del query_params["limit"]
@@ -114,11 +107,19 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
             if "excludeTestWeighing" in query_params:
                 del query_params["excludeTestWeighing"]
+
+            if "onlyInOutWithWeight2" in query_params:
+                del query_params["onlyInOutWithWeight2"]
+
+            if "onlyInOutWithoutWeight2" in query_params:
+                del query_params["onlyInOutWithoutWeight2"]
                 
             # Call get_list_in_out with prepared query_params
             data, total_rows = get_list_in_out(
                 filters=query_params,
-                not_closed=not_closed,
+                not_closed=False,
+                only_in_out_with_weight2=onlyInOutWithWeight2,
+                only_in_out_without_weight2=onlyInOutWithoutWeight2,
                 fromDate=fromDate,
                 toDate=toDate,
                 limit=limit,
@@ -210,18 +211,18 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             raise HTTPException(status_code=400, detail=f"{e}")
         
     async def exportListReservationsXlsx(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
-                                   limit: Optional[int] = None, offset: Optional[int] = None,
-                                   fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
-                                   excludeTestWeighing: bool = False, filterDateReservation: bool = False):
+                                    limit: Optional[int] = None, offset: Optional[int] = None,
+                                    fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
+                                    excludeTestWeighing: bool = False, filterDateReservation: bool = False, onlyInOutWithWeight2: bool = False,
+                                    onlyInOutWithoutWeight2: bool = False):
         try:
             not_closed = False
             filters = query_params.copy()
+
+            if "reservation.status" in filters and filters["reservation.status"] == "NOT_CLOSED":
+                not_closed = True
+                del filters["reservation.status"]
             
-            # Handle status filter
-            if "status" in filters and filters["status"] == "NOT_CLOSED":
-                not_closed = True                
-                del filters["status"]
-                
             # Handle limit and offset
             if "limit" in filters:
                 del filters["limit"]
@@ -236,15 +237,24 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
                 del filters["toDate"]
 
-            if "excludeTestWeighing" in query_params:
+            # Prima di chiamare get_list_in_out
+            if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
 
             if "filterDateReservation" in query_params:
                 del filters["filterDateReservation"]
 
+            if "onlyInOutWithWeight2" in filters:
+                del filters["onlyInOutWithWeight2"]
+
+            if "onlyInOutWithoutWeight2" in filters:
+                del filters["onlyInOutWithoutWeight2"]
+                
             data, total_rows = get_list_in_out(
                 filters=filters,
                 not_closed=not_closed,
+                only_in_out_with_weight2=onlyInOutWithWeight2,
+                only_in_out_without_weight2=onlyInOutWithoutWeight2,
                 fromDate=fromDate,
                 toDate=toDate,
                 limit=limit,
@@ -292,18 +302,18 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             raise HTTPException(status_code=400, detail=f"{e}")
 
     async def exportListReservationsPdf(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
-                                      limit: Optional[int] = None, offset: Optional[int] = None,
-                                      fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
-                                      excludeTestWeighing: bool = False, filterDateReservation: bool = False):
+                                    limit: Optional[int] = None, offset: Optional[int] = None,
+                                    fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
+                                    excludeTestWeighing: bool = False, filterDateReservation: bool = False, onlyInOutWithWeight2: bool = False,
+                                    onlyInOutWithoutWeight2: bool = False):
         try:
             not_closed = False
             filters = query_params.copy()
+
+            if "reservation.status" in filters and filters["reservation.status"] == "NOT_CLOSED":
+                not_closed = True
+                del filters["reservation.status"]
             
-            # Handle status filter
-            if "status" in filters and filters["status"] == "NOT_CLOSED":
-                not_closed = True                
-                del filters["status"]
-                
             # Handle limit and offset
             if "limit" in filters:
                 del filters["limit"]
@@ -325,9 +335,17 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if "filterDateReservation" in query_params:
                 del filters["filterDateReservation"]
 
+            if "onlyInOutWithWeight2" in filters:
+                del filters["onlyInOutWithWeight2"]
+
+            if "onlyInOutWithoutWeight2" in filters:
+                del filters["onlyInOutWithoutWeight2"]
+
             data, total_rows = get_list_in_out(
                 filters=filters,
                 not_closed=not_closed,
+                only_in_out_with_weight2=onlyInOutWithWeight2,
+                only_in_out_without_weight2=onlyInOutWithoutWeight2,
                 fromDate=fromDate,
                 toDate=toDate,
                 limit=limit,

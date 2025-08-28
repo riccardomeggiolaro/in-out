@@ -72,6 +72,7 @@ async function configuration() {
                     report.in = instance.nodes[weigher].events.weighing.report.in;
                     report.out = instance.nodes[weigher].events.weighing.report.out;
                 });
+                if (Object.keys(config.panel).length === 0) document.querySelectorAll(".li-panel-mode").forEach(li => li.style.display = "none");
                 if (!res.use_badge) {
                     document.querySelectorAll(".badge").forEach(input => {
                         if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {
@@ -168,7 +169,9 @@ async function updateTable() {
         }
     })
     filters.querySelectorAll('select').forEach(select => {
-        if (select.value) {
+        if (select.name === "reservation.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
+        else if (select.name === "reservation.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
+        else if (select.value) {
             queryParams += `${select.name}=${select.value}&`;
         }
     })
@@ -186,20 +189,22 @@ async function updateTable() {
 }
 
 async function exportTable(type) {
-    let queryParams = 'excludeTestWeighing=true&filterDateReservation=true&';
+    let queryParams = 'excludeTestWeighing=true&filterDateReservation=true&onlyInOutWithWeight2=true&';
     const filters = document.querySelector('#filters');
     let name;
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.value) {
-            name = itemName === "reservation" ? `${itemName}.${input.name}` : input.name;
+        name = itemName === "reservation" && !input.name.includes("reservation") ? `${itemName}.${input.name}` : input.name;
             if (input.type == 'text') queryParams += `${name}=${input.value}%&`;
             else if (input.type == 'number') queryParams += `${name}=${input.value}&`;
             else if (input.type == 'date') queryParams += `${name}=${input.value}&`;
         }
     })
     filters.querySelectorAll('select').forEach(select => {
-        name = itemName === "reservation" ? `${itemName}.${select.name}` : input.name;
-        if (select.value) {
+        name = itemName === "reservation" && !select.name.includes("reservation") ? `${itemName}.${select.name}` : select.name;
+        if (name === "reservation.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
+        else if (select.name === "reservation.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
+        else if (select.value) {
             queryParams += `${name}=${select.value}&`;
         }
     })

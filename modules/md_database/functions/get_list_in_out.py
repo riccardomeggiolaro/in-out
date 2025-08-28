@@ -4,7 +4,9 @@ from modules.md_database.md_database import SessionLocal, Weighing, InOut, Reser
 
 def get_list_in_out(
     filters=None,
-    not_closed=True,
+    not_closed=False,
+    only_in_out_with_weight2=False,
+    only_in_out_without_weight2=False,
     fromDate=None,
     toDate=None,
     limit=None,
@@ -122,9 +124,16 @@ def get_list_in_out(
                     else:
                         query = query.filter(getattr(InOut, key) == value)
 
-        # Filter for non-closed reservations if requested
         if not_closed:
             query = query.join(InOut.reservation).filter(Reservation.status != ReservationStatus.CLOSED)
+
+        # Filter for non-closed reservations if requested
+        if only_in_out_with_weight2:
+            query = query.filter(InOut.idWeight2 != None)
+
+        # Filter for non-closed reservations if requested
+        if only_in_out_without_weight2:
+            query = query.filter(InOut.idWeight2 == None)
 
         total_rows = query.count()
 

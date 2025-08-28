@@ -1,6 +1,14 @@
 {
     "app_api": {
-        "panel": {},
+        "panel": {
+            "endpoint": null,
+            "ip": "100.100.100.100",
+            "max_string_content": 3,
+            "password": null,
+            "port": 5200,
+            "timeout": 5,
+            "username": null
+        },
         "path_csv": "/var/lib/in-out/csv",
         "path_database": "/var/lib/in-out/database.db",
         "path_img": "/var/lib/in-out/images",
@@ -20,7 +28,14 @@
             "module": "rfidserialrfid",
             "setup": {}
         },
-        "siren": {},
+        "siren": {
+            "endpoint": "http://100.100.100.101/rpc/Switch.Set?id=0&on=true",
+            "ip": "100.100.100.101",
+            "password": "16888",
+            "port": 80,
+            "timeout": 5,
+            "username": "admin"
+        },
         "ssh_reverse_tunneling": {
             "forwarding_port": 80,
             "local_port": 80,
@@ -30,7 +45,7 @@
             "user": "root"
         },
         "use_badge": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_white_list": false,
         "weighers": {
             "1": {
