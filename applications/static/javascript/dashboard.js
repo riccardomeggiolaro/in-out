@@ -211,7 +211,12 @@ async function getData(path) {
         selectedIdVector = obj.vector.id;
         selectedIdMaterial = obj.material.id;
         console.log(selectedIdWeight)
-        if (type === "RESERVATION" && number_in_out === null && weight1 === null) obj.vehicle.plate += "⭐";
+        if (type === "RESERVATION" && number_in_out === null && weight1 === null) {
+            obj.vehicle.plate += "⭐";
+            document.querySelector('.containerPlateVehicle').classList.add('permanent');
+        } else {
+            document.querySelector('.containerPlateVehicle').classList.remove('permanent');
+        }
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
@@ -342,6 +347,25 @@ function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
     .then(res => {
         if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
         else closePopup();
+    });
+}
+
+function deleteIdSelected() {
+    fetch(`/api/data${currentWeigherPath}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "id_selected": {
+                "id": -1
+            }
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+        else document.querySelector('.containerPlateVehicle').classList.remove('permanent');
     });
 }
 
@@ -746,7 +770,12 @@ function updateUIRealtime(e) {
         selectedIdMaterial = obj.data_in_execution.material.id;
         if (obj.data_in_execution.typeSubject === 'Cliente') obj.data_in_execution.typeSubject = 'CUSTOMER';
         else if (obj.data_in_execution.typeSubject === 'Fornitore') obj.data_in_execution.typeSubject = 'SUPPLIER';
-        if (obj.type === "RESERVATION" && obj.number_in_out === null && obj.id_selected.weight1 === null) obj.data_in_execution.vehicle.plate += "⭐";
+        if (obj.type === "RESERVATION" && obj.number_in_out === null && obj.id_selected.weight1 === null) {
+            obj.data_in_execution.vehicle.plate += "⭐";
+            document.querySelector('.containerPlateVehicle').classList.add('permanent');
+        } else {
+            document.querySelector('.containerPlateVehicle').classList.remove('permanent');
+        }
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
         document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';

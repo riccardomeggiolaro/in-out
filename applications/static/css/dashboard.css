@@ -753,3 +753,24 @@ hr {
     display: flex;
     justify-content: space-between;
 }
+
+.containerPlateVehicle {
+    display: flex;
+    flex-direction: row;
+}
+
+.containerPlateVehicle button {
+    height: auto;
+    display: none;
+    color: #000;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.containerPlateVehicle.permanent input {
+    max-width: 80%;
+}
+
+.containerPlateVehicle.permanent button {
+    display: block;    
+}
