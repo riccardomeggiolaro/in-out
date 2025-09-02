@@ -1,0 +1,244 @@
+TM/BA Series Thermal Printer Driver for Linux
+TM-T20II Model Manual
+
+Contents
+1. Preface
+2. Overview
+3. Default settings at shipping
+4. Setting values of printing options
+5. Paper size information
+6. Restrictions
+
+
+---------------------------------------------------------------------
+1. Preface
+---------------------------------------------------------------------
+
+This manual describes printing conditions you can specify when 
+printing on a TM-T20II with the "TM/BA Series Thermal Printer 
+Driver for Linux."
+
+Refer to the driver manual for information on the "TM/BA Series 
+Thermal Printer Driver for Linux."
+
+
+---------------------------------------------------------------------
+2. Overview
+---------------------------------------------------------------------
+
+  You can specify the following printing options for the TM-T20II.
+
+  Option            | CUPS Admin display | Description
+--------------------+--------------------+---------------------------
+  PageSize          | Media Size         | Paper size
+  Resolution        | Resolution         | Output resolution
+  TmtSpeed          | Printing Speed     | Printing speed
+  TmtPaperReduction | Paper Reduction    | Blank page saving
+  TmtPaperSource    | Paper Source       | Whether to cut or feed the
+                    |                    | paper
+  TmtBuzzerControl  | Buzzer             | Whether to emit a beep
+  TmtSoundPattern   | Sound Pattern      | Beep pattern
+  TmtBuzzerRepeat   | Buzzer Repeat      | Beep repeat count
+  TmtDrawer1        | Cash Drawer #1     | Cash drawer 1
+  TmtDrawer2        | Cash Drawer #2     | Cash drawer 2
+
+  The above settings are defined in the following PPD file.
+
+        tm-t20ii-rastertotmt.ppd
+
+  Setting values of printing options can be changed from the GUI or 
+  the command line. For descriptions on setting values of each print 
+  option, see "4. Setting values of printing options".
+
+  Example) Specify the paper size to Roll paper (80 x 297 mm)
+           using an lp command.
+
+           $ lp -o Pagesize=RP80x297
+
+
+  Note)
+    ! You can also specify the number of copies using a CUPS' 
+      proprietary option.
+      Refer to the CUPS document for information on CUPS' proprietary
+      options.
+        http://localhost:631/help/
+
+
+---------------------------------------------------------------------
+3. Default settings at shipping
+---------------------------------------------------------------------
+
+  The following describes the default settings.
+
+  CUPS Admin display          | Default setting
+------------------------------+--------------------------------------
+  Media Size                  | Roll paper 80 x 297 mm
+  Resolution                  | 203 x 203 dpi
+  Printing Speed              | Use the printer settings
+  Paper Reduction             | Bottom margin
+  Paper Source                | Document [Feed, Cut]
+  Buzzer                      | Not used
+  Sound Pattern               | Option buzzer (Pattern A)
+  Buzzer Repeat               | 1
+  Cash Drawer #1              | Does not open
+  Cash Drawer #2              | Does not open
+
+
+---------------------------------------------------------------------
+4. Setting values of printing options
+---------------------------------------------------------------------
+
+  The following settings are available in printing options.
+
+Media Size: Specify the paper size
+
+  Setting value | CUPS Admin display      | Description
+----------------+-------------------------+--------------------------
+  RP80x297      | Roll paper 80 x 297 mm  | Roll paper (80 x 297 mm)
+  RP58x297      | Roll paper 58 x 297 mm  | Roll paper (58 x 297 mm)
+
+
+Resolution: Specify the output resolution
+
+  Setting value | CUPS Admin display      | Description
+----------------+-------------------------+--------------------------
+  203x203dpi    | 203 x 203 dpi           | Output at 203 x 203 dpi
+
+
+Printing Speed: Specify the printing speed
+
+  Setting value | CUPS Admin display      | Description
+----------------+-------------------------+--------------------------
+  Auto          | Use the printer settings| Use the default value of 
+                |                         | the printer
+  1             | 1st (Fast)              | Print at the fastest speed
+  2             | 2nd                     | Print at the second
+                |                         | fastest speed
+  3             | 3rd                     | Print at the third 
+                |                         | fastest speed
+  4             | 4th (Slow)              | Print at the slowest speed
+
+
+Paper Reduction: Specify whether to save blank pages
+
+  Setting value | CUPS Admin display      | Description
+----------------+-------------------------+--------------------------
+  Off           | None                    | Do not save blank pages
+  Top           | Top margin              | Save blank at the top
+  Bottom        | Bottom margin           | Save blank at the bottom
+  Both          | Top & Bottom margins    | Save blank at the top and 
+                |                         | bottom
+
+
+Paper Source: Specify whether to cut or feed the paper
+
+  Setting value  | CUPS Admin display      | Description
+-----------------+-------------------------+-------------------------
+  DocFeedCut     | Document [Feed, Cut]    | Partially cut after 
+                 |                         | feeding
+  DocFeedNoCut   | Document [Feed, NoCut]  | Feed to the manual cut 
+                 |                         | position without cutting
+  DocNoFeedCut   | Document [NoFeed, Cut]  | Partially cut immediately
+                 |                         | without feeding
+  DocNoFeedNoCut | Document [NoFeed, NoCut]| Do nothing
+  PageFeedCut    | Page [Feed, Cut]        | Partially cut every page 
+                 |                         | after feeding
+  PageFeedNoCut  | Page [Feed, NoCut]      | Feed every page to the 
+                 |                         | manual cut position
+                 |                         | without cutting
+  PageNoFeedCut  | Page [NoFeed, Cut]      | Partially cut every page 
+                 |                         | immediately without
+                 |                         | feeding
+
+
+Buzzer: Specify whether to emit a beep
+
+  Setting value  | CUPS Admin display      | Description
+-----------------+-------------------------+-------------------------
+  Off            | Not used                | Do not emit a beep
+  Before         | Sounds before printing  | Emit a beep before 
+                 |                         | printing
+  After          | Sounds after printing   | Emit a beep after 
+                 |                         | printing
+
+
+Sound Pattern: Specify the beep pattern
+
+  Setting value  | CUPS Admin display         | Description
+-----------------+----------------------------+----------------------
+  A              | Option buzzer (Pattern A)  | Beep pattern A
+  B              | Option buzzer (Pattern B)  | Beep pattern B
+  C              | Option buzzer (Pattern C)  | Beep pattern C
+  D              | Option buzzer (Pattern D)  | Beep pattern D
+  E              | Option buzzer (Pattern E)  | Beep pattern E
+
+
+Buzzer Repeat: Specify the number of beeps
+
+  Setting value  | CUPS Admin display      | Description
+-----------------+-------------------------+-------------------------
+  1              | 1                       | Beep once
+  2              | 2                       | Beep twice
+  3              | 3                       | Beep three times
+  5              | 5                       | Beep five times
+
+
+Cash Drawer #1: Specify the operation of cash drawer 1
+
+  Setting value  | CUPS Admin display      | Description
+-----------------+-------------------------+-------------------------
+  Off            | Does not open           | Do not open the drawer
+  Before         | Open before printing    | Open before printing
+  After          | Open after printing     | Open after printing
+
+
+Cash Drawer #2: Specify the operation of cash drawer 2
+
+  Setting value  | CUPS Admin display      | Description
+-----------------+-------------------------+-------------------------
+  Off            | Does not open           | Do not open the drawer
+  Before         | Open before printing    | Open before printing
+  After          | Open after printing     | Open after printing
+
+
+---------------------------------------------------------------------
+5. Paper size information
+---------------------------------------------------------------------
+
+  Paper size name       | Input size   | Margin               | Output paper size
+   (CUPS Admin display) | Width Length | Left Right Top Bottom| Width   Length
+                        |          (mm)|                  (mm)|            (mm)
+------------------------+--------------+----------------------+------------------
+  Roll paper 80 x 297 mm|   72    297  |   0    0    0    0   |    72    297
+  Roll paper 58 x 297 mm|   50    297  |   0    0    0    0   |    50    297
+
+
+  This driver allows you to specify the paper size using CUPS' 
+  options.
+
+    Example) Print a file to 80 x 297 mm in size.
+
+             $ lp -o media=Custom.72x297mm file
+
+  The paper size can be specified within the following range.
+    Paper width:    25.4 - 72 mm
+    Paper length:   25.4 - 2,000 mm
+
+---------------------------------------------------------------------
+6. Restrictions
+---------------------------------------------------------------------
+
+* You cannot specify printing conditions for each page.
+
+
+---------------------------------------------------------------------
+Copyright (C) 2013 Seiko Epson Corporation. All rights reserved.
+
+Linux is the registered trademark or trademark of Linus Torvalds in 
+the U.S.A. and other countries.
+
+CUPS and the CUPS logo are trademarks of Apple Inc. registered in the
+U.S.A. and other countries.
+
+Other product names in this document are trademarks or registered
+trademarks of respective companies.
