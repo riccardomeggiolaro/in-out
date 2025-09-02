@@ -34,11 +34,7 @@
         "use_white_list": false,
         "weighers": {
             "1": {
-                "connection": {
-                    "ip": "10.0.5.96",
-                    "port": 4001,
-                    "timeout": 4.0
-                },
+                "connection": {},
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
@@ -115,7 +111,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
+                        "take_of_weight_on_startup": true,
                         "terminal": "egt-af03"
                     }
                 },

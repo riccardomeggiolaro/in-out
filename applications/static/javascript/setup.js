@@ -1623,12 +1623,8 @@ async function loadSetupWeighers() {
 
                     const selections = editMode.querySelectorAll('select');
                     selections.forEach(selection => {
-                        const originalValue = weigher[selection.name];
                         const currentValue = selection.value;
-
-                        if (currentValue !== originalValue) {
-                            changedData[selection.name] = currentValue !== '' ? currentValue : null;
-                        }
+                        changedData[selection.name] = currentValue !== '' ? currentValue : null;
                     });
 
                     document.querySelector(`.${addCamWeigher}`).querySelectorAll(".cam").forEach(element => {
