@@ -50,13 +50,13 @@ else
     echo "ATTENZIONE: L'utente baronpesi non esiste sul sistema."
 fi
 
-# Installa python3.13-venv se non è presente
-if ! is_installed python3.13-venv; then
-    echo "Installazione di python3.13-venv..."
+# Installa python3.11-venv se non è presente
+if ! is_installed python3.11-venv; then
+    echo "Installazione di python3.11-venv..."
     sudo apt update
-    sudo apt install -y python3.13-venv
+    sudo apt install -y python3.11-venv
 else
-    echo "python3.13-venv è già installato, procedo..."
+    echo "python3.11-venv è già installato, procedo..."
 fi
 
 # Installa python3-dev se non è presente
