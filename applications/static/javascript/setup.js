@@ -80,6 +80,50 @@ async function getReportOut() {
     template_report_out.items.add(namedBlob);
 }
 
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        // Metodo moderno (HTTPS/localhost)
+        navigator.clipboard.writeText(text).then(() => {
+            document.body.removeChild(modal);
+            showSnackbar("Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
+        }).catch(err => {
+            console.error('Errore nel copiare:', err);
+            fallbackCopyTextToClipboard(text);
+        });
+    } else {
+        // Fallback per HTTP
+        fallbackCopyTextToClipboard(text);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+            showSnackbar("Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
+        } else {
+            showSnackbar("Impossibile copiare automaticamente. Seleziona e copia manualmente.", 'rgb(255, 208, 208)', 'black');
+        }
+    } catch (err) {
+        document.body.removeChild(textArea);
+        console.error('Fallback: Impossibile copiare', err);
+        showSnackbar("Errore nella copia. Riprova manualmente.", 'rgb(255, 208, 208)', 'black');
+    }
+}
+
 document.addEventListener("DOMContentLoaded", loadSetupWeighers);
 
 async function loadSetupWeighers() {
@@ -1571,7 +1615,7 @@ async function loadSetupWeighers() {
                         document.body.appendChild(modal);
                         modal.style.display = 'block';
                         modal.querySelector('.copy-btn').addEventListener('click', () => {
-                            navigator.clipboard.writeText(res);
+                            copyToClipboard(res);
                             document.body.removeChild(modal);
                             showSnackbar("Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
                         });
