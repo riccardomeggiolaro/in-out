@@ -303,7 +303,8 @@ class Dgt1(Terminal):
 			self.pesa_real_time.unite_measure = ""
 			self.weight.weight_executed.net_weight = ""
 			self.weight.weight_executed.gross_weight = ""
-			self.weight.weight_executed.tare = ""
+			self.weight.weight_executed.tare.value = ""
+			self.weight.weight_executed.tare.is_preset_tare = False
 			self.weight.weight_executed.unite_misure = ""
 			self.weight.weight_executed.pid = ""
 			self.weight.weight_executed.bil = ""
