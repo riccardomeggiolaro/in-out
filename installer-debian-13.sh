@@ -210,3 +210,21 @@ sudo systemctl enable in-out.service
 sudo systemctl start in-out.service
 
 echo "Il servizio in-out è stato avviato e verrà eseguito all'avvio della macchina."
+
+# Esegui l'installer nella cartella tmt-cups
+TMT_CUPS_DIR="$SCRIPT_DIR/tmt-cups"
+if [ -d "$TMT_CUPS_DIR" ]; then
+    echo "Cartella tmt-cups trovata, esecuzione dell'installer..."
+    if [ -f "$TMT_CUPS_DIR/install.sh" ]; then
+        echo "Esecuzione di $TMT_CUPS_DIR/installer.sh..."
+        cd "$TMT_CUPS_DIR"
+        sudo bash install.sh
+        echo "Installer tmt-cups completato."
+    else
+        echo "ATTENZIONE: File installer.sh non trovato in $TMT_CUPS_DIR!"
+    fi
+else
+    echo "ATTENZIONE: Cartella tmt-cups non trovata nella directory dello script!"
+fi
+
+echo "Installazione completa!"

@@ -50,13 +50,13 @@ else
     echo "ATTENZIONE: L'utente baronpesi non esiste sul sistema."
 fi
 
-# Installa python3.11-venv se non è presente
-if ! is_installed python3.11-venv; then
-    echo "Installazione di python3.11-venv..."
+# Installa python3.13-venv se non è presente
+if ! is_installed python3.13-venv; then
+    echo "Installazione di python3.13-venv..."
     sudo apt update
-    sudo apt install -y python3.11-venv
+    sudo apt install -y python3.13-venv
 else
-    echo "python3.11-venv è già installato, procedo..."
+    echo "python3.13-venv è già installato, procedo..."
 fi
 
 # Installa python3-dev se non è presente
@@ -107,12 +107,12 @@ WEASYPRINT_DEPS=(
     "libpangoft2-1.0-0"
     "libpangocairo-1.0-0"
     "libcairo2"
-    "libgdk-pixbuf2.0-0"
+    "libgdk-pixbuf-2.0-0"
     "libffi-dev"
     "shared-mime-info"
     "libcairo2-dev"
     "libpango1.0-dev"
-    "libgdk-pixbuf2.0-dev"
+    "libgdk-pixbuf-2.0-dev"
 )
 
 INSTALL_NEEDED=false
@@ -210,3 +210,21 @@ sudo systemctl enable in-out.service
 sudo systemctl start in-out.service
 
 echo "Il servizio in-out è stato avviato e verrà eseguito all'avvio della macchina."
+
+# Esegui l'installer nella cartella tmt-cups
+TMT_CUPS_DIR="$SCRIPT_DIR/tmt-cups"
+if [ -d "$TMT_CUPS_DIR" ]; then
+    echo "Cartella tmt-cups trovata, esecuzione dell'installer..."
+    if [ -f "$TMT_CUPS_DIR/install.sh" ]; then
+        echo "Esecuzione di $TMT_CUPS_DIR/installer.sh..."
+        cd "$TMT_CUPS_DIR"
+        sudo bash install.sh
+        echo "Installer tmt-cups completato."
+    else
+        echo "ATTENZIONE: File installer.sh non trovato in $TMT_CUPS_DIR!"
+    fi
+else
+    echo "ATTENZIONE: Cartella tmt-cups non trovata nella directory dello script!"
+fi
+
+echo "Installazione completa!"
