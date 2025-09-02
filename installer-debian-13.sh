@@ -6,6 +6,26 @@ is_installed() {
     dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
 }
 
+# Funzione per controllare se l'ambiente desktop è MATE
+is_mate_desktop() {
+    # Controlla diverse variabili e processi che indicano MATE
+    if [ "$XDG_CURRENT_DESKTOP" = "MATE" ] || [ "$DESKTOP_SESSION" = "mate" ]; then
+        return 0
+    fi
+    
+    # Controlla se ci sono processi MATE in esecuzione
+    if pgrep -f "mate-session" >/dev/null 2>&1; then
+        return 0
+    fi
+    
+    # Controlla se il pacchetto mate-desktop è installato
+    if is_installed "mate-desktop" || is_installed "mate-desktop-environment"; then
+        return 0
+    fi
+    
+    return 1
+}
+
 # Installa sudo se non è presente
 if ! command -v sudo &>/dev/null; then
     echo "Installazione di sudo..."
@@ -30,13 +50,13 @@ else
     echo "ATTENZIONE: L'utente baronpesi non esiste sul sistema."
 fi
 
-# Installa python3.11-venv se non è presente
+# Installa python3.13-venv se non è presente
 if ! is_installed python3.13-venv; then
-    echo "Installazione di python3.11-venv..."
+    echo "Installazione di python3.13-venv..."
     sudo apt update
     sudo apt install -y python3.13-venv
 else
-    echo "python3.11-venv è già installato, procedo..."
+    echo "python3.13-venv è già installato, procedo..."
 fi
 
 # Installa python3-dev se non è presente
@@ -57,13 +77,27 @@ else
     echo "python3-pip è già installato, procedo..."
 fi
 
-# Installa CUPS e libcups2-dev se non sono presenti
-if ! is_installed cups || ! is_installed libcups2-dev; then
-    echo "Installazione di CUPS e libcups2-dev..."
+# Installa CUPS, libcups2-dev e libcupsimage2 se non sono presenti
+if ! is_installed cups || ! is_installed libcups2-dev || ! is_installed libcupsimage2; then
+    echo "Installazione di CUPS, libcups2-dev e libcupsimage2..."
     sudo apt update
-    sudo apt install -y cups libcups2-dev
+    sudo apt install -y cups libcups2-dev libcupsimage2
 else
-    echo "CUPS e libcups2-dev sono già installati, procedo..."
+    echo "CUPS, libcups2-dev e libcupsimage2 sono già installati, procedo..."
+fi
+
+# Controlla se l'ambiente desktop è MATE e installa system-config-printer
+if is_mate_desktop; then
+    echo "Ambiente desktop MATE rilevato."
+    if ! is_installed system-config-printer; then
+        echo "Installazione di system-config-printer per MATE..."
+        sudo apt update
+        sudo apt install -y system-config-printer
+    else
+        echo "system-config-printer è già installato, procedo..."
+    fi
+else
+    echo "Ambiente desktop MATE non rilevato, salto l'installazione di system-config-printer."
 fi
 
 # Installa TUTTE le dipendenze necessarie per WeasyPrint
