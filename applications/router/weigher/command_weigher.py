@@ -140,7 +140,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				modope="WEIGHING", 
 				data_assigned=reservation.id
 			)
-			if error_message:
+			if error_message and reservation.hidden is True:
 				await self.deleteReservation(request=None, id=current_id)
 		return {
 			"instance": instance,
