@@ -7,8 +7,8 @@
         "path_pdf": "/var/lib/in-out/pdf",
         "path_report": "./applications/static/report",
         "port": 80,
-        "report_in": "weight_in.html",
-        "report_out": "weight_out.html",
+        "report_in": null,
+        "report_out": null,
         "return_pdf_copy_after_weighing": false,
         "rfid": {
             "connection": {
@@ -30,11 +30,15 @@
             "user": "root"
         },
         "use_badge": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_white_list": false,
         "weighers": {
             "1": {
-                "connection": {},
+                "connection": {
+                    "ip": "10.0.5.96",
+                    "port": 4001,
+                    "timeout": 3.0
+                },
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
@@ -79,7 +83,7 @@
                             "type": "MANUALLY"
                         },
                         "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
+                        "division": 20,
                         "events": {
                             "realtime": {
                                 "over_min": {
@@ -100,10 +104,10 @@
                         },
                         "maintaine_session_realtime_after_command": true,
                         "max_theshold": null,
-                        "max_weight": 50000,
-                        "min_weight": 200,
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "max_weight": 60000,
+                        "min_weight": 400,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
@@ -111,7 +115,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": true,
+                        "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"
                     }
                 },
