@@ -272,7 +272,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
 									break
 								if weight1 is not None and tare is not None and abs(float(current_tare) - float(tare)) > division:
-									error_message = "Pesatura automatica interrotta. La tara non è stata impostata correttamente."
+									error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
 									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
 									break
 								elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
@@ -296,8 +296,6 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 											stable = stable + 1
 									else:
 										stable = 0
-										message = "In attessa del peso stabile per effettuare la pesatura automatica."
-										await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": message})
 				else:
 					error_message = f"Accesso con '{identify_dto.identify}' non esistente."
 			current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
