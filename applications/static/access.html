@@ -369,7 +369,7 @@
     </div>
 
     <!-- Snackbar -->
-    <div id="snackbar"></div>
+    <div id="snackbar" class="snackbar"></div>
 
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
@@ -462,7 +462,7 @@
                 })
                 .then(res => {
                     if (res.status !== 200) {
-                        showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                        showSnackbar("snackbar", res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
                     }
                     closePopups(['delete-popup'], false);
                 })

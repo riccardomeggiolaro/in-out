@@ -274,7 +274,7 @@ async function populateListIn() {
                 })
                 .then(res => res.json())
                 .then(res => {
-                    if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                     else numberInOutSelectedIdWeight = item.in_out.length;
                 });
             })
@@ -345,7 +345,7 @@ function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
     })
     .then(res => res.json())
     .then(res => {
-        if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+        if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         else closePopup();
     });
 }
@@ -364,7 +364,7 @@ function deleteIdSelected() {
     })
     .then(res => res.json())
     .then(res => {
-        if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+        if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         else document.querySelector('.containerPlateVehicle').classList.remove('permanent');
     });
 }
@@ -427,7 +427,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                 })
                 .then(res => res.json())
                 .then(res => {
-                    if (res.detail) showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                    if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                     else closePopup();
                 });
             };
@@ -650,11 +650,11 @@ function isNumeric(value) {
 function updateUIRealtime(e) {
     const obj = JSON.parse(e.data);
     if (obj.command_in_executing) {
-        if (obj.command_in_executing == "TARE") showSnackbar("Tara", 'rgb(208, 255, 208)', 'black');
-        if (obj.command_in_executing == "PRESETTARE") showSnackbar("Preset tara", 'rgb(208, 255, 208)', 'black');
-        if (obj.command_in_executing == "ZERO") showSnackbar("Zero", 'rgb(208, 255, 208)', 'black');
+        if (obj.command_in_executing == "TARE") showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
+        if (obj.command_in_executing == "PRESETTARE") showSnackbar("snackbar", "Preset tara", 'rgb(208, 255, 208)', 'black');
+        if (obj.command_in_executing == "ZERO") showSnackbar("snackbar", "Zero", 'rgb(208, 255, 208)', 'black');
         if (obj.command_in_executing == "WEIGHING") {
-            showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             buttons.forEach(button => {
                 button.disabled = true;
                 button.classList.add("disabled-button"); // Aggi
@@ -695,10 +695,10 @@ function updateUIRealtime(e) {
                     }
                 }
             }
-            showSnackbar(message, 'rgb(208, 255, 208)', 'black');
+            showSnackbar("snackbar", message, 'rgb(208, 255, 208)', 'black');
             populateListIn();
         } else { 
-            showSnackbar("Pesata fallita", 'rgb(255, 208, 208)', 'black');
+            showSnackbar("snackbar", "Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
         reservation_id = null;
         buttons.forEach(button => {
@@ -831,7 +831,11 @@ function updateUIRealtime(e) {
     } else if (obj.reservation) {
         populateListIn();       
     } else if (obj.message) {
-        showSnackbar(obj.message, 'rgb(208, 255, 208)', 'black');
+        showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
+    } else if (obj.error_message) {
+        showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
+    } else if (obj.cam_message) {
+        showSnackbar("snackbar2", obj.cam_message, 'white', 'black');
     }
 }
 
@@ -910,15 +914,15 @@ async function printLastInOut() {
     const r = await fetch(`${pathname}/api/anagrafic/reservation/in-out/print-last${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar(r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
-    else showSnackbar(r.message, 'rgb(208, 255, 208)', 'black');
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar("snackbar", r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+    else showSnackbar("snackbar", r.message, 'rgb(208, 255, 208)', 'black');
 }
 
 async function handleTara() {
     const r = await fetch(`${pathname}/api/command-weigher/tare${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar(r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar("snackbar", r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
 }
 
 async function handleZero() {
@@ -936,7 +940,7 @@ async function handlePTara() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar(r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+    if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar("snackbar", r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
 }
 
 async function handleStampa() {
@@ -950,10 +954,10 @@ async function handleStampa() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+        showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
         if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
     } else {
-        showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -983,10 +987,10 @@ async function inWeighing() {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+        showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
         if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
     } else {
-        showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -1022,10 +1026,10 @@ async function outWeighing () {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
-        showSnackbar("Pesando...", 'rgb(208, 255, 208)', 'black');
+        showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
         if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
     } else {
-        showSnackbar(r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi

@@ -1,7 +1,7 @@
-const snackbar = document.getElementById("snackbar");
 let currentShowSnackbar = null;
 
-function showSnackbar(text, backgroundColor, color) {
+function showSnackbar(id, text, backgroundColor, color) {
+    const snackbar = document.getElementById(id);
     snackbar.textContent = text;
     snackbar.style.backgroundColor = backgroundColor;
     snackbar.style.color = color;

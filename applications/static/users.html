@@ -289,7 +289,7 @@
     </div>
 
     <!-- Snackbar -->
-    <div id="snackbar"></div>
+    <div id="snackbar" class="snackbar"></div>
     
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
@@ -444,9 +444,9 @@
                 if (res.status === 200) {
                     listUser();
                     closePopups(['add-popup']); // chiudi il popup/form
-                    showSnackbar('Nuovo utente creato', 'rgb(208, 255, 208)', 'black');
+                    showSnackbar("snackbar", 'Nuovo utente creato', 'rgb(208, 255, 208)', 'black');
                 } else {
-                    showSnackbar(res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
                 }
             });
         }
@@ -472,10 +472,10 @@
                 if (res.status === 200) {
                     listUser();
                     closePopups(['edit-popup']); // chiudi il popup/form
-                    showSnackbar('Utente modificato correttamente', 'rgb(208, 255, 208)', 'black');
+                    showSnackbar("snackbar", 'Utente modificato correttamente', 'rgb(208, 255, 208)', 'black');
                     document.querySelector("#edit-popup .save-btn").disabled = false;
                 } else {
-                    showSnackbar(res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
                 }
             });
         }
@@ -490,9 +490,9 @@
                 if (res.status === 200) {
                     listUser();
                     closePopups(["delete-popup"]);
-                    showSnackbar('Utente eliminato correttamente', 'rgb(208, 255, 208)', 'black');
+                    showSnackbar("snackbar", 'Utente eliminato correttamente', 'rgb(208, 255, 208)', 'black');
                 } else {
-                    showSnackbar(res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
                 }
             })
         }

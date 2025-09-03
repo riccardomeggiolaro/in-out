@@ -85,7 +85,7 @@ function copyToClipboard(text) {
         // Metodo moderno (HTTPS/localhost)
         navigator.clipboard.writeText(text).then(() => {
             document.body.removeChild(modal);
-            showSnackbar("Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
+            showSnackbar("snackbar", "Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
         }).catch(err => {
             console.error('Errore nel copiare:', err);
             fallbackCopyTextToClipboard(text);
@@ -113,14 +113,14 @@ function fallbackCopyTextToClipboard(text) {
         document.body.removeChild(textArea);
         
         if (successful) {
-            showSnackbar("Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
+            showSnackbar("snackbar", "Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
         } else {
-            showSnackbar("Impossibile copiare automaticamente. Seleziona e copia manualmente.", 'rgb(255, 208, 208)', 'black');
+            showSnackbar("snackbar", "Impossibile copiare automaticamente. Seleziona e copia manualmente.", 'rgb(255, 208, 208)', 'black');
         }
     } catch (err) {
         document.body.removeChild(textArea);
         console.error('Fallback: Impossibile copiare', err);
-        showSnackbar("Errore nella copia. Riprova manualmente.", 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", "Errore nella copia. Riprova manualmente.", 'rgb(255, 208, 208)', 'black');
     }
 }
 
@@ -302,7 +302,7 @@ async function loadSetupWeighers() {
                         deleteReportIn.disabled = true;
                     } else {
                         res = res.json();
-                        showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                        showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                     }
                 })
             }
@@ -330,7 +330,7 @@ async function loadSetupWeighers() {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             } else {
-                showSnackbar("Nessun file da scaricare", 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", "Nessun file da scaricare", 'rgb(255, 208, 208)', 'black');
             }
         };
         previewReportIn.style.textDecoration = "underline";
@@ -351,10 +351,10 @@ async function loadSetupWeighers() {
                     // Puoi eventualmente revocare l'URL dopo un timeout
                     setTimeout(() => URL.revokeObjectURL(url), 10000);
                 } else {
-                    showSnackbar("Errore nella generazione dell'anteprima PDF", 'rgb(255, 208, 208)', 'black');
+                    showSnackbar("snackbar", "Errore nella generazione dell'anteprima PDF", 'rgb(255, 208, 208)', 'black');
                 }
             } else {
-                showSnackbar("Nessun file selezionato", 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", "Nessun file selezionato", 'rgb(255, 208, 208)', 'black');
             }
         };
         const labelReportOut = document.createElement('label');
@@ -404,7 +404,7 @@ async function loadSetupWeighers() {
                         deleteReportOut.disabled = true;
                     } else {
                         res = res.json();
-                        showSnackbar(res.detail, 'rgb(255, 208, 208)', 'black');
+                        showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                     }
                 })
             }
@@ -432,7 +432,7 @@ async function loadSetupWeighers() {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             } else {
-                showSnackbar("Nessun file da scaricare", 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", "Nessun file da scaricare", 'rgb(255, 208, 208)', 'black');
             }
         };
         previewReportOut.style.textDecoration = "underline";
@@ -453,10 +453,10 @@ async function loadSetupWeighers() {
                     // Puoi eventualmente revocare l'URL dopo un timeout
                     setTimeout(() => URL.revokeObjectURL(url), 10000);
                 } else {
-                    showSnackbar("Errore nella generazione dell'anteprima PDF", 'rgb(255, 208, 208)', 'black');
+                    showSnackbar("snackbar", "Errore nella generazione dell'anteprima PDF", 'rgb(255, 208, 208)', 'black');
                 }
             } else {
-                showSnackbar("Nessun file selezionato", 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", "Nessun file selezionato", 'rgb(255, 208, 208)', 'black');
             }
         };
         const br = document.createElement('br');
@@ -488,11 +488,11 @@ async function loadSetupWeighers() {
             })
             .then(res => {
                 if (res.ok) {
-                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
+                    showSnackbar("snackbar", "Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
                     savePdfPathButton.disabled = true;
                     originalPathPdf = value;
                 } else {
-                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
+                    showSnackbar("snackbar", "Directory non valida", 'rgb(255, 208, 208)', 'black');
                     savePdfPath.value = originalPathPdf;
                 }
             })
@@ -525,11 +525,11 @@ async function loadSetupWeighers() {
             })
             .then(res => {
                 if (res.ok) {
-                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
+                    showSnackbar("snackbar", "Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
                     saveCsvPathButton.disabled = true;
                     originalPathCsv = value;
                 } else {
-                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
+                    showSnackbar("snackbar", "Directory non valida", 'rgb(255, 208, 208)', 'black');
                     saveCsvPath.value = originalPathCsv;
                 }
             })
@@ -562,11 +562,11 @@ async function loadSetupWeighers() {
             })
             .then(res => {
                 if (res.ok) {
-                    showSnackbar("Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
+                    showSnackbar("snackbar", "Directory salvata correttamente", 'rgb(208, 255, 208)', 'black');
                     saveImgPathButton.disabled = true;
                     originalPathImg = value;
                 } else {
-                    showSnackbar("Directory non valida", 'rgb(255, 208, 208)', 'black');
+                    showSnackbar("snackbar", "Directory non valida", 'rgb(255, 208, 208)', 'black');
                     saveImgPath.value = originalPathImg;
                 }
             })
@@ -1617,7 +1617,7 @@ async function loadSetupWeighers() {
                         modal.querySelector('.copy-btn').addEventListener('click', () => {
                             copyToClipboard(res);
                             document.body.removeChild(modal);
-                            showSnackbar("Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
+                            showSnackbar("snackbar", "Url copiata correttamente negli appunti", 'rgb(208, 255, 208)', 'black');
                         });
                         modal.querySelector('.close-btn').addEventListener('click', () => {
                             modal.style.display = 'none';

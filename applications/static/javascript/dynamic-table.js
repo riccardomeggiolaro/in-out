@@ -138,7 +138,7 @@ async function exportReportWeighing(idWeighing) {
         document.body.removeChild(link);
         setTimeout(() => URL.revokeObjectURL(link.href), 10000);
     } else {
-        showSnackbar("Errore nella generazione del PDF", 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", "Errore nella generazione del PDF", 'rgb(255, 208, 208)', 'black');
     }
 }
 
@@ -629,10 +629,10 @@ addPopup.querySelector('#save-btn').addEventListener('click', () => {
     })
     .then(res => {
         if (res.status === 404 || res.status === 403) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            showSnackbar("snackbar", res.data.detail, 'rgb(255, 208, 208)', 'black');
             closePopups(['add-popup'], false);
         } else if (res.status === 400) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            showSnackbar("snackbar", res.data.detail, 'rgb(255, 208, 208)', 'black');
         } else {
             closePopups(['add-popup'], false);
         }
@@ -666,10 +666,10 @@ editPopup.querySelector('#save-btn').addEventListener('click', () => {
     })
     .then(res => {
         if (res.status === 404 || res.status === 403) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            showSnackbar("snackbar", res.data.detail, 'rgb(255, 208, 208)', 'black');
             closePopups(['edit-popup'], false);
         } else if (res.status === 400) {
-            showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+            showSnackbar("snackbar", res.data.detail, 'rgb(255, 208, 208)', 'black');
         } else {
             closePopups(['edit-popup'], false);
         }
@@ -722,10 +722,10 @@ function closeRow(item) {
         })
         .then(res => {
             if (res.status === 404 || res.status === 403) {
-                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", res.data.detail, 'rgb(255, 208, 208)', 'black');
                 closePopups(['edit-popup'], false);
             } else if (res.status === 400) {
-                showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", res.data.detail, 'rgb(255, 208, 208)', 'black');
             } else {
                 closePopups(['edit-popup'], false);
             }
@@ -848,11 +848,11 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
     })
     .then(res => {
         if (res.status !== 200) {
-            showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+            showSnackbar("snackbar", res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
         }
         closePopups(['delete-popup'], false);
     })
-    .catch(error => showSnackbar(`${error}`, 'red', 'white'));
+    .catch(error => showSnackbar("snackbar", `${error}`, 'red', 'white'));
 })
 
 function deleteRow(item) {
@@ -1015,7 +1015,7 @@ function connectWebSocket() {
                     }
                     let action = `creat${lastChar}`;
                     if (firstKey === "weighing") action = `effettuat${lastChar}`;
-                    showSnackbar(capitalizeFirstLetter(`Nuov${lastChar} ${specific} ${action}`), 'rgb(208, 255, 208)', 'black');
+                    showSnackbar("snackbar", capitalizeFirstLetter(`Nuov${lastChar} ${specific} ${action}`), 'rgb(208, 255, 208)', 'black');
                 } else if (data.action === "update") {
                     await updateTable();
                     const obj = getTableColumns();
@@ -1027,7 +1027,7 @@ function connectWebSocket() {
                         }
                         tr.classList.toggle('updated');
                     }
-                    showSnackbar(capitalizeFirstLetter(`${specific} modificat${lastChar}`), 'rgb(255, 240, 208)', 'black');
+                    showSnackbar("snackbar", capitalizeFirstLetter(`${specific} modificat${lastChar}`), 'rgb(255, 240, 208)', 'black');
                 } else if (data.action === "delete") {
                     const obj = getTableColumns();
                     let tr = obj.table.querySelector(`[data-id="${data.data[firstKey].id}"]`);
@@ -1072,7 +1072,7 @@ function connectWebSocket() {
                     } else {
                         await updateTable();
                     }
-                    showSnackbar(capitalizeFirstLetter(`${specific} eliminat${lastChar}`), 'rgb(255, 208, 208)', 'black');
+                    showSnackbar("snackbar", capitalizeFirstLetter(`${specific} eliminat${lastChar}`), 'rgb(255, 208, 208)', 'black');
                 } else if (data.action === "call") {
                     await updateTable();
                     const obj = getTableColumns();
@@ -1084,7 +1084,7 @@ function connectWebSocket() {
                             tr.classList.remove('updated');
                         }, { once: true }); // Ascolta solo una volta
                     }
-                    showSnackbar(capitalizeFirstLetter(`${specific} chiamat${lastChar}`), 'rgb(255, 240, 208)', 'black');                    
+                    showSnackbar("snackbar", capitalizeFirstLetter(`${specific} chiamat${lastChar}`), 'rgb(255, 240, 208)', 'black');                    
                 } else if (data.action === "cancel_call") {
                     await updateTable();
                     const obj = getTableColumns();
@@ -1096,7 +1096,7 @@ function connectWebSocket() {
                             tr.classList.remove('updated');
                         }, { once: true }); // Ascolta solo una volta
                     }
-                    showSnackbar(capitalizeFirstLetter(`Chiamata del ${specific} annullat${lastChar}`), 'rgb(255, 240, 208)', 'black'); 
+                    showSnackbar("snackbar", capitalizeFirstLetter(`Chiamata del ${specific} annullat${lastChar}`), 'rgb(255, 240, 208)', 'black'); 
                 } else if (data.action === "lock") {
                     if (data.success === true) {
                         if (data.type === "UPDATE") {
@@ -1128,7 +1128,7 @@ function connectWebSocket() {
                     if (data.success === true) removeWebSocketRequest(data.idRequest);
                 }
             } else {
-                showSnackbar(data.error, 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", data.error, 'rgb(255, 208, 208)', 'black');
             }
         }
         if (callback_websocket_message) callback_websocket_message(e);

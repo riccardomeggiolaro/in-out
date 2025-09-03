@@ -590,7 +590,7 @@
     </div>
 
     <!-- Snackbar -->
-    <div id="snackbar"></div>
+    <div id="snackbar" class="snackbar"></div>
 
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
@@ -751,7 +751,7 @@
                 messageSnackbar = `Annullando la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
             }
             confirm_exec_funct = () => {
-                showSnackbar(messageSnackbar, 'rgb(208, 255, 208)', 'black');
+                showSnackbar("snackbar", messageSnackbar, 'rgb(208, 255, 208)', 'black');
                 fetch(url, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -766,9 +766,9 @@
                 })
                 .then(res => {
                     if (res.data.detail) {
-                        showSnackbar(res.data.detail, 'rgb(255, 208, 208)', 'black');
+                        showSnackbar("snackbar", res.data.detail, 'rgb(255, 208, 208)', 'black');
                     } else {
-                        showSnackbar(res.data, 'rgb(255, 208, 208)', 'black');
+                        showSnackbar("snackbar", res.data, 'rgb(255, 208, 208)', 'black');
                     }
                 })
                 .finally(_ => {
@@ -802,7 +802,7 @@
                 document.body.removeChild(link);
                 setTimeout(() => URL.revokeObjectURL(link.href), 10000);
             } else {
-                showSnackbar("Errore nella generazione del PDF", 'rgb(255, 208, 208)', 'black');
+                showSnackbar("snackbar", "Errore nella generazione del PDF", 'rgb(255, 208, 208)', 'black');
             }
         }
 
@@ -833,7 +833,7 @@
                 })
                 .then(res => {
                     if (res.status !== 200) {
-                        showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                        showSnackbar("snackbar", res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
                     }
                     closePopups(['edit-inout-popup'], false);
                 })
@@ -862,7 +862,7 @@
                 })
                 .then(res => {
                     if (res.status !== 200) {
-                        showSnackbar(res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                        showSnackbar("snackbar", res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
                     }
                     closePopups(['delete-popup'], false);
                 })

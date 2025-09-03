@@ -224,8 +224,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			"identify": identify_dto.identify
 		}
 		if request is not None:
-			request_message_received = f"'{identify_dto.identify}' ricevuto da {request.client.host}"
-			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": request_message_received})
+			cam_message = f"'{identify_dto.identify}' ricevuto da {request.client.host}"
+			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
 		if proc in self.automatic_weighing_process:
 			error_message = f"Pesatura automatica con '{identify_dto.identify}' già in esecuzione sulla pesa '{instance.weigher_name}'"
 		else:
@@ -249,7 +249,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 					if current_weigher_data["id_selected"]["id"] != reservation["id"]:
 						await self.DeleteData(instance=instance)
 						try:
-							if reservation["type"].name == TypeReservation.RESERVATION.name and reservation["number_in_out"] is not None and realtime.tare != "":
+							if reservation["type"].name == TypeReservation.RESERVATION.name and reservation["number_in_out"] is not None and realtime.tare != "0":
 								error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
 							else:
 								await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
@@ -272,15 +272,15 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 							if modope != "PRESETTARE" and current_modope != "PRESETTARE":
 								if current_weigher_data["id_selected"]["id"] != reservation["id"]:
 									error_message = f"Pesatura automatica interrotta. Accesso con '{identify_dto.identify}' deselezionato."
-									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
+									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 									break
 								if weight1 is not None and tare is not None and abs(float(current_tare) - float(tare)) > division:
 									error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
-									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
+									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 									break
 								elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
 									error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
-									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
+									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 									break
 								elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
 									if realtime.status == "ST":
@@ -292,7 +292,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 												data_assigned=reservation["id"])
 											if error_message:
 												error_message = f"Errore nella pesatura automatica: {error_message}. Ritento."
-												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
+												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 											if command_executed:
 												break
 										else:
