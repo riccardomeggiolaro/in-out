@@ -223,6 +223,9 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			"weigher_name": instance.weigher_name,
 			"identify": identify_dto.identify
 		}
+		if request is not None:
+			request_message_received = f"'{identify_dto.identify}' ricevuto da {request.client.host}"
+			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": request_message_received})
 		if proc in self.automatic_weighing_process:
 			error_message = f"Pesatura automatica con '{identify_dto.identify}' già in esecuzione sulla pesa '{instance.weigher_name}'"
 		else:
