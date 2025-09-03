@@ -215,6 +215,7 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			if hasattr(response, "status_code"):
 				return response
 		status_modope, command_executed, error_message = 500, False, ""
+		reservation = None
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
 		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
@@ -275,7 +276,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 				"command_executed": command_executed,
 				"error_message": error_message
 			},
-			"reservation_id": reservation["id"] if reservation else None
+			"reservation_id": reservation.id if reservation else None,
+			"identify_dto": identify_dto
 		}
 
 	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
