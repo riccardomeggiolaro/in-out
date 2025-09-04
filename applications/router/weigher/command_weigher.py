@@ -316,6 +316,75 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			"identify_dto": identify_dto
 		}
 
+	# async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None):
+	# 	if request is not None:
+	# 		response = get_user(token=token)
+	# 		if hasattr(response, "status_code"):
+	# 			return response
+	# 	status_modope, command_executed, error_message = 500, False, ""
+	# 	weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+	# 	take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
+	# 	take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
+	# 	if take_of_weight_on_startup is True:
+	# 		error_message = "Scaricare la pesa dopo l'avvio del programma"
+	# 	elif take_of_weight_before_weighing is True:
+	# 		error_message = "Scaricare la pesa prima di eseguire nuova pesata"
+	# 	else:
+	# 		reservation = get_reservation_by_identify_if_uncomplete(identify=identify_dto.identify)
+	# 		realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+	# 		min_weight = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["min_weight"]
+	# 		if realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
+	# 			error_message = f"Il peso deve essere maggiore di {min_weight} kg"
+	# 		elif reservation:
+	# 			current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+	# 			set_data = None
+	# 			if current_weigher_data["id_selected"]["id"] != reservation["id"]:
+	# 				set_data = await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": reservation["id"]}}), instance=instance)
+	# 			data = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]
+	# 			tare = data["data_in_execution"]["vehicle"]["tare"]
+	# 			weight1 = data["id_selected"]["weight1"]
+	# 			weighing = True
+	# 			if weight1 is None and tare is not None:
+	# 				weighing = False
+	# 				timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
+	# 				time_between_actions = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"]
+	# 				while timeout > 0:
+	# 					await asyncio.sleep(time_between_actions)
+	# 					modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+	# 					current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+	# 					realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+	# 					current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
+	# 					m = modope if request is not None else current_modope
+	# 					if modope != "PRESETTARE" and current_modope != "PRESETTARE" and current_tare == str(tare):
+	# 						weighing = True
+	# 						break
+	# 					timeout -= time_between_actions
+	# 				if weighing is False:
+	# 					error_message = "Errore durante la pesatura automatica. La tara non è stata impostata correttamente."
+	# 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
+	# 			if weighing:
+	# 				realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+	# 				if realtime.status != "ST":
+	# 					error_message = "Errore durante la pesatura automatica. La pesa non è stabile."
+	# 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
+	# 				else:
+	# 					status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+	# 						instance_name=instance.instance_name, 
+	# 						weigher_name=instance.weigher_name, 
+	# 						modope="WEIGHING", 
+	# 						data_assigned=reservation["id"])
+	# 	if error_message:
+	# 		await self.DeleteData(instance=instance)
+	# 	return {
+	# 		"instance": instance,
+	# 		"command_details": {
+	# 			"status_modope": status_modope,
+	# 			"command_executed": command_executed,
+	# 			"error_message": error_message
+	# 		},
+	# 		"reservation_id": reservation["id"] if reservation else None
+	# 	}
+
 	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
 		instance = InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)
 		identify_dto = IdentifyDTO(identify=identify)
