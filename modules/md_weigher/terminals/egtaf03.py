@@ -129,6 +129,8 @@ class EgtAf03(Terminal):
 				split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
 				length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
 				length_response = len(response) # ottengo la lunghezza della stringa della risposta
+				# if response.startswith("ERR"):
+				# 	pass
 				if length_split_response == 5 and (length_response == 48 or length_response == 38):
 					gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
 					t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
@@ -146,11 +148,16 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 					self.diagnostic.status = 200
 					self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
-					# if self.modope == "REALTIME":
-					# 	response = self.read()
-					# 	split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
-					# 	length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
-					# 	length_response = len(response) # ottengo la lunghezza della stringa della risposta
+					if self.modope == "REALTIME":
+						lb_log.warning(f"CODE: {self.code_identify}")
+						if self.modope == "REALTIME":
+							something_else = self.read(log=True, without_error=True)
+							lb_log.warning(f"SOMETHING ELSE: {something_else}")
+							if something_else:
+								split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
+								length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
+								length_response = len(response) # ottengo la lunghezza della stringa della risposta
+								# self.modope_to_execute = "OK"
 					callCallback(self.callback_weighing)
 					self.weight.weight_executed.net_weight = ""
 					self.weight.weight_executed.gross_weight = ""
@@ -167,12 +174,15 @@ class EgtAf03(Terminal):
 				######### Se arriva tag #############################################################################################
 				elif length_split_response == 1 and length_response == 15 and "$" in response:
 					self.code_identify = response.replace("$", "").strip()
+					lb_log.warning(f"CODE: {self.code_identify}")
 					if self.modope == "REALTIME":
-						response = self.read()
-						split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
-						length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
-						length_response = len(response) # ottengo la lunghezza della stringa della risposta
-						# self.modope_to_execute = "OK"
+						something_else = self.read(log=True, without_error=True)
+						lb_log.warning(f"SOMETHING ELSE: {something_else}")
+						if something_else:
+							split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
+							length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
+							length_response = len(response) # ottengo la lunghezza della stringa della risposta
+							# self.modope_to_execute = "OK"
 					callCallback(self.callback_code_identify)
 					self.code_identify = ""
 					self.diagnostic.status = 200

@@ -114,6 +114,7 @@ class ConfigWeigher(CommandWeigherRouter):
         self.deleteInstanceSocket(instance_name=instance.instance_name)
         lb_config.g_config["app_api"]["weighers"].pop(instance.instance_name)
         lb_config.saveconfig()
+        self.switch_to_call_instance_weigher = {}
         return { "deleted": response }
 
     async def GetInstanceWeigher(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
@@ -178,6 +179,7 @@ class ConfigWeigher(CommandWeigherRouter):
                 weigher_created[setup.name]["rele"][rele] = 0
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][setup.name] = weigher_created[setup.name]
         lb_config.saveconfig()
+        self.switch_to_call_instance_weigher[instance.instance_name][setup.name] = None
         return response
 
     async def SetInstanceWeigher(self, setup: ChangeSetupWeigherDTO = {}, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
@@ -249,6 +251,7 @@ class ConfigWeigher(CommandWeigherRouter):
         response[weigher_name]["max_theshold"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"]
         response[weigher_name]["events"] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]
         lb_config.saveconfig()
+        self.switch_to_call_instance_weigher[instance.instance_name][setup.name] = None
         return response
 
     async def DeleteInstanceWeigher(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
@@ -256,6 +259,7 @@ class ConfigWeigher(CommandWeigherRouter):
         self.deleteDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
         self.deleteIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
         self.deleteInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+        del self.switch_to_call_instance_weigher[instance.instance_name][instance.weigher_name]
         del lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]
         lb_config.saveconfig()
         return { "deleted": response }

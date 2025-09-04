@@ -223,9 +223,12 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 			"weigher_name": instance.weigher_name,
 			"identify": identify_dto.identify
 		}
+		cam_message = f'"{identify_dto.identify}"'
 		if request is not None:
-			cam_message = f"'{identify_dto.identify}' ricevuto da {request.client.host}"
-			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
+			cam_message = cam_message + f" ricevuto da {request.client.host}"
+		else:
+			cam_message = cam_message + f" ricevuto da terminale"
+		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
 		if proc in self.automatic_weighing_process:
 			error_message = f"Pesatura automatica con '{identify_dto.identify}' già in esecuzione sulla pesa '{instance.weigher_name}'"
 		else:
@@ -259,14 +262,17 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						data = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]
 						tare = data["data_in_execution"]["vehicle"]["tare"]
 						weight1 = data["id_selected"]["weight1"]
+						timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
 						time_between_actions = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"]
 						stable = 0
 						while True:
 							await asyncio.sleep(time_between_actions)
+							timeout = timeout - time_between_actions
 							current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 							modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 							current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 							realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+							lb_log.warning(realtime)
 							current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
 							m = modope if request is not None else current_modope
 							if modope != "PRESETTARE" and current_modope != "PRESETTARE":
@@ -274,10 +280,15 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 									error_message = f"Pesatura automatica interrotta. Accesso con '{identify_dto.identify}' deselezionato."
 									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 									break
-								if weight1 is not None and tare is not None and abs(float(current_tare) - float(tare)) > division:
-									error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
-									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
-									break
+								if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division:
+									if current_tare == "0":
+										if timeout >= 0:
+											message = f"Impostando la tara per la pesatura automatica."
+											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": message})
+									elif timeout >= 0:
+										error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
+										await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
+										break
 								elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
 									error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
 									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})

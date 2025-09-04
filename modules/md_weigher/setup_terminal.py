@@ -36,17 +36,20 @@ class __SetupWeigherConnection:
 			else:
 				raise BrokenPipeError()
 
-	def read(self):
+	def read(self, log=False, without_error=False):
 		read = self.self_config.connection.connection.read()
 		if read:
 			decode = read.decode("utf-8", errors="ignore").replace(self.node if isinstance(self.node, str) else "", "", 1).replace("\r\n", "")
 			read = decode
+			if log:
+				lb_log.error(f"LOG: {read}")
 		else:
-			connected = self.is_open()
-			if not connected:
-				raise TimeoutError()
-			else:
-				raise BrokenPipeError()
+			if without_error is False:
+				connected = self.is_open()
+				if not connected:
+					raise TimeoutError()
+				else:
+					raise BrokenPipeError()
 		return read
 
 	def flush(self):

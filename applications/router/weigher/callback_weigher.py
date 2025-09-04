@@ -2,6 +2,7 @@ import modules.md_weigher.md_weigher as md_weigher
 import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
+import libs.lb_log as lb_log
 from modules.md_database.md_database import ReservationStatus, TypeReservation
 from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
 from modules.md_database.functions.add_data import add_data
@@ -22,13 +23,13 @@ class CallbackWeigher(Functions, WebSocket):
 	def __init__(self):
 		super().__init__()
   
-		self.switch_to_call = None
-
 	# ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
 	def Callback_Realtime(self, instance_name: str, weigher_name: str, pesa_real_time: Realtime):
 		try:
 			gross_weight = pesa_real_time.gross_weight
+			if gross_weight == "":
+				self.switch_to_call_instance_weigher[instance_name][weigher_name] = None
 			numeric_gross_weight = None
 			try:
 				if "," in gross_weight or "." in gross_weight:
@@ -38,18 +39,18 @@ class CallbackWeigher(Functions, WebSocket):
 			except:
 				pass
 			if type(numeric_gross_weight) in [float, int]:
-				if numeric_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [0, None]:
+				if numeric_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call_instance_weigher[instance_name][weigher_name] in [0, None]:
 					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
 						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
-					self.switch_to_call = 1
-				elif numeric_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call in [1, None]:
+					self.switch_to_call_instance_weigher[instance_name][weigher_name] = 1
+				elif numeric_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call_instance_weigher[instance_name][weigher_name] in [1, None]:
 					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]:
 						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
-					self.switch_to_call = 0
+					self.switch_to_call_instance_weigher[instance_name][weigher_name] = 0
 				weight1 = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["weight1"]
 				if pesa_real_time.status == "ST" and weight1:
 					pesa_real_time.potential_net_weight = numeric_gross_weight - weight1 if numeric_gross_weight > weight1 else weight1 - numeric_gross_weight
@@ -62,6 +63,7 @@ class CallbackWeigher(Functions, WebSocket):
 					pesa_real_time.over_max_theshold = False
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(pesa_real_time.dict()))
 		except Exception as e:
+			lb_log.error(e)
 			pass
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
@@ -185,10 +187,6 @@ class CallbackWeigher(Functions, WebSocket):
 				save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv_data_line)
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
-				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
-					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
-					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
-					md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
 				i = 1
 				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 					if cam["active"]:
@@ -200,6 +198,11 @@ class CallbackWeigher(Functions, WebSocket):
 							save_bytes_to_file(image_captured_details["image"], file_name, f"{base_folder_path}{sub_folder_path}")
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
+					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
+					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
+					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
+					lb_log.warning(r)
 		elif not last_pesata.weight_executed.executed and last_pesata.data_assigned and reservation.hidden is True:
 			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
 			delete_data("reservation", last_pesata.data_assigned)
@@ -240,8 +243,6 @@ class CallbackWeigher(Functions, WebSocket):
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 		
 	def Callback_Rele(self, instance_name: str, weigher_name: str, port_rele: tuple):
-		import libs.lb_log as lb_log
-		lb_log.warning(port_rele)
 		key, value = port_rele
 		result = {key: value}
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][key] = value

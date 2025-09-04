@@ -15,6 +15,8 @@ class Functions:
 	def __init__(self):
 		md_weigher.module_weigher.initializeModuleConfig(config=lb_config.g_config["app_api"]["weighers"])
 
+		self.switch_to_call_instance_weigher = {}
+
 		for instance_name, instance in md_weigher.module_weigher.instances.items():
 			nodes_sockets = {}
 			for weigher_name, weigher in instance.nodes.items():
@@ -22,6 +24,7 @@ class Functions:
 					"sockets": NodeConnectionManager(),
 					"data": Data(**lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"])
 				}
+				self.switch_to_call_instance_weigher[instance_name] = {weigher_name: None}
 			weighers_data[instance_name] = nodes_sockets
 
 		md_weigher.module_weigher.setApplicationCallback(
