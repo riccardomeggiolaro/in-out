@@ -114,6 +114,8 @@
                         "printer_name": null,
                         "rele": {},
                         "run": true,
+                        "status_brief_description": null,
+                        "status_description": null,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"

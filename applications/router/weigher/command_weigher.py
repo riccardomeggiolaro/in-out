@@ -512,10 +512,8 @@ class CommandWeigherRouter(DataRouter, ReservationRouter):
 						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
 				else:
 					message = "Errore di connessione"
-					if status == 305:
-						message = "Errore di raggiungimento della pesa"
-					elif status == 201:
-						message = "Errore di comunicazione con la pesa"
+					if status in [305, 201]:
+						message = "Errore di ricezione"
 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
 						"status": message,
 						"type":"--",
