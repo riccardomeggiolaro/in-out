@@ -1,19 +1,19 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Reservation, ReservationStatus, TypeSubjectEnum, TypeReservation
-from modules.md_database.interfaces.reservation import AddReservationDTO
-from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
-from modules.md_database.functions.get_reservation_by_identify_if_uncomplete import get_reservation_by_identify_if_uncomplete
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Access, AccessStatus, TypeSubjectEnum, TypeAccess
+from modules.md_database.interfaces.access import AddAccessDTO
+from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
+from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
 
-def add_reservation(data: AddReservationDTO):
+def add_access(data: AddAccessDTO):
     """
     Aggiunge un record a una tabella specificata dinamicamente con gestione dei conflitti per SQLite.
     """
     with SessionLocal() as session:
         data_to_check = None
         try:
-            add_reservation = {
+            add_access = {
                 "typeSubject": TypeSubjectEnum[data.typeSubject],
                 "idSubject": data.subject.id,
                 "idVector": data.vector.id,
@@ -21,9 +21,9 @@ def add_reservation(data: AddReservationDTO):
                 "idVehicle": data.vehicle.id,
                 "number_in_out": data.number_in_out,
                 "note": data.note,
-                "status": ReservationStatus.WAITING,
+                "status": AccessStatus.WAITING,
                 "document_reference": data.document_reference,
-                "type": TypeReservation[data.type],
+                "type": TypeAccess[data.type],
                 "badge": data.badge if data.badge != "" else None,
                 "hidden": data.hidden
             }
@@ -40,7 +40,7 @@ def add_reservation(data: AddReservationDTO):
                     subject = current_model(**add_subject)
                     session.add(subject)
                     session.flush()
-                    add_reservation["idSubject"] = subject.id
+                    add_access["idSubject"] = subject.id
 
             current_model = Vector
             if not data.vector.id:
@@ -54,7 +54,7 @@ def add_reservation(data: AddReservationDTO):
                     vector = current_model(**add_vector)
                     session.add(vector)
                     session.flush()
-                    add_reservation["idVector"] = vector.id
+                    add_access["idVector"] = vector.id
 
             current_model = Driver
             if not data.driver.id:
@@ -67,7 +67,7 @@ def add_reservation(data: AddReservationDTO):
                     driver = current_model(**add_driver)
                     session.add(driver)
                     session.flush()
-                    add_reservation["idDriver"] = driver.id
+                    add_access["idDriver"] = driver.id
             
             current_model = Vehicle
             vehicle = None
@@ -82,16 +82,16 @@ def add_reservation(data: AddReservationDTO):
                     vehicle = current_model(**add_vehicle)
                     session.add(vehicle)
                     session.flush()
-                    add_reservation["idVehicle"] = vehicle.id
+                    add_access["idVehicle"] = vehicle.id
 
-            existing = get_reservation_by_vehicle_id_if_uncomplete(add_reservation["idVehicle"])
+            existing = get_access_by_vehicle_id_if_uncomplete(add_access["idVehicle"])
 
             if existing:
                 existing = existing["vehicle"].__dict__
                 plate = existing["plate"]
                 raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
             elif existing is None and data.vehicle.plate is not None:
-                existing = get_reservation_by_identify_if_uncomplete(identify=data.vehicle.plate)
+                existing = get_access_by_identify_if_uncomplete(identify=data.vehicle.plate)
                 if existing:
                     raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
 
@@ -99,26 +99,26 @@ def add_reservation(data: AddReservationDTO):
             if badge is not None:
                 # Controllo per duplicati badge (escludendo la prenotazione corrente)
                 if badge != "":
-                    existing_badge = session.query(Reservation).filter(
-                        Reservation.badge == badge
+                    existing_badge = session.query(Access).filter(
+                        Access.badge == badge
                     ).first()
                     
                     if existing_badge:
                         raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso")
-                    existing = get_reservation_by_identify_if_uncomplete(identify=badge)
+                    existing = get_access_by_identify_if_uncomplete(identify=badge)
                     if existing:
                         raise ValueError(f"Il badge '{badge}' è già assegnato come TARGA ad un altro accesso ancora aperto")
 
-            current_model = Reservation
+            current_model = Access
             data_to_check = data.dict()
-            reservation = current_model(**add_reservation)
-            session.add(reservation)
+            access = current_model(**add_access)
+            session.add(access)
 
             session.commit()
 
-            session.refresh(reservation)
+            session.refresh(access)
 
-            return reservation.__dict__
+            return access.__dict__
         except IntegrityError as e:
             session.rollback()
             error_message = str(e)

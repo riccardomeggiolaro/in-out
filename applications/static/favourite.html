@@ -602,25 +602,25 @@
         const toDate = document.querySelector('#filter\\.toDate');
 
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'reservation';
+            itemName = 'access';
             customQueryParams = "type=RESERVATION&";
             nextElementSibling = true;
             lastChar = 'a';
             canAlwaysDelete = true;
-            listUrlPath = '/api/anagrafic/reservation/list';
-            exportUrlPath = '/api/anagrafic/reservation/export'
-            addUrlPath = '/api/anagrafic/reservation';
-            setUrlPath = '/api/anagrafic/reservation';
-            deleteUrlPath = '/api/anagrafic/reservation';
-            websocketUrlPath = '/api/anagrafic/reservation';
+            listUrlPath = '/api/anagrafic/access/list';
+            exportUrlPath = '/api/anagrafic/access/export'
+            addUrlPath = '/api/anagrafic/access';
+            setUrlPath = '/api/anagrafic/access';
+            deleteUrlPath = '/api/anagrafic/access';
+            websocketUrlPath = '/api/anagrafic/access';
             callback_populate_select = populateForm;
             callback_close_popups = deselectAllAnagrafic;
             populate_detail_tr = populateDetailTr;
             callback_populate_table = updateElapsedTimes;
-            callback_call_anagrafic = callReservation;
+            callback_call_anagrafic = callAccess;
             params = {
-                "accesso con targa": "reservation.vehicle.plate",
-                "accesso con id": "reservation.id",
+                "accesso con targa": "access.vehicle.plate",
+                "accesso con id": "access.id",
                 "soggetto": "subject.social_reason",
                 "vettore": "vector.social_reason",
                 "autista": "driver.social_reason",
@@ -628,7 +628,7 @@
                 "veicolo con targa": "vehicle.plate",
                 "veicolo con descrizione": "vehicle.description",
                 "materiale": "material.description",
-                "pesata con il veicolo": "weighing.reservation.vehicle.plate",
+                "pesata con il veicolo": "weighing.access.vehicle.plate",
                 "pesata con id": "weighing.id"
             }
             init();
@@ -734,21 +734,21 @@
             return '';
         }
 
-        function callReservation(type, reservation) {
+        function callAccess(type, access) {
             let url;
             let popupTitle;
             let popupContent;
             let messageSnackbar;
             if (type === "CALL") {
-                url = `/api/anagrafic/reservation/call/${reservation["id"]}`;
+                url = `/api/anagrafic/access/call/${access["id"]}`;
                 popupTitle = "Conferma chiamata!";
-                popupContent = `Chiamare il veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
-                messageSnackbar = `Chiamando il veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
+                popupContent = `Chiamare il veicolo con la targa '${access["vehicle"]["plate"]}'?'`;
+                messageSnackbar = `Chiamando il veicolo con la targa '${access["vehicle"]["plate"]}'`;
             } else {
-                url = `/api/anagrafic/reservation/cancel-call/${reservation["id"]}`;
+                url = `/api/anagrafic/access/cancel-call/${access["id"]}`;
                 popupTitle = "Conferma annullamento chiamata!";
-                popupContent = `Annullare la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'?'`;
-                messageSnackbar = `Annullando la chiamata del veicolo con la targa '${reservation["vehicle"]["plate"]}'`;
+                popupContent = `Annullare la chiamata del veicolo con la targa '${access["vehicle"]["plate"]}'?'`;
+                messageSnackbar = `Annullando la chiamata del veicolo con la targa '${access["vehicle"]["plate"]}'`;
             }
             confirm_exec_funct = () => {
                 showSnackbar("snackbar", messageSnackbar, 'rgb(208, 255, 208)', 'black');
@@ -772,7 +772,7 @@
                     }
                 })
                 .finally(_ => {
-                    deselectAnagrafic(reservation["id"]);
+                    deselectAnagrafic(access["id"]);
                 });
             }
             document.querySelector('#confirm-title').textContent = popupTitle;
@@ -781,7 +781,7 @@
         }
 
         async function exportReportWeighing(idWeighing) {
-            const response = await fetch(`/api/anagrafic/reservation/in-out/pdf/${idWeighing}`);
+            const response = await fetch(`/api/anagrafic/access/in-out/pdf/${idWeighing}`);
             if (response.ok) {
                 const blob = await response.blob();
                 // Prendi il nome file dall'header Content-Disposition
@@ -806,7 +806,7 @@
             }
         }
 
-        function updateWeighingMaterial(idReservation, idInOut, idMaterial, descriptionMaterial) {
+        function updateWeighingMaterial(idAccess, idInOut, idMaterial, descriptionMaterial) {
             confirm_exec_funct = () => {
                 const id = document.querySelector("#material\\.id").value || -1;
                 const description = document.querySelector("#material\\.description").value || null;
@@ -817,7 +817,7 @@
                     }
                 });
                 console.log(idMaterial, descriptionMaterial)
-                fetch(`/api/anagrafic/reservation/${idReservation}?idInOut=${idInOut}`, {
+                fetch(`/api/anagrafic/access/${idAccess}?idInOut=${idInOut}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -841,13 +841,13 @@
             document.querySelector("#edit-inout-popup #material\\.id").value = idMaterial;
             document.querySelector('#edit-inout-popup #material\\.description').value = descriptionMaterial;
             document.querySelector('#edit-inout-popup .save-btn').disabled = false;
-            selectAnagrafic(idReservation, "UPDATE", "reservation", null, true);
-            currentId = idReservation;
+            selectAnagrafic(idAccess, "UPDATE", "access", null, true);
+            currentId = idAccess;
         }
 
-        function deleteLastWeighing(idReservation, plate, pid) {
+        function deleteLastWeighing(idAccess, plate, pid) {
             confirm_exec_funct = () => {
-                fetch(`/api/anagrafic/reservation/last-weighing/${idReservation}`, {
+                fetch(`/api/anagrafic/access/last-weighing/${idAccess}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -871,8 +871,8 @@
             document.querySelector('#confirm-content').innerHTML = `
                 Sei sicuro di voler eliminare l'ultima pesata effettuata dal veicolo '${plate}' con pid '${pid}?'
             `;
-            selectAnagrafic(idReservation, "DELETE", "reservation", null, true);
-            currentId = idReservation;
+            selectAnagrafic(idAccess, "DELETE", "access", null, true);
+            currentId = idAccess;
         }
 
         function getImageWeighing(imageUrl) {

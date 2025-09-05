@@ -3,8 +3,8 @@ from datetime import datetime, date
 
 def get_list_weighings(filters=None, weigher_name=None, fromDate=None, toDate=None, limit=None, offset=None, order_by=None):
     """
-    Gets a list of reservations with optional filtering for incomplete reservations
-    and additional filters on any reservation field or related entities.
+    Gets a list of accesses with optional filtering for incomplete accesses
+    and additional filters on any access field or related entities.
     """
     session = SessionLocal()
     try:
@@ -89,7 +89,7 @@ def get_list_weighings(filters=None, weigher_name=None, fromDate=None, toDate=No
         if order_by:
             column_name, direction = order_by
             if not hasattr(Weighing, column_name):
-                raise ValueError(f"Column '{column_name}' not found in Reservation table.")
+                raise ValueError(f"Column '{column_name}' not found in Access table.")
             column = getattr(Weighing, column_name)
             if direction.lower() == 'asc':
                 query = query.order_by(column.asc())
@@ -106,8 +106,8 @@ def get_list_weighings(filters=None, weigher_name=None, fromDate=None, toDate=No
         if offset is not None:
             query = query.offset(offset)
 
-        reservations = query.all()
-        return reservations, total_rows
+        accesses = query.all()
+        return accesses, total_rows
 
     except Exception as e:
         session.rollback()

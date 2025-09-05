@@ -9,7 +9,7 @@ from modules.md_database.interfaces.in_out import InOut
 from datetime import datetime
 import libs.lb_config as lb_config
 
-class Reservation(BaseModel):
+class Access(BaseModel):
     id: Optional[int] = None
     typeSubject: Optional[str] = None
     idSubject: Optional[int] = None
@@ -31,7 +31,7 @@ class Reservation(BaseModel):
     vehicle: Optional[Vehicle] = None
     in_out: List[InOut] = []
 
-class AddReservationDTO(BaseModel):
+class AddAccessDTO(BaseModel):
     typeSubject: str = "CUSTOMER"
     subject: SubjectDataDTO = SubjectDataDTO(**{})
     vector: VectorDataDTO = VectorDataDTO(**{})
@@ -63,7 +63,7 @@ class AddReservationDTO(BaseModel):
     #         raise ValueError("Mode badge is not enabled")
     #     return v
     
-class SetReservationDTO(BaseModel):
+class SetAccessDTO(BaseModel):
     typeSubject: Optional[str] = None
     subject: SubjectDataDTO = SubjectDataDTO(**{})
     vector: VectorDataDTO = VectorDataDTO(**{})

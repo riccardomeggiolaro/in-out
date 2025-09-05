@@ -49,7 +49,7 @@ class VectorRouter(WebSocket):
             data = add_data("vector", body.dict())
             vector = Vector(**data).json()
             await self.broadcastAddAnagrafic("vector", {"vector": vector})
-            await self.broadcastAddAnagrafic("reservation", {"vector": vector})
+            await self.broadcastAddAnagrafic("access", {"vector": vector})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -65,7 +65,7 @@ class VectorRouter(WebSocket):
             data = update_data("vector", id, body.dict())
             vector = Vector(**data).json()
             await self.broadcastUpdateAnagrafic("vector", {"vector": vector})
-            await self.broadcastUpdateAnagrafic("reservation", {"vector": vector})
+            await self.broadcastUpdateAnagrafic("access", {"vector": vector})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -83,13 +83,13 @@ class VectorRouter(WebSocket):
             locked_data = get_data_by_attributes('lock_record', {"table_name": "vector", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the vector with id '{id}' before to delete that")
-            check_vector_reservations = get_data_by_id("vector", id)
-            if check_vector_reservations and len(check_vector_reservations["reservations"]) > 0:
+            check_vector_accesses = get_data_by_id("vector", id)
+            if check_vector_accesses and len(check_vector_accesses["accesses"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il vettore con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("vector", id)
             vector = Vector(**data).json()
             await self.broadcastDeleteAnagrafic("vector", {"vector": vector})
-            await self.broadcastDeleteAnagrafic("reservation", {"vector": vector})
+            await self.broadcastDeleteAnagrafic("access", {"vector": vector})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

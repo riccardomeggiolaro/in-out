@@ -12,6 +12,7 @@ from applications.router.anagrafic.router import AnagraficRouter
 from applications.router.auth import AuthRouter
 from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
+from applications.router.open_to_customer import OpenToCustomerRouter
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
@@ -91,6 +92,7 @@ def init():
 	auth_router = AuthRouter()
 	printer_router = PrinterRouter()
 	tunnel_connections_router = TunnelConnectionsRouter()
+	open_to_customer = OpenToCustomerRouter()
 
 	directory = lb_config.g_config["app_api"]["path_img"] if os.path.exists(lb_config.g_config["app_api"]["path_img"]) else None
 
@@ -105,6 +107,8 @@ def init():
 	app.include_router(auth_router.router, prefix="/api/auth", tags=["auth"])
 
 	app.include_router(tunnel_connections_router.router, prefix="/api/tunnel_connections", tags=["tunnel connections"])
+
+	app.include_router(open_to_customer.router, prefix="/api", tags=["open to customer"])
 
 	# Monta la cartella 'static' nella rotta '/static'
 	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")

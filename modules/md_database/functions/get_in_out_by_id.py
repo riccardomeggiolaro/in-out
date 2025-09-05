@@ -1,5 +1,5 @@
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Reservation
+from modules.md_database.md_database import SessionLocal, InOut, Access
 
 def get_last_in_out_by_id(id):
     """
@@ -9,11 +9,11 @@ def get_last_in_out_by_id(id):
     try:
         in_out = session.query(InOut
                 ).options(
-                    selectinload(InOut.reservation).options(
-                        selectinload(Reservation.vehicle),
-                        selectinload(Reservation.driver),
-                        selectinload(Reservation.subject),
-                        selectinload(Reservation.vector)
+                    selectinload(InOut.access).options(
+                        selectinload(Access.vehicle),
+                        selectinload(Access.driver),
+                        selectinload(Access.subject),
+                        selectinload(Access.vector)
                     ),
                     selectinload(InOut.weight1),
                     selectinload(InOut.weight2),

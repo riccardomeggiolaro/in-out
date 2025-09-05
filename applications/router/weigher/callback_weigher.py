@@ -3,13 +3,13 @@ import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
-from modules.md_database.md_database import ReservationStatus, TypeReservation
-from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
+from modules.md_database.md_database import AccessStatus, TypeAccess
+from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.add_material_if_not_exist import add_material_if_not_exists
-from modules.md_database.interfaces.reservation import Reservation
+from modules.md_database.interfaces.access import Access
 import datetime as dt
 from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
@@ -72,7 +72,7 @@ class CallbackWeigher(Functions, WebSocket):
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
-		reservation = get_reservation_by_id(last_pesata.data_assigned)
+		access = get_access_by_id(last_pesata.data_assigned)
 		if last_pesata.weight_executed.executed and not "NO" in last_pesata.weight_executed.pid:
 			############################
 			# SALVATAGGIO DELLA PESATA
@@ -104,7 +104,7 @@ class CallbackWeigher(Functions, WebSocket):
 				id_material = material["id"]
 			############################
 			# ASSOCIAZIONE DELLA PESATA SALVATA ALLA COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
-			last_in_out = reservation.in_out[-1] if len(reservation.in_out) > 0 else None
+			last_in_out = access.in_out[-1] if len(access.in_out) > 0 else None
 			if last_in_out and not last_in_out.idWeight2:
 				weight1 = last_in_out.weight1.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
@@ -113,11 +113,11 @@ class CallbackWeigher(Functions, WebSocket):
         			"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight
 	           })
-			elif last_in_out and last_in_out.idWeight2 and tare == 0 and reservation.number_in_out is not None:
+			elif last_in_out and last_in_out.idWeight2 and tare == 0 and access.number_in_out is not None:
 				weight1 = last_in_out.weight2.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
 				add_data("in_out", {
-					"idReservation": last_pesata.data_assigned,
+					"idAccess": last_pesata.data_assigned,
 					"idMaterial": id_material,
 					"idWeight1": last_in_out.idWeight2,
 					"idWeight2": weighing_stored_db["id"],
@@ -125,7 +125,7 @@ class CallbackWeigher(Functions, WebSocket):
 				})
 			else:
 				add_data("in_out", {
-					"idReservation": last_pesata.data_assigned,
+					"idAccess": last_pesata.data_assigned,
 					"idMaterial": id_material,
 					"idWeight1": weighing_stored_db["id"] if tare == 0 else None,
 					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
@@ -133,31 +133,31 @@ class CallbackWeigher(Functions, WebSocket):
 				})
 			############################
 			# RECUPERO L'ACCESSO CON IL NUOVO IN-OUT CREATO
-			reservation = get_reservation_by_id(last_pesata.data_assigned)
-			last_in_out = reservation.in_out[-1]
-			len_in_out = len(reservation.in_out)
-			is_test = reservation.type == TypeReservation.TEST
-			is_to_close = len_in_out == reservation.number_in_out and last_in_out.idWeight2 or is_test
-			last_in_out.reservation = reservation
+			access = get_access_by_id(last_pesata.data_assigned)
+			last_in_out = access.in_out[-1]
+			len_in_out = len(access.in_out)
+			is_test = access.type == TypeAccess.TEST
+			is_to_close = len_in_out == access.number_in_out and last_in_out.idWeight2 or is_test
+			last_in_out.access = access
    			############################
 			# CREO L'IN-OUT SUCCESSIVO PER L'ASSEGNAZIONE DEL MATERIALE SE L'ACCESSO NON E' STATO CHIUSO E HA PIU' DI UNA OPERAZIONE
 			# if tare == 0 and not is_to_close and last_in_out.idWeight2 and not is_test:
 			# 	add_data("in_out", {
-			# 		"idReservation": reservation.id,
+			# 		"idAccess": access.id,
 			# 		"idWeight1": last_in_out.idWeight2
 			# 	})
 			############################
 			# AGGIORNAMENTO FINALE DELLO STATO DELL'ACCESSO
 			changed = {
-				"status": ReservationStatus.CLOSED if is_to_close else ReservationStatus.ENTERED,
+				"status": AccessStatus.CLOSED if is_to_close else AccessStatus.ENTERED,
 				"hidden": False
 			}
 			if is_to_close:
 				changed["badge"] = ""
-			updated_reservation = update_data("reservation", last_pesata.data_assigned, changed)
-			reservation_data_json = Reservation(**updated_reservation).json()
-			asyncio.run(self.broadcastUpdateAnagrafic("reservation", {"weighing": reservation_data_json}))
-			last_pesata.data_assigned = reservation_data_json
+			updated_access = update_data("access", last_pesata.data_assigned, changed)
+			access_data_json = Access(**updated_access).json()
+			asyncio.run(self.broadcastUpdateAnagrafic("access", {"weighing": access_data_json}))
+			last_pesata.data_assigned = access_data_json
 			############################
 			# RIMUOVE TUTTI I DATA IN ESECUZIONE E L'ID SELEZIONATO SULLA DASHBAORD
 			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
@@ -203,11 +203,11 @@ class CallbackWeigher(Functions, WebSocket):
 					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
 					lb_log.warning(r)
-		elif not last_pesata.weight_executed.executed and last_pesata.data_assigned and reservation.hidden is True:
+		elif not last_pesata.weight_executed.executed and last_pesata.data_assigned and access.hidden is True:
 			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
-			delete_data("reservation", last_pesata.data_assigned)
+			delete_data("access", last_pesata.data_assigned)
 		# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
-		if not last_pesata.weight_executed.executed and len(reservation.in_out) == 0 and reservation.hidden is False:
+		if not last_pesata.weight_executed.executed and len(access.in_out) == 0 and access.hidden is False:
 			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE E NON C'E' NESSUN IN-OUT ELIMINA I DATI IN ESECUZIONE
 			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO

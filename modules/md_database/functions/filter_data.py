@@ -1,6 +1,6 @@
 from sqlalchemy.orm import selectinload
 from sqlalchemy import case, exists, and_, select, or_
-from modules.md_database.md_database import table_models, SessionLocal, Reservation, InOut
+from modules.md_database.md_database import table_models, SessionLocal, Access, InOut
 from datetime import datetime, date
 
 def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None, toDate=None, order_by=None, permanentAssociatedFirstToWeighing1=None):
@@ -106,7 +106,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                     try:
                         # Try ISO format first
                         fromDate = datetime.fromisoformat(fromDate)
-                        query = query.filter(Reservation.date_created >= fromDate)
+                        query = query.filter(Access.date_created >= fromDate)
                     except ValueError:
                         try:
                             # Then try common date formats
@@ -118,7 +118,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                             for fmt in formats_to_try:
                                 try:
                                     fromDate = datetime.strptime(fromDate, fmt)
-                                    query = query.filter(Reservation.date_created >= fromDate)
+                                    query = query.filter(Access.date_created >= fromDate)
                                     break
                                 except ValueError:
                                     continue
@@ -127,7 +127,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                             pass
                 elif isinstance(fromDate, (datetime, date)):
                     # Already a datetime or date object
-                    query = query.filter(Reservation.date_created >= fromDate)
+                    query = query.filter(Access.date_created >= fromDate)
             
         if toDate:
             # Handle various input types and ensure we're dealing with a datetime object
@@ -139,7 +139,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                     try:
                         # Try ISO format first
                         toDate = datetime.fromisoformat(toDate)
-                        query = query.filter(Reservation.date_created <= toDate)
+                        query = query.filter(Access.date_created <= toDate)
                     except ValueError:
                         try:
                             # Then try common date formats
@@ -151,7 +151,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                             for fmt in formats_to_try:
                                 try:
                                     toDate = datetime.strptime(toDate, fmt)
-                                    query = query.filter(Reservation.date_created <= toDate)
+                                    query = query.filter(Access.date_created <= toDate)
                                     break
                                 except ValueError:
                                     continue
@@ -160,7 +160,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                             pass
                 elif isinstance(toDate, (datetime, date)):
                     # Already a datetime or date object
-                    query = query.filter(Reservation.date_created <= toDate)
+                    query = query.filter(Access.date_created <= toDate)
 
         # Aggiungi l'ordinamento se specificato
         if order_by:
@@ -170,25 +170,25 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
 
             column = getattr(model, column_name)
 
-            # Ordinamento custom per le targhe associate a Reservation con in_out == None e stato != "CLOSED"
+            # Ordinamento custom per le targhe associate a Access con in_out == None e stato != "CLOSED"
             if permanentAssociatedFirstToWeighing1 is True and table_name.lower() == "vehicle":
-                # Subquery: ultimo InOut per la Reservation
+                # Subquery: ultimo InOut per la Access
                 last_inout_subq = (
                     select(InOut.idWeight2)
-                    .where(InOut.idReservation == Reservation.id)
+                    .where(InOut.idAccess == Access.id)
                     .order_by(InOut.id.desc())
                     .limit(1)
                 )
 
-                reservation_priority = case(
+                access_priority = case(
                     (
                         exists().where(
                             and_(
-                                Reservation.idVehicle == model.id,
-                                Reservation.status != "CLOSED",
-                                Reservation.number_in_out == None,
+                                Access.idVehicle == model.id,
+                                Access.status != "CLOSED",
+                                Access.number_in_out == None,
                                 or_(
-                                    ~exists().where(InOut.idReservation == Reservation.id),  # Nessun InOut associato
+                                    ~exists().where(InOut.idAccess == Access.id),  # Nessun InOut associato
                                     last_inout_subq.scalar_subquery() != None                # Ultimo InOut ha idWeight2 valorizzato
                                 )
                             )
@@ -197,7 +197,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
                     ),
                     else_=1
                 )
-                query = query.order_by(reservation_priority.asc(), column.asc() if direction.lower() == 'asc' else column.desc())
+                query = query.order_by(access_priority.asc(), column.asc() if direction.lower() == 'asc' else column.desc())
             else:
                 if direction.lower() == 'asc':
                     query = query.order_by(column.asc())

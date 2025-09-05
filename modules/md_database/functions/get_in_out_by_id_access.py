@@ -2,7 +2,7 @@ from sqlalchemy import func, alias, case
 from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, Weighing, InOut
 
-def get_in_out_by_id(id):
+def get_in_out_by_id_access(id):
     """
     Gets the latest InOut record based on weigher_name.
     """
@@ -12,11 +12,11 @@ def get_in_out_by_id(id):
         weight1_alias = alias(Weighing, name='w1')
         weight2_alias = alias(Weighing, name='w2')
 
-        # CTE per l'ultimo InOut per ogni reservation
+        # CTE per l'ultimo InOut per ogni access
         latest_inout = session.query(
-            InOut.idReservation,
+            InOut.idAccess,
             func.max(InOut.id).label('latest_id')
-        ).group_by(InOut.idReservation).cte('latest_inout')
+        ).group_by(InOut.idAccess).cte('latest_inout')
 
         # Query base per ottenere l'ultimo InOut
         query = session.query(
@@ -30,7 +30,7 @@ def get_in_out_by_id(id):
             selectinload(InOut.weight2)
         ).outerjoin(
             latest_inout,
-            InOut.idReservation == latest_inout.c.idReservation
+            InOut.idAccess == latest_inout.c.idAccess
         ).join(
             InOut.weight1
         ).filter(

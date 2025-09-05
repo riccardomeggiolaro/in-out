@@ -1,80 +1,80 @@
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload, selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Reservation, Vehicle, TypeReservation, ReservationStatus
+from modules.md_database.md_database import SessionLocal, InOut, Access, Vehicle, TypeAccess, AccessStatus
 
-def get_reservation_by_vehicle_id_if_uncomplete(id: int):
+def get_access_by_vehicle_id_if_uncomplete(id: int):
     session = SessionLocal()
     try:
         weighing_count_subquery = (
             session.query(
-                InOut.idReservation,
+                InOut.idAccess,
                 func.count(InOut.id).label("weighing_count")
             )
-            .group_by(InOut.idReservation)
+            .group_by(InOut.idAccess)
             .subquery()
         )
 
         last_inout_subq = (
             session.query(
-                InOut.idReservation,
+                InOut.idAccess,
                 func.max(InOut.id).label("last_inout_id")
             )
-            .group_by(InOut.idReservation)
+            .group_by(InOut.idAccess)
             .subquery()
         )
 
         last_inout_weight2_subq = (
             session.query(
-                InOut.idReservation,
+                InOut.idAccess,
                 InOut.idWeight2
             )
             .join(last_inout_subq, and_(
-                InOut.idReservation == last_inout_subq.c.idReservation,
+                InOut.idAccess == last_inout_subq.c.idAccess,
                 InOut.id == last_inout_subq.c.last_inout_id
             ))
             .subquery()
         )
 
-        reservation = session.query(Reservation).options(
-            joinedload(Reservation.subject),
-            joinedload(Reservation.vector),
-            joinedload(Reservation.driver),
-            joinedload(Reservation.vehicle),
-            selectinload(Reservation.in_out)
+        access = session.query(Access).options(
+            joinedload(Access.subject),
+            joinedload(Access.vector),
+            joinedload(Access.driver),
+            joinedload(Access.vehicle),
+            selectinload(Access.in_out)
         ).join(
-            Vehicle, Reservation.idVehicle == Vehicle.id
+            Vehicle, Access.idVehicle == Vehicle.id
         ).outerjoin(
             weighing_count_subquery,
-            Reservation.id == weighing_count_subquery.c.idReservation
+            Access.id == weighing_count_subquery.c.idAccess
         ).outerjoin(
             last_inout_weight2_subq,
-            Reservation.id == last_inout_weight2_subq.c.idReservation
+            Access.id == last_inout_weight2_subq.c.idAccess
         ).filter(
             Vehicle.id == id,
-            Reservation.type != TypeReservation.TEST.name,
-            Reservation.status != ReservationStatus.CLOSED.name,
+            Access.type != TypeAccess.TEST.name,
+            Access.status != AccessStatus.CLOSED.name,
             or_(
-                Reservation.number_in_out == None,
+                Access.number_in_out == None,
                 # weighing_count is NULL (nessun InOut)
                 weighing_count_subquery.c.weighing_count == None,
                 # weighing_count < number_in_out
-                weighing_count_subquery.c.weighing_count < Reservation.number_in_out,
+                weighing_count_subquery.c.weighing_count < Access.number_in_out,
                 # weighing_count == number_in_out AND last_inout_weight2_subq.c.idWeight2 == None
                 and_(
-                    weighing_count_subquery.c.weighing_count == Reservation.number_in_out,
+                    weighing_count_subquery.c.weighing_count == Access.number_in_out,
                     last_inout_weight2_subq.c.idWeight2 == None
                 ),
             )
         ).order_by(
-            Reservation.date_created.desc()
+            Access.date_created.desc()
         ).first()
 
-        if not reservation:
+        if not access:
             return None
 
         session.commit()
-        session.refresh(reservation)
-        return reservation.__dict__
+        session.refresh(access)
+        return access.__dict__
 
     except Exception as e:
         session.rollback()

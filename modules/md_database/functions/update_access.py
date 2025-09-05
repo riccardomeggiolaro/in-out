@@ -1,13 +1,13 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Reservation, ReservationStatus, TypeSubjectEnum
-from modules.md_database.interfaces.reservation import SetReservationDTO
-from modules.md_database.functions.get_reservation_by_vehicle_id_if_uncompete import get_reservation_by_vehicle_id_if_uncomplete
-from modules.md_database.functions.get_reservation_by_identify_if_uncomplete import get_reservation_by_identify_if_uncomplete
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, TypeSubjectEnum
+from modules.md_database.interfaces.access import SetAccessDTO
+from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
+from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
 
-def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
+def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
     """
     Aggiunge un record a una tabella specificata dinamicamente con gestione dei conflitti per SQLite.
     """
@@ -15,17 +15,17 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
         data_to_check = None
         try:
             # Recupera il record specifico in base all'ID
-            reservation = session.query(Reservation).options(
-                    selectinload(Reservation.vehicle).selectinload(Vehicle.reservations),
+            access = session.query(Access).options(
+                    selectinload(Access.vehicle).selectinload(Vehicle.accesses),
                 ).filter_by(id=id).one_or_none()
             
-            if reservation is None:
-                raise ValueError(f"Record con ID {id} non trovato nella tabella '{Reservation.__tablename__}'.")
+            if access is None:
+                raise ValueError(f"Record con ID {id} non trovato nella tabella '{Access.__tablename__}'.")
 
-            if reservation.vehicle and reservation.vehicle.reservations[-1].id != id and data.number_in_out and data.number_in_out is not None and data.number_in_out != reservation.number_in_out:
-                raise ValueError(f"Puoi modificare il numero di operazioni solo sull'ultimo accesso con la targa '{reservation.vehicle.plate}'")
+            if access.vehicle and access.vehicle.accesses[-1].id != id and data.number_in_out and data.number_in_out is not None and data.number_in_out != access.number_in_out:
+                raise ValueError(f"Puoi modificare il numero di operazioni solo sull'ultimo accesso con la targa '{access.vehicle.plate}'")
 
-            if reservation.number_in_out is None and data.number_in_out is not None and data.number_in_out != -1:
+            if access.number_in_out is None and data.number_in_out is not None and data.number_in_out != -1:
                 raise ValueError(f"Non puoi modificare il numero di operazioni da illimitato a un numero specifico")
 
             current_model = Subject
@@ -40,11 +40,11 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
                     subject = current_model(**add_subject)
                     session.add(subject)
                     session.flush()
-                    reservation.idSubject = subject.id
+                    access.idSubject = subject.id
                 elif data.subject.id == -1:
-                    reservation.idSubject = None
+                    access.idSubject = None
             else:
-                reservation.idSubject = data.subject.id
+                access.idSubject = data.subject.id
 
             current_model = Vector
             if data.vector.id in [None, -1]:
@@ -58,11 +58,11 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
                     vector = current_model(**add_vector)
                     session.add(vector)
                     session.flush()
-                    reservation.idVector = vector.id
+                    access.idVector = vector.id
                 elif data.vector.id == -1:
-                    reservation.idVector = None
+                    access.idVector = None
             else:
-                reservation.idVector = data.vector.id
+                access.idVector = data.vector.id
 
             current_model = Driver
             if data.driver.id in [None, -1]:
@@ -75,16 +75,16 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
                     driver = current_model(**add_driver)
                     session.add(driver)
                     session.flush()
-                    reservation.idDriver = driver.id
+                    access.idDriver = driver.id
                 elif data.driver.id == -1:
-                    reservation.idDriver = None
+                    access.idDriver = None
             else:
-                reservation.idDriver = data.driver.id
+                access.idDriver = data.driver.id
 
-            # if data.vehicle.id and reservation.idVehicle and reservation.idVehicle != data.vehicle.id and len(reservation.in_out) > 0:
+            # if data.vehicle.id and access.idVehicle and access.idVehicle != data.vehicle.id and len(access.in_out) > 0:
             #     raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
 
-            current_reservation_vehicle = reservation.idVehicle
+            current_reservation_vehicle = access.idVehicle
 
             current_model = Vehicle
             vehicle = None
@@ -99,22 +99,22 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
                     vehicle = current_model(**add_vehicle)
                     session.add(vehicle)
                     session.flush()
-                    reservation.idVehicle = vehicle.id
+                    access.idVehicle = vehicle.id
                 elif data.vehicle.id == -1:
-                    reservation.idVehicle = None
+                    access.idVehicle = None
             else:
-                reservation.idVehicle = data.vehicle.id
+                access.idVehicle = data.vehicle.id
 
-            if reservation.status != ReservationStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
-                existing = get_reservation_by_vehicle_id_if_uncomplete(reservation.idVehicle)
+            if access.status != AccessStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
+                existing = get_access_by_vehicle_id_if_uncomplete(access.idVehicle)
 
-                if existing and existing["id"] != reservation.id and existing["idVehicle"]:
+                if existing and existing["id"] != access.id and existing["idVehicle"]:
                     existing = existing["vehicle"].__dict__
                     plate = existing["plate"]
                     raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
-                elif existing is None and reservation.idVehicle is not None:
-                    existing = get_reservation_by_identify_if_uncomplete(identify=data.vehicle.plate)
-                    if existing and existing["id"] != reservation.id and existing["idVehicle"]:
+                elif existing is None and access.idVehicle is not None:
+                    existing = get_access_by_identify_if_uncomplete(identify=data.vehicle.plate)
+                    if existing and existing["id"] != access.id and existing["idVehicle"]:
                         raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
 
             current_model = Material
@@ -129,68 +129,68 @@ def update_reservation(id: int, data: SetReservationDTO, idInOut: int = None):
                     session.add(material)
                     session.flush()
                     # Find the correct in_out object by id and update its material
-                    for in_out in reservation.in_out:
+                    for in_out in access.in_out:
                         if in_out.id == idInOut:
                             in_out.idMaterial = material.id
                             break
                 elif data.material.id == -1:
                     # Find the correct in_out object by id and set material to None
-                    for in_out in reservation.in_out:
+                    for in_out in access.in_out:
                         if in_out.id == idInOut:
                             in_out.idMaterial = None
                             break
             elif idInOut:
                 # Find the correct in_out object by id and update its material
-                for in_out in reservation.in_out:
+                for in_out in access.in_out:
                     if in_out.id == idInOut:
                         in_out.idMaterial = data.material.id
                         break
 
             if data.typeSubject:
-                reservation.typeSubject = TypeSubjectEnum[data.typeSubject]
+                access.typeSubject = TypeSubjectEnum[data.typeSubject]
 
             if data.number_in_out is not None:
                 if data.number_in_out != -1:
-                    if len(reservation.in_out) > data.number_in_out:
+                    if len(access.in_out) > data.number_in_out:
                         raise ValueError("Non puoi assegnare un numero di pesate inferiore a quelle già effettuate")
-                reservation.number_in_out = data.number_in_out if data.number_in_out != -1 else None
-                if len(reservation.in_out) > 0:
+                access.number_in_out = data.number_in_out if data.number_in_out != -1 else None
+                if len(access.in_out) > 0:
                     if data.number_in_out == -1:
-                        reservation.status = ReservationStatus.ENTERED
+                        access.status = AccessStatus.ENTERED
                     else:
-                        reservation.status = ReservationStatus.CLOSED if len(reservation.in_out) == reservation.number_in_out and reservation.in_out[-1].idWeight2 else ReservationStatus.ENTERED
+                        access.status = AccessStatus.CLOSED if len(access.in_out) == access.number_in_out and access.in_out[-1].idWeight2 else AccessStatus.ENTERED
                 else:
-                    reservation.status = ReservationStatus.WAITING
+                    access.status = AccessStatus.WAITING
 
             if data.note is not None:
-                reservation.note = data.note if data.note != "" else None
+                access.note = data.note if data.note != "" else None
 
             if data.document_reference is not None:
-                reservation.document_reference = data.document_reference if data.document_reference != "" else None
+                access.document_reference = data.document_reference if data.document_reference != "" else None
 
             badge = data.badge
             if badge is not None:
                 # Controllo per duplicati badge (escludendo la prenotazione corrente)
                 if badge != "":
-                    existing_badge = session.query(Reservation).filter(
-                        Reservation.badge == badge,
-                        Reservation.id != id  # Escludi la prenotazione corrente
+                    existing_badge = session.query(Access).filter(
+                        Access.badge == badge,
+                        Access.id != id  # Escludi la prenotazione corrente
                     ).first()
                     
                     if existing_badge:
                         raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso")
                     else:
-                        existing_badge = get_reservation_by_identify_if_uncomplete(identify=badge)
+                        existing_badge = get_access_by_identify_if_uncomplete(identify=badge)
                         if existing_badge and existing_badge["id"] != id:
                             raise ValueError(f"Il badge '{badge}' è già assegnato come TARGA ad un altro accesso ancora aperto")
                 
-                reservation.badge = badge if badge != "" else None
+                access.badge = badge if badge != "" else None
 
             session.commit()
 
-            session.refresh(reservation)
+            session.refresh(access)
 
-            return reservation.__dict__
+            return access.__dict__
         except IntegrityError as e:
             session.rollback()
             error_message = str(e)

@@ -34,7 +34,7 @@ class Subject(Base):
     cfpiva = Column(String(collation="NOCASE"), unique=True, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
-    reservations = relationship("Reservation", back_populates="subject", cascade="all, delete")
+    accesses = relationship("Access", back_populates="subject", cascade="all, delete")
 
 # Model for Vector table
 class Vector(Base):
@@ -45,7 +45,7 @@ class Vector(Base):
     cfpiva = Column(String(collation="NOCASE"), unique=True, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
-    reservations = relationship("Reservation", back_populates="vector", cascade="all, delete")
+    accesses = relationship("Access", back_populates="vector", cascade="all, delete")
 
 # Model for Driver table
 class Driver(Base):
@@ -55,7 +55,7 @@ class Driver(Base):
     telephone = Column(String(collation="NOCASE"), index=True, unique=True, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
-    reservations = relationship("Reservation", back_populates="driver", cascade="all, delete")
+    accesses = relationship("Access", back_populates="driver", cascade="all, delete")
 
 # Model for Vehicle table
 class Vehicle(Base):
@@ -66,7 +66,7 @@ class Vehicle(Base):
     tare = Column(Integer, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
-    reservations = relationship("Reservation", back_populates="vehicle", cascade="all, delete")
+    accesses = relationship("Access", back_populates="vehicle", cascade="all, delete")
 
 # Model for Material table
 class Material(Base):
@@ -107,20 +107,20 @@ class TypeSubjectEnum(PyEnum):
     CUSTOMER = "Cliente"
     SUPPLIER = "Fornitore"
 
-class ReservationStatus(PyEnum):
+class AccessStatus(PyEnum):
     WAITING = "Attesa"
     CALLED = "Chiamato"
     ENTERED = "Entrato"
     CLOSED = "Chiusa"
 
-class TypeReservation(PyEnum):
+class TypeAccess(PyEnum):
     RESERVATION = "Prenotazione"
     MANUALLY = "Manuale"
     TEST = "Test"
 
-# Model for Reservation table
-class Reservation(Base):
-    __tablename__ = 'reservation'
+# Model for Access table
+class Access(Base):
+    __tablename__ = 'access'
     id = Column(Integer, primary_key=True, index=True)
     typeSubject = Column(Enum(TypeSubjectEnum), default=None, nullable=True)
     idSubject = Column(Integer, ForeignKey('subject.id'))
@@ -131,18 +131,18 @@ class Reservation(Base):
     note = Column(String, nullable=True)
     selected = Column(Boolean, index=True, default=False)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
-    status = Column(Enum(ReservationStatus), default=ReservationStatus.WAITING)
+    status = Column(Enum(AccessStatus), default=AccessStatus.WAITING)
     document_reference = Column(String, nullable=True)
-    type = Column(Enum(TypeReservation), default=TypeReservation.MANUALLY)
+    type = Column(Enum(TypeAccess), default=TypeAccess.MANUALLY)
     badge = Column(String(collation='NOCASE'), index=True, unique=True, nullable=True)
     hidden = Column(Boolean, default=False)
 
     # Relationships
-    subject = relationship("Subject", back_populates="reservations")
-    vector = relationship("Vector", back_populates="reservations")
-    driver = relationship("Driver", back_populates="reservations")
-    vehicle = relationship("Vehicle", back_populates="reservations")
-    in_out = relationship("InOut", back_populates="reservation", cascade="all, delete")
+    subject = relationship("Subject", back_populates="accesses")
+    vector = relationship("Vector", back_populates="accesses")
+    driver = relationship("Driver", back_populates="accesses")
+    vehicle = relationship("Vehicle", back_populates="accesses")
+    in_out = relationship("InOut", back_populates="access", cascade="all, delete")
 
     @hybrid_property  
     def is_latest_for_vehicle(self):
@@ -153,8 +153,8 @@ class Reservation(Base):
         if not session:
             return False
             
-        max_id = session.query(func.max(Reservation.id)).filter(
-            Reservation.idVehicle == self.idVehicle
+        max_id = session.query(func.max(Access.id)).filter(
+            Access.idVehicle == self.idVehicle
         ).scalar()
         
         return self.id == max_id
@@ -166,21 +166,21 @@ class Reservation(Base):
 class InOut(Base):
     __tablename__ = 'in_out'
     id = Column(Integer, primary_key=True, index=True)
-    idReservation = Column(Integer, ForeignKey('reservation.id'))
+    idAccess = Column(Integer, ForeignKey('access.id'))
     idMaterial = Column(Integer, ForeignKey('material.id'), nullable=True)
     idWeight1 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
     idWeight2 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
     net_weight = Column(Integer, nullable=True)
 
     # Relationships
-    reservation = relationship("Reservation", back_populates="in_out")    
+    access = relationship("Access", back_populates="in_out")    
     material = relationship("Material", back_populates="in_out")
     weight1 = relationship("Weighing", foreign_keys=[idWeight1], back_populates="in_out_weight1")  # FIXED: added foreign_keys
     weight2 = relationship("Weighing", foreign_keys=[idWeight2], back_populates="in_out_weight2")  # FIXED: added foreign_keys
 
     @hybrid_property  
     def is_last(self):
-        if not self.idReservation:
+        if not self.idAccess:
             return False
         
         session = object_session(self)
@@ -188,14 +188,14 @@ class InOut(Base):
             return False
             
         max_id = session.query(func.max(InOut.id)).filter(
-            InOut.idReservation == self.idReservation
+            InOut.idAccess == self.idAccess
         ).scalar()
         
         return self.id == max_id
 
     @is_last.expression
     def is_last(cls):
-        return cls.id == func.max(cls.id).over(partition_by=cls.idReservation)
+        return cls.id == func.max(cls.id).over(partition_by=cls.idAccess)
 
 class LockRecordType(PyEnum):
     SELECT = "select"
@@ -225,7 +225,7 @@ table_models = {
     'vehicle': Vehicle,
     'material': Material,
     'weighing': Weighing,
-    'reservation': Reservation,
+    'access': Access,
     'lock_record': LockRecord,
     'weighing_picture': WeighingPicture,
     'in_out': InOut  # ADDED: missing from original
@@ -237,7 +237,7 @@ upload_file_datas_required_columns = {
     "driver": {"social_reason": str, "telephone": str},
     "vehicle": {"plate": str, "description": str, "tare": int},
     "material": {"description": str},
-    "reservation": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str}
+    "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str}
 }
 
 # Create tables

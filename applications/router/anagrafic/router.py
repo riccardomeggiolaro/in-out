@@ -5,7 +5,7 @@ from applications.router.anagrafic.subject import SubjectRouter
 from applications.router.anagrafic.vector import VectorRouter
 from applications.router.anagrafic.driver import DriverRouter
 from applications.router.anagrafic.vehicle import VehicleRouter
-from applications.router.anagrafic.reservation import ReservationRouter
+from applications.router.anagrafic.access import AccessRouter
 from applications.router.anagrafic.manager_anagrafics import manager_anagrafics
 import asyncio
 from modules.md_database.functions.lock_record import lock_record
@@ -13,7 +13,7 @@ from modules.md_database.functions.unlock_record_by_attributes import unlock_rec
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.unlock_all_record_by_websocket import unlock_all_record_by_websocket
 from modules.md_database.functions.unlock_all_record import unlock_all_record
-from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
+from modules.md_database.functions.get_access_by_id import get_access_by_id
 import json
 from applications.middleware.auth import get_user
 from applications.utils.utils import just_locked_message
@@ -29,15 +29,15 @@ class AnagraficRouter:
 		driver = DriverRouter()
 		vehicle = VehicleRouter()
 		material = MaterialRouter()
-		reservation = ReservationRouter()
+		access = AccessRouter()
 
 		self.router.include_router(subject.router, prefix='/subject', tags=['subject'])
 		self.router.include_router(vector.router, prefix='/vector', tags=['vector'])
 		self.router.include_router(driver.router, prefix='/driver', tags=['driver'])
 		self.router.include_router(vehicle.router, prefix='/vehicle', tags=['vehicle'])
 		self.router.include_router(material.router, prefix='/material', tags=['material'])
-		self.router.include_router(reservation.router, prefix='/reservation', tags=['reservation'])
-		self.router.include_router(reservation.panel_siren_router, prefix='', tags=['panel siren'])
+		self.router.include_router(access.router, prefix='/access', tags=['access'])
+		self.router.include_router(access.panel_siren_router, prefix='', tags=['panel siren'])
 
 		self.router.add_api_websocket_route('/{anagrafic}', self.websocket_anagrafic)
 
@@ -50,8 +50,8 @@ class AnagraficRouter:
 				message = just_locked_message(type, table_name, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
 				return {"action": "lock", "success": False, "anagrafic": table_name, "error": message, "idRecord": idRecord, "type": type, "idRequest": idRequest}
 			data = None
-			if table_name == "reservation":
-				data = get_reservation_by_id(idRecord)
+			if table_name == "access":
+				data = get_access_by_id(idRecord)
 			else:
 				data = get_data_by_id(table_name, idRecord)
 			return {"action": "lock", "success": True, "anagrafic": table_name, "data": data, "idRecord": idRecord, "type": type, "idRequest": idRequest}

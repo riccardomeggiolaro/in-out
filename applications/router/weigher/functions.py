@@ -5,7 +5,7 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_weigher import md_weigher
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import NodeConnectionManager
-from modules.md_database.md_database import TypeReservation
+from modules.md_database.md_database import TypeAccess
 from modules.md_database.functions.unlock_record_by_attributes import unlock_record_by_attributes
 from modules.md_database.functions.lock_record import lock_record
 from applications.router.weigher.types import DataInExecution
@@ -40,7 +40,7 @@ class Functions:
 	def getData(self, instance_name: str, weigher_name: str):
 		return lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]
 
-	def setDataInExecution(self, instance_name: str, weigher_name: str, source: DataInExecutionDTO, idReservation: int = None):
+	def setDataInExecution(self, instance_name: str, weigher_name: str, source: DataInExecutionDTO, idAccess: int = None):
 		# Per ogni chiave dei nuovi dati passati controlla se è un oggetto o None
 		for key, value in vars(source).items():
 			if isinstance(value, str) or isinstance(value, int):
@@ -74,7 +74,7 @@ class Functions:
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteData(self, instance_name: str, weigher_name: str):
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["type"] = TypeReservation.MANUALLY.name
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["type"] = TypeAccess.MANUALLY.name
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["number_in_out"] = 1
 		lb_config.saveconfig()
 		self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
@@ -94,9 +94,9 @@ class Functions:
 		if new_id == -1:
 			new_id = None
 		else:
-			success, locked_record, error = lock_record("reservation", new_id, "SELECT", None, None, weigher_name)
+			success, locked_record, error = lock_record("access", new_id, "SELECT", None, None, weigher_name)
 			if success is False:
-				message = just_locked_message("SELECT", "reservation", locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
+				message = just_locked_message("SELECT", "access", locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
 				raise HTTPException(status_code=400, detail=message)
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"] = {
 			"id": new_id,
@@ -108,7 +108,7 @@ class Functions:
 	def deleteIdSelected(self, instance_name: str, weigher_name: str):
 		current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"]
 		if current_id is not None:
-			unlock_record_by_attributes("reservation", current_id, None, weigher_name)
+			unlock_record_by_attributes("access", current_id, None, weigher_name)
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"] = {
 			"id": None,
 			"weight1": None

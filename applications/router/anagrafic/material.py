@@ -48,7 +48,7 @@ class MaterialRouter(WebSocket):
             data = add_data("material", body.dict())
             material = Material(**data).json()
             await self.broadcastAddAnagrafic("material", {"material": material})
-            await self.broadcastAddAnagrafic("reservation", {"material": material})
+            await self.broadcastAddAnagrafic("access", {"material": material})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -64,7 +64,7 @@ class MaterialRouter(WebSocket):
             data = update_data("material", id, body.dict())
             material = Material(**data).json()
             await self.broadcastUpdateAnagrafic("material", {"material": material})
-            await self.broadcastUpdateAnagrafic("reservation", {"material": material})
+            await self.broadcastUpdateAnagrafic("access", {"material": material})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -83,7 +83,7 @@ class MaterialRouter(WebSocket):
             data = delete_data("material", id)
             material = Material(**data).json()
             await self.broadcastDeleteAnagrafic("material", {"material": material})
-            await self.broadcastDeleteAnagrafic("reservation", {"material": material})
+            await self.broadcastDeleteAnagrafic("access", {"material": material})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

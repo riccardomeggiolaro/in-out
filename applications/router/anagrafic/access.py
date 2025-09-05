@@ -1,21 +1,21 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import StreamingResponse
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import ReservationStatus, LockRecordType, TypeReservation
-from modules.md_database.interfaces.reservation import Reservation, AddReservationDTO, SetReservationDTO
+from modules.md_database.md_database import AccessStatus, LockRecordType, TypeAccess
+from modules.md_database.interfaces.access import Access, AddAccessDTO, SetAccessDTO
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
-from modules.md_database.functions.get_list_reservations import get_list_reservations
+from modules.md_database.functions.get_list_accesses import get_list_accesses
 from modules.md_database.functions.get_list_in_out import get_list_in_out
 from modules.md_database.functions.get_list_weighings import get_list_weighings
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
-from modules.md_database.functions.delete_last_weighing_of_reservation import delete_last_weighing_of_reservation
-from modules.md_database.functions.add_reservation import add_reservation
-from modules.md_database.functions.update_reservation import update_reservation
+from modules.md_database.functions.delete_last_weighing_of_access import delete_last_weighing_of_access
+from modules.md_database.functions.add_access import add_access
+from modules.md_database.functions.update_access import update_access
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
-from modules.md_database.functions.get_reservation_by_id import get_reservation_by_id
+from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.get_last_in_out_by_weigher import get_last_in_out_by_weigher
 from modules.md_database.functions.get_in_out_by_id import get_last_in_out_by_id
 from applications.utils.utils import get_query_params
@@ -37,29 +37,29 @@ from libs.lb_printer import printer
 from applications.utils.utils_report import get_data_variables, generate_html_report, save_file_dir
 from applications.middleware.writable_user import is_writable_user
 
-class ReservationRouter(WebSocket, PanelSirenRouter):
+class AccessRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
         super().__init__()
         
         self.router = APIRouter()
         
-        self.router.add_api_route('/list', self.getListReservations, methods=['GET'])
+        self.router.add_api_route('/list', self.getListAccesses, methods=['GET'])
         self.router.add_api_route('/in-out/list', self.getListInOut, methods=['GET'])
         self.router.add_api_route('/in-out/pdf/{id}', self.pdfInOut, methods=['GET'])
         self.router.add_api_route('/in-out/print-last', self.printLastInOut, methods=['GET'])
         self.router.add_api_route('/weighing/list', self.getListWeighing, methods=['GET'])
-        self.router.add_api_route('/export/xlsx', self.exportListReservationsXlsx, methods=['GET'])
-        self.router.add_api_route('/export/pdf', self.exportListReservationsPdf, methods=['GET'])
-        self.router.add_api_route('', self.addReservation, methods=['POST'], dependencies=[Depends(is_writable_user)])
-        self.router.add_api_route('/{id}', self.setReservation, methods=['PATCH'], dependencies=[Depends(is_writable_user)])
-        self.router.add_api_route('/close/{id}', self.closeReservation, methods=['GET'], dependencies=[Depends(is_writable_user)])
-        self.router.add_api_route('/{id}', self.deleteReservation, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
-        self.router.add_api_route('', self.deleteAllReservations, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/export/xlsx', self.exportListAccessesXlsx, methods=['GET'])
+        self.router.add_api_route('/export/pdf', self.exportListAccessesPdf, methods=['GET'])
+        self.router.add_api_route('', self.addAccess, methods=['POST'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.setAccess, methods=['PATCH'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/close/{id}', self.closeAccess, methods=['GET'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.deleteAccess, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('', self.deleteAllAccesses, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('/last-weighing/{id}', self.deleteLastWeighing, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
-        self.router.add_api_route('/call/{id}', self.callReservation, methods=["GET"])
-        self.router.add_api_route('/cancel-call/{id}', self.cancelCallReservation, methods=["GET"])
+        self.router.add_api_route('/call/{id}', self.callAccess, methods=["GET"])
+        self.router.add_api_route('/cancel-call/{id}', self.cancelCallAccess, methods=["GET"])
         
-    async def getListReservations(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, permanent: Optional[bool] = None, permanentIfWeight1: bool = None):
+    async def getListAccesses(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, permanent: Optional[bool] = None, permanentIfWeight1: bool = None):
         try:
             not_closed = False
             if "status" in query_params and query_params["status"] == "NOT_CLOSED":
@@ -80,7 +80,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 del query_params["permanent"]
             if "permanentIfWeight1" in query_params:
                 del query_params["permanentIfWeight1"]
-            data, total_rows = get_list_reservations(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing, permanent, True, permanentIfWeight1)
+            data, total_rows = get_list_accesses(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing, permanent, True, permanentIfWeight1)
             return {
                 "data": data,
                 "total_rows": total_rows,
@@ -210,18 +210,18 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
         
-    async def exportListReservationsXlsx(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
+    async def exportListAccessesXlsx(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
                                     limit: Optional[int] = None, offset: Optional[int] = None,
                                     fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
-                                    excludeTestWeighing: bool = False, filterDateReservation: bool = False, onlyInOutWithWeight2: bool = False,
+                                    excludeTestWeighing: bool = False, filterDateAccess: bool = False, onlyInOutWithWeight2: bool = False,
                                     onlyInOutWithoutWeight2: bool = False):
         try:
             not_closed = False
             filters = query_params.copy()
 
-            if "reservation.status" in filters and filters["reservation.status"] == "NOT_CLOSED":
+            if "access.status" in filters and filters["access.status"] == "NOT_CLOSED":
                 not_closed = True
-                del filters["reservation.status"]
+                del filters["access.status"]
             
             # Handle limit and offset
             if "limit" in filters:
@@ -241,8 +241,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
 
-            if "filterDateReservation" in query_params:
-                del filters["filterDateReservation"]
+            if "filterDateAccess" in query_params:
+                del filters["filterDateAccess"]
 
             if "onlyInOutWithWeight2" in filters:
                 del filters["onlyInOutWithWeight2"]
@@ -259,9 +259,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 toDate=toDate,
                 limit=limit,
                 offset=offset,
-                order_by=('reservation.date_created', 'desc'),
+                order_by=('access.date_created', 'desc'),
                 excludeTestWeighing=excludeTestWeighing,
-                filterDateReservation=filterDateReservation
+                filterDateAccess=filterDateAccess
             )
 
             # Prepara lista per export
@@ -271,11 +271,11 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 if weight1 is None and inout.weight2 and inout.weight2.tare > 0:
                     weight1 = inout.weight2.tare
                 in_out_list.append({
-                    "Targa": inout.reservation.vehicle.plate if inout.reservation.vehicle else None,
-                    "Cliente/Fornitore": inout.reservation.subject.social_reason if inout.reservation.subject else None,
-                    "Vettore": inout.reservation.vector.social_reason if inout.reservation.vector else None,
-                    "Note": inout.reservation.note,
-                    "Referenza documento": inout.reservation.document_reference,
+                    "Targa": inout.access.vehicle.plate if inout.access.vehicle else None,
+                    "Cliente/Fornitore": inout.access.subject.social_reason if inout.access.subject else None,
+                    "Vettore": inout.access.vector.social_reason if inout.access.vector else None,
+                    "Note": inout.access.note,
+                    "Referenza documento": inout.access.document_reference,
                     "Materiale": inout.material.description if inout.material else None,
                     "Data 1": datetime.strftime(inout.weight1.date, "%d-%m-%Y %H:%M") if inout.weight1 else None,
                     "Data 2": datetime.strftime(inout.weight2.date, "%d-%m-%Y %H:%M") if inout.weight2 else None,
@@ -301,18 +301,18 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def exportListReservationsPdf(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
+    async def exportListAccessesPdf(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
                                     limit: Optional[int] = None, offset: Optional[int] = None,
                                     fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None,
-                                    excludeTestWeighing: bool = False, filterDateReservation: bool = False, onlyInOutWithWeight2: bool = False,
+                                    excludeTestWeighing: bool = False, filterDateAccess: bool = False, onlyInOutWithWeight2: bool = False,
                                     onlyInOutWithoutWeight2: bool = False):
         try:
             not_closed = False
             filters = query_params.copy()
 
-            if "reservation.status" in filters and filters["reservation.status"] == "NOT_CLOSED":
+            if "access.status" in filters and filters["access.status"] == "NOT_CLOSED":
                 not_closed = True
-                del filters["reservation.status"]
+                del filters["access.status"]
             
             # Handle limit and offset
             if "limit" in filters:
@@ -332,8 +332,8 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
 
-            if "filterDateReservation" in query_params:
-                del filters["filterDateReservation"]
+            if "filterDateAccess" in query_params:
+                del filters["filterDateAccess"]
 
             if "onlyInOutWithWeight2" in filters:
                 del filters["onlyInOutWithWeight2"]
@@ -350,9 +350,9 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
                 toDate=toDate,
                 limit=limit,
                 offset=offset,
-                order_by=('reservation.date_created', 'desc'),
+                order_by=('access.date_created', 'desc'),
                 excludeTestWeighing=excludeTestWeighing,
-                filterDateReservation=filterDateReservation
+                filterDateAccess=filterDateAccess
             )
 
             # Create PDF with smaller margins
@@ -409,11 +409,11 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
 
                 # Update row data to include material
                 row = [
-                    str(inout.reservation.vehicle.plate if inout.reservation.vehicle else '')[:6],      # Targa (32)
-                    str(inout.reservation.subject.social_reason if inout.reservation.subject else '')[:18],  # Cliente (50)
-                    str(inout.reservation.vector.social_reason if inout.reservation.vector else '')[:18],    # Vettore (50)
-                    str(inout.reservation.note or '')[:18],                                             # Note (50)
-                    str(inout.reservation.document_reference or '')[:12],                               # Ref.Doc (45)
+                    str(inout.access.vehicle.plate if inout.access.vehicle else '')[:6],      # Targa (32)
+                    str(inout.access.subject.social_reason if inout.access.subject else '')[:18],  # Cliente (50)
+                    str(inout.access.vector.social_reason if inout.access.vector else '')[:18],    # Vettore (50)
+                    str(inout.access.note or '')[:18],                                             # Note (50)
+                    str(inout.access.document_reference or '')[:12],                               # Ref.Doc (45)
                     str(inout.material.description if inout.material else '')[:12],               # Materiale (45)
                     date1,                                                                              # Data 1 (47)
                     date2,                                                                              # Data 2 (47)
@@ -443,7 +443,7 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def addReservation(self, request: Request, body: AddReservationDTO):
+    async def addAccess(self, request: Request, body: AddAccessDTO):
         try:
             if request and not body.vehicle.id and not body.vehicle.plate:
                 raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
@@ -453,53 +453,53 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             body.driver.id = body.driver.id if body.driver.id not in [None, -1] else None
             body.vehicle.id = body.vehicle.id if body.vehicle.id not in [None, -1] else None
 
-            data = add_reservation(body)
+            data = add_access(body)
 
-            get_reservation_data = get_data_by_id("reservation", data["id"])
+            get_access_data = get_data_by_id("access", data["id"])
 
-            reservation = Reservation(**get_reservation_data)
-            await self.broadcastAddAnagrafic("reservation", {"reservation": reservation.json()})
-            if not body.subject.id and reservation.idSubject:
-                await self.broadcastAddAnagrafic("subject", {"subject": reservation.subject.json()})
-            if not body.vector.id and reservation.idVector:
-                await self.broadcastAddAnagrafic("vector", {"vector": reservation.vector.json()})
-            if not body.driver.id and reservation.idDriver:
-                await self.broadcastAddAnagrafic("driver", {"driver": reservation.driver.json()})
-            if not body.vehicle.id and reservation.idVehicle:
-                await self.broadcastAddAnagrafic("vehicle", {"vehicle": reservation.vehicle.json()})
+            access = Access(**get_access_data)
+            await self.broadcastAddAnagrafic("access", {"access": access.json()})
+            if not body.subject.id and access.idSubject:
+                await self.broadcastAddAnagrafic("subject", {"subject": access.subject.json()})
+            if not body.vector.id and access.idVector:
+                await self.broadcastAddAnagrafic("vector", {"vector": access.vector.json()})
+            if not body.driver.id and access.idDriver:
+                await self.broadcastAddAnagrafic("driver", {"driver": access.driver.json()})
+            if not body.vehicle.id and access.idVehicle:
+                await self.broadcastAddAnagrafic("vehicle", {"vehicle": access.vehicle.json()})
 
-            await broadcastMessageWebSocket({"reservation": {}})
+            await broadcastMessageWebSocket({"access": {}})
 
-            return reservation
+            return access
         except Exception as e:
             # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
             status_code = getattr(e, 'status_code', 400)
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
 
-    async def setReservation(self, request: Request, id: int, body: SetReservationDTO, idInOut: Optional[int] = None):
+    async def setAccess(self, request: Request, id: int, body: SetAccessDTO, idInOut: Optional[int] = None):
         locked_data = None
         try:
             if request:
-                locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+                locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
                 if not locked_data:
-                    raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
-            data = update_reservation(id, body, idInOut)
-            get_reservation_data = get_data_by_id("reservation", data["id"])
-            reservation = Reservation(**get_reservation_data)
-            await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation.json()})
-            if body.subject.id in [None, -1] and reservation.idSubject:
-                await self.broadcastAddAnagrafic("subject", {"subject": reservation.subject.json()})
-            if body.vector.id in [None, -1] and reservation.idVector:
-                await self.broadcastAddAnagrafic("vector", {"vector": reservation.vector.json()})
-            if body.driver.id in [None, -1] and reservation.idDriver:
-                await self.broadcastAddAnagrafic("driver", {"driver": reservation.driver.json()})
-            if body.vehicle.id in [None, -1] and reservation.idVehicle:
-                await self.broadcastAddAnagrafic("vehicle", {"vehicle": reservation.vehicle.json()})
+                    raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to update that")
+            data = update_access(id, body, idInOut)
+            get_access_data = get_data_by_id("access", data["id"])
+            access = Access(**get_access_data)
+            await self.broadcastUpdateAnagrafic("access", {"access": access.json()})
+            if body.subject.id in [None, -1] and access.idSubject:
+                await self.broadcastAddAnagrafic("subject", {"subject": access.subject.json()})
+            if body.vector.id in [None, -1] and access.idVector:
+                await self.broadcastAddAnagrafic("vector", {"vector": access.vector.json()})
+            if body.driver.id in [None, -1] and access.idDriver:
+                await self.broadcastAddAnagrafic("driver", {"driver": access.driver.json()})
+            if body.vehicle.id in [None, -1] and access.idVehicle:
+                await self.broadcastAddAnagrafic("vehicle", {"vehicle": access.vehicle.json()})
 
-            await broadcastMessageWebSocket({"reservation": {}})
+            await broadcastMessageWebSocket({"access": {}})
 
-            return reservation
+            return access
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
             detail = getattr(e, 'detail', str(e))
@@ -510,25 +510,25 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if locked_data:
                 unlock_record_by_id(locked_data["id"])
 
-    async def closeReservation(self, request: Request, id: int):
+    async def closeAccess(self, request: Request, id: int):
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
-            get_reservation_data = get_data_by_id("reservation", id)
-            if get_reservation_data["status"] == ReservationStatus.CLOSED:
+                raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to update that")
+            get_access_data = get_data_by_id("access", id)
+            if get_access_data["status"] == AccessStatus.CLOSED:
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è già chiusa")
-            elif len(get_reservation_data["in_out"]) == 0:
+            elif len(get_access_data["in_out"]) == 0:
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' non ha effettuato nessuna pesata")
-            elif len(get_reservation_data["in_out"]) > 0 and get_reservation_data["in_out"][-1]["idWeight2"] is None:
+            elif len(get_access_data["in_out"]) > 0 and get_access_data["in_out"][-1]["idWeight2"] is None:
                 raise HTTPException(status_code=400, detail=f"L'ultima pesata della prenotazione con id '{id}' non è completa")
-            data_to_update = {"status": ReservationStatus.CLOSED}
-            if get_reservation_data["number_in_out"] is not None:
-                data_to_update["number_in_out"] = len(get_reservation_data["in_out"])
-            data = update_data("reservation", id, data_to_update)
-            reservation = Reservation(**data).json()
-            await self.broadcastUpdateAnagrafic("reservation", {"reservation": reservation})
-            return reservation
+            data_to_update = {"status": AccessStatus.CLOSED}
+            if get_access_data["number_in_out"] is not None:
+                data_to_update["number_in_out"] = len(get_access_data["in_out"])
+            data = update_data("access", id, data_to_update)
+            access = Access(**data).json()
+            await self.broadcastUpdateAnagrafic("access", {"access": access})
+            return access
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
             detail = getattr(e, 'detail', str(e))
@@ -537,20 +537,20 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if locked_data:
                 unlock_record_by_id(locked_data["id"])
 
-    async def deleteReservation(self, request: Request, id: int):
+    async def deleteAccess(self, request: Request, id: int):
         locked_data = None
         try:
             if request:
-                locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+                locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
                 if not locked_data:
-                    raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to update that")
-            check_reservation_weighings = get_data_by_id("reservation", id)
-            if check_reservation_weighings and len(check_reservation_weighings["in_out"]) > 0:
+                    raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to update that")
+            check_access_weighings = get_data_by_id("access", id)
+            if check_access_weighings and len(check_access_weighings["in_out"]) > 0:
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è assegnata a delle pesate salvate")
-            data = delete_data("reservation", id)
-            await self.broadcastDeleteAnagrafic("reservation", {"reservation": Reservation(**data).json()})
+            data = delete_data("access", id)
+            await self.broadcastDeleteAnagrafic("access", {"access": Access(**data).json()})
 
-            await broadcastMessageWebSocket({"reservation": {}})
+            await broadcastMessageWebSocket({"access": {}})
 
             return data
         except Exception as e:
@@ -561,12 +561,12 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if locked_data:
                 unlock_record_by_id(locked_data["id"])
 
-    async def deleteAllReservations(self):
+    async def deleteAllAccesses(self):
         try:
-            deleted_count = delete_all_data("reservation")
-            await self.broadcastDeleteAnagrafic("reservation", None)
+            deleted_count = delete_all_data("access")
+            await self.broadcastDeleteAnagrafic("access", None)
 
-            await broadcastMessageWebSocket({"reservation": {}})
+            await broadcastMessageWebSocket({"access": {}})
 
             return {
                 "deleted_count": deleted_count,
@@ -576,31 +576,31 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             detail = getattr(e, 'detail', str(e))
             raise HTTPException(status_code=status_code, detail=detail)
         
-    async def deleteLastWeighing(self, request: Request, id: int, deleteReservationIfislastInOut: Optional[bool] = False):
+    async def deleteLastWeighing(self, request: Request, id: int, deleteAccessIfislastInOut: Optional[bool] = False):
         locked_data = None
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
-            delete_last_weighing_of_reservation(id)
-            data = get_reservation_by_id(id)
+                raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to delete its last weighing")
+            delete_last_weighing_of_access(id)
+            data = get_access_by_id(id)
             if data:
                 number_in_out_executed = len(data.in_out)
                 if number_in_out_executed > 0:
-                    data = update_data("reservation", id, {"status": ReservationStatus.ENTERED})
+                    data = update_data("access", id, {"status": AccessStatus.ENTERED})
                 else:
-                    if deleteReservationIfislastInOut and lb_config.g_config["app_api"]["use_reservation"] == False and data.type != TypeReservation.RESERVATION:
-                        data = delete_data("reservation", id)
+                    if deleteAccessIfislastInOut and lb_config.g_config["app_api"]["use_access"] == False and data.type != TypeAccess.RESERVATION:
+                        data = delete_data("access", id)
                     else:
-                        data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
-                reservation = Reservation(**data).json()
-                await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
+                        data = update_data("access", id, {"status": AccessStatus.WAITING})
+                access = Access(**data).json()
+                await self.broadcastDeleteAnagrafic("access", {"weighing": access})
 
-                await broadcastMessageWebSocket({"reservation": {}})
+                await broadcastMessageWebSocket({"access": {}})
 
-                return reservation
+                return access
             # else:
-            #     await self.broadcastDeleteAnagrafic("reservation", {"weighing": reservation})
+            #     await self.broadcastDeleteAnagrafic("access", {"weighing": access})
             return None
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -610,22 +610,22 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if locked_data:
                 unlock_record_by_id(locked_data["id"])
         
-    async def callReservation(self, request: Request, id: int):
+    async def callAccess(self, request: Request, id: int):
         locked_data = None
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.CALL, "user_id": request.state.user.id})
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.CALL, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
-            data = get_data_by_id("reservation", id)
-            if data["status"] not in [ReservationStatus.WAITING, ReservationStatus.CALLED]:
+                raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to delete its last weighing")
+            data = get_data_by_id("access", id)
+            if data["status"] not in [AccessStatus.WAITING, AccessStatus.CALLED]:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' ha già effettuato una pesata")
             elif data["vehicle"]["plate"] in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' è già presente nel buffer")
             edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"])
             await self.sendMessageSiren()
-            data = update_data("reservation", id, {"status": ReservationStatus.CALLED})
-            reservation = Reservation(**data).json()
-            await self.broadcastCallAnagrafic("reservation", {"reservation": reservation})
+            data = update_data("access", id, {"status": AccessStatus.CALLED})
+            access = Access(**data).json()
+            await self.broadcastCallAnagrafic("access", {"access": access})
             return edit_buffer
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -635,21 +635,21 @@ class ReservationRouter(WebSocket, PanelSirenRouter):
             if locked_data:
                 unlock_record_by_id(locked_data["id"])
     
-    async def cancelCallReservation(self, request: Request, id: int):
+    async def cancelCallAccess(self, request: Request, id: int):
         locked_data = None
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "reservation", "idRecord": id, "type": LockRecordType.CANCEL_CALL, "user_id": request.state.user.id})
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.CANCEL_CALL, "user_id": request.state.user.id})
             if not locked_data:
-                raise HTTPException(status_code=403, detail=f"You need to block the reservation with id '{id}' before to delete its last weighing")
-            data = get_data_by_id("reservation", id)
-            if data["status"] != ReservationStatus.CALLED:
+                raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to delete its last weighing")
+            data = get_data_by_id("access", id)
+            if data["status"] != AccessStatus.CALLED:
                 raise HTTPException(status_code=400, detail="Il mezzo non è ancora stato chiamato")
             elif data["vehicle"]["plate"] not in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' non è presente nel buffer")
             undo_buffer = await self.deleteMessagePanel(data["vehicle"]["plate"])
-            data = update_data("reservation", id, {"status": ReservationStatus.WAITING})
-            reservation = Reservation(**data).json()
-            await self.broadcastCallAnagrafic("reservation", {"reservation": reservation})
+            data = update_data("access", id, {"status": AccessStatus.WAITING})
+            access = Access(**data).json()
+            await self.broadcastCallAnagrafic("access", {"access": access})
             return undo_buffer
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

@@ -15,7 +15,7 @@
             .permanentFilter {
                 padding: 0px 0px 10px 0px;
             }
-            #filter\.reservation\.status {
+            #filter\.access\.status {
                 width: 200px;
                 color: black;
             }
@@ -64,7 +64,7 @@
             <thead id="filters">
                 <tr>
                     <td colspan="13" class="permanentFilter">
-                        <select id="filter.reservation.status" name="reservation.status" onchange="updateTable()">
+                        <select id="filter.access.status" name="access.status" onchange="updateTable()">
                             <option value="">Tutte</option>
                             <option value="ENTERED">Aperte</option>
                             <option value="CLOSED">Chiuse</option>
@@ -72,25 +72,25 @@
                     </td>
                 </tr>
                 <tr>
-                    <th name="reservation.vehicle.plate">
-                        <input id="filter.reservation.vehicle.plate" name="reservation.vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
+                    <th name="access.vehicle.plate">
+                        <input id="filter.access.vehicle.plate" name="access.vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
                     </th>
-                    <th name="reservation.subject.social_reason">
-                        <input id="filter.reservation.subject.social_reason" name="reservation.subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
+                    <th name="access.subject.social_reason">
+                        <input id="filter.access.subject.social_reason" name="access.subject.social_reason" type="text" placeholder="Soggetto" oninput="updateTable()">
                     </th>
-                    <th name="reservation.vector.social_reason">
-                        <input id="filter.reservation.vector.social_reason" name="reservation.vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
+                    <th name="access.vector.social_reason">
+                        <input id="filter.access.vector.social_reason" name="access.vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
                     </th>
-                    <th name="reservation.note">
-                        <input id="filter.reservation.note" name="reservation.note" type="text" placeholder="Note" oninput="updateTable()">
+                    <th name="access.note">
+                        <input id="filter.access.note" name="access.note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
-                    <th name="reservation.document_reference">
-                        <input id="filter.reservation.document_reference" name="reservation.document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
+                    <th name="access.document_reference">
+                        <input id="filter.access.document_reference" name="access.document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
                     </th>
                     <th name="material.description">
                         <input id="filter.material.description" name="material.description" type="text" placeholder="Materiale" oninput="updateTable()">
                     </th>
-                    <th name="reservation.date_created">
+                    <th name="access.date_created">
                         <input type="text" id="dateRange" placeholder="Data pesate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
                         <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
                         <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
@@ -381,20 +381,20 @@
         const toDate = document.querySelector('#filter\\.toDate');
 
         document.addEventListener("DOMContentLoaded", () => {
-            itemName = 'reservation';
+            itemName = 'access';
             nextElementSibling = false;
             lastChar = 'a';
             canAlwaysDelete = true;
-            listUrlPath = '/api/anagrafic/reservation/in-out/list';
-            exportUrlPath = '/api/anagrafic/reservation/export'
-            addUrlPath = '/api/anagrafic/reservation';
-            setUrlPath = '/api/anagrafic/reservation';
-            deleteUrlPath = '/api/anagrafic/reservation/last-weighing';
-            websocketUrlPath = '/api/anagrafic/reservation';
+            listUrlPath = '/api/anagrafic/access/in-out/list';
+            exportUrlPath = '/api/anagrafic/access/export'
+            addUrlPath = '/api/anagrafic/access';
+            setUrlPath = '/api/anagrafic/access';
+            deleteUrlPath = '/api/anagrafic/access/last-weighing';
+            websocketUrlPath = '/api/anagrafic/access';
             callback_close_popups = deselectAllAnagrafic;
             params = {
                 "accesso con targa": "vehicle.plate",
-                "accesso con id": "reservation.id",
+                "accesso con id": "access.id",
                 "soggetto": "subject.social_reason",
                 "pesata con il veicolo": "weighing.vehicle.plate"
             }
@@ -445,9 +445,9 @@
             return '';
         }
 
-        function deleteLastWeighing(idReservation, plate, weighing, pid, bil) {
+        function deleteLastWeighing(idAccess, plate, weighing, pid, bil) {
             confirm_exec_funct = () => {
-                fetch(`/api/anagrafic/reservation/last-weighing/${idReservation}`, {
+                fetch(`/api/anagrafic/access/last-weighing/${idAccess}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
@@ -479,8 +479,8 @@
                 <br><br>
                 <b>Bilancia:</b> <em><u>${bil}</u></em>
             `;
-            selectAnagrafic(idReservation, "DELETE", "reservation", null, true);
-            currentId = idReservation;
+            selectAnagrafic(idAccess, "DELETE", "access", null, true);
+            currentId = idAccess;
         }
 
         function getImageWeighing(imageUrl) {

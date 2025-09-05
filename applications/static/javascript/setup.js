@@ -212,14 +212,14 @@ async function loadSetupWeighers() {
     await fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(data => {
-        const labelReservation = document.createElement('label');
-        const reservation = document.createElement('input');
-        labelReservation.textContent = "Usa le prenotazioni: ";
-        reservation.type = 'checkbox';
-        reservation.checked = data.use_reservation ? true : false;
-        reservation.onchange = (e) => {
+        const labelAccess = document.createElement('label');
+        const access = document.createElement('input');
+        labelAccess.textContent = "Usa le prenotazioni: ";
+        access.type = 'checkbox';
+        access.checked = data.use_reservation ? true : false;
+        access.onchange = (e) => {
             const checked = e.target.checked;
-            fetch(`/api/config-weigher/configuration/use-reservation/${checked}`, {
+            fetch(`/api/config-weigher/configuration/use-access/${checked}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
@@ -580,8 +580,8 @@ async function loadSetupWeighers() {
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(h1Access);
         divAccess.appendChild(br.cloneNode(true));
-        divAccess.appendChild(labelReservation);
-        divAccess.appendChild(reservation);
+        divAccess.appendChild(labelAccess);
+        divAccess.appendChild(access);
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(labelBadge);

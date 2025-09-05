@@ -23,7 +23,7 @@ class ConfigWeigher(CommandWeigherRouter):
         self.router_config_weigher = APIRouter()
     
         self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
-        self.router_config_weigher.add_api_route('/configuration/use-reservation/{use_reservation}', self.SetUseReservation, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/use-access/{use_access}', self.SetUseAccess, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-white-list/{use_white_list}', self.SetUseWhiteList, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-badge/{use_badge}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -51,10 +51,10 @@ class ConfigWeigher(CommandWeigherRouter):
         lb_config.saveconfig()
         return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
 
-    async def SetUseReservation(self, use_reservation: bool):
-        lb_config.g_config["app_api"]["use_reservation"] = use_reservation
+    async def SetUseAccess(self, use_access: bool):
+        lb_config.g_config["app_api"]["use_access"] = use_access
         lb_config.saveconfig()
-        return { "use_reservation": use_reservation }
+        return { "use_access": use_access }
 
     async def SetUseWhiteList(self, use_white_list: bool):
         lb_config.g_config["app_api"]["use_white_list"] = use_white_list

@@ -117,7 +117,7 @@ async function configuration() {
 }
 
 async function exportReportWeighing(idWeighing) {
-    const response = await fetch(`/api/anagrafic/reservation/in-out/pdf/${idWeighing}`);
+    const response = await fetch(`/api/anagrafic/access/in-out/pdf/${idWeighing}`);
     if (response.ok) {
         const blob = await response.blob();
         // Prendi il nome file dall'header Content-Disposition
@@ -158,7 +158,7 @@ function isValidDate(dateStr) {
 
 async function updateTable() {
     let queryParams = '';
-    if (itemName === "reservation") queryParams += customQueryParams;
+    if (itemName === "access") queryParams += customQueryParams;
     const filters = document.querySelector('#filters');
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.type != "checkbox" && input.value || input.name && input.type == "checkbox" && input.checked) {
@@ -169,8 +169,8 @@ async function updateTable() {
         }
     })
     filters.querySelectorAll('select').forEach(select => {
-        if (select.name === "reservation.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
-        else if (select.name === "reservation.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
+        if (select.name === "access.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
+        else if (select.name === "access.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
         else if (select.value) {
             queryParams += `${select.name}=${select.value}&`;
         }
@@ -189,21 +189,21 @@ async function updateTable() {
 }
 
 async function exportTable(type) {
-    let queryParams = 'excludeTestWeighing=true&filterDateReservation=true&onlyInOutWithWeight2=true&';
+    let queryParams = 'excludeTestWeighing=true&filterDateAccess=true&onlyInOutWithWeight2=true&';
     const filters = document.querySelector('#filters');
     let name;
     filters.querySelectorAll('input').forEach(input => {
         if (input.name && input.value) {
-        name = itemName === "reservation" && !input.name.includes("reservation") ? `${itemName}.${input.name}` : input.name;
+        name = itemName === "access" && !input.name.includes("access") ? `${itemName}.${input.name}` : input.name;
             if (input.type == 'text') queryParams += `${name}=${input.value}%&`;
             else if (input.type == 'number') queryParams += `${name}=${input.value}&`;
             else if (input.type == 'date') queryParams += `${name}=${input.value}&`;
         }
     })
     filters.querySelectorAll('select').forEach(select => {
-        name = itemName === "reservation" && !select.name.includes("reservation") ? `${itemName}.${select.name}` : select.name;
-        if (name === "reservation.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
-        else if (select.name === "reservation.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
+        name = itemName === "access" && !select.name.includes("access") ? `${itemName}.${select.name}` : select.name;
+        if (name === "access.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
+        else if (select.name === "access.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
         else if (select.value) {
             queryParams += `${name}=${select.value}&`;
         }
@@ -324,21 +324,21 @@ function populateTable(data) {
         }
         if (item.weight1 && item.weight1.date && isValidDate(item.weight1.date)) {
             date1 = new Date(item.weight1.date).toLocaleString('it-IT', options);
-            item.reservation.date_created = date1;
+            item.access.date_created = date1;
         }
         if (item.weight2 && item.weight2.date && isValidDate(item.weight2.date)) {
             date2 = new Date(item.weight2.date).toLocaleString('it-IT', options);
-            if (date1 && date2) item.reservation.date_created += ` - ${date2}`;
-            else if (!date1 && date2) item.reservation.date_created = date2;
+            if (date1 && date2) item.access.date_created += ` - ${date2}`;
+            else if (!date1 && date2) item.access.date_created = date2;
         }
         if (!item.weight1 && item.weight2) {
             item.weight1 = {
                 weight: item.weight2.tare
             };
         }
-        if (item.reservation && item.reservation.id) {
+        if (item.access && item.access.id) {
             idInOut = item.id;
-            item.id = item.reservation.id;
+            item.id = item.access.id;
         }
         if (item.log) item.pid = item.log;
         createRow(obj.table, obj.columns, item, idInOut);
@@ -429,11 +429,11 @@ function createRow(table, columns, item, idInout) {
         actionsCell.appendChild(callButton);
     }
     let pdfButton;
-    if (itemName === "reservation" && "status" in item && item.status === "Attesa") {
+    if (itemName === "access" && "status" in item && item.status === "Attesa") {
         const th = document.querySelector('th[name="waiting"]');
         const index = Array.from(th.parentNode.children).indexOf(th);
         startTimer(row, index, item.date_created);
-    } else if (itemName === "reservation" && idInout) {
+    } else if (itemName === "access" && idInout) {
         if (!item.weight2 && report.in || item.weight2 && report.out) {
             pdfButton = document.createElement("button");
             pdfButton.style.visibility = 'hidden';
@@ -500,7 +500,7 @@ function createRow(table, columns, item, idInout) {
         if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
         else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out) actionsCell.appendChild(deleteButton);
-        if (itemName === "reservation" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
+        if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
     }
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga
@@ -817,12 +817,12 @@ function editRow(item) {
         }
         triggerEventsForAll('.id');
     }
-    if (item.reservations ? item.reservations.length > 0 : item.in_out.length > 0) {
-        const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
+    if (item.accesses ? item.accesses.length > 0 : item.in_out.length > 0) {
+        const accesses_or_weighings = item.accesses ? "prenotazioni" : "pesate";
         confirm_exec_funct = funct;
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').innerHTML = `
-            Apportando le modifiche, verranno aggiornati anche i dati correlati alle ${reservations_or_weighings}.
+            Apportando le modifiche, verranno aggiornati anche i dati correlati alle ${accesses_or_weighings}.
         `;
         openPopup('confirm-popup');
     } else {
@@ -832,7 +832,7 @@ function editRow(item) {
 
 const deletePopup = document.getElementById('delete-popup');
 deletePopup.querySelector('#save-btn').addEventListener('click', () => {
-    let queryParams = !nextElementSibling && itemName === "reservation" ? 'deleteReservationIfislastInOut=true' : '';
+    let queryParams = !nextElementSibling && itemName === "access" ? 'deleteAccessIfislastInOut=true' : '';
     fetch(`${deleteUrlPath}/${currentId}?${queryParams}`, {
         method: 'DELETE',
         headers: {
@@ -878,11 +878,11 @@ function deleteRow(item) {
             }
         }
     }
-    if (item.reservations ? item.reservations.length > 0 : item.in_out.length > 0 && !canAlwaysDelete) {
-        const reservations_or_weighings = item.reservations ? "prenotazioni" : "pesate";
+    if (item.accesses ? item.accesses.length > 0 : item.in_out.length > 0 && !canAlwaysDelete) {
+        const accesses_or_weighings = item.accesses ? "prenotazioni" : "pesate";
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').textContent = `
-            Non è possibile procedere con l'eliminazione perchè è associata a delle ${reservations_or_weighings}.
+            Non è possibile procedere con l'eliminazione perchè è associata a delle ${accesses_or_weighings}.
         `;
         openPopup('confirm-popup');
     } else {
@@ -934,7 +934,7 @@ function closePopups(idPopups, deselectCurrentId = true) {
             if (input.type !== 'radio') input.value = '';
             if (input.type === 'checkbox') input.checked = false;
             if (input.dataset.id) input.dataset.id = '';
-            if (idPopup == "add-popup" && itemName == "reservation") {
+            if (idPopup == "add-popup" && itemName == "access") {
                 document.querySelector(`#${idPopup} #number_in_out`).required = true;
                 document.querySelector(`#${idPopup} #number_in_out`).color = 'black';
             }
@@ -1103,7 +1103,7 @@ function connectWebSocket() {
                             request = getWebSocketRequest(data.idRequest);
                             removeWebSocketRequest(data.idRequest);
                             if (request.custom_execute_callback) {
-                                if (data.anagrafic === "reservation") openPopup("edit-inout-popup");
+                                if (data.anagrafic === "access") openPopup("edit-inout-popup");
                                 else openPopup("confirm-popup");
                             } else {
                                 if (typeUpdate == "CLOSE") closeRow(data.data);

@@ -52,7 +52,7 @@ class VehicleRouter(WebSocket):
             data = add_data("vehicle", body.dict())
             vehicle = Vehicle(**data).json()
             await self.broadcastAddAnagrafic("vehicle", {"vehicle": vehicle})
-            await self.broadcastAddAnagrafic("reservation", {"vehicle": vehicle})
+            await self.broadcastAddAnagrafic("access", {"vehicle": vehicle})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -72,7 +72,7 @@ class VehicleRouter(WebSocket):
             data = update_data("vehicle", id, body.dict())
             vehicle = Vehicle(**data).json()
             await self.broadcastUpdateAnagrafic("vehicle", {"vehicle": vehicle})
-            await self.broadcastUpdateAnagrafic("reservation", {"vehicle": vehicle})
+            await self.broadcastUpdateAnagrafic("access", {"vehicle": vehicle})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -90,13 +90,13 @@ class VehicleRouter(WebSocket):
             locked_data = get_data_by_attributes('lock_record', {"table_name": "vehicle", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the vehicle with id '{id}' before to update that")
-            check_vehicle_reservations = get_data_by_id("vehicle", id)
-            if check_vehicle_reservations and len(check_vehicle_reservations["reservations"]) > 0:
+            check_vehicle_accesses = get_data_by_id("vehicle", id)
+            if check_vehicle_accesses and len(check_vehicle_accesses["accesses"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il veicolo con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("vehicle", id)
             vehicle = Vehicle(**data).json()
             await self.broadcastDeleteAnagrafic("vehicle", {"vehicle": vehicle})
-            await self.broadcastDeleteAnagrafic("reservation", {"vehicle": vehicle})
+            await self.broadcastDeleteAnagrafic("access", {"vehicle": vehicle})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

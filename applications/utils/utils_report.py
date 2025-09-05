@@ -14,14 +14,14 @@ def get_data_variables(in_out):
     report = report_out if in_out.idWeight2 else report_in
     name_file = ""
     variables = ReportVariables(**{})
-    variables.typeSubject = in_out.reservation.typeSubject.value
-    variables.subject = in_out.reservation.subject if in_out.reservation.subject else SubjectDataDTO(**{})
-    variables.vector = in_out.reservation.vector if in_out.reservation.vector else VectorDataDTO(**{})
-    variables.driver = in_out.reservation.driver if in_out.reservation.driver else DriverDataDTO(**{})
-    variables.vehicle = in_out.reservation.vehicle if in_out.reservation.vehicle else VehicleDataDTO(**{})
+    variables.typeSubject = in_out.access.typeSubject.value
+    variables.subject = in_out.access.subject if in_out.access.subject else SubjectDataDTO(**{})
+    variables.vector = in_out.access.vector if in_out.access.vector else VectorDataDTO(**{})
+    variables.driver = in_out.access.driver if in_out.access.driver else DriverDataDTO(**{})
+    variables.vehicle = in_out.access.vehicle if in_out.access.vehicle else VehicleDataDTO(**{})
     variables.material = in_out.material if in_out.material else MaterialDataDTO(**{})    
-    variables.note = in_out.reservation.note
-    variables.document_reference = in_out.reservation.document_reference
+    variables.note = in_out.access.note
+    variables.document_reference = in_out.access.document_reference
     if in_out.idWeight1:
         name_file = f"{in_out.weight1.weigher}_{in_out.weight1.pid}"
         variables.weight1.date = in_out.weight1.date.strftime("%d/%m/%Y %H:%M")

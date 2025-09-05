@@ -63,7 +63,7 @@ let maxThesholdValue;
 
 let confirmWeighing;
 
-let reservation_id;
+let access_id;
 
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
@@ -240,7 +240,7 @@ async function getData(path) {
 async function populateListIn() {
     const listIn = document.querySelector('.list-in');
 
-    await fetch('/api/anagrafic/reservation/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
+    await fetch('/api/anagrafic/access/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
     .then(res => res.json())
     .then(data => {
         listIn.innerHTML = '';
@@ -441,14 +441,14 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                 if (
                     anagrafic_to_set === 'vehicle' && 
                     selectedIdWeight === null && 
-                    "reservations" in suggestion && 
-                    suggestion.reservations.length > 0 && 
-                    suggestion.reservations[suggestion.reservations.length - 1].number_in_out === null &&
-                    suggestion.reservations[suggestion.reservations.length - 1].status !== 'Chiusa'
+                    "accesses" in suggestion && 
+                    suggestion.accesses.length > 0 && 
+                    suggestion.accesses[suggestion.accesses.length - 1].number_in_out === null &&
+                    suggestion.accesses[suggestion.accesses.length - 1].status !== 'Chiusa'
                 ) {
-                    if (suggestion.reservations[suggestion.reservations.length - 1].in_out.length === 0 ||
-                        suggestion.reservations[suggestion.reservations.length - 1].in_out.length > 0 && 
-                        suggestion.reservations[suggestion.reservations.length - 1].in_out[suggestion.reservations[suggestion.reservations.length - 1].in_out.length - 1].idWeight2 !== null
+                    if (suggestion.accesses[suggestion.accesses.length - 1].in_out.length === 0 ||
+                        suggestion.accesses[suggestion.accesses.length - 1].in_out.length > 0 && 
+                        suggestion.accesses[suggestion.accesses.length - 1].in_out[suggestion.accesses[suggestion.accesses.length - 1].in_out.length - 1].idWeight2 !== null
                     ) {
                         li.classList.add('permanent-associated');
                         text = `<span>${text}</span><span>⭐</span>`;
@@ -666,12 +666,12 @@ function updateUIRealtime(e) {
             if (obj.weight_executed.pid != "") {
                 message += ` Pid: ${obj.weight_executed.pid}`;
                 obj.data_assigned = JSON.parse(obj.data_assigned);
-                if (obj.data_assigned.id === reservation_id) {
+                if (obj.data_assigned.id === access_id) {
                     const id_in_out = obj.data_assigned.in_out[obj.data_assigned.in_out.length-1]["id"]
                     const typeOfWeight = obj.data_assigned.in_out[obj.data_assigned.in_out.length-1]["idWeight2"] === null ? "in" : "out";
                     const inOutPdf = instances[obj.instance_name]["nodes"][obj.weigher_name]["events"]["weighing"]["report"][typeOfWeight];
                     if (inOutPdf) {
-                        fetch(`/api/anagrafic/reservation/in-out/pdf/${id_in_out}`)
+                        fetch(`/api/anagrafic/access/in-out/pdf/${id_in_out}`)
                         .then(res => {
                             // Prendi il nome file dall'header Content-Disposition
                             const disposition = res.headers.get('Content-Disposition');
@@ -700,7 +700,7 @@ function updateUIRealtime(e) {
         } else { 
             showSnackbar("snackbar", "Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
-        reservation_id = null;
+        access_id = null;
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
@@ -828,7 +828,7 @@ function updateUIRealtime(e) {
         //         element.disabled = true;
         //     });
         // }
-    } else if (obj.reservation) {
+    } else if (obj.access) {
         populateListIn();       
     } else if (obj.message) {
         showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
@@ -911,7 +911,7 @@ function closeDiagnostic() {
 }
 
 async function printLastInOut() {
-    const r = await fetch(`${pathname}/api/anagrafic/reservation/in-out/print-last${currentWeigherPath}`)
+    const r = await fetch(`${pathname}/api/anagrafic/access/in-out/print-last${currentWeigherPath}`)
     .then(res => res.json())
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar("snackbar", r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
@@ -955,7 +955,7 @@ async function handleStampa() {
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
         showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
-        if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
+        if (return_pdf_copy_after_weighing) access_id = r.access_id;
     } else {
         showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
@@ -988,7 +988,7 @@ async function inWeighing() {
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
         showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
-        if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
+        if (return_pdf_copy_after_weighing) access_id = r.access_id;
     } else {
         showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
@@ -1027,7 +1027,7 @@ async function outWeighing () {
     .catch(error => console.error('Errore nella fetch:', error));
     if (r.command_details.command_executed == true) {
         showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
-        if (return_pdf_copy_after_weighing) reservation_id = r.reservation_id;
+        if (return_pdf_copy_after_weighing) access_id = r.access_id;
     } else {
         showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {

@@ -49,7 +49,7 @@ class DriverRouter(WebSocket):
             data = add_data("driver", body.dict())
             driver = Driver(**data).json()
             await self.broadcastAddAnagrafic("driver", {"driver": driver})
-            await self.broadcastAddAnagrafic("reservation", {"driver": driver})
+            await self.broadcastAddAnagrafic("access", {"driver": driver})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -65,7 +65,7 @@ class DriverRouter(WebSocket):
             data = update_data("driver", id, body.dict())
             driver = Driver(**data).json()
             await self.broadcastUpdateAnagrafic("driver", {"driver": driver})
-            await self.broadcastUpdateAnagrafic("reservation", {"driver": driver})
+            await self.broadcastUpdateAnagrafic("access", {"driver": driver})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -83,13 +83,13 @@ class DriverRouter(WebSocket):
             locked_data = get_data_by_attributes('lock_record', {"table_name": "driver", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the driver with id '{id}' before to update that")
-            check_driver_reservations = get_data_by_id("driver", id)
-            if check_driver_reservations and len(check_driver_reservations["reservations"]) > 0:
+            check_driver_accesses = get_data_by_id("driver", id)
+            if check_driver_accesses and len(check_driver_accesses["accesses"]) > 0:
                 raise HTTPException(status_code=400, detail=f"L'autista con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("driver", id)
             driver = Driver(**data).json()
             await self.broadcastDeleteAnagrafic("driver", {"driver": driver})
-            await self.broadcastDeleteAnagrafic("reservation", {"driver": driver})
+            await self.broadcastDeleteAnagrafic("access", {"driver": driver})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

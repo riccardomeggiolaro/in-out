@@ -1,6 +1,6 @@
 from sqlalchemy import func, or_, and_, alias
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, Weighing, InOut, Reservation, ReservationStatus, TypeReservation
+from modules.md_database.md_database import SessionLocal, Weighing, InOut, Access, AccessStatus, TypeAccess
 
 def get_list_in_out(
     filters=None,
@@ -13,7 +13,7 @@ def get_list_in_out(
     offset=None,
     order_by=None,
     excludeTestWeighing=False,
-    filterDateReservation=False,
+    filterDateAccess=False,
     get_is_last=False
 ):
     """
@@ -30,26 +30,26 @@ def get_list_in_out(
 
         # Add relationships
         query = query.options(
-            selectinload(InOut.reservation).selectinload(Reservation.subject),
-            selectinload(InOut.reservation).selectinload(Reservation.vector),
-            selectinload(InOut.reservation).selectinload(Reservation.driver),
-            selectinload(InOut.reservation).selectinload(Reservation.vehicle),
+            selectinload(InOut.access).selectinload(Access.subject),
+            selectinload(InOut.access).selectinload(Access.vector),
+            selectinload(InOut.access).selectinload(Access.driver),
+            selectinload(InOut.access).selectinload(Access.vehicle),
             selectinload(InOut.weight1),
             selectinload(InOut.weight2),
             selectinload(InOut.material)
         )
 
-        # Escludi le reservation di tipo TEST se richiesto
+        # Escludi le access di tipo TEST se richiesto
         if excludeTestWeighing:
-            query = query.join(InOut.reservation).filter(Reservation.type != TypeReservation.TEST)
+            query = query.join(InOut.access).filter(Access.type != TypeAccess.TEST)
 
-        # Gestione filtro data su Reservation.date_created se richiesto
-        if filterDateReservation and (fromDate or toDate):
-            query = query.join(InOut.reservation)
+        # Gestione filtro data su Access.date_created se richiesto
+        if filterDateAccess and (fromDate or toDate):
+            query = query.join(InOut.access)
             if fromDate:
-                query = query.filter(Reservation.date_created >= fromDate)
+                query = query.filter(Access.date_created >= fromDate)
             if toDate:
-                query = query.filter(Reservation.date_created <= toDate)
+                query = query.filter(Access.date_created <= toDate)
         else:
             # Handle fromDate filter sulle pesate
             if fromDate:
@@ -125,13 +125,13 @@ def get_list_in_out(
                         query = query.filter(getattr(InOut, key) == value)
 
         if not_closed:
-            query = query.join(InOut.reservation).filter(Reservation.status != ReservationStatus.CLOSED)
+            query = query.join(InOut.access).filter(Access.status != AccessStatus.CLOSED)
 
-        # Filter for non-closed reservations if requested
+        # Filter for non-closed accesses if requested
         if only_in_out_with_weight2:
             query = query.filter(InOut.idWeight2 != None)
 
-        # Filter for non-closed reservations if requested
+        # Filter for non-closed accesses if requested
         if only_in_out_without_weight2:
             query = query.filter(InOut.idWeight2 == None)
 
@@ -170,8 +170,8 @@ def get_list_in_out(
             # Forza la valutazione delle hybrid properties per la serializzazione
             for inout in results:
                 inout.__dict__['is_last'] = inout.is_last
-                if inout.reservation:
-                    inout.reservation.__dict__['is_latest_for_vehicle'] = inout.reservation.is_latest_for_vehicle
+                if inout.access:
+                    inout.access.__dict__['is_latest_for_vehicle'] = inout.access.is_latest_for_vehicle
 
         return results, total_rows
 

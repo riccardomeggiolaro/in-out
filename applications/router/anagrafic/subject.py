@@ -49,7 +49,7 @@ class SubjectRouter(WebSocket):
             data = add_data("subject", body.dict())
             subject = Subject(**data).json()
             await self.broadcastAddAnagrafic("subject", {"subject": subject})
-            await self.broadcastAddAnagrafic("reservation", {"subject": subject})
+            await self.broadcastAddAnagrafic("access", {"subject": subject})
             return data
         except Exception as e:
             # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
@@ -66,7 +66,7 @@ class SubjectRouter(WebSocket):
             data = update_data("subject", id, body.dict())
             subject = Subject(**data).json()
             await self.broadcastUpdateAnagrafic("subject", {"subject": subject})
-            await self.broadcastUpdateAnagrafic("reservation", {"subject": subject})
+            await self.broadcastUpdateAnagrafic("access", {"subject": subject})
             return data
         except Exception as e:
             # Verifica se l'eccezione ha un attributo 'status_code' e usa quello, altrimenti usa 404
@@ -85,13 +85,13 @@ class SubjectRouter(WebSocket):
             locked_data = get_data_by_attributes('lock_record', {"table_name": "subject", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the subject with id '{id}' before to update that")
-            check_subject_reservations = get_data_by_id("subject", id)
-            if check_subject_reservations and len(check_subject_reservations["reservations"]) > 0:
+            check_subject_accesses = get_data_by_id("subject", id)
+            if check_subject_accesses and len(check_subject_accesses["accesses"]) > 0:
                 raise HTTPException(status_code=400, detail=f"Il soggetto con id '{id}' è assegnato a delle pesate salvate")
             data = delete_data("subject", id)
             subject = Subject(**data).json()
             await self.broadcastDeleteAnagrafic("subject", {"subject": subject})
-            await self.broadcastDeleteAnagrafic("reservation", {"subject": subject})
+            await self.broadcastDeleteAnagrafic("access", {"subject": subject})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

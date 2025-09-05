@@ -1,19 +1,19 @@
 from sqlalchemy import exists, and_
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, Reservation, InOut
+from modules.md_database.md_database import SessionLocal, Access, InOut
 
 def has_vehicle_weighings(id):
     with SessionLocal() as session:
-        reservation = session.query(
-                Reservation
+        access = session.query(
+                Access
             ).options(
-                selectinload(Reservation.in_out)
+                selectinload(Access.in_out)
             ).filter(
                 and_(
-                    Reservation.idVehicle == id,
+                    Access.idVehicle == id,
                     exists().where(
-                        InOut.idReservation == Reservation.id
+                        InOut.idAccess == Access.id
                     )
                 )
             ).first()
-        return reservation and len(reservation.in_out) > 0
+        return access and len(access.in_out) > 0
