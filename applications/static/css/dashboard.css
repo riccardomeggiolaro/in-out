@@ -69,6 +69,7 @@ body {
     align-items: center;
     flex-direction: column;
     position: relative;
+    overflow-x: hidden;
 }
 
 .display-wrapper {
@@ -139,12 +140,12 @@ select {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-radius: 15px;
+    border-radius: 5px;
 }
 
 .weight {
     background-color: white;
-    border-radius: 8px;
+    border-radius: 5px;
     position: relative;
     font-size: 3rem;
     width: 99%;
@@ -185,7 +186,7 @@ select {
     background-color: #333;
     color: white;
     padding: 10px;
-    border-radius: 6px;
+    border-radius: 5px;
     width: 200px;
     opacity: 0;
     transition: opacity 0.3s;
@@ -290,7 +291,7 @@ button {
     background-color: white;
     color: #1362b8;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     border-color: #1362b8;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -336,7 +337,7 @@ button:active {
     min-width: 350px;
     max-width: 350px;
     height: fit-content;
-    border-radius: 15px;
+    border-radius: 8px;
     opacity: 0;
     transform: scale(0.8);
     transition: opacity 0.1s ease, transform 0.1s ease;
@@ -773,4 +774,25 @@ hr {
 
 .containerPlateVehicle.permanent button {
     display: block;    
+}
+
+/* Desktop navbar adjustments */
+@media (min-width: 1051px) {
+    .box {
+        height: calc(100vh - 60px); /* Subtract navbar height */
+        max-height: calc(100vh - 60px); /* Prevent overflow */
+        padding-top: 0; /* Remove any existing padding-top */
+        overflow: hidden;
+    }
+    
+    .container {
+        max-height: 100%;
+        overflow-y: auto;
+    }
+}
+
+@media (min-width: 1051px) and (min-height: 610px) {
+    .container {
+        max-height: 100%;
+    }
 }
