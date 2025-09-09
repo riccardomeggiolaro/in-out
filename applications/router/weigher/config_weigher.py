@@ -23,7 +23,7 @@ class ConfigWeigher(CommandWeigherRouter):
         self.router_config_weigher = APIRouter()
     
         self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
-        self.router_config_weigher.add_api_route('/configuration/use-access/{use_access}', self.SetUseAccess, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router_config_weigher.add_api_route('/configuration/use-reservation/{use_reservation}', self.SetUseReservation, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-white-list/{use_white_list}', self.SetUseWhiteList, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-badge/{use_badge}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -51,10 +51,10 @@ class ConfigWeigher(CommandWeigherRouter):
         lb_config.saveconfig()
         return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
 
-    async def SetUseAccess(self, use_access: bool):
-        lb_config.g_config["app_api"]["use_access"] = use_access
+    async def SetUseReservation(self, use_reservation: bool):
+        lb_config.g_config["app_api"]["use_reservation"] = use_reservation
         lb_config.saveconfig()
-        return { "use_access": use_access }
+        return { "use_reservation": use_reservation }
 
     async def SetUseWhiteList(self, use_white_list: bool):
         lb_config.g_config["app_api"]["use_white_list"] = use_white_list
@@ -114,7 +114,7 @@ class ConfigWeigher(CommandWeigherRouter):
         self.deleteInstanceSocket(instance_name=instance.instance_name)
         lb_config.g_config["app_api"]["weighers"].pop(instance.instance_name)
         lb_config.saveconfig()
-        self.switch_to_call_instance_weigher = {}
+        del self.switch_to_call_instance_weigher[instance.instance_name]
         return { "deleted": response }
 
     async def GetInstanceWeigher(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
@@ -179,6 +179,8 @@ class ConfigWeigher(CommandWeigherRouter):
                 weigher_created[setup.name]["rele"][rele] = 0
         lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][setup.name] = weigher_created[setup.name]
         lb_config.saveconfig()
+        if instance.instance_name not in self.switch_to_call_instance_weigher:
+            self.switch_to_call_instance_weigher[instance.instance_name] = {}
         self.switch_to_call_instance_weigher[instance.instance_name][setup.name] = None
         return response
 

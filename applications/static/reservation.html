@@ -658,6 +658,7 @@
             populate_detail_tr = populateDetailTr;
             callback_populate_table = updateElapsedTimes;
             callback_call_anagrafic = callAccess;
+            customQueryParams = 'excludeTestWeighing=true&';
             params = {
                 "accesso con targa": "access.vehicle.plate",
                 "accesso con id": "access.id",
@@ -706,17 +707,24 @@
         });
 
         function updateElapsedTimes() {
-            const rows = document.querySelectorAll("table tr");
+            const rows = document.querySelectorAll("tbody tr"); // Usa tbody invece di table
 
             rows.forEach(row => {
                 const cells = row.querySelectorAll("td");
-
+                
                 if (cells.length >= 2) {
-                    const datetimeCell = cells[0]; // primo td = data di creazione
-                    const statusCell = cells[1]; // secondo td = stato della prenotazione
-                    const elapsedCell = cells[3]; // terzo td = tempo trascorso
-                    const buttonsCell = cells[11];
-
+                    // Usa il mapping delle colonne invece di indici fissi
+                    const obj = getTableColumns();
+                    const columns = obj.columns;
+                    
+                    if (!columns['date_created'] || !columns['status'] || !columns['waiting']) {
+                        return; // Skip se le colonne non esistono
+                    }
+                    
+                    const datetimeCell = cells[columns['date_created']]; 
+                    const statusCell = cells[columns['status']]; 
+                    const elapsedCell = cells[columns['waiting']]; // Usa il mapping dinamico!
+                    
                     if (statusCell.dataset.value === "Attesa") {
                         const startDate = new Date(datetimeCell.dataset.value);
                         const now = new Date();
@@ -733,13 +741,8 @@
                         const minutes = totalMinutes % 60;
 
                         let displayText = '';
-
-                        if (days > 0) {
-                            displayText += `${days}d `;
-                        }
-                        if (hours > 0 || days > 0) {
-                            displayText += `${hours}h `;
-                        }
+                        if (days > 0) displayText += `${days}d `;
+                        if (hours > 0 || days > 0) displayText += `${hours}h `;
                         displayText += `${minutes}min`;
 
                         elapsedCell.textContent = displayText.trim();

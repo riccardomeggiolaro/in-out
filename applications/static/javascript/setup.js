@@ -219,7 +219,7 @@ async function loadSetupWeighers() {
         access.checked = data.use_reservation ? true : false;
         access.onchange = (e) => {
             const checked = e.target.checked;
-            fetch(`/api/config-weigher/configuration/use-access/${checked}`, {
+            fetch(`/api/config-weigher/configuration/use-reservation/${checked}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
