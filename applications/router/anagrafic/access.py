@@ -589,7 +589,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 if number_in_out_executed > 0:
                     data = update_data("access", id, {"status": AccessStatus.ENTERED})
                 else:
-                    if deleteAccessIfislastInOut and lb_config.g_config["app_api"]["use_access"] == False and data.type != TypeAccess.RESERVATION:
+                    if deleteAccessIfislastInOut and lb_config.g_config["app_api"]["use_reservation"] == False and data.type != TypeAccess.RESERVATION:
                         data = delete_data("access", id)
                     else:
                         data = update_data("access", id, {"status": AccessStatus.WAITING})
