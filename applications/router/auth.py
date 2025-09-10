@@ -43,8 +43,8 @@ class AuthRouter(APIRouter):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=(
-                    "You cannot assign a higher or equal access level than your own. "
-                    f"Your current access level is {request.state.user.level}, but you're trying to assign level {register_dto.level}."
+                    'Non puoi assegnare un livello uguale o più alto del tuo. '
+                    f'Il tuo livello è "{request.state.user.level}", ma stai provando ad assegnare un livello "{register_dto.level}."'
                 )
             )
         return add_data("user", register_dto.dict())

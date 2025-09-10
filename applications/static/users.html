@@ -20,7 +20,7 @@
             margin: auto;
             background: white;
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 5px;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: auto;
@@ -63,6 +63,12 @@
         }
         thead {
             font-size: 16px;
+        }
+        thead tr th:first-child {
+            border-radius: 5px 0px 0px 5px;
+        }
+        thead tr th:last-child {
+            border-radius: 0px 5px 5px 0px;
         }
         tr td button {
             background-color: white;
@@ -191,7 +197,7 @@
             transform: translate(-50%, -50%); 
             background-color: white; 
             padding: 20px; 
-            border-radius: 10px; 
+            border-radius: 8px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 300px;
@@ -251,15 +257,15 @@
             Username:<br>
             <input type="text" id="username" name="username" autocomplete="off" required>
             Descrizione:<br>
-            <input type="text" id="description" name="description" autocomplete="off" required>
+            <input type="text" id="description" name="description" autocomplete="off">
             <label for="level">Livello:</label>
             <select id="level" name="level">
                 <option value=3>Amministratore</option>
                 <option value=2>Utente</option>
                 <option value=1>Utente solo lettura</option>
             </select>
-            Password: (Min 8 caratteri)<br>
-            <input type="password" id="password" name="password" autocomplete="off" minlength="8" required>
+            Password: (Min 4 caratteri)<br>
+            <input type="password" id="password" name="password" autocomplete="off" minlength="4" required>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
@@ -270,8 +276,8 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica password:</h3>
         <form id="edit" class="content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
-            Password: (Min 8 caratteri)<br>
-            <input type="password" id="password" name="password" autocomplete="off" minlength="8" required>
+            Password: (Min 4 caratteri)<br>
+            <input type="password" id="password" name="password" autocomplete="off" minlength="4" required>
         </form>
         <div class="container-buttons right">                
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
@@ -446,7 +452,8 @@
                     closePopups(['add-popup']); // chiudi il popup/form
                     showSnackbar("snackbar", 'Nuovo utente creato', 'rgb(208, 255, 208)', 'black');
                 } else {
-                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                    const message = res.data.detail[0].msg ? res.data.detail[0].msg.replace("Value error, ", "") : null;
+                    showSnackbar("snackbar", message || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
                 }
             });
         }

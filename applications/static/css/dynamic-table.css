@@ -11,7 +11,7 @@ body {
     margin: auto;
     background: white;
     padding: 20px;
-    border-radius: 15px;
+    border-radius: 5px;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
     position: relative;
     overflow: auto;
@@ -88,7 +88,7 @@ th {
 button {
     background-color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     border-color: #1362b8;
     cursor: pointer;
     transition: background-color 0.3s;
@@ -102,6 +102,12 @@ button:disabled {
 }
 h3 {
     margin: 0px 0px 10px 0px;
+}
+thead tr th:first-child {
+    border-radius: 5px 0px 0px 5px;
+}
+thead tr th:last-child {
+    border-radius: 0px 5px 5px 0px;
 }
 thead input,
 thead select,
@@ -151,7 +157,7 @@ input[type="checkbox"] {
     transform: translate(-50%, -50%); 
     background-color: white; 
     padding: 20px; 
-    border-radius: 10px; 
+    border-radius: 8px; 
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     width: 100%;
     max-width: 300px;

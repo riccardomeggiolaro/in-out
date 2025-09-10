@@ -13,15 +13,13 @@ class UserDTO(BaseModel):
 	def check_username(cls, v):
 		data = get_data_by_attribute('user', 'username', v)
 		if data:
-			raise ValueError('Username already exists')
-		if len(v) < 3:
-			raise ValueError('Username must be at least 3 characters long')
+			raise ValueError('Username già esistente')
 		return v
 
 	@validator('password', pre=True, always=True)
 	def check_password(cls, v):
-		if len(v) < 8:
-			raise ValueError('Password must be at least 8 characters long')
+		if len(v) < 4:
+			raise ValueError('La password deve avere almeno 4 caratteri')
 		return hash_password(v)
 
 class LoginDTO(BaseModel):
@@ -37,8 +35,8 @@ class SetUserDTO(BaseModel):
 	
 	@validator('password', pre=True, always=True)
 	def check_password(cls, v):
-		if v is not None and len(v) < 8:
-			raise ValueError('Password must be at least 8 characters long')
+		if v is not None and len(v) < 4:
+			raise ValueError('La password deve avere almeno 4 caratteri')
 		if v:
 			return hash_password(v)
 		return v
