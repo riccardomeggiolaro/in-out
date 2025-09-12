@@ -47,6 +47,8 @@ class SerialPortWithoutControls(Connection):
 	serial_port_name: str
 	timeout: float = 1
 
+	connecting: bool = False
+
 	conn: Optional[serial.Serial] = None
 
 	class Config:
@@ -64,6 +66,7 @@ class SerialPortWithoutControls(Connection):
 	def try_connection(self):
 		status = False
 		error_message = None
+		self.connecting = True
 		try:
 			self.flush()
 			self.conn = None
@@ -78,6 +81,8 @@ class SerialPortWithoutControls(Connection):
 		except TypeError as e:
 			error_message = e
 			# lb_log.error(f"TypeError on try connection: {error_message}")
+		finally:
+			self.connecting = False
 		return status, error_message
 
 	def flush(self):
@@ -197,6 +202,8 @@ class TcpWithoutControls(Connection):
 	port: int
 	timeout: float
 
+	connecting: bool = False
+
 	conn: Optional[socket.socket] = None
 
 	class Config:
@@ -222,6 +229,7 @@ class TcpWithoutControls(Connection):
 	def try_connection(self):
 		status = True
 		error_message = None
+		self.connecting = True
 		try:
 			self.conn = None
 			self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -231,6 +239,8 @@ class TcpWithoutControls(Connection):
 		except Exception as e:
 			status = False
 			error_message = e
+		finally:
+			self.connecting = False
 		return status, error_message
 
 	def flush(self):

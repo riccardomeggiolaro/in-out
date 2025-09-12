@@ -91,6 +91,9 @@ class WeigherModule:
 				cb_code_identify=cb_code_identify
 			)
 
+	def getInstanceConnecting(self, instance_name):
+		return self.instances[instance_name].getInstanceConnecting()
+
 	def getAllInstance(self):
 		instances = {}
 		for name, instance in self.instances.items():
@@ -475,8 +478,11 @@ class WeigherInstance:
 
 	# ==== FUNZIONI RICHIAMABILI DA MODULI ESTERNI =================
 
+	def getInstanceConnecting(self):
+		return self.connection.connection.connecting
+
 	def getInstance(self):
-		conn = self.connection.getConnection()
+		conn = self.getConnection()
 		nodes = {name: weigher.getSetup() for name, weigher in self.nodes.items()}
 		return {
 			"connection": conn,

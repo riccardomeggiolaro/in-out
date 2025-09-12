@@ -35,9 +35,10 @@
         "weighers": {
             "1": {
                 "connection": {
+                    "connecting": false,
                     "ip": "10.0.5.96",
                     "port": 4001,
-                    "timeout": 3.0
+                    "timeout": 2.0
                 },
                 "nodes": {
                     "P1": {

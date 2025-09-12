@@ -511,7 +511,10 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 							})
 						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
 				else:
+					connecting = md_weigher.module_weigher.getInstanceConnecting(instance_name=instance.instance_name)
 					message = "Errore di connessione"
+					if connecting:
+						message = "Tentativo di connessione in corso..."
 					if status in [305, 201]:
 						message = "Errore di ricezione"
 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
@@ -528,7 +531,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				await self.StopAllCommand(instance=instance)
 				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
-			await asyncio.sleep(1)
+			await asyncio.sleep(0.1)
 
 	async def websocket_endpoint_diagnostic(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.connect(websocket)
