@@ -4,7 +4,8 @@ import os
 from typing import List
 import libs.lb_log as lb_log
 import datetime as dt
-from weasyprint import HTML
+from weasyprint import HTML, CSS
+from lxml import html
 
 """
 Linux debian dependencies:
@@ -118,23 +119,72 @@ class HTMLPrinter:
     def generate_pdf_from_html(self, html_content):
         """
         Genera un PDF a partire da una stringa HTML e restituisce i bytes del PDF.
+        Rileva le misure specificate nel tag <body> o in CSS, altrimenti usa A4 come default.
         """
-        import tempfile
-        import os
-        from weasyprint import HTML
+        # Default page size (A4 in points: 595 x 842)
+        default_size = {'width': '210mm', 'height': '297mm'}  # A4 dimensions
+        page_size = default_size
 
+        try:
+            # Parse HTML content
+            tree = html.fromstring(html_content)
+
+            # Check for size in <body> style attribute
+            body = tree.xpath('//body')
+            if body and body[0].get('style'):
+                style = body[0].get('style')
+                # Extract width and height from style
+                styles = dict(s.split(':') for s in style.split(';') if ':' in s)
+                width = styles.get('width', '').strip()
+                height = styles.get('height', '').strip()
+                if width and height:
+                    page_size = {'width': width, 'height': height}
+
+            # Check for @page rule in <style> tags
+            style_tags = tree.xpath('//style')
+            for style_tag in style_tags:
+                css_content = style_tag.text or ''
+                if '@page' in css_content:
+                    import re
+                    match = re.search(r'@page\s*{[^}]*size:\s*([^;]+);', css_content)
+                    if match:
+                        size_value = match.group(1).strip()
+                        # Handle named sizes or dimensions (e.g., "210mm 297mm", "210mm auto", etc.)
+                        if ' ' in size_value:
+                            size_parts = size_value.split()
+                            if len(size_parts) == 2:
+                                width, height = size_parts
+                                width = width if width != 'auto' else default_size['width']
+                                height = height if height != 'auto' else default_size['height']
+                                page_size = {'width': width, 'height': height}
+                        elif size_value.lower() in ['a4', 'letter', 'legal']:  # Add more as needed
+                            page_size = {'size': size_value.lower()}
+
+        except Exception as e:
+            lb_log.warning(f"Errore nel parsing delle dimensioni HTML: {e}. Uso A4 come default.")
+
+        # Generate PDF
         pdf_bytes = None
         with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as html_file, \
             tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
             html_file.write(html_content.encode('utf-8'))
             html_file.flush()
             try:
-                HTML(filename=html_file.name).write_pdf(pdf_file.name)
+                # Create WeasyPrint HTML object
+                weasy_html = HTML(filename=html_file.name)
+                # Apply page size via CSS or direct size parameter
+                if 'size' in page_size:
+                    css = CSS(string=f'@page {{ size: {page_size["size"]}; }}')
+                    weasy_html.write_pdf(pdf_file.name, stylesheets=[css])
+                else:
+                    css = CSS(string=f'@page {{ size: {page_size["width"]} {page_size["height"]}; }}')
+                    weasy_html.write_pdf(pdf_file.name, stylesheets=[css])
                 with open(pdf_file.name, "rb") as f:
                     pdf_bytes = f.read()
             finally:
                 os.unlink(html_file.name)
                 os.unlink(pdf_file.name)
+        
         return pdf_bytes
 
     def print_pdf(self, pdf_bytes, printer_name: str, number_of_prints: int = 1):
