@@ -25,6 +25,7 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	always_execute_realtime_in_undeground: Optional[bool] = None
 	need_take_of_weight_on_startup: Optional[bool] = None
 	need_take_of_weight_before_weighing: Optional[bool] = None
+	continuous_transmission: Optional[bool] = None
 	node: Optional[str] = "undefined"
 	terminal: Optional[str] = None
 	run: Optional[bool] = None
@@ -69,6 +70,7 @@ class SetupWeigherDTO(BaseModel):
 	always_execute_realtime_in_undeground: Optional[bool] = True
 	need_take_of_weight_on_startup: Optional[bool] = True
 	need_take_of_weight_before_weighing: Optional[bool] = True
+	continuous_transmission: Optional[bool] = False
 	node: Optional[Union[str, None]] = None
 	terminal: str
 	run: Optional[bool] = True

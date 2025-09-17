@@ -1291,6 +1291,9 @@ async function loadSetupWeighers() {
                         <label><input type="checkbox" name="need_take_of_weight_on_startup" checked> Scaricare la pesa dopo l'avvio del programma</label>
                     </div>
                     <div class="form-group">
+                        <label><input type="checkbox" name="continuous_transmission"> Trasmissione continua per il peso in tempo reale</label>
+                    </div>
+                    <div class="form-group">
                         <label>Telecamere: <button onclick="addCam(event, '#add-form', '${addCamClass}')">Aggiungi</button></label>
                         <div class="form-group cams ${addCamClass}"></div>
                     </div>
@@ -1423,12 +1426,13 @@ async function loadSetupWeighers() {
                         <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
                         <p class="gray"><em>Peso massimo: ${data.max_weight}</em> <strong>-</strong> <em>Peso minimo: ${data.min_weight}</em> <strong>-</strong> <em>Divisione: ${data.division}</em><br></p>
                         <p class="gray"><em>Soglia massima: ${data.max_theshold ? data.max_theshold : 'Nessuna'}</em></p>
-                        <p class="gray"><em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
-                        <p class="gray"><em>Scaricare pesa dopo pesata effettuata: ${data.need_take_of_weight_before_weighing ? 'Si' : 'No'}</em></p>
-                        <p class="gray"><em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Genera report all'entrata: ${data.events.weighing.report.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Genera report all'entrata: ${data.events.weighing.report.out ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Stampa su: ${data.printer_name ? data.printer_name : 'Nessuna'}</em></p>
                         <p class="gray"><em>Numero di stampe: ${data.number_of_prints}</em></p>
+                        <p class="gray"><em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Scaricare pesa dopo pesata effettuata: ${data.need_take_of_weight_before_weighing ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Scaricare pesa all'avvio: ${data.need_take_of_weight_on_startup ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Trasmissione continua per il peso in tempo reale: ${data.continuous_transmission ? 'Si' : 'No'}</em></p>
                     `;
                     if (cams.length > 0) {
                         viewModeCFontent.innerHTML += '<h5 class="gray"><em>TELECAMERE</em></h5>';
@@ -1553,6 +1557,9 @@ async function loadSetupWeighers() {
                         </div>
                         <div class="form-group">
                             <label><input type="checkbox" name="need_take_of_weight_on_startup" ${data.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa dopo l'avvio del programma</label>
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" name="continuous_transmission" ${data.continuous_transmission ? 'checked' : null}> Trasmissione continua per il peso in tempo reale</label>
                         </div>
                         <div class="form-group">
                             <label>Telecamere: <button onclick="addCam(event, '#${idEditForm}', '${addCamWeigher}')">Aggiungi</button></label>

@@ -7,7 +7,7 @@
         "path_pdf": "/var/lib/in-out/pdf",
         "path_report": "./applications/static/report",
         "port": 80,
-        "report_in": null,
+        "report_in": "report_template - 2025-09-17T172049.245.html",
         "report_out": null,
         "return_pdf_copy_after_weighing": false,
         "rfid": {
@@ -43,6 +43,7 @@
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
+                        "continuous_transmission": false,
                         "data": {
                             "data_in_execution": {
                                 "document_reference": null,
@@ -97,8 +98,8 @@
                             "weighing": {
                                 "cams": [],
                                 "report": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
                                 "set_rele": []
                             }
@@ -107,8 +108,8 @@
                         "max_theshold": null,
                         "max_weight": 60000,
                         "min_weight": 400,
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": true,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
@@ -116,7 +117,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
+                        "take_of_weight_on_startup": true,
                         "terminal": "egt-af03"
                     }
                 },

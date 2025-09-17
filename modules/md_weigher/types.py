@@ -53,6 +53,7 @@ class SetupWeigher(CustomBaseModel):
 	always_execute_realtime_in_undeground: bool
 	need_take_of_weight_on_startup: bool
 	need_take_of_weight_before_weighing: bool
+	continuous_transmission: bool
 	node: Optional[str] = None
 	terminal: str
 	run: bool

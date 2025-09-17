@@ -228,7 +228,7 @@ class WeigherModule:
 	def getCurrentModope(self, instance_name, weigher_name: str):
 		return self.instances[instance_name].getCurrentModope(weigher_name=weigher_name)
 
-	def setModope(self, instance_name, weigher_name: str, modope, presettare=0, data_assigned: int = None, port_rele=None):
+	def setModope(self, instance_name, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None):
 		return self.instances[instance_name].setModope(weigher_name=weigher_name, modope=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele)
 
 	def canStartWeighing(self, instance_name, weigher_name: str):
@@ -270,6 +270,7 @@ class WeigherInstance:
 				always_execute_realtime_in_undeground=value.always_execute_realtime_in_undeground,
 				need_take_of_weight_before_weighing=value.need_take_of_weight_before_weighing,
 				need_take_of_weight_on_startup=value.need_take_of_weight_on_startup,
+				continuous_transmission=value.continuous_transmission,
 				node=value.node, 
 				terminal=value.terminal,
 				run=value.run
@@ -525,6 +526,7 @@ class WeigherInstance:
 			always_execute_realtime_in_undeground=setup.always_execute_realtime_in_undeground,
    			need_take_of_weight_before_weighing=setup.need_take_of_weight_before_weighing,
 			need_take_of_weight_on_startup=setup.need_take_of_weight_on_startup,
+			continuous_transmission=setup.continuous_transmission,
 			node=setup.node, 
 			terminal=setup.terminal,
 			run=setup.run
