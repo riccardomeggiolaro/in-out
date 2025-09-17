@@ -7,7 +7,7 @@
         "path_pdf": "/var/lib/in-out/pdf",
         "path_report": "./applications/static/report",
         "port": 80,
-        "report_in": "report_template - 2025-09-17T172049.245.html",
+        "report_in": "report_template - 2025-09-17T182041.996.html",
         "report_out": null,
         "return_pdf_copy_after_weighing": false,
         "rfid": {
