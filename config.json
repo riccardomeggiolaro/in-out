@@ -7,7 +7,7 @@
         "path_pdf": "/var/lib/in-out/pdf",
         "path_report": "./applications/static/report",
         "port": 80,
-        "report_in": "report_template - 2025-09-17T182041.996.html",
+        "report_in": null,
         "report_out": null,
         "return_pdf_copy_after_weighing": false,
         "rfid": {
@@ -30,7 +30,7 @@
             "user": "root"
         },
         "use_badge": false,
-        "use_reservation": true,
+        "use_reservation": false,
         "use_white_list": false,
         "weighers": {
             "1": {
@@ -98,8 +98,8 @@
                             "weighing": {
                                 "cams": [],
                                 "report": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "set_rele": []
                             }
@@ -113,7 +113,7 @@
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
-                        "printer_name": "Canon_iR_ADV_C5235_5240",
+                        "printer_name": null,
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
