@@ -7,7 +7,7 @@
         "path_pdf": "/var/lib/in-out/pdf",
         "path_report": "./applications/static/report",
         "port": 80,
-        "report_in": null,
+        "report_in": "d.html",
         "report_out": null,
         "return_pdf_copy_after_weighing": false,
         "rfid": {
