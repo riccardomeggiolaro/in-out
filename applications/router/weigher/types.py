@@ -44,7 +44,6 @@ class Weight2(Weight):
     pass
     
 class ReportVariables(DataInExecution):
-	material: MaterialDTO = MaterialDTO(**{})
 	weight1: Weight1 = Weight1(**{})
 	weight2: Weight2 = Weight2(**{})
 	net_weight: Union[int, float] = None
