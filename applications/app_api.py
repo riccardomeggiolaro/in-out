@@ -114,6 +114,8 @@ def init():
 	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 	app.mount("/images", StaticFiles(directory=directory), name="images")
+ 
+	app.mount("/report", StaticFiles(directory=lb_config.g_config["app_api"]["path_report"]), name="report")
 
 	@app.get("/access", response_class=HTMLResponse)
 	async def Access(request: Request):
@@ -123,6 +125,64 @@ def init():
 			file_name = "reservation.html"
 		return templates.TemplateResponse(file_name, {"request": request})
  
+	@app.get('/report-designer/entrata', response_class=HTMLResponse)
+	async def report_designer(request: Request):
+		"""Endpoint dedicato per il report designer."""
+		try:
+			nome_variabile = ""
+			type = "ENTRATA"
+			file_path = base_dir_templates / "report-designer.html"
+			
+			if not file_path.is_file():
+				return HTMLResponse(content="File report-designer.html non trovato", status_code=404)
+			
+			# Leggi il file HTML
+			with open(file_path, 'r', encoding='utf-8') as f:
+				html_content = f.read()
+			
+			# Sostituisci le variabili
+			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
+			html_content = html_content.replace('{{ type }}', type)
+			html_content = html_content.replace('{{ default_report_template }}', '/report/weight_in.json')
+			
+			# Puoi aggiungere altre sostituzioni se servono
+			# html_content = html_content.replace('{{ altra_variabile }}', altro_valore)
+			
+			return HTMLResponse(content=html_content)
+			
+		except Exception as e:
+			print(f"Errore nel caricamento report-designer: {e}")
+			return HTMLResponse(content=f"Errore: {str(e)}", status_code=500)
+
+	@app.get('/report-designer/uscita', response_class=HTMLResponse)
+	async def report_designer(request: Request):
+		"""Endpoint dedicato per il report designer."""
+		try:
+			nome_variabile = ""
+			type = "USCITA"
+			file_path = base_dir_templates / "report-designer.html"
+			
+			if not file_path.is_file():
+				return HTMLResponse(content="File report-designer.html non trovato", status_code=404)
+			
+			# Leggi il file HTML
+			with open(file_path, 'r', encoding='utf-8') as f:
+				html_content = f.read()
+			
+			# Sostituisci le variabili
+			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
+			html_content = html_content.replace('{{ type }}', type)
+			html_content = html_content.replace('{{ default_report_template }}', '/report/weight_out.json')
+			
+			# Puoi aggiungere altre sostituzioni se servono
+			# html_content = html_content.replace('{{ altra_variabile }}', altro_valore)
+			
+			return HTMLResponse(content=html_content)
+			
+		except Exception as e:
+			print(f"Errore nel caricamento report-designer: {e}")
+			return HTMLResponse(content=f"Errore: {str(e)}", status_code=500)
+
 	@app.get('/{filename:path}', response_class=HTMLResponse)
 	async def Static(request: Request, filename: str):
 		"""Gestisce le richieste di file statici (HTML, CSS, JS)."""

@@ -10,6 +10,8 @@ from libs.lb_printer import printer
 from applications.utils.utils_report import generate_html_report
 from io import BytesIO
 import shutil
+from pathlib import Path
+from collections import defaultdict
 
 class GenericRouter:
     def __init__(self):
@@ -17,6 +19,7 @@ class GenericRouter:
 
         # Aggiungi le rotte
         self.router.add_api_route('/list/serial-ports', self.getSerialPorts)
+        self.router.add_api_route('/list/default-reports', self.listDefualtReports)
         self.router.add_api_route('/report-in', self.saveReportIn, methods=['POST'])
         self.router.add_api_route('/report-in', self.getReportIn)
         self.router.add_api_route('/report-in/preview', self.getReportInPreview)
@@ -38,6 +41,43 @@ class GenericRouter:
         except Exception as e:
             elapsed = time.time() - start_time
             raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)} (elapsed: {elapsed:.3f}s)")
+
+    def listDefualtReports(self):
+        """
+        Restituisce una struttura ad albero con percorsi relativi delle cartelle
+        """
+        directory = lb_config.g_config['app_api']['path_report'] + "/default-report/"
+        files_tree = defaultdict(list)
+        
+        try:
+            directory_path = Path(directory)
+            
+            if not directory_path.exists():
+                print(f"Directory non trovata: {directory}")
+                return {}
+            
+            if not directory_path.is_dir():
+                print(f"Il percorso non è una directory: {directory}")
+                return {}
+            
+            # Ottieni tutti i file ricorsivamente
+            for file_path in directory_path.rglob('*'):
+                if file_path.is_file():
+                    # Ottieni il percorso relativo della cartella
+                    relative_path = file_path.relative_to(directory_path)
+                    if relative_path.parent == Path('.'):
+                        folder_key = 'root'
+                    else:
+                        folder_key = str(relative_path.parent)
+                    
+                    files_tree[folder_key].append(file_path.name)
+                    
+        except PermissionError:
+            print(f"Permessi insufficienti per accedere a: {directory}")
+        except Exception as e:
+            print(f"Errore durante la scansione della directory: {e}")
+        
+        return dict(files_tree)
         
     async def saveReportIn(self, file: UploadFile = File(None)):
         path = lb_config.g_config['app_api']['path_report']
