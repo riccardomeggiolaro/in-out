@@ -17,9 +17,12 @@ class Functions:
 
 		self.switch_to_call_instance_weigher = {}
 
+		import libs.lb_log as lb_log
+
 		for instance_name, instance in md_weigher.module_weigher.instances.items():
 			nodes_sockets = {}
 			for weigher_name, weigher in instance.nodes.items():
+				lb_log.warning(weigher_name)				
 				nodes_sockets[weigher_name] = {
 					"sockets": NodeConnectionManager(),
 					"data": Data(**{}).dict()
@@ -124,7 +127,7 @@ class Functions:
 	def addInstanceWeigherSocket(self, instance_name: str, weigher_name: str, data: Data):
 		node_sockets = {
 			"sockets": NodeConnectionManager(),
-			"data": data
+			"data": data.dict()
 		}
 		weighers_data[instance_name][weigher_name] = node_sockets
 
