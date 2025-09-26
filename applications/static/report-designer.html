@@ -627,7 +627,7 @@
                 </select>
                 <button class="btn btn-primary" onclick="previewReport()">👁️ Anteprima</button>
                 <button class="btn btn-primary" onclick="showCode()" style="display: none;">📝 Mostra Codice</button>
-                <button class="btn btn-primary" onclick="saveProject()">💾 Salva</button>
+                <button class="btn btn-primary" onclick="saveProject('{{ report }}')">💾 Salva</button>
                 <button class="btn btn-primary" onclick="importProject()">📥 Importa</button>
             </div>
         </div>
@@ -753,6 +753,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
     <script>
@@ -1197,7 +1198,7 @@
                     wrapper.style.textAlign = "center"; // Allineamento iniziale sul wrapper
                     content = `
                         <div data-image-container>
-                            <img src="https://via.placeholder.com/100x75" alt="Immagine" 
+                            <img src="" alt="Immagine" 
                                  style="width: 50mm; height: 37.5mm; display: inline-block;" 
                                  data-width-mm="50" data-height-mm="37.5" data-image-type="file">
                         </div>
@@ -1653,7 +1654,7 @@
                     document.getElementById('fileUploadSection').style.display = 'block';
                     // Se non ha ancora un'immagine caricata, mostra placeholder
                     if (!img.src.startsWith('data:image/') && img.src.includes('placeholder')) {
-                        img.src = 'https://via.placeholder.com/100x75';
+                        img.src = '';
                         img.alt = 'Immagine';
                     }
                     break;
@@ -1669,7 +1670,7 @@
                     document.getElementById('urlSection').style.display = 'block';
                     // Se è una variabile, resetta a placeholder
                     if (img.src.includes('{{')) {
-                        img.src = 'https://via.placeholder.com/100x75';
+                        img.src = '';
                         img.alt = 'Immagine';
                     }
                     break;
@@ -1755,7 +1756,7 @@
             if (!selectedElement) return;
             const img = selectedElement.querySelector('img');
             if (img) {
-                img.src = src || 'https://via.placeholder.com/100x75';
+                img.src = src;
                 img.alt = 'Immagine';
             }
         }
@@ -2571,50 +2572,92 @@ ${pageClone.innerHTML}
         }
 
         // Nuova funzione: Salva progetto (stato del designer)
-        function saveProject() {
-            const pagesContainer = document.getElementById('pagesContainer');
-            const pageFormat = document.getElementById('pageFormat').value;
-            const marginTop = document.getElementById('marginTop').value;
-            const marginBottom = document.getElementById('marginBottom').value;
-            const marginLeft = document.getElementById('marginLeft').value;
-            const marginRight = document.getElementById('marginRight').value;
+        async function saveProject(report) {
+            try {
+                // Raccogli i dati (stesso codice che avevi)
+                const pagesContainer = document.getElementById('pagesContainer');
+                const pageFormat = document.getElementById('pageFormat').value;
+                const marginTop = document.getElementById('marginTop').value;
+                const marginBottom = document.getElementById('marginBottom').value;
+                const marginLeft = document.getElementById('marginLeft').value;
+                const marginRight = document.getElementById('marginRight').value;
 
-            // Pulisci l'HTML rimuovendo newline extra e spazi multipli
-            function cleanHtml(html) {
-                return html
-                    .replace(/\n/g, ' ')  // Sostituisci newline con spazi
-                    .replace(/\s+/g, ' ')  // Riduci spazi multipli a uno solo
-                    .replace(/"/g, "'")       // Sostituisci \" con '
-                    .trim();  // Rimuovi spazi iniziali/finali
+                function cleanHtml(html) {
+                    return html
+                        .replace(/\n/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .replace(/"/g, "'")
+                        .trim();
+                }
+
+                const state = {
+                    canvas: cleanHtml(pagesContainer.innerHTML),
+                    html: cleanHtml(generateTemplate()),
+                    format: pageFormat,
+                    margins: {
+                        top: marginTop,
+                        bottom: marginBottom,
+                        left: marginLeft,
+                        right: marginRight
+                    },
+                    zoom: currentZoom,
+                    elementCounter: elementCounter,
+                    totalPages: totalPages,
+                    globalFont: globalFont
+                };
+
+                const jsonState = JSON.stringify(state);
+
+                // Download locale (mantieni questo)
+                const blob = new Blob([jsonState], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'report_project.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('Progetto salvato localmente!');
+
+                // Crea ZIP per il server
+                showNotification('Invio al server in corso...', false, true);
+                
+                const zip = new JSZip();
+                zip.file('report_project.json', jsonState);
+                
+                const zipBlob = await zip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 9 }
+                });
+
+                // Upload al server
+                const formData = new FormData();
+                formData.append('file', zipBlob, 'report_project.zip');
+                
+                const response = await fetch(`/api/generic/report/${report}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Errore server');
+                }
+
+                const data = await response.json();
+                console.log('Risposta server:', data);
+                
+                showNotification('✅ Progetto salvato sul server con successo!');
+                
+                return data;
+
+            } catch (error) {
+                console.error('Errore:', error);
+                showNotification(`❌ Errore: ${error.message}`, true);
+                throw error;
             }
-
-            const state = {
-                canvas: cleanHtml(pagesContainer.innerHTML),
-                html: cleanHtml(generateTemplate()),
-                format: pageFormat,
-                margins: {
-                    top: marginTop,
-                    bottom: marginBottom,
-                    left: marginLeft,
-                    right: marginRight
-                },
-                zoom: currentZoom,
-                elementCounter: elementCounter,
-                totalPages: totalPages,
-                globalFont: globalFont
-            };
-
-            const jsonState = JSON.stringify(state);
-            const blob = new Blob([jsonState], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'report_project.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showNotification('Progetto salvato con successo!');
         }
 
         // Funzione: Importa progetto (carica stato del designer)

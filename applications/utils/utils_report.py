@@ -7,6 +7,7 @@ from modules.md_database.interfaces.vector import VectorDataDTO
 from modules.md_database.interfaces.driver import DriverDataDTO
 from modules.md_database.interfaces.vehicle import VehicleDataDTO
 from modules.md_database.interfaces.material import MaterialDataDTO
+import json
 
 def get_data_variables(in_out):
     report_in = lb_config.g_config["app_api"]["report_in"]
@@ -51,16 +52,38 @@ def convert_none_to_empty(data):
         return ""
     return data
 
-def generate_html_report(reports_dir, report_name_file, v: ReportVariables =None):
+def get_report_file(report_dir, report_name_file):
+    content = os.path.join(report_dir, report_name_file)
+    if os.path.exists(content):
+        with open(content, 'r', encoding='utf-8') as file:
+            return file.read()
+    return None
+
+def generate_html_report(reports_dir, report_name_file, v: ReportVariables = None):
     try:
         # Setup path to reports
         env = Environment(loader=FileSystemLoader(reports_dir))
         
-        # Get the template
-        report = env.get_template(report_name_file)
-
-        source = env.loader.get_source(env, report_name_file)[0]
-        parsed_content = env.parse(source)
+        file_path = os.path.join(reports_dir, report_name_file)
+        
+        # Controlla se è un file JSON o HTML
+        if report_name_file.endswith('.json'):
+            # Caso JSON: leggi il file e estrai l'HTML dalla chiave "html"
+            with open(file_path, 'r', encoding='utf-8') as file:
+                json_data = json.load(file)
+                html_content = json_data.get('html', '')
+            
+            # Crea il template dalla stringa HTML
+            report = env.from_string(html_content)
+            parsed_content = env.parse(html_content)
+            
+        else:
+            # Caso HTML: carica direttamente il template
+            report = env.get_template(report_name_file)
+            source = env.loader.get_source(env, report_name_file)[0]
+            parsed_content = env.parse(source)
+        
+        # Trova le variabili non dichiarate nel template
         variables = meta.find_undeclared_variables(parsed_content)
 
         # Create template data dictionary

@@ -144,6 +144,7 @@ def init():
 			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
 			html_content = html_content.replace('{{ type }}', type)
 			html_content = html_content.replace('{{ default_report_template }}', '/report/weight_in.json')
+			html_content = html_content.replace('{{ report }}', 'report_in')
 			
 			# Puoi aggiungere altre sostituzioni se servono
 			# html_content = html_content.replace('{{ altra_variabile }}', altro_valore)
@@ -173,6 +174,7 @@ def init():
 			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
 			html_content = html_content.replace('{{ type }}', type)
 			html_content = html_content.replace('{{ default_report_template }}', '/report/weight_out.json')
+			html_content = html_content.replace('{{ report }}', 'report_out')
 			
 			# Puoi aggiungere altre sostituzioni se servono
 			# html_content = html_content.replace('{{ altra_variabile }}', altro_valore)

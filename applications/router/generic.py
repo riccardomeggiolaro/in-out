@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 import libs.lb_system as lb_system
-from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
-from applications.utils.utils_auth import create_access_token
 import libs.lb_config as lb_config
 from fastapi.responses import FileResponse
 import os
@@ -12,6 +10,74 @@ from io import BytesIO
 import shutil
 from pathlib import Path
 from collections import defaultdict
+from pydantic import BaseModel, validator, field_validator, ValidationInfo
+import re
+import json
+import zipfile
+import os
+import json
+import zipfile
+import asyncio
+import aiofiles
+import time
+from io import BytesIO
+from fastapi import UploadFile, HTTPException
+
+class MarginsDTO(BaseModel):
+    top: str
+    right: str
+    bottom: str
+    left: str
+    
+    @validator('*')
+    def validate_margin(cls, v):
+        # Verifica che la stringa contenga solo numeri (interi o decimali)
+        if not re.match(r'^\d+(\.\d+)?$', v):
+            raise ValueError(f"{v} non è un numero valido.")
+        return v
+
+class ReportTemplateDTO(BaseModel):
+    canvas: str
+    html: str
+    format: str
+    margins: MarginsDTO
+    zoom: int
+    elementCounter: int
+    totalPages: int
+    globalFont: str
+
+   # Validatore per canvas, html e globalFont (stringhe non vuote)
+    @field_validator('canvas', 'html', 'globalFont')
+    @classmethod
+    def validate_non_empty_string(cls, v: str, info: ValidationInfo):
+        if not v or not isinstance(v, str):
+            raise ValueError(f"{info.field_name} deve essere una stringa non vuota.")
+        return v.strip()
+
+    @field_validator('format')
+    @classmethod
+    def validate_format(cls, v: str):
+        valid_formats = ['A4', 'A5', 'A6', 'A7', 'A8', 'Receipt80']
+        v_upper = v.upper()
+
+        # Normalizza Receipt80 a uppercase per confronto
+        normalized_formats = [f.upper() for f in valid_formats]
+
+        if v_upper not in normalized_formats:
+            raise ValueError(f"Il formato deve essere uno di: {', '.join(valid_formats)}.")
+        
+        # Restituisce il formato così com'è nella lista originale (corretto casing)
+        for original_format in valid_formats:
+            if original_format.upper() == v_upper:
+                return original_format
+
+    # Validatore per zoom, elementCounter e totalPages (numeri interi positivi)
+    @field_validator('zoom', 'elementCounter', 'totalPages')
+    @classmethod
+    def validate_positive_integer(cls, v: int, info: ValidationInfo):
+        if not isinstance(v, int) or v <= 0:
+            raise ValueError(f"{info.field_name} deve essere un intero positivo.")
+        return v
 
 class GenericRouter:
     def __init__(self):
@@ -20,12 +86,7 @@ class GenericRouter:
         # Aggiungi le rotte
         self.router.add_api_route('/list/serial-ports', self.getSerialPorts)
         self.router.add_api_route('/list/default-reports', self.listDefualtReports)
-        self.router.add_api_route('/report-in', self.saveReportIn, methods=['POST'])
-        self.router.add_api_route('/report-in', self.getReportIn)
-        self.router.add_api_route('/report-in/preview', self.getReportInPreview)
-        self.router.add_api_route('/report-out', self.saveReportOut, methods=['POST'])
-        self.router.add_api_route('/report-out', self.getReportOut)
-        self.router.add_api_route('/report-out/preview', self.getReportOutPreview)
+        self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -78,37 +139,110 @@ class GenericRouter:
             print(f"Errore durante la scansione della directory: {e}")
         
         return dict(files_tree)
+
+    async def saveReportTemplate(self, report: str, file: UploadFile):
+        if report not in ["report_in", "report_out"]:
+            raise HTTPException(status_code=400, detail="Tipo di report non valido")
         
-    async def saveReportIn(self, file: UploadFile = File(None)):
         path = lb_config.g_config['app_api']['path_report']
-        name_report_in = lb_config.g_config["app_api"]["report_in"]
-        if file and file.filename == lb_config.g_config["app_api"]["report_out"]:
-            raise HTTPException(status_code=400, detail="File with this name just exists")
+        report_file = lb_config.g_config["app_api"][report]
+        full_path = os.path.join(path, report_file)
+        
+        start_time = time.time()
+        
         try:
-            if name_report_in is not None:
-                full_path = os.path.join(path, name_report_in)
-                # Elimina il file se esiste
-                if os.path.exists(full_path):
-                    os.remove(full_path)
-                    lb_config.g_config["app_api"]["report_in"] = None
-                    lb_config.saveconfig()
-                if file is None:
-                    return {"message": "Report eliminato correttamente"}
-            if file is not None:
-                # Controlla che sia un file HTML
-                if not file.filename.lower().endswith('.html'):
-                    raise HTTPException(status_code=400, detail="Il file deve essere in formato .html")
-                if file.content_type not in ["text/html", "application/octet-stream"]:
-                    raise HTTPException(status_code=400, detail="Il file deve essere di tipo text/html")
-                lb_config.g_config["app_api"]["report_in"] = file.filename
-                lb_config.saveconfig()
-                name_report_in = lb_config.g_config["app_api"]["report_in"]
-                full_path = os.path.join(path, name_report_in)
-                with open(full_path, "wb") as buffer:
-                    shutil.copyfileobj(file.file, buffer)
-                return {"message": "Report salvato correttamente"}
+            await asyncio.to_thread(os.makedirs, os.path.dirname(full_path), exist_ok=True)
+
+            # Statistiche per il tracking
+            stats = {
+                "zip_read_time": 0,
+                "extraction_time": 0,
+                "validation_time": 0,
+                "write_time": 0,
+                "verification_time": 0
+            }
+
+            # Fase 1: Lettura streaming ottimizzata
+            phase_start = time.time()
+            
+            zip_data = await file.read()  # Leggi tutto per ZIP (necessario per struttura)
+            if len(zip_data) == 0:
+                raise HTTPException(status_code=400, detail="File vuoto ricevuto")
+                
+            stats["zip_read_time"] = time.time() - phase_start
+
+            # Fase 2: Estrazione asincrona
+            phase_start = time.time()
+            
+            async def extract_json():
+                def _extract():
+                    with zipfile.ZipFile(BytesIO(zip_data), 'r') as zip_file:
+                        files = zip_file.namelist()
+                        json_file = next((f for f in files if f.endswith('.json')), None)
+                        if not json_file:
+                            raise ValueError("Nessun file JSON nel ZIP")
+                        
+                        with zip_file.open(json_file) as jf:
+                            return jf.read().decode('utf-8')
+                
+                return await asyncio.to_thread(_extract)
+
+            json_content = await extract_json()
+            stats["extraction_time"] = time.time() - phase_start
+
+            # Fase 3: Validazione asincrona
+            phase_start = time.time()
+            
+            await asyncio.to_thread(json.loads, json_content)
+            stats["validation_time"] = time.time() - phase_start
+
+            # Fase 4: Scrittura streaming ad alta velocità
+            phase_start = time.time()
+            
+            json_bytes = json_content.encode('utf-8')
+            chunk_size = 1024 * 1024  # 1MB chunks per massima velocità
+            
+            async with aiofiles.open(full_path, 'wb') as f:
+                for i in range(0, len(json_bytes), chunk_size):
+                    chunk = json_bytes[i:i + chunk_size]
+                    await f.write(chunk)
+                await f.flush()
+                await asyncio.to_thread(os.fsync, f.fileno())
+                
+            stats["write_time"] = time.time() - phase_start
+
+            # Fase 5: Verifica finale
+            phase_start = time.time()
+            
+            def verify():
+                if not os.path.exists(full_path):
+                    raise ValueError("File non esistente")
+                size = os.path.getsize(full_path)
+                if size != len(json_bytes):
+                    raise ValueError(f"Dimensioni errate: {size} vs {len(json_bytes)}")
+                return size
+                
+            final_size = await asyncio.to_thread(verify)
+            stats["verification_time"] = time.time() - phase_start
+            total_time = time.time() - start_time
+            
+            return {
+                "message": "Report salvato con successo",
+                "status": "completed", 
+                "original_zip_size": len(zip_data),
+                "final_json_size": final_size,
+                "compression_ratio": f"{(1 - len(zip_data)/final_size)*100:.1f}%",
+                "performance": {
+                    **stats,
+                    "total_time": total_time,
+                    "throughput_mbps": (final_size / (1024*1024)) / total_time
+                }
+            }
+
+        except HTTPException:
+            raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Errore nel salvataggio/eliminazione del report: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Errore: {str(e)}")
             
     async def getReportIn(self):
         path = lb_config.g_config['app_api']['path_report']
