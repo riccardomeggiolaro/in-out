@@ -3,6 +3,7 @@ from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_p
 from applications.router.weigher.dto import DataDTO
 from applications.router.weigher.types import DataInExecution as DataInExecutionType
 from applications.router.weigher.callback_weigher import CallbackWeigher
+from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.update_access import update_access
@@ -62,8 +63,8 @@ class DataRouter(CallbackWeigher):
 					description_material = access.in_out[-1].material.description
 		if tare != "0" and data_dto.id_selected.id not in [-1, None] and weight1:
 			raise HTTPException(status_code=400, detail="E' necessario rimuovere la tara per selezionare il mezzo perchè ha già effettuato l'entrata.")
-		id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
-		type_current_access = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"]
+		id_selected = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]
+		type_current_access = weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"]
 		if data_dto.data_in_execution.vehicle.id:
 			access = get_access_by_vehicle_id_if_uncomplete(data_dto.data_in_execution.vehicle.id)
 			if access:
@@ -129,32 +130,25 @@ class DataRouter(CallbackWeigher):
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idAccess=data_dto.id_selected.id)
-				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"] = access.type.name
-				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
-				lb_config.saveconfig()
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
 		else:
 			# FUNZIONE UTILE PER GLI AGGIORNAMENTI RAPIDI DEI DATI IN ESECUZIONE DALLA DASHBAORD
 			if request and updated:
 				await self.DeleteData(instance=instance)
-				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"] = access.type.name
-				lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
-				lb_config.saveconfig()
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
 			else:
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		tare = data["data_in_execution"]["vehicle"]["tare"]
-		import libs.lb_log as lb_log
-		lb_log.warning(f"WEIGHT1: {data['id_selected']['weight1']}")
-		lb_log.warning(f"TARE: {tare}")
 		if data["id_selected"]["weight1"] is None and tare is not None:
 			r =	md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
-			lb_log.warning(r)
 		return data
 
 	async def DeleteData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		self.deleteDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		self.deleteIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["type"] = TypeAccess.MANUALLY.name
-		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["number_in_out"] = 1
-		lb_config.saveconfig()
+		weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = TypeAccess.MANUALLY.name
+		weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = 1
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)

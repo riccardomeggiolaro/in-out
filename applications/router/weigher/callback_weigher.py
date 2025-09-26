@@ -51,7 +51,7 @@ class CallbackWeigher(Functions, WebSocket):
 						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
 					self.switch_to_call_instance_weigher[instance_name][weigher_name] = 0
-				weight1 = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["weight1"]
+				weight1 = weighers_data[instance_name][weigher_name]["data"]["id_selected"]["weight1"]
 				if pesa_real_time.status == "ST" and weight1:
 					pesa_real_time.potential_net_weight = numeric_gross_weight - weight1 if numeric_gross_weight > weight1 else weight1 - numeric_gross_weight
 				else:
@@ -97,8 +97,8 @@ class CallbackWeigher(Functions, WebSocket):
 			weighing_stored_db = add_data("weighing", weighing)
 			############################
 			# SALVATAGGIO DEL MATERIALE
-			id_material = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"]["material"]["id"]
-			description_material = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"]["material"]["description"]
+			id_material = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["material"]["id"]
+			description_material = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["material"]["description"]
 			if not id_material and description_material is not None:
 				material = add_material_if_not_exists(description_material)
 				id_material = material["id"]

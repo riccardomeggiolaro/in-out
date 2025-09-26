@@ -44,46 +44,6 @@
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
                         "continuous_transmission": false,
-                        "data": {
-                            "data_in_execution": {
-                                "document_reference": null,
-                                "driver": {
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "material": {
-                                    "description": null,
-                                    "id": null
-                                },
-                                "note": null,
-                                "subject": {
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "typeSubject": "CUSTOMER",
-                                "vector": {
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "vehicle": {
-                                    "description": null,
-                                    "id": null,
-                                    "plate": null,
-                                    "tare": null
-                                }
-                            },
-                            "id_selected": {
-                                "id": null,
-                                "weight1": null
-                            },
-                            "number_in_out": 1,
-                            "type": "MANUALLY"
-                        },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 20,
                         "events": {
@@ -109,7 +69,7 @@
                         "max_weight": 60000,
                         "min_weight": 400,
                         "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
@@ -117,7 +77,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": true,
+                        "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"
                     }
                 },

@@ -15,6 +15,7 @@ from applications.router.weigher.dto import PathDTO
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 from applications.utils.utils_auth import create_access_token
 import socket
+from applications.router.weigher.manager_weighers_data import weighers_data
 
 class ConfigWeigher(CommandWeigherRouter):
     def __init__(self):
@@ -200,7 +201,7 @@ class ConfigWeigher(CommandWeigherRouter):
         weigher_name = instance.weigher_name
         is_changed_terminal = setup.terminal and setup.terminal != lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["terminal"]
         if setup.name != "undefined":
-            data = Data(**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"])
+            data = Data(**weighers_data[instance.instance_name][instance.weigher_name]["data"])
             self.deleteInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
             self.addInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=setup.name, data=data)
             lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][setup.name] = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"].pop(instance.weigher_name)

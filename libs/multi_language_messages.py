@@ -50,14 +50,14 @@ multi_language_data = {
                 "without_article": "material"
             }
         },
-        "reservation": {
+        "access": {
             "it": {
-                "with_article": "La prenotazione",
-                "without_article": "prenotazione"
+                "with_article": "L'accesso'",
+                "without_article": "accesso"
             },
             "en": {
-                "with_article": "the reservation",
-                "without_article": "reservation"
+                "with_article": "the access",
+                "without_article": "access"
             }
         },
     },

@@ -17,6 +17,7 @@ from modules.md_database.functions.get_data_by_attributes import get_data_by_att
 from applications.middleware.auth import get_user
 import libs.lb_log as lb_log
 import threading
+from applications.router.weigher.manager_weighers_data import weighers_data
 
 class CommandWeigherRouter(DataRouter, AccessRouter):
 	def __init__(self):
@@ -78,11 +79,11 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 	async def Generic(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		access_id = None
-		if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]:
+		if weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
 		else:
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-				**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
+				**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
 				"number_in_out": 1,
 				"type": "TEST",
 				"hidden": True
@@ -112,7 +113,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
 		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
-		current_id = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
+		current_id = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]
 		access = None
 		status_modope = None
 		command_executed = None
@@ -123,13 +124,13 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
 		if current_id:
 			access = get_access_by_id(current_id)
-		if access and len(access.in_out) > 0 and lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["weight1"] is not None:
+		if access and len(access.in_out) > 0 and weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["weight1"] is not None:
 			error_message = "Il mezzo ha già effettuato l'entrata."
 		elif tare != "0":
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		elif not access:
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-                	**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
+                	**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
                  	"number_in_out": 1,
                   	"type": "MANUALLY",
                    	"hidden": True
@@ -160,7 +161,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
 		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
-		idAccess = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["id"]
+		idAccess = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]
 		access = None
 		if take_of_weight_on_startup is True:
 			error_message = "Scaricare la pesa dopo l'avvio del programma"
@@ -177,16 +178,14 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					error_message = "Rimuovere la tara per effettuare l'uscita del mezzo tramite id."
 				elif len(access.in_out) == 0 and tare == "0":
 					error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
-				if len(access.in_out) > 0 and lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]["weight1"] is None and tare == "0":
+				if len(access.in_out) > 0 and weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["weight1"] is None and tare == "0":
 					error_message = "E' necessario effettuare l'entrata del mezzo"
-				# elif len(access.in_out) > 0 and not access.in_out[-1].idWeight1 and tare == "0":
-				# 	error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
 			if not access:
 				if tare == "0":
 					error_message = "Nessun id impostato per effettuare l'uscita."
 				else:
 					access = await self.addAccess(request=None, body=AddAccessDTO(**{
-						**lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["data_in_execution"], 
+						**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
 						"number_in_out": 1,
 	                  	"type": "MANUALLY",
 						"hidden": True
@@ -259,7 +258,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 						except Exception as e:
 							error_message = e.detail
 					if not error_message:
-						data = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]
+						data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
 						tare = data["data_in_execution"]["vehicle"]["tare"]
 						weight1 = data["id_selected"]["weight1"]
 						timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
@@ -272,7 +271,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 							modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 							current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 							realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-							lb_log.warning(realtime)
 							current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
 							m = modope if request is not None else current_modope
 							if modope != "PRESETTARE" and current_modope != "PRESETTARE":
@@ -327,82 +325,10 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"identify_dto": identify_dto
 		}
 
-	# async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None):
-	# 	if request is not None:
-	# 		response = get_user(token=token)
-	# 		if hasattr(response, "status_code"):
-	# 			return response
-	# 	status_modope, command_executed, error_message = 500, False, ""
-	# 	weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
-	# 	take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
-	# 	take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
-	# 	if take_of_weight_on_startup is True:
-	# 		error_message = "Scaricare la pesa dopo l'avvio del programma"
-	# 	elif take_of_weight_before_weighing is True:
-	# 		error_message = "Scaricare la pesa prima di eseguire nuova pesata"
-	# 	else:
-	# 		access = get_access_by_identify_if_uncomplete(identify=identify_dto.identify)
-	# 		realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-	# 		min_weight = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["min_weight"]
-	# 		if realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
-	# 			error_message = f"Il peso deve essere maggiore di {min_weight} kg"
-	# 		elif access:
-	# 			current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-	# 			set_data = None
-	# 			if current_weigher_data["id_selected"]["id"] != access["id"]:
-	# 				set_data = await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": access["id"]}}), instance=instance)
-	# 			data = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]
-	# 			tare = data["data_in_execution"]["vehicle"]["tare"]
-	# 			weight1 = data["id_selected"]["weight1"]
-	# 			weighing = True
-	# 			if weight1 is None and tare is not None:
-	# 				weighing = False
-	# 				timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
-	# 				time_between_actions = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"]
-	# 				while timeout > 0:
-	# 					await asyncio.sleep(time_between_actions)
-	# 					modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-	# 					current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-	# 					realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-	# 					current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
-	# 					m = modope if request is not None else current_modope
-	# 					if modope != "PRESETTARE" and current_modope != "PRESETTARE" and current_tare == str(tare):
-	# 						weighing = True
-	# 						break
-	# 					timeout -= time_between_actions
-	# 				if weighing is False:
-	# 					error_message = "Errore durante la pesatura automatica. La tara non è stata impostata correttamente."
-	# 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
-	# 			if weighing:
-	# 				realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-	# 				if realtime.status != "ST":
-	# 					error_message = "Errore durante la pesatura automatica. La pesa non è stabile."
-	# 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": error_message})
-	# 				else:
-	# 					status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
-	# 						instance_name=instance.instance_name, 
-	# 						weigher_name=instance.weigher_name, 
-	# 						modope="WEIGHING", 
-	# 						data_assigned=access["id"])
-	# 	if error_message:
-	# 		await self.DeleteData(instance=instance)
-	# 	return {
-	# 		"instance": instance,
-	# 		"command_details": {
-	# 			"status_modope": status_modope,
-	# 			"command_executed": command_executed,
-	# 			"error_message": error_message
-	# 		},
-	# 		"access_id": access["id"] if access else None
-	# 	}
-
 	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
 		instance = InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)
 		identify_dto = IdentifyDTO(identify=identify)
 
-		# Lancia un thread separato siccome viene lanciata come callback all'interno del ciclo di lettura della pesa
-		# e non può essere bloccante altrimenti rimarrebbe bloccato tutto il ciclo di lettura della pesa
-		# su PRESETTARE in attesa della pesata automatica e non eseguirebbe WEIGHING
 		def run_in_thread():
 			asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
 
@@ -411,15 +337,11 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 
 	async def Tare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
-		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
+		data_id_selected = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]
 		execution = True
 		if data_id_selected["id"] and data_id_selected["weight1"]:
-			# last_in_out = get_access_by_id(data_id_selected["id"])
-			# if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
 			error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
 			execution = False
-			# else:
-			# 	execution = True
 		if execution:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="TARE")
 		return {
@@ -433,15 +355,11 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 
 	async def PresetTare(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), tare: Optional[int] = 0):
 		status_modope, command_executed, error_message = 500, False, ""
-		data_id_selected = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["data"]["id_selected"]
+		data_id_selected = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]
 		execution = True
 		if data_id_selected["id"] and data_id_selected["weight1"]:
-			# last_in_out = get_access_by_id(data_id_selected["id"])
-			# if len(last_in_out.in_out) > 0 and not last_in_out.in_out[-1].idWeight2:
 			error_message = "Non puoi effettuare la preset tara perchè il mezzo ha già effettuato una entrata."
 			execution = False
-			# else:
-			# 	execution = True
 		if execution:
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
 		return {

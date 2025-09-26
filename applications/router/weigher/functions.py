@@ -22,7 +22,7 @@ class Functions:
 			for weigher_name, weigher in instance.nodes.items():
 				nodes_sockets[weigher_name] = {
 					"sockets": NodeConnectionManager(),
-					"data": Data(**lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"])
+					"data": Data(**{}).dict()
 				}
 				self.switch_to_call_instance_weigher[instance_name] = {weigher_name: None}
 			weighers_data[instance_name] = nodes_sockets
@@ -38,7 +38,7 @@ class Functions:
 		)
 	
 	def getData(self, instance_name: str, weigher_name: str):
-		return lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]
+		return weighers_data[instance_name][weigher_name]["data"]
 
 	def setDataInExecution(self, instance_name: str, weigher_name: str, source: DataInExecutionDTO, idAccess: int = None):
 		# Per ogni chiave dei nuovi dati passati controlla se è un oggetto o None
@@ -46,16 +46,15 @@ class Functions:
 			if isinstance(value, str) or isinstance(value, int):
 				if value in ["", "undefined", -1]:
 					value = None
-				lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] = value
-				lb_config.saveconfig()
+				weighers_data[instance_name][weigher_name]["data"]["data_in_execution"][key] = value
 			elif isinstance(value, object) and value is not None:
 				is_allow_none = False
 				is_passed_some_values = {sub_key: sub_value for sub_key, sub_value in vars(value).items() if sub_value is not None}
-				current_data_contains_id = True if "id" in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key] and lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]["id"] is not None else False
+				current_data_contains_id = True if "id" in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"][key] and weighers_data[instance_name][weigher_name]["data"]["data_in_execution"][key]["id"] is not None else False
 				if is_passed_some_values:
 					if current_data_contains_id:
 						is_allow_none = True
-						current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key]["id"]
+						current_id = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"][key]["id"]
 						if current_id:
 							unlock_record_by_attributes(key, current_id, None, weigher_name)
 					if value.id and value.id not in [None, -1]:
@@ -68,26 +67,23 @@ class Functions:
 						# Se il valore è un tipo primitivo, aggiorna il nuovo valore
 						if sub_value in ["", "undefined", -1]:
 							sub_value = None
-						lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"][key][sub_key] = sub_value
-						lb_config.saveconfig()
+						weighers_data[instance_name][weigher_name]["data"]["data_in_execution"][key][sub_key] = sub_value
 							
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteData(self, instance_name: str, weigher_name: str):
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["type"] = TypeAccess.MANUALLY.name
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["number_in_out"] = 1
-		lb_config.saveconfig()
+		weighers_data[instance_name][weigher_name]["data"]["type"] = TypeAccess.MANUALLY.name
+		weighers_data[instance_name][weigher_name]["data"]["number_in_out"] = 1
 		self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 		self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteDataInExecution(self, instance_name: str, weigher_name: str):
-		for key, value in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"].items():
+		for key, value in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].items():
 			if isinstance(value, object) and value is not None:
 				if "id" in value and value["id"] is not None:
 					unlock_record_by_attributes(key, value["id"], None, weigher_name)
 		# Per ogni chiave dei dati correnti
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["data_in_execution"] = DataInExecution(**{}).dict()
-		lb_config.saveconfig()
+		weighers_data[instance_name][weigher_name]["data"]["data_in_execution"] = DataInExecution(**{}).dict()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
 	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int, weight1: int):
@@ -98,22 +94,20 @@ class Functions:
 			if success is False:
 				message = just_locked_message("SELECT", "access", locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
 				raise HTTPException(status_code=400, detail=message)
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"] = {
+		weighers_data[instance_name][weigher_name]["data"]["id_selected"] = {
 			"id": new_id,
 			"weight1": weight1
 		}
-		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
 	def deleteIdSelected(self, instance_name: str, weigher_name: str):
-		current_id = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"]["id"]
+		current_id = weighers_data[instance_name][weigher_name]["data"]["id_selected"]["id"]
 		if current_id is not None:
 			unlock_record_by_attributes("access", current_id, None, weigher_name)
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["data"]["id_selected"] = {
+		weighers_data[instance_name][weigher_name]["data"]["id_selected"] = {
 			"id": None,
 			"weight1": None
 		}
-		lb_config.saveconfig()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def addInstanceSocket(self, instance_name: str):

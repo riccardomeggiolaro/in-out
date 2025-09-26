@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
+from applications.middleware.super_admin import is_super_admin
 from fastapi.responses import StreamingResponse
 import libs.lb_system as lb_system
 import libs.lb_config as lb_config
@@ -84,9 +85,9 @@ class GenericRouter:
         self.router = APIRouter()
 
         # Aggiungi le rotte
-        self.router.add_api_route('/list/serial-ports', self.getSerialPorts)
-        self.router.add_api_route('/list/default-reports', self.listDefualtReports)
-        self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'])
+        self.router.add_api_route('/list/serial-ports', self.getSerialPorts, dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/list/default-reports', self.listDefualtReports, dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'], dependencies=[Depends(is_super_admin)])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
