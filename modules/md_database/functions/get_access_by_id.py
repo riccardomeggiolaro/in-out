@@ -1,5 +1,5 @@
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, Access, InOut
+from modules.md_database.md_database import SessionLocal, Access, InOut, Weighing
 from typing import Union, Dict
 
 def get_access_by_id(access_id: int) -> Dict[str, Union[bool, str, dict]]:
@@ -25,8 +25,14 @@ def get_access_by_id(access_id: int) -> Dict[str, Union[bool, str, dict]]:
                 selectinload(Access.vector),
                 selectinload(Access.driver),
                 selectinload(Access.vehicle),
-                selectinload(Access.in_out).selectinload(InOut.weight1),
-                selectinload(Access.in_out).selectinload(InOut.weight2),
+                selectinload(Access.in_out).selectinload(InOut.weight1).options(
+                    selectinload(Weighing.user),
+                    selectinload(Weighing.operator)
+                ),
+                selectinload(Access.in_out).selectinload(InOut.weight2).options(
+                    selectinload(Weighing.user),
+                    selectinload(Weighing.operator)
+                ),
                 selectinload(Access.in_out).selectinload(InOut.material)
             )
             .filter(Access.id == access_id)

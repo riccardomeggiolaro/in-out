@@ -8,6 +8,10 @@ from modules.md_database.md_database import TypeAccess
 from typing import Union, Optional, List
 from datetime import datetime
 
+class DataAssignedDTO(BaseModel):
+    accessId: int
+    userId: int
+
 class DataInExecution(BaseModel):
 	typeSubject: Optional[str] = "CUSTOMER"
 	subject: SubjectDTO = SubjectDTO(**{})

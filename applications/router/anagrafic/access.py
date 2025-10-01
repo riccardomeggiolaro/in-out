@@ -18,6 +18,7 @@ from modules.md_database.functions.unlock_record_by_id import unlock_record_by_i
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.get_last_in_out_by_weigher import get_last_in_out_by_weigher
 from modules.md_database.functions.get_in_out_by_id import get_last_in_out_by_id
+from modules.md_database.functions.safe_get_attr import safe_get_attr
 from applications.utils.utils import get_query_params
 from applications.utils.utils_weigher import get_query_params_name_node, InstanceNameWeigherDTO
 from applications.utils.utils_report import find_file_in_directory
@@ -80,7 +81,32 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 del query_params["permanent"]
             if "permanentIfWeight1" in query_params:
                 del query_params["permanentIfWeight1"]
-            data, total_rows = get_list_accesses(query_params, not_closed, fromDate, toDate, limit, offset, ('date_created', 'desc'), excludeTestWeighing, permanent, True, permanentIfWeight1)
+            data, total_rows = get_list_accesses(
+                                    query_params, 
+                                    not_closed, 
+                                    fromDate, 
+                                    toDate, 
+                                    limit, 
+                                    offset, 
+                                    ('date_created', 'desc'), 
+                                    excludeTestWeighing, 
+                                    permanent, 
+                                    True, 
+                                    permanentIfWeight1,
+                                    load_subject=lb_config.g_config["app_api"]["use_anagrafic"]["subject"],
+                                    load_vector=lb_config.g_config["app_api"]["use_anagrafic"]["vector"],
+                                    load_driver=lb_config.g_config["app_api"]["use_anagrafic"]["driver"],
+                                    load_vehicle=lb_config.g_config["app_api"]["use_anagrafic"]["vehicle"],
+                                    load_operator=lb_config.g_config["app_api"]["use_anagrafic"]["operator"],
+                                    load_material=lb_config.g_config["app_api"]["use_anagrafic"]["material"],
+                                    load_weighing_pictures=lb_config.g_config["app_api"]["use_anagrafic"]["weighing_pictures"],
+                                    load_note=lb_config.g_config["app_api"]["use_anagrafic"]["note"],
+                                    load_document_reference=lb_config.g_config["app_api"]["use_anagrafic"]["document_reference"],
+                                    load_date_weight1=lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["date"],
+                                    load_pid_weight1=lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["pid"],
+                                    load_date_weight2=lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["date"],
+                                    load_pid_weight2=lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["pid"]
+                                )
             return {
                 "data": data,
                 "total_rows": total_rows,
@@ -126,7 +152,20 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 offset=offset,
                 order_by=('id', 'desc'),
                 excludeTestWeighing=excludeTestWeighing,
-                get_is_last=True
+                get_is_last=True,
+                load_subject=lb_config.g_config["app_api"]["use_anagrafic"]["subject"],
+                load_vector=lb_config.g_config["app_api"]["use_anagrafic"]["vector"],
+                load_driver=lb_config.g_config["app_api"]["use_anagrafic"]["driver"],
+                load_vehicle=lb_config.g_config["app_api"]["use_anagrafic"]["vehicle"],
+                load_operator=lb_config.g_config["app_api"]["use_anagrafic"]["operator"],
+                load_material=lb_config.g_config["app_api"]["use_anagrafic"]["material"],
+                load_weighing_pictures=lb_config.g_config["app_api"]["use_anagrafic"]["weighing_pictures"],
+                load_note=lb_config.g_config["app_api"]["use_anagrafic"]["note"],
+                load_document_reference=lb_config.g_config["app_api"]["use_anagrafic"]["document_reference"],
+                load_date_weight1=lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["date"],
+                load_pid_weight1=lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["pid"],
+                load_date_weight2=lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["date"],
+                load_pid_weight2=lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["pid"]
             )
             
             return {
@@ -223,13 +262,11 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 not_closed = True
                 del filters["access.status"]
             
-            # Handle limit and offset
             if "limit" in filters:
                 del filters["limit"]
             if "offset" in filters:
                 del filters["offset"]
                 
-            # Handle date filters
             if fromDate is not None:
                 del filters["fromDate"]
                 
@@ -237,7 +274,6 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
                 del filters["toDate"]
 
-            # Prima di chiamare get_list_in_out
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
 
@@ -249,6 +285,21 @@ class AccessRouter(WebSocket, PanelSirenRouter):
 
             if "onlyInOutWithoutWeight2" in filters:
                 del filters["onlyInOutWithoutWeight2"]
+            
+            # Leggi configurazioni
+            load_subject = lb_config.g_config["app_api"]["use_anagrafic"]["subject"]
+            load_vector = lb_config.g_config["app_api"]["use_anagrafic"]["vector"]
+            load_driver = lb_config.g_config["app_api"]["use_anagrafic"]["driver"]
+            load_vehicle = lb_config.g_config["app_api"]["use_anagrafic"]["vehicle"]
+            load_operator = lb_config.g_config["app_api"]["use_anagrafic"]["operator"]
+            load_material = lb_config.g_config["app_api"]["use_anagrafic"]["material"]
+            load_weighing_pictures = lb_config.g_config["app_api"]["use_anagrafic"]["weighing_pictures"]
+            load_note = lb_config.g_config["app_api"]["use_anagrafic"]["note"]
+            load_document_reference = lb_config.g_config["app_api"]["use_anagrafic"]["document_reference"]
+            load_date_weight1 = lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["date"]
+            load_pid_weight1 = lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["pid"]
+            load_date_weight2 = lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["date"]
+            load_pid_weight2 = lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["pid"]
                 
             data, total_rows = get_list_in_out(
                 filters=filters,
@@ -261,7 +312,20 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 offset=offset,
                 order_by=('access.date_created', 'desc'),
                 excludeTestWeighing=excludeTestWeighing,
-                filterDateAccess=filterDateAccess
+                filterDateAccess=filterDateAccess,
+                load_subject=load_subject,
+                load_vector=load_vector,
+                load_driver=load_driver,
+                load_vehicle=load_vehicle,
+                load_operator=load_operator,
+                load_material=load_material,
+                load_weighing_pictures=load_weighing_pictures,
+                load_note=load_note,
+                load_document_reference=load_document_reference,
+                load_date_weight1=load_date_weight1,
+                load_pid_weight1=load_pid_weight1,
+                load_date_weight2=load_date_weight2,
+                load_pid_weight2=load_pid_weight2
             )
 
             # Prepara lista per export
@@ -270,21 +334,53 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 weight1 = inout.weight1.weight if inout.weight1 else None
                 if weight1 is None and inout.weight2 and inout.weight2.tare > 0:
                     weight1 = inout.weight2.tare
-                in_out_list.append({
-                    "Targa": inout.access.vehicle.plate if inout.access.vehicle else None,
-                    "Cliente/Fornitore": inout.access.subject.social_reason if inout.access.subject else None,
-                    "Vettore": inout.access.vector.social_reason if inout.access.vector else None,
-                    "Note": inout.access.note,
-                    "Referenza documento": inout.access.document_reference,
-                    "Materiale": inout.material.description if inout.material else None,
-                    "Data 1": datetime.strftime(inout.weight1.date, "%d-%m-%Y %H:%M") if inout.weight1 else None,
-                    "Data 2": datetime.strftime(inout.weight2.date, "%d-%m-%Y %H:%M") if inout.weight2 else None,
-                    "Pid 1": inout.weight1.pid if inout.weight1 else None,
-                    "Pid 2": inout.weight2.pid if inout.weight2 else None,
-                    "Peso 1 (kg)": weight1,
-                    "Peso 2 (kg)": inout.weight2.weight if inout.weight2 else None,
-                    "Netto (kg)": inout.net_weight if inout.net_weight is not None else None
-                })
+                
+                # Costruisci il dizionario dinamicamente solo con i campi caricati
+                row = {}
+                
+                if load_vehicle:
+                    row["Targa"] = inout.access.vehicle.plate if inout.access.vehicle else None
+                
+                if load_subject:
+                    row["Cliente/Fornitore"] = inout.access.subject.social_reason if inout.access.subject else None
+                
+                if load_vector:
+                    row["Vettore"] = inout.access.vector.social_reason if inout.access.vector else None
+                
+                if load_note:
+                    row["Note"] = inout.access.note
+                
+                if load_document_reference:
+                    row["Referenza documento"] = inout.access.document_reference
+                
+                if load_material:
+                    row["Materiale"] = inout.material.description if inout.material else None
+
+                if load_operator:
+                    if inout.weight2 and inout.weight2.operator:
+                        row["Operatore"] = inout.weight2.operator.description
+                    elif inout.weight1 and inout.weight1.operator:
+                        row["Operatore"] = inout.weight1.operator.description
+                    else:
+                        row["Operatore"] = ""              
+                
+                if load_date_weight1:
+                    row["Data 1"] = datetime.strftime(inout.weight1.date, "%d-%m-%Y %H:%M") if inout.weight1 else None
+                
+                if load_date_weight2:
+                    row["Data 2"] = datetime.strftime(inout.weight2.date, "%d-%m-%Y %H:%M") if inout.weight2 else None
+                
+                if load_pid_weight1:
+                    row["Pid 1"] = inout.weight1.pid if inout.weight1 else None
+                
+                if load_pid_weight2:
+                    row["Pid 2"] = inout.weight2.pid if inout.weight2 else None
+                
+                row["Peso 1 (kg)"] = weight1
+                row["Peso 2 (kg)"] = inout.weight2.weight if inout.weight2 else None
+                row["Netto (kg)"] = inout.net_weight if inout.net_weight is not None else None
+                
+                in_out_list.append(row)
 
             # Crea DataFrame e esporta
             df = pd.DataFrame(in_out_list)
@@ -299,7 +395,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 headers={"Content-Disposition": "attachment; filename=pesate.xlsx"}
             )
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"{e}")
+            raise e
 
     async def exportListAccessesPdf(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), 
                                     limit: Optional[int] = None, offset: Optional[int] = None,
@@ -314,13 +410,11 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 not_closed = True
                 del filters["access.status"]
             
-            # Handle limit and offset
             if "limit" in filters:
                 del filters["limit"]
             if "offset" in filters:
                 del filters["offset"]
                 
-            # Handle date filters
             if fromDate is not None:
                 del filters["fromDate"]
                 
@@ -328,7 +422,6 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
                 del filters["toDate"]
 
-            # Prima di chiamare get_list_in_out
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
 
@@ -341,6 +434,21 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             if "onlyInOutWithoutWeight2" in filters:
                 del filters["onlyInOutWithoutWeight2"]
 
+            # Leggi configurazioni
+            load_subject = lb_config.g_config["app_api"]["use_anagrafic"]["subject"]
+            load_vector = lb_config.g_config["app_api"]["use_anagrafic"]["vector"]
+            load_driver = lb_config.g_config["app_api"]["use_anagrafic"]["driver"]
+            load_vehicle = lb_config.g_config["app_api"]["use_anagrafic"]["vehicle"]
+            load_operator = lb_config.g_config["app_api"]["use_anagrafic"]["operator"]
+            load_material = lb_config.g_config["app_api"]["use_anagrafic"]["material"]
+            load_weighing_pictures = lb_config.g_config["app_api"]["use_anagrafic"]["weighing_pictures"]
+            load_note = lb_config.g_config["app_api"]["use_anagrafic"]["note"]
+            load_document_reference = lb_config.g_config["app_api"]["use_anagrafic"]["document_reference"]
+            load_date_weight1 = lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["date"]
+            load_pid_weight1 = lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["pid"]
+            load_date_weight2 = lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["date"]
+            load_pid_weight2 = lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["pid"]
+
             data, total_rows = get_list_in_out(
                 filters=filters,
                 not_closed=not_closed,
@@ -352,35 +460,92 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 offset=offset,
                 order_by=('access.date_created', 'desc'),
                 excludeTestWeighing=excludeTestWeighing,
-                filterDateAccess=filterDateAccess
+                filterDateAccess=filterDateAccess,
+                load_subject=load_subject,
+                load_vector=load_vector,
+                load_driver=load_driver,
+                load_vehicle=load_vehicle,
+                load_operator=load_operator,
+                load_material=load_material,
+                load_weighing_pictures=load_weighing_pictures,
+                load_note=load_note,
+                load_document_reference=load_document_reference,
+                load_date_weight1=load_date_weight1,
+                load_pid_weight1=load_pid_weight1,
+                load_date_weight2=load_date_weight2,
+                load_pid_weight2=load_pid_weight2
             )
 
             # Create PDF with smaller margins
             buffer = BytesIO()
             doc = SimpleDocTemplate(buffer, 
-                                  pagesize=A4, 
-                                  leftMargin=15,  # Reduced margins
-                                  rightMargin=15,
-                                  topMargin=15,
-                                  bottomMargin=15)
+                                pagesize=A4, 
+                                leftMargin=15,
+                                rightMargin=15,
+                                topMargin=15,
+                                bottomMargin=15)
             story = []
 
             # Add title with smaller spacing
             styles = getSampleStyleSheet()
-            title = Paragraph("Lista Pesate", styles['Heading2'])  # Smaller heading
+            title = Paragraph("Lista Pesate", styles['Heading2'])
             story.append(title)
-            story.append(Spacer(1, 0.2*inch))  # Reduced spacing
+            story.append(Spacer(1, 0.2*inch))
 
             # Define table properties with smaller font
-            common_font_size = 6  # Reduced font size
+            common_font_size = 6
             header_color = colors.grey
 
-            # Define headers and column widths
-            headers = ['Targa', 'Cliente/Forn.', 'Vettore', 'Note', 'Ref.Doc', 'Materiale',
-                      'Data 1', 'Data 2', 'Pid 1', 'Pid 2', 'Peso 1 (kg)', 'Peso 2 (kg)', 'Netto (kg)']
+            # Costruisci headers e colonne dinamicamente
+            headers = []
+            col_widths = []
             
-            # Updated widths to accommodate the new material column (reduced some widths to maintain A4 fit)
-            col_widths = [30, 55, 55, 55, 46, 46, 46, 46, 46, 46, 38, 38, 38]  
+            if load_vehicle:
+                headers.append('Targa')
+                col_widths.append(30)
+            
+            if load_subject:
+                headers.append('Cliente/Forn.')
+                col_widths.append(55)
+            
+            if load_vector:
+                headers.append('Vettore')
+                col_widths.append(55)
+            
+            if load_note:
+                headers.append('Note')
+                col_widths.append(55)
+            
+            if load_document_reference:
+                headers.append('Ref.Doc')
+                col_widths.append(46)
+            
+            if load_material:
+                headers.append('Materiale')
+                col_widths.append(46)
+            
+            if load_operator:
+                headers.append('Operatore')
+                col_widths.append(46)
+            
+            if load_date_weight1:
+                headers.append('Data 1')
+                col_widths.append(46)
+            
+            if load_date_weight2:
+                headers.append('Data 2')
+                col_widths.append(46)
+            
+            if load_pid_weight1:
+                headers.append('Pid 1')
+                col_widths.append(46)
+            
+            if load_pid_weight2:
+                headers.append('Pid 2')
+                col_widths.append(46)
+            
+            headers.extend(['Peso 1 (kg)', 'Peso 2 (kg)', 'Netto (kg)'])
+            col_widths.extend([38, 38, 38])
 
             # Create table style with compact formatting
             table_style = TableStyle([
@@ -389,9 +554,9 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),  # Reduced padding
-                ('TOPPADDING', (0, 0), (-1, -1), 4),     # Reduced padding
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),  # Thinner grid
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('WORDWRAP', (0, 0), (-1, -1), True),
             ])
@@ -403,26 +568,52 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 if weight1 is None and inout.weight2 and inout.weight2.tare > 0:
                     weight1 = inout.weight2.tare
 
-                # Use shorter date format
-                date1 = datetime.strftime(inout.weight1.date, "%d-%m-%y %H:%M") if inout.weight1 else None
-                date2 = datetime.strftime(inout.weight2.date, "%d-%m-%y %H:%M") if inout.weight2 else None
+                row = []
+                
+                if load_vehicle:
+                    row.append(str(inout.access.vehicle.plate if inout.access.vehicle else '')[:6])
+                
+                if load_subject:
+                    row.append(str(inout.access.subject.social_reason if inout.access.subject else '')[:18])
+                
+                if load_vector:
+                    row.append(str(inout.access.vector.social_reason if inout.access.vector else '')[:18])
+                
+                if load_note:
+                    row.append(str(inout.access.note or '')[:18])
+                
+                if load_document_reference:
+                    row.append(str(inout.access.document_reference or '')[:12])
+                
+                if load_material:
+                    row.append(str(inout.material.description if inout.material else '')[:12])
 
-                # Update row data to include material
-                row = [
-                    str(inout.access.vehicle.plate if inout.access.vehicle else '')[:6],      # Targa (32)
-                    str(inout.access.subject.social_reason if inout.access.subject else '')[:18],  # Cliente (50)
-                    str(inout.access.vector.social_reason if inout.access.vector else '')[:18],    # Vettore (50)
-                    str(inout.access.note or '')[:18],                                             # Note (50)
-                    str(inout.access.document_reference or '')[:12],                               # Ref.Doc (45)
-                    str(inout.material.description if inout.material else '')[:12],               # Materiale (45)
-                    date1,                                                                              # Data 1 (47)
-                    date2,                                                                              # Data 2 (47)
-                    str(inout.weight1.pid if inout.weight1 else '')[:12],                              # P1 (43)
-                    str(inout.weight2.pid if inout.weight2 else '')[:12],                              # P2 (43)
-                    str(weight1) if weight1 is not None else '',                                        # Peso 1 (28)
-                    str(inout.weight2.weight) if inout.weight2 else '',                                # Peso 2 (28)
-                    str(inout.net_weight) if inout.net_weight is not None else ''                      # Netto (28)
-                ]
+                if load_operator:
+                    if inout.weight2 and inout.weight2.operator:
+                        row.append(str(inout.weight2.operator.description)[:12])
+                    elif inout.weight1 and inout.weight1.operator:
+                        row.append(str(inout.weight1.operator.description)[:12])
+                    else:
+                        row.append('')
+                
+                if load_date_weight1:
+                    date1 = datetime.strftime(inout.weight1.date, "%d-%m-%y %H:%M") if inout.weight1 else ''
+                    row.append(date1)
+                
+                if load_date_weight2:
+                    date2 = datetime.strftime(inout.weight2.date, "%d-%m-%y %H:%M") if inout.weight2 else ''
+                    row.append(date2)
+                
+                if load_pid_weight1:
+                    row.append(str(inout.weight1.pid if inout.weight1 else '')[:12])
+                
+                if load_pid_weight2:
+                    row.append(str(inout.weight2.pid if inout.weight2 else '')[:12])
+                
+                row.append(str(weight1) if weight1 is not None else '')
+                row.append(str(inout.weight2.weight) if inout.weight2 else '')
+                row.append(str(inout.net_weight) if inout.net_weight is not None else '')
+                
                 table_data.append(row)
 
             # Create and style table

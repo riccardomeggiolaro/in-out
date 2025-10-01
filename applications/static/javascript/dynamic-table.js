@@ -495,11 +495,11 @@ function createRow(table, columns, item, idInout) {
     const permanentAccess = document.createElement("span");
     permanentAccess.textContent = "⭐";
     if (itemName !== "pid") {
-        if (item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
+        if (itemName === "access" && item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
         if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
-        else if (item.in_out && item.in_out.length === 0) actionsCell.appendChild(deleteButton);
-        else if (!idInout && !item.in_out) actionsCell.appendChild(deleteButton);
+        else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0) actionsCell.appendChild(deleteButton);
+        else if (!idInout && !item.in_out && !item.weighings) actionsCell.appendChild(deleteButton);
         if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
     }
     row.appendChild(actionsCell);
@@ -750,6 +750,12 @@ function editRow(item) {
             console.log(currentIdInOut, current_in_out);
             console.log(item);
             item.material = current_in_out ? current_in_out.material : '';
+            if (item.in_out.length > 0) {
+                const in_out = item.in_out.find(obj => obj.id === currentIdInOut);
+                item.operator1 = in_out.weight1 ? in_out.weight1.operator : null;
+                item.operator2 = in_out.weight2 ? in_out.weight2.operator : null;
+            }
+            console.log(item);
         }
         document.getElementById('overlay').classList.add('active');
         editPopup.classList.add('active');
@@ -759,6 +765,7 @@ function editRow(item) {
         for (let key in item) {
             let annidate_key = `#${key}`;
             let annidate_value = item[key];
+            console.log(annidate_key);
             if (typeof annidate_value === 'object' && annidate_value !== null && !Array.isArray(annidate_value)) {
                 Object.entries(annidate_value).forEach(([sub_key, sub_value]) => {
                     annidate_key = `#${key}\\.${sub_key}`;
@@ -817,7 +824,7 @@ function editRow(item) {
         }
         triggerEventsForAll('.id');
     }
-    if (item.accesses ? item.accesses.length > 0 : item.in_out.length > 0) {
+    if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : item.weighings.length > 0)) {
         const accesses_or_weighings = item.accesses ? "prenotazioni" : "pesate";
         confirm_exec_funct = funct;
         document.querySelector('#confirm-title').textContent = "Attenzione!";
@@ -878,7 +885,7 @@ function deleteRow(item) {
             }
         }
     }
-    if (item.accesses ? item.accesses.length > 0 : item.in_out.length > 0 && !canAlwaysDelete) {
+    if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : item.weighings.length > 0) && !canAlwaysDelete) {
         const accesses_or_weighings = item.accesses ? "prenotazioni" : "pesate";
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').textContent = `

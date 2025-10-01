@@ -7,3 +7,4 @@ class Weighing(BaseModel):
     weight: Optional[Union[int, float]] = None
     pid: Optional[str] = None
     weigher: Optional[str] = None
+    # operator: Optional[str] = None

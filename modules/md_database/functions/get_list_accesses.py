@@ -1,14 +1,35 @@
 from sqlalchemy import func
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, defer
 from sqlalchemy.sql import exists, and_, or_
-from modules.md_database.md_database import SessionLocal, InOut, Access, AccessStatus, TypeAccess, Weighing
+from modules.md_database.md_database import SessionLocal, InOut, Access, AccessStatus, TypeAccess, Weighing, User
 from datetime import datetime, date
 
-def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None, limit=None, offset=None, order_by=None, exclude_test_access=False, permanent=None, get_is_last_for_vehicle=False, permanentIfWeight1=False):
-    """
-    Gets a list of accesses with optional filtering for incomplete accesses
-    and additional filters on any access field or related entities.
-    """
+def get_list_accesses(
+    filters=None,
+    not_closed=False,
+    fromDate=None,
+    toDate=None,
+    limit=None,
+    offset=None,
+    order_by=None,
+    exclude_test_access=False,
+    permanent=None,
+    get_is_last_for_vehicle=False,
+    permanentIfWeight1=False,
+    load_subject=True,
+    load_vector=True,
+    load_driver=True,
+    load_vehicle=True,
+    load_operator=True,
+    load_material=True,
+    load_weighing_pictures=True,
+    load_note=True,
+    load_document_reference=True,
+    load_date_weight1=True,
+    load_pid_weight1=True,
+    load_date_weight2=True,
+    load_pid_weight2=True
+):
     session = SessionLocal()
     try:
         weighing_count_subquery = (
@@ -22,26 +43,60 @@ def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None
 
         query = session.query(Access)
 
-        query = query.options(
-            selectinload(Access.subject),
-            selectinload(Access.vector),
-            selectinload(Access.driver),
-            selectinload(Access.vehicle),
-            selectinload(Access.in_out)
-                .selectinload(InOut.weight1)
-                .selectinload(Weighing.weighing_pictures),
-            selectinload(Access.in_out)
-                .selectinload(InOut.weight2)
-                .selectinload(Weighing.weighing_pictures),
-            selectinload(Access.in_out).selectinload(InOut.material)
-        )
+        access_options = []
+        if load_subject:
+            access_options.append(selectinload(Access.subject))
+        if load_vector:
+            access_options.append(selectinload(Access.vector))
+        if load_driver:
+            access_options.append(selectinload(Access.driver))
+        if load_vehicle:
+            access_options.append(selectinload(Access.vehicle))
+        if not load_note:
+            access_options.append(defer(Access.note))
+        if not load_document_reference:
+            access_options.append(defer(Access.document_reference))
+
+        weighing1_options = [
+            selectinload(Weighing.user).load_only(User.username, User.description)
+        ]
+        if load_weighing_pictures:
+            weighing1_options.append(selectinload(Weighing.weighing_pictures))
+        if load_operator:
+            weighing1_options.append(selectinload(Weighing.operator))
+        if not load_date_weight1:
+            weighing1_options.append(defer(Weighing.date))
+        if not load_pid_weight1:
+            weighing1_options.append(defer(Weighing.pid))
+
+        weighing2_options = [
+            selectinload(Weighing.user).load_only(User.username, User.description)
+        ]
+        if load_weighing_pictures:
+            weighing2_options.append(selectinload(Weighing.weighing_pictures))
+        if load_operator:
+            weighing2_options.append(selectinload(Weighing.operator))
+        if not load_date_weight2:
+            weighing2_options.append(defer(Weighing.date))
+        if not load_pid_weight2:
+            weighing2_options.append(defer(Weighing.pid))
+
+        inout_options = [
+            selectinload(InOut.weight1).options(*weighing1_options),
+            selectinload(InOut.weight2).options(*weighing2_options)
+        ]
+        if load_material:
+            inout_options.append(selectinload(InOut.material))
+
+        access_options.append(selectinload(Access.in_out).options(*inout_options))
+
+        query = query.options(*access_options)
 
         query = query.outerjoin(
             weighing_count_subquery,
             Access.id == weighing_count_subquery.c.idAccess
         )
 
-        # Filtri generici
         if filters:
             for key, value in filters.items():
                 if "." in key:
@@ -72,11 +127,9 @@ def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None
 
         query = query.filter(Access.hidden == False)
 
-        # Filtro per status NOT_CLOSED
         if not_closed:
             query = query.filter(Access.status != AccessStatus.CLOSED)
 
-        # Filtro per exclude_test_access
         if exclude_test_access:
             query = query.filter(Access.type != TypeAccess.TEST.name)
 
@@ -86,7 +139,6 @@ def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None
             elif permanent is False:
                 query = query.filter(Access.number_in_out != None)
 
-        # Filtro per data di inizio
         if fromDate:
             if isinstance(fromDate, str):
                 try:
@@ -122,7 +174,6 @@ def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None
                 )
             )
 
-        # Filtro per data di fine
         if toDate:
             if isinstance(toDate, str):
                 try:
@@ -141,10 +192,8 @@ def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None
             if isinstance(toDate, (datetime, date)):
                 query = query.filter(Access.date_created <= toDate)
 
-        # Conta totale risultati
         total_rows = query.count()
 
-        # Ordinamento
         if order_by:
             column_name, direction = order_by
             if not hasattr(Access, column_name):
@@ -159,7 +208,6 @@ def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None
         else:
             query = query.order_by(Access.date_created.desc())
 
-        # Paginazione
         if limit is not None:
             query = query.limit(limit)
         if offset is not None:
@@ -167,7 +215,6 @@ def get_list_accesses(filters=None, not_closed=False, fromDate=None, toDate=None
 
         accesses = query.all()
         if get_is_last_for_vehicle:
-            # Forza la valutazione della hybrid property
             for res in accesses:
                 res.__dict__['is_latest_for_vehicle'] = res.is_latest_for_vehicle
                 for index, in_out in enumerate(res.in_out):

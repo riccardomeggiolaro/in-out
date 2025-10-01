@@ -66,10 +66,6 @@ let confirmWeighing;
 let access_id;
 
 const buttons = document.querySelectorAll("button");
-const myNumberInput = document.getElementById("myNumberInput");
-const container = document.querySelector('.ins');
-const listIn = document.querySelector('.list-in');
-const reprint = document.querySelector('#reprint');
 const selectedIdWeigher = document.querySelector('.list-weigher');
 const tareButton = document.getElementById('tareButton');
 const zeroButton = document.getElementById('zeroButton');
@@ -85,11 +81,8 @@ const maxWeight = document.getElementById('maxWeight');
 const division = document.getElementById('division');
 const cams = document.querySelector('#cams');
 const reconnectionButton = document.getElementById('reconnectionButton');
-// Usa un MutationObserver per rilevare i cambiamenti nei contenuti
-const observer = new MutationObserver(() => updateStyle());
 
 document.addEventListener('DOMContentLoaded', async () => {
-    updateStyle();
     fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(res => {
@@ -123,20 +116,11 @@ selectedIdWeigher.addEventListener('change', (event) => {
     if (currentWeigherPath) {
         closeWebSocket();
         document.getElementById('netWeight').innerText = "N/A";
-        document.getElementById('uniteMisure').innerText = "N/A";
-        document.getElementById('tare').innerText = "N/A";
-        document.getElementById('status').innerText = "N/A";
         connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime)
         getInstanceWeigher(currentWeigherPath)
-        getData(currentWeigherPath)
         .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
-        .then(() => populateListIn());
     }
 });
-
-// Aggiorna lo stile quando la finestra viene ridimensionata
-window.addEventListener('resize', updateStyle);
-observer.observe(listIn, { childList: true, subtree: true });
 
 // Aggiungi gli event listener per gli eventi online e offline
 window.addEventListener('online', updateOnlineStatus);
@@ -155,13 +139,6 @@ window.onclick = function(event) {
     }
 };
 
-function updateStyle() {
-    // Confronta l'altezza della lista e del contenitore
-    if (listIn.scrollHeight > container.clientHeight) {
-        listIn.style.justifyContent = 'flex-start'; // Rimuovi il centraggio
-    }
-}
-
 async function getInstanceWeigher(path) {
     await fetch(`/api/config-weigher/instance/node${path}`)
     .then(res => {
@@ -169,127 +146,6 @@ async function getInstanceWeigher(path) {
             alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
         }
         return res.json();        
-    })
-    .then(res => {
-        const obj = Object.values(res)[0];
-        firmware.textContent = obj.terminal_data.firmware;
-        firmwareValue = obj.terminal_data.firmware;
-        modelName.textContent = obj.terminal_data.model_name;
-        modelNameValue = obj.terminal_data.model_name;
-        serialNumber.textContent = obj.terminal_data.serial_number;
-        serialNumberValue = obj.terminal_data.serial_number;
-        minWeight.textContent = obj.min_weight;
-        minWeightValue = obj.min_weight;
-        maxWeight.textContent = obj.max_weight;
-        maxWeightValue = obj.max_weight;
-        division.textContent = obj.division;
-        divisionValue = obj.division;
-        maxThesholdValue = obj.max_theshold;
-        if (obj.printer_name === null || !obj.events.weighing.report.in && !obj.events.weighing.report.out) reprint.style.display = 'none';
-        else reprint.style.display = 'block';
-    })
-    .catch(error => console.error('Errore nella fetch:', error));
-}
-
-async function getData(path) {
-    await fetch(`/api/data${path}`)
-    .then(res => {
-        if (res.status === 404) {
-            alert("La pesa selezionata non è presente nella configurazione perché potrebbe essere stata cancellata, è necessario aggiornare la pagina.");
-        }
-        return res.json();
-    })
-    .then(res => {
-        const type = res.type;
-        const number_in_out = res.number_in_out;
-        const weight1 = res.id_selected.weight1;
-        dataInExecution = res["data_in_execution"];
-        const obj = res["data_in_execution"];
-        selectedIdVehicle = obj.vehicle.id;
-        selectedIdTypeSubject = obj.typeSubject;
-        selectedIdSubject = obj.subject.id;
-        selectedIdVector = obj.vector.id;
-        selectedIdMaterial = obj.material.id;
-        console.log(selectedIdWeight)
-        if (type === "RESERVATION" && number_in_out === null && weight1 === null) {
-            obj.vehicle.plate += "⭐";
-            document.querySelector('.containerPlateVehicle').classList.add('permanent');
-        } else {
-            document.querySelector('.containerPlateVehicle').classList.remove('permanent');
-        }
-        document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-        document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
-        document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
-        document.querySelector('#currentSocialReasonVector').value = obj.vector.social_reason ? obj.vector.social_reason : '';
-        document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
-        document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
-        document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
-        selectedIdWeight = res["id_selected"]["id"];
-        if (res.id_selected.id !== null) {
-            // Seleziona tutti i pulsanti e gli input
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            // Disabilita ogni elemento trovato
-            buttonsAndInputs.forEach(element => {
-                element.disabled = true;
-            });
-        }
-    })
-    .catch(error => console.error('Errore nella fetch:', error));
-}
-
-async function populateListIn() {
-    const listIn = document.querySelector('.list-in');
-
-    await fetch('/api/anagrafic/access/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
-    .then(res => res.json())
-    .then(data => {
-        listIn.innerHTML = '';
-        data.data.forEach(item => {
-            const li = document.createElement('li');
-            if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
-            let content = item.id;
-            if (item.in_out.length > 0) {
-                if (item.in_out[0].idWeight1) content = item.in_out[0].weight1.pid;
-                else if (item.in_out[0].idWeight2) content = item.in_out[0].weight2.pid;
-            }
-            if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
-            li.textContent = content;
-            li.setAttribute('data-id', item.id);
-            if (item.id == selectedIdWeight) li.classList.add('selected');
-            li.addEventListener('click', async () => {
-                let obj =  {
-                    data_in_execution: {                                    
-                    },
-                    id_selected: {
-                        id: item.id
-                    }
-                }
-                if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                await fetch(`/api/data${currentWeigherPath}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(obj)
-                })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-                    else numberInOutSelectedIdWeight = item.in_out.length;
-                });
-            })
-            listIn.appendChild(li);
-        })
-    })
-    .then(() => {
-        const selected = document.querySelector('.list-in li.selected');
-        if (selected) {
-            selected.scrollIntoView({
-                behavior: 'instant',
-                block: 'nearest',
-                inline: 'start'
-            });
-        }
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -303,70 +159,6 @@ function scrollToSelectedItem() {
             inline: 'start'
         });
     }
-}
-
-function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
-    let requestBody;
-    const suggestionsList = document.getElementById(showList);
-    if (suggestionsList && suggestionsList.children.length === 1 && suggestionsList.children[0].textContent.replace("⭐", "") === value) {
-        id = suggestionsList.children[0].dataset.id;
-        requestBody = JSON.stringify({
-            data_in_execution: {
-                [anagrafic]: {
-                    id
-                }
-            }
-        });
-    } else if (key) {
-        const data = {
-            data_in_execution: {
-                [anagrafic]: {
-                    [key]: value
-                }
-            }
-        }
-        if (key !== "id" && value === "") {
-            data.data_in_execution[anagrafic]["id"] = -1;
-        }
-        requestBody = JSON.stringify(data);
-    } else {
-        requestBody = JSON.stringify({
-            data_in_execution: {
-                [anagrafic]: value
-            }
-        })
-    }
-    fetch(`/api/data${currentWeigherPath}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: requestBody
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-        else closePopup();
-    });
-}
-
-function deleteIdSelected() {
-    fetch(`/api/data${currentWeigherPath}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            "id_selected": {
-                "id": -1
-            }
-        })
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-        else document.querySelector('.containerPlateVehicle').classList.remove('permanent');
-    });
 }
 
 function isDate(string) {
@@ -509,28 +301,6 @@ function updateOnlineStatus() {
     }
 }
 
-myNumberInput.onkeydown = function(event) {
-    // Controlla se il tasto premuto è una freccia, Backspace, o altre combinazioni speciali
-    const validKeys = [
-        'Backspace', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Control', 'Meta', 'Tab'
-    ];
-
-    // Permetti la selezione di tutto (Ctrl + A)
-    if (event.ctrlKey && event.key === 'a') {
-        return; // Non fare nulla, consenti l'azione
-    }
-
-    // Permetti anche la combinazione Ctrl (per altri scopi)
-    if (event.ctrlKey || event.metaKey) {
-        return; // Non fare nulla, consenti l'azione
-    }
-
-    // Controlla se il tasto è un numero o una chiave valida
-    if (isNaN(event.key) && !validKeys.includes(event.key)) {
-        event.preventDefault(); // Blocca il tasto
-    }
-};
-
 // script.js
 function showSnackbarDashboard(message) {
     const snackbar = document.getElementById("snackbar-dashboard");
@@ -577,7 +347,6 @@ function closePopup() {
         // Aspetta il tempo di transizione prima di nascondere il popup
         setTimeout(() => {
             popup.style.display = "none"; // Nascondi il popup
-            myNumberInput.value = "";
             buttons.forEach(button => button.disabled = false);
         }, 300); // Tempo della transizione
     }
@@ -632,8 +401,6 @@ function attemptReconnect() {
     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
     getInstanceWeigher(currentWeigherPath);
-    getData(currentWeigherPath);
-    populateListIn(currentWeigherPath);
 }
 
 function closeWebSocket() {
@@ -662,17 +429,13 @@ function updateUIRealtime(e) {
         }                    
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight != "") {
-            let message = `Pesata eseguita!`;
-            if (obj.data_assigned.userId) {
-                obj.data_assigned.userId = JSON.parse(obj.data_assigned.userId);
-                message += ` Operatore: ${obj.data_assigned.userId.username || obj.data_assigned.userId.description}.`;
-            }
+            let message = `Pesata eseguita! Bilancia: ${obj.weigher_name}.`;
             if (obj.weight_executed.pid != "") {
                 message += ` Pid: ${obj.weight_executed.pid}`;
-                obj.data_assigned.accessId = JSON.parse(obj.data_assigned.accessId);
-                if (obj.data_assigned.accessId.id === access_id) {
-                    const id_in_out = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["id"]
-                    const typeOfWeight = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["idWeight2"] === null ? "in" : "out";
+                obj.data_assigned = JSON.parse(obj.data_assigned);
+                if (obj.data_assigned.id === access_id) {
+                    const id_in_out = obj.data_assigned.in_out[obj.data_assigned.in_out.length-1]["id"]
+                    const typeOfWeight = obj.data_assigned.in_out[obj.data_assigned.in_out.length-1]["idWeight2"] === null ? "in" : "out";
                     const inOutPdf = instances[obj.instance_name]["nodes"][obj.weigher_name]["events"]["weighing"]["report"][typeOfWeight];
                     if (inOutPdf) {
                         fetch(`/api/anagrafic/access/in-out/pdf/${id_in_out}`)
@@ -700,7 +463,6 @@ function updateUIRealtime(e) {
                 }
             }
             showSnackbar("snackbar", message, 'rgb(208, 255, 208)', 'black');
-            populateListIn();
         } else { 
             showSnackbar("snackbar", "Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
@@ -712,134 +474,7 @@ function updateUIRealtime(e) {
     } else if (obj.tare) {
         data_weight_realtime = obj;
         net = [undefined, '0'].includes(data_weight_realtime.tare);
-        document.getElementById('tare').innerText = data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : 'N/A';
         document.getElementById('netWeight').innerText = data_weight_realtime.net_weight !== undefined ? data_weight_realtime.net_weight : "N/A";
-        document.getElementById('uniteMisure').innerText = data_weight_realtime.unite_measure !== undefined ? data_weight_realtime.unite_measure : 'N/A';
-        document.getElementById('status').innerText = data_weight_realtime.status !== undefined ? data_weight_realtime.status : 'N/A';
-        document.getElementById('potential_net_weight').innerHTML = data_weight_realtime.potential_net_weight !== null ? `NET ${data_weight_realtime.potential_net_weight}` : !net ? 'NET' : '';
-        if (!net) {
-            document.getElementById('potential_net_weight').style.top = '3rem';
-            document.getElementById('potential_net_weight').style.fontWeight = 'bold';
-        } else {
-            document.getElementById('potential_net_weight').style.top = '0';
-            document.getElementById('potential_net_weight').style.fontWeight = 'normal';
-        }
-        const numeric = isNumeric(data_weight_realtime.gross_weight);
-        const gross_weight = Number(data_weight_realtime.gross_weight);
-        const tare_weight = Number(data_weight_realtime.tare);
-        // if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
-        //     if (tare_weight == 0 && selectedIdWeight === null) {
-        //         tareButton.disabled = false;
-        //         // zeroButton.disabled = true;
-        //         presetTareButton.disabled = false;
-        //         inButton.disabled = false;
-        //         printButton.disabled = false;
-        //     } else if (tare_weight !== 0 && selectedIdWeight !== null) {
-        //         tareButton.disabled = true;
-        //         // zeroButton.disabled = true;
-        //         presetTareButton.disabled = true;
-        //         inButton.disabled = true;
-        //         printButton.disabled = true;
-        //     } else {
-        //         tareButton.disabled = false;
-        //         // zeroButton.disabled = true;
-        //         presetTareButton.disabled = false;
-        //         inButton.disabled = true;
-        //         outButton.disabled = false;
-        //         if (selectedIdWeight !== null) {
-        //             printButton.disabled = true;
-        //         } else {
-        //             printButton.disabled = false;
-        //         }
-        //     }
-        // } else if (numeric && minWeightValue >= gross_weight) {
-        //     tareButton.disabled = true;
-        //     // zeroButton.disabled = false;
-        //     presetTareButton.disabled = false;
-        //     inButton.disabled = true;
-        //     outButton.disabled = true;
-        // } else {
-        //     tareButton.disabled = true;
-        //     // zeroButton.disabled = true;
-        //     presetTareButton.disabled = true;
-        //     inButton.disabled = true;
-        //     outButton.disabled = true;
-        // }
-    } else if (obj.data_in_execution) {
-        dataInExecution = obj.data_in_execution;
-        selectedIdVehicle = obj.data_in_execution.vehicle.id;
-        selectedIdTypeSubject = obj.data_in_execution.typeSubject;
-        selectedIdSubject = obj.data_in_execution.subject.id;
-        selectedIdVector = obj.data_in_execution.vector.id;
-        selectedIdMaterial = obj.data_in_execution.material.id;
-        if (obj.data_in_execution.typeSubject === 'Cliente') obj.data_in_execution.typeSubject = 'CUSTOMER';
-        else if (obj.data_in_execution.typeSubject === 'Fornitore') obj.data_in_execution.typeSubject = 'SUPPLIER';
-        if (obj.type === "RESERVATION" && obj.number_in_out === null && obj.id_selected.weight1 === null) {
-            obj.data_in_execution.vehicle.plate += "⭐";
-            document.querySelector('.containerPlateVehicle').classList.add('permanent');
-        } else {
-            document.querySelector('.containerPlateVehicle').classList.remove('permanent');
-        }
-        document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
-        document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
-        document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
-        document.querySelector('#currentSocialReasonVector').value = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
-        document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
-        document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
-        document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
-        if (obj.type === "MANUALLY") {
-            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-                element.disabled = false;
-            });
-        } else {
-            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-                element.disabled = true;
-            });
-        }
-        if (obj.id_selected.id != selectedIdWeight) {
-            if (selectedIdWeight !== null) {
-                const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
-                if (previouslySelected) previouslySelected.classList.remove('selected');
-            }
-            selectedIdWeight = obj.id_selected.id;                    
-            if (selectedIdWeight !== null) {
-                const newlySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
-                if (newlySelected) newlySelected.classList.add('selected');
-            }
-            const selected = document.querySelector('.list-in li.selected');
-            if (selected) {
-                selected.scrollIntoView({
-                    behavior: 'instant',
-                    block: 'nearest',
-                    inline: 'start'
-                });
-            }
-        } else {
-            populateListIn();
-        }
-        // if (obj.id_selected.id === null) {
-        //     // Seleziona tutti i pulsanti e gli input
-        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-        //     // Disabilita ogni elemento trovato
-        //     buttonsAndInputs.forEach(element => {
-        //         element.disabled = false;
-        //     });
-        // } else {
-        //     // Seleziona tutti i pulsanti e gli input
-        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-        //     // Disabilita ogni elemento trovato
-        //     buttonsAndInputs.forEach(element => {
-        //         element.disabled = true;
-        //     });
-        // }
-    } else if (obj.access) {
-        populateListIn();
-    } else if (obj.message) {
-        showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
-    } else if (obj.error_message) {
-        showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
-    } else if (obj.cam_message) {
-        showSnackbar("snackbar2", obj.cam_message, 'white', 'black');
     }
 }
 
@@ -937,7 +572,6 @@ async function handleZero() {
 
 async function handlePTara() {
     let preset_tare = 0;
-    if (myNumberInput.value) preset_tare = myNumberInput.value;
     const r = await fetch(`${pathname}/api/command-weigher/tare/preset${currentWeigherPath}&tare=${preset_tare}`)
     .then(res => {
         closePopup();

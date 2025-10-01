@@ -3,6 +3,12 @@ from pydantic import BaseModel, validator
 from typing import Optional
 from libs.lb_utils import hash_password
 
+class User(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    level: Optional[int] = None
+    description: Optional[str] = None
+
 class UserDTO(BaseModel):
 	username: str
 	password: str

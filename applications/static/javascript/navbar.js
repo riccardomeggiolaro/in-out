@@ -10,7 +10,7 @@ fetch('navbar.html')
     })
     .then(res => res.json())
     .then(res => {
-        if (res.level < 2) {
+        if (res.level < 3) {
             const users = document.querySelectorAll(".page-of-users");
             users.forEach(user => user.style.display = "none");
         }

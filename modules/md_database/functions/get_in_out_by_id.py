@@ -1,5 +1,5 @@
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Access
+from modules.md_database.md_database import SessionLocal, InOut, Access, Weighing
 
 def get_last_in_out_by_id(id):
     """
@@ -15,8 +15,16 @@ def get_last_in_out_by_id(id):
                         selectinload(Access.subject),
                         selectinload(Access.vector)
                     ),
-                    selectinload(InOut.weight1),
-                    selectinload(InOut.weight2),
+                    selectinload(InOut.weight1).options(
+                        selectinload(Weighing.weighing_pictures),
+                        selectinload(Weighing.user),
+                        selectinload(Weighing.operator)
+                    ),
+                    selectinload(InOut.weight2).options(
+                        selectinload(Weighing.weighing_pictures),
+                        selectinload(Weighing.user),
+                        selectinload(Weighing.operator)
+                    ),
                     selectinload(InOut.material)
                 ).filter(
                     InOut.id == id

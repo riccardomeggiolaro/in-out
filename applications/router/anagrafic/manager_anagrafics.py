@@ -6,5 +6,6 @@ manager_anagrafics = {
     "driver": ConnectionManager(),
     "vehicle": ConnectionManager(),
     "material": ConnectionManager(),
+    "operator": ConnectionManager(),
     "access": ConnectionManager()
 }

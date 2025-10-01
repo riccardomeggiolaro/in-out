@@ -42,7 +42,7 @@ class WeightExecuted(BaseModel):
 
 class Weight(BaseModel):
 	weight_executed: WeightExecuted
-	data_assigned: Optional[int] = None
+	data_assigned: Optional[Any] = None
 
 class SetupWeigher(CustomBaseModel):
 	max_weight: int

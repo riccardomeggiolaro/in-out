@@ -18,6 +18,7 @@ from applications.middleware.auth import get_user
 import libs.lb_log as lb_log
 import threading
 from applications.router.weigher.manager_weighers_data import weighers_data
+from applications.router.weigher.types import DataAssignedDTO
 
 class CommandWeigherRouter(DataRouter, AccessRouter):
 	def __init__(self):
@@ -76,7 +77,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			}
 		}
 
-	async def Generic(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def Generic(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		access_id = None
 		if weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
@@ -88,11 +89,12 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				"type": "TEST",
 				"hidden": True
 			}))
+			data_assigned = DataAssignedDTO(**{"accessId": access.id, "userId": request.state.user.id})
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
 				modope="WEIGHING", 
-	          	data_assigned=access.id
+	          	data_assigned=data_assigned
 			)
 			access_id = access.id
 			if error_message:
@@ -107,7 +109,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"access_id": access_id
 		}
 
-	async def Weight1(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def Weight1(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
@@ -137,11 +139,12 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
                 }))
 			current_id = access.id
 		if not error_message:
+			data_assigned = DataAssignedDTO(**{"accessId": current_id, "userId": request.state.user.id})
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
 				modope="WEIGHING", 
-				data_assigned=access.id
+				data_assigned=data_assigned
 			)
 			if error_message and access.hidden is True:
 				await self.deleteAccess(request=None, id=current_id)
@@ -155,7 +158,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"access_id": current_id
 		}
 
-	async def Weight2(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def Weight2(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
@@ -193,11 +196,12 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					idAccess = access.id
 					just_created = True
 			if idAccess and not error_message:
+				data_assigned = DataAssignedDTO(**{"accessId": idAccess, "userId": request.state.user.id})
 				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 					instance_name=instance.instance_name, 
 					weigher_name=instance.weigher_name, 
 					modope="WEIGHING", 
-					data_assigned=idAccess)
+					data_assigned=data_assigned)
 			if error_message and just_created:
 				await self.deleteAccess(request=None, id=idAccess)
 		return {

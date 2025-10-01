@@ -5,6 +5,7 @@ from modules.md_database.interfaces.vector import Vector, VectorDataDTO
 from modules.md_database.interfaces.driver import Driver, DriverDataDTO
 from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
 from modules.md_database.interfaces.material import MaterialDataDTO
+from modules.md_database.interfaces.operator import OperatorDTO
 from modules.md_database.interfaces.in_out import InOut
 from datetime import datetime
 import libs.lb_config as lb_config
@@ -70,6 +71,8 @@ class SetAccessDTO(BaseModel):
     driver: DriverDataDTO = DriverDataDTO(**{})
     vehicle: VehicleDataDTO = VehicleDataDTO(**{})
     material: MaterialDataDTO = MaterialDataDTO(**{})
+    operator1: OperatorDTO = OperatorDTO(**{})
+    operator2: OperatorDTO = OperatorDTO(**{})
     number_in_out: Optional[int] = None
     note: Optional[str] = None
     document_reference: Optional[str] = None

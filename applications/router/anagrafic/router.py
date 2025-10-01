@@ -5,6 +5,7 @@ from applications.router.anagrafic.subject import SubjectRouter
 from applications.router.anagrafic.vector import VectorRouter
 from applications.router.anagrafic.driver import DriverRouter
 from applications.router.anagrafic.vehicle import VehicleRouter
+from applications.router.anagrafic.operator import OperatorRouter
 from applications.router.anagrafic.access import AccessRouter
 from applications.router.anagrafic.manager_anagrafics import manager_anagrafics
 import asyncio
@@ -29,6 +30,7 @@ class AnagraficRouter:
 		driver = DriverRouter()
 		vehicle = VehicleRouter()
 		material = MaterialRouter()
+		operator = OperatorRouter()
 		access = AccessRouter()
 
 		self.router.include_router(subject.router, prefix='/subject', tags=['subject'])
@@ -36,6 +38,7 @@ class AnagraficRouter:
 		self.router.include_router(driver.router, prefix='/driver', tags=['driver'])
 		self.router.include_router(vehicle.router, prefix='/vehicle', tags=['vehicle'])
 		self.router.include_router(material.router, prefix='/material', tags=['material'])
+		self.router.include_router(operator.router, prefix='/operator', tags=['operator'])
 		self.router.include_router(access.router, prefix='/access', tags=['access'])
 		self.router.include_router(access.panel_siren_router, prefix='', tags=['panel siren'])
 

@@ -24,6 +24,7 @@ class User(Base):
 
     # Relazione con LockRecord
     lock_records = relationship("LockRecord", back_populates="user", cascade="all, delete")
+    weighings = relationship("Weighing", back_populates="user", cascade="all, delete")
 
 # Model for Subject table
 class Subject(Base):
@@ -77,6 +78,14 @@ class Material(Base):
 
     in_out = relationship("InOut", back_populates="material", cascade="all, delete")
 
+class Operator(Base):
+    __tablename__ = 'operator'
+    id = Column(Integer, primary_key=True, index=True)
+    description = Column(String(collation="NOCASE"), index=True, unique=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
+    
+    weighings = relationship("Weighing", back_populates="operator", cascade="all, delete")
+
 # Model for Weighing table
 class Weighing(Base):
     __tablename__ = 'weighing'
@@ -89,11 +98,15 @@ class Weighing(Base):
     tare = Column(Integer, nullable=True)
     weight = Column(Integer, nullable=True)
     log = Column(String, nullable=True)
+    idUser = Column(Integer, ForeignKey('user.id'))
+    idOperator = Column(Integer, ForeignKey('operator.id'))
 
     # Relationships
     weighing_pictures = relationship("WeighingPicture", back_populates="weighing", cascade="all, delete")
     in_out_weight1 = relationship("InOut", foreign_keys="InOut.idWeight1", back_populates="weight1")
     in_out_weight2 = relationship("InOut", foreign_keys="InOut.idWeight2", back_populates="weight2")
+    user = relationship("User", back_populates="weighings")
+    operator = relationship("Operator", back_populates="weighings")
 
 class WeighingPicture(Base):
     __tablename__ = 'weighing_picture'
@@ -225,6 +238,7 @@ table_models = {
     'vehicle': Vehicle,
     'material': Material,
     'weighing': Weighing,
+    'operator': Operator,
     'access': Access,
     'lock_record': LockRecord,
     'weighing_picture': WeighingPicture,
@@ -237,6 +251,7 @@ upload_file_datas_required_columns = {
     "driver": {"social_reason": str, "telephone": str},
     "vehicle": {"plate": str, "description": str, "tare": int},
     "material": {"description": str},
+    "operator": {"description": str},
     "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str}
 }
 

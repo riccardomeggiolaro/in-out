@@ -1,35 +1,84 @@
-    <div id="edit-inout-popup" class="modal-content popup">
-        <h3>Modifica materiale:</h3>
-        <form id="edit-inout" class="content form-content" oninput="document.querySelector('#edit-inout-popup .save-btn').disabled = !this.checkValidity()">
-            <div>
-                <div class="item">
-                    <input id="material.id" name="material.id" type="number" class="suggestionId id">
-                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
-                            if (document.querySelector('#edit-inout-popup #material\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-inout-popup #material\\.id').value, 'material');
-                                document.querySelector('#edit-inout-popup #material\\.id').value = '';
-                                document.querySelector('#edit-inout-popup #material\\.description').disabled = false;
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#edit-inout-popup #material\\.id').value) {
-                                populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
-                    <div id="suggestions.material.description" class="suggestions"></div>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Peso</title>
+    <meta name="description" content="About this app" />
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <style>
+        .weight {
+            max-width: 600px !important;
+        }
+        select {
+            max-width: 90%;
+        }
+        input {
+            max-width: 88%;
+        }
+    </style>
+</head>
+<!-- Rest of your HTML remains unchanged -->
+</style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div class="box">
+        <div class="loading">
+            <img class="img-loading" src="/static/content/baronpesi_logo.png" alt="Logo Baron Pesi">
+        </div>
+        <div class="container">
+            <div class="display-wrapper">
+                <div class="display item">
+                    <!-- <div id="cams" class="cams">
+                    </div> -->
+
+                    <div class="weight">
+                        <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+                            <select class="list-weigher" style="margin: 0;">
+                            </select>
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                <h4 id="netWeight" style="margin: 0 0 0 10px;">------</h2>
+                                <span style="margin-left: 10px;">kg</span>
+                            </div>
+                        </div>
+                        <input type="text" id="myDescriptionMaterialInput" autocomplete="off" class="input" oninput="showSuggestions('material', 'myDescriptionMaterialInput', 'description', this.value, ['date_created'], 'materialPopup', 'suggestionsListMaterial');">
+                        <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
+                        </select>
+                        <select>
+                            <option>Claudio</option>
+                            <option>Enrico</option>
+                            <option>Giuseppe</option>
+                        </select>
+                        <input type="text" placeholder="Descrizione">
+                    </div>
                 </div>
             </div>
-        </form>
-        <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Indietro</button>
-            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
         </div>
-        <select name="" id="">
-            <option value="ciao">Ciao</option>
-            <option value="hello">Hello</option>
-            <option value="Salut">Salut</option>
-        </select>
+
+        <div id="snackbar-dashboard"></div>
+
+        <div id="reconnectionPopup" class="popup">
+            <div class="popup-content">
+                <h2>Connessione al server pesa perso</h2>
+                <p>Clicca ok per riconnettere...</p>
+                <div class="footer-buttons reconnection-footer-buttons">
+                    <button id="reconnectionButton" class="p-tare-button" onclick="attemptReconnect()">OK</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div id="snackbar" class="snackbar"></div>
+
+    <div id="snackbar2" class="snackbar" style="top: 70px;"></div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script src="/static/javascript/index.js"></script>
+</body>
+</html>

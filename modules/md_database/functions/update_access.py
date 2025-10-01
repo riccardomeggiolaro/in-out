@@ -1,4 +1,4 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, TypeSubjectEnum
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, Weighing, Operator, TypeSubjectEnum
 from modules.md_database.interfaces.access import SetAccessDTO
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
@@ -144,6 +144,82 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                 for in_out in access.in_out:
                     if in_out.id == idInOut:
                         in_out.idMaterial = data.material.id
+                        break
+
+            # Gestione operator1 per InOut
+            if idInOut and data.operator1.id in [None, -1]:
+                # Trova l'InOut specifico
+                target_in_out = None
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        target_in_out = in_out
+                        break
+                
+                if target_in_out and target_in_out.idWeight1:
+                    add_operator1 = {
+                        "description": data.operator1.description if data.operator1.description != "" else None
+                    }
+                    if has_non_none_value(add_operator1):
+                        current_model = Operator
+                        data_to_check = data.operator1.dict()
+                        operator1 = current_model(**add_operator1)
+                        session.add(operator1)
+                        session.flush()
+                        # Aggiorna l'operatore della prima pesata
+                        weight1 = session.query(Weighing).filter_by(id=target_in_out.idWeight1).first()
+                        if weight1:
+                            weight1.idOperator = operator1.id
+                    elif data.operator1.id == -1:
+                        # Rimuovi l'operatore dalla prima pesata
+                        weight1 = session.query(Weighing).filter_by(id=target_in_out.idWeight1).first()
+                        if weight1:
+                            weight1.idOperator = None
+            elif idInOut:
+                # Assegna operatore esistente alla prima pesata
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        if in_out.idWeight1:
+                            weight1 = session.query(Weighing).filter_by(id=in_out.idWeight1).first()
+                            if weight1:
+                                weight1.idOperator = data.operator1.id
+                        break
+
+            # Gestione operator2 per InOut
+            if idInOut and data.operator2.id in [None, -1]:
+                # Trova l'InOut specifico
+                target_in_out = None
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        target_in_out = in_out
+                        break
+                
+                if target_in_out and target_in_out.idWeight2:
+                    add_operator2 = {
+                        "description": data.operator2.description if data.operator2.description != "" else None
+                    }
+                    if has_non_none_value(add_operator2):
+                        current_model = Operator
+                        data_to_check = data.operator2.dict()
+                        operator2 = current_model(**add_operator2)
+                        session.add(operator2)
+                        session.flush()
+                        # Aggiorna l'operatore della seconda pesata
+                        weight2 = session.query(Weighing).filter_by(id=target_in_out.idWeight2).first()
+                        if weight2:
+                            weight2.idOperator = operator2.id
+                    elif data.operator2.id == -1:
+                        # Rimuovi l'operatore dalla seconda pesata
+                        weight2 = session.query(Weighing).filter_by(id=target_in_out.idWeight2).first()
+                        if weight2:
+                            weight2.idOperator = None
+            elif idInOut:
+                # Assegna operatore esistente alla seconda pesata
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        if in_out.idWeight2:
+                            weight2 = session.query(Weighing).filter_by(id=in_out.idWeight2).first()
+                            if weight2:
+                                weight2.idOperator = data.operator2.id
                         break
 
             if data.typeSubject:

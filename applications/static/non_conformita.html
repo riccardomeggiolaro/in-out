@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="it">
+    <head>
+        <link rel="icon" href="/static/content/baronpesi_favicon.png">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Accessi</title>
+        <meta name="description" content="About this app" />
+        <link rel="stylesheet" href="/static/css/dynamic-table.css">
+        <link rel="stylesheet" href="/static/css/snackbar.css">
+        <style>
+            .table-container {
+                max-width: 2000px;
+            }
+            .permanentFilter {
+                padding: 0px 0px 10px 0px;
+            }
+            #filter\.access\.status {
+                width: 200px;
+                color: black;
+            }
+            #dateRange {
+                width: 100%;
+            }
+            .popup.active {
+                max-width: 800px !important;
+            }
+            .detail-cell {
+                padding: 0px;
+            }
+            .detail-cell img:hover {
+                cursor: pointer;
+            }
+            .list-detail-tr li {
+                list-style-type: disc;
+            }
+            .imgs {
+                display: flex;
+                gap: 10px;
+            }
+            .imgs img {
+                width: 100px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </head>
+<body>
+    <div id="navbar-container"></div>
+
+    <br>
+
+    <div class="table-container">
+        <div class="title">
+            <h2>Non conformità</h2>
+            <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
+                <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
+                <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
+            </div>
+        </div>
+        <table>
+            <thead id="filters">
+                <tr>
+                    <th name="access.note">
+                        <input id="filter.access.note" name="access.note" type="text" placeholder="Descrizione" oninput="updateTable()">
+                    </th>
+                    <th name="material.description">
+                        <input id="filter.material.description" name="material.description" type="text" placeholder="Materiale" oninput="updateTable()">
+                    </th>
+                    <th name="weight2.operator.description">
+                        <input id="filter.operator.description" name="weight2.operator.description" type="text" placeholder="Operatore" oninput="updateTable()">
+                    </th>
+                    <th name="access.date_created">
+                        <input type="text" id="dateRange" placeholder="Data pesate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
+                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                    </th>
+                    <th name="weight2.tare">
+                        Tara (kg)
+                    </th>
+                    <th name="weight2.weight">
+                        Lordo (kg)
+                    </th>
+                    <th name="net_weight">
+                        Netto (kg)
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="13" style="text-align: center;">
+                        <label for="rows-per-page">Righe per pagina:</label>
+                        <select id="rows-per-page" onchange="changeRowsPerPage()">
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <button id="previous-page" onclick="previousPage()">&laquo; Precedente</button>
+                        <select id="page-select" onchange="goToPage()"></select>
+                        <button id="next-page" onclick="nextPage()">Successiva &raquo;</button>
+                        <span id="total-rows" style="margin-left: 20px;"></span> <!-- Aggiungi il numero totale di righe qui -->
+                    </td>
+                </tr>
+            </tfoot>            
+        </table>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closePopups(['edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
+    
+    <div id="add-popup" class="modal-content popup">
+        <h3>Prenota accesso:</h3>
+        <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['add-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
+        </div>
+    </div>
+
+    <div id="edit-popup" class="modal-content popup">
+        <h3>Modifica non conformità:</h3>
+        <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+            <h4>Descrizione</h4>
+
+            <div>
+                <div class="item">
+                    <input placeholder="Descrizione" id="note" name="note" type="text" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Materiale</h4>
+
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId id">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            if (document.querySelector('#edit-popup #material\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #material\\.id').value, 'material');
+                                document.querySelector('#edit-popup #material\\.id').value = '';
+                                document.querySelector('#edit-popup #material\\.description').disabled = false;
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #material\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+
+            <hr>
+
+            <h4>Operatore</h4>
+
+            <div>
+                <div class="item">
+                    <input id="operator2.id" name="operator2.id" type="number" class="suggestionId id">
+                    <input placeholder="Operatore" id="operator2.description" name="operator2.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.operator\\.description', 'description', 'operator', this.value);
+                            if (document.querySelector('#edit-popup #operator2\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #operator2\\.id').value, 'operator');
+                                document.querySelector('#edit-popup #operator2\\.id').value = '';
+                                document.querySelector('#edit-popup #operator2\\.description').disabled = false;
+                            }
+                        "
+                        onfocus="
+                            if (!document.querySelector('#edit-popup #operator2\\.id').value) {
+                                populateSuggestions('#edit-popup', '#edit #suggestions\\.operator\\.description', 'description', 'operator', this.value);
+                            }
+                        "
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.operator\\.description', 'description', 'operator', this.value)">
+                    <div id="suggestions.operator.description" class="suggestions"></div>
+                </div>
+            </div>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Indietro</button>
+            <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
+        </div>
+    </div>
+
+    <div id="delete-popup" class="modal-content popup">
+        <div id="delete">
+            <h3>Eliminare non conformità?</h3>
+            <div class="container-buttons right">                
+                <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+                <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-popup" class="modal-content popup">
+        <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+            <button id="save-btn" class="confirm-btn">Ok</button><br>
+        </div>
+    </div>
+
+    <div id="img-popup" class="modal-content popup preview-image">
+        <img id="confirm-content" src="" alt="">
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['img-popup'])">Chiudi</button>
+            <button id="download-btn" class="confirm-btn" onclick="
+                // Prende l'elemento <img> e il suo src
+                const img = document.querySelector('#img-popup img');
+                const url = img.src;
+                // Crea un link invisibile per il download
+                const link = document.createElement('a');
+                link.href = url;
+                // Nome file da salvare (se vuoi usare un nome fisso o dinamico)
+                link.download = img.alt;
+                // Simula il click per scaricare
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            ">Scarica</button><br>
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script src="/static/javascript/dynamic-table.js"></script>
+    <script>
+        const fromDate = document.querySelector('#filter\\.fromDate');
+        const toDate = document.querySelector('#filter\\.toDate');
+
+        document.addEventListener("DOMContentLoaded", () => {
+            itemName = 'access';
+            nextElementSibling = false;
+            lastChar = 'a';
+            canAlwaysDelete = true;
+            listUrlPath = '/api/anagrafic/access/in-out/list';
+            exportUrlPath = '/api/anagrafic/access/export'
+            addUrlPath = '/api/anagrafic/access';
+            setUrlPath = '/api/anagrafic/access';
+            deleteUrlPath = '/api/anagrafic/access/last-weighing';
+            websocketUrlPath = '/api/anagrafic/access';
+            callback_close_popups = deselectAllAnagrafic;
+            customQueryParams = 'excludeTestWeighing=true&';
+            params = {
+                "accesso con targa": "vehicle.plate",
+                "accesso con id": "access.id",
+                "soggetto": "subject.social_reason",
+                "pesata con il veicolo": "weighing.vehicle.plate"
+            }
+            init();
+        });
+
+        flatpickr("#dateRange", {
+            locale: {
+                rangeSeparator: ' / '
+            },
+            mode: 'range',
+            // allowInput: true,
+            dateFormat: "d-m-Y", // Formato della data
+            onClose: function(selectedDates, dateStr, instance) {
+                document.querySelector('#dateRange').setSelectionRange(0, 0);
+                const firstDay = selectedDates[0];
+                let secondDay = selectedDates[1];
+                // Verifica se una data è selezionata o meno
+                if (firstDay && secondDay === undefined) {
+                    secondDay = new Date(Date.now());
+                    secondDay.setHours(12, 0, 0, 0);
+                } else if (selectedDates.length === 2 && firstDay == secondDay) {
+                    secondDay.setHours(12, 0, 0, 0);
+                }
+                // Imposta l'istanza flatpickr con le date selezionate
+                instance.setDate([firstDay, secondDay]);
+                const adjustedFirstDay = new Date(firstDay);
+                adjustedFirstDay.setHours(12, 0, 0, 0);
+                const adjustedSecondDay = new Date(secondDay);
+                adjustedSecondDay.setHours(12, 0, 0, 0);
+                fromDate.valueAsDate = adjustedFirstDay;
+                toDate.valueAsDate = adjustedSecondDay;
+                updateTable();
+            }
+        });
+
+        function highlightText(suggestion, input, filter) {
+            // Creiamo un'espressione regolare che cerca l'input solo all'inizio della stringa
+            const regex = new RegExp(`^(${input})`, 'i');
+            if (suggestion[filter]) {
+                // Se c'è una corrispondenza all'inizio, evidenziala
+                if (regex.test(suggestion[filter])) {
+                    return suggestion[filter].replace(regex, '<span class="highlight">$1</span>');
+                }
+                // Altrimenti, restituisci la stringa originale senza evidenziazioni
+                return suggestion[filter];
+            }
+            return '';
+        }
+
+        function deleteLastWeighing(idAccess, plate, weighing, pid, bil) {
+            confirm_exec_funct = () => {
+                fetch(`/api/anagrafic/access/last-weighing/${idAccess}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(async res => {
+                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
+                    return ({
+                        data,
+                        status
+                    });
+                })
+                .then(res => {
+                    if (res.status !== 200) {
+                        showSnackbar("snackbar", res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
+                    }
+                    closePopups(['delete-popup'], false);
+                })
+            }
+            document.querySelector('#confirm-title').textContent = "Attenzione!";
+            document.querySelector('#confirm-content').innerHTML = `
+                Sei sicuro di voler eliminare l'ultima pesata effettuata dal veicolo '${plate}'?'.
+                <br><br>
+                <h4><u>Dettagli pesata</u></h4>
+                <br>
+                <b>Peso:</b> <em><u>${weighing}</u></em>
+                <br><br>
+                <b>PID:</b> <em><u>${pid}</u></em>
+                <br><br>
+                <b>Bilancia:</b> <em><u>${bil}</u></em>
+            `;
+            selectAnagrafic(idAccess, "DELETE", "access", null, true);
+            currentId = idAccess;
+        }
+
+        function getImageWeighing(imageUrl) {
+            const imgElement = document.querySelector('#img-popup img');
+            const fileName = imageUrl.split("/").at(-1);
+            imgElement.src = imageUrl;
+            imgElement.alt = fileName;
+            openPopup('img-popup');
+        }
+
+        function populateSuggestions(popup, suggestions, key, anagrafic, value) {
+            let currentSuggestions = document.querySelector(suggestions);
+            fetch(`/api/anagrafic/${anagrafic}/list?${key}=${value}%`)
+            .then(res => res.json())
+            .then(res => {
+                currentSuggestions.innerHTML = '';
+                res.data.forEach(item => {
+                    const option = document.createElement('p');
+                    option.innerHTML = highlightText(item, value, key);
+                    option.id = item.id;
+                    option.dataset.item = JSON.stringify(item);
+                    option.onmousedown = (e) => {
+                        let callback_select_anagrafic;
+                        if (anagrafic === 'subject') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                                document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                                document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                                document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'vector') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                                document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                                document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                                document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                                document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                                document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'vehicle') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                                document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                                document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                                document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'material') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #material\\.id`).value = item.id;
+                                document.querySelector(`${popup} #material\\.description`).value = item.description;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else if (anagrafic === 'operator') {
+                            callback_select_anagrafic = () => {
+                                document.querySelector(`${popup} #operator2\\.id`).value = item.id;
+                                document.querySelector(`${popup} #operator2\\.description`).value = item.description;
+                                document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                            }
+                        } else {
+                            console.error("Anagrafic non supportato: " + anagrafic);
+                            return;
+                        }
+                        if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
+                    };
+                    currentSuggestions.appendChild(option);  
+                });
+                currentSuggestions.style.display = 'block';
+            });
+        }        
+
+        function closeSuggestions(popup, suggestions, key, anagrafic, value) {
+            const currentSuggestions = document.querySelector(suggestions);
+            currentSuggestions.style.display = 'none';
+            const options = currentSuggestions.querySelectorAll('p');
+            let continues = false;
+            if (options.length === 1) {
+                const item = JSON.parse(options[0].dataset.item);
+                if (item[key].toLowerCase() == value.toLowerCase()) {
+                    let callback_select_anagrafic;
+                    if (anagrafic === 'subject' && document.querySelector(`${popup} #subject\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #subject\\.id`).value = item.id;
+                            document.querySelector(`${popup} #subject\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #subject\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #subject\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #subject\\.cfpiva`).disabled = true;
+                        }
+                    } else if (anagrafic === 'vector' && document.querySelector(`${popup} #vector\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #vector\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vector\\.social_reason`).value = item.social_reason;
+                            document.querySelector(`${popup} #vector\\.telephone`).value = item.telephone;
+                            document.querySelector(`${popup} #vector\\.telephone`).disabled = true;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).value = item.cfpiva;
+                            document.querySelector(`${popup} #vector\\.cfpiva`).disabled = true;
+                        }
+                    } else if (anagrafic === 'vehicle' && document.querySelector(`${popup} #vehicle\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #vehicle\\.id`).value = item.id;
+                            document.querySelector(`${popup} #vehicle\\.plate`).value = item.plate;
+                            document.querySelector(`${popup} #vehicle\\.description`).value = item.description;
+                            document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
+                    } else if (anagrafic === 'operator' && document.querySelector(`${popup} #operator2\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #operator2\\.id`).value = item.id;
+                            document.querySelector(`${popup} #operator2\\.description`).value = item.description;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
+                    } else {
+                        continues = true;
+                    }
+                    if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
+                }
+            }
+        }
+
+        function deselectAllAnagrafic() {
+            document.querySelectorAll('#subject\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "subject");
+            });
+            document.querySelectorAll('#vector\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "vector");
+            });
+            document.querySelectorAll('#vehicle\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "vehicle");
+            });
+            document.querySelectorAll('#material\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "material");
+            });
+            document.querySelectorAll('#operator2\\.id').forEach(input => {
+                if (input.value != '') deselectAnagrafic(input.value, "operator");
+            });
+        }
+    </script>
+</body>
+</html>
