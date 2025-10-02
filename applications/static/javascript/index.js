@@ -82,6 +82,9 @@ const division = document.getElementById('division');
 const cams = document.querySelector('#cams');
 const reconnectionButton = document.getElementById('reconnectionButton');
 
+let requestIdCounter = 0;
+const pendingRequests = new Map();
+
 document.addEventListener('DOMContentLoaded', async () => {
     fetch('/api/config-weigher/configuration')
     .then(res => res.json())
@@ -148,6 +151,56 @@ async function getInstanceWeigher(path) {
         return res.json();        
     })
     .catch(error => console.error('Errore nella fetch:', error));
+}
+
+async function sendWebSocketRequest(action, data, callback_anagrafic, custom_execute_callback = false) {
+    return new Promise((resolve, reject) => {
+        if (!_data || _data.readyState !== WebSocket.OPEN) {
+            reject(new Error("WebSocket is not connected"));
+            return;
+        }
+
+        // Create a unique request ID
+        const idRequest = ++requestIdCounter;
+
+        // Store the promise callbacks
+        pendingRequests.set(idRequest, { resolve, reject, callback_anagrafic, custom_execute_callback });
+
+        // Send the request with the ID
+        const message = { action, ...data, idRequest };
+        _data.send(JSON.stringify(message));
+
+        // Set a timeout to clean up if no response comes
+        setTimeout(() => {
+            if (pendingRequests.has(idRequest)) {
+                pendingRequests.delete(idRequest);
+                // reject(new Error("Request timed out"));
+            }
+        }, 10000); // 10 second timeout
+    });
+}
+
+// Example of using WebSocket for selectAnagrafic
+async function selectAnagrafic(idRecord, type, anagrafic = itemName, callback_anagrafic = null, custom_execute_callback = false) {
+    try {
+        const response = await sendWebSocketRequest("lock", { idRecord, type, anagrafic }, callback_anagrafic, custom_execute_callback);
+        return response.data;
+    } catch (error) {
+        console.error("Error selecting anagrafic:", error);
+        throw error;
+    }
+}
+
+// Example of using WebSocket for deselectAnagrafic
+async function deselectAnagrafic(idRecord, anagrafic = itemName, callback_anagrafic = null, custom_execute_callback = false) {
+    try {
+        const type = "";
+        const response = await sendWebSocketRequest("unlock", { idRecord, type, anagrafic }, callback_anagrafic, custom_execute_callback);
+        return response;
+    } catch (error) {
+        console.error("Error deselecting anagrafic:", error);
+        throw error;
+    }
 }
 
 function scrollToSelectedItem() {

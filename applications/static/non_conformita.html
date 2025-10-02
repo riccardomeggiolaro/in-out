@@ -456,6 +456,12 @@
                             document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                             document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                         }
+                    } else if (anagrafic === 'material' && document.querySelector(`${popup} #material\\.id`).value != item.id) {
+                        callback_select_anagrafic = () => {
+                            document.querySelector(`${popup} #material\\.id`).value = item.id;
+                            document.querySelector(`${popup} #material\\.description`).value = item.description;
+                            document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
+                        }
                     } else if (anagrafic === 'operator' && document.querySelector(`${popup} #operator2\\.id`).value != item.id) {
                         callback_select_anagrafic = () => {
                             document.querySelector(`${popup} #operator2\\.id`).value = item.id;
