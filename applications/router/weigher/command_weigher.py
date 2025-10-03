@@ -9,16 +9,19 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.access import AccessRouter
 from modules.md_database.md_database import TypeAccess
 from modules.md_database.functions.get_access_by_id import get_access_by_id
-from modules.md_database.interfaces.access import AddAccessDTO, VehicleDataDTO
-from applications.router.weigher.dto import IdentifyDTO, DataDTO
+from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO, VehicleDataDTO
+from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
 from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from modules.md_database.functions.add_data import add_data
+from modules.md_database.functions.get_in_out_by_id import get_last_in_out_by_id
 from applications.middleware.auth import get_user
 import libs.lb_log as lb_log
 import threading
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.weigher.types import DataAssignedDTO
+import datetime as dt
 
 class CommandWeigherRouter(DataRouter, AccessRouter):
 	def __init__(self):
@@ -31,6 +34,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		self.router_action_weigher.add_api_route('/realtime', self.StartRealtime, methods=['GET'])
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/stop-all-command', self.StopAllCommand, methods=['GET'])
+		self.router_action_weigher.add_api_route('/weighing-without-pid', self.WeighingWithoutPid, methods=['POST'])
 		self.router_action_weigher.add_api_route('/print', self.Generic, methods=['GET'])
 		self.router_action_weigher.add_api_route('/in', self.Weight1, methods=['POST'])
 		self.router_action_weigher.add_api_route('/out', self.Weight2, methods=['POST'])
@@ -75,6 +79,53 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				"command_executed": command_executed,
 				"error_message": error_message
 			}
+		}
+
+	async def WeighingWithoutPid(self, request: Request, body: DataToStoreDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		status_modope, command_executed, error_message = 500, False, ""
+		realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		status = realtime.status
+		gross_weight = realtime.gross_weight
+		net_weight = realtime.net_weight
+		instance_weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		firmware = instance_weigher[instance.instance_name]["terminal_data"]["firmware"]
+		model_name = instance_weigher[instance.instance_name]["terminal_data"]["model_name"]
+		serial_number = instance_weigher[instance.instance_name]["terminal_data"]["serial_number"]
+		tare = realtime.tare
+		if status != "ST":
+			error_message = "La pesa non è stabile"
+		elif tare != "0":
+			error_message = "Eliminare la tara per effettuare la pesata"
+		access = await self.addAccess(request=None, body=AddAccessDTO(**{
+			**body.dict(), 
+			"number_in_out": 1,
+			"type": "MANUALLY",
+			"status": "CLOSED",
+			"hidden": False
+		}))
+		weighing_stored_db = add_data("weighing", {
+			"date": dt.datetime.now(),
+			"weigher": instance.weigher_name,
+			"weigher_serial_number": serial_number,
+			"pid": None,
+			"tare": 0,
+			"is_preset_tare": True,
+			"weight": gross_weight,
+			"log": None,
+			"idUser": request.state.user.id,
+			"idOperator": None,
+		})
+		in_out = add_data("in_out", {
+			"idAccess": access.id,
+			"idMaterial": None,
+			"idWeight1": None,
+			"idWeight2": weighing_stored_db["id"],
+			"net_weight": net_weight
+		})
+		await self.setAccess(request=None, id=access.id, body=SetAccessDTO(**{"material": body.material.dict(), "operator2": body.operator.dict()}), idInOut=in_out["id"])
+		return {
+			"instance": instance,
+			"in_out": in_out
 		}
 
 	async def Generic(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):

@@ -877,13 +877,29 @@
             }
 
             try {
-                const res = await fetch(`/api/command-weigher/print${currentWeigherPath}`);
+                const res = await fetch(`/api/command-weigher/weighing-without-pid${currentWeigherPath}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        note: note.textContent,
+                        material: {
+                            id: materialId.value ? Number(materialId.value) : null,
+                            description: materialDescription.textContent
+                        },
+                        operator: {
+                            id: operatorId.value ? Number(operatorId.value) : null,
+                            description: operatorDescription.textContent
+                        }
+                    })
+                });
                 const data = await res.json();
                 
-                if (data.command_details && data.command_details.command_executed) {
-                    showSnackbar('Pesata in corso...', 'success');
+                if (data.in_out && data.in_out.id) {
+                    showSnackbar('Pesata di non conformità eseguita', 'success');
                 } else {
-                    showSnackbar(data.command_details.error_message, 'error');
+                    showSnackbar(data.error_message, 'error');
                 }
             } catch (error) {
                 showSnackbar('Errore nell\'esecuzione della pesata', 'error');
