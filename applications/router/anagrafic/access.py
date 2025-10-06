@@ -3,6 +3,9 @@ from fastapi.responses import StreamingResponse
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import AccessStatus, LockRecordType, TypeAccess
 from modules.md_database.interfaces.access import Access, AddAccessDTO, SetAccessDTO
+from modules.md_database.interfaces.material import Material
+from modules.md_database.interfaces.operator import Operator
+from modules.md_database.interfaces.in_out import InOut
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.get_list_accesses import get_list_accesses
@@ -678,6 +681,9 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             data = update_access(id, body, idInOut)
             get_access_data = get_data_by_id("access", data["id"])
             access = Access(**get_access_data)
+            in_out = None
+            if idInOut:
+                in_out = get_last_in_out_by_id(idInOut)
             await self.broadcastUpdateAnagrafic("access", {"access": access.json()})
             if body.subject.id in [None, -1] and access.idSubject:
                 await self.broadcastAddAnagrafic("subject", {"subject": access.subject.json()})
@@ -687,6 +693,15 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 await self.broadcastAddAnagrafic("driver", {"driver": access.driver.json()})
             if body.vehicle.id in [None, -1] and access.idVehicle:
                 await self.broadcastAddAnagrafic("vehicle", {"vehicle": access.vehicle.json()})
+            if in_out and body.material.id in [None, -1] and in_out.idMaterial:
+                material = Material(**in_out.material.__dict__)
+                await self.broadcastAddAnagrafic("material", {"material": material.json()})
+            if in_out and body.operator1.id in [None, -1] and in_out.weight1 and in_out.weight1.idOperator:
+                operator = Operator(**in_out.weight1.operator.__dict__)
+                await self.broadcastAddAnagrafic("operator", {"operator": operator.json()})
+            if in_out and body.operator2.id in [None, -1] and in_out.weight2 and in_out.weight2.idOperator:
+                operator = Operator(**in_out.weight2.operator.__dict__)
+                await self.broadcastAddAnagrafic("operator", {"operator": operator.json()})
 
             await broadcastMessageWebSocket({"access": {}})
 

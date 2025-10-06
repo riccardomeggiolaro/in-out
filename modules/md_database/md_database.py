@@ -255,6 +255,8 @@ upload_file_datas_required_columns = {
     "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str}
 }
 
+instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut]
+
 # Create tables
 Base.metadata.create_all(engine)
 

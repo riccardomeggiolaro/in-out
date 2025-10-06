@@ -295,10 +295,10 @@
             </div>
         </div>
 
-        <!-- Campo Note -->
+        <!-- Campo Descrizione -->
         <div class="input-group">
-            <label for="noteInput">Note</label>
-            <input type="text" id="noteInput" placeholder="Inserisci note...">
+            <label for="noteInput">Descrizione</label>
+            <input type="text" id="noteInput" placeholder="Inserisci descrizione...">
         </div>
 
         <!-- Campo Materiale con suggerimenti -->
@@ -331,9 +331,9 @@
             <ul class="suggestions-list" id="operatorSuggestions"></ul>
         </div>
 
-        <!-- Pulsante pesata -->
+        <!-- Pulsante stampa -->
         <div class="buttons-group">
-            <button id="weighingButton">Pesata</button>
+            <button id="weighingButton">Stampa</button>
         </div>
     </div>
 
@@ -360,6 +360,7 @@
         let requestIdCounter = 0;
         const pendingRequests = new Map();
         let isRefreshing = false;
+        let intentionalClose = false;
         let currentPopup = null;
         
         const weigherSelect = document.getElementById('weigherSelect');
@@ -402,12 +403,24 @@
             }, 300);
         }
 
+        // Funzione per validare i campi e abilitare/disabilitare il pulsante
+        function validateInputs() {
+            const isNoteValid = note.value.trim() !== '';
+            const isMaterialValid = materialDescription.value.trim() !== '';
+            const isOperatorValid = operatorDescription.value.trim() !== '';
+            
+            weighingButton.disabled = !(isNoteValid && isMaterialValid && isOperatorValid);
+        }
+
         // Funzioni per gestire abilitazione/disabilitazione input
         function disableAllElements() {
-            const elements = document.querySelectorAll('button, input, select, textarea, [role="button"]');
-            elements.forEach(element => {
-                element.disabled = true;
-            });
+            // Disabilita solo gli input di pesata
+            note.disabled = true;
+            materialId.disabled = true;
+            materialDescription.disabled = true;
+            operatorId.disabled = true;
+            operatorDescription.disabled = true;
+            weighingButton.disabled = true;
         }
 
         function enableAllElements() {
@@ -416,10 +429,8 @@
                 element.disabled = false;
             });
             
-            // Il pulsante di riconnessione dovrebbe essere disabilitato quando connesso
-            if (reconnectionButton) {
-                reconnectionButton.disabled = true;
-            }
+            // Valida gli input dopo aver abilitato gli elementi
+            validateInputs();
         }
 
         function disableInputs() {
@@ -437,11 +448,10 @@
             materialDescription.disabled = false;
             operatorId.disabled = false;
             operatorDescription.disabled = false;
-            weighingButton.disabled = false;
+            validateInputs();
         }
 
         function clearAllInputs() {            
-            // Deseleziona anagrafiche
             if (materialId.value) {
                 deselectAnagrafic('material');
             }
@@ -453,6 +463,8 @@
             materialDescription.value = '';
             operatorId.value = null;
             operatorDescription.value = '';
+            
+            validateInputs();
         }
 
         // Inizializzazione
@@ -492,13 +504,22 @@
         function setupEventListeners() {
             weigherSelect.addEventListener('change', handleWeigherChange);
             
-            // Gestione input materiale
+            note.addEventListener('input', validateInputs);
             materialDescription.addEventListener('input', (e) => {
                 const value = e.target.value;
                 if (materialId.value) {
                     deselectAnagrafic('material');
                 }
                 showSuggestions('material', value);
+                validateInputs();
+            });
+            operatorDescription.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (operatorId.value) {
+                    deselectAnagrafic('operator');
+                }
+                showSuggestions('operator', value);
+                validateInputs();
             });
 
             materialDescription.addEventListener('focus', (e) => {
@@ -512,15 +533,6 @@
                 closeSuggestions('materialInput', 'materialSuggestions', 'material');
             });
 
-            // Gestione input operatore
-            operatorDescription.addEventListener('input', (e) => {
-                const value = e.target.value;
-                if (operatorId.value) {
-                    deselectAnagrafic('operator');
-                }
-                showSuggestions('operator', value);
-            });
-            
             operatorDescription.addEventListener('focus', (e) => {
                 const value = e.target.value;
                 if (!operatorId.value) {
@@ -534,7 +546,6 @@
 
             weighingButton.addEventListener('click', handleWeighing);
 
-            // Chiudi suggerimenti quando si clicca fuori
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.input-group') && !e.target.closest('.weigher-select-container')) {
                     document.querySelectorAll('.suggestions-list').forEach(list => {
@@ -543,7 +554,6 @@
                 }
             });
 
-            // Chiudi popup quando si clicca all'esterno (tranne per reconnectionPopup)
             window.onclick = function(event) {
                 if (currentPopup && event.target.classList.contains('popup') && currentPopup !== "reconnectionPopup") {
                     closePopup(currentPopup);
@@ -555,19 +565,15 @@
         function handleWeigherChange(e) {
             currentWeigherPath = e.target.value;
             
-            // Chiudi il WebSocket precedente se esiste
-            closeWebSocket();
+            closeWebSocket(true);
             
             if (currentWeigherPath) {
-                // Pesa selezionata - abilita gli input
                 enableInputs();
                 connectWebSocket();
             } else {
-                // Nessuna pesa selezionata - disabilita e pulisci
                 disableInputs();
                 clearAllInputs();
                 
-                // Resetta il display del peso
                 weightValue.textContent = '------';
                 weightUnit.textContent = '--';
                 weightStatus.textContent = '--';
@@ -579,14 +585,14 @@
             const baseUrl = window.location.origin.replace(/^http/, 'ws');
             const wsUrl = `${baseUrl}/api/command-weigher/realtime${currentWeigherPath}`;
             
-            closeWebSocket(); // Assicurati di chiudere eventuali connessioni precedenti
+            closeWebSocket(true);
             
             websocket = new WebSocket(wsUrl);
             
             websocket.addEventListener('open', () => {
                 console.log('WebSocket peso connesso');
+                intentionalClose = false;
                 enableAllElements();
-                reconnectionButton.disabled = true;
                 if (currentPopup === 'reconnectionPopup') {
                     closePopup('reconnectionPopup');
                 }
@@ -598,38 +604,50 @@
             });
 
             websocket.addEventListener('error', () => {
-                if (!isRefreshing) {
+                if (!isRefreshing && !intentionalClose) {
                     console.error('WebSocket error');
-                    closeWebSocket();
+                    closeWebSocket(false);
                     disableAllElements();
+                    weigherSelect.disabled = false;
                     reconnectionButton.disabled = false;
                     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
                     openPopup('reconnectionPopup');
+                } else if (!isRefreshing) {
+                    // FALLBACK: riabilita sempre
+                    reconnectionButton.disabled = false;
+                    weigherSelect.disabled = false;
                 }
             });
 
             websocket.addEventListener('close', () => {
-                if (!isRefreshing) {
+                if (!isRefreshing && !intentionalClose) {
                     console.log('WebSocket chiuso');
                     disableAllElements();
+                    weigherSelect.disabled = false;
                     reconnectionButton.disabled = false;
                     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
                     openPopup('reconnectionPopup');
+                } else if (!isRefreshing) {
+                    // FALLBACK: riabilita sempre
+                    reconnectionButton.disabled = false;
+                    weigherSelect.disabled = false;
                 }
+                intentionalClose = false;
             });
         }
 
         // Chiudi WebSocket
-        function closeWebSocket() {
+        function closeWebSocket(isIntentional = false) {
             if (websocket) {
-                websocket.onclose = null; // Rimuovi listener per evitare riconnessioni
+                intentionalClose = isIntentional;
+                websocket.onclose = null;
                 websocket.onerror = null;
                 websocket.close();
                 websocket = null;
             }
         }
 
-        // Tentativo di riconnessione
+        // Tentativo di riconnessione - CORRETTO!
         function attemptReconnect() {
             if (!currentWeigherPath) {
                 showSnackbar('Seleziona una pesa', 'error');
@@ -640,7 +658,9 @@
             reconnectionButton.disabled = true;
             document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
             
-            closeWebSocket();
+            closeWebSocket(true);
+            // RESET DEL FLAG - FONDAMENTALE!!!
+            intentionalClose = false;
             connectWebSocket();
         }
 
@@ -697,6 +717,7 @@
                             operatorDescription.value = item.description;
                             operatorDescription.blur();
                         }
+                        validateInputs();
                     });
                     
                     list.appendChild(li);
@@ -829,6 +850,8 @@
                     operatorId.value = item.id;
                     operatorDescription.value = item.description;
                 }
+                
+                validateInputs();
             } catch (error) {
                 showSnackbar('Errore nella selezione', 'error');
             }
@@ -855,6 +878,8 @@
                 } else if (type === 'operator') {
                     operatorId.value = null;
                 }
+                
+                validateInputs();
             } catch (error) {
                 console.error('Errore nella deselezione:', error);
             }
@@ -883,14 +908,14 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        note: note.textContent,
+                        note: note.value,
                         material: {
                             id: materialId.value ? Number(materialId.value) : null,
-                            description: materialDescription.textContent
+                            description: materialDescription.value
                         },
                         operator: {
                             id: operatorId.value ? Number(operatorId.value) : null,
-                            description: operatorDescription.textContent
+                            description: operatorDescription.value
                         }
                     })
                 });
@@ -898,6 +923,12 @@
                 
                 if (data.in_out && data.in_out.id) {
                     showSnackbar('Pesata di non conformità eseguita', 'success');
+                    note.value = "";
+                    materialId.value = null;
+                    materialDescription.value = "";
+                    operatorId.value = null;
+                    operatorDescription.value = "";
+                    validateInputs();
                 } else {
                     showSnackbar(data.error_message, 'error');
                 }

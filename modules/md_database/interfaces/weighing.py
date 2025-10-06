@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, Union
+from modules.md_database.interfaces.operator import Operator
 
 # Model for Weighing table
 class Weighing(BaseModel):
@@ -7,4 +8,6 @@ class Weighing(BaseModel):
     weight: Optional[Union[int, float]] = None
     pid: Optional[str] = None
     weigher: Optional[str] = None
-    # operator: Optional[str] = None
+    idOperator: Optional[int] = None
+    
+    operator: Optional[Operator] = None

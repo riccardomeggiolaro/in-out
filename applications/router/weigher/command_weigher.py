@@ -96,6 +96,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = "La pesa non è stabile"
 		elif tare != "0":
 			error_message = "Eliminare la tara per effettuare la pesata"
+		if error_message:
+			raise HTTPException(status_code=400, detail=error_message)
 		access = await self.addAccess(request=None, body=AddAccessDTO(**{
 			**body.dict(), 
 			"number_in_out": 1,
