@@ -331,6 +331,12 @@
             <ul class="suggestions-list" id="operatorSuggestions"></ul>
         </div>
 
+        <!-- Campo Tara -->
+        <div class="input-group">
+            <label for="tareInput">Tara</label>
+            <input type="number" id="tareInput" placeholder="Inserisci tara..." min="1" step="0.01">
+        </div>
+
         <!-- Pulsante stampa -->
         <div class="buttons-group">
             <button id="weighingButton">Stampa</button>
@@ -372,6 +378,7 @@
         const materialDescription = document.getElementById('materialInput');
         const operatorId = document.getElementById('operatorId');
         const operatorDescription = document.getElementById('operatorInput');
+        const tare = document.getElementById('tareInput');
         const weighingButton = document.getElementById('weighingButton');
         const reconnectionButton = document.getElementById('reconnectionButton');
 
@@ -408,8 +415,9 @@
             const isNoteValid = note.value.trim() !== '';
             const isMaterialValid = materialDescription.value.trim() !== '';
             const isOperatorValid = operatorDescription.value.trim() !== '';
+            const isTareValid = tare.value && Number(tare.value) >= 1;
             
-            weighingButton.disabled = !(isNoteValid && isMaterialValid && isOperatorValid);
+            weighingButton.disabled = !(isNoteValid && isMaterialValid && isOperatorValid && isTareValid);
         }
 
         // Funzioni per gestire abilitazione/disabilitazione input
@@ -420,6 +428,7 @@
             materialDescription.disabled = true;
             operatorId.disabled = true;
             operatorDescription.disabled = true;
+            tare.disabled = true;
             weighingButton.disabled = true;
         }
 
@@ -439,6 +448,7 @@
             materialDescription.disabled = true;
             operatorId.disabled = true;
             operatorDescription.disabled = true;
+            tare.disabled = true;
             weighingButton.disabled = true;
         }
 
@@ -448,6 +458,7 @@
             materialDescription.disabled = false;
             operatorId.disabled = false;
             operatorDescription.disabled = false;
+            tare.disabled = false;
             validateInputs();
         }
 
@@ -463,6 +474,7 @@
             materialDescription.value = '';
             operatorId.value = null;
             operatorDescription.value = '';
+            tare.value = '';
             
             validateInputs();
         }
@@ -505,6 +517,7 @@
             weigherSelect.addEventListener('change', handleWeigherChange);
             
             note.addEventListener('input', validateInputs);
+            tare.addEventListener('input', validateInputs);
             materialDescription.addEventListener('input', (e) => {
                 const value = e.target.value;
                 if (materialId.value) {
@@ -613,7 +626,6 @@
                     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
                     openPopup('reconnectionPopup');
                 } else if (!isRefreshing) {
-                    // FALLBACK: riabilita sempre
                     reconnectionButton.disabled = false;
                     weigherSelect.disabled = false;
                 }
@@ -628,7 +640,6 @@
                     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
                     openPopup('reconnectionPopup');
                 } else if (!isRefreshing) {
-                    // FALLBACK: riabilita sempre
                     reconnectionButton.disabled = false;
                     weigherSelect.disabled = false;
                 }
@@ -647,7 +658,7 @@
             }
         }
 
-        // Tentativo di riconnessione - CORRETTO!
+        // Tentativo di riconnessione
         function attemptReconnect() {
             if (!currentWeigherPath) {
                 showSnackbar('Seleziona una pesa', 'error');
@@ -659,7 +670,6 @@
             document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
             
             closeWebSocket(true);
-            // RESET DEL FLAG - FONDAMENTALE!!!
             intentionalClose = false;
             connectWebSocket();
         }
@@ -901,8 +911,18 @@
                 return;
             }
 
+            // Validazione tara
+            const tareValue = Number(tare.value);
+            if (!tare.value || tareValue < 1) {
+                showSnackbar('La tara deve essere almeno 1', 'error');
+                return;
+            }
+
             try {
-                const res = await fetch(`/api/command-weigher/weighing-without-pid${currentWeigherPath}`, {
+                // Aggiungi la tara come query parameter
+                const url = `/api/command-weigher/weighing-without-pid${currentWeigherPath}&tare=${tareValue}`;
+                
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -928,9 +948,10 @@
                     materialDescription.value = "";
                     operatorId.value = null;
                     operatorDescription.value = "";
+                    tare.value = null;
                     validateInputs();
                 } else {
-                    showSnackbar(data.error_message, 'error');
+                    showSnackbar(data.error_message || data.detail, 'error');
                 }
             } catch (error) {
                 showSnackbar('Errore nell\'esecuzione della pesata', 'error');

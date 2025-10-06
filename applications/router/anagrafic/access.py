@@ -371,16 +371,16 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                     row["Data 1"] = datetime.strftime(inout.weight1.date, "%d-%m-%Y %H:%M") if inout.weight1 else None
                 
                 if load_date_weight2:
-                    row["Data 2"] = datetime.strftime(inout.weight2.date, "%d-%m-%Y %H:%M") if inout.weight2 else None
+                    row["Data 2" if load_date_weight1 else "Data"] = datetime.strftime(inout.weight2.date, "%d-%m-%Y %H:%M") if inout.weight2 else None
                 
                 if load_pid_weight1:
                     row["Pid 1"] = inout.weight1.pid if inout.weight1 else None
                 
                 if load_pid_weight2:
-                    row["Pid 2"] = inout.weight2.pid if inout.weight2 else None
+                    row["Pid 2" if load_pid_weight1 else "Pid"] = inout.weight2.pid if inout.weight2 else None
                 
-                row["Peso 1 (kg)"] = weight1
-                row["Peso 2 (kg)"] = inout.weight2.weight if inout.weight2 else None
+                row["Peso 1 (kg)" if load_pid_weight1 else "Tara (kg)"] = weight1
+                row["Peso 2 (kg)" if load_pid_weight1 else "Lordo (kg)"] = inout.weight2.weight if inout.weight2 else None
                 row["Netto (kg)"] = inout.net_weight if inout.net_weight is not None else None
                 
                 in_out_list.append(row)
@@ -502,6 +502,8 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             # Costruisci headers e colonne dinamicamente
             headers = []
             col_widths = []
+
+            extends = ['Peso 1 (kg)', 'Peso 2 (kg)', 'Netto (kg)']
             
             if load_vehicle:
                 headers.append('Targa')
@@ -536,18 +538,21 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 col_widths.append(46)
             
             if load_date_weight2:
-                headers.append('Data 2')
+                headers.append('Data 2' if load_pid_weight1 else 'Data')
                 col_widths.append(46)
             
             if load_pid_weight1:
                 headers.append('Pid 1')
                 col_widths.append(46)
+            else:
+                extends[0] = 'Tara (kg)'
+                extends[1] = 'Lordo (kg)'
             
             if load_pid_weight2:
-                headers.append('Pid 2')
+                headers.append('Pid 2' if load_pid_weight1 else 'Pid')
                 col_widths.append(46)
             
-            headers.extend(['Peso 1 (kg)', 'Peso 2 (kg)', 'Netto (kg)'])
+            headers.extend(extends)
             col_widths.extend([38, 38, 38])
 
             # Create table style with compact formatting
