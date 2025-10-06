@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <title>Document</title>
+    <style>
+        html,
+        body {
+            margin: 0px;
+            height: 100vh;
+        }
+        * {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        .table-container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: auto;
+        }
+        th {
+            text-align: left;
+        }
+        .title {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table td:last-child, 
+        table th:last-child {
+            white-space: nowrap; /* Evita il wrapping del testo */
+            width: 1px;
+            max-width: 90px; /* Evita che la colonna si espanda */
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+        }
+        th {
+            padding: 10px;
+            background-color: #1362b8;
+            color: white;
+        }
+        .register-button {
+            background-color: #1362b8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        thead {
+            font-size: 16px;
+        }
+        thead tr th:first-child {
+            border-radius: 5px 0px 0px 5px;
+        }
+        thead tr th:last-child {
+            border-radius: 0px 5px 5px 0px;
+        }
+        tr td button {
+            background-color: white;
+            border: none;
+            border-top-color: currentcolor;
+            border-right-color: currentcolor;
+            border-bottom-color: currentcolor;
+            border-left-color: currentcolor;
+            border-radius: 8px;
+            border-color: #1362b8;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+            box-shadow: 0 4px 30px rgba(202, 73, 73, 0.1);
+        }
+        tr:hover {
+            background-color: whitesmoke;
+        }
+        button {
+            background-color: white;
+            border: none;
+            border-radius: 8px;
+            border-color: #1362b8;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+            box-shadow: 0 4px 30px rgba(202, 73, 73, 0.1);
+            padding: 8px !important;
+        }
+        .register-button {
+            background-color: #1362b8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0px 4px 3px rgba(0, 0, 0, 0.3);
+            font-size: 1rem;
+            padding: 8px;
+        }
+        .register-button:hover {
+            cursor: pointer;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        .popup.active {
+            display: block;
+        }
+        .popup input {
+            margin: 5px 0px 0px 0px;
+            padding: 8px !important;
+        }
+        .popup button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .overlay.active {
+            display: block;
+        }
+        h3 {
+            margin: 0px 0px 10px 0px;
+        }
+        thead input,
+        thead select,
+        .popup input,
+        .popup select {
+            position: relative;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            width: -webkit-fill-available; /* Chrome, Safari */
+            width: -moz-available;  
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
+            transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+        }
+        input:focus {
+            box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra più intensa quando è in focus */
+            outline: none;
+        }
+        input[type="checkbox"] {
+            width: auto;
+            max-width: none;
+        }
+        .popup select {
+            width: 100%;
+        }
+        .radio {
+            display: flex;
+            flex-direction: row;
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background-color: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .container-buttons {
+            display: flex;
+            gap: 5px;
+            padding-top: 10px;
+        }
+
+        .right {
+            justify-content: flex-end;
+        }
+
+        td button {
+            padding: 0px 8px !important;
+        }
+
+        li {
+            list-style-type: none;
+        }
+
+        form {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <br>
+
+    <div class="table-container">
+        <div class="title">
+            <h2>Utenti</h2>
+            <button class="register-button" onclick="addRow()">Registra</button>
+        </div> 
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Descrizione</th>
+                    <th>Livello</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="users"></tbody>
+        </table>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
+    
+    <div id="add-popup" class="modal-content popup">
+        <h3>Nuovo utente:</h3>
+        <form id="register" class="content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
+            Username:<br>
+            <input type="text" id="username" name="username" autocomplete="off" required>
+            Descrizione:<br>
+            <input type="text" id="description" name="description" autocomplete="off">
+            <label for="level">Livello:</label>
+            <select id="level" name="level">
+                <option value=3>Amministratore</option>
+                <option value=2>Utente</option>
+                <option value=1>Utente solo lettura</option>
+            </select>
+            Password: (Min 4 caratteri)<br>
+            <input type="password" id="password" name="password" autocomplete="off" minlength="4" required>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
+            <button id="save-btn" class="save-btn" onclick="addUser()" disabled>Salva</button><br>
+        </div>
+    </div>   
+
+    <div id="edit-popup" class="modal-content popup">
+        <h3>Modifica password:</h3>
+        <form id="edit" class="content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+            Password: (Min 4 caratteri)<br>
+            <input type="password" id="password" name="password" autocomplete="off" minlength="4" required>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
+            <button id="save-btn" class="save-btn" onclick="editUser()" disabled>Salva</button><br>
+        </div>
+    </div>   
+
+    <div id="delete-popup" class="modal-content popup">
+        <h3>Elimina utente:</h3>
+        <p><u><em><span id="username"></span></em></u></p>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+            <button id="save-btn" class="delete-save-btn" onclick="deleteUser()">Elimina</button><br>
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+    
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script type="module">
+        import { dataUser } from '/static/javascript/auth.js';
+
+        const table = document.getElementById("users");
+        let currentId;
+
+        listUser();
+        setupLevelSelects();
+
+        function openPopup(idPopup) {
+            document.getElementById(idPopup).classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function closePopups(idPopups) {
+            if (currentId) currentId = null;
+            idPopups.forEach(idPopup => {
+                const popup = document.getElementById(idPopup);
+                if (popup) {
+                    popup.classList.remove('active');
+                    // Disabilita il pulsante "Save"
+                    const saveBtn = popup.querySelector('.save-btn');
+                    if (saveBtn) {
+                        saveBtn.disabled = true;
+                    }
+                    // Resetta i campi input
+                    const inputs = popup.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        if (input.disabled) input.disabled = false;
+                        if (input.type !== 'radio') input.value = '';
+                        if (input.dataset.id) input.dataset.id = '';
+                    });
+                }
+            });
+
+            document.getElementById('overlay').classList.remove('active');
+        }
+        
+        function addRow() {
+            openPopup("add-popup");
+        }
+
+        function editRow(id) {
+            currentId = id;
+            openPopup("edit-popup");
+        }
+
+        function deleteRow(id, username) {
+            currentId = id;
+            document.querySelector("#delete-popup #username").textContent = username;
+            openPopup("delete-popup");
+        }
+
+        function setupLevelSelects() {
+            const selects = document.querySelectorAll('select[name="level"]');
+            selects.forEach(select => {
+                // Rimuovi tutte le opzioni esistenti
+                select.innerHTML = '';
+                // Crea opzioni solo per livelli inferiori a dataUser.level
+                const options = [];
+                if (dataUser.level > 3) options.push({ value: 3, label: "Amministratore" });
+                if (dataUser.level > 2) options.push({ value: 2, label: "Utente" });
+                if (dataUser.level > 1) options.push({ value: 1, label: "Utente solo lettura"});
+                // Trova la label associata (assume che la label sia subito prima del select)
+                let label = select.previousElementSibling;
+                console.log(label)
+                if (!(label && label.tagName.toLowerCase() === 'label' && label.htmlFor === select.id)) {
+                    label = null;
+                }
+                if (options.length === 1) {
+                    // Solo una opzione disponibile: nascondi il select (nessun valore di default)
+                    select.style.display = 'none';
+                    // Rimuovi eventuale input hidden
+                    let hidden = select.parentElement.querySelector('input[name="level"]');
+                    if (hidden) hidden.remove();
+                } else if (options.length === 0) {
+                    // Nessuna opzione disponibile: nascondi il select (nessun valore di default)
+                    select.style.display = 'none';
+                    let hidden = select.parentElement.querySelector('input[name="level"]');
+                    if (hidden) hidden.remove();
+                } else {
+                    // Più di una opzione: mostra il select e aggiungi le opzioni
+                    select.style.display = '';
+                    let hidden = select.parentElement.querySelector('input[name="level"]');
+                    if (hidden) hidden.remove();
+                    options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.textContent = opt.label;
+                        select.appendChild(option);
+                    });
+                }
+            });
+        }
+        
+        function listUser() {
+            fetch('/api/auth/users')
+            .then(res => res.json())
+            .then(res => {
+                table.innerHTML = "";
+                res[0].forEach(user => {
+                    if (user.level > 0 && user.level <= dataUser.level) {
+                        const tr = document.createElement("tr");
+                        let level = "Super amministratore";
+                        if (user.level === 3) level = "Amministratore";
+                        else if (user.level === 2) level = "Utente";
+                        else if (user.level === 1) level = "Utente solo lettura";
+                        const buttons = `
+                            <button onclick="editRow(${user.id}, '${user.username}', '${user.description}', ${user.level})">🔑</button>
+                            <button onclick="deleteRow(${user.id}, '${user.username}')">🗑️</button>
+                        `;
+                        tr.innerHTML = `
+                            <tr data-id="${user.id}">
+                                <td>${user.username}</td>
+                                <td>${user.description}</td>
+                                <td>${level}</td>
+                                <td>
+                                    ${user.level < dataUser.level ? buttons : ''}
+                                </td>
+                            </tr>
+                        `;
+                        table.appendChild(tr);
+                    }
+                })
+            })
+            .catch(err => console.error(err));
+        }
+
+        function addUser() {
+            const formData = {};
+            // Raccogli i dati dal form
+            const form = document.getElementById("register");
+            form.querySelectorAll("input").forEach((input) => {
+                formData[input.name] = input.value;
+            });
+            form.querySelectorAll("select").forEach((select) => {
+                formData[select.name] = select.value || 1;
+            })
+
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(res => res.json().then(data => ({ data, status: res.status })))
+            .then(res => {
+                if (res.status === 200) {
+                    listUser();
+                    closePopups(['add-popup']); // chiudi il popup/form
+                    showSnackbar("snackbar", 'Nuovo utente creato', 'rgb(208, 255, 208)', 'black');
+                } else {
+                    const message = res.data.detail[0].msg ? res.data.detail[0].msg.replace("Value error, ", "") : null;
+                    showSnackbar("snackbar", message || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                }
+            });
+        }
+
+        function editUser() {
+            const formData = {};
+            // Raccogli i dati dal form
+            const form = document.getElementById("edit");
+            form.querySelectorAll("input").forEach((input) => {
+                formData[input.name] = input.value;
+            });
+            form.querySelectorAll("select").forEach((select) => {
+                formData[select.name] = select.value;
+            })
+
+            fetch(`/api/auth/user/${currentId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(res => res.json().then(data => ({ data, status: res.status })))
+            .then(res => {
+                if (res.status === 200) {
+                    listUser();
+                    closePopups(['edit-popup']); // chiudi il popup/form
+                    showSnackbar("snackbar", 'Utente modificato correttamente', 'rgb(208, 255, 208)', 'black');
+                    document.querySelector("#edit-popup .save-btn").disabled = false;
+                } else {
+                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                }
+            });
+        }
+
+        function deleteUser() {
+            fetch(`/api/auth/user/${currentId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json().then(data => ({ data, status: res.status })))
+            .then(res => {
+                if (res.status === 200) {
+                    listUser();
+                    closePopups(["delete-popup"]);
+                    showSnackbar("snackbar", 'Utente eliminato correttamente', 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                }
+            })
+        }
+
+        window.openPopup = openPopup;
+        window.closePopups = closePopups;
+        window.addRow = addRow;
+        window.editRow = editRow;
+        window.deleteRow = deleteRow;
+        window.addUser = addUser;
+        window.editUser = editUser;
+        window.deleteUser = deleteUser;
+    </script>
+</body>
+</html>

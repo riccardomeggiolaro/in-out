@@ -2791,7 +2791,7 @@ ${pageClone.innerHTML}
                     data[folder].forEach(file => {
                         if (file.includes(type)) {
                             const option = document.createElement('option');
-                            option.value = `/report/default-report/${folder}/${file}`;
+                            option.value = `/static/content/report/default-report/${folder}/${file}`;
                             option.textContent = file;
                             select.appendChild(option);
                         }

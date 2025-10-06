@@ -27,8 +27,6 @@ name_app = "app_api"
 # funzione che si connette a redis, setta i moduli e imposta le callback da richiamare dentro i moduli
 def mainprg():
 	global app
-	global base_dir_templates
-	global templates
  
 	uvicorn.run(app, host="0.0.0.0", port=lb_config.g_config["app_api"]["port"], log_level="info", reload=False)
 # ==============================================================
@@ -66,12 +64,13 @@ def init():
 	# global rfid
 	# global modules
 	# global ssh_client
-	global base_dir_templates
-	global templates
+
+	path_ui = Path(__file__).parent / lb_config.g_config["app_api"]["path_ui"]
+	path_content = Path(__file__).parent / lb_config.g_config["app_api"]["path_content"]
+	path_images = lb_config.g_config["app_api"]["path_img"] if os.path.exists(lb_config.g_config["app_api"]["path_img"]) else None
 
 	# Usa Path per una gestione più sicura dei percorsi
-	base_dir_templates = Path(os.getcwd()) / "applications" / "static"
-	templates = Jinja2Templates(directory=str(base_dir_templates))
+	templates = Jinja2Templates(directory=str(path_ui))
 
 	app = FastAPI()
 
@@ -94,8 +93,6 @@ def init():
 	tunnel_connections_router = TunnelConnectionsRouter()
 	open_to_customer = OpenToCustomerRouter()
 
-	directory = lb_config.g_config["app_api"]["path_img"] if os.path.exists(lb_config.g_config["app_api"]["path_img"]) else None
-
 	app.include_router(weigher_router.router, prefix="/api")
 
 	app.include_router(anagrafic_router.router, prefix="/api")
@@ -110,13 +107,12 @@ def init():
 
 	app.include_router(open_to_customer.router, prefix="/api", tags=["open to customer"])
 
-	# Monta la cartella 'static' nella rotta '/static'
-	app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+	app.mount("/static/content", StaticFiles(directory=path_content), name="content")
 
-	app.mount("/images", StaticFiles(directory=directory), name="images")
+	app.mount("/static", StaticFiles(directory=path_ui), name="static")
  
-	app.mount("/report", StaticFiles(directory=lb_config.g_config["app_api"]["path_report"]), name="report")
-
+	app.mount("/images", StaticFiles(directory=path_images), name="images")
+ 
 	@app.get("/access", response_class=HTMLResponse)
 	async def Access(request: Request):
 		use_reservation = lb_config.g_config["app_api"]["use_reservation"]
@@ -131,7 +127,7 @@ def init():
 		try:
 			nome_variabile = ""
 			type = "ENTRATA"
-			file_path = base_dir_templates / "report-designer.html"
+			file_path = path_ui / "report-designer.html"
 			
 			if not file_path.is_file():
 				return HTMLResponse(content="File report-designer.html non trovato", status_code=404)
@@ -143,7 +139,7 @@ def init():
 			# Sostituisci le variabili
 			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
 			html_content = html_content.replace('{{ type }}', type)
-			html_content = html_content.replace('{{ default_report_template }}', '/report/weight_in.json')
+			html_content = html_content.replace('{{ default_report_template }}', '/static/content/report/weight_in.json')
 			html_content = html_content.replace('{{ report }}', 'report_in')
 			
 			# Puoi aggiungere altre sostituzioni se servono
@@ -161,7 +157,7 @@ def init():
 		try:
 			nome_variabile = ""
 			type = "USCITA"
-			file_path = base_dir_templates / "report-designer.html"
+			file_path = path_ui / "report-designer.html"
 			
 			if not file_path.is_file():
 				return HTMLResponse(content="File report-designer.html non trovato", status_code=404)
@@ -173,7 +169,7 @@ def init():
 			# Sostituisci le variabili
 			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
 			html_content = html_content.replace('{{ type }}', type)
-			html_content = html_content.replace('{{ default_report_template }}', '/report/weight_out.json')
+			html_content = html_content.replace('{{ default_report_template }}', '/static/content/report/weight_out.json')
 			html_content = html_content.replace('{{ report }}', 'report_out')
 			
 			# Puoi aggiungere altre sostituzioni se servono
@@ -192,13 +188,13 @@ def init():
 			return RedirectResponse(url="/dashboard")
 
 		# Verifica se il file esiste nella directory templates
-		file_path = base_dir_templates / filename
+		file_path = path_ui / filename
 		if file_path.is_file():
 			return templates.TemplateResponse(filename, {"request": request})
 
 		# Prova ad aggiungere l'estensione ".html" se non è stato fornito
 		filename_html = f"{filename}.html"
-		file_path_html = base_dir_templates / filename_html
+		file_path_html = path_ui / filename_html
 		if file_path_html.is_file():
 			return templates.TemplateResponse(filename_html, {"request": request})
 

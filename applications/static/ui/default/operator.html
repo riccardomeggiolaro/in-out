@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="it">
+    <head>
+        <link rel="icon" href="/static/content/baronpesi_favicon.png">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Operatori</title>
+        <meta name="description" content="About this app" />
+        <link rel="stylesheet" href="/static/css/dynamic-table.css">
+        <link rel="stylesheet" href="/static/css/snackbar.css">
+    </head>
+<body>
+    <div id="navbar-container"></div>
+
+    <br>
+
+    <div class="table-container">
+        <div class="title">
+            <h2>Operatori</h2>
+            <button class="register-button" onclick="addRow()">Registra</button>
+        </div>
+        <table>
+            <thead>
+                <tr id="filters">
+                    <th name="description">
+                        <input id="filter.description" name="description" type="text" placeholder="Descrizione" oninput="updateTable()" autocomplete="off">
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: center;">
+                        <label for="rows-per-page">Righe per pagina:</label>
+                        <select id="rows-per-page" onchange="changeRowsPerPage()">
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <button id="previous-page" onclick="previousPage()">&laquo; Precedente</button>
+                        <select id="page-select" onchange="goToPage()"></select>
+                        <button id="next-page" onclick="nextPage()">Successiva &raquo;</button>
+                        <span id="total-rows" style="margin-left: 20px;"></span> <!-- Aggiungi il numero totale di righe qui -->
+                    </td>
+                </tr>
+            </tfoot>            
+        </table>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
+    
+    <div id="add-popup" class="modal-content popup">
+        <h3>Nuovo operatore:</h3>
+        <form id="register" class="content" oninput="document.querySelector('.save-btn').disabled = !this.checkValidity()">
+            <input type="text" id="description" name="description" autocomplete="off" required>
+        </form>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
+            <button id="save-btn" class="save-btn" disabled>Salva</button><br>
+        </div>
+    </div>
+
+    <div id="edit-popup" class="modal-content popup">
+        <h3>Modifica operatore:</h3>
+        <form id="register" class="content" oninput="document.querySelector('.edit-save-btn').disabled = !this.checkValidity()">
+            <input type="text" id="description" name="description" autocomplete="off" required>
+        </form>
+        <div class="errors"></div>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
+            <button id="save-btn" class="edit-save-btn">Salva</button><br>
+        </div>
+    </div>
+
+    <div id="delete-popup" class="modal-content popup">
+        <h3>Elimina operatore:</h3>
+        <p><u><em><span id="description"></span></em></u></p>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+            <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+        </div>
+    </div>
+
+    <div id="confirm-popup" class="modal-content popup">
+        <h3 id="confirm-title"></h3>
+        <span id="confirm-content"></span>
+        <div class="container-buttons right">                
+            <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+            <button id="save-btn" class="confirm-btn">Ok</button><br>
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script src="/static/javascript/dynamic-table.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            itemName = 'operator';
+            nextElementSibling = false;
+            listUrlPath = '/api/anagrafic/operator/list';
+            addUrlPath = '/api/anagrafic/operator';
+            setUrlPath = '/api/anagrafic/operator';
+            deleteUrlPath = '/api/anagrafic/operator';
+            websocketUrlPath = '/api/anagrafic/operator';
+            params = {
+                'operatore': 'operator.description'
+            }
+            init();
+        });
+    </script>
+</body>
+</html>

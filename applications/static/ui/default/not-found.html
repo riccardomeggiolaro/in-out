@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Peso</title>
+    <meta name="description" content="About this app" />
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            box-sizing: border-box; /* Impostazione per una gestione migliore dei margini e del padding */
+            height: 100%; /* Garantire che l'altezza della pagina si estenda completamente */
+            color: white !important;
+        }
+
+        /* Aggiungi un universale per applicare box-sizing a tutti gli elementi */
+        *,
+        *::before,
+        *::after {
+            box-sizing: inherit;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: cornflowerblue;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        form {
+            width: 300px;
+            max-width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Ombra al form */
+            transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+        }
+        input {
+            position: relative;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
+            transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+        }
+        input:focus {
+            box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra più intensa quando è in focus */
+            outline: none;
+        }
+        button {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            background-color: cornflowerblue;
+            color: #fff;
+            cursor: pointer;
+            width: 100%;
+            opacity: 0.6; /* Inizialmente disabilitato */
+            pointer-events: none; /* Disabilita il click */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ombra del pulsante */
+            transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+        }
+        button:disabled {
+            opacity: 0.6; /* Disabilitato */
+            pointer-events: none; /* Disabilita il click */
+        }
+        button:hover {
+            box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra piu' intensa al passaggio del mouse */
+        }
+        button:enabled {
+            opacity: 1; /* Quando abilitato, aumenta l'opacità */
+            pointer-events: auto; /* Abilita il click */
+        }
+        img {
+            width: 200px;
+            max-width: 90%;
+            position: absolute;
+            bottom: 10px;
+        }
+        a {
+            color: #00346b;
+        }
+    </style>
+</head>
+<!-- Rest of your HTML remains unchanged -->
+</style>
+</head>
+<body>
+    <h1>Pagina non trovata!</h1>
+    <h2>Vai alla 👉<a href="/dashboard">dashboard</a>👈️</h2>
+    <img src="/static/content/baronpesi_logo.png" alt="Logo Baron Pesi">
+</body>
+</html>

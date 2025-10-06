@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Designer - Jinja2 Compatible</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: cornflowerblue;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1450px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #1362b8;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 140px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: aliceblue;
+            padding: 20px;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #6c757d;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .page-global-settings {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+
+        .format-selector {
+            margin-bottom: 20px;
+        }
+
+        .format-selector select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .zoom-controls button {
+            color: #6c757d;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+        }
+
+        .component-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: move;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .component-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .component-item i {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #667eea;
+        }
+
+        .design-area {
+            width: fit-content;
+            flex: 1;
+            padding: 20px;
+            background: #ffffff;
+            overflow: auto;
+        }
+
+        .canvas-container {
+            width: fit-content;
+            background: white;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            position: relative;
+            transform-origin: top left;
+            transition: transform 0.3s ease;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Aggiungi dopo .canvas-container */
+        .pages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .page-wrapper {
+            position: relative;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            page-break-after: always;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .margin-controls {
+            margin-bottom: 20px;
+        }
+
+        .margin-input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .margin-input-group input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .new-page-indicator {
+            border-top: 3px dashed #667eea;
+            margin-top: 20px;
+            padding-top: 20px;
+            position: relative;
+        }
+
+        .new-page-indicator::before {
+            content: "Nuova Pagina";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 0 10px;
+            color: #667eea;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .canvas {
+            min-height: 100%;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .canvas.A4 {
+            width: 210mm;
+            height: 297mm;
+            padding: 25mm;
+            font-size: 12pt; /* standard corpo testo */
+        }
+
+        .canvas.A5 {
+            width: 148mm;
+            height: 210mm;
+            padding: 15mm;
+            font-size: 11pt; /* leggermente più piccolo ma ancora molto leggibile */
+        }
+
+        .canvas.A6 {
+            width: 105mm;
+            height: 148mm;
+            padding: 10mm;
+            font-size: 10pt; /* proporzionato per formati tascabili */
+        }
+
+        .canvas.A7 {
+            width: 74mm;
+            height: 105mm;
+            padding: 8mm;
+            font-size: 9pt; /* al limite del minimo leggibile */
+        }
+
+        .canvas.A8 {
+            width: 52mm;
+            height: 74mm;
+            padding: 6mm;
+            font-size: 8pt; /* minimo accettabile per leggibilità */
+        }
+
+        .canvas.Receipt80 {
+            width: 80mm;
+            height: fit-content;
+            min-height: 10mm;
+            padding: 5mm;
+            font-size: 9pt; /* standard per scontrini da 80mm */
+            background: white;
+        }
+
+        .canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            border: 1px dashed #667eea;
+            opacity: 0.3;
+        }
+
+        .canvas::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            border-top: 1px dashed #667eea;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .canvas .vertical-guide {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            border-left: 1px dashed #667eea;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .dropped-element {
+            border: none;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .dropped-element:hover {
+            border: 1px dashed #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .dropped-element.selected {
+            border: 2px solid #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .canvas .dropped-element table {
+            font-size: inherit;
+            table-layout: fixed;
+        }
+
+        .canvas .dropped-element table th,
+        .canvas .dropped-element table td {
+            padding: 2mm 3mm;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        img {
+            border: 1px dashed #ccc;
+        }
+
+        /* Aggiustamenti specifici per formati molto piccoli */
+        .canvas.A8 .dropped-element table th,
+        .canvas.A8 .dropped-element table td,
+        .canvas.A7 .dropped-element table th,
+        .canvas.A7 .dropped-element table td {
+            padding: 1mm 2mm;
+            font-size: 0.9em;
+        }
+
+        .canvas.Receipt80 .dropped-element table th,
+        .canvas.Receipt80 .dropped-element table td {
+            padding: 1mm 2mm;
+            font-size: 0.95em;
+        }
+
+        /* Classe per celle selezionate nelle tabelle */
+        .table-cell-selected {
+            background: rgba(102, 126, 234, 0.2) !important;
+            outline: 2px solid #667eea !important;
+        }
+
+        .element-controls {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            display: none;
+            gap: 5px;
+        }
+
+        .dropped-element.selected .element-controls {
+            display: flex;
+        }
+
+        .control-btn {
+            width: 25px;
+            height: 25px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: #764ba2;
+        }
+
+        .properties-panel {
+            width: 300px;
+            background: aliceblue;
+            padding: 20px;
+            border-left: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+
+        .property-group {
+            margin-bottom: 15px;
+        }
+
+        .property-group label {
+            display: block;
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .header select {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .property-group input,
+        .property-group select,
+        .property-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .property-group textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .jinja-section {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #90caf9;
+        }
+
+        .jinja-section h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .drag-over {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px dashed #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 12px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close-modal {
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            border: none;
+            background: none;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .code-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .copy-btn, .download-btn {
+            margin-top: 15px;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .copy-btn:hover, .download-btn:hover {
+            background: #764ba2;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Elementi template specifici */
+        .jinja-variable {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            color: #1976d2;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .jinja-loop {
+            background: #f3e5f5;
+            border: 1px solid #ce93d8;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .jinja-condition {
+            background: #e8f5e9;
+            border: 1px solid #81c784;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .properties-panel {
+                width: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar, .properties-panel {
+                width: 100%;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body onclick="selectElement()">
+    <div class="container">
+        <div class="header">
+            <h1>📄 Report Designer - {{ type }}</h1>
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="loadDefaultTemplate('{{ default_report_template }}')">Ripristina ultimo salvato</button>
+                <select id="defaultReportSelect" onfocus="populateTemplates('{{ type }}')" onchange="loadDefaultTemplate(this.value)">
+                    <option>--Template di default--</option>
+                </select>
+                <button class="btn btn-primary" onclick="previewReport()">👁️ Anteprima</button>
+                <button class="btn btn-primary" onclick="showCode()" style="display: none;">📝 Mostra Codice</button>
+                <button class="btn btn-primary" onclick="saveProject('{{ report }}')">💾 Salva</button>
+                <button class="btn btn-primary" onclick="importProject()">📥 Importa</button>
+            </div>
+        </div>
+
+        <div class="main-container">
+            <div class="sidebar">
+                <div class="page-global-settings">
+                    <!-- Sostituisci la sezione format-selector con questa versione estesa -->
+                    <div class="format-selector">
+                        <h3>Formato Pagina</h3>
+                        <select id="pageFormat" onchange="changePageFormat()">
+                            <option value="A4">A4 (210 × 297 mm)</option>
+                            <option value="A5">A5 (148 × 210 mm)</option>
+                            <option value="A6">A6 (105 × 148 mm)</option>
+                            <option value="A7">A7 (74 × 105 mm)</option>
+                            <option value="A8">A8 (52 × 74 mm)</option>
+                            <option value="Receipt80">Scontrino 80mm (80 × ∞)</option>
+                        </select>
+                    </div>
+
+                    <div class="margin-controls">
+                        <h3>Margini (mm)</h3>
+                        <div class="margin-input-group">
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Superiore</label>
+                                <input type="number" id="marginTop" value="25" min="5" max="50" onchange="updatePageMargins()">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Inferiore</label>
+                                <input type="number" id="marginBottom" value="25" min="5" max="50" onchange="updatePageMargins()">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Sinistro</label>
+                                <input type="number" id="marginLeft" value="25" min="5" max="50" onchange="updatePageMargins()">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Destro</label>
+                                <input type="number" id="marginRight" value="25" min="5" max="50" onchange="updatePageMargins()">
+                            </div>
+                        </div>
+                        <div class="property-group" style="margin-top: 15px;">
+                            <h3>Font Globale</h3>
+                            <select id="globalFont" onchange="updateGlobalFont(this.value)">
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="'Times New Roman', serif">Times New Roman</option>
+                                <option value="'Courier New', monospace">Courier New</option>
+                                <option value="Verdana, sans-serif">Verdana</option>
+                                <option value="Georgia, serif">Georgia</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="zoom-controls">
+                        <h3>Zoom</h3>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button class="btn btn-secondary btn-small" style="flex: 1;" onclick="changeZoom(-10)">-</button>
+                            <span id="zoomDisplay" style="flex: 1;">100%</span>
+                            <button class="btn btn-secondary btn-small" style="flex: 1;" onclick="changeZoom(10)">+</button>
+                        </div>
+                        <button class="btn btn-secondary btn-small" onclick="resetZoom()" style="margin-top: 5px; width: 100%;">Reset</button>
+                    </div>
+                </div>
+
+                <h3>Componenti Base</h3>
+                <div class="component-item" draggable="true" data-type="heading">
+                    <i>📝</i>
+                    Intestazione
+                </div>
+                <div class="component-item" draggable="true" data-type="paragraph">
+                    <i>📄</i>
+                    Paragrafo
+                </div>
+                <div class="component-item" draggable="true" data-type="table">
+                    <i>📊</i>
+                    Tabella
+                </div>
+                <div class="component-item" draggable="true" data-type="image">
+                    <i>🖼️</i>
+                    Immagine
+                </div>
+                <div class="component-item" draggable="true" data-type="divider">
+                    <i>➖</i>
+                    Separatore
+                </div>
+            </div>
+
+            <div class="design-area">
+                <div class="canvas-container">
+                    <div id="pagesContainer" class="pages-container">
+                        <div class="page-wrapper">
+                            <div id="canvas" class="canvas A4" data-page-number="1">
+                                <!-- Gli elementi verranno droppati qui -->
+                                <div class="vertical-guide"></div>
+                            </div>
+                            <span class="page-number">Pagina 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="properties-panel" onclick="event.stopPropagation()">
+                <h3>Proprietà</h3>
+                <div id="propertiesContent">
+                    <p style="color: #999; text-align: center; margin-top: 20px;">
+                        Seleziona un elemento per modificarne le proprietà
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per mostrare il codice -->
+    <div id="codeModal" class="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Template HTML/Jinja2</h2>
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="code-output" id="codeOutput"></div>
+            <div class="modal-buttons">
+                <button class="copy-btn" onclick="copyCode()">📋 Copia Codice</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script>
+        let selectedElement = null;
+        let selectedTableCell = null; // Nuova variabile per tracciare la cella selezionata
+        let elementCounter = 0;
+        let currentZoom = 100;
+        // Aggiungi queste variabili globali all'inizio
+        let currentPage = 1;
+        let totalPages = 1;
+        let pageHeights = {
+            'A4': 297,
+            'A5': 210,
+            'A6': 148,
+            'A7': 105,
+            'A8': 74,
+            'Receipt80': null // Altezza infinita per scontrini
+        };
+
+        let globalFont = "Arial, sans-serif";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDefaultTemplate('{{ default_report_template }}', false);
+        });
+
+        // Funzione helper per calcolare il numero effettivo di colonne in una riga (considerando colspan)
+        function getEffectiveColumnCount(row) {
+            let totalCols = 0;
+            row.querySelectorAll('th, td').forEach(cell => {
+                const colspan = parseInt(cell.getAttribute('colspan') || cell.getAttribute('data-colspan') || '1');
+                totalCols += colspan;
+            });
+            return totalCols;
+        }
+
+        // Funzione per ottenere l'altezza disponibile della pagina
+        function getAvailablePageHeight(pageElement) {
+            const format = document.getElementById('pageFormat').value;
+            if (format === 'Receipt80') return Infinity; // Scontrino non ha limite
+            
+            const pageHeightMm = pageHeights[format];
+            const marginTop = parseInt(document.getElementById('marginTop').value) || 25;
+            const marginBottom = parseInt(document.getElementById('marginBottom').value) || 25;
+            
+            // Converti mm in pixel (approssimativo: 1mm ≈ 3.78px)
+            const mmToPx = 3.78;
+            const availableHeight = (pageHeightMm - marginTop - marginBottom) * mmToPx;
+            
+            return availableHeight;
+        }
+
+        // Funzione per calcolare l'altezza totale degli elementi in una pagina
+        function calculatePageContentHeight(pageElement) {
+            const elements = pageElement.querySelectorAll('.dropped-element');
+            let totalHeight = 0;
+            
+            elements.forEach(element => {
+                const rect = element.getBoundingClientRect();
+                const styles = window.getComputedStyle(element);
+                const marginTop = parseFloat(styles.marginTop) || 0;
+                const marginBottom = parseFloat(styles.marginBottom) || 0;
+                totalHeight += rect.height + marginTop + marginBottom;
+            });
+            
+            return totalHeight;
+        }
+
+        // Funzione per verificare se un elemento può essere aggiunto
+        function canAddElement(pageElement, newElementHeight = 100) {
+            const format = document.getElementById('pageFormat').value;
+            if (format === 'Receipt80') return true; // Sempre permesso per scontrini
+            
+            const currentHeight = calculatePageContentHeight(pageElement);
+            const availableHeight = getAvailablePageHeight(pageElement);
+            
+            return (currentHeight + newElementHeight) <= availableHeight;
+        }
+
+        // Funzione per creare una nuova pagina
+        function createNewPage() {
+            totalPages++;
+            const pagesContainer = document.getElementById('pagesContainer');
+            const format = document.getElementById('pageFormat').value;
+            
+            const newPageWrapper = document.createElement('div');
+            newPageWrapper.className = 'page-wrapper';
+            newPageWrapper.dataset.page = totalPages;
+            
+            const newPage = document.createElement('div');
+            newPage.id = `canvas-page-${totalPages}`;
+            newPage.className = `canvas ${format}`;
+            newPage.dataset.pageNumber = totalPages;
+            
+            // Applica i margini correnti
+            updatePageMarginsForElement(newPage);
+            
+            // Aggiungi indicatore di nuova pagina nel primo elemento
+            const pageIndicator = document.createElement('div');
+            pageIndicator.className = 'new-page-indicator';
+            pageIndicator.style.display = 'none'; // Nascosto inizialmente
+            newPage.appendChild(pageIndicator);
+            
+            const pageNumber = document.createElement('span');
+            pageNumber.className = 'page-number';
+            pageNumber.textContent = `Pagina ${totalPages}`;
+            
+            const verticalGuide = document.createElement('div');
+            verticalGuide.className = 'vertical-guide';
+            newPage.appendChild(verticalGuide);
+            
+            newPageWrapper.appendChild(newPage);
+            newPageWrapper.appendChild(pageNumber);
+            pagesContainer.appendChild(newPageWrapper);
+            
+            // Inizializza drag and drop per la nuova pagina
+            newPage.addEventListener('dragover', handleDragOver);
+            newPage.addEventListener('drop', handleDrop);
+            newPage.addEventListener('dragleave', handleDragLeave);
+            
+            return newPage;
+        }
+
+        // Modifica handleDrop per gestire il controllo spazio
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            e.preventDefault();
+            
+            const canvas = e.currentTarget;
+            canvas.classList.remove('drag-over');
+            
+            const componentType = e.dataTransfer.getData('componentType');
+            
+            // Verifica se c'è spazio nella pagina corrente
+            if (!canAddElement(canvas)) {
+                // Cerca l'ultima pagina o creane una nuova
+                let targetCanvas = canvas;
+                const allPages = document.querySelectorAll('.canvas');
+                
+                // Trova una pagina con spazio disponibile
+                let foundSpace = false;
+                for (let i = allPages.length - 1; i >= 0; i--) {
+                    if (canAddElement(allPages[i])) {
+                        targetCanvas = allPages[i];
+                        foundSpace = true;
+                        break;
+                    }
+                }
+                
+                // Se non c'è spazio in nessuna pagina, crea una nuova pagina
+                if (!foundSpace) {
+                    targetCanvas = createNewPage();
+                    
+                    // Mostra un messaggio all'utente
+                    showNotification('Nuova pagina creata per contenere l\'elemento');
+                }
+                
+                addElement(componentType, targetCanvas);
+            } else {
+                addElement(componentType, canvas);
+            }
+            
+            // Riorganizza elementi se necessario
+            redistributeElements();
+            
+            return false;
+        }
+
+        // Funzione per ridistribuire elementi tra le pagine
+        function redistributeElements() {
+            const format = document.getElementById('pageFormat').value;
+            if (format === 'Receipt80') return; // Non ridistribuire per scontrini
+            
+            const allPages = document.querySelectorAll('.canvas');
+            const allElements = [];
+            
+            // Raccogli tutti gli elementi
+            allPages.forEach(page => {
+                const elements = page.querySelectorAll('.dropped-element');
+                elements.forEach(el => {
+                    allElements.push(el.cloneNode(true));
+                    el.remove();
+                });
+            });
+            
+            // Ridistribuisci gli elementi
+            let currentPageIndex = 0;
+            let currentPage = allPages[currentPageIndex];
+            
+            allElements.forEach(element => {
+                if (!canAddElement(currentPage, element.offsetHeight)) {
+                    currentPageIndex++;
+                    if (currentPageIndex >= allPages.length) {
+                        currentPage = createNewPage();
+                    } else {
+                        currentPage = allPages[currentPageIndex];
+                    }
+                }
+                
+                currentPage.appendChild(element);
+                makeElementInteractive(element);
+            });
+            
+            // Rimuovi pagine vuote extra (tranne la prima)
+            for (let i = allPages.length - 1; i > 0; i--) {
+                if (allPages[i].querySelectorAll('.dropped-element').length === 0) {
+                    allPages[i].closest('.page-wrapper').remove();
+                    totalPages--;
+                }
+            }
+        }
+
+        // Funzione per aggiornare i margini
+        function updatePageMargins() {
+            const marginTop = document.getElementById('marginTop').value + 'mm';
+            const marginBottom = document.getElementById('marginBottom').value + 'mm';
+            const marginLeft = document.getElementById('marginLeft').value + 'mm';
+            const marginRight = document.getElementById('marginRight').value + 'mm';
+            
+            const allPages = document.querySelectorAll('.canvas');
+            allPages.forEach(page => {
+                page.style.paddingTop = marginTop;
+                page.style.paddingBottom = marginBottom;
+                page.style.paddingLeft = marginLeft;
+                page.style.paddingRight = marginRight;
+            });
+            
+            // Ridistribuisci elementi dopo il cambio margini
+            setTimeout(redistributeElements, 100);
+        }
+
+        // Funzione per aggiornare margini di un singolo elemento
+        function updatePageMarginsForElement(element) {
+            const marginTop = document.getElementById('marginTop').value + 'mm';
+            const marginBottom = document.getElementById('marginBottom').value + 'mm';
+            const marginLeft = document.getElementById('marginLeft').value + 'mm';
+            const marginRight = document.getElementById('marginRight').value + 'mm';
+            
+            element.style.paddingTop = marginTop;
+            element.style.paddingBottom = marginBottom;
+            element.style.paddingLeft = marginLeft;
+            element.style.paddingRight = marginRight;
+        }
+
+        // Funzione per mostrare notifiche
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #667eea;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Modifica changePageFormat per gestire tutte le pagine
+        function changePageFormat() {
+            const format = document.getElementById('pageFormat').value;
+            const allPages = document.querySelectorAll('.canvas');
+            
+            allPages.forEach(page => {
+                page.className = `canvas ${format}`;
+            });
+            
+            // Aggiorna margini predefiniti per il formato
+            updateDefaultMarginsForFormat(format);
+            updatePageMargins();
+            
+            // Auto zoom per formati piccoli
+            if (format === 'A7' || format === 'A8' || format === 'Receipt80') {
+                currentZoom = 150;
+            } else if (format === 'A6') {
+                currentZoom = 120;
+            } else {
+                currentZoom = 100;
+            }
+            applyZoom();
+            updateZoomDisplay();
+            
+            // Ridistribuisci elementi per il nuovo formato
+            setTimeout(redistributeElements, 100);
+        }
+
+        // Funzione per impostare margini predefiniti per formato
+        function updateDefaultMarginsForFormat(format) {
+            const marginInputs = {
+                'A4': { top: 25, bottom: 25, left: 20, right: 20 },
+                'A5': { top: 15, bottom: 15, left: 12, right: 12 },
+                'A6': { top: 10, bottom: 10, left: 10, right: 10 },
+                'A7': { top: 8, bottom: 8, left: 8, right: 8 },
+                'A8': { top: 6, bottom: 6, left: 6, right: 6 },
+                'Receipt80': { top: 5, bottom: 5, left: 5, right: 5 }
+            };
+            
+            const margins = marginInputs[format];
+            document.getElementById('marginTop').value = margins.top;
+            document.getElementById('marginBottom').value = margins.bottom;
+            document.getElementById('marginLeft').value = margins.left;
+            document.getElementById('marginRight').value = margins.right;
+        }
+
+        // Aggiungi animazioni CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Inizializzazione drag and drop
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDragAndDrop();
+            updateZoomDisplay();
+        });
+
+        // Funzioni zoom
+        function changeZoom(delta) {
+            currentZoom = Math.max(20, Math.min(300, currentZoom + delta));
+            applyZoom();
+            updateZoomDisplay();
+        }
+
+        function resetZoom() {
+            currentZoom = 100;
+            applyZoom();
+            updateZoomDisplay();
+        }
+
+        function applyZoom() {
+            const canvasContainer = document.querySelector('.canvas-container');
+            canvasContainer.style.transform = `scale(${currentZoom / 100})`;
+        }
+
+        function updateZoomDisplay() {
+            document.getElementById('zoomDisplay').textContent = currentZoom + '%';
+        }
+
+        function initializeDragAndDrop() {
+            const components = document.querySelectorAll('.component-item');
+            const canvas = document.getElementById('canvas');
+
+            components.forEach(component => {
+                component.addEventListener('dragstart', handleDragStart);
+                component.addEventListener('dragend', handleDragEnd);
+            });
+
+            canvas.addEventListener('dragover', handleDragOver);
+            canvas.addEventListener('drop', handleDrop);
+            canvas.addEventListener('dragleave', handleDragLeave);
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('componentType', e.target.dataset.type);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'copy';
+            e.currentTarget.classList.add('drag-over');
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function addElement(type, container) {
+            const element = createElementByType(type);
+            container.appendChild(element);
+            makeElementInteractive(element);
+        }
+
+        function createElementByType(type) {
+            const pageFormat = document.getElementById('pageFormat').value;
+            let { size, pageStyle, fontSize } = getPageSize(pageFormat);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'dropped-element';
+            wrapper.dataset.elementId = `element_${++elementCounter}`;
+            wrapper.dataset.type = type;
+            wrapper.style.marginTop = "1mm";
+            wrapper.style.marginBottom = "1mm";
+            wrapper.style.fontSize = fontSize;
+
+            let content = '';
+            
+            switch(type) {
+                case 'heading':
+                    wrapper.style.textAlign = "left";
+                    content = `
+                        <h2 contenteditable="true">Titolo Report</h2>
+                    `;
+                    break;
+                case 'paragraph':
+                    wrapper.style.textAlign = "left";
+                    content = `
+                        <p contenteditable="true">Inserisci qui il testo del paragrafo...</p>
+                    `;
+                    break;
+                case 'table':
+                    content = `
+                        <table style="width: 100%; border-collapse: collapse; font-size: inherit; table-layout: fixed;" data-padding="2mm">
+                            <thead>
+                                <tr>
+                                    <th style="border: 0.3mm solid #ddd; padding: 2mm 3mm; text-align: left; white-space: nowrap; overflow: hidden;" contenteditable="true" data-colspan="1">Colonna 1</th>
+                                    <th style="border: 0.3mm solid #ddd; padding: 2mm 3mm; text-align: left; white-space: nowrap; overflow: hidden;" contenteditable="true" data-colspan="1">Colonna 2</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 0.3mm solid #ddd; padding: 2mm 3mm; text-align: left; white-space: nowrap; overflow: hidden;" contenteditable="true" data-colspan="1">Dato 1</td>
+                                    <td style="border: 0.3mm solid #ddd; padding: 2mm 3mm; text-align: left; white-space: nowrap; overflow: hidden;" contenteditable="true" data-colspan="1">Dato 2</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `;
+                    break;
+                case 'image':
+                    wrapper.style.textAlign = "center"; // Allineamento iniziale sul wrapper
+                    content = `
+                        <div data-image-container>
+                            <img src="" alt="Immagine" 
+                                 style="width: 50mm; height: 37.5mm; display: inline-block;" 
+                                 data-width-mm="50" data-height-mm="37.5" data-image-type="file">
+                        </div>
+                    `;
+                    break;
+                case 'divider':
+                    content = `<hr style="border: none; border-top: 2px solid #e0e0e0; margin: 0; padding: 0;">`;
+                    wrapper.style.padding = "0";
+                    break;
+            }
+            
+            wrapper.innerHTML = content + `
+                <div class="element-controls" onclick="event.stopPropagation()">
+                    <button class="control-btn" onclick="moveUp(this)" title="Sposta su">↑</button>
+                    <button class="control-btn" onclick="moveDown(this)" title="Sposta giù">↓</button>
+                    <button class="control-btn" onclick="deleteElement(this)" title="Elimina">×</button>
+                </div>
+            `;
+            
+            // Se è una tabella, aggiungi event listener per le celle
+            if (type === 'table') {
+                setupTableCellSelection(wrapper);
+            }
+            
+            return wrapper;
+        }
+
+        // Nuova funzione per gestire la selezione delle celle della tabella
+        function setupTableCellSelection(tableElement) {
+            const cells = tableElement.querySelectorAll('td, th');
+            cells.forEach(cell => {
+                // Rimuovi listener precedenti se presenti
+                cell.removeEventListener('click', cell._clickHandler);
+                cell._clickHandler = function(e) {
+                    e.stopPropagation();
+                    selectTableCell(this);
+                };
+                cell.addEventListener('click', cell._clickHandler);
+            });
+        }
+
+        // Nuova funzione per selezionare una cella della tabella
+        function selectTableCell(cell) {
+            // Rimuovi selezione precedente
+            document.querySelectorAll('.table-cell-selected').forEach(c => {
+                c.classList.remove('table-cell-selected');
+            });
+            
+            // Seleziona la nuova cella
+            cell.classList.add('table-cell-selected');
+            selectedTableCell = cell;
+            
+            // Seleziona anche l'elemento padre (la tabella)
+            const tableWrapper = cell.closest('.dropped-element');
+            if (tableWrapper) {
+                selectElement(tableWrapper);
+            } else {
+                const cellPropertiesContent = document.getElementById('cellPropertiesContent');
+                if (cellPropertiesContent) cellPropertiesContent.remove();
+            }
+        }
+
+        function makeElementInteractive(element) {
+            // Rimuovi listener precedente se presente
+            element.removeEventListener('click', element._clickHandler);
+            element._clickHandler = function(e) {
+                // Se è una tabella e si clicca su una cella, non selezionare l'elemento intero
+                if (!e.target.matches('td, th')) {
+                    selectElement(this);
+                }
+                e.stopPropagation();
+            };
+            element.addEventListener('click', element._clickHandler);
+            
+            // Se è una tabella, setup celle
+            if (element.dataset.type === 'table') {
+                setupTableCellSelection(element);
+            }
+        }
+
+        function selectElement(element) {
+            // Rimuovi selezione precedente
+            document.querySelectorAll('.dropped-element').forEach(el => {
+                el.classList.remove('selected');
+            });
+
+            if (element) {
+                // Seleziona nuovo elemento
+                element.classList.add('selected');
+                selectedElement = element;
+            }
+            
+            // Mostra proprietà
+            showProperties(element);
+        }
+
+        function showProperties(element) {
+            const propertiesContent = document.getElementById('propertiesContent');
+
+            if (!element) {
+                propertiesContent.innerHTML = `
+                    <p style="color: #999; text-align: center; margin-top: 20px;">
+                        Seleziona un elemento per modificarne le proprietà
+                    </p>
+                `;
+                return;
+            }
+
+            const type = element.dataset.type;
+            const marginTop = element.style.marginTop.replace("mm", "");
+            const marginBottom = element.style.marginBottom.replace("mm", "");
+            const textAlign = element.style.textAlign;
+            const fontSize = element.style.fontSize.replace("pt", "");
+            const fontFamily = element.style.fontFamily;
+
+            let propertiesHTML = `
+                <div class="property-group">
+                    <label>ID Elemento</label>
+                    <input type="text" value="${element.dataset.elementId}" readonly>
+                </div>
+                <div class="property-group">
+                    <label>Tipo</label>
+                    <input type="text" value="${type}" readonly>
+                </div>
+            `;
+
+            if (type !== 'image') {
+                // SEZIONE VARIABILI JINJA2 - SOLO DROPDOWN
+                propertiesHTML += `
+                    <div class="jinja-section">
+                        <h4>🔤 Variabili Jinja2</h4>
+                        
+                        <div class="property-group">
+                            <label>Seleziona Variabile da Inserire</label>
+                            <select onchange="insertQuickVariable(this.value); this.value='';">Tipo Sorgente Immagine
+                                <option value="">-- Seleziona variabile --</option>
+                                <option value="{{ typeSubject }}">{{ typeSubject }} - Tipo SOGGETTO</option>
+                                <option value="{{ subject.social_reason }}">{{ subject.social_reason }} - Ragione sociale SOGGETTO</option>
+                                <option value="{{ subject.telephone }}">{{ subject.telephone }} - Telefono SOGGETTO</option>
+                                <option value="{{ subject.cfpiva }}">{{ subject.cfpiva }} - CF/P.iVA SOGGETTO</option>
+                                <option value="{{ vector.social_reason }}">{{ vector.social_reason }} - Ragione sociale VETTORE</option>
+                                <option value="{{ vector.telephone }}">{{ vector.telephone }} - Telefono VETTORE</option>
+                                <option value="{{ vector.cfpiva }}">{{ vector.cfpiva }} - CF/P.Iva VETTORE</option>
+                                <option value="{{ driver.social_reason }}">{{ driver.social_reason }} - Ragione sociale AUTISTA</option>
+                                <option value="{{ driver.telephone }}">{{ driver.telephone }} - Telefono AUTISTA</option>
+                                <option value="{{ vehicle.plate }}">{{ vehicle.plate }} - Targa VEICOLO</option>
+                                <option value="{{ vehicle.description }}">{{ vehicle.description }} - Descrizione VEICOLO</option>
+                                <option value="{{ material.description }}">{{ material.description }} - Descrizione MATERIALE</option>
+                                <option value="{{ note }}">{{ note }} - NOTE</option>
+                                <option value="{{ document_reference }}">{{ document_reference }} - REFERENZA DOCUMENTO</option>
+                                <option value="{{ weight1.weight }}">{{ weight1.weight }} - Peso ENTRATA</option>
+                                <option value="{{ weight1.date }}">{{ weight1.date }} - Data ENTRATA</option>
+                                <option value="{{ weight1.pid }}">{{ weight1.pid }} - Pid ENTRATA</option>
+                                <option value="{{ weight2weight }}">{{ weight2weight }} - Peso USCITA</option>
+                                <option value="{{ weight2date }}">{{ weight2date }} - Data USCITA</option>
+                                <option value="{{ weight2pid }}">{{ weight2pid }} - Pid USCITA</option>
+                                <option value="{{ net_weight }}">{{ net_weight }} - Peso NETTO</option>
+                            </select>
+                        </div>
+                        
+                        <div class="property-group">
+                            <small style="color: #666;">
+                                ${type === 'table' ? 'Clicca su una cella della tabella per selezionarla, poi scegli la variabile.' : 'Clicca nel testo dove vuoi inserire la variabile, poi selezionala dal menu sopra.'}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Proprietà specifiche per tipo
+            switch(type) {
+                case 'heading':
+                    const typeTitle = element.firstElementChild.tagName;
+                    propertiesHTML += `
+                        <div class="property-group">
+                            <label>Dimensione</label>
+                            <select onchange="changeHeadingSize(this.value)">
+                                <option value="h1" ${typeTitle == "H1" ? 'selected' : null}>H1 - Molto grande</option>
+                                <option value="h2" ${typeTitle == "H2" ? 'selected' : null}>H2 - Grande</option>
+                                <option value="h3" ${typeTitle == "H3" ? 'selected' : null}>H3 - Medio</option>
+                                <option value="h4" ${typeTitle == "H4" ? 'selected' : null}>H4 - Piccolo</option>
+                            </select>
+                        </div>
+                        <div class="property-group">
+                            <label>Allineamento</label>
+                            <select onchange="changeAlignment(this.value)">
+                                <option value="left" ${textAlign == "left" ? 'selected' : null}>Sinistra</option>
+                                <option value="center" ${textAlign == "center" ? 'selected' : null}>Centro</option>
+                                <option value="right" ${textAlign == "right" ? 'selected' : null}>Destra</option>
+                            </select>
+                        </div>
+                        <div class="property-group">
+                            <label>Font</label>
+                            <select onchange="changeElementFont(this.value)">
+                                <option value="unset" ${!fontFamily || fontFamily == "unset" ? 'selected' : null}>Globale (${globalFont.split(',')[0]})</option>
+                                <option value="Arial, sans-serif" ${fontFamily == "Arial, sans-serif" ? 'selected' : null}>Arial</option>
+                                <option value="'Times New Roman', serif" ${fontFamily == "'Times New Roman', serif" ? 'selected' : null}>Times New Roman</option>
+                                <option value="'Courier New', monospace" ${fontFamily == "'Courier New', monospace" ? 'selected' : null}>Courier New</option>
+                                <option value="Verdana, sans-serif" ${fontFamily == "Verdana, sans-serif" ? 'selected' : null}>Verdana</option>
+                                <option value="Georgia, serif" ${fontFamily == "Georgia, serif" ? 'selected' : null}>Georgia</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'paragraph':
+                    propertiesHTML += `
+                        <div class="property-group">
+                            <label>Allineamento</label>
+                            <select onchange="changeAlignment(this.value)">
+                                <option value="left" ${textAlign == "left" ? 'selected' : null}>Sinistra</option>
+                                <option value="center" ${textAlign == "center" ? 'selected' : null}>Centro</option>
+                                <option value="right" ${textAlign == "right" ? 'selected' : null}>Destra</option>
+                            </select>
+                        </div>
+                        <div class="property-group">
+                            <label>Dimensione font</label>
+                            <input type="number" value="${fontSize}" min="8" max="32" onchange="changeFontSize(this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label>Font</label>
+                            <select onchange="changeElementFont(this.value)">
+                                <option value="unset" ${!fontFamily || fontFamily == "unset" ? 'selected' : null}>Globale (${globalFont.split(',')[0]})</option>
+                                <option value="Arial, sans-serif" ${fontFamily == "Arial, sans-serif" ? 'selected' : null}>Arial</option>
+                                <option value="'Times New Roman', serif" ${fontFamily == "'Times New Roman', serif" ? 'selected' : null}>Times New Roman</option>
+                                <option value="'Courier New', monospace" ${fontFamily == "'Courier New', monospace" ? 'selected' : null}>Courier New</option>
+                                <option value="Verdana, sans-serif" ${fontFamily == "Verdana, sans-serif" ? 'selected' : null}>Verdana</option>
+                                <option value="Georgia, serif" ${fontFamily == "Georgia, serif" ? 'selected' : null}>Georgia</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'image':
+                    const img = element.querySelector('img');
+                    const currentWidthMm = img.dataset.widthMm || '';
+                    const currentHeightMm = img.dataset.heightMm || '';
+                    const currentSrc = img.src;
+                    const imageType = img.dataset.imageType || 'file';
+                
+                    propertiesHTML += `
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #ffeaa7;">
+                            <h4 style="margin: 0 0 15px 0; color: #856404;">🖼️ Proprietà Immagine</h4>
+                            
+                            <div class="property-group">
+                                <label>Tipo Sorgente Immagine</label>
+                                <select onchange="changeImageType(this.value)" id="imageTypeSelect">
+                                    <option value="file" ${imageType === 'file' ? 'selected' : ''}>📁 File dal PC</option>
+                                    <option value="variable" ${imageType === 'variable' ? 'selected' : ''}>🔤 Variabile Jinja2</option>
+                                </select>
+                            </div>
+                            
+                            <div id="fileUploadSection" style="display: ${imageType === 'file' ? 'block' : 'none'};">
+                                <div class="property-group">
+                                    <label>Carica Immagine dal PC</label>
+                                    <div class="file-upload-container">
+                                        <input type="file" accept="image/*" onchange="handleImageUpload(this)" id="imageFileInput">
+                                        <div style="pointer-events: none;">
+                                            <div style="font-size: 24px; color: #667eea;">📁</div>
+                                            <div class="file-upload-text">Clicca per selezionare un'immagine</div>
+                                            <div style="font-size: 12px; color: #999; margin-top: 5px;">PNG, JPG, GIF, WebP</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="variableSection" style="display: ${imageType === 'variable' ? 'block' : 'none'};">
+                                <div class="property-group">
+                                    <label>Variabili Immagini</label>
+                                    <select onchange="setImageVariable(this.value); this.value='';">
+                                        <option value="">-- Seleziona variabile --</option>
+                                        <option value="weight1.img">{{ weight1.img }} - Foto ENTRATA</option>
+                                        <option value="weight2.img">{{ weight1.img }} - Foto USCITA</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="urlSection" style="display: ${imageType === 'url' ? 'block' : 'none'};">
+                                <div class="property-group"></div>
+                            </div>
+                            
+                            <div class="property-group">
+                                <label>Dimensioni</label>
+                                <div class="dimension-group">
+                                    <div class="dimension-input">
+                                        <input type="number" value="${currentWidthMm}" min="5" max="200" step="0.5" 
+                                            onchange="changeImageWidth(this.value)" placeholder="Larghezza">
+                                        <span>mm</span>
+                                    </div>
+                                    <div class="dimension-input">
+                                        <input type="number" value="${currentHeightMm}" min="5" max="200" step="0.5" 
+                                            onchange="changeImageHeight(this.value)" placeholder="Altezza">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                                <small style="color: #666; margin-top: 5px; display: block;">
+                                    Lascia un campo vuoto per mantenere le proporzioni
+                                </small>
+                            </div>
+                        </div>
+                    `;
+
+                    propertiesHTML += `
+                        <div class="property-group">
+                            <label>Allineamento</label>
+                            <select onchange="changeImageAlignment(this.value)">
+                                <option value="center" ${textAlign === 'center' ? 'selected' : ''}>Centro</option>
+                                <option value="left" ${textAlign === 'left' ? 'selected' : ''}>Sinistra</option>
+                                <option value="right" ${textAlign === 'right' ? 'selected' : ''}>Destra</option>
+                            </select>
+                        </div>
+                    `;
+
+                    break;
+                case 'table':
+                    const table = element.querySelector('table');
+                    const currentFontSize = table.style.fontSize ? table.style.fontSize.replace('pt', '') : '12';
+                    const currentPadding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
+                    const theadRow = table.querySelector('thead tr');
+                    const currentCols = getEffectiveColumnCount(theadRow); // Usa effective columns
+                    const tbodyRows = table.querySelectorAll('tbody tr');
+                    const currentRows = tbodyRows.length;
+                    const tableFont = table.style.fontFamily || globalFont;
+                    
+                    // Sezione proprietà cella selezionata
+                    if (selectedTableCell) {
+                        const cellAlign = selectedTableCell.style.textAlign || 'left';
+                        const cellColspan = selectedTableCell.getAttribute('data-colspan') || '1';
+                        // Calcola il numero massimo di celle disponibili a destra (inclusa la cella corrente)
+                        const row = selectedTableCell.closest('tr');
+                        const cells = Array.from(row.querySelectorAll('th, td'));
+                        const cellIndex = cells.indexOf(selectedTableCell);
+                        const maxColspan = (cells.length - cellIndex) + (Number(cellColspan) - 1); // Celle rimanenti a destra, inclusa la corrente
+                        const cellFontWeight = selectedTableCell.style.fontWeight || (selectedTableCell.tagName.toUpperCase() === 'TH' ? 'bold' : 'normal');
+
+                        console.log(cellColspan);
+                        console.log(cells.length);
+                        console.log(cellIndex);
+                        console.log(maxColspan);
+
+                        propertiesHTML += `
+                            <div id="cellPropertiesContent" style="background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                                <h4 style="margin: 0 0 10px 0; color: #2e7d32;">📌 Cella Selezionata</h4>
+                                
+                                <div class="property-group">
+                                    <label>Allineamento Cella</label>
+                                    <select onchange="changeCellAlignment(this.value)">
+                                        <option value="left" ${cellAlign === 'left' ? 'selected' : ''}>Sinistra</option>
+                                        <option value="center" ${cellAlign === 'center' ? 'selected' : ''}>Centro</option>
+                                        <option value="right" ${cellAlign === 'right' ? 'selected' : ''}>Destra</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="property-group">
+                                    <label>Colspan (unisci colonne)</label>
+                                    <input type="number" value="${cellColspan}" min="1" max="${maxColspan}" onchange="changeCellColspan(this.value)">
+                                </div>
+
+                                <div class="property-group">
+                                    <label>Stile Testo</label>
+                                    <select onchange="changeCellFontWeight(this.value)">
+                                        <option value="normal" ${cellFontWeight === 'normal' ? 'selected' : ''}>Normale</option>
+                                        <option value="bold" ${cellFontWeight === 'bold' ? 'selected' : ''}>Grassetto</option>
+                                    </select>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    propertiesHTML += `
+                        <div style="background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">📊 Proprietà Globali Tabella</h4>
+                            
+                            <div class="property-group">
+                                <label>Numero Colonne</label>
+                                <input id="inputTableColumns" type="number" value="${currentCols}" min="1" max="10" onchange="changeTableColumns(this, this.value);">
+                            </div>
+                            
+                            <div class="property-group">
+                                <label>Numero Righe</label>
+                                <input id="inputTableRows" type="number" value="${currentRows}" min="1" max="20" onchange="changeTableRows(this.value)">
+                            </div>
+                            
+                            <div class="property-group">
+                                <label>Padding Celle (mm)</label>
+                                <input type="number" value="${currentPadding}" min="1" max="10" step="0.5" onchange="changeTablePadding(this.value)">
+                            </div>
+                        </div>
+                    `;
+
+                    propertiesHTML += `
+                            <div class="property-group">
+                                <label>Dimensione Font (pt)</label>
+                                <input type="number" value="${fontSize}" min="6" max="24" onchange="changeFontSize(this.value)">
+                            </div>
+                            <div class="property-group">
+                                <label>Font</label>
+                                <select onchange="changeElementFont(this.value)">
+                                    <option value="unset" ${!fontFamily || fontFamily == "unset" ? 'selected' : null}>Globale (${globalFont.split(',')[0]})</option>
+                                    <option value="Arial, sans-serif" ${fontFamily == "Arial, sans-serif" ? 'selected' : null}>Arial</option>
+                                    <option value="'Times New Roman', serif" ${fontFamily == "'Times New Roman', serif" ? 'selected' : null}>Times New Roman</option>
+                                    <option value="'Courier New', monospace" ${fontFamily == "'Courier New', monospace" ? 'selected' : null}>Courier New</option>
+                                    <option value="Verdana, sans-serif" ${fontFamily == "Verdana, sans-serif" ? 'selected' : null}>Verdana</option>
+                                    <option value="Georgia, serif" ${fontFamily == "Georgia, serif" ? 'selected' : null}>Georgia</option>
+                                </select>
+                            </div>
+                    `;
+                    break;
+                case 'divider':
+                    const hr = element.querySelector('hr');
+                    const currentThickness = hr.style.borderTopWidth.replace('px', '') || '2';
+                    propertiesHTML += `
+                        <div class="property-group">
+                            <label>Spessore linea (mm)</label>
+                            <input type="number" value="${currentThickness}" min="1" max="10" onchange="changeDividerThickness(this.value)">
+                        </div>
+                    `;
+                    break;
+            }
+            
+            propertiesHTML += `
+                <div class="property-group">
+                    <label>Margine superiore (mm)</label>
+                    <input type="number" value="${marginTop}" min="0" max="100" onchange="changeMarginTop(this.value)">
+                </div>
+                <div class="property-group">
+                    <label>Margine inferiore (mm)</label>
+                    <input type="number" value="${marginBottom}" min="0" max="100" onchange="changeMarginBottom(this.value)">
+                </div>
+            `;
+            
+            propertiesContent.innerHTML = propertiesHTML;
+        }
+
+        // NUOVE FUNZIONI PER LA GESTIONE DELLE IMMAGINI
+
+        // Cambia il tipo di sorgente dell'immagine (file, variabile, url)
+        function changeImageType(type) {
+            if (!selectedElement) return;
+            
+            const img = selectedElement.querySelector('img');
+            if (!img) return;
+            
+            // Aggiorna il data attribute
+            img.dataset.imageType = type;
+            
+            // Nascondi tutte le sezioni
+            document.getElementById('fileUploadSection').style.display = 'none';
+            document.getElementById('variableSection').style.display = 'none';
+            document.getElementById('urlSection').style.display = 'none';
+            
+            // Mostra la sezione appropriata
+            switch(type) {
+                case 'file':
+                    document.getElementById('fileUploadSection').style.display = 'block';
+                    // Se non ha ancora un'immagine caricata, mostra placeholder
+                    if (!img.src.startsWith('data:image/') && img.src.includes('placeholder')) {
+                        img.src = '';
+                        img.alt = 'Immagine';
+                    }
+                    break;
+                case 'variable':
+                    document.getElementById('variableSection').style.display = 'block';
+                    // Reset src per mostrare che è una variabile
+                    if (!img.src.includes('{{')) {
+                        img.src = '{{ nome_variabile }}';
+                        img.alt = 'Variabile Jinja2';
+                    }
+                    break;
+                case 'url':
+                    document.getElementById('urlSection').style.display = 'block';
+                    // Se è una variabile, resetta a placeholder
+                    if (img.src.includes('{{')) {
+                        img.src = '';
+                        img.alt = 'Immagine';
+                    }
+                    break;
+            }
+        }
+
+        // Imposta una variabile Jinja2 per l'immagine
+        function setImageVariable(variableName) {
+            if (!selectedElement) return;
+            
+            const img = selectedElement.querySelector('img');
+            if (!img) return;
+            
+            if (variableName.trim()) {
+                // Rimuovi eventuali {{ }} se inseriti dall'utente
+                const cleanVariable = variableName.replace(/^\{\{\s*/, '').replace(/\s*\}\}$/, '').trim();
+                img.src = `{{ ${cleanVariable} }}`;
+                img.alt = `Variabile: ${cleanVariable}`;
+                
+                // Aggiorna anche l'input se chiamato da dropdown
+                const variableInput = document.getElementById('imageVariableInput');
+                if (variableInput) {
+                    variableInput.value = cleanVariable;
+                }
+            } else {
+                img.src = '{{ nome_variabile }}';
+                img.alt = 'Variabile Jinja2';
+            }
+        }
+
+        // Gestisce il caricamento di un'immagine da file
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            // Verifica che sia un'immagine
+            if (!file.type.startsWith('image/')) {
+                alert('Seleziona un file immagine valido');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = selectedElement.querySelector('img');
+                if (img) {
+                    img.src = e.target.result; // Base64 dell'immagine
+                    img.alt = file.name;
+                    
+                    // Calcola e imposta le dimensioni proporzionali
+                    const tempImg = new Image();
+                    tempImg.onload = function() {
+                        const aspectRatio = this.width / this.height;
+                        let newWidth, newHeight;
+                        
+                        // Se l'immagine è più larga che alta
+                        if (aspectRatio > 1) {
+                            newWidth = Math.min(100, this.width * 0.1); // Max 100mm di larghezza
+                            newHeight = newWidth / aspectRatio;
+                        } else {
+                            newHeight = Math.min(100, this.height * 0.1); // Max 100mm di altezza
+                            newWidth = newHeight * aspectRatio;
+                        }
+                        
+                        // Arrotonda a 1 decimale
+                        newWidth = Math.round(newWidth * 10) / 10;
+                        newHeight = Math.round(newHeight * 10) / 10;
+                        
+                        // Aggiorna l'immagine con le nuove dimensioni
+                        changeImageWidth(newWidth);
+                        changeImageHeight(newHeight);
+                        
+                        // Aggiorna il pannello proprietà
+                        showProperties(selectedElement);
+                    };
+                    tempImg.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Cambia l'URL dell'immagine (per tipo URL)
+        function changeImageSrc(src) {
+            if (!selectedElement) return;
+            const img = selectedElement.querySelector('img');
+            if (img) {
+                img.src = src;
+                img.alt = 'Immagine';
+            }
+        }
+
+        // Cambia la larghezza dell'immagine in mm
+        function changeImageWidth(value) {
+            if (!selectedElement) return;
+            const img = selectedElement.querySelector('img');
+            if (img) {
+                if (value.trim() === '') {
+                    img.style.width = 'auto';
+                    img.dataset.widthMm = '';
+                } else {
+                    const width = parseFloat(value) || 50;
+                    img.style.width = width + 'mm';
+                    img.dataset.widthMm = width;
+                }
+            }
+        }
+
+        // Cambia l'altezza dell'immagine in mm
+        function changeImageHeight(value) {
+            if (!selectedElement) return;
+            const img = selectedElement.querySelector('img');
+            if (img) {
+                if (value.trim() === '') {
+                    img.style.height = 'auto';
+                    img.dataset.heightMm = '';
+                } else {
+                    const height = parseFloat(value) || 37.5;
+                    img.style.height = height + 'mm';
+                    img.dataset.heightMm = height;
+                }
+            }
+        }
+
+        // Cambia l'allineamento dell'immagine (applicato al div principale)
+        function changeImageAlignment(alignment) {
+            if (!selectedElement) return;
+            selectedElement.style.textAlign = alignment;
+        }
+
+        // Altre funzioni esistenti...
+        function insertQuickVariable(variable) {
+            if (!selectedElement || !variable) return;
+            insertTextAtCursor(variable);
+        }
+
+        function insertTextAtCursor(text) {
+            if (!selectedElement) return;
+            
+            const editableElement = findEditableElement(selectedElement);
+            if (editableElement) {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    
+                    if (editableElement.contains(range.commonAncestorContainer)) {
+                        range.deleteContents();
+                        const textNode = document.createTextNode(text);
+                        range.insertNode(textNode);
+                        
+                        range.setStartAfter(textNode);
+                        range.setEndAfter(textNode);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    } else {
+                        editableElement.focus();
+                        const newText = document.createTextNode(' ' + text);
+                        editableElement.appendChild(newText);
+                    }
+                } else {
+                    editableElement.focus();
+                    const newText = document.createTextNode(' ' + text);
+                    editableElement.appendChild(newText);
+                }
+            }
+        }
+
+        // Nuove funzioni per gestire le tabelle
+        function changeTableFontSize(size) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (table) {
+                table.style.fontSize = size + 'pt';
+            }
+        }
+
+        function changeTablePadding(padding) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (table) {
+                table.dataset.padding = padding + 'mm';
+                const cells = table.querySelectorAll('td, th');
+                cells.forEach(cell => {
+                    cell.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
+                });
+            }
+        }
+
+        function changeCellAlignment(alignment) {
+            if (!selectedTableCell) return;
+            selectedTableCell.style.textAlign = alignment;
+        }
+
+        function changeCellFontWeight(weight) {
+            if (!selectedTableCell) return;
+            selectedTableCell.style.fontWeight = weight;
+        }
+
+        function changeCellColspan(colspan) {
+            console.log('Cambia colspan a:', colspan);
+            if (!selectedTableCell) return;
+            const table = selectedTableCell.closest('table');
+            const row = selectedTableCell.closest('tr');
+            const colspanValue = Math.max(1, parseInt(colspan) || 1);
+            const oldColspan = parseInt(selectedTableCell.getAttribute('data-colspan') || '1');
+            const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
+
+            // Calcola l'indice della cella corrente nella riga (considerando colspan precedenti)
+            let currentIndex = 0;
+            let cellIndex = 0;
+            row.querySelectorAll('th, td').forEach((cell, idx) => {
+                if (cell === selectedTableCell) {
+                    cellIndex = idx;
+                }
+                const span = parseInt(cell.getAttribute('data-colspan') || '1');
+                currentIndex += span;
+                if (cell === selectedTableCell) {
+                    currentIndex -= span; // Per l'indice di partenza
+                }
+            });
+
+            if (colspanValue > oldColspan) {
+                // Aumenta colspan: rimuovi celle successive
+                let nextCell = selectedTableCell.nextElementSibling;
+                for (let i = oldColspan; i < colspanValue; i++) {
+                    if (nextCell && (nextCell.tagName === 'TD' || nextCell.tagName === 'TH')) {
+                        // Opzionale: merge content
+                        // selectedTableCell.textContent += ' ' + nextCell.textContent;
+                        nextCell.remove();
+                        // Aggiorna nextCell
+                        nextCell = selectedTableCell.nextElementSibling;
+                    } else {
+                        // Se non ci sono celle successive, aggiungi celle vuote per mantenere struttura (ma per ora rimuovi solo esistenti)
+                        break;
+                    }
+                }
+            } else if (colspanValue < oldColspan) {
+                // Diminuisci colspan: inserisci celle vuote successive
+                for (let i = oldColspan - 1; i >= colspanValue; i--) {
+                    const newCell = document.createElement(selectedTableCell.tagName === 'TH' ? 'th' : 'td');
+                    newCell.style.border = '0.3mm solid #ddd';
+                    newCell.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
+                    newCell.style.textAlign = 'left';
+                    newCell.style.whiteSpace = 'nowrap';
+                    newCell.style.overflow = 'hidden';
+                    newCell.contentEditable = true;
+                    newCell.setAttribute('data-colspan', '1');
+                    newCell.textContent = '';
+                    newCell.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        selectTableCell(this);
+                    });
+                    // Inserisci dopo la cella corrente
+                    row.insertBefore(newCell, selectedTableCell.nextElementSibling);
+                }
+            }
+
+            // Aggiorna colspan corrente
+            selectedTableCell.setAttribute('colspan', colspanValue);
+            selectedTableCell.setAttribute('data-colspan', colspanValue);
+
+            // Ri-setuppa i listener per le celle
+            const tableWrapper = selectedTableCell.closest('.dropped-element');
+            if (tableWrapper) {
+                setupTableCellSelection(tableWrapper);
+            }
+        }
+
+        // Funzioni per modificare proprietà
+        function changeHeadingSize(size) {
+            if (!selectedElement) return;
+            const heading = selectedElement.querySelector('h1, h2, h3, h3, h4, h5, h6');
+            if (heading) {
+                const newHeading = document.createElement(size);
+                newHeading.contentEditable = true;
+                newHeading.textContent = heading.textContent;
+                heading.parentNode.replaceChild(newHeading, heading);
+            }
+        }
+
+        function changeAlignment(alignment) {
+            if (!selectedElement) return;
+            selectedElement.style.textAlign = alignment;
+        }
+
+        function changeFontSize(size) {
+            if (!selectedElement) return;
+            selectedElement.style.fontSize = size + 'pt';
+        }
+
+        function changeImageSrc(src) {
+            if (!selectedElement) return;
+            const img = selectedElement.querySelector('img');
+            if (img) {
+                img.src = src || 'https://via.placeholder.com/300x200';
+            }
+        }
+
+        function changeTableColumns(event, cols) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+            
+            const newCols = parseInt(cols) || 3;
+            const thead = table.querySelector('thead tr');
+            const tbodyRows = table.querySelectorAll('tbody tr');
+            const currentEffectiveCols = getEffectiveColumnCount(thead);
+            const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
+            
+            if (newCols > currentEffectiveCols) {
+                // Aggiungi colonne: inserisci nuove celle alla fine di ogni riga
+                const cellsToAdd = newCols - currentEffectiveCols;
+                const allRows = [thead, ...Array.from(tbodyRows)];
+                allRows.forEach((row, rowIndex) => {
+                    const isHeader = rowIndex === 0;
+                    for (let i = 0; i < cellsToAdd; i++) {
+                        const newCell = isHeader ? document.createElement('th') : document.createElement('td');
+                        newCell.style.border = '0.3mm solid #ddd';
+                        newCell.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
+                        newCell.style.textAlign = 'left';
+                        newCell.style.whiteSpace = 'nowrap';
+                        newCell.style.overflow = 'hidden';
+                        newCell.contentEditable = true;
+                        newCell.setAttribute('data-colspan', '1');
+                        newCell.textContent = isHeader ? `Colonna ${currentEffectiveCols + i + 1}` : `Dato ${currentEffectiveCols + i + 1}`;
+                        newCell.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            selectTableCell(this);
+                        });
+                        row.appendChild(newCell);
+                    }
+                });
+            } else if (newCols < currentEffectiveCols) {
+                // Rimuovi colonne: rimuovi dalle fine di ogni riga fino a raggiungere il numero desiderato
+                const cellsToRemove = currentEffectiveCols - newCols;
+                const allRows = [thead, ...Array.from(tbodyRows)];
+                allRows.forEach(row => {
+                    let removed = 0;
+                    while (removed < cellsToRemove) {
+                        const lastCell = row.lastElementChild;
+                        if (lastCell) {
+                            const span = parseInt(lastCell.getAttribute('data-colspan') || '1');
+                            if (span > 1) {
+                                // Se ha colspan >1, riducilo invece di rimuovere
+                                lastCell.setAttribute('data-colspan', span - 1);
+                                lastCell.setAttribute('colspan', span - 1);
+                            } else {
+                                lastCell.remove();
+                            }
+                            removed += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                });
+            }
+            selectTableCell(selectedTableCell); // Deseleziona cella
+            document.getElementById('inputTableColumns').focus();
+        }
+
+        function changeTableRows(rows) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+            
+            const newRows = parseInt(rows) || 1;
+            const tbody = table.querySelector('tbody');
+            const currentRows = tbody.children.length;
+            const theadRow = table.querySelector('thead tr');
+            const effectiveCols = getEffectiveColumnCount(theadRow);
+            const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
+            
+            if (newRows > currentRows) {
+                // Aggiungi righe: crea nuove <tr> con effectiveCols celle
+                for (let i = currentRows; i < newRows; i++) {
+                    const tr = document.createElement('tr');
+                    // Crea celle base, poi applica colspan esistenti se necessario (ma per semplicità, crea una cella per colonna logica)
+                    for (let j = 0; j < effectiveCols; j++) {
+                        const td = document.createElement('td');
+                        td.style.border = '0.3mm solid #ddd';
+                        td.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
+                        td.style.textAlign = 'left';
+                        td.style.whiteSpace = 'nowrap';
+                        td.style.overflow = 'hidden';
+                        td.contentEditable = true;
+                        td.setAttribute('data-colspan', '1');
+                        td.textContent = `Dato ${j + 1}`;
+                        td.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            selectTableCell(this);
+                        });
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+            } else if (newRows < currentRows) {
+                // Rimuovi righe
+                while (tbody.children.length > newRows) {
+                    tbody.removeChild(tbody.lastElementChild);
+                }
+            }
+            selectTableCell(selectedTableCell); // Reseleziona tabella per aggiornare proprietà
+            document.getElementById('inputTableRows').focus();
+        }
+
+        // Funzione helper per applicare colspan da una riga sorgente a una target (per nuove righe)
+        function applyColspansToRow(targetRow, sourceRow) {
+            const sourceCells = Array.from(sourceRow.querySelectorAll('th, td'));
+            const targetCells = Array.from(targetRow.querySelectorAll('td'));
+            let sourceIdx = 0;
+            let targetIdx = 0;
+            while (sourceIdx < sourceCells.length && targetIdx < targetCells.length) {
+                const sourceCell = sourceCells[sourceIdx];
+                const colspan = parseInt(sourceCell.getAttribute('data-colspan') || '1');
+                if (colspan > 1) {
+                    // Merge target cells
+                    const mainCell = targetCells[targetIdx];
+                    for (let k = 1; k < colspan; k++) {
+                        if (targetIdx + k < targetCells.length) {
+                            // Opzionale: merge content
+                            // mainCell.textContent += ' ' + targetCells[targetIdx + k].textContent;
+                            targetCells[targetIdx + k].remove();
+                        }
+                    }
+                    mainCell.setAttribute('data-colspan', colspan);
+                    mainCell.setAttribute('colspan', colspan);
+                }
+                sourceIdx++;
+                targetIdx += colspan;
+            }
+        }
+
+        function changeMarginTop(value) {
+            if (!selectedElement) return;
+            selectedElement.style.marginTop = value + 'mm';
+        }
+
+        function changeMarginBottom(value) {
+            if (!selectedElement) return;
+            selectedElement.style.marginBottom = value + 'mm';
+        }
+
+        function changeDividerThickness(value) {
+            if (!selectedElement) return;
+            const hr = selectedElement.querySelector('hr');
+            if (hr) {
+                hr.style.borderTopWidth = value + 'px';
+            }
+        }
+
+        // FUNZIONI PER GESTIONE VARIABILI JINJA2
+        function insertQuickVariable(variable) {
+            if (!selectedElement || !variable) return;
+            
+            // Se c'è una cella selezionata in una tabella, inserisci lì
+            if (selectedTableCell) {
+                insertTextInTableCell(selectedTableCell, variable);
+            } else {
+                insertTextAtCursor(variable);
+            }
+        }
+
+        function insertTextInTableCell(cell, text) {
+            if (!cell) return;
+            
+            cell.focus();
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                
+                // Verifica che la selezione sia dentro la cella
+                if (cell.contains(range.commonAncestorContainer)) {
+                    range.deleteContents();
+                    const textNode = document.createTextNode(text);
+                    range.insertNode(textNode);
+                    
+                    // Sposta il cursore dopo il testo inserito
+                    range.setStartAfter(textNode);
+                    range.setEndAfter(textNode);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                } else {
+                    // Se non c'è selezione, aggiungi alla fine
+                    const newText = document.createTextNode(' ' + text);
+                    cell.appendChild(newText);
+                }
+            } else {
+                // Nessuna selezione, aggiungi alla fine
+                const newText = document.createTextNode(' ' + text);
+                cell.appendChild(newText);
+            }
+        }
+
+        function insertTextAtCursor(text) {
+            if (!selectedElement) return;
+            
+            // Trova l'elemento editabile nel componente selezionato
+            const editableElement = findEditableElement(selectedElement);
+            if (editableElement) {
+                // Se c'è una selezione attiva, sostituiscila
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    
+                    // Verifica che la selezione sia dentro l'elemento editabile
+                    if (editableElement.contains(range.commonAncestorContainer)) {
+                        range.deleteContents();
+                        const textNode = document.createTextNode(text);
+                        range.insertNode(textNode);
+                        
+                        // Sposta il cursore dopo il testo inserito
+                        range.setStartAfter(textNode);
+                        range.setEndAfter(textNode);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    } else {
+                        // Se non c'è selezione, aggiungi alla fine
+                        editableElement.focus();
+                        const newText = document.createTextNode(' ' + text);
+                        editableElement.appendChild(newText);
+                    }
+                } else {
+                    // Nessuna selezione, aggiungi alla fine
+                    editableElement.focus();
+                    const newText = document.createTextNode(' ' + text);
+                    editableElement.appendChild(newText);
+                }
+            }
+        }
+
+        function findEditableElement(element) {
+            // Se è una tabella e c'è una cella selezionata, usa quella
+            if (element.dataset.type === 'table' && selectedTableCell) {
+                return selectedTableCell;
+            }
+            
+            // Cerca il primo elemento editabile nel componente
+            const editable = element.querySelector('[contenteditable="true"]');
+            if (editable) return editable;
+            
+            // Se l'elemento stesso è editabile
+            if (element.contentEditable === 'true') return element;
+            
+            return null;
+        }
+
+        // Funzioni per controlli elementi
+        function moveUp(btn) {
+            const element = btn.closest('.dropped-element');
+            const prev = element.previousElementSibling;
+            if (prev) {
+                element.parentNode.insertBefore(element, prev);
+            }
+        }
+
+        function moveDown(btn) {
+            const element = btn.closest('.dropped-element');
+            const next = element.nextElementSibling;
+            if (next) {
+                element.parentNode.insertBefore(next, element);
+            }
+        }
+
+        function deleteElement(btn) {
+            const element = btn.closest('.dropped-element');
+            if (element) {
+                element.remove();
+                selectedElement = null;
+                selectedTableCell = null;
+                showProperties(null);
+            }
+        }
+
+        function getPageSize(pageFormat, marginTop, marginRight, marginBottom, marginLeft) {
+            let size;
+            let pageStyle;
+            let fontSize;
+
+            switch(pageFormat) {
+                case 'A4':
+                    size = pageFormat;
+                    pageStyle = `width: 210mm; height: 297mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
+                    fontSize = '12pt';
+                    break;
+                case 'A5':
+                    size = pageFormat;
+                    pageStyle = `width: 148mm; height: 210mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
+                    fontSize = '10pt';
+                    break;
+                case 'A6':
+                    size = pageFormat;
+                    pageStyle = `width: 105mm; height: 148mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
+                    fontSize = '9pt';
+                    break;
+                case 'A7':
+                    size = pageFormat;
+                    pageStyle = `width: 74mm; height: 105mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
+                    fontSize = '8pt';
+                    break;
+                case 'A8':
+                    size = pageFormat;
+                    pageStyle = `width: 52mm; height: 74mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
+                    fontSize = '7pt';
+                    break;
+                case 'Receipt80':
+                    // Calcola l'altezza dinamica del contenuto per Receipt80
+                    const originalCanvas = document.getElementById('canvas');
+                    let currentOriginalCanvas = originalCanvas.style.minHeight;
+                    originalCanvas.style.minHeight = "auto";
+                    const contentHeight = originalCanvas.scrollHeight;
+                    
+                    // Correggi per il zoom - dividi per il fattore di zoom per ottenere la dimensione reale
+                    const actualContentHeight = contentHeight / (currentZoom / 100);
+                    
+                    // Converti da pixel a mm (approssimativo: 1mm ≈ 3.78px)
+                    const contentHeightMm = Math.ceil(actualContentHeight / 3.78);
+                    // Aggiungi margini top e bottom
+                    const topMargin = parseInt(document.getElementById('marginTop').value) || 0;
+                    const bottomMargin = parseInt(document.getElementById('marginBottom').value) || 0;
+                    const totalHeightMm = contentHeightMm;
+
+                    size = `80mm ${totalHeightMm}mm`;
+                    pageStyle = `width: 80mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft}; background: white;`;
+                    fontSize = '8pt';
+                    originalCanvas.style.minHeight = currentOriginalCanvas;
+                    break;
+            }
+
+            return {
+                size, 
+                pageStyle, 
+                fontSize
+            }
+        }
+
+        // Genera codice HTML/Jinja2
+        function generateTemplate() {
+            let content = '';
+            const allPages = document.querySelectorAll('.canvas');
+            const pageFormat = document.getElementById('pageFormat').value;
+            const marginTop = document.getElementById('marginTop').value + 'mm';
+            const marginLeft = document.getElementById('marginLeft').value + 'mm';
+            const marginRight = document.getElementById('marginRight').value + 'mm';
+            const marginBottom = document.getElementById('marginBottom').value + 'mm';
+
+            let { size, pageStyle, fontSize } = getPageSize(pageFormat, marginTop, marginRight, marginBottom, marginLeft);
+
+            allPages.forEach((page, index) => {
+                const pageClone = page.cloneNode(true);
+
+                // Rimuovi controlli e attributi non necessari
+                pageClone.querySelectorAll('.element-controls').forEach(el => el.remove());
+                pageClone.querySelectorAll('.dropped-element').forEach(el => {
+                    el.classList.remove('dropped-element', 'selected');
+                    el.removeAttribute('data-element-id');
+                    el.removeAttribute('data-type');
+                    el.style.border = 'none';
+                    el.style.background = 'none';
+                });
+                
+                // Rimuovi classi dalle celle
+                pageClone.querySelectorAll('.table-cell-selected').forEach(el => {
+                    el.classList.remove('table-cell-selected');
+                });
+                
+                // Rimuovi contenteditable
+                pageClone.querySelectorAll('[contenteditable]').forEach(el => {
+                    el.removeAttribute('contenteditable');
+                });
+                
+                // Applica colspan reali
+                pageClone.querySelectorAll('[data-colspan]').forEach(el => {
+                    const colspan = el.getAttribute('data-colspan');
+                    if (colspan && colspan !== '1') {
+                        el.setAttribute('colspan', colspan);
+                    }
+                    el.removeAttribute('data-colspan');
+                });
+
+                // Rimuovi le guide
+                pageClone.querySelectorAll('.vertical-guide').forEach(el => el.remove());
+
+                let pageContent = `<div class="report-container"`;
+                if (index > 0) {
+                    pageContent += ` style="page-break-before: always; ${pageStyle}"`;
+                } else {
+                    pageContent += ` style="${pageStyle}"`;
+                }
+                pageContent += `>
+${pageClone.innerHTML}
+</div>`;
+
+                content += pageContent;
+            });
+
+            const template = `<!DOCTYPE html>
+        <html lang="it">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{{ titolo_report | default('Report') }}</title>
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                @page {
+                    size: ${size};
+                    margin: 0mm;
+                }
+
+                body {
+                    font-family: ${globalFont};
+                    color: #333;
+                    margin: 0;
+                    font-size: ${fontSize};
+                }
+                
+                .report-container {
+                    background: white;
+                    margin-left: auto;
+                    margin-right: auto;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                }
+                
+                h1, h2, h3, h4, h5, h6 {
+                    color: #2c3e50;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+
+                p {
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: inherit;
+                    table-layout: fixed;
+                }
+                
+                th, td {
+                    border: 0.3mm solid #ddd;
+                    padding: 2mm 3mm;
+                    text-align: left;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+                
+                th {
+                    background-color: #f8f9fa;
+                    font-weight: bold;
+                }
+                
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+                
+                .page-break {
+                    page-break-after: always;
+                }
+            </style>
+        </head>
+        <body>
+            ${content}
+        </body>
+        </html>`;
+            
+            return template;
+        }
+
+        // Mostra codice
+        function showCode() {
+            const code = generateTemplate();
+            document.getElementById('codeOutput').textContent = code;
+            document.getElementById('codeModal').style.display = 'block';
+        }
+
+        // Chiudi modal
+        function closeModal() {
+            document.getElementById('codeModal').style.display = 'none';
+        }
+
+        // Copia codice
+        function copyCode() {
+            const code = document.getElementById('codeOutput').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Codice copiato negli appunti!');
+            }).catch(err => {
+                console.error('Errore nella copia:', err);
+                // Fallback per browser che non supportano clipboard API
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Codice copiato negli appunti!');
+            });
+        }
+
+        // Download template dal modal
+        function downloadTemplate() {
+            const code = document.getElementById('codeOutput').textContent;
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'report_template.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Anteprima report
+        function previewReport() {
+            const template = generateTemplate();
+            const previewWindow = window.open('', '_blank');
+            previewWindow.document.write(template);
+            previewWindow.document.close();
+        }
+
+        // Click fuori da elementi per deselezionare
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'canvas' || e.target.classList.contains('design-area')) {
+                document.querySelectorAll('.dropped-element').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                document.querySelectorAll('.table-cell-selected').forEach(el => {
+                    el.classList.remove('table-cell-selected');
+                });
+                selectedElement = null;
+                selectedTableCell = null;
+                document.getElementById('propertiesContent').innerHTML = `
+                    <p style="color: #999; text-align: center; margin-top: 20px;">
+                        Seleziona un elemento per modificarne le proprietà
+                    </p>
+                `;
+            }
+        });
+
+        // Gestione tasti rapidi
+        document.addEventListener('keydown', function(e) {
+            if (selectedElement) {
+                if (e.key === 'Delete') {
+                    selectedElement.remove();
+                    selectedElement = null;
+                    selectedTableCell = null;
+                    document.getElementById('propertiesContent').innerHTML = `
+                        <p style="color: #999; text-align: center; margin-top: 20px;">
+                            Seleziona un elemento per modificarne le proprietà
+                        </p>
+                    `;
+                } else if (e.ctrlKey && e.key === 'c') {
+                    // Copia elemento
+                    localStorage.setItem('copiedElement', selectedElement.outerHTML);
+                } else if (e.ctrlKey && e.key === 'v') {
+                    // Incolla elemento
+                    const copiedHTML = localStorage.getItem('copiedElement');
+                    if (copiedHTML) {
+                        const canvas = document.getElementById('canvas');
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = copiedHTML;
+                        const newElement = tempDiv.firstChild;
+                        newElement.dataset.elementId = `element_${++elementCounter}`;
+                        canvas.appendChild(newElement);
+                        makeElementInteractive(newElement);
+                    }
+                }
+            }
+        });
+
+        function updateGlobalFont(font) {
+            globalFont = font;
+            document.querySelectorAll('.canvas').forEach(page => {
+                page.style.fontFamily = font;
+            });
+        }
+
+        function changeElementFont(font) {
+            if (!selectedElement) return;
+            selectedElement.style.fontFamily = font;
+            if (selectedElement.dataset.type === 'table') {
+                const table = selectedElement.querySelector('table');
+                if (table) {
+                    table.style.fontFamily = font;
+                }
+            }
+            if (selectedElement.dataset.type === 'heading') {
+                const heading = selectedElement.querySelector('h1, h2, h3, h4');
+                if (heading) {
+                    heading.style.fontFamily = font;
+                }
+            }
+        }
+
+        // Nuova funzione: Salva progetto (stato del designer)
+        async function saveProject(report) {
+            try {
+                // Raccogli i dati (stesso codice che avevi)
+                const pagesContainer = document.getElementById('pagesContainer');
+                const pageFormat = document.getElementById('pageFormat').value;
+                const marginTop = document.getElementById('marginTop').value;
+                const marginBottom = document.getElementById('marginBottom').value;
+                const marginLeft = document.getElementById('marginLeft').value;
+                const marginRight = document.getElementById('marginRight').value;
+
+                function cleanHtml(html) {
+                    return html
+                        .replace(/\n/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .replace(/"/g, "'")
+                        .trim();
+                }
+
+                const state = {
+                    canvas: cleanHtml(pagesContainer.innerHTML),
+                    html: cleanHtml(generateTemplate()),
+                    format: pageFormat,
+                    margins: {
+                        top: marginTop,
+                        bottom: marginBottom,
+                        left: marginLeft,
+                        right: marginRight
+                    },
+                    zoom: currentZoom,
+                    elementCounter: elementCounter,
+                    totalPages: totalPages,
+                    globalFont: globalFont
+                };
+
+                const jsonState = JSON.stringify(state);
+
+                // Download locale (mantieni questo)
+                const blob = new Blob([jsonState], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'report_project.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('Progetto salvato localmente!');
+
+                // Crea ZIP per il server
+                showNotification('Invio al server in corso...', false, true);
+                
+                const zip = new JSZip();
+                zip.file('report_project.json', jsonState);
+                
+                const zipBlob = await zip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 9 }
+                });
+
+                // Upload al server
+                const formData = new FormData();
+                formData.append('file', zipBlob, 'report_project.zip');
+                
+                const response = await fetch(`/api/generic/report/${report}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Errore server');
+                }
+
+                const data = await response.json();
+                console.log('Risposta server:', data);
+                
+                showNotification('✅ Progetto salvato sul server con successo!');
+                
+                return data;
+
+            } catch (error) {
+                console.error('Errore:', error);
+                showNotification(`❌ Errore: ${error.message}`, true);
+                throw error;
+            }
+        }
+
+        // Funzione: Importa progetto (carica stato del designer)
+        function importProject() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const content = event.target.result;
+                    let state;
+                    try {
+                        state = JSON.parse(content);
+                    } catch (err) {
+                        alert('File non valido. Assicurati di importare un file .json del progetto.');
+                        return;
+                    }
+                    
+                    loadProjectState(state);
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Nuova funzione estratta per caricare lo stato (usata sia per import che per template default)
+        function loadProjectState(state, showNotificationMessage = true) {
+            const pagesContainer = document.getElementById('pagesContainer');
+            pagesContainer.innerHTML = state.canvas;
+            
+            // Reinizializza elementi interattivi con handler personalizzati per evitare duplicati
+            const allElements = pagesContainer.querySelectorAll('.dropped-element');
+            allElements.forEach(el => {
+                makeElementInteractive(el);
+                if (el.dataset.type === 'table') {
+                    setupTableCellSelection(el);
+                }
+            });
+            
+            // Reinizializza drag and drop sulle pagine
+            const allCanvases = pagesContainer.querySelectorAll('.canvas');
+            allCanvases.forEach(canvas => {
+                // Rimuovi listener precedenti se presenti
+                canvas.removeEventListener('dragover', canvas._dragOverHandler);
+                canvas.removeEventListener('drop', canvas._dropHandler);
+                canvas.removeEventListener('dragleave', canvas._dragLeaveHandler);
+                
+                canvas._dragOverHandler = handleDragOver;
+                canvas._dropHandler = handleDrop;
+                canvas._dragLeaveHandler = handleDragLeave;
+                
+                canvas.addEventListener('dragover', canvas._dragOverHandler);
+                canvas.addEventListener('drop', canvas._dropHandler);
+                canvas.addEventListener('dragleave', canvas._dragLeaveHandler);
+            });
+            
+            // Aggiorna contatori
+            elementCounter = state.elementCounter || allElements.length;
+            totalPages = state.totalPages || allCanvases.length;
+            
+            // Aggiorna impostazioni
+            if (state.format) {
+                document.getElementById('pageFormat').value = state.format;
+            } else if (allCanvases.length > 0) {
+                const firstCanvas = allCanvases[0];
+                const formatClass = firstCanvas.className.split(' ')[1] || 'A4';
+                document.getElementById('pageFormat').value = formatClass;
+            }
+            
+            if (state.margins) {
+                document.getElementById('marginTop').value = state.margins.top;
+                document.getElementById('marginBottom').value = state.margins.bottom;
+                document.getElementById('marginLeft').value = state.margins.left;
+                document.getElementById('marginRight').value = state.margins.right;
+            } else if (allCanvases.length > 0) {
+                const firstCanvas = allCanvases[0];
+                const paddingTop = firstCanvas.style.paddingTop.replace('mm', '') || 25;
+                const paddingBottom = firstCanvas.style.paddingBottom.replace('mm', '') || 25;
+                const paddingLeft = firstCanvas.style.paddingLeft.replace('mm', '') || 25;
+                const paddingRight = firstCanvas.style.paddingRight.replace('mm', '') || 25;
+                
+                document.getElementById('marginTop').value = paddingTop;
+                document.getElementById('marginBottom').value = paddingBottom;
+                document.getElementById('marginLeft').value = paddingLeft;
+                document.getElementById('marginRight').value = paddingRight;
+            }
+            
+            currentZoom = state.zoom || 100;
+            applyZoom();
+            updateZoomDisplay();
+
+            globalFont = state.globalFont || "Arial, sans-serif";
+            document.getElementById('globalFont').value = globalFont;
+            updateGlobalFont(globalFont);
+            
+            // Applica changePageFormat per aggiornare tutto
+            changePageFormat();
+            
+            // Deseleziona eventuali elementi
+            selectedElement = null;
+            selectedTableCell = null;
+            document.querySelectorAll('.dropped-element').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.table-cell-selected').forEach(el => el.classList.remove('table-cell-selected'));
+            document.getElementById('propertiesContent').innerHTML = `
+                <p style="color: #999; text-align: center; margin-top: 20px;">
+                    Seleziona un elemento per modificarne le proprietà
+                </p>
+            `;
+            
+            if (showNotificationMessage) showNotification('Progetto importato con successo! Ora puoi modificarlo.');
+        }
+
+        async function populateTemplates(type) {
+            const select = document.getElementById('defaultReportSelect'); // ID CORRETTO!
+            const baseUrl = '/api/generic/list/default-reports';
+            
+            // Pulisci il select
+            select.innerHTML = '<option value="">--Seleziona Template--</option>';
+            
+            try {
+                const response = await fetch(baseUrl);
+                if (!response.ok) throw new Error('Directory non accessibile');
+                
+                const data = await response.json();
+                
+                Object.keys(data).forEach(folder => {
+                    data[folder].forEach(file => {
+                        if (file.includes(type)) {
+                            const option = document.createElement('option');
+                            option.value = `/static/content/report/default-report/${folder}/${file}`;
+                            option.textContent = file;
+                            select.appendChild(option);
+                        }
+                    });
+                });
+            } catch (err) {
+                console.error('Errore nel caricamento dei template default:', err);
+                showNotification('Impossibile caricare i template default. Verifica il server.');
+            }
+        }
+
+        // Nuova funzione: Carica un template default selezionato
+        function loadDefaultTemplate(url, showNotificationMessage = true) {
+            url = window.location.origin + url; // Assicura URL assoluto
+            fetch(url)
+                .then(resp => {
+                    if (!resp.ok) throw new Error('Template non accessibile');
+                    return resp.json();
+                })
+                .then(state => {
+                    loadProjectState(state, showNotificationMessage);
+                })
+                .catch(err => {
+                    console.error('Errore nel caricamento del template:', err);
+                    alert('Errore nel caricamento del template default');
+                });
+        }
+    </script>
+</body>
+</html>

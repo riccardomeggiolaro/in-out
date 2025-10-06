@@ -108,7 +108,7 @@ class GenericRouter:
         """
         Restituisce una struttura ad albero con percorsi relativi delle cartelle
         """
-        directory = lb_config.g_config['app_api']['path_report'] + "/default-report/"
+        directory = Path(__file__).cwd() / "applications" / lb_config.g_config['app_api']['path_content'] / "report/default-report"
         files_tree = defaultdict(list)
         
         try:
@@ -145,7 +145,7 @@ class GenericRouter:
         if report not in ["report_in", "report_out"]:
             raise HTTPException(status_code=400, detail="Tipo di report non valido")
         
-        path = lb_config.g_config['app_api']['path_report']
+        path = Path(__file__).cwd() / "applications" / lb_config.g_config["app_api"]["path_content"] / "report"
         report_file = lb_config.g_config["app_api"][report]
         full_path = os.path.join(path, report_file)
         
