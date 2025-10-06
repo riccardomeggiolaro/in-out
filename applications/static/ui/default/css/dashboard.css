@@ -134,7 +134,7 @@ select {
 }
 
 .display {
-    background-color: cornflowerblue;
+    background-color: #1362b8;
     width: 100%;
     flex: 1 1 300px;
     display: flex;
