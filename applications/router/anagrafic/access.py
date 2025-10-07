@@ -642,17 +642,19 @@ class AccessRouter(WebSocket, PanelSirenRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def addAccess(self, request: Request, body: AddAccessDTO):
+    async def addAccess(self, request: Request, body: AddAccessDTO, status: Optional[AccessStatus] = None):
         try:
             if request and not body.vehicle.id and not body.vehicle.plate:
                 raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
+            elif request is not None:
+                status = None
 
             body.subject.id = body.subject.id if body.subject.id not in [None, -1] else None
             body.vector.id = body.vector.id if body.vector.id not in [None, -1] else None
             body.driver.id = body.driver.id if body.driver.id not in [None, -1] else None
             body.vehicle.id = body.vehicle.id if body.vehicle.id not in [None, -1] else None
 
-            data = add_access(body)
+            data = add_access(body, status)
 
             get_access_data = get_data_by_id("access", data["id"])
 

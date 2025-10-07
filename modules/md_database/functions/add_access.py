@@ -5,11 +5,14 @@ from modules.md_database.functions.get_access_by_identify_if_uncomplete import g
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from libs.lb_utils import has_non_none_value
+from typing import Optional
 
-def add_access(data: AddAccessDTO):
+def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
     """
     Aggiunge un record a una tabella specificata dinamicamente con gestione dei conflitti per SQLite.
     """
+    import libs.lb_log as lb_log
+    lb_log.warning(status)
     with SessionLocal() as session:
         data_to_check = None
         try:
@@ -21,7 +24,7 @@ def add_access(data: AddAccessDTO):
                 "idVehicle": data.vehicle.id,
                 "number_in_out": data.number_in_out,
                 "note": data.note,
-                "status": AccessStatus.WAITING,
+                "status": status or AccessStatus.WAITING,
                 "document_reference": data.document_reference,
                 "type": TypeAccess[data.type],
                 "badge": data.badge if data.badge != "" else None,

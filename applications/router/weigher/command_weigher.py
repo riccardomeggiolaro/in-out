@@ -7,7 +7,7 @@ from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.access import AccessRouter
-from modules.md_database.md_database import TypeAccess
+from modules.md_database.md_database import TypeAccess, AccessStatus
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO, VehicleDataDTO
 from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
@@ -114,10 +114,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		access = await self.addAccess(request=None, body=AddAccessDTO(**{
 			**body.dict(), 
 			"number_in_out": 1,
-			"type": "MANUALLY",
-			"status": "CLOSED",
-			"hidden": False
-		}))
+			"type": TypeAccess.MANUALLY.name,
+		}), status=AccessStatus.CLOSED.name)
 		weighing_stored_db = add_data("weighing", {
 			"date": dt.datetime.now(),
 			"weigher": instance.weigher_name,
