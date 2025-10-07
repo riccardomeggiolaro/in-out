@@ -85,8 +85,15 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		status_modope, command_executed, error_message = 500, False, ""
 		realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		status = realtime.status
-		gross_weight = realtime.gross_weight
-		net_weight = realtime.net_weight
+		current_tare = None
+		if realtime.tare:
+			current_tare = float(realtime.tare.replace("PT", "").replace(" ",  "")) if "." in tare or "," in tare else int(realtime.tare.replace("PT", "").replace(" ",  ""))
+		gross_weight = None
+		if realtime.gross_weight:
+			gross_weight = float(realtime.gross_weight) if "." in realtime.gross_weight or "," in realtime.gross_weight else int(realtime.gross_weight)
+		net_weight = None
+		if realtime.net_weight:
+			net_weight = float(realtime.net_weight) if "." in realtime.net_weight or "," in realtime.net_weight else int(realtime.net_weight)
 		instance_weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		firmware = instance_weigher[instance.instance_name]["terminal_data"]["firmware"]
 		model_name = instance_weigher[instance.instance_name]["terminal_data"]["model_name"]
@@ -96,14 +103,13 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		division = instance_weigher[instance.instance_name]["division"]
 		take_of_weight_on_startup = instance_weigher[instance.instance_name]["take_of_weight_on_startup"]
 		take_of_weight_before_weighing = instance_weigher[instance.instance_name]["take_of_weight_before_weighing"]
-		current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
 		if status != "ST":
 			error_message = "Il peso non è stabile"
 		elif int(realtime.gross_weight) < min_weight:
 			error_message = f"Il peso è inferiore a {min_weight} kg"
 		elif int(realtime.gross_weight) > max_weight:
 			error_message = f"Il peso è maggiore di {max_weight} kg"
-		elif tare and current_tare != "0":
+		elif tare and str(current_tare).isdigit() and current_tare > 0:
 			error_message = "Non puoi passare la tara perchè è già impostata sulla pesa"
 		elif take_of_weight_on_startup is True:
 			error_message = "E' necessario scaricare la pesa dopo l'avvio del programma"
@@ -121,7 +127,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"weigher": instance.weigher_name,
 			"weigher_serial_number": serial_number,
 			"pid": None,
-			"tare": tare or int(current_tare),
+			"tare": tare or current_tare,
 			"is_preset_tare": True,
 			"weight": gross_weight,
 			"log": None,
@@ -133,7 +139,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"idMaterial": None,
 			"idWeight1": None,
 			"idWeight2": weighing_stored_db["id"],
-			"net_weight": net_weight
+			"net_weight": net_weight - tare if tare else net_weight
 		})
 		md_weigher.module_weigher.instances[instance.instance_name].nodes[instance.weigher_name].take_of_weight_before_weighing = True
 		await self.setAccess(request=None, id=access.id, body=SetAccessDTO(**{"material": body.material.dict(), "operator2": body.operator.dict()}), idInOut=in_out["id"])

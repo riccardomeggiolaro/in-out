@@ -60,39 +60,42 @@ class Dgt1(Terminal):
 	def initialize_content(self):
 		try:
 			self.flush()
-			self.setModope("VER")
-			self.command()
-			response = self.read()
-			if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
-				# lb_log.info(response)
-				values = response.split(",")
-				# se il numero di sottostringhe è 3 assegna i valori all'oggetto diagnostic
-				if len(values) == 3:
-					self.diagnostic.firmware = values[1].lstrip()
-					self.diagnostic.model_name = values[2].rstrip()
-				# se il numero di sottostringhe non è 3 manda errore
-				else:
-					raise ValueError("Firmware and model name not found")
-			# ottenere numero conn
-			self.setModope("SN")
-			self.command()
-			response = self.read()
-			if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
-				value = response.replace("SN: ", "")
-				self.diagnostic.serial_number = value
+			if not self.continuous_transmission:
+				self.setModope("VER")
+				self.command()
+				response = self.read()
+				if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
+					# lb_log.info(response)
+					values = response.split(",")
+					# se il numero di sottostringhe è 3 assegna i valori all'oggetto diagnostic
+					if len(values) == 3:
+						self.diagnostic.firmware = values[1].lstrip()
+						self.diagnostic.model_name = values[2].rstrip()
+					# se il numero di sottostringhe non è 3 manda errore
+					else:
+						raise ValueError("Firmware and model name not found")
+				# ottenere numero conn
+				self.setModope("SN")
+				self.command()
+				response = self.read()
+				if response: # se legge la risposta e la lunghezza della stringa è di 12 la splitta per ogni virgola
+					value = response.replace("SN: ", "")
+					self.diagnostic.serial_number = value
 			# controllo se ho ottenuto firmware, nome modello e numero conn
-			if self.diagnostic.firmware and self.diagnostic.model_name and self.diagnostic.serial_number:
+			if self.diagnostic.firmware and self.diagnostic.model_name and self.diagnostic.serial_number or self.continuous_transmission:
 				self.diagnostic.status = 200 # imposto status della pesa a 200 per indicare che è accesa
-				if self.modope not in ["REALTIME", "DIAGNOSTIC"]:
+				if not self.continuous_transmission and self.modope not in ["REALTIME", "DIAGNOSTIC"]:
 					self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 				lb_log.info("------------------------------------------------------")
 				lb_log.info("INITIALIZATION")
 				lb_log.info("INFOSTART: " + "Accensione con successo")
-				lb_log.info("NODE: " + str(self.node))
+				lb_log.info("NODE: " + str(self.node or ""))
 				lb_log.info("FIRMWARE: " + self.diagnostic.firmware) 
 				lb_log.info("MODELNAME: " + self.diagnostic.model_name)
 				lb_log.info("SERIALNUMBER: " + self.diagnostic.serial_number)
+				lb_log.info("CONTINUOUS TRANSMISSION: " + "SI" if self.continuous_transmission else "NO")
 				lb_log.info("------------------------------------------------------")
+			self.diagnostic.status = 200
 		except TimeoutError as e:
 			self.diagnostic.status = 301
 			self.diagnostic.firmware = None
@@ -169,7 +172,7 @@ class Dgt1(Terminal):
 					self.code_identify = ""
 					self.diagnostic.status = 200
 				######### Se in esecuzione peso in tempo reale ######################################################################
-				elif self.modope == "REALTIME":
+				elif self.modope == "REALTIME" or self.continuous_transmission:
 					# Controlla formato stringa del peso in tempo reale, se corretta aggiorna oggetto e chiama callback
 					if length_split_response == 10 and length_response == 63:
 						nw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
@@ -181,6 +184,20 @@ class Dgt1(Terminal):
 						self.pesa_real_time.gross_weight = gw
 						self.pesa_real_time.tare = t
 						self.pesa_real_time.unite_measure = split_response[2][-2:]
+						self.diagnostic.status = 200
+						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
+							self.take_of_weight_on_startup = False
+							self.take_of_weight_before_weighing = False
+					elif length_split_response == 4 and length_response == 17:
+						nw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
+						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
+						t = "0"
+						self.pesa_real_time.status = split_response[0]
+						self.pesa_real_time.type = split_response[1]
+						self.pesa_real_time.net_weight = nw
+						self.pesa_real_time.gross_weight = gw
+						self.pesa_real_time.tare = t
+						self.pesa_real_time.unite_measure = split_response[3]
 						self.diagnostic.status = 200
 						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
 							self.take_of_weight_on_startup = False
