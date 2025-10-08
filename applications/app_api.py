@@ -17,6 +17,7 @@ from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
 from applications.middleware.auth import AuthMiddleware
+import applications.utils.utils as utils
 # ==============================================================
 
 name_app = "app_api"
@@ -61,18 +62,13 @@ def stop():
 def init():	
 	lb_log.info("init")
 	global app
-	# global rfid
-	# global modules
-	# global ssh_client
-
-	path_ui = Path(__file__).parent / lb_config.g_config["app_api"]["path_ui"]
-	path_content = Path(__file__).parent / lb_config.g_config["app_api"]["path_content"]
-	path_images = lb_config.g_config["app_api"]["path_img"] if os.path.exists(lb_config.g_config["app_api"]["path_img"]) else None
-
-	# Usa Path per una gestione più sicura dei percorsi
-	templates = Jinja2Templates(directory=str(path_ui))
 
 	app = FastAPI()
+	utils.base_path_applications = Path(__file__).parent
+	path_ui = utils.base_path_applications / lb_config.g_config["app_api"]["path_ui"]
+	path_content = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]
+	path_images = lb_config.g_config["app_api"]["path_img"] if os.path.exists(lb_config.g_config["app_api"]["path_img"]) else None
+	templates = Jinja2Templates(directory=str(path_ui))
 
 	app.add_middleware(
 		CORSMiddleware, 

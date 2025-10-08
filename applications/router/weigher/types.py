@@ -4,6 +4,7 @@ from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
+from modules.md_database.interfaces.operator import OperatorDTO
 from modules.md_database.md_database import TypeAccess
 from typing import Union, Optional, List
 from datetime import datetime
@@ -19,6 +20,7 @@ class DataInExecution(BaseModel):
 	driver: DriverDTO = DriverDTO(**{})
 	vehicle: VehicleDTO = VehicleDTO(**{})
 	material: MaterialDTO = MaterialDTO(**{})
+	operator: OperatorDTO = OperatorDTO(**{})
 	note: Optional[str] = None
 	document_reference: Optional[str] = None
 

@@ -1,6 +1,9 @@
 from fastapi import Request, HTTPException
 from typing import Dict, Union
 from libs.multi_language_messages import multi_language_data
+from pathlib import Path
+
+base_path_applications = None
 
 async def get_query_params(request: Request) -> Dict[str, Union[str, int]]:
 	"""

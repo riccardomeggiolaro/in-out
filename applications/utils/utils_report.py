@@ -61,6 +61,9 @@ def get_report_file(report_dir, report_name_file):
 
 def generate_html_report(reports_dir, report_name_file, v: ReportVariables = None):
     try:
+        import libs.lb_log as lb_log
+        lb_log.warning(reports_dir)
+        
         # Setup path to reports
         env = Environment(loader=FileSystemLoader(reports_dir))
         

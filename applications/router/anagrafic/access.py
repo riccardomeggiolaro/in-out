@@ -40,6 +40,7 @@ import libs.lb_config as lb_config
 from libs.lb_printer import printer
 from applications.utils.utils_report import get_data_variables, generate_html_report, save_file_dir
 from applications.middleware.writable_user import is_writable_user
+import applications.utils.utils as utils
 
 class AccessRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -182,7 +183,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
 
     async def pdfInOut(self, id: int):
         in_out = get_last_in_out_by_id(id)
-        report_dir = lb_config.g_config["app_api"]["path_report"]
+        report_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
         name_file, variables, report = get_data_variables(in_out)
         html = generate_html_report(report_dir, report, v=variables.dict())
         pdf = printer.generate_pdf_from_html(html_content=html)
@@ -194,7 +195,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
 
     async def printLastInOut(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         path_pdf = lb_config.g_config["app_api"]["path_pdf"]
-        report_dir = lb_config.g_config["app_api"]["path_report"]
+        report_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
         printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
         number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
         in_out = get_last_in_out_by_weigher(weigher_name=instance.weigher_name)

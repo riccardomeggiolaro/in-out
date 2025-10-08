@@ -20,7 +20,7 @@ from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.utils.utils_report import get_data_variables, generate_html_report, generate_csv_report, save_file_dir
 from libs.lb_printer import printer
-import json
+import applications.utils.utils as utils
 
 class CallbackWeigher(Functions, WebSocket):
 	def __init__(self):
@@ -173,7 +173,7 @@ class CallbackWeigher(Functions, WebSocket):
 			# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
-			reports_dir = lb_config.g_config["app_api"]["path_report"]
+			reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]  / "report"
 			print_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
 			print_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
 			print = print_out if tare > 0 or last_in_out.idWeight2 else print_in
