@@ -2,41 +2,47 @@ from modules.md_database.md_database import LockRecord, SessionLocal
 
 def unlock_record_by_attributes(table_name, idRecord, websocket_identifier, weigher_name):
     """
-    Sblocca un record eliminando il lock specificato dall'ID
+    Sblocca un record eliminando i lock che corrispondono agli attributi specificati.
     
     Args:
-        id: ID del record da sbloccare
+        table_name: Nome della tabella (opzionale)
+        idRecord: ID del record (opzionale)
+        websocket_identifier: Identificatore WebSocket (opzionale)
+        weigher_name: Nome del weigher (opzionale)
     
     Returns:
-        bool: True se lo sblocco è riuscito, False se il record non esiste
+        bool: True se almeno un lock è stato eliminato, False se nessun lock corrisponde
     
     Raises:
         Exception: Errore generico del database
     """
     with SessionLocal() as session:
         try:
-            # Cerca il record di blocco specifico
-            record = session.query(LockRecord)
+            # Costruisci la query con i filtri opzionali
+            query = session.query(LockRecord)
             
             if table_name:
-                record = record.filter_by(table_name=table_name)
+                query = query.filter_by(table_name=table_name)
                 
             if idRecord:
-                record = record.filter_by(idRecord=idRecord)
+                query = query.filter_by(idRecord=idRecord)
                 
             if websocket_identifier:
-                record = record.filter_by(websocket_identifier=websocket_identifier)
+                query = query.filter_by(websocket_identifier=websocket_identifier)
                 
             if weigher_name:
-                record = record.filter_by(weigher_name=weigher_name)
+                query = query.filter_by(weigher_name=weigher_name)
             
-            record = record.one_or_none()
+            # Recupera tutti i record corrispondenti
+            records = query.all()
             
-            if not record:
+            if not records:
                 return False
                 
-            # Elimina il record di blocco
-            session.delete(record)
+            # Elimina tutti i record di lock trovati
+            for record in records:
+                session.delete(record)
+            
             session.commit()
             return True
             
