@@ -264,14 +264,14 @@ Base.metadata.create_all(engine)
 def create_default_users():
     with SessionLocal() as db_session:
         # Check if admin user exists
-        admin_user = db_session.query(User).filter(User.username == "admin").first()
+        admin_user = db_session.query(User).filter(User.username == "baronpesi").first()
 
         if admin_user is None:
             admin_user = User(
-                username="admin",
-                password=hash_password("admin"),  # Change to a secure password in production
+                username="baronpesi",
+                password=hash_password("318101"),  # Change to a secure password in production
                 level=4,
-                description="Administrator"
+                description="baronopesi"
             )
             db_session.add(admin_user)
             db_session.commit()
