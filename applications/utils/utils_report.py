@@ -42,14 +42,14 @@ def get_data_variables(in_out):
     name_file += ".pdf"
     return name_file, variables, report
 
-def convert_none_to_empty(data):
-    """Recursively converts None values to empty strings in dictionaries and lists"""
+def delete_none_value(data):
+    """Recursively removes keys with None values in dictionaries and lists."""
     if isinstance(data, dict):
-        return {k: convert_none_to_empty(v) for k, v in data.items()}
+        # Filter out keys with None values
+        return {k: delete_none_value(v) for k, v in data.items() if v is not None}
     elif isinstance(data, list):
-        return [convert_none_to_empty(item) for item in data]
-    elif data is None:
-        return ""
+        # Remove None values from lists
+        return [delete_none_value(item) for item in data if item is not None]
     return data
 
 def get_report_file(report_dir, report_name_file):
@@ -61,9 +61,6 @@ def get_report_file(report_dir, report_name_file):
 
 def generate_html_report(reports_dir, report_name_file, v: ReportVariables = None):
     try:
-        import libs.lb_log as lb_log
-        lb_log.warning(reports_dir)
-        
         # Setup path to reports
         env = Environment(loader=FileSystemLoader(reports_dir))
         
@@ -92,8 +89,8 @@ def generate_html_report(reports_dir, report_name_file, v: ReportVariables = Non
         # Create template data dictionary
         report_data = {var: v[var] if v and var in v else None for var in variables}
         
-        # Convert all None values to empty strings recursively
-        report_data = convert_none_to_empty(report_data)
+        # Rimuove tutte le variabili con valore None
+        report_data = delete_none_value(report_data)
 
         # Return the rendered report
         return report.render(**report_data)
