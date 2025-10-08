@@ -673,8 +673,7 @@ function updateUIRealtime(e) {
                 if (obj.data_assigned.accessId.id === access_id) {
                     const id_in_out = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["id"]
                     const typeOfWeight = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["idWeight2"] === null ? "in" : "out";
-                    const params = getParamsFromQueryString();
-                    const inOutPdf = instances[params.instance_name]["nodes"][params.weigher_name]["events"]["weighing"]["report"][typeOfWeight];
+                    const inOutPdf = instances[obj.instance_name]["nodes"][obj.weigher_name]["events"]["weighing"]["report"][typeOfWeight];
                     if (inOutPdf) {
                         fetch(`/api/anagrafic/access/in-out/pdf/${id_in_out}`)
                         .then(res => {
@@ -1068,19 +1067,4 @@ function enableAllElements() {
     buttonsAndInputs.forEach(element => {
         element.disabled = false;
     });
-}
-
-function getParamsFromQueryString() {
-  const params = new URLSearchParams(currentWeigherPath);
-  const result = {};
-
-  if (params.has('instance_name')) {
-    result.instance_name = params.get('instance_name');
-  }
-
-  if (params.has('weigher_name')) {
-    result.weigher_name = params.get('weigher_name');
-  }
-
-  return result;
 }
