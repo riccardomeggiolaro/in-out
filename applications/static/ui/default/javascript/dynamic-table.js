@@ -747,15 +747,12 @@ function editRow(item) {
         currentId = item.id;
         if (currentIdInOut) {
             let current_in_out = item.in_out.find(in_out => in_out.id === currentIdInOut);
-            console.log(currentIdInOut, current_in_out);
-            console.log(item);
             item.material = current_in_out ? current_in_out.material : '';
             if (item.in_out.length > 0) {
                 const in_out = item.in_out.find(obj => obj.id === currentIdInOut);
                 item.operator1 = in_out.weight1 ? in_out.weight1.operator : null;
                 item.operator2 = in_out.weight2 ? in_out.weight2.operator : null;
             }
-            console.log(item);
         }
         document.getElementById('overlay').classList.add('active');
         editPopup.classList.add('active');
@@ -765,7 +762,6 @@ function editRow(item) {
         for (let key in item) {
             let annidate_key = `#${key}`;
             let annidate_value = item[key];
-            console.log(annidate_key);
             if (typeof annidate_value === 'object' && annidate_value !== null && !Array.isArray(annidate_value)) {
                 Object.entries(annidate_value).forEach(([sub_key, sub_value]) => {
                     annidate_key = `#${key}\\.${sub_key}`;

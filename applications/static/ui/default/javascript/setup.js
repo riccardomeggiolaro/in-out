@@ -173,7 +173,6 @@ async function loadSetupWeighers() {
     }
 
     const addRele = (e, classNameForm, className, number_rele, status, on_event) => {
-        console.log(status);
         const form = document.querySelector(classNameForm);
 
         if (e) e.preventDefault();
@@ -754,7 +753,6 @@ async function loadSetupWeighers() {
                     })
                     .then(res => res.json())
                     .then(res => {
-                        console.log(res)
                         const newTimeBetweenActions = Number(editModeSerial.querySelector('input[name="time_between_actions"]').value);
                         if (newTimeBetweenActions != currentTimeBetweenActions) {
                             fetch(`/api/config-weigher/instance/time-between-actions/${newTimeBetweenActions}?instance_name=${key}`, {
@@ -1145,7 +1143,6 @@ async function loadSetupWeighers() {
 
                 document.querySelector(`.${addCamClass}`).querySelectorAll(".cam").forEach(element => {
                     const inputs = element.querySelectorAll("input");
-                    console.log(inputs[1])
                     const cam = {
                         "picture": inputs[0].value,
                         "active": inputs[1].checked ? true : false
@@ -1215,7 +1212,6 @@ async function loadSetupWeighers() {
                 `;
 
                 const populateViewContent = (data) => {
-                    console.log(data);
                     const viewModeCFontent = viewMode.querySelector('.content');
                     const cams = data.events.weighing.cams;
                     const over_min = data.events.realtime.over_min.set_rele;
@@ -1275,8 +1271,6 @@ async function loadSetupWeighers() {
                 `;
 
                 const editWeigherForm = editMode.querySelector('form');
-
-                console.log(editWeigherForm)
 
                 editWeigherForm.oninput = () => {
                     editMode.querySelector('.save-btn').disabled = !editWeigherForm.checkValidity();
@@ -1565,7 +1559,6 @@ async function loadSetupWeighers() {
                 });
 
                 deleteWeigherModal.querySelector('.modalDeleteWeigherConfirm').addEventListener('click', () => {
-                    console.log(weigher)
                     let delete_url = `/api/config-weigher/instance/node?instance_name=${key}`;
                     if (weigher.name !== null) {
                         delete_url += `&weigher_name=${weigher.name}`;

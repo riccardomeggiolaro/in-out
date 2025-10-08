@@ -210,7 +210,6 @@ async function getData(path) {
         selectedIdSubject = obj.subject.id;
         selectedIdVector = obj.vector.id;
         selectedIdMaterial = obj.material.id;
-        console.log(selectedIdWeight)
         if (type === "RESERVATION" && number_in_out === null && weight1 === null) {
             obj.vehicle.plate += "⭐";
             document.querySelector('.containerPlateVehicle').classList.add('permanent');
