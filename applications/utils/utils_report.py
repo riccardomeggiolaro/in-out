@@ -7,6 +7,7 @@ from modules.md_database.interfaces.vector import VectorDataDTO
 from modules.md_database.interfaces.driver import DriverDataDTO
 from modules.md_database.interfaces.vehicle import VehicleDataDTO
 from modules.md_database.interfaces.material import MaterialDataDTO
+from modules.md_database.interfaces.operator import OperatorDataDTO
 import json
 
 def get_data_variables(in_out):
@@ -21,6 +22,7 @@ def get_data_variables(in_out):
     variables.driver = in_out.access.driver if in_out.access.driver else DriverDataDTO(**{})
     variables.vehicle = in_out.access.vehicle if in_out.access.vehicle else VehicleDataDTO(**{})
     variables.material = in_out.material if in_out.material else MaterialDataDTO(**{})    
+    variables.operator = in_out.weight1.operator if in_out.weight1 and in_out.weight1.operator else in_out.weight2.operator or OperatorDataDTO(**{})
     variables.note = in_out.access.note
     variables.document_reference = in_out.access.document_reference
     if in_out.idWeight1:

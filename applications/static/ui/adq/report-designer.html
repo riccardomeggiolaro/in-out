@@ -168,7 +168,6 @@
             margin-right: auto;
         }
 
-        /* Aggiungi dopo .canvas-container */
         .pages-container {
             display: flex;
             flex-direction: column;
@@ -246,35 +245,35 @@
             width: 210mm;
             height: 297mm;
             padding: 25mm;
-            font-size: 12pt; /* standard corpo testo */
+            font-size: 12pt;
         }
 
         .canvas.A5 {
             width: 148mm;
             height: 210mm;
             padding: 15mm;
-            font-size: 11pt; /* leggermente più piccolo ma ancora molto leggibile */
+            font-size: 11pt;
         }
 
         .canvas.A6 {
             width: 105mm;
             height: 148mm;
             padding: 10mm;
-            font-size: 10pt; /* proporzionato per formati tascabili */
+            font-size: 10pt;
         }
 
         .canvas.A7 {
             width: 74mm;
             height: 105mm;
             padding: 8mm;
-            font-size: 9pt; /* al limite del minimo leggibile */
+            font-size: 9pt;
         }
 
         .canvas.A8 {
             width: 52mm;
             height: 74mm;
             padding: 6mm;
-            font-size: 8pt; /* minimo accettabile per leggibilità */
+            font-size: 8pt;
         }
 
         .canvas.Receipt80 {
@@ -282,7 +281,14 @@
             height: fit-content;
             min-height: 10mm;
             padding: 5mm;
-            font-size: 9pt; /* standard per scontrini da 80mm */
+            font-size: 9pt;
+            background: white;
+        }
+
+        .canvas.Custom {
+            min-height: 100%;
+            padding: 3mm;
+            font-size: 11pt;
             background: white;
         }
 
@@ -351,7 +357,6 @@
             border: 1px dashed #ccc;
         }
 
-        /* Aggiustamenti specifici per formati molto piccoli */
         .canvas.A8 .dropped-element table th,
         .canvas.A8 .dropped-element table td,
         .canvas.A7 .dropped-element table th,
@@ -366,7 +371,6 @@
             font-size: 0.95em;
         }
 
-        /* Classe per celle selezionate nelle tabelle */
         .table-cell-selected {
             background: rgba(102, 126, 234, 0.2) !important;
             outline: 2px solid #667eea !important;
@@ -571,7 +575,6 @@
             justify-content: flex-end;
         }
 
-        /* Elementi template specifici */
         .jinja-variable {
             background: #e3f2fd;
             border: 1px solid #90caf9;
@@ -597,7 +600,6 @@
             margin: 10px 0;
         }
 
-        /* Responsive */
         @media (max-width: 1200px) {
             .properties-panel {
                 width: 250px;
@@ -614,6 +616,15 @@
                 border: none;
             }
         }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
     </style>
 </head>
 <body onclick="selectElement()">
@@ -628,6 +639,7 @@
                 <button class="btn btn-primary" onclick="previewReport()">👁️ Anteprima</button>
                 <button class="btn btn-primary" onclick="showCode()" style="display: none;">📝 Mostra Codice</button>
                 <button class="btn btn-primary" onclick="saveProject('{{ report }}')">💾 Salva</button>
+                <button class="btn btn-primary" onclick="downloadProjectLocal()">📥 Download</button>
                 <button class="btn btn-primary" onclick="importProject()">📥 Importa</button>
             </div>
         </div>
@@ -635,7 +647,6 @@
         <div class="main-container">
             <div class="sidebar">
                 <div class="page-global-settings">
-                    <!-- Sostituisci la sezione format-selector con questa versione estesa -->
                     <div class="format-selector">
                         <h3>Formato Pagina</h3>
                         <select id="pageFormat" onchange="changePageFormat()">
@@ -645,7 +656,23 @@
                             <option value="A7">A7 (74 × 105 mm)</option>
                             <option value="A8">A8 (52 × 74 mm)</option>
                             <option value="Receipt80">Scontrino 80mm (80 × ∞)</option>
+                            <option value="Custom">📐 Personalizzato</option>
                         </select>
+                    </div>
+
+                    <div id="customSizeSection" style="display: none; margin-top: 15px;">
+                        <h3>Dimensioni Custom (mm)</h3>
+                        <div class="margin-input-group">
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Larghezza</label>
+                                <input type="number" id="customWidth" value="" min="50" max="500" placeholder="auto" onchange="applyCustomSize()">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Altezza</label>
+                                <input type="number" id="customHeight" value="" min="50" max="1000" placeholder="auto" onchange="applyCustomSize()">
+                            </div>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 5px; font-size: 11px;">Lascia vuoto per dimensione automatica</small>
                     </div>
 
                     <div class="margin-controls">
@@ -653,19 +680,19 @@
                         <div class="margin-input-group">
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Superiore</label>
-                                <input type="number" id="marginTop" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginTop" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Inferiore</label>
-                                <input type="number" id="marginBottom" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginBottom" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Sinistro</label>
-                                <input type="number" id="marginLeft" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginLeft" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Destro</label>
-                                <input type="number" id="marginRight" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginRight" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                         </div>
                         <div class="property-group" style="margin-top: 15px;">
@@ -719,7 +746,6 @@
                     <div id="pagesContainer" class="pages-container">
                         <div class="page-wrapper">
                             <div id="canvas" class="canvas A4" data-page-number="1">
-                                <!-- Gli elementi verranno droppati qui -->
                                 <div class="vertical-guide"></div>
                             </div>
                             <span class="page-number">Pagina 1</span>
@@ -739,7 +765,6 @@
         </div>
     </div>
 
-    <!-- Modal per mostrare il codice -->
     <div id="codeModal" class="modal" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -758,10 +783,9 @@
     <script type="module" src="/static/javascript/interceptor.js"></script>
     <script>
         let selectedElement = null;
-        let selectedTableCell = null; // Nuova variabile per tracciare la cella selezionata
+        let selectedTableCell = null;
         let elementCounter = 0;
         let currentZoom = 100;
-        // Aggiungi queste variabili globali all'inizio
         let currentPage = 1;
         let totalPages = 1;
         let pageHeights = {
@@ -770,16 +794,21 @@
             'A6': 148,
             'A7': 105,
             'A8': 74,
-            'Receipt80': null // Altezza infinita per scontrini
+            'Receipt80': null,
+            'Custom': null
         };
 
         let globalFont = "Arial, sans-serif";
+        
+        // Memorizza formato e padding del file importato
+        let importedFileFormat = null;
+        let importedFilePadding = null;
+        let importedCustomSize = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadDefaultTemplate('{{ default_report_template }}', false);
         });
 
-        // Funzione helper per calcolare il numero effettivo di colonne in una riga (considerando colspan)
         function getEffectiveColumnCount(row) {
             let totalCols = 0;
             row.querySelectorAll('th, td').forEach(cell => {
@@ -789,23 +818,28 @@
             return totalCols;
         }
 
-        // Funzione per ottenere l'altezza disponibile della pagina
         function getAvailablePageHeight(pageElement) {
             const format = document.getElementById('pageFormat').value;
-            if (format === 'Receipt80') return Infinity; // Scontrino non ha limite
+            if (format === 'Receipt80') return Infinity;
             
-            const pageHeightMm = pageHeights[format];
+            let pageHeightMm;
+            if (format === 'Custom') {
+                const customHeightInput = document.getElementById('customHeight').value.trim();
+                if (customHeightInput === '') return Infinity; // Se altezza è auto, nessun limite
+                pageHeightMm = parseInt(customHeightInput) || 297;
+            } else {
+                pageHeightMm = pageHeights[format];
+            }
+            
             const marginTop = parseInt(document.getElementById('marginTop').value) || 25;
             const marginBottom = parseInt(document.getElementById('marginBottom').value) || 25;
             
-            // Converti mm in pixel (approssimativo: 1mm ≈ 3.78px)
             const mmToPx = 3.78;
             const availableHeight = (pageHeightMm - marginTop - marginBottom) * mmToPx;
             
             return availableHeight;
         }
 
-        // Funzione per calcolare l'altezza totale degli elementi in una pagina
         function calculatePageContentHeight(pageElement) {
             const elements = pageElement.querySelectorAll('.dropped-element');
             let totalHeight = 0;
@@ -821,10 +855,9 @@
             return totalHeight;
         }
 
-        // Funzione per verificare se un elemento può essere aggiunto
         function canAddElement(pageElement, newElementHeight = 100) {
             const format = document.getElementById('pageFormat').value;
-            if (format === 'Receipt80') return true; // Sempre permesso per scontrini
+            if (format === 'Receipt80') return true;
             
             const currentHeight = calculatePageContentHeight(pageElement);
             const availableHeight = getAvailablePageHeight(pageElement);
@@ -832,7 +865,6 @@
             return (currentHeight + newElementHeight) <= availableHeight;
         }
 
-        // Funzione per creare una nuova pagina
         function createNewPage() {
             totalPages++;
             const pagesContainer = document.getElementById('pagesContainer');
@@ -847,13 +879,23 @@
             newPage.className = `canvas ${format}`;
             newPage.dataset.pageNumber = totalPages;
             
-            // Applica i margini correnti
+            if (format === 'Custom') {
+                const widthInput = document.getElementById('customWidth').value.trim();
+                const heightInput = document.getElementById('customHeight').value.trim();
+                
+                newPage.style.width = widthInput === '' ? 'auto' : (parseInt(widthInput) + 'mm');
+                newPage.style.height = heightInput === '' ? 'auto' : (parseInt(heightInput) + 'mm');
+            } else {
+                // Assicurati che non ci siano stili inline per i formati preimpostati
+                newPage.style.width = '';
+                newPage.style.height = '';
+            }
+            
             updatePageMarginsForElement(newPage);
             
-            // Aggiungi indicatore di nuova pagina nel primo elemento
             const pageIndicator = document.createElement('div');
             pageIndicator.className = 'new-page-indicator';
-            pageIndicator.style.display = 'none'; // Nascosto inizialmente
+            pageIndicator.style.display = 'none';
             newPage.appendChild(pageIndicator);
             
             const pageNumber = document.createElement('span');
@@ -868,7 +910,6 @@
             newPageWrapper.appendChild(pageNumber);
             pagesContainer.appendChild(newPageWrapper);
             
-            // Inizializza drag and drop per la nuova pagina
             newPage.addEventListener('dragover', handleDragOver);
             newPage.addEventListener('drop', handleDrop);
             newPage.addEventListener('dragleave', handleDragLeave);
@@ -876,7 +917,6 @@
             return newPage;
         }
 
-        // Modifica handleDrop per gestire il controllo spazio
         function handleDrop(e) {
             if (e.stopPropagation) {
                 e.stopPropagation();
@@ -888,13 +928,10 @@
             
             const componentType = e.dataTransfer.getData('componentType');
             
-            // Verifica se c'è spazio nella pagina corrente
             if (!canAddElement(canvas)) {
-                // Cerca l'ultima pagina o creane una nuova
                 let targetCanvas = canvas;
                 const allPages = document.querySelectorAll('.canvas');
                 
-                // Trova una pagina con spazio disponibile
                 let foundSpace = false;
                 for (let i = allPages.length - 1; i >= 0; i--) {
                     if (canAddElement(allPages[i])) {
@@ -904,11 +941,8 @@
                     }
                 }
                 
-                // Se non c'è spazio in nessuna pagina, crea una nuova pagina
                 if (!foundSpace) {
                     targetCanvas = createNewPage();
-                    
-                    // Mostra un messaggio all'utente
                     showNotification('Nuova pagina creata per contenere l\'elemento');
                 }
                 
@@ -917,21 +951,18 @@
                 addElement(componentType, canvas);
             }
             
-            // Riorganizza elementi se necessario
             redistributeElements();
             
             return false;
         }
 
-        // Funzione per ridistribuire elementi tra le pagine
         function redistributeElements() {
             const format = document.getElementById('pageFormat').value;
-            if (format === 'Receipt80') return; // Non ridistribuire per scontrini
+            if (format === 'Receipt80') return;
             
             const allPages = document.querySelectorAll('.canvas');
             const allElements = [];
             
-            // Raccogli tutti gli elementi
             allPages.forEach(page => {
                 const elements = page.querySelectorAll('.dropped-element');
                 elements.forEach(el => {
@@ -940,7 +971,6 @@
                 });
             });
             
-            // Ridistribuisci gli elementi
             let currentPageIndex = 0;
             let currentPage = allPages[currentPageIndex];
             
@@ -958,16 +988,22 @@
                 makeElementInteractive(element);
             });
             
-            // Rimuovi pagine vuote extra (tranne la prima)
             for (let i = allPages.length - 1; i > 0; i--) {
                 if (allPages[i].querySelectorAll('.dropped-element').length === 0) {
                     allPages[i].closest('.page-wrapper').remove();
                     totalPages--;
                 }
             }
+            
+            // Dopo la redistribuzione, rimuovi stili inline se non è Custom
+            if (format !== 'Custom') {
+                document.querySelectorAll('.canvas').forEach(page => {
+                    page.style.width = '';
+                    page.style.height = '';
+                });
+            }
         }
 
-        // Funzione per aggiornare i margini
         function updatePageMargins() {
             const marginTop = document.getElementById('marginTop').value + 'mm';
             const marginBottom = document.getElementById('marginBottom').value + 'mm';
@@ -982,11 +1018,9 @@
                 page.style.paddingRight = marginRight;
             });
             
-            // Ridistribuisci elementi dopo il cambio margini
             setTimeout(redistributeElements, 100);
         }
 
-        // Funzione per aggiornare margini di un singolo elemento
         function updatePageMarginsForElement(element) {
             const marginTop = document.getElementById('marginTop').value + 'mm';
             const marginBottom = document.getElementById('marginBottom').value + 'mm';
@@ -999,59 +1033,174 @@
             element.style.paddingRight = marginRight;
         }
 
-        // Funzione per mostrare notifiche
-        function showNotification(message) {
+        function showNotification(message, isError = false, isPersistent = false) {
+            const existingPersistent = document.querySelector('.notification-persistent');
+            if (existingPersistent) {
+                existingPersistent.remove();
+            }
+            
             const notification = document.createElement('div');
+            notification.className = isPersistent ? 'notification-persistent' : '';
             notification.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
-                background: #667eea;
+                background: ${isError ? '#e74c3c' : '#667eea'};
                 color: white;
                 padding: 12px 20px;
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
                 z-index: 10000;
                 animation: slideIn 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 10px;
             `;
-            notification.textContent = message;
+            
+            if (isPersistent) {
+                const spinner = document.createElement('div');
+                spinner.style.cssText = `
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid rgba(255,255,255,0.3);
+                    border-top-color: white;
+                    border-radius: 50%;
+                    animation: spin 0.6s linear infinite;
+                `;
+                notification.appendChild(spinner);
+            }
+            
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+            notification.appendChild(messageSpan);
+            
             document.body.appendChild(notification);
             
-            setTimeout(() => {
-                notification.style.animation = 'fadeOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            if (!isPersistent) {
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+            
+            return notification;
         }
 
-        // Modifica changePageFormat per gestire tutte le pagine
-        function changePageFormat() {
+        function changePageFormat(preserveMargins = false) {
             const format = document.getElementById('pageFormat').value;
             const allPages = document.querySelectorAll('.canvas');
+            const customSection = document.getElementById('customSizeSection');
             
-            allPages.forEach(page => {
-                page.className = `canvas ${format}`;
-            });
+            if (format === 'Custom') {
+                customSection.style.display = 'block';
+                
+                // Controlla se stiamo tornando al formato Custom del file importato
+                if (importedFileFormat === 'Custom' && importedCustomSize !== null) {
+                    document.getElementById('customWidth').value = importedCustomSize.width || '';
+                    document.getElementById('customHeight').value = importedCustomSize.height || '';
+                }
+                
+                applyCustomSize();
+            } else {
+                customSection.style.display = 'none';
+                allPages.forEach(page => {
+                    page.className = `canvas ${format}`;
+                    // RIMUOVI gli stili inline width/height per permettere al CSS di funzionare
+                    page.style.width = '';
+                    page.style.height = '';
+                });
+            }
             
-            // Aggiorna margini predefiniti per il formato
-            updateDefaultMarginsForFormat(format);
+            // Controlla se stiamo tornando al formato del file importato
+            if (importedFileFormat === format && importedFilePadding !== null) {
+                // Ripristina i padding del file importato
+                document.getElementById('marginTop').value = importedFilePadding.top;
+                document.getElementById('marginBottom').value = importedFilePadding.bottom;
+                document.getElementById('marginLeft').value = importedFilePadding.left;
+                document.getElementById('marginRight').value = importedFilePadding.right;
+            } else if (!preserveMargins) {
+                // Altrimenti usa i default
+                updateDefaultMarginsForFormat(format);
+            }
+            
             updatePageMargins();
             
-            // Auto zoom per formati piccoli
+            // Ricalcola font size per tutti gli elementi esistenti
+            updateAllElementsFontSize(format);
+            
             if (format === 'A7' || format === 'A8' || format === 'Receipt80') {
                 currentZoom = 150;
             } else if (format === 'A6') {
                 currentZoom = 120;
+            } else if (format === 'Custom') {
+                currentZoom = 100;
             } else {
                 currentZoom = 100;
             }
             applyZoom();
             updateZoomDisplay();
             
-            // Ridistribuisci elementi per il nuovo formato
             setTimeout(redistributeElements, 100);
         }
 
-        // Funzione per impostare margini predefiniti per formato
+        function updateAllElementsFontSize(format) {
+            const fontSizeMap = {
+                'A4': '12pt',
+                'A5': '11pt',
+                'A6': '10pt',
+                'A7': '9pt',
+                'A8': '8pt',
+                'Receipt80': '9pt',
+                'Custom': '11pt'
+            };
+            
+            const newFontSize = fontSizeMap[format] || '12pt';
+            
+            // Aggiorna tutti gli elementi dropped
+            document.querySelectorAll('.dropped-element').forEach(element => {
+                // Solo se l'elemento non ha un font size personalizzato
+                // (controlla se è stato modificato dall'utente)
+                const currentSize = element.style.fontSize;
+                
+                // Se ha già un font size, mantienilo solo se è stato personalizzato
+                // Altrimenti aggiorna al font size del nuovo formato
+                if (!currentSize || currentSize === '' || isDefaultFontSize(currentSize)) {
+                    element.style.fontSize = newFontSize;
+                }
+            });
+        }
+
+        function isDefaultFontSize(fontSize) {
+            const defaultSizes = ['12pt', '11pt', '10pt', '9pt', '8pt', '7pt'];
+            return defaultSizes.includes(fontSize);
+        }
+
+        function applyCustomSize() {
+            const format = document.getElementById('pageFormat').value;
+            if (format !== 'Custom') return;
+            
+            const widthInput = document.getElementById('customWidth').value.trim();
+            const heightInput = document.getElementById('customHeight').value.trim();
+            
+            const width = widthInput === '' ? 'auto' : (parseInt(widthInput) + 'mm');
+            const height = heightInput === '' ? 'fit-content' : (parseInt(heightInput) + 'mm');
+            
+            const allPages = document.querySelectorAll('.canvas');
+            
+            allPages.forEach(page => {
+                page.className = 'canvas Custom';
+                page.style.width = width;
+                page.style.height = height;
+                if (heightInput === '') {
+                    page.style.minHeight = '10mm';
+                } else {
+                    page.style.minHeight = '';
+                }
+            });
+            
+            setTimeout(redistributeElements, 100);
+        }
+
         function updateDefaultMarginsForFormat(format) {
             const marginInputs = {
                 'A4': { top: 25, bottom: 25, left: 20, right: 20 },
@@ -1059,7 +1208,8 @@
                 'A6': { top: 10, bottom: 10, left: 10, right: 10 },
                 'A7': { top: 8, bottom: 8, left: 8, right: 8 },
                 'A8': { top: 6, bottom: 6, left: 6, right: 6 },
-                'Receipt80': { top: 5, bottom: 5, left: 5, right: 5 }
+                'Receipt80': { top: 5, bottom: 5, left: 5, right: 5 },
+                'Custom': { top: 3, bottom: 3, left: 3, right: 3 }
             };
             
             const margins = marginInputs[format];
@@ -1069,23 +1219,11 @@
             document.getElementById('marginRight').value = margins.right;
         }
 
-        // Aggiungi animazioni CSS
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeOut {
-                from { opacity: 1; }
-                to { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Inizializzazione drag and drop
         document.addEventListener('DOMContentLoaded', function() {
             initializeDragAndDrop();
             updateZoomDisplay();
         });
 
-        // Funzioni zoom
         function changeZoom(delta) {
             currentZoom = Math.max(20, Math.min(300, currentZoom + delta));
             applyZoom();
@@ -1195,10 +1333,10 @@
                     `;
                     break;
                 case 'image':
-                    wrapper.style.textAlign = "center"; // Allineamento iniziale sul wrapper
+                    wrapper.style.textAlign = "center";
                     content = `
                         <div data-image-container>
-                            <img src="" alt="Immagine" 
+                            <img alt="Immagine" 
                                  style="width: 50mm; height: 37.5mm; display: inline-block;" 
                                  data-width-mm="50" data-height-mm="37.5" data-image-type="file">
                         </div>
@@ -1218,7 +1356,6 @@
                 </div>
             `;
             
-            // Se è una tabella, aggiungi event listener per le celle
             if (type === 'table') {
                 setupTableCellSelection(wrapper);
             }
@@ -1226,11 +1363,9 @@
             return wrapper;
         }
 
-        // Nuova funzione per gestire la selezione delle celle della tabella
         function setupTableCellSelection(tableElement) {
             const cells = tableElement.querySelectorAll('td, th');
             cells.forEach(cell => {
-                // Rimuovi listener precedenti se presenti
                 cell.removeEventListener('click', cell._clickHandler);
                 cell._clickHandler = function(e) {
                     e.stopPropagation();
@@ -1240,18 +1375,14 @@
             });
         }
 
-        // Nuova funzione per selezionare una cella della tabella
         function selectTableCell(cell) {
-            // Rimuovi selezione precedente
             document.querySelectorAll('.table-cell-selected').forEach(c => {
                 c.classList.remove('table-cell-selected');
             });
             
-            // Seleziona la nuova cella
             cell.classList.add('table-cell-selected');
             selectedTableCell = cell;
             
-            // Seleziona anche l'elemento padre (la tabella)
             const tableWrapper = cell.closest('.dropped-element');
             if (tableWrapper) {
                 selectElement(tableWrapper);
@@ -1262,10 +1393,8 @@
         }
 
         function makeElementInteractive(element) {
-            // Rimuovi listener precedente se presente
             element.removeEventListener('click', element._clickHandler);
             element._clickHandler = function(e) {
-                // Se è una tabella e si clicca su una cella, non selezionare l'elemento intero
                 if (!e.target.matches('td, th')) {
                     selectElement(this);
                 }
@@ -1273,25 +1402,21 @@
             };
             element.addEventListener('click', element._clickHandler);
             
-            // Se è una tabella, setup celle
             if (element.dataset.type === 'table') {
                 setupTableCellSelection(element);
             }
         }
 
         function selectElement(element) {
-            // Rimuovi selezione precedente
             document.querySelectorAll('.dropped-element').forEach(el => {
                 el.classList.remove('selected');
             });
 
             if (element) {
-                // Seleziona nuovo elemento
                 element.classList.add('selected');
                 selectedElement = element;
             }
             
-            // Mostra proprietà
             showProperties(element);
         }
 
@@ -1326,14 +1451,13 @@
             `;
 
             if (type !== 'image') {
-                // SEZIONE VARIABILI JINJA2 - SOLO DROPDOWN
                 propertiesHTML += `
                     <div class="jinja-section">
                         <h4>🔤 Variabili Jinja2</h4>
                         
                         <div class="property-group">
                             <label>Seleziona Variabile da Inserire</label>
-                            <select onchange="insertQuickVariable(this.value); this.value='';">Tipo Sorgente Immagine
+                            <select onchange="insertQuickVariable(this.value); this.value='';">
                                 <option value="">-- Seleziona variabile --</option>
                                 <option value="{{ typeSubject }}">{{ typeSubject }} - Tipo SOGGETTO</option>
                                 <option value="{{ subject.social_reason }}">{{ subject.social_reason }} - Ragione sociale SOGGETTO</option>
@@ -1352,9 +1476,9 @@
                                 <option value="{{ weight1.weight }}">{{ weight1.weight }} - Peso ENTRATA</option>
                                 <option value="{{ weight1.date }}">{{ weight1.date }} - Data ENTRATA</option>
                                 <option value="{{ weight1.pid }}">{{ weight1.pid }} - Pid ENTRATA</option>
-                                <option value="{{ weight2weight }}">{{ weight2weight }} - Peso USCITA</option>
-                                <option value="{{ weight2date }}">{{ weight2date }} - Data USCITA</option>
-                                <option value="{{ weight2pid }}">{{ weight2pid }} - Pid USCITA</option>
+                                <option value="{{ weight2.weight }}">{{ weight2.weight }} - Peso USCITA</option>
+                                <option value="{{ weight2.date }}">{{ weight2.date }} - Data USCITA</option>
+                                <option value="{{ weight2.pid }}">{{ weight2.pid }} - Pid USCITA</option>
                                 <option value="{{ net_weight }}">{{ net_weight }} - Peso NETTO</option>
                             </select>
                         </div>
@@ -1368,7 +1492,6 @@
                 `;
             }
             
-            // Proprietà specifiche per tipo
             switch(type) {
                 case 'heading':
                     const typeTitle = element.firstElementChild.tagName;
@@ -1434,7 +1557,6 @@
                     const img = element.querySelector('img');
                     const currentWidthMm = img.dataset.widthMm || '';
                     const currentHeightMm = img.dataset.heightMm || '';
-                    const currentSrc = img.src;
                     const imageType = img.dataset.imageType || 'file';
                 
                     propertiesHTML += `
@@ -1469,7 +1591,7 @@
                                     <select onchange="setImageVariable(this.value); this.value='';">
                                         <option value="">-- Seleziona variabile --</option>
                                         <option value="weight1.img">{{ weight1.img }} - Foto ENTRATA</option>
-                                        <option value="weight2.img">{{ weight1.img }} - Foto USCITA</option>
+                                        <option value="weight2.img">{{ weight2.img }} - Foto USCITA</option>
                                     </select>
                                 </div>
                             </div>
@@ -1509,33 +1631,23 @@
                             </select>
                         </div>
                     `;
-
                     break;
                 case 'table':
                     const table = element.querySelector('table');
-                    const currentFontSize = table.style.fontSize ? table.style.fontSize.replace('pt', '') : '12';
                     const currentPadding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
                     const theadRow = table.querySelector('thead tr');
-                    const currentCols = getEffectiveColumnCount(theadRow); // Usa effective columns
+                    const currentCols = getEffectiveColumnCount(theadRow);
                     const tbodyRows = table.querySelectorAll('tbody tr');
                     const currentRows = tbodyRows.length;
-                    const tableFont = table.style.fontFamily || globalFont;
                     
-                    // Sezione proprietà cella selezionata
                     if (selectedTableCell) {
                         const cellAlign = selectedTableCell.style.textAlign || 'left';
                         const cellColspan = selectedTableCell.getAttribute('data-colspan') || '1';
-                        // Calcola il numero massimo di celle disponibili a destra (inclusa la cella corrente)
                         const row = selectedTableCell.closest('tr');
                         const cells = Array.from(row.querySelectorAll('th, td'));
                         const cellIndex = cells.indexOf(selectedTableCell);
-                        const maxColspan = (cells.length - cellIndex) + (Number(cellColspan) - 1); // Celle rimanenti a destra, inclusa la corrente
+                        const maxColspan = (cells.length - cellIndex) + (Number(cellColspan) - 1);
                         const cellFontWeight = selectedTableCell.style.fontWeight || (selectedTableCell.tagName.toUpperCase() === 'TH' ? 'bold' : 'normal');
-
-                        console.log(cellColspan);
-                        console.log(cells.length);
-                        console.log(cellIndex);
-                        console.log(maxColspan);
 
                         propertiesHTML += `
                             <div id="cellPropertiesContent" style="background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
@@ -1631,53 +1743,43 @@
             propertiesContent.innerHTML = propertiesHTML;
         }
 
-        // NUOVE FUNZIONI PER LA GESTIONE DELLE IMMAGINI
-
-        // Cambia il tipo di sorgente dell'immagine (file, variabile, url)
         function changeImageType(type) {
             if (!selectedElement) return;
             
             const img = selectedElement.querySelector('img');
             if (!img) return;
             
-            // Aggiorna il data attribute
             img.dataset.imageType = type;
             
-            // Nascondi tutte le sezioni
             document.getElementById('fileUploadSection').style.display = 'none';
             document.getElementById('variableSection').style.display = 'none';
             document.getElementById('urlSection').style.display = 'none';
             
-            // Mostra la sezione appropriata
             switch(type) {
                 case 'file':
                     document.getElementById('fileUploadSection').style.display = 'block';
-                    // Se non ha ancora un'immagine caricata, mostra placeholder
-                    if (!img.src.startsWith('data:image/') && img.src.includes('placeholder')) {
-                        img.src = '';
+                    if (!img.src.startsWith('data:image/')) {
+                        img.removeAttribute('src');
                         img.alt = 'Immagine';
                     }
                     break;
                 case 'variable':
                     document.getElementById('variableSection').style.display = 'block';
-                    // Reset src per mostrare che è una variabile
                     if (!img.src.includes('{{')) {
-                        img.src = '{{ nome_variabile }}';
+                        img.setAttribute('src', '{{ nome_variabile }}');
                         img.alt = 'Variabile Jinja2';
                     }
                     break;
                 case 'url':
                     document.getElementById('urlSection').style.display = 'block';
-                    // Se è una variabile, resetta a placeholder
                     if (img.src.includes('{{')) {
-                        img.src = '';
+                        img.removeAttribute('src');
                         img.alt = 'Immagine';
                     }
                     break;
             }
         }
 
-        // Imposta una variabile Jinja2 per l'immagine
         function setImageVariable(variableName) {
             if (!selectedElement) return;
             
@@ -1685,28 +1787,24 @@
             if (!img) return;
             
             if (variableName.trim()) {
-                // Rimuovi eventuali {{ }} se inseriti dall'utente
                 const cleanVariable = variableName.replace(/^\{\{\s*/, '').replace(/\s*\}\}$/, '').trim();
-                img.src = `{{ ${cleanVariable} }}`;
+                img.setAttribute('src', `{{ ${cleanVariable} }}`);
                 img.alt = `Variabile: ${cleanVariable}`;
                 
-                // Aggiorna anche l'input se chiamato da dropdown
                 const variableInput = document.getElementById('imageVariableInput');
                 if (variableInput) {
                     variableInput.value = cleanVariable;
                 }
             } else {
-                img.src = '{{ nome_variabile }}';
+                img.setAttribute('src', '{{ nome_variabile }}');
                 img.alt = 'Variabile Jinja2';
             }
         }
 
-        // Gestisce il caricamento di un'immagine da file
         function handleImageUpload(input) {
             const file = input.files[0];
             if (!file) return;
             
-            // Verifica che sia un'immagine
             if (!file.type.startsWith('image/')) {
                 alert('Seleziona un file immagine valido');
                 return;
@@ -1716,33 +1814,28 @@
             reader.onload = function(e) {
                 const img = selectedElement.querySelector('img');
                 if (img) {
-                    img.src = e.target.result; // Base64 dell'immagine
+                    img.setAttribute('src', e.target.result);
                     img.alt = file.name;
                     
-                    // Calcola e imposta le dimensioni proporzionali
                     const tempImg = new Image();
                     tempImg.onload = function() {
                         const aspectRatio = this.width / this.height;
                         let newWidth, newHeight;
                         
-                        // Se l'immagine è più larga che alta
                         if (aspectRatio > 1) {
-                            newWidth = Math.min(100, this.width * 0.1); // Max 100mm di larghezza
+                            newWidth = Math.min(100, this.width * 0.1);
                             newHeight = newWidth / aspectRatio;
                         } else {
-                            newHeight = Math.min(100, this.height * 0.1); // Max 100mm di altezza
+                            newHeight = Math.min(100, this.height * 0.1);
                             newWidth = newHeight * aspectRatio;
                         }
                         
-                        // Arrotonda a 1 decimale
                         newWidth = Math.round(newWidth * 10) / 10;
                         newHeight = Math.round(newHeight * 10) / 10;
                         
-                        // Aggiorna l'immagine con le nuove dimensioni
                         changeImageWidth(newWidth);
                         changeImageHeight(newHeight);
                         
-                        // Aggiorna il pannello proprietà
                         showProperties(selectedElement);
                     };
                     tempImg.src = e.target.result;
@@ -1751,17 +1844,19 @@
             reader.readAsDataURL(file);
         }
 
-        // Cambia l'URL dell'immagine (per tipo URL)
         function changeImageSrc(src) {
             if (!selectedElement) return;
             const img = selectedElement.querySelector('img');
             if (img) {
-                img.src = src;
+                if (src && src.trim() !== '') {
+                    img.setAttribute('src', src);
+                } else {
+                    img.removeAttribute('src');
+                }
                 img.alt = 'Immagine';
             }
         }
 
-        // Cambia la larghezza dell'immagine in mm
         function changeImageWidth(value) {
             if (!selectedElement) return;
             const img = selectedElement.querySelector('img');
@@ -1777,7 +1872,6 @@
             }
         }
 
-        // Cambia l'altezza dell'immagine in mm
         function changeImageHeight(value) {
             if (!selectedElement) return;
             const img = selectedElement.querySelector('img');
@@ -1793,13 +1887,11 @@
             }
         }
 
-        // Cambia l'allineamento dell'immagine (applicato al div principale)
         function changeImageAlignment(alignment) {
             if (!selectedElement) return;
             selectedElement.style.textAlign = alignment;
         }
 
-        // Altre funzioni esistenti...
         function insertQuickVariable(variable) {
             if (!selectedElement || !variable) return;
             insertTextAtCursor(variable);
@@ -1836,7 +1928,6 @@
             }
         }
 
-        // Nuove funzioni per gestire le tabelle
         function changeTableFontSize(size) {
             if (!selectedElement) return;
             const table = selectedElement.querySelector('table');
@@ -1868,7 +1959,6 @@
         }
 
         function changeCellColspan(colspan) {
-            console.log('Cambia colspan a:', colspan);
             if (!selectedTableCell) return;
             const table = selectedTableCell.closest('table');
             const row = selectedTableCell.closest('tr');
@@ -1876,7 +1966,6 @@
             const oldColspan = parseInt(selectedTableCell.getAttribute('data-colspan') || '1');
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
 
-            // Calcola l'indice della cella corrente nella riga (considerando colspan precedenti)
             let currentIndex = 0;
             let cellIndex = 0;
             row.querySelectorAll('th, td').forEach((cell, idx) => {
@@ -1886,27 +1975,21 @@
                 const span = parseInt(cell.getAttribute('data-colspan') || '1');
                 currentIndex += span;
                 if (cell === selectedTableCell) {
-                    currentIndex -= span; // Per l'indice di partenza
+                    currentIndex -= span;
                 }
             });
 
             if (colspanValue > oldColspan) {
-                // Aumenta colspan: rimuovi celle successive
                 let nextCell = selectedTableCell.nextElementSibling;
                 for (let i = oldColspan; i < colspanValue; i++) {
                     if (nextCell && (nextCell.tagName === 'TD' || nextCell.tagName === 'TH')) {
-                        // Opzionale: merge content
-                        // selectedTableCell.textContent += ' ' + nextCell.textContent;
                         nextCell.remove();
-                        // Aggiorna nextCell
                         nextCell = selectedTableCell.nextElementSibling;
                     } else {
-                        // Se non ci sono celle successive, aggiungi celle vuote per mantenere struttura (ma per ora rimuovi solo esistenti)
                         break;
                     }
                 }
             } else if (colspanValue < oldColspan) {
-                // Diminuisci colspan: inserisci celle vuote successive
                 for (let i = oldColspan - 1; i >= colspanValue; i--) {
                     const newCell = document.createElement(selectedTableCell.tagName === 'TH' ? 'th' : 'td');
                     newCell.style.border = '0.3mm solid #ddd';
@@ -1921,26 +2004,22 @@
                         e.stopPropagation();
                         selectTableCell(this);
                     });
-                    // Inserisci dopo la cella corrente
                     row.insertBefore(newCell, selectedTableCell.nextElementSibling);
                 }
             }
 
-            // Aggiorna colspan corrente
             selectedTableCell.setAttribute('colspan', colspanValue);
             selectedTableCell.setAttribute('data-colspan', colspanValue);
 
-            // Ri-setuppa i listener per le celle
             const tableWrapper = selectedTableCell.closest('.dropped-element');
             if (tableWrapper) {
                 setupTableCellSelection(tableWrapper);
             }
         }
 
-        // Funzioni per modificare proprietà
         function changeHeadingSize(size) {
             if (!selectedElement) return;
-            const heading = selectedElement.querySelector('h1, h2, h3, h3, h4, h5, h6');
+            const heading = selectedElement.querySelector('h1, h2, h3, h4, h5, h6');
             if (heading) {
                 const newHeading = document.createElement(size);
                 newHeading.contentEditable = true;
@@ -1959,14 +2038,6 @@
             selectedElement.style.fontSize = size + 'pt';
         }
 
-        function changeImageSrc(src) {
-            if (!selectedElement) return;
-            const img = selectedElement.querySelector('img');
-            if (img) {
-                img.src = src || 'https://via.placeholder.com/300x200';
-            }
-        }
-
         function changeTableColumns(event, cols) {
             if (!selectedElement) return;
             const table = selectedElement.querySelector('table');
@@ -1979,7 +2050,6 @@
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
             
             if (newCols > currentEffectiveCols) {
-                // Aggiungi colonne: inserisci nuove celle alla fine di ogni riga
                 const cellsToAdd = newCols - currentEffectiveCols;
                 const allRows = [thead, ...Array.from(tbodyRows)];
                 allRows.forEach((row, rowIndex) => {
@@ -2002,7 +2072,6 @@
                     }
                 });
             } else if (newCols < currentEffectiveCols) {
-                // Rimuovi colonne: rimuovi dalle fine di ogni riga fino a raggiungere il numero desiderato
                 const cellsToRemove = currentEffectiveCols - newCols;
                 const allRows = [thead, ...Array.from(tbodyRows)];
                 allRows.forEach(row => {
@@ -2012,7 +2081,6 @@
                         if (lastCell) {
                             const span = parseInt(lastCell.getAttribute('data-colspan') || '1');
                             if (span > 1) {
-                                // Se ha colspan >1, riducilo invece di rimuovere
                                 lastCell.setAttribute('data-colspan', span - 1);
                                 lastCell.setAttribute('colspan', span - 1);
                             } else {
@@ -2025,7 +2093,7 @@
                     }
                 });
             }
-            selectTableCell(selectedTableCell); // Deseleziona cella
+            selectTableCell(selectedTableCell);
             document.getElementById('inputTableColumns').focus();
         }
 
@@ -2042,10 +2110,8 @@
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
             
             if (newRows > currentRows) {
-                // Aggiungi righe: crea nuove <tr> con effectiveCols celle
                 for (let i = currentRows; i < newRows; i++) {
                     const tr = document.createElement('tr');
-                    // Crea celle base, poi applica colspan esistenti se necessario (ma per semplicità, crea una cella per colonna logica)
                     for (let j = 0; j < effectiveCols; j++) {
                         const td = document.createElement('td');
                         td.style.border = '0.3mm solid #ddd';
@@ -2065,40 +2131,12 @@
                     tbody.appendChild(tr);
                 }
             } else if (newRows < currentRows) {
-                // Rimuovi righe
                 while (tbody.children.length > newRows) {
                     tbody.removeChild(tbody.lastElementChild);
                 }
             }
-            selectTableCell(selectedTableCell); // Reseleziona tabella per aggiornare proprietà
+            selectTableCell(selectedTableCell);
             document.getElementById('inputTableRows').focus();
-        }
-
-        // Funzione helper per applicare colspan da una riga sorgente a una target (per nuove righe)
-        function applyColspansToRow(targetRow, sourceRow) {
-            const sourceCells = Array.from(sourceRow.querySelectorAll('th, td'));
-            const targetCells = Array.from(targetRow.querySelectorAll('td'));
-            let sourceIdx = 0;
-            let targetIdx = 0;
-            while (sourceIdx < sourceCells.length && targetIdx < targetCells.length) {
-                const sourceCell = sourceCells[sourceIdx];
-                const colspan = parseInt(sourceCell.getAttribute('data-colspan') || '1');
-                if (colspan > 1) {
-                    // Merge target cells
-                    const mainCell = targetCells[targetIdx];
-                    for (let k = 1; k < colspan; k++) {
-                        if (targetIdx + k < targetCells.length) {
-                            // Opzionale: merge content
-                            // mainCell.textContent += ' ' + targetCells[targetIdx + k].textContent;
-                            targetCells[targetIdx + k].remove();
-                        }
-                    }
-                    mainCell.setAttribute('data-colspan', colspan);
-                    mainCell.setAttribute('colspan', colspan);
-                }
-                sourceIdx++;
-                targetIdx += colspan;
-            }
         }
 
         function changeMarginTop(value) {
@@ -2119,18 +2157,6 @@
             }
         }
 
-        // FUNZIONI PER GESTIONE VARIABILI JINJA2
-        function insertQuickVariable(variable) {
-            if (!selectedElement || !variable) return;
-            
-            // Se c'è una cella selezionata in una tabella, inserisci lì
-            if (selectedTableCell) {
-                insertTextInTableCell(selectedTableCell, variable);
-            } else {
-                insertTextAtCursor(variable);
-            }
-        }
-
         function insertTextInTableCell(cell, text) {
             if (!cell) return;
             
@@ -2139,83 +2165,38 @@
             if (selection.rangeCount > 0) {
                 const range = selection.getRangeAt(0);
                 
-                // Verifica che la selezione sia dentro la cella
                 if (cell.contains(range.commonAncestorContainer)) {
                     range.deleteContents();
                     const textNode = document.createTextNode(text);
                     range.insertNode(textNode);
                     
-                    // Sposta il cursore dopo il testo inserito
                     range.setStartAfter(textNode);
                     range.setEndAfter(textNode);
                     selection.removeAllRanges();
                     selection.addRange(range);
                 } else {
-                    // Se non c'è selezione, aggiungi alla fine
                     const newText = document.createTextNode(' ' + text);
                     cell.appendChild(newText);
                 }
             } else {
-                // Nessuna selezione, aggiungi alla fine
                 const newText = document.createTextNode(' ' + text);
                 cell.appendChild(newText);
             }
         }
 
-        function insertTextAtCursor(text) {
-            if (!selectedElement) return;
-            
-            // Trova l'elemento editabile nel componente selezionato
-            const editableElement = findEditableElement(selectedElement);
-            if (editableElement) {
-                // Se c'è una selezione attiva, sostituiscila
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    
-                    // Verifica che la selezione sia dentro l'elemento editabile
-                    if (editableElement.contains(range.commonAncestorContainer)) {
-                        range.deleteContents();
-                        const textNode = document.createTextNode(text);
-                        range.insertNode(textNode);
-                        
-                        // Sposta il cursore dopo il testo inserito
-                        range.setStartAfter(textNode);
-                        range.setEndAfter(textNode);
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                    } else {
-                        // Se non c'è selezione, aggiungi alla fine
-                        editableElement.focus();
-                        const newText = document.createTextNode(' ' + text);
-                        editableElement.appendChild(newText);
-                    }
-                } else {
-                    // Nessuna selezione, aggiungi alla fine
-                    editableElement.focus();
-                    const newText = document.createTextNode(' ' + text);
-                    editableElement.appendChild(newText);
-                }
-            }
-        }
-
         function findEditableElement(element) {
-            // Se è una tabella e c'è una cella selezionata, usa quella
             if (element.dataset.type === 'table' && selectedTableCell) {
                 return selectedTableCell;
             }
             
-            // Cerca il primo elemento editabile nel componente
             const editable = element.querySelector('[contenteditable="true"]');
             if (editable) return editable;
             
-            // Se l'elemento stesso è editabile
             if (element.contentEditable === 'true') return element;
             
             return null;
         }
 
-        // Funzioni per controlli elementi
         function moveUp(btn) {
             const element = btn.closest('.dropped-element');
             const prev = element.previousElementSibling;
@@ -2273,21 +2254,26 @@
                     pageStyle = `width: 52mm; height: 74mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
                     fontSize = '7pt';
                     break;
+                case 'Custom':
+                    const customWidthInput = document.getElementById('customWidth').value.trim();
+                    const customHeightInput = document.getElementById('customHeight').value.trim();
+                    
+                    const customWidth = customWidthInput === '' ? 'auto' : (parseInt(customWidthInput) + 'mm');
+                    const customHeight = customHeightInput === '' ? 'auto' : (parseInt(customHeightInput) + 'mm');
+                    
+                    size = `${customWidth} ${customHeight}`;
+                    pageStyle = `width: ${customWidth}; height: ${customHeight}; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
+                    fontSize = '11pt';
+                    break;
                 case 'Receipt80':
-                    // Calcola l'altezza dinamica del contenuto per Receipt80
                     const originalCanvas = document.getElementById('canvas');
                     let currentOriginalCanvas = originalCanvas.style.minHeight;
                     originalCanvas.style.minHeight = "auto";
                     const contentHeight = originalCanvas.scrollHeight;
                     
-                    // Correggi per il zoom - dividi per il fattore di zoom per ottenere la dimensione reale
                     const actualContentHeight = contentHeight / (currentZoom / 100);
                     
-                    // Converti da pixel a mm (approssimativo: 1mm ≈ 3.78px)
                     const contentHeightMm = Math.ceil(actualContentHeight / 3.78);
-                    // Aggiungi margini top e bottom
-                    const topMargin = parseInt(document.getElementById('marginTop').value) || 0;
-                    const bottomMargin = parseInt(document.getElementById('marginBottom').value) || 0;
                     const totalHeightMm = contentHeightMm;
 
                     size = `80mm ${totalHeightMm}mm`;
@@ -2304,7 +2290,6 @@
             }
         }
 
-        // Genera codice HTML/Jinja2
         function generateTemplate() {
             let content = '';
             const allPages = document.querySelectorAll('.canvas');
@@ -2319,7 +2304,6 @@
             allPages.forEach((page, index) => {
                 const pageClone = page.cloneNode(true);
 
-                // Rimuovi controlli e attributi non necessari
                 pageClone.querySelectorAll('.element-controls').forEach(el => el.remove());
                 pageClone.querySelectorAll('.dropped-element').forEach(el => {
                     el.classList.remove('dropped-element', 'selected');
@@ -2329,17 +2313,14 @@
                     el.style.background = 'none';
                 });
                 
-                // Rimuovi classi dalle celle
                 pageClone.querySelectorAll('.table-cell-selected').forEach(el => {
                     el.classList.remove('table-cell-selected');
                 });
                 
-                // Rimuovi contenteditable
                 pageClone.querySelectorAll('[contenteditable]').forEach(el => {
                     el.removeAttribute('contenteditable');
                 });
                 
-                // Applica colspan reali
                 pageClone.querySelectorAll('[data-colspan]').forEach(el => {
                     const colspan = el.getAttribute('data-colspan');
                     if (colspan && colspan !== '1') {
@@ -2348,7 +2329,6 @@
                     el.removeAttribute('data-colspan');
                 });
 
-                // Rimuovi le guide
                 pageClone.querySelectorAll('.vertical-guide').forEach(el => el.remove());
 
                 let pageContent = `<div class="report-container"`;
@@ -2365,106 +2345,102 @@ ${pageClone.innerHTML}
             });
 
             const template = `<!DOCTYPE html>
-        <html lang="it">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{{ titolo_report | default('Report') }}</title>
-            <style>
-                * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                }
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titolo_report | default('Report') }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-                @page {
-                    size: ${size};
-                    margin: 0mm;
-                }
+        @page {
+            size: ${size};
+            margin: 0mm;
+        }
 
-                body {
-                    font-family: ${globalFont};
-                    color: #333;
-                    margin: 0;
-                    font-size: ${fontSize};
-                }
-                
-                .report-container {
-                    background: white;
-                    margin-left: auto;
-                    margin-right: auto;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                }
-                
-                h1, h2, h3, h4, h5, h6 {
-                    color: #2c3e50;
-                    white-space: nowrap;
-                    overflow: hidden;
-                }
+        body {
+            font-family: ${globalFont};
+            color: #333;
+            margin: 0;
+            font-size: ${fontSize};
+        }
+        
+        .report-container {
+            background: white;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: #2c3e50;
+            white-space: nowrap;
+            overflow: hidden;
+        }
 
-                p {
-                    white-space: nowrap;
-                    overflow: hidden;
-                }
+        p {
+            white-space: nowrap;
+            overflow: hidden;
+        }
 
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-size: inherit;
-                    table-layout: fixed;
-                }
-                
-                th, td {
-                    border: 0.3mm solid #ddd;
-                    padding: 2mm 3mm;
-                    text-align: left;
-                    white-space: nowrap;
-                    overflow: hidden;
-                }
-                
-                th {
-                    background-color: #f8f9fa;
-                    font-weight: bold;
-                }
-                
-                img {
-                    max-width: 100%;
-                    height: auto;
-                }
-                
-                .page-break {
-                    page-break-after: always;
-                }
-            </style>
-        </head>
-        <body>
-            ${content}
-        </body>
-        </html>`;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: inherit;
+            table-layout: fixed;
+        }
+        
+        th, td {
+            border: 0.3mm solid #ddd;
+            padding: 2mm 3mm;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+    ${content}
+</body>
+</html>`;
             
             return template;
         }
 
-        // Mostra codice
         function showCode() {
             const code = generateTemplate();
             document.getElementById('codeOutput').textContent = code;
             document.getElementById('codeModal').style.display = 'block';
         }
 
-        // Chiudi modal
         function closeModal() {
             document.getElementById('codeModal').style.display = 'none';
         }
 
-        // Copia codice
         function copyCode() {
             const code = document.getElementById('codeOutput').textContent;
             navigator.clipboard.writeText(code).then(() => {
                 alert('Codice copiato negli appunti!');
             }).catch(err => {
                 console.error('Errore nella copia:', err);
-                // Fallback per browser che non supportano clipboard API
                 const textarea = document.createElement('textarea');
                 textarea.value = code;
                 document.body.appendChild(textarea);
@@ -2475,7 +2451,6 @@ ${pageClone.innerHTML}
             });
         }
 
-        // Download template dal modal
         function downloadTemplate() {
             const code = document.getElementById('codeOutput').textContent;
             const blob = new Blob([code], { type: 'text/html' });
@@ -2489,7 +2464,6 @@ ${pageClone.innerHTML}
             URL.revokeObjectURL(url);
         }
 
-        // Anteprima report
         function previewReport() {
             const template = generateTemplate();
             const previewWindow = window.open('', '_blank');
@@ -2497,7 +2471,6 @@ ${pageClone.innerHTML}
             previewWindow.document.close();
         }
 
-        // Click fuori da elementi per deselezionare
         document.addEventListener('click', function(e) {
             if (e.target.id === 'canvas' || e.target.classList.contains('design-area')) {
                 document.querySelectorAll('.dropped-element').forEach(el => {
@@ -2516,7 +2489,6 @@ ${pageClone.innerHTML}
             }
         });
 
-        // Gestione tasti rapidi
         document.addEventListener('keydown', function(e) {
             if (selectedElement) {
                 if (e.key === 'Delete') {
@@ -2529,10 +2501,8 @@ ${pageClone.innerHTML}
                         </p>
                     `;
                 } else if (e.ctrlKey && e.key === 'c') {
-                    // Copia elemento
                     localStorage.setItem('copiedElement', selectedElement.outerHTML);
                 } else if (e.ctrlKey && e.key === 'v') {
-                    // Incolla elemento
                     const copiedHTML = localStorage.getItem('copiedElement');
                     if (copiedHTML) {
                         const canvas = document.getElementById('canvas');
@@ -2571,10 +2541,10 @@ ${pageClone.innerHTML}
             }
         }
 
-        // Nuova funzione: Salva progetto (stato del designer)
         async function saveProject(report) {
+            let loadingNotification = null;
+            
             try {
-                // Raccogli i dati (stesso codice che avevi)
                 const pagesContainer = document.getElementById('pagesContainer');
                 const pageFormat = document.getElementById('pageFormat').value;
                 const marginTop = document.getElementById('marginTop').value;
@@ -2590,10 +2560,52 @@ ${pageClone.innerHTML}
                         .trim();
                 }
 
+                // Costruisci format in base al tipo
+                let formatValue = pageFormat;
+                if (pageFormat === 'Custom') {
+                    const wInput = document.getElementById('customWidth').value.trim();
+                    const hInput = document.getElementById('customHeight').value.trim();
+                    
+                    let width, height;
+                    
+                    // Se width è auto, calcola la larghezza effettiva
+                    if (wInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const actualWidth = firstCanvas.scrollWidth / (currentZoom / 100);
+                            const widthMm = Math.ceil(actualWidth / 3.78);
+                            width = widthMm + 'mm';
+                        } else {
+                            width = 'auto';
+                        }
+                    } else {
+                        width = wInput + 'mm';
+                    }
+                    
+                    // Se height è auto, calcola l'altezza effettiva
+                    if (hInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const currentMinHeight = firstCanvas.style.minHeight;
+                            firstCanvas.style.minHeight = "auto";
+                            const actualHeight = firstCanvas.scrollHeight / (currentZoom / 100);
+                            const heightMm = Math.ceil(actualHeight / 3.78);
+                            height = heightMm + 'mm';
+                            firstCanvas.style.minHeight = currentMinHeight;
+                        } else {
+                            height = 'auto';
+                        }
+                    } else {
+                        height = hInput + 'mm';
+                    }
+                    
+                    formatValue = `${width} ${height}`;
+                }
+
                 const state = {
                     canvas: cleanHtml(pagesContainer.innerHTML),
                     html: cleanHtml(generateTemplate()),
-                    format: pageFormat,
+                    format: formatValue,
                     margins: {
                         top: marginTop,
                         bottom: marginBottom,
@@ -2608,20 +2620,7 @@ ${pageClone.innerHTML}
 
                 const jsonState = JSON.stringify(state);
 
-                // Download locale (mantieni questo)
-                const blob = new Blob([jsonState], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'report_project.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                showNotification('Progetto salvato localmente!');
-
-                // Crea ZIP per il server
-                showNotification('Invio al server in corso...', false, true);
+                loadingNotification = showNotification('Salvataggio in corso...', false, true);
                 
                 const zip = new JSZip();
                 zip.file('report_project.json', jsonState);
@@ -2632,7 +2631,6 @@ ${pageClone.innerHTML}
                     compressionOptions: { level: 9 }
                 });
 
-                // Upload al server
                 const formData = new FormData();
                 formData.append('file', zipBlob, 'report_project.zip');
                 
@@ -2640,6 +2638,10 @@ ${pageClone.innerHTML}
                     method: 'POST',
                     body: formData
                 });
+
+                if (loadingNotification) {
+                    loadingNotification.remove();
+                }
 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -2649,18 +2651,114 @@ ${pageClone.innerHTML}
                 const data = await response.json();
                 console.log('Risposta server:', data);
                 
-                showNotification('✅ Progetto salvato sul server con successo!');
+                showNotification('✅ Progetto salvato con successo sul server!');
                 
                 return data;
 
             } catch (error) {
+                if (loadingNotification) {
+                    loadingNotification.remove();
+                }
+                
                 console.error('Errore:', error);
                 showNotification(`❌ Errore: ${error.message}`, true);
                 throw error;
             }
         }
 
-        // Funzione: Importa progetto (carica stato del designer)
+        function downloadProjectLocal() {
+            try {
+                const pagesContainer = document.getElementById('pagesContainer');
+                const pageFormat = document.getElementById('pageFormat').value;
+                const marginTop = document.getElementById('marginTop').value;
+                const marginBottom = document.getElementById('marginBottom').value;
+                const marginLeft = document.getElementById('marginLeft').value;
+                const marginRight = document.getElementById('marginRight').value;
+
+                function cleanHtml(html) {
+                    return html
+                        .replace(/\n/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .replace(/"/g, "'")
+                        .trim();
+                }
+
+                // Costruisci format in base al tipo
+                let formatValue = pageFormat;
+                if (pageFormat === 'Custom') {
+                    const wInput = document.getElementById('customWidth').value.trim();
+                    const hInput = document.getElementById('customHeight').value.trim();
+                    
+                    let width, height;
+                    
+                    // Se width è auto, calcola la larghezza effettiva
+                    if (wInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const actualWidth = firstCanvas.scrollWidth / (currentZoom / 100);
+                            const widthMm = Math.ceil(actualWidth / 3.78);
+                            width = widthMm + 'mm';
+                        } else {
+                            width = 'auto';
+                        }
+                    } else {
+                        width = wInput + 'mm';
+                    }
+                    
+                    // Se height è auto, calcola l'altezza effettiva
+                    if (hInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const currentMinHeight = firstCanvas.style.minHeight;
+                            firstCanvas.style.minHeight = "auto";
+                            const actualHeight = firstCanvas.scrollHeight / (currentZoom / 100);
+                            const heightMm = Math.ceil(actualHeight / 3.78);
+                            height = heightMm + 'mm';
+                            firstCanvas.style.minHeight = currentMinHeight;
+                        } else {
+                            height = 'auto';
+                        }
+                    } else {
+                        height = hInput + 'mm';
+                    }
+                    
+                    formatValue = `${width} ${height}`;
+                }
+
+                const state = {
+                    canvas: cleanHtml(pagesContainer.innerHTML),
+                    html: cleanHtml(generateTemplate()),
+                    format: formatValue,
+                    margins: {
+                        top: marginTop,
+                        bottom: marginBottom,
+                        left: marginLeft,
+                        right: marginRight
+                    },
+                    zoom: currentZoom,
+                    elementCounter: elementCounter,
+                    totalPages: totalPages,
+                    globalFont: globalFont
+                };
+
+                const jsonState = JSON.stringify(state);
+                const blob = new Blob([jsonState], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'report_project.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showNotification('📥 Download locale completato!');
+            } catch (error) {
+                console.error('Errore download:', error);
+                showNotification('❌ Errore nel download locale', true);
+            }
+        }
+
         function importProject() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -2687,12 +2785,10 @@ ${pageClone.innerHTML}
             input.click();
         }
 
-        // Nuova funzione estratta per caricare lo stato (usata sia per import che per template default)
         function loadProjectState(state, showNotificationMessage = true) {
             const pagesContainer = document.getElementById('pagesContainer');
             pagesContainer.innerHTML = state.canvas;
             
-            // Reinizializza elementi interattivi con handler personalizzati per evitare duplicati
             const allElements = pagesContainer.querySelectorAll('.dropped-element');
             allElements.forEach(el => {
                 makeElementInteractive(el);
@@ -2701,10 +2797,8 @@ ${pageClone.innerHTML}
                 }
             });
             
-            // Reinizializza drag and drop sulle pagine
             const allCanvases = pagesContainer.querySelectorAll('.canvas');
             allCanvases.forEach(canvas => {
-                // Rimuovi listener precedenti se presenti
                 canvas.removeEventListener('dragover', canvas._dragOverHandler);
                 canvas.removeEventListener('drop', canvas._dropHandler);
                 canvas.removeEventListener('dragleave', canvas._dragLeaveHandler);
@@ -2718,19 +2812,43 @@ ${pageClone.innerHTML}
                 canvas.addEventListener('dragleave', canvas._dragLeaveHandler);
             });
             
-            // Aggiorna contatori
             elementCounter = state.elementCounter || allElements.length;
             totalPages = state.totalPages || allCanvases.length;
             
-            // Aggiorna impostazioni
-            if (state.format) {
-                document.getElementById('pageFormat').value = state.format;
+            // Parsa formato
+            let formatType = state.format;
+            let customWidth = '';
+            let customHeight = '';
+            
+            if (state.format && !['A4', 'A5', 'A6', 'A7', 'A8', 'Receipt80'].includes(state.format)) {
+                // È Custom con dimensioni (es: "150mm 200mm")
+                formatType = 'Custom';
+                const parts = state.format.split(' ');
+                if (parts.length === 2) {
+                    customWidth = parts[0].replace('mm', '');
+                    customHeight = parts[1].replace('mm', '');
+                }
+            }
+            
+            // Ripristina formato pagina
+            if (formatType) {
+                document.getElementById('pageFormat').value = formatType;
+                
+                // Ripristina dimensioni custom se presenti
+                if (formatType === 'Custom') {
+                    document.getElementById('customWidth').value = customWidth;
+                    document.getElementById('customHeight').value = customHeight;
+                    document.getElementById('customSizeSection').style.display = 'block';
+                } else {
+                    document.getElementById('customSizeSection').style.display = 'none';
+                }
             } else if (allCanvases.length > 0) {
                 const firstCanvas = allCanvases[0];
                 const formatClass = firstCanvas.className.split(' ')[1] || 'A4';
                 document.getElementById('pageFormat').value = formatClass;
             }
             
+            // Ripristina margini PRIMA di chiamare changePageFormat
             if (state.margins) {
                 document.getElementById('marginTop').value = state.margins.top;
                 document.getElementById('marginBottom').value = state.margins.bottom;
@@ -2738,15 +2856,29 @@ ${pageClone.innerHTML}
                 document.getElementById('marginRight').value = state.margins.right;
             } else if (allCanvases.length > 0) {
                 const firstCanvas = allCanvases[0];
-                const paddingTop = firstCanvas.style.paddingTop.replace('mm', '') || 25;
-                const paddingBottom = firstCanvas.style.paddingBottom.replace('mm', '') || 25;
-                const paddingLeft = firstCanvas.style.paddingLeft.replace('mm', '') || 25;
-                const paddingRight = firstCanvas.style.paddingRight.replace('mm', '') || 25;
-                
-                document.getElementById('marginTop').value = paddingTop;
-                document.getElementById('marginBottom').value = paddingBottom;
-                document.getElementById('marginLeft').value = paddingLeft;
-                document.getElementById('marginRight').value = paddingRight;
+                document.getElementById('marginTop').value = firstCanvas.style.paddingTop.replace('mm', '') || 25;
+                document.getElementById('marginBottom').value = firstCanvas.style.paddingBottom.replace('mm', '') || 25;
+                document.getElementById('marginLeft').value = firstCanvas.style.paddingLeft.replace('mm', '') || 25;
+                document.getElementById('marginRight').value = firstCanvas.style.paddingRight.replace('mm', '') || 25;
+            }
+            
+            // SALVA formato e padding del file importato
+            importedFileFormat = document.getElementById('pageFormat').value;
+            importedFilePadding = {
+                top: document.getElementById('marginTop').value,
+                bottom: document.getElementById('marginBottom').value,
+                left: document.getElementById('marginLeft').value,
+                right: document.getElementById('marginRight').value
+            };
+            
+            // SALVA dimensioni custom se il formato è Custom
+            if (importedFileFormat === 'Custom') {
+                importedCustomSize = {
+                    width: customWidth,
+                    height: customHeight
+                };
+            } else {
+                importedCustomSize = null;
             }
             
             currentZoom = state.zoom || 100;
@@ -2757,10 +2889,9 @@ ${pageClone.innerHTML}
             document.getElementById('globalFont').value = globalFont;
             updateGlobalFont(globalFont);
             
-            // Applica changePageFormat per aggiornare tutto
-            changePageFormat();
+            // Chiama changePageFormat con preserveMargins=true per mantenere i padding del file
+            changePageFormat(true);
             
-            // Deseleziona eventuali elementi
             selectedElement = null;
             selectedTableCell = null;
             document.querySelectorAll('.dropped-element').forEach(el => el.classList.remove('selected'));
@@ -2775,10 +2906,9 @@ ${pageClone.innerHTML}
         }
 
         async function populateTemplates(type) {
-            const select = document.getElementById('defaultReportSelect'); // ID CORRETTO!
+            const select = document.getElementById('defaultReportSelect');
             const baseUrl = '/api/generic/list/default-reports';
             
-            // Pulisci il select
             select.innerHTML = '<option value="">--Seleziona Template--</option>';
             
             try {
@@ -2803,9 +2933,8 @@ ${pageClone.innerHTML}
             }
         }
 
-        // Nuova funzione: Carica un template default selezionato
         function loadDefaultTemplate(url, showNotificationMessage = true) {
-            url = window.location.origin + url; // Assicura URL assoluto
+            url = window.location.origin + url;
             fetch(url)
                 .then(resp => {
                     if (!resp.ok) throw new Error('Template non accessibile');

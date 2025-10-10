@@ -285,6 +285,13 @@
             background: white;
         }
 
+        .canvas.Custom {
+            min-height: 100%;
+            padding: 3mm;
+            font-size: 11pt;
+            background: white;
+        }
+
         .canvas::before {
             content: '';
             position: absolute;
@@ -649,7 +656,23 @@
                             <option value="A7">A7 (74 × 105 mm)</option>
                             <option value="A8">A8 (52 × 74 mm)</option>
                             <option value="Receipt80">Scontrino 80mm (80 × ∞)</option>
+                            <option value="Custom">📐 Personalizzato</option>
                         </select>
+                    </div>
+
+                    <div id="customSizeSection" style="display: none; margin-top: 15px;">
+                        <h3>Dimensioni Custom (mm)</h3>
+                        <div class="margin-input-group">
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Larghezza</label>
+                                <input type="number" id="customWidth" value="" min="50" max="500" placeholder="auto" onchange="applyCustomSize()">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; color: #6c757d;">Altezza</label>
+                                <input type="number" id="customHeight" value="" min="50" max="1000" placeholder="auto" onchange="applyCustomSize()">
+                            </div>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 5px; font-size: 11px;">Lascia vuoto per dimensione automatica</small>
                     </div>
 
                     <div class="margin-controls">
@@ -657,19 +680,19 @@
                         <div class="margin-input-group">
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Superiore</label>
-                                <input type="number" id="marginTop" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginTop" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Inferiore</label>
-                                <input type="number" id="marginBottom" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginBottom" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Sinistro</label>
-                                <input type="number" id="marginLeft" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginLeft" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                             <div>
                                 <label style="font-size: 11px; color: #6c757d;">Destro</label>
-                                <input type="number" id="marginRight" value="25" min="5" max="50" onchange="updatePageMargins()">
+                                <input type="number" id="marginRight" value="25" min="0" max="50" onchange="updatePageMargins()">
                             </div>
                         </div>
                         <div class="property-group" style="margin-top: 15px;">
@@ -771,10 +794,16 @@
             'A6': 148,
             'A7': 105,
             'A8': 74,
-            'Receipt80': null
+            'Receipt80': null,
+            'Custom': null
         };
 
         let globalFont = "Arial, sans-serif";
+        
+        // Memorizza formato e padding del file importato
+        let importedFileFormat = null;
+        let importedFilePadding = null;
+        let importedCustomSize = null;
 
         document.addEventListener('DOMContentLoaded', () => {
             loadDefaultTemplate('{{ default_report_template }}', false);
@@ -793,7 +822,15 @@
             const format = document.getElementById('pageFormat').value;
             if (format === 'Receipt80') return Infinity;
             
-            const pageHeightMm = pageHeights[format];
+            let pageHeightMm;
+            if (format === 'Custom') {
+                const customHeightInput = document.getElementById('customHeight').value.trim();
+                if (customHeightInput === '') return Infinity; // Se altezza è auto, nessun limite
+                pageHeightMm = parseInt(customHeightInput) || 297;
+            } else {
+                pageHeightMm = pageHeights[format];
+            }
+            
             const marginTop = parseInt(document.getElementById('marginTop').value) || 25;
             const marginBottom = parseInt(document.getElementById('marginBottom').value) || 25;
             
@@ -841,6 +878,18 @@
             newPage.id = `canvas-page-${totalPages}`;
             newPage.className = `canvas ${format}`;
             newPage.dataset.pageNumber = totalPages;
+            
+            if (format === 'Custom') {
+                const widthInput = document.getElementById('customWidth').value.trim();
+                const heightInput = document.getElementById('customHeight').value.trim();
+                
+                newPage.style.width = widthInput === '' ? 'auto' : (parseInt(widthInput) + 'mm');
+                newPage.style.height = heightInput === '' ? 'auto' : (parseInt(heightInput) + 'mm');
+            } else {
+                // Assicurati che non ci siano stili inline per i formati preimpostati
+                newPage.style.width = '';
+                newPage.style.height = '';
+            }
             
             updatePageMarginsForElement(newPage);
             
@@ -945,6 +994,14 @@
                     totalPages--;
                 }
             }
+            
+            // Dopo la redistribuzione, rimuovi stili inline se non è Custom
+            if (format !== 'Custom') {
+                document.querySelectorAll('.canvas').forEach(page => {
+                    page.style.width = '';
+                    page.style.height = '';
+                });
+            }
         }
 
         function updatePageMargins() {
@@ -1029,26 +1086,117 @@
             return notification;
         }
 
-        function changePageFormat() {
+        function changePageFormat(preserveMargins = false) {
             const format = document.getElementById('pageFormat').value;
             const allPages = document.querySelectorAll('.canvas');
+            const customSection = document.getElementById('customSizeSection');
             
-            allPages.forEach(page => {
-                page.className = `canvas ${format}`;
-            });
+            if (format === 'Custom') {
+                customSection.style.display = 'block';
+                
+                // Controlla se stiamo tornando al formato Custom del file importato
+                if (importedFileFormat === 'Custom' && importedCustomSize !== null) {
+                    document.getElementById('customWidth').value = importedCustomSize.width || '';
+                    document.getElementById('customHeight').value = importedCustomSize.height || '';
+                }
+                
+                applyCustomSize();
+            } else {
+                customSection.style.display = 'none';
+                allPages.forEach(page => {
+                    page.className = `canvas ${format}`;
+                    // RIMUOVI gli stili inline width/height per permettere al CSS di funzionare
+                    page.style.width = '';
+                    page.style.height = '';
+                });
+            }
             
-            updateDefaultMarginsForFormat(format);
+            // Controlla se stiamo tornando al formato del file importato
+            if (importedFileFormat === format && importedFilePadding !== null) {
+                // Ripristina i padding del file importato
+                document.getElementById('marginTop').value = importedFilePadding.top;
+                document.getElementById('marginBottom').value = importedFilePadding.bottom;
+                document.getElementById('marginLeft').value = importedFilePadding.left;
+                document.getElementById('marginRight').value = importedFilePadding.right;
+            } else if (!preserveMargins) {
+                // Altrimenti usa i default
+                updateDefaultMarginsForFormat(format);
+            }
+            
             updatePageMargins();
+            
+            // Ricalcola font size per tutti gli elementi esistenti
+            updateAllElementsFontSize(format);
             
             if (format === 'A7' || format === 'A8' || format === 'Receipt80') {
                 currentZoom = 150;
             } else if (format === 'A6') {
                 currentZoom = 120;
+            } else if (format === 'Custom') {
+                currentZoom = 100;
             } else {
                 currentZoom = 100;
             }
             applyZoom();
             updateZoomDisplay();
+            
+            setTimeout(redistributeElements, 100);
+        }
+
+        function updateAllElementsFontSize(format) {
+            const fontSizeMap = {
+                'A4': '12pt',
+                'A5': '11pt',
+                'A6': '10pt',
+                'A7': '9pt',
+                'A8': '8pt',
+                'Receipt80': '9pt',
+                'Custom': '11pt'
+            };
+            
+            const newFontSize = fontSizeMap[format] || '12pt';
+            
+            // Aggiorna tutti gli elementi dropped
+            document.querySelectorAll('.dropped-element').forEach(element => {
+                // Solo se l'elemento non ha un font size personalizzato
+                // (controlla se è stato modificato dall'utente)
+                const currentSize = element.style.fontSize;
+                
+                // Se ha già un font size, mantienilo solo se è stato personalizzato
+                // Altrimenti aggiorna al font size del nuovo formato
+                if (!currentSize || currentSize === '' || isDefaultFontSize(currentSize)) {
+                    element.style.fontSize = newFontSize;
+                }
+            });
+        }
+
+        function isDefaultFontSize(fontSize) {
+            const defaultSizes = ['12pt', '11pt', '10pt', '9pt', '8pt', '7pt'];
+            return defaultSizes.includes(fontSize);
+        }
+
+        function applyCustomSize() {
+            const format = document.getElementById('pageFormat').value;
+            if (format !== 'Custom') return;
+            
+            const widthInput = document.getElementById('customWidth').value.trim();
+            const heightInput = document.getElementById('customHeight').value.trim();
+            
+            const width = widthInput === '' ? 'auto' : (parseInt(widthInput) + 'mm');
+            const height = heightInput === '' ? 'fit-content' : (parseInt(heightInput) + 'mm');
+            
+            const allPages = document.querySelectorAll('.canvas');
+            
+            allPages.forEach(page => {
+                page.className = 'canvas Custom';
+                page.style.width = width;
+                page.style.height = height;
+                if (heightInput === '') {
+                    page.style.minHeight = '10mm';
+                } else {
+                    page.style.minHeight = '';
+                }
+            });
             
             setTimeout(redistributeElements, 100);
         }
@@ -1060,7 +1208,8 @@
                 'A6': { top: 10, bottom: 10, left: 10, right: 10 },
                 'A7': { top: 8, bottom: 8, left: 8, right: 8 },
                 'A8': { top: 6, bottom: 6, left: 6, right: 6 },
-                'Receipt80': { top: 5, bottom: 5, left: 5, right: 5 }
+                'Receipt80': { top: 5, bottom: 5, left: 5, right: 5 },
+                'Custom': { top: 3, bottom: 3, left: 3, right: 3 }
             };
             
             const margins = marginInputs[format];
@@ -2105,6 +2254,17 @@
                     pageStyle = `width: 52mm; height: 74mm; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
                     fontSize = '7pt';
                     break;
+                case 'Custom':
+                    const customWidthInput = document.getElementById('customWidth').value.trim();
+                    const customHeightInput = document.getElementById('customHeight').value.trim();
+                    
+                    const customWidth = customWidthInput === '' ? 'auto' : (parseInt(customWidthInput) + 'mm');
+                    const customHeight = customHeightInput === '' ? 'auto' : (parseInt(customHeightInput) + 'mm');
+                    
+                    size = `${customWidth} ${customHeight}`;
+                    pageStyle = `width: ${customWidth}; height: ${customHeight}; padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};`;
+                    fontSize = '11pt';
+                    break;
                 case 'Receipt80':
                     const originalCanvas = document.getElementById('canvas');
                     let currentOriginalCanvas = originalCanvas.style.minHeight;
@@ -2351,7 +2511,7 @@ ${pageClone.innerHTML}
                         const newElement = tempDiv.firstChild;
                         newElement.dataset.elementId = `element_${++elementCounter}`;
                         canvas.appendChild(newElement);
-makeElementInteractive(newElement);
+                        makeElementInteractive(newElement);
                     }
                 }
             }
@@ -2400,10 +2560,52 @@ makeElementInteractive(newElement);
                         .trim();
                 }
 
+                // Costruisci format in base al tipo
+                let formatValue = pageFormat;
+                if (pageFormat === 'Custom') {
+                    const wInput = document.getElementById('customWidth').value.trim();
+                    const hInput = document.getElementById('customHeight').value.trim();
+                    
+                    let width, height;
+                    
+                    // Se width è auto, calcola la larghezza effettiva
+                    if (wInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const actualWidth = firstCanvas.scrollWidth / (currentZoom / 100);
+                            const widthMm = Math.ceil(actualWidth / 3.78);
+                            width = widthMm + 'mm';
+                        } else {
+                            width = 'auto';
+                        }
+                    } else {
+                        width = wInput + 'mm';
+                    }
+                    
+                    // Se height è auto, calcola l'altezza effettiva
+                    if (hInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const currentMinHeight = firstCanvas.style.minHeight;
+                            firstCanvas.style.minHeight = "auto";
+                            const actualHeight = firstCanvas.scrollHeight / (currentZoom / 100);
+                            const heightMm = Math.ceil(actualHeight / 3.78);
+                            height = heightMm + 'mm';
+                            firstCanvas.style.minHeight = currentMinHeight;
+                        } else {
+                            height = 'auto';
+                        }
+                    } else {
+                        height = hInput + 'mm';
+                    }
+                    
+                    formatValue = `${width} ${height}`;
+                }
+
                 const state = {
                     canvas: cleanHtml(pagesContainer.innerHTML),
                     html: cleanHtml(generateTemplate()),
-                    format: pageFormat,
+                    format: formatValue,
                     margins: {
                         top: marginTop,
                         bottom: marginBottom,
@@ -2418,10 +2620,8 @@ makeElementInteractive(newElement);
 
                 const jsonState = JSON.stringify(state);
 
-                // Mostra notifica persistente durante l'upload
                 loadingNotification = showNotification('Salvataggio in corso...', false, true);
                 
-                // Crea ZIP per il server
                 const zip = new JSZip();
                 zip.file('report_project.json', jsonState);
                 
@@ -2431,7 +2631,6 @@ makeElementInteractive(newElement);
                     compressionOptions: { level: 9 }
                 });
 
-                // Upload al server
                 const formData = new FormData();
                 formData.append('file', zipBlob, 'report_project.zip');
                 
@@ -2440,7 +2639,6 @@ makeElementInteractive(newElement);
                     body: formData
                 });
 
-                // Rimuovi notifica di caricamento
                 if (loadingNotification) {
                     loadingNotification.remove();
                 }
@@ -2453,13 +2651,11 @@ makeElementInteractive(newElement);
                 const data = await response.json();
                 console.log('Risposta server:', data);
                 
-                // Mostra notifica di successo
                 showNotification('✅ Progetto salvato con successo sul server!');
                 
                 return data;
 
             } catch (error) {
-                // Rimuovi notifica di caricamento in caso di errore
                 if (loadingNotification) {
                     loadingNotification.remove();
                 }
@@ -2470,7 +2666,6 @@ makeElementInteractive(newElement);
             }
         }
 
-        // Aggiungi questa nuova funzione per download locale
         function downloadProjectLocal() {
             try {
                 const pagesContainer = document.getElementById('pagesContainer');
@@ -2488,10 +2683,52 @@ makeElementInteractive(newElement);
                         .trim();
                 }
 
+                // Costruisci format in base al tipo
+                let formatValue = pageFormat;
+                if (pageFormat === 'Custom') {
+                    const wInput = document.getElementById('customWidth').value.trim();
+                    const hInput = document.getElementById('customHeight').value.trim();
+                    
+                    let width, height;
+                    
+                    // Se width è auto, calcola la larghezza effettiva
+                    if (wInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const actualWidth = firstCanvas.scrollWidth / (currentZoom / 100);
+                            const widthMm = Math.ceil(actualWidth / 3.78);
+                            width = widthMm + 'mm';
+                        } else {
+                            width = 'auto';
+                        }
+                    } else {
+                        width = wInput + 'mm';
+                    }
+                    
+                    // Se height è auto, calcola l'altezza effettiva
+                    if (hInput === '') {
+                        const firstCanvas = document.querySelector('.canvas');
+                        if (firstCanvas) {
+                            const currentMinHeight = firstCanvas.style.minHeight;
+                            firstCanvas.style.minHeight = "auto";
+                            const actualHeight = firstCanvas.scrollHeight / (currentZoom / 100);
+                            const heightMm = Math.ceil(actualHeight / 3.78);
+                            height = heightMm + 'mm';
+                            firstCanvas.style.minHeight = currentMinHeight;
+                        } else {
+                            height = 'auto';
+                        }
+                    } else {
+                        height = hInput + 'mm';
+                    }
+                    
+                    formatValue = `${width} ${height}`;
+                }
+
                 const state = {
                     canvas: cleanHtml(pagesContainer.innerHTML),
                     html: cleanHtml(generateTemplate()),
-                    format: pageFormat,
+                    format: formatValue,
                     margins: {
                         top: marginTop,
                         bottom: marginBottom,
@@ -2578,14 +2815,40 @@ makeElementInteractive(newElement);
             elementCounter = state.elementCounter || allElements.length;
             totalPages = state.totalPages || allCanvases.length;
             
-            if (state.format) {
-                document.getElementById('pageFormat').value = state.format;
+            // Parsa formato
+            let formatType = state.format;
+            let customWidth = '';
+            let customHeight = '';
+            
+            if (state.format && !['A4', 'A5', 'A6', 'A7', 'A8', 'Receipt80'].includes(state.format)) {
+                // È Custom con dimensioni (es: "150mm 200mm")
+                formatType = 'Custom';
+                const parts = state.format.split(' ');
+                if (parts.length === 2) {
+                    customWidth = parts[0].replace('mm', '');
+                    customHeight = parts[1].replace('mm', '');
+                }
+            }
+            
+            // Ripristina formato pagina
+            if (formatType) {
+                document.getElementById('pageFormat').value = formatType;
+                
+                // Ripristina dimensioni custom se presenti
+                if (formatType === 'Custom') {
+                    document.getElementById('customWidth').value = customWidth;
+                    document.getElementById('customHeight').value = customHeight;
+                    document.getElementById('customSizeSection').style.display = 'block';
+                } else {
+                    document.getElementById('customSizeSection').style.display = 'none';
+                }
             } else if (allCanvases.length > 0) {
                 const firstCanvas = allCanvases[0];
                 const formatClass = firstCanvas.className.split(' ')[1] || 'A4';
                 document.getElementById('pageFormat').value = formatClass;
             }
             
+            // Ripristina margini PRIMA di chiamare changePageFormat
             if (state.margins) {
                 document.getElementById('marginTop').value = state.margins.top;
                 document.getElementById('marginBottom').value = state.margins.bottom;
@@ -2593,15 +2856,29 @@ makeElementInteractive(newElement);
                 document.getElementById('marginRight').value = state.margins.right;
             } else if (allCanvases.length > 0) {
                 const firstCanvas = allCanvases[0];
-                const paddingTop = firstCanvas.style.paddingTop.replace('mm', '') || 25;
-                const paddingBottom = firstCanvas.style.paddingBottom.replace('mm', '') || 25;
-                const paddingLeft = firstCanvas.style.paddingLeft.replace('mm', '') || 25;
-                const paddingRight = firstCanvas.style.paddingRight.replace('mm', '') || 25;
-                
-                document.getElementById('marginTop').value = paddingTop;
-                document.getElementById('marginBottom').value = paddingBottom;
-                document.getElementById('marginLeft').value = paddingLeft;
-                document.getElementById('marginRight').value = paddingRight;
+                document.getElementById('marginTop').value = firstCanvas.style.paddingTop.replace('mm', '') || 25;
+                document.getElementById('marginBottom').value = firstCanvas.style.paddingBottom.replace('mm', '') || 25;
+                document.getElementById('marginLeft').value = firstCanvas.style.paddingLeft.replace('mm', '') || 25;
+                document.getElementById('marginRight').value = firstCanvas.style.paddingRight.replace('mm', '') || 25;
+            }
+            
+            // SALVA formato e padding del file importato
+            importedFileFormat = document.getElementById('pageFormat').value;
+            importedFilePadding = {
+                top: document.getElementById('marginTop').value,
+                bottom: document.getElementById('marginBottom').value,
+                left: document.getElementById('marginLeft').value,
+                right: document.getElementById('marginRight').value
+            };
+            
+            // SALVA dimensioni custom se il formato è Custom
+            if (importedFileFormat === 'Custom') {
+                importedCustomSize = {
+                    width: customWidth,
+                    height: customHeight
+                };
+            } else {
+                importedCustomSize = null;
             }
             
             currentZoom = state.zoom || 100;
@@ -2612,7 +2889,8 @@ makeElementInteractive(newElement);
             document.getElementById('globalFont').value = globalFont;
             updateGlobalFont(globalFont);
             
-            changePageFormat();
+            // Chiama changePageFormat con preserveMargins=true per mantenere i padding del file
+            changePageFormat(true);
             
             selectedElement = null;
             selectedTableCell = null;
