@@ -211,6 +211,52 @@ async function loadSetupWeighers() {
     await fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(data => {
+        const options = [
+            {
+                "value": "MANUALLY",
+                "description": "Manuale"
+            },
+            {
+                "value": "AUTOMATIC",
+                "description": "Automatico"
+            },
+            {
+                "value": "SEMIAUTOMATIC",
+                "description": "Semiautomatico"
+            }
+        ];
+        const modes = document.createElement('div');
+        options.forEach((option, index) => {
+            const labelMode = document.createElement('label');
+            labelMode.setAttribute('for', `radio-${index}`); 
+            labelMode.textContent = ` ${option.description} `;
+            const mode = document.createElement('input');
+            mode.type = 'radio';
+            mode.name = 'option'; // tutti i radio button devono avere lo stesso nome
+            mode.value = option.value;
+            mode.id = `radio-${index}`;  // Assign a unique ID for each radio button
+            if (mode.value === data.mode) mode.checked = true;
+            // Aggiungi l'evento onchange per ogni radio button
+            mode.onchange = (e) => {
+                const selected = e.target.value;
+                fetch(`/api/config-weigher/configuration/mode/${selected}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Risposta ricevuta:', data);
+                    // Puoi aggiornare l'interfaccia o fare altro con la risposta
+                })
+                .catch(error => {
+                    console.error('Errore durante la richiesta:', error);
+                });
+            };
+            modes.appendChild(mode);
+            modes.appendChild(labelMode);
+        });
         const labelAccess = document.createElement('label');
         const access = document.createElement('input');
         labelAccess.innerHTML = "Usa <b><u>prenotazioni</u></b>: ";
@@ -384,6 +430,8 @@ async function loadSetupWeighers() {
         h1Access.textContent = 'Accessi';
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(h1Access);
+        divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(modes);
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(labelAccess);
         divAccess.appendChild(access);

@@ -291,6 +291,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			if hasattr(response, "status_code"):
 				return response
 		status_modope, command_executed, error_message = 500, False, ""
+		mode = lb_config.g_config["app_api"]["mode"]
 		access = None
 		proc = {
 			"instance_name": instance.instance_name,
@@ -303,8 +304,10 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		else:
 			cam_message = cam_message + f" ricevuto da terminale"
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
-		if proc in self.automatic_weighing_process:
-			error_message = f"Pesatura automatica con '{identify_dto.identify}' già in esecuzione sulla pesa '{instance.weigher_name}'"
+		if mode == "MANUALLY":
+			error_message = f"Modalità automatica disattiva. Tentativo di pesatura {cam_message} bloccato"
+		elif proc in self.automatic_weighing_process:
+			error_message = f"Pesatura automatica con '{identify_dto.identify}' già in esecuzione sulla pesa '{instance.weigher_name}'."
 		else:
 			self.automatic_weighing_process.append(proc)
 			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
@@ -332,7 +335,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 								await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": access["id"]}}), instance=instance)
 						except Exception as e:
 							error_message = e.detail
-					if not error_message:
+					if not error_message and mode == "AUTOMATIC":
 						data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
 						tare = data["data_in_execution"]["vehicle"]["tare"]
 						weight1 = data["id_selected"]["weight1"]

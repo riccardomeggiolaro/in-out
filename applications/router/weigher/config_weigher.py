@@ -24,6 +24,7 @@ class ConfigWeigher(CommandWeigherRouter):
         self.router_config_weigher = APIRouter()
     
         self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
+        self.router_config_weigher.add_api_route('/configuration/mode/{mode}', self.SetMode, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-reservation/{use_reservation}', self.SetUseReservation, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-white-list/{use_white_list}', self.SetUseWhiteList, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
         self.router_config_weigher.add_api_route('/configuration/use-badge/{use_badge}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -47,10 +48,10 @@ class ConfigWeigher(CommandWeigherRouter):
     async def GetAllConfiguration(self):
         return lb_config.g_config["app_api"]
 
-    async def SetReturnCopyPdfWeighing(self, return_pdf_copy_after_weighing: bool):
-        lb_config.g_config["app_api"]["return_pdf_copy_after_weighing"] = return_pdf_copy_after_weighing
+    async def SetMode(self, mode: str):
+        lb_config.g_config["app_api"]["mode"] = mode
         lb_config.saveconfig()
-        return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
+        return { "mode": mode }
 
     async def SetUseReservation(self, use_reservation: bool):
         lb_config.g_config["app_api"]["use_reservation"] = use_reservation
@@ -66,6 +67,11 @@ class ConfigWeigher(CommandWeigherRouter):
         lb_config.g_config["app_api"]["use_badge"] = use_badge
         lb_config.saveconfig()
         return { "use_badge": use_badge }
+
+    async def SetReturnCopyPdfWeighing(self, return_pdf_copy_after_weighing: bool):
+        lb_config.g_config["app_api"]["return_pdf_copy_after_weighing"] = return_pdf_copy_after_weighing
+        lb_config.saveconfig()
+        return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
 
     async def SavePathPdf(self, body: PathDTO):
         path = body.path

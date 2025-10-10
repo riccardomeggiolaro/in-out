@@ -1,5 +1,6 @@
 {
     "app_api": {
+        "mode": "MANUALLY",
         "panel": {},
         "path_content": "static/content",
         "path_csv": "/var/lib/in-out/csv",
@@ -56,9 +57,9 @@
             "1": {
                 "connection": {
                     "connecting": false,
-                    "ip": "10.0.5.96",
+                    "ip": "10.0.5.111",
                     "port": 4001,
-                    "timeout": 1.0
+                    "timeout": 2.0
                 },
                 "nodes": {
                     "P1": {
