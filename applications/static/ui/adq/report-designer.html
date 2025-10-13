@@ -825,7 +825,7 @@
             let pageHeightMm;
             if (format === 'Custom') {
                 const customHeightInput = document.getElementById('customHeight').value.trim();
-                if (customHeightInput === '') return Infinity; // Se altezza è auto, nessun limite
+                if (customHeightInput === '') return Infinity;
                 pageHeightMm = parseInt(customHeightInput) || 297;
             } else {
                 pageHeightMm = pageHeights[format];
@@ -886,7 +886,6 @@
                 newPage.style.width = widthInput === '' ? 'auto' : (parseInt(widthInput) + 'mm');
                 newPage.style.height = heightInput === '' ? 'auto' : (parseInt(heightInput) + 'mm');
             } else {
-                // Assicurati che non ci siano stili inline per i formati preimpostati
                 newPage.style.width = '';
                 newPage.style.height = '';
             }
@@ -995,7 +994,6 @@
                 }
             }
             
-            // Dopo la redistribuzione, rimuovi stili inline se non è Custom
             if (format !== 'Custom') {
                 document.querySelectorAll('.canvas').forEach(page => {
                     page.style.width = '';
@@ -1094,7 +1092,6 @@
             if (format === 'Custom') {
                 customSection.style.display = 'block';
                 
-                // Controlla se stiamo tornando al formato Custom del file importato
                 if (importedFileFormat === 'Custom' && importedCustomSize !== null) {
                     document.getElementById('customWidth').value = importedCustomSize.width || '';
                     document.getElementById('customHeight').value = importedCustomSize.height || '';
@@ -1105,27 +1102,21 @@
                 customSection.style.display = 'none';
                 allPages.forEach(page => {
                     page.className = `canvas ${format}`;
-                    // RIMUOVI gli stili inline width/height per permettere al CSS di funzionare
                     page.style.width = '';
                     page.style.height = '';
                 });
             }
             
-            // Controlla se stiamo tornando al formato del file importato
             if (importedFileFormat === format && importedFilePadding !== null) {
-                // Ripristina i padding del file importato
                 document.getElementById('marginTop').value = importedFilePadding.top;
                 document.getElementById('marginBottom').value = importedFilePadding.bottom;
                 document.getElementById('marginLeft').value = importedFilePadding.left;
                 document.getElementById('marginRight').value = importedFilePadding.right;
             } else if (!preserveMargins) {
-                // Altrimenti usa i default
                 updateDefaultMarginsForFormat(format);
             }
             
             updatePageMargins();
-            
-            // Ricalcola font size per tutti gli elementi esistenti
             updateAllElementsFontSize(format);
             
             if (format === 'A7' || format === 'A8' || format === 'Receipt80') {
@@ -1156,14 +1147,9 @@
             
             const newFontSize = fontSizeMap[format] || '12pt';
             
-            // Aggiorna tutti gli elementi dropped
             document.querySelectorAll('.dropped-element').forEach(element => {
-                // Solo se l'elemento non ha un font size personalizzato
-                // (controlla se è stato modificato dall'utente)
                 const currentSize = element.style.fontSize;
                 
-                // Se ha già un font size, mantienilo solo se è stato personalizzato
-                // Altrimenti aggiorna al font size del nuovo formato
                 if (!currentSize || currentSize === '' || isDefaultFontSize(currentSize)) {
                     element.style.fontSize = newFontSize;
                 }
@@ -1305,13 +1291,13 @@
                 case 'heading':
                     wrapper.style.textAlign = "left";
                     content = `
-                        <h2 contenteditable="true">Titolo Report</h2>
+                        <h2 contenteditable="true" style="white-space: nowrap; overflow: hidden;">Titolo Report</h2>
                     `;
                     break;
                 case 'paragraph':
                     wrapper.style.textAlign = "left";
                     content = `
-                        <p contenteditable="true">Inserisci qui il testo del paragrafo...</p>
+                        <p contenteditable="true" style="white-space: nowrap; overflow: hidden;">Inserisci qui il testo del paragrafo...</p>
                     `;
                     break;
                 case 'table':
@@ -1495,6 +1481,9 @@
             switch(type) {
                 case 'heading':
                     const typeTitle = element.firstElementChild.tagName;
+                    const headingElement = element.firstElementChild;
+                    const headingWhiteSpace = headingElement.style.whiteSpace || 'nowrap';
+                    
                     propertiesHTML += `
                         <div class="property-group">
                             <label>Dimensione</label>
@@ -1514,6 +1503,13 @@
                             </select>
                         </div>
                         <div class="property-group">
+                            <label>Comportamento Testo</label>
+                            <select onchange="changeTextWrap(this.value)">
+                                <option value="nowrap" ${headingWhiteSpace == "nowrap" ? 'selected' : null}>Riga singola (tagliato)</option>
+                                <option value="pre-wrap" ${headingWhiteSpace == "pre-wrap" || headingWhiteSpace == "normal" ? 'selected' : null}>A capo automatico</option>
+                            </select>
+                        </div>
+                        <div class="property-group">
                             <label>Font</label>
                             <select onchange="changeElementFont(this.value)">
                                 <option value="unset" ${!fontFamily || fontFamily == "unset" ? 'selected' : null}>Globale (${globalFont.split(',')[0]})</option>
@@ -1527,6 +1523,9 @@
                     `;
                     break;
                 case 'paragraph':
+                    const paragraphElement = element.firstElementChild;
+                    const paragraphWhiteSpace = paragraphElement.style.whiteSpace || 'nowrap';
+                    
                     propertiesHTML += `
                         <div class="property-group">
                             <label>Allineamento</label>
@@ -1534,6 +1533,13 @@
                                 <option value="left" ${textAlign == "left" ? 'selected' : null}>Sinistra</option>
                                 <option value="center" ${textAlign == "center" ? 'selected' : null}>Centro</option>
                                 <option value="right" ${textAlign == "right" ? 'selected' : null}>Destra</option>
+                            </select>
+                        </div>
+                        <div class="property-group">
+                            <label>Comportamento Testo</label>
+                            <select onchange="changeTextWrap(this.value)">
+                                <option value="nowrap" ${paragraphWhiteSpace == "nowrap" ? 'selected' : null}>Riga singola (tagliato)</option>
+                                <option value="pre-wrap" ${paragraphWhiteSpace == "pre-wrap" || paragraphWhiteSpace == "normal" ? 'selected' : null}>A capo automatico</option>
                             </select>
                         </div>
                         <div class="property-group">
@@ -2024,6 +2030,10 @@
                 const newHeading = document.createElement(size);
                 newHeading.contentEditable = true;
                 newHeading.textContent = heading.textContent;
+                // Preserva gli stili esistenti
+                newHeading.style.whiteSpace = heading.style.whiteSpace;
+                newHeading.style.overflow = heading.style.overflow;
+                newHeading.style.fontFamily = heading.style.fontFamily;
                 heading.parentNode.replaceChild(newHeading, heading);
             }
         }
@@ -2031,6 +2041,23 @@
         function changeAlignment(alignment) {
             if (!selectedElement) return;
             selectedElement.style.textAlign = alignment;
+        }
+
+        function changeTextWrap(wrapValue) {
+            if (!selectedElement) return;
+            const textElement = selectedElement.querySelector('h1, h2, h3, h4, h5, h6, p');
+            if (textElement) {
+                textElement.style.whiteSpace = wrapValue;
+                
+                // Imposta automaticamente overflow in base al comportamento testo
+                if (wrapValue === 'nowrap') {
+                    // Riga singola → testo tagliato
+                    textElement.style.overflow = 'hidden';
+                } else {
+                    // A capo automatico (pre-wrap) → testo visibile
+                    textElement.style.overflow = 'visible';
+                }
+            }
         }
 
         function changeFontSize(size) {
@@ -2378,13 +2405,9 @@ ${pageClone.innerHTML}
         
         h1, h2, h3, h4, h5, h6 {
             color: #2c3e50;
-            white-space: nowrap;
-            overflow: hidden;
         }
 
         p {
-            white-space: nowrap;
-            overflow: hidden;
         }
 
         table {
@@ -2560,7 +2583,6 @@ ${pageClone.innerHTML}
                         .trim();
                 }
 
-                // Costruisci format in base al tipo
                 let formatValue = pageFormat;
                 if (pageFormat === 'Custom') {
                     const wInput = document.getElementById('customWidth').value.trim();
@@ -2568,7 +2590,6 @@ ${pageClone.innerHTML}
                     
                     let width, height;
                     
-                    // Se width è auto, calcola la larghezza effettiva
                     if (wInput === '') {
                         const firstCanvas = document.querySelector('.canvas');
                         if (firstCanvas) {
@@ -2582,7 +2603,6 @@ ${pageClone.innerHTML}
                         width = wInput + 'mm';
                     }
                     
-                    // Se height è auto, calcola l'altezza effettiva
                     if (hInput === '') {
                         const firstCanvas = document.querySelector('.canvas');
                         if (firstCanvas) {
@@ -2683,7 +2703,6 @@ ${pageClone.innerHTML}
                         .trim();
                 }
 
-                // Costruisci format in base al tipo
                 let formatValue = pageFormat;
                 if (pageFormat === 'Custom') {
                     const wInput = document.getElementById('customWidth').value.trim();
@@ -2691,7 +2710,6 @@ ${pageClone.innerHTML}
                     
                     let width, height;
                     
-                    // Se width è auto, calcola la larghezza effettiva
                     if (wInput === '') {
                         const firstCanvas = document.querySelector('.canvas');
                         if (firstCanvas) {
@@ -2705,7 +2723,6 @@ ${pageClone.innerHTML}
                         width = wInput + 'mm';
                     }
                     
-                    // Se height è auto, calcola l'altezza effettiva
                     if (hInput === '') {
                         const firstCanvas = document.querySelector('.canvas');
                         if (firstCanvas) {
@@ -2815,13 +2832,11 @@ ${pageClone.innerHTML}
             elementCounter = state.elementCounter || allElements.length;
             totalPages = state.totalPages || allCanvases.length;
             
-            // Parsa formato
             let formatType = state.format;
             let customWidth = '';
             let customHeight = '';
             
             if (state.format && !['A4', 'A5', 'A6', 'A7', 'A8', 'Receipt80'].includes(state.format)) {
-                // È Custom con dimensioni (es: "150mm 200mm")
                 formatType = 'Custom';
                 const parts = state.format.split(' ');
                 if (parts.length === 2) {
@@ -2830,11 +2845,9 @@ ${pageClone.innerHTML}
                 }
             }
             
-            // Ripristina formato pagina
             if (formatType) {
                 document.getElementById('pageFormat').value = formatType;
                 
-                // Ripristina dimensioni custom se presenti
                 if (formatType === 'Custom') {
                     document.getElementById('customWidth').value = customWidth;
                     document.getElementById('customHeight').value = customHeight;
@@ -2848,7 +2861,6 @@ ${pageClone.innerHTML}
                 document.getElementById('pageFormat').value = formatClass;
             }
             
-            // Ripristina margini PRIMA di chiamare changePageFormat
             if (state.margins) {
                 document.getElementById('marginTop').value = state.margins.top;
                 document.getElementById('marginBottom').value = state.margins.bottom;
@@ -2862,7 +2874,6 @@ ${pageClone.innerHTML}
                 document.getElementById('marginRight').value = firstCanvas.style.paddingRight.replace('mm', '') || 25;
             }
             
-            // SALVA formato e padding del file importato
             importedFileFormat = document.getElementById('pageFormat').value;
             importedFilePadding = {
                 top: document.getElementById('marginTop').value,
@@ -2871,7 +2882,6 @@ ${pageClone.innerHTML}
                 right: document.getElementById('marginRight').value
             };
             
-            // SALVA dimensioni custom se il formato è Custom
             if (importedFileFormat === 'Custom') {
                 importedCustomSize = {
                     width: customWidth,
@@ -2889,7 +2899,6 @@ ${pageClone.innerHTML}
             document.getElementById('globalFont').value = globalFont;
             updateGlobalFont(globalFont);
             
-            // Chiama changePageFormat con preserveMargins=true per mantenere i padding del file
             changePageFormat(true);
             
             selectedElement = null;
