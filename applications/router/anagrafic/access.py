@@ -20,7 +20,7 @@ from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.get_last_in_out_by_weigher import get_last_in_out_by_weigher
-from modules.md_database.functions.get_in_out_by_id import get_last_in_out_by_id
+from modules.md_database.functions.get_in_out_by_id import get_in_out_by_id
 from modules.md_database.functions.safe_get_attr import safe_get_attr
 from applications.utils.utils import get_query_params
 from applications.utils.utils_weigher import get_query_params_name_node, InstanceNameWeigherDTO
@@ -182,7 +182,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             raise HTTPException(status_code=400, detail=f"{e}")
 
     async def pdfInOut(self, id: int):
-        in_out = get_last_in_out_by_id(id)
+        in_out = get_in_out_by_id(id)
         report_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
         name_file, variables, report = get_data_variables(in_out)
         html = generate_html_report(report_dir, report, v=variables.dict())
@@ -691,7 +691,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             access = Access(**get_access_data)
             in_out = None
             if idInOut:
-                in_out = get_last_in_out_by_id(idInOut)
+                in_out = get_in_out_by_id(idInOut)
             await self.broadcastUpdateAnagrafic("access", {"access": access.json()})
             if body.subject.id in [None, -1] and access.idSubject:
                 await self.broadcastAddAnagrafic("subject", {"subject": access.subject.json()})

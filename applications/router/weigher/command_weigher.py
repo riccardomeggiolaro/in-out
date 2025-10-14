@@ -13,11 +13,15 @@ from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO
 from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
 from modules.md_database.functions.add_data import add_data
+from modules.md_database.functions.get_in_out_by_id import get_in_out_by_id
 from applications.middleware.auth import get_user
 import threading
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.weigher.types import DataAssignedDTO
 import datetime as dt
+import applications.utils.utils as utils
+from applications.utils.utils_report import get_data_variables, generate_html_report, save_file_dir
+from libs.lb_printer import printer
 
 class CommandWeigherRouter(DataRouter, AccessRouter):
 	def __init__(self):
@@ -133,8 +137,26 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"idWeight2": weighing_stored_db["id"],
 			"net_weight": net_weight - tare if tare else net_weight
 		})
-		md_weigher.module_weigher.instances[instance.instance_name].nodes[instance.weigher_name].take_of_weight_before_weighing = True
 		await self.setAccess(request=None, id=access.id, body=SetAccessDTO(**{"material": body.material.dict(), "operator2": body.operator.dict()}), idInOut=in_out["id"])
+		last_in_out = get_in_out_by_id(in_out["id"])
+		# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
+		printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
+		number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
+		reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]  / "report"
+		print_in = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["in"]
+		print_out = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["out"]
+		print = print_out if tare > 0 or last_in_out.idWeight2 else print_in
+		path_pdf = lb_config.g_config["app_api"]["path_pdf"]
+		name_file, variables, report = get_data_variables(last_in_out)
+		# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
+		if report:
+			html = generate_html_report(reports_dir, report, v=variables.dict())
+			pdf = printer.generate_pdf_from_html(html_content=html)
+			if print:
+				job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
+			# SALVA COPIA PDF
+			if path_pdf and pdf:
+				save_file_dir(path_pdf, name_file, pdf)
 		return {
 			"instance": instance,
 			"in_out": in_out

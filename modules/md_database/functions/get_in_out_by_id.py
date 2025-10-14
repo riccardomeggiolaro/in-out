@@ -1,7 +1,7 @@
 from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Access, Weighing
 
-def get_last_in_out_by_id(id):
+def get_in_out_by_id(id):
     """
     Gets a list of InOut records with optional filtering.
     """
