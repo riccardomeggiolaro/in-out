@@ -83,7 +83,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		status = realtime.status
 		current_tare = None
 		if realtime.tare:
-			current_tare = float(realtime.tare.replace("PT", "").replace(" ",  "")) if "." in tare or "," in tare else int(realtime.tare.replace("PT", "").replace(" ",  ""))
+			current_tare = float(realtime.tare.replace("PT", "").replace(" ",  "")) if "." in realtime.tare or "," in realtime.tare else int(realtime.tare.replace("PT", "").replace(" ",  ""))
 		gross_weight = None
 		if realtime.gross_weight:
 			gross_weight = float(realtime.gross_weight) if "." in realtime.gross_weight or "," in realtime.gross_weight else int(realtime.gross_weight)
@@ -107,10 +107,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = f"Il peso è maggiore di {max_weight} kg"
 		elif tare and str(current_tare).isdigit() and current_tare > 0:
 			error_message = "Non puoi passare la tara perchè è già impostata sulla pesa"
-		elif take_of_weight_on_startup is True:
-			error_message = "E' necessario scaricare la pesa dopo l'avvio del programma"
-		elif take_of_weight_before_weighing is True:
-			error_message = "E' necessario scaricare la pesa prima di eseguire una nuova pesata"
 		if error_message:
 			raise HTTPException(status_code=400, detail=error_message)
 		access = await self.addAccess(request=None, body=AddAccessDTO(**{
