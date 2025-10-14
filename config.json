@@ -50,7 +50,7 @@
                 "pid": true
             }
         },
-        "use_badge": false,
+        "use_badge": true,
         "use_reservation": true,
         "use_white_list": false,
         "weighers": {
