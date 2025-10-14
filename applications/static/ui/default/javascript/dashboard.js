@@ -150,7 +150,7 @@ window.onbeforeunload = function() {
 // Chiudi il popup quando si fa clic all'esterno
 window.onclick = function(event) {
     const popup = document.getElementById(currentPopup);
-    if (event.target === popup && currentPopup !== "reconnectionPopup") {
+    if (event.target === popup && currentPopup !== "reconnectionPopup" && confirmWeighing === null) {
         closePopup(currentPopup);
     }
 };
@@ -224,10 +224,14 @@ async function getData(path) {
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
         selectedIdWeight = res["id_selected"]["id"];
+        
+        // NUOVO: Controlla need_to_confirm
+        if (res.id_selected.need_to_confirm === true) {
+            handleNeedToConfirm(obj.vehicle.plate.replace("⭐", ""));
+        }
+        
         if (res.id_selected.id !== null) {
-            // Seleziona tutti i pulsanti e gli input
             const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            // Disabilita ogni elemento trovato
             buttonsAndInputs.forEach(element => {
                 element.disabled = true;
             });
@@ -563,6 +567,7 @@ function openPopup(name, input) {
 
 function closePopup() {
     if (currentPopup) {
+        confirmWeighing = null;
         const popup = document.getElementById(currentPopup);
         const popupContent = popup.querySelector(".popup-content");
         const buttons = popup.querySelectorAll("button");
@@ -661,6 +666,7 @@ function updateUIRealtime(e) {
         }                    
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight != "") {
+            closePopup();
             let message = `Pesata eseguita!`;
             if (obj.data_assigned.userId) {
                 obj.data_assigned.userId = JSON.parse(obj.data_assigned.userId);
@@ -751,7 +757,7 @@ function updateUIRealtime(e) {
         //         } else {
         //             printButton.disabled = false;
         //         }
-        //     }
+        //      }
         // } else if (numeric && minWeightValue >= gross_weight) {
         //     tareButton.disabled = true;
         //     // zeroButton.disabled = false;
@@ -787,6 +793,7 @@ function updateUIRealtime(e) {
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
+        
         if (obj.type === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
                 element.disabled = false;
@@ -796,12 +803,19 @@ function updateUIRealtime(e) {
                 element.disabled = true;
             });
         }
+        
         if (obj.id_selected.id != selectedIdWeight) {
             if (selectedIdWeight !== null) {
                 const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
                 if (previouslySelected) previouslySelected.classList.remove('selected');
             }
-            selectedIdWeight = obj.id_selected.id;                    
+            selectedIdWeight = obj.id_selected.id;
+            
+            // NUOVO: Controlla need_to_confirm dopo aver aggiornato selectedIdWeight
+            if (obj.id_selected.need_to_confirm === true) {
+                handleNeedToConfirm(obj.data_in_execution.vehicle.plate.replace("⭐", ""));
+            }
+            
             if (selectedIdWeight !== null) {
                 const newlySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
                 if (newlySelected) newlySelected.classList.add('selected');
@@ -815,23 +829,13 @@ function updateUIRealtime(e) {
                 });
             }
         } else {
+            // NUOVO: Controlla need_to_confirm anche quando l'ID non cambia
+            if (obj.id_selected.need_to_confirm === true) {
+                handleNeedToConfirm(obj.data_in_execution.vehicle.plate.replace("⭐", ""));
+            }
+            
             populateListIn();
         }
-        // if (obj.id_selected.id === null) {
-        //     // Seleziona tutti i pulsanti e gli input
-        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-        //     // Disabilita ogni elemento trovato
-        //     buttonsAndInputs.forEach(element => {
-        //         element.disabled = false;
-        //     });
-        // } else {
-        //     // Seleziona tutti i pulsanti e gli input
-        //     const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-        //     // Disabilita ogni elemento trovato
-        //     buttonsAndInputs.forEach(element => {
-        //         element.disabled = true;
-        //     });
-        // }
     } else if (obj.access) {
         populateListIn();
     } else if (obj.message) {
@@ -969,8 +973,8 @@ async function handleStampa() {
     }            
 }
 
-async function inWeighing() {
-    closePopup();
+async function inWeighing(close=true) {
+    if (close) closePopup();
     buttons.forEach(button => {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
@@ -1010,8 +1014,8 @@ async function handlePesata() {
     } else await inWeighing();
 }
 
-async function outWeighing () {
-    closePopup();
+async function outWeighing(close=true) {
+    if (close) closePopup();
     buttons.forEach(button => {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
@@ -1047,6 +1051,35 @@ async function handlePesata2() {
         document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
         openPopup('confirmPopup');
     } else await outWeighing();
+}
+
+async function confirmSemiAutomatic() {
+    if (data_weight_realtime.potential_net_weight !== null || /[1-9]/.test(String(data_weight_realtime.tare))) outWeighing(false);
+    else inWeighing(false);
+}
+
+function handleNeedToConfirm(plate) {
+    confirmWeighing = confirmSemiAutomatic;
+    document.getElementById("over_max_theshold_description").innerHTML = 
+        `Lettura automatica della targa <strong>'${plate}'</strong>. <br> Effettuare la pesatura?`;
+    openPopup('confirmPopup');
+    const closeButton = document.querySelector('#confirmPopup .close-button');
+    const handleClick = () => {
+        fetch(`/api/data${currentWeigherPath}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.status)
+        .then(r => {
+            if (r === 200) {
+                closePopup();
+                closeButton.removeEventListener('click', handleClick); // Rimuove l'evento
+            }
+        });
+    };
+    closeButton.addEventListener('click', handleClick);
 }
 
 function disableAllElements() {

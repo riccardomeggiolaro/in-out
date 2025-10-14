@@ -13,6 +13,7 @@ import libs.lb_config as lb_config
 import json
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
+from typing import Optional
 
 class DataRouter(CallbackWeigher):
 	def __init__(self):
@@ -32,19 +33,24 @@ class DataRouter(CallbackWeigher):
 	async def GetDataInExecution(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
-	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		if request is not None and request.state.user.level == 1:
-			continues = True
-			if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
-				continues = False
-			if data_dto.data_in_execution.subject.social_reason and not data_dto.data_in_execution.subject.id:
-				continues = False
-			if data_dto.data_in_execution.vector.social_reason and not data_dto.data_in_execution.vector.id:
-				continues = False
-			if data_dto.data_in_execution.driver.social_reason and not data_dto.data_in_execution.driver.id:
-				continues = False
-			if not continues:
-				raise HTTPException(status_code=400, detail="Puoi utilizzare solo i dati registrati nelle anagrafiche per effettuare le pesate")
+	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False):
+		if request is not None:
+			if request.state.user.level == 1:
+				continues = True
+				if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
+					continues = False
+				if data_dto.data_in_execution.subject.social_reason and not data_dto.data_in_execution.subject.id:
+					continues = False
+				if data_dto.data_in_execution.vector.social_reason and not data_dto.data_in_execution.vector.id:
+					continues = False
+				if data_dto.data_in_execution.driver.social_reason and not data_dto.data_in_execution.driver.id:
+					continues = False
+				if not continues:
+					raise HTTPException(status_code=400, detail="Puoi utilizzare solo i dati registrati nelle anagrafiche per effettuare le pesate")
+			if data_dto.id_selected.id == weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
+				need_to_confirm = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["need_to_confirm"]
+			else:
+				need_to_confirm = False
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		weight1 = None
 		id_material = None
@@ -128,7 +134,7 @@ class DataRouter(CallbackWeigher):
 					"document_reference": access.document_reference,
 					"badge": access.badge,
 				})
-				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1)
+				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1, need_to_confirm=need_to_confirm)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idAccess=data_dto.id_selected.id)
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
@@ -147,8 +153,5 @@ class DataRouter(CallbackWeigher):
 		return data
 
 	async def DeleteData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		self.deleteDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-		self.deleteIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-		weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = TypeAccess.MANUALLY.name
-		weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = 1
+		self.deleteData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)

@@ -22,7 +22,7 @@ def get_data_variables(in_out):
     variables.driver = in_out.access.driver if in_out.access.driver else DriverDataDTO(**{})
     variables.vehicle = in_out.access.vehicle if in_out.access.vehicle else VehicleDataDTO(**{})
     variables.material = in_out.material if in_out.material else MaterialDataDTO(**{})    
-    variables.operator = in_out.weight1.operator if in_out.weight1 and in_out.weight1.operator else in_out.weight2.operator or OperatorDataDTO(**{})
+    variables.operator = in_out.weight1.operator if in_out.weight1 and in_out.weight1.operator else in_out.weight2.operator if in_out.weight2 and in_out.weight2.operator else OperatorDataDTO(**{})
     variables.note = in_out.access.note
     variables.document_reference = in_out.access.document_reference
     if in_out.idWeight1:

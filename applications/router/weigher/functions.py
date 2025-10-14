@@ -75,10 +75,12 @@ class Functions:
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteData(self, instance_name: str, weigher_name: str):
-		weighers_data[instance_name][weigher_name]["data"]["type"] = TypeAccess.MANUALLY.name
-		weighers_data[instance_name][weigher_name]["data"]["number_in_out"] = 1
-		self.deleteDataInExecution(instance_name=instance_name, weigher_name=weigher_name)
-		self.deleteIdSelected(instance_name=instance_name, weigher_name=weigher_name)
+		for key, value in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].items():
+			if isinstance(value, object) and value is not None:
+				if "id" in value and value["id"] is not None:
+					unlock_record_by_attributes(key, value["id"], None, weigher_name)
+		weighers_data[instance_name][weigher_name]["data"] = Data(**{}).dict()
+		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteDataInExecution(self, instance_name: str, weigher_name: str):
 		for key, value in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].items():
@@ -89,7 +91,7 @@ class Functions:
 		weighers_data[instance_name][weigher_name]["data"]["data_in_execution"] = DataInExecution(**{}).dict()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
-	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int, weight1: int):
+	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int, weight1: int, need_to_confirm: bool):
 		if new_id == -1:
 			new_id = None
 		else:
@@ -99,7 +101,8 @@ class Functions:
 				raise HTTPException(status_code=400, detail=message)
 		weighers_data[instance_name][weigher_name]["data"]["id_selected"] = {
 			"id": new_id,
-			"weight1": weight1
+			"weight1": weight1,
+			"need_to_confirm": need_to_confirm
 		}
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
@@ -109,7 +112,8 @@ class Functions:
 			unlock_record_by_attributes("access", current_id, None, weigher_name)
 		weighers_data[instance_name][weigher_name]["data"]["id_selected"] = {
 			"id": None,
-			"weight1": None
+			"weight1": None,
+			"need_to_confirm": False
 		}
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 

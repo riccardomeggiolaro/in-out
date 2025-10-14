@@ -1,13 +1,13 @@
 {
     "app_api": {
-        "mode": "MANUALLY",
+        "mode": "SEMIAUTOMATIC",
         "panel": {},
         "path_content": "static/content",
         "path_csv": "/var/lib/in-out/csv",
         "path_database": "/var/lib/in-out/database.db",
         "path_img": "/var/lib/in-out/images",
         "path_pdf": "/var/lib/in-out/pdf",
-        "path_ui": "static/ui/adq",
+        "path_ui": "static/ui/default",
         "port": 80,
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
@@ -51,64 +51,20 @@
             }
         },
         "use_badge": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_white_list": false,
         "weighers": {
             "1": {
                 "connection": {
                     "connecting": false,
-                    "ip": "10.0.5.111",
-                    "port": 4001,
+                    "ip": "10.0.5.178",
+                    "port": 23,
                     "timeout": 2.0
                 },
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
                         "continuous_transmission": false,
-                        "data": {
-                            "data_in_execution": {
-                                "document_reference": null,
-                                "driver": {
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "material": {
-                                    "description": null,
-                                    "id": null
-                                },
-                                "note": null,
-                                "operator": {
-                                    "description": null,
-                                    "id": null
-                                },
-                                "subject": {
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "typeSubject": "CUSTOMER",
-                                "vector": {
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "vehicle": {
-                                    "description": null,
-                                    "id": null,
-                                    "plate": null,
-                                    "tare": null
-                                }
-                            },
-                            "id_selected": {
-                                "id": null,
-                                "weight1": null
-                            },
-                            "number_in_out": 1,
-                            "type": "MANUALLY"
-                        },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
                         "events": {
@@ -133,8 +89,8 @@
                         "max_theshold": null,
                         "max_weight": 60000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
@@ -142,7 +98,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": true,
+                        "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"
                     }
                 },

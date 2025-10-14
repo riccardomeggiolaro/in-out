@@ -28,9 +28,12 @@ class IdSelected(BaseModel):
 	id: Optional[int] = None
 	weight1: Optional[int] = None
 
+class IdSelectedExtended(IdSelected):
+    need_to_confirm: Optional[bool] = False
+
 class Data(BaseModel):
 	data_in_execution: DataInExecution = DataInExecution(**{})
-	id_selected: IdSelected = IdSelected(**{})
+	id_selected: IdSelectedExtended = IdSelectedExtended(**{})
 	number_in_out: Optional[int] = 1
 	type: Optional[str] = TypeAccess.MANUALLY.name
     

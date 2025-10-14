@@ -9,15 +9,11 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.access import AccessRouter
 from modules.md_database.md_database import TypeAccess, AccessStatus
 from modules.md_database.functions.get_access_by_id import get_access_by_id
-from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO, VehicleDataDTO
+from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO
 from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
-from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
-from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.add_data import add_data
-from modules.md_database.functions.get_in_out_by_id import get_last_in_out_by_id
 from applications.middleware.auth import get_user
-import libs.lb_log as lb_log
 import threading
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.weigher.types import DataAssignedDTO
@@ -290,6 +286,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			response = get_user(token=token)
 			if hasattr(response, "status_code"):
 				return response
+			request.state.user = response
 		status_modope, command_executed, error_message = 500, False, ""
 		mode = lb_config.g_config["app_api"]["mode"]
 		access = None
@@ -332,60 +329,64 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 							if access["type"].name == TypeAccess.RESERVATION.name and access["number_in_out"] is not None and realtime.tare != "0":
 								error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
 							else:
-								await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": access["id"]}}), instance=instance)
+								await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": access["id"]}}), instance=instance, need_to_confirm=True if mode == "SEMIAUTOMATIC" else False)
 						except Exception as e:
 							error_message = e.detail
-					if not error_message and mode == "AUTOMATIC":
-						data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
-						tare = data["data_in_execution"]["vehicle"]["tare"]
-						weight1 = data["id_selected"]["weight1"]
-						timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
-						time_between_actions = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"]
-						stable = 0
-						while True:
-							await asyncio.sleep(time_between_actions)
-							timeout = timeout - time_between_actions
-							current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-							modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-							current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-							realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-							current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
-							m = modope if request is not None else current_modope
-							if modope != "PRESETTARE" and current_modope != "PRESETTARE":
-								if current_weigher_data["id_selected"]["id"] != access["id"]:
-									error_message = f"Pesatura automatica interrotta. Accesso con '{identify_dto.identify}' deselezionato."
-									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
-									break
-								if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division:
-									if current_tare == "0":
-										if timeout >= 0:
-											message = f"Impostando la tara per la pesatura automatica."
-											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": message})
-									elif timeout >= 0:
-										error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
+					if not error_message:
+						if mode == "AUTOMATIC":
+							data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
+							tare = data["data_in_execution"]["vehicle"]["tare"]
+							weight1 = data["id_selected"]["weight1"]
+							timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
+							time_between_actions = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"]
+							stable = 0
+							while True:
+								await asyncio.sleep(time_between_actions)
+								timeout = timeout - time_between_actions
+								current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+								modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+								current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+								realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+								current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
+								m = modope if request is not None else current_modope
+								if modope != "PRESETTARE" and current_modope != "PRESETTARE":
+									if current_weigher_data["id_selected"]["id"] != access["id"]:
+										error_message = f"Pesatura automatica interrotta. Accesso con '{identify_dto.identify}' deselezionato."
 										await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 										break
-								elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
-									error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
-									await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
-									break
-								elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
-									if realtime.status == "ST":
-										if stable == 3:
-											status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
-												instance_name=instance.instance_name, 
-												weigher_name=instance.weigher_name, 
-												modope="WEIGHING", 
-												data_assigned=access["id"])
-											if error_message:
-												error_message = f"Errore nella pesatura automatica: {error_message}. Ritento."
-												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
-											if command_executed:
-												break
+									if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division:
+										if current_tare == "0":
+											if timeout >= 0:
+												message = f"Impostando la tara per la pesatura automatica."
+												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": message})
+										elif timeout >= 0:
+											error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
+											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
+											break
+									elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+										error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
+										await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
+										break
+									elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
+										if realtime.status == "ST":
+											if stable == 3:
+												data_assigned = DataAssignedDTO(**{"accessId": access["id"], "userId": request.state.user.id if request else None})
+												status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+													instance_name=instance.instance_name, 
+													weigher_name=instance.weigher_name, 
+													modope="WEIGHING", 
+													data_assigned=data_assigned)
+												if error_message:
+													error_message = f"Errore nella pesatura automatica: {error_message}. Ritento."
+													await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
+												if command_executed:
+													break
+											else:
+												stable = stable + 1
 										else:
-											stable = stable + 1
-									else:
-										stable = 0
+											stable = 0
+						elif mode == "SEMIAUTOMATIC":
+							error_message = "Modalità automatica disattiva. Tentativo di pesatura in attesa di conferma dell'utente per la modalità semiautomatica"
 				else:
 					error_message = f"Accesso con '{identify_dto.identify}' non esistente."
 			current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
