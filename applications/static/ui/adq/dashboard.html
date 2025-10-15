@@ -946,7 +946,7 @@
                 const data = await res.json();
                 
                 if (data.in_out && data.in_out.id) {
-                    showSnackbar('Pesata di non conformità eseguita', 'success');
+                    showSnackbar('Pesata eseguita correttamente', 'success');
                     note.value = "";
                     materialId.value = null;
                     materialDescription.value = "";

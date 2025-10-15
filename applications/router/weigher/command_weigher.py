@@ -111,6 +111,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = f"Il peso è maggiore di {max_weight} kg"
 		elif tare and str(current_tare).isdigit() and current_tare > 0:
 			error_message = "Non puoi passare la tara perchè è già impostata sulla pesa"
+		elif tare > int(realtime.gross_weight):
+			error_message = "Non puoi assegnare un tara più grande del peso lordo"
 		if error_message:
 			raise HTTPException(status_code=400, detail=error_message)
 		access = await self.addAccess(request=None, body=AddAccessDTO(**{
