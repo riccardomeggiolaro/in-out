@@ -26,17 +26,19 @@ def get_data_variables(in_out):
     variables.note = in_out.access.note
     variables.document_reference = in_out.access.document_reference
     if in_out.idWeight1:
-        name_file = f"{in_out.weight1.weigher}_{in_out.weight1.pid}"
+        pid = in_out.weight1.pid if in_out.weight1.pid else in_out.weight1.id
+        name_file = f"{in_out.weight1.weigher}_{pid}"
         variables.weight1.date = in_out.weight1.date.strftime("%d/%m/%Y %H:%M")
         variables.weight1.pid = in_out.weight1.pid
         variables.weight1.weight = in_out.weight1.weight
     if in_out.idWeight2:
+        pid = in_out.weight2.pid if in_out.weight2.pid else in_out.weight2.id
         if in_out.weight2.tare > 0:
-            name_file = f"{in_out.weight2.weigher}_{in_out.weight2.pid}"
+            name_file = f"{in_out.weight2.weigher}_{pid}"
             variables.weight1.weight = in_out.weight2.tare
             variables.weight1.type = "PT" if in_out.weight2.is_preset_tare else "Tara"
         else:
-            name_file = f"{in_out.weight2.weigher}_{in_out.weight1.pid}_{in_out.weight2.pid}"
+            name_file = f"{in_out.weight2.weigher}_{in_out.weight1.pid}_{pid}"
         variables.weight2.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M") if in_out.idWeight2 else ""
         variables.weight2.pid = in_out.weight2.pid if in_out.idWeight2 else ""
         variables.weight2.weight = in_out.weight2.weight if in_out.idWeight2 else ""
