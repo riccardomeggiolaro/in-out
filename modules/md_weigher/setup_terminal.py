@@ -38,10 +38,20 @@ class __SetupWeigherConnection:
 			else:
 				raise BrokenPipeError()
 
-	def read(self, log=False, without_error=False):
+	def read(self, log=False, without_error=False, discard_something_else=False):
+		def get_first_data(data):
+			"""Estrae solo fino al primo CRLF dai bytes"""
+			if '\r\n' in data:
+				pos = data.find('\r\n')
+				return data[:pos + 2]  # Include \r\n
+			return data
+
 		read = self.self_config.connection.connection.read()
 		if read:
-			decode = read.decode("utf-8", errors="ignore").replace(self.node if isinstance(self.node, str) else "", "", 1).replace("\r\n", "")
+			decode = read.decode("utf-8", errors="ignore")
+			if True:
+				decode = get_first_data(decode)
+			decode = decode.replace(self.node if isinstance(self.node, str) else "", "", 1).replace("\r\n", "")
 			read = decode
 			if log:
 				lb_log.error(f"LOG: {read}")

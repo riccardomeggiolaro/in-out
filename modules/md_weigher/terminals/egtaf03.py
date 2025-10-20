@@ -129,7 +129,10 @@ class EgtAf03(Terminal):
 		try:
 			if self.diagnostic.status == 200:
 				self.command() # eseguo la funzione command() che si occupa di scrivere il comando sulla pesa in base al valore del modope_to_execute nel momento in cui ho chiamato la funzione
-				response = self.read()
+				discard_something_else = False
+				if self.continuous_transmission and self.modope == "REALTIME":
+					discard_something_else = True
+				response = self.read(discard_something_else=discard_something_else)
 				split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
 				length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
 				length_response = len(response) # ottengo la lunghezza della stringa della risposta
