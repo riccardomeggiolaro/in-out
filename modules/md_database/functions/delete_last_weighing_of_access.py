@@ -9,7 +9,7 @@ def delete_last_weighing_of_access(access_id):
     """
     with SessionLocal() as session:
         try:
-            disassociated_weighing_id = None
+            id = None
 
             # Trova l'ultimo InOut per la prenotazione
             latest_inout = session.query(InOut).options(
@@ -29,13 +29,13 @@ def delete_last_weighing_of_access(access_id):
                 raise ValueError(f"No InOut records found for access {access_id}")
 
             if latest_inout.idWeight2:
-                disassociated_weighing_id = latest_inout.weight2.id
+                id = latest_inout.weight2.id
                 latest_inout.idWeight2 = None
                 if latest_inout.idWeight1 and latest_inout.weight1.in_out_weight2:
-                    disassociated_weighing_id = latest_inout.weight1.id
+                    id = latest_inout.weight1.id
                     latest_inout.idWeight1 = None
             elif latest_inout.idWeight2 is None and latest_inout.idWeight1:
-                disassociated_weighing_id = latest_inout.weight1.id
+                id = latest_inout.weight1.id
                 latest_inout.idWeight1 = None
             
             # Se l'InOut non ha più pesate associate, eliminalo
@@ -50,7 +50,7 @@ def delete_last_weighing_of_access(access_id):
                 latest_inout.net_weight = None
 
             session.commit()
-            return latest_inout.__dict__, disassociated_weighing_id
+            return id
 
         except Exception as e:
             session.rollback()

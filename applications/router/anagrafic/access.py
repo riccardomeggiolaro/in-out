@@ -796,9 +796,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to delete its last weighing")
-            _, weighingId = delete_last_weighing_of_access(id)
-            import libs.lb_log as lb_log
-            lb_log.warning(_)
+            weighingId = delete_last_weighing_of_access(id)
             update_data("weighing", weighingId, {"idOperator": -1})
             data = get_access_by_id(id)
             if data:
