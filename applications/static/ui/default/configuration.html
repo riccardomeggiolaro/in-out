@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <link rel="stylesheet" href="/static/css/setup.css"></link>
+    <style>
+        .form-group { margin-bottom: 12px; }
+        .form-group label { font-weight: 500; }
+        .selected { background-color: #1362b8; color: white; }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div id="config">
+        <h3>CONFIGURAZIONE</h3>
+        <br>
+        <div id="sub-menu">
+            <button class="menu-tab selected" onclick="changeSetupTab(event, 'settings')">SETTAGGI</button>
+            <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">TERMINALI</button>
+        </div>
+        <br>
+        <div id="tabs">
+            <div id="settings" class="tab">
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>ACCESSI</h3>
+                    <br>
+                    <div>
+                        <label><b>Funzionamento</b>: </label>
+                        <input type="radio" name="option" value="MANUALLY" id="radio-0">
+                        <label for="radio-0">Manuale</label>
+                        <input type="radio" name="option" value="AUTOMATIC" id="radio-1">
+                        <label for="radio-1">Automatico</label>
+                        <input type="radio" name="option" value="SEMIAUTOMATIC" id="radio-2">
+                        <label for="radio-2">Semiautomatico</label>
+                    </div>
+                    <br>
+                    <label for="reservetion">Usa <b>prenotazioni</b>: </label>
+                    <input type="checkbox" id="reservetion">
+                    <br>
+                    <br>
+                    <label for="badge">Usa <b>badge</b> per riconoscimento tramite tessere: </label>
+                    <input type="checkbox" id="badge">
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>Report</h3>
+                    <br>
+                    <label for="report-copy">Ritorna copia del report a chi effettua la pesata: </label>
+                    <input type="checkbox" id="report-copy">
+                    <br>
+                    <br>
+                    <label for="entry-report">Report di stampa per <b>l'entrata</b>: </label>
+                    <button>Apri report designer</button>
+                    <br>
+                    <br>
+                    <label for="exit-report">Report di stampa per <b>l'uscita</b>: </label>
+                    <button>Apri report designer</button>
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>Percorsi di salvataggio</h3>
+                    <br>
+                    <label for="pdf-path">Directory salvataggio report pesata in <b>pdf</b>: </label>
+                    <input type="file" id="pdf-path" webkitdirectory directory>
+                    <br>
+                    <br>
+                    <label for="csv-path">Directory salvataggio report pesata in <b>csv</b>: </label>
+                    <input type="file" id="csv-path" webkitdirectory directory>
+                    <br>
+                    <br>
+                    <label for="image-path">Directory salvatggio <b>immagini</b>: </label>
+                    <input type="file" id="image-path" webkitdirectory directory>
+                    <br>
+                    <br>
+                </div>
+            </div>
+            <div id="instances" class="tab"></div>
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+    
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script>
+        document.querySelector('#instances').style.display = "none";
+
+        function changeSetupTab(event, tab) {
+            document.querySelectorAll('.menu-tab').forEach(button => button.classList.remove("selected"));
+            document.querySelectorAll(".tab").forEach(div => div.style.display = 'none');
+            document.querySelector(`#${tab}`).style.display = "block";
+            event.target.classList.toggle("selected");
+        }
+    </script>
+</body>
+</html>

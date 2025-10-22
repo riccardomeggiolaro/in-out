@@ -75,6 +75,14 @@ class Functions:
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 
 	def deleteData(self, instance_name: str, weigher_name: str):
+		current_id = weighers_data[instance_name][weigher_name]["data"]["id_selected"]["id"]
+		if current_id is not None:
+			unlock_record_by_attributes("access", current_id, None, weigher_name)
+		weighers_data[instance_name][weigher_name]["data"]["id_selected"] = {
+			"id": None,
+			"weight1": None,
+			"need_to_confirm": False
+		}
 		for key, value in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].items():
 			if isinstance(value, object) and value is not None:
 				if "id" in value and value["id"] is not None:
