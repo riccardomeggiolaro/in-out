@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Manager Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.error {
+            background: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #764ba2;
+        }
+        
+        .sync-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sync-list h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 2px solid #e5e7eb;
+            color: #667eea;
+        }
+        
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background: #f9fafb;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-running {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-stopped {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .status-error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .status-idle {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .console {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .console-line {
+            margin-bottom: 5px;
+        }
+        
+        .console-time {
+            color: #6b7280;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Sync Manager Dashboard</h1>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="connectionStatus">Connected</span>
+                </div>
+                <div class="status-item">
+                    <span>Server: <span id="serverUrl">http://localhost:8000</span></span>
+                </div>
+                <button class="btn btn-primary" onclick="showCreateModal()">➕ New Sync</button>
+            </div>
+        </header>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2>📊 System Metrics</h2>
+                <div class="metric">
+                    <span>Active Syncs</span>
+                    <span class="metric-value" id="activeSyncs">0</span>
+                </div>
+                <div class="metric">
+                    <span>Files in Queue</span>
+                    <span class="metric-value" id="filesInQueue">0</span>
+                </div>
+                <div class="metric">
+                    <span>Files Synced Today</span>
+                    <span class="metric-value" id="filesSyncedToday">0</span>
+                </div>
+                <div class="metric">
+                    <span>CPU Usage</span>
+                    <span class="metric-value" id="cpuUsage">0%</span>
+                </div>
+                <div class="metric">
+                    <span>Memory Usage</span>
+                    <span class="metric-value" id="memoryUsage">0%</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🔔 Recent Events</h2>
+                <div class="console" id="eventConsole">
+                    <div class="console-line">
+                        <span class="console-time">--:--:--</span>
+                        Waiting for events...
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sync-list">
+            <h2>📁 Sync Configurations</h2>
+            <table id="syncTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Source</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="syncTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Create Sync Modal -->
+    <div class="modal" id="createModal">
+        <div class="modal-content">
+            <h2>Create New Sync</h2>
+            <form id="createSyncForm">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="syncName" required>
+                </div>
+                <div class="form-group">
+                    <label>Source Path</label>
+                    <input type="text" id="sourcePath" placeholder="/path/to/source" required>
+                </div>
+                <div class="form-group">
+                    <label>Destination Path</label>
+                    <input type="text" id="destPath" placeholder="/path/to/destination" required>
+                </div>
+                <div class="form-group">
+                    <label>Sync Interval (seconds)</label>
+                    <input type="number" id="syncInterval" value="5" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="deleteAfter">
+                        Delete files after sync
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="enableSync" checked>
+                        Enable immediately
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="hideCreateModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/api/v1';
+        let ws = null;
+        
+        // Initialize dashboard
+        async function init() {
+            connectWebSocket();
+            await loadSyncs();
+            await loadMetrics();
+            setInterval(loadMetrics, 5000);
+        }
+        
+        // WebSocket connection
+        function connectWebSocket() {
+            const wsUrl = 'ws://localhost:8000/ws';
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('statusIndicator').classList.remove('error');
+                
+                // Subscribe to events
+                ws.send(JSON.stringify({
+                    type: 'subscribe',
+                    events: ['sync_event', 'file_event', 'metrics']
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('statusIndicator').classList.add('error');
+                // Reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+        
+        // Handle WebSocket messages
+        function handleWebSocketMessage(data) {
+            if (data.type === 'metrics') {
+                updateMetrics(data.data);
+            } else if (data.type === 'sync_event' || data.type === 'file_event') {
+                addEventToConsole(data);
+                loadSyncs(); // Reload sync table
+            }
+        }
+        
+        // Add event to console
+        function addEventToConsole(event) {
+            const console = document.getElementById('eventConsole');
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            
+            let message = '';
+            if (event.type === 'sync_event') {
+                message = `Sync #${event.sync_id}: ${event.event}`;
+            } else if (event.type === 'file_event') {
+                message = `File: ${event.file_path} - ${event.event}`;
+            } else {
+                message = `${event.type}: ${JSON.stringify(event.data)}`;
+            }
+            
+            line.innerHTML = `<span class="console-time">${time}</span>${message}`;
+            
+            // Keep only last 10 events
+            if (console.children.length > 10) {
+                console.removeChild(console.children[0]);
+            }
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        // Load syncs
+        async function loadSyncs() {
+            try {
+                const response = await fetch(`${API_URL}/syncs`);
+                const syncs = await response.json();
+                
+                const tbody = document.getElementById('syncTableBody');
+                tbody.innerHTML = '';
+                
+                syncs.forEach(sync => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${sync.id}</td>
+                        <td>${sync.name}</td>
+                        <td title="${sync.source_path}">${truncatePath(sync.source_path)}</td>
+                        <td title="${sync.destination_path}">${truncatePath(sync.destination_path)}</td>
+                        <td><span class="status-badge status-${sync.status}">${sync.status}</span></td>
+                        <td>
+                            ${sync.status === 'running' 
+                                ? `<button class="btn btn-danger" onclick="stopSync(${sync.id})">Stop</button>`
+                                : `<button class="btn btn-success" onclick="startSync(${sync.id})">Start</button>`
+                            }
+                            <button class="btn" onclick="deleteSync(${sync.id})">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                if (syncs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No syncs configured</td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to load syncs:', error);
+            }
+        }
+        
+        // Load metrics
+        async function loadMetrics() {
+            try {
+                const response = await fetch(`${API_URL}/metrics`);
+                const metrics = await response.json();
+                updateMetrics(metrics);
+            } catch (error) {
+                console.error('Failed to load metrics:', error);
+            }
+        }
+        
+        // Update metrics display
+        function updateMetrics(metrics) {
+            document.getElementById('activeSyncs').textContent = metrics.active_syncs || 0;
+            document.getElementById('filesInQueue').textContent = metrics.files_in_queue || 0;
+            document.getElementById('filesSyncedToday').textContent = metrics.files_synced_today || 0;
+            document.getElementById('cpuUsage').textContent = `${(metrics.cpu_usage || 0).toFixed(1)}%`;
+            document.getElementById('memoryUsage').textContent = `${(metrics.memory_usage || 0).toFixed(1)}%`;
+        }
+        
+        // Truncate path for display
+        function truncatePath(path, maxLength = 30) {
+            if (path.length <= maxLength) return path;
+            const parts = path.split('/');
+            if (parts.length > 3) {
+                return `.../${parts.slice(-2).join('/')}`;
+            }
+            return path.substring(0, maxLength - 3) + '...';
+        }
+        
+        // Start sync
+        async function startSync(id) {
+            try {
+                await fetch(`${API_URL}/syncs/${id}/start`, { method: 'POST' });
+                await loadSyncs();
+            } catch (error) {
+                alert('Failed to start sync: ' + error.message);
+            }
+        }
+        
+        // Stop sync
+        async function stopSync(id) {
+            try {
+                await fetch(`${API_URL}/syncs/${id}/stop`, { method: 'POST' });
+                await loadSyncs();
+            } catch (error) {
+                alert('Failed to stop sync: ' + error.message);
+            }
+        }
+        
+        // Delete sync
+        async function deleteSync(id) {
+            if (!confirm(`Are you sure you want to delete sync #${id}?`)) return;
+            
+            try {
+                await fetch(`${API_URL}/syncs/${id}`, { method: 'DELETE' });
+                await loadSyncs();
+            } catch (error) {
+                alert('Failed to delete sync: ' + error.message);
+            }
+        }
+        
+        // Show create modal
+        function showCreateModal() {
+            document.getElementById('createModal').classList.add('active');
+        }
+        
+        // Hide create modal
+        function hideCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+            document.getElementById('createSyncForm').reset();
+        }
+        
+        // Create sync form submission
+        document.getElementById('createSyncForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('syncName').value,
+                source_path: document.getElementById('sourcePath').value,
+                destination_path: document.getElementById('destPath').value,
+                sync_interval: parseInt(document.getElementById('syncInterval').value),
+                delete_after_sync: document.getElementById('deleteAfter').checked,
+                enabled: document.getElementById('enableSync').checked
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/syncs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) throw new Error('Failed to create sync');
+                
+                hideCreateModal();
+                await loadSyncs();
+            } catch (error) {
+                alert('Failed to create sync: ' + error.message);
+            }
+        });
+        
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html>

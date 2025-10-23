@@ -1,0 +1,60 @@
+# Core dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# File watching and system operations
+watchdog==3.0.0
+psutil==5.9.6
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+aiosqlite==0.19.0
+
+# Async support
+aiofiles==23.2.1
+asyncio==3.4.3
+aiocron==1.8
+
+# API and networking
+httpx==0.25.1
+python-multipart==0.0.6
+websockets==12.0
+
+# Configuration
+pyyaml==6.0.1
+python-dotenv==1.0.0
+
+# Logging and monitoring
+python-json-logger==2.0.7
+prometheus-client==0.19.0
+
+# Utilities
+click==8.1.7
+rich==13.7.0
+pendulum==2.1.2
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==41.0.7
+
+# Cloud storage (optional)
+boto3==1.29.7  # AWS S3
+azure-storage-blob==12.19.0  # Azure
+google-cloud-storage==2.10.0  # Google Cloud
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.1  # For API testing
+faker==20.1.0
+
+# Development
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.0
+pre-commit==3.5.0

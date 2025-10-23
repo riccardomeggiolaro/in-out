@@ -1,0 +1,213 @@
+version: '3.8'
+
+services:
+  sync-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sync-manager:latest
+    container_name: sync-manager
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Data persistence
+      - sync-data:/data
+      - sync-logs:/logs
+      - ./config:/config:ro
+      
+      # Mount local directories for sync
+      - ${LOCAL_SYNC_DIR:-/opt/sync/local}:/mnt/local
+      - ${NETWORK_SYNC_DIR:-/opt/sync/network}:/mnt/network
+      
+      # Optional: Mount additional paths
+      # - /path/to/nas:/mnt/nas
+      # - /path/to/backup:/mnt/backup
+    
+    environment:
+      # Server configuration
+      - HOST=0.0.0.0
+      - PORT=8000
+      - WORKERS=4
+      - DEBUG=false
+      
+      # Database
+      - DATABASE_URL=sqlite+aiosqlite:////data/sync_manager.db
+      
+      # Logging
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/sync_manager.log
+      
+      # Sync settings
+      - DEFAULT_SYNC_INTERVAL=5
+      - MAX_RETRIES=3
+      - RETRY_DELAY=10
+      - BATCH_SIZE=100
+      
+      # Security (change in production!)
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+      - API_KEY_ENABLED=${API_KEY_ENABLED:-false}
+      - API_KEY=${API_KEY:-your-api-key-here}
+      
+      # Monitoring
+      - ENABLE_METRICS=true
+      - ENABLE_HEALTH=true
+      
+      # Optional cloud storage
+      - ENABLE_S3=${ENABLE_S3:-false}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      
+      - ENABLE_AZURE=${ENABLE_AZURE:-false}
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING:-}
+      
+      - ENABLE_GCS=${ENABLE_GCS:-false}
+      - GCS_CREDENTIALS_PATH=${GCS_CREDENTIALS_PATH:-}
+    
+    networks:
+      - sync-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: PostgreSQL for production
+  postgres:
+    image: postgres:15-alpine
+    container_name: sync-postgres
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=sync_manager
+      - POSTGRES_USER=syncuser
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    networks:
+      - sync-network
+    profiles:
+      - production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U syncuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Redis for caching and queuing
+  redis:
+    image: redis:7-alpine
+    container_name: sync-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - sync-network
+    profiles:
+      - production
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sync-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - sync-network
+    profiles:
+      - monitoring
+
+  # Optional: Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sync-grafana
+    restart: unless-stopped
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=
+    ports:
+      - "3000:3000"
+    networks:
+      - sync-network
+    profiles:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: sync-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - sync-network
+    profiles:
+      - production
+    depends_on:
+      - sync-manager
+
+networks:
+  sync-network:
+    driver: bridge
+
+volumes:
+  sync-data:
+    driver: local
+  sync-logs:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
