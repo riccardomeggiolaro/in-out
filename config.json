@@ -8,6 +8,17 @@
         "path_img": "/var/lib/in-out/images",
         "path_pdf": "/var/lib/in-out/pdf",
         "path_ui": "static/ui/default",
+        "sync_folder": {
+            "local_dir": "/var/lib/in-out",
+            "mount_point": "/mnt/in-out",
+            "remote_folder": {
+                "ip": "10.0.5.105",
+                "share_name": "gh5",
+                "sub_path": "Dev/in-out",
+                "username": "Ricardo Meggiolaro",
+                "password": "uPZa6eY2Ik"
+            }
+        },
         "port": 80,
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",

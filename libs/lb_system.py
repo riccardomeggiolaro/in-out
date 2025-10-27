@@ -15,6 +15,8 @@ import socket
 from typing import Optional, Union
 import select
 import time
+import shutil
+from collections import deque
 try:
 	import winreg
 	import wmi
@@ -420,6 +422,115 @@ def exist_serial_port(port_name):
 	elif is_windows():
 		result, message = exist_serial_port_windows(port_name)
 	return result, message
+
+# Function to scan local directory and add existing files/directories to queue
+def scan_local_dir(local_dir):
+	# Pending files queue
+	pending_files = deque()
+	for root, dirs, files in os.walk(local_dir):
+		for dir_name in dirs:
+			dir_path = os.path.join(root, dir_name)
+			pending_files.append(dir_path)
+		for file_name in files:
+			file_path = os.path.join(root, file_name)
+			pending_files.append(file_path)
+
+# Function to mount the remote share
+def mount_remote(ip, share_name, username, password, local_dir, mount_point):
+	if is_linux():
+		if os.path.ismount(mount_point):
+			try:
+				subprocess.check_call(['umount', mount_point])
+			except subprocess.CalledProcessError as e:
+				lb_log.error(f"1: {e}")
+				return False
+		cmd = [
+            'mount', '-t', 'cifs', f'//{ip}/{share_name}', mount_point,
+            '-o', f'username={username},password={password}'
+        ]
+		try:
+			os.chmod(local_dir, 0o777)  # Ensure directory is writable (adjust as needed)
+		except Exception as e:
+			lb_log.error(f"2: {e}")
+			pass
+	elif is_windows():
+		cmd = [
+            'net', 'use', mount_point, f'\\\\{ip}\\{share_name}',
+            f'/user:{username}', password
+        ]
+        # For Windows, check if mounted and unmount
+		try:
+			subprocess.check_call(['net', 'use', mount_point])
+			subprocess.check_call(['net', 'use', mount_point, '/delete'])
+		except subprocess.CalledProcessError as e:
+			lb_log.error(e)
+			pass  # Not mounted, proceed
+		except Exception as e:
+			lb_log.error(e)
+	try:
+		os.makedirs(local_dir, exist_ok=True)
+		os.makedirs(mount_point, exist_ok=True)
+		subprocess.check_call(cmd)
+        # Verify mount is not empty
+		if not os.listdir(mount_point):
+			return False
+		return True
+	except subprocess.CalledProcessError as e:
+		lb_log.error(e)
+		return False
+	except OSError as e:
+		lb_log.error(e)
+		return False
+
+def is_mounted(mount_point):
+	if is_linux():
+		return os.path.ismount(mount_point)
+	elif is_windows():
+		try:
+			output = subprocess.check_output(['net', 'use'], text=True)
+			return mount_point in output
+		except subprocess.CalledProcessError:
+			return False
+	return False
+
+# Function to copy a file or directory to remote
+def copy_to_remote(file_path, local_dir, mount_point, sub_path):
+    # Calculate relative path from local_dir
+    rel_path = os.path.relpath(file_path, local_dir)
+    # Normalize paths for comparison
+    norm_sub_path = os.path.normpath(sub_path).replace('\\', '/')
+    norm_rel_path = os.path.normpath(rel_path).replace('\\', '/')
+    # Remove sub_path from rel_path if it exists to avoid duplication
+    if norm_sub_path and norm_rel_path.startswith(norm_sub_path + '/'):
+        rel_path = rel_path[len(sub_path) + 1:]
+    elif norm_sub_path and norm_rel_path == norm_sub_path:
+        if os.path.isdir(file_path):
+            # Copy contents of the folder to the remote sub_path
+            for child in os.listdir(file_path):
+                child_path = os.path.join(file_path, child)
+                remote_child_path = os.path.join(mount_point, sub_path, child)
+                remote_child_dir = os.path.dirname(remote_child_path)
+                os.makedirs(remote_child_dir, exist_ok=True)
+                if os.path.isdir(child_path):
+                    shutil.copytree(child_path, remote_child_path, dirs_exist_ok=True)
+                else:
+                    shutil.copy(child_path, remote_child_path)
+            return True
+        else:
+            rel_path = os.path.basename(file_path)
+    # Construct remote path
+    remote_path = os.path.join(mount_point, sub_path, rel_path) if rel_path else os.path.join(mount_point, sub_path, os.path.basename(file_path))
+    remote_path = os.path.normpath(remote_path)  # Normalize path to handle separators
+    remote_dir = os.path.dirname(remote_path)
+    os.makedirs(remote_dir, exist_ok=True)
+    try:
+        if os.path.isdir(file_path):
+            shutil.copytree(file_path, remote_path, dirs_exist_ok=True)
+        else:
+            shutil.copy(file_path, remote_path)
+        return True
+    except IOError as e:
+        return False
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA LIBRERIA ================

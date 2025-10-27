@@ -16,6 +16,7 @@ from modules.md_database.functions.get_data_by_attribute import get_data_by_attr
 from applications.utils.utils_auth import create_access_token
 import socket
 from applications.router.weigher.manager_weighers_data import weighers_data
+from modules.md_sync_folder.dto import SyncFolderDTO
 
 class ConfigWeigher(CommandWeigherRouter):
     def __init__(self):
