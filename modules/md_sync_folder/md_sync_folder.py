@@ -49,11 +49,12 @@ class ModuleSyncFolder:
 		self.config = None
 		self.local_dir = None
 		self.mount_point = None
-		self.create_remote_connection(config=SyncFolderDTO(**lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]), local_dir=lb_config.g_config["app_api"]["sync_folder"]["local_dir"], mount_point=lb_config.g_config["app_api"]["sync_folder"]["mount_point"])
 		
 	def create_remote_connection(self, config: SyncFolderDTO, local_dir: str, mount_point: str):
 		mounted = lb_system.mount_remote(config.ip, config.share_name, config.username, config.password, local_dir, mount_point)
 		if mounted:
+			if self.mount_point and self.mount_point != mount_point:
+				lb_system.umount_remote(self.mount_point)
 			self.config = config
 			self.local_dir = local_dir
 			self.mount_point = mount_point
@@ -62,6 +63,17 @@ class ModuleSyncFolder:
 				pending_files.append(file)
 			self.create_observer(local_dir)
 		return mounted
+
+	def delete_remote_connection(self):
+		if self.mount_point and lb_system.is_mounted(self.mount_point):
+			lb_system.umount_remote(self.mount_point)
+		self.config = None
+		self.local_dir = None
+		self.mount_point = None
+		if self.observer and self.observer.is_alive():
+			self.observer.stop()
+			self.observer.join()
+			self.observer = None
 
 	def create_observer(self, local_dir):
 		if self.observer and self.observer.is_alive():
@@ -102,6 +114,8 @@ class ModuleSyncFolder:
 					except Exception as e:
 						lb_log.error(f"Failed to remove {file_path}: {e}")
 				else:
+					if self.config:
+						self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
 					lb_log.warning(f"Retrying {file_path} after delay")
 					time.sleep(1)  # Retry after delay
 			else:

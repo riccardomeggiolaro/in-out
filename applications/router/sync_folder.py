@@ -25,10 +25,18 @@ from io import BytesIO
 from fastapi import UploadFile, HTTPException
 from modules.md_sync_folder.dto import SyncFolderDTO
 from libs.lb_sync_folder import mount_remote
+from modules.md_sync_folder.dto import SyncFolderDTO
+import modules.md_sync_folder.md_sync_folder as md_sync_folder
 
 class SyncFolderRouter:
     def __init__(self):
         self.router = APIRouter()
+        
+        config = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
+        if config:
+            status = md_sync_folder.module_sync_folder.create_remote_connection(config=SyncFolderDTO(**config), local_dir=lb_config.g_config["app_api"]["sync_folder"]["local_dir"], mount_point=lb_config.g_config["app_api"]["sync_folder"]["mount_point"])
+            import libs.lb_log as lb_log
+            lb_log.info(f"Sync Folder mounted at startup: {status}")
 
         # Aggiungi le rotte
         self.router.add_api_route('/sync_folder', self.getSyncFolder, methods=['GET'], dependencies=[Depends(is_super_admin)])
@@ -39,12 +47,14 @@ class SyncFolderRouter:
         return lb_config.g_config["app_api"]["sync_folder"]
 
     async def SetSyncFolder(self, body: SyncFolderDTO):
-        lb_config.g_config["app_api"]["sync_folder"] = body.dict()
-        lb_config.saveconfig()
-        status = mount_remote(body.dict())
-        return { "status": status }
+        mounted = md_sync_folder.module_sync_folder.create_remote_connection(config=body, local_dir=lb_config.g_config["app_api"]["sync_folder"]["local_dir"], mount_point=lb_config.g_config["app_api"]["sync_folder"]["mount_point"])
+        if mounted:
+            lb_config.g_config["app_api"]["sync_folder"] = body.dict()
+            lb_config.saveconfig()
+        return { "mounted": mounted }
 
     async def DeleteSyncFolder(self):
-        lb_config.g_config["app_api"]["sync_folder"] = None
+        md_sync_folder.module_sync_folder.delete_remote_connection()
+        lb_config.g_config["app_api"]["sync_folder"]["remote_folder"] = None
         lb_config.saveconfig()
         return { "deleted": True }

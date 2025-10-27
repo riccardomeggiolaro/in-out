@@ -13,6 +13,7 @@ from applications.router.auth import AuthRouter
 from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
 from applications.router.open_to_customer import OpenToCustomerRouter
+from applications.router.sync_folder import SyncFolderRouter
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
@@ -88,6 +89,7 @@ def init():
 	printer_router = PrinterRouter()
 	tunnel_connections_router = TunnelConnectionsRouter()
 	open_to_customer = OpenToCustomerRouter()
+	sync_folder_router = SyncFolderRouter()
 
 	app.include_router(weigher_router.router, prefix="/api")
 
@@ -102,6 +104,8 @@ def init():
 	app.include_router(tunnel_connections_router.router, prefix="/api/tunnel_connections", tags=["tunnel connections"])
 
 	app.include_router(open_to_customer.router, prefix="/api", tags=["open to customer"])
+
+	app.include_router(sync_folder_router.router, prefix="/api/sync-folder", tags=["sync folder"])
 
 	app.mount("/static/content", StaticFiles(directory=path_content), name="content")
 

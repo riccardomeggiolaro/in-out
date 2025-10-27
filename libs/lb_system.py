@@ -438,13 +438,8 @@ def scan_local_dir(local_dir):
 
 # Function to mount the remote share
 def mount_remote(ip, share_name, username, password, local_dir, mount_point):
+	umount_remote(mount_point)
 	if is_linux():
-		if os.path.ismount(mount_point):
-			try:
-				subprocess.check_call(['umount', mount_point])
-			except subprocess.CalledProcessError as e:
-				lb_log.error(f"1: {e}")
-				return False
 		cmd = [
             'mount', '-t', 'cifs', f'//{ip}/{share_name}', mount_point,
             '-o', f'username={username},password={password}'
@@ -452,22 +447,12 @@ def mount_remote(ip, share_name, username, password, local_dir, mount_point):
 		try:
 			os.chmod(local_dir, 0o777)  # Ensure directory is writable (adjust as needed)
 		except Exception as e:
-			lb_log.error(f"2: {e}")
 			pass
 	elif is_windows():
 		cmd = [
             'net', 'use', mount_point, f'\\\\{ip}\\{share_name}',
             f'/user:{username}', password
         ]
-        # For Windows, check if mounted and unmount
-		try:
-			subprocess.check_call(['net', 'use', mount_point])
-			subprocess.check_call(['net', 'use', mount_point, '/delete'])
-		except subprocess.CalledProcessError as e:
-			lb_log.error(e)
-			pass  # Not mounted, proceed
-		except Exception as e:
-			lb_log.error(e)
 	try:
 		subprocess.check_call(cmd)
         # Verify mount is not empty
@@ -489,6 +474,27 @@ def is_mounted(mount_point):
 			output = subprocess.check_output(['net', 'use'], text=True)
 			return mount_point in output
 		except subprocess.CalledProcessError:
+			return False
+	return False
+
+def umount_remote(mount_point):
+	if is_linux():
+		if os.path.ismount(mount_point):
+			try:
+				subprocess.check_call(['umount', mount_point])
+				return True
+			except subprocess.CalledProcessError as e:
+				lb_log.error(e)
+				return False
+		else:
+			return True
+	elif is_windows():
+		try:
+			subprocess.check_call(['net', 'use', mount_point])
+			subprocess.check_call(['net', 'use', mount_point, '/delete'])
+			return True
+		except subprocess.CalledProcessError as e:
+			lb_log.error(e)
 			return False
 	return False
 
