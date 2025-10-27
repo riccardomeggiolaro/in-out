@@ -27,12 +27,12 @@ def init():
 	global module_sync_folder
 	lb_log.info("init")
 	module_sync_folder = ModuleSyncFolder()
+	thread = createThread(module_sync_folder.start)
+	startThread(thread)
 	lb_log.info("end")
 
 def start():
 	lb_log.info("start")
-	lb_log.error("ihbdfiwfbwefiwyufwiuvy")
-	module_sync_folder.start()
 	lb_log.info("end")
 
 def stop():
@@ -40,7 +40,7 @@ def stop():
 
 # Watchdog handler for file and directory creations
 class FileHandler(FileSystemEventHandler):
-	def on_created(event):
+	def on_created(self, event):
 		pending_files.append(event.src_path)
 
 class ModuleSyncFolder:
@@ -50,7 +50,6 @@ class ModuleSyncFolder:
 		self.local_dir = None
 		self.mount_point = None
 		self.create_remote_connection(config=SyncFolderDTO(**lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]), local_dir=lb_config.g_config["app_api"]["sync_folder"]["local_dir"], mount_point=lb_config.g_config["app_api"]["sync_folder"]["mount_point"])
-		self.start()
 		
 	def create_remote_connection(self, config: SyncFolderDTO, local_dir: str, mount_point: str):
 		mounted = lb_system.mount_remote(config.ip, config.share_name, config.username, config.password, local_dir, mount_point)
@@ -73,10 +72,24 @@ class ModuleSyncFolder:
 		self.observer.start()
   
 	def start(self):
-		lb_log.error("ijjbefiuwefbwiefbu")
+		lb_log.error("Starting sync folder module")
+		
+		# Lista delle estensioni da escludere (aggiungi quelle che ti servono)
+		excluded_extensions = ['.db', '.db-journal']  # Modifica secondo necessità
+		
 		while lb_config.g_enabled:
 			if pending_files and self.mount_point:
 				file_path = pending_files[0]
+				
+				# Ottieni l'estensione del file
+				file_extension = os.path.splitext(file_path)[1].lower()
+				
+				# Controlla se l'estensione è nella lista delle escluse
+				if file_extension in excluded_extensions:
+					lb_log.info(f"Skipping file {file_path} with excluded extension {file_extension}")
+					pending_files.popleft()
+					continue
+				
 				if lb_system.is_mounted(self.mount_point) and lb_system.copy_to_remote(file_path, self.local_dir, self.mount_point, self.config.sub_path):
 					try:
 						# Only remove files, not directories

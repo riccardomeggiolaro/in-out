@@ -434,6 +434,7 @@ def scan_local_dir(local_dir):
 		for file_name in files:
 			file_path = os.path.join(root, file_name)
 			pending_files.append(file_path)
+	return pending_files
 
 # Function to mount the remote share
 def mount_remote(ip, share_name, username, password, local_dir, mount_point):
@@ -468,8 +469,6 @@ def mount_remote(ip, share_name, username, password, local_dir, mount_point):
 		except Exception as e:
 			lb_log.error(e)
 	try:
-		os.makedirs(local_dir, exist_ok=True)
-		os.makedirs(mount_point, exist_ok=True)
 		subprocess.check_call(cmd)
         # Verify mount is not empty
 		if not os.listdir(mount_point):
