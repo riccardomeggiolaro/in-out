@@ -38,7 +38,7 @@
                 "ip": "10.0.5.105",
                 "password": "uPZa6eY2Ik",
                 "share_name": "gh5",
-                "sub_path": "Dev/in-out",
+                "sub_path": "/Dev/in-out",
                 "username": "Riccardo Meggiolaro"
             }
         },

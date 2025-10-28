@@ -422,6 +422,143 @@ async function loadSetupWeighers() {
                 }
             })
         }
+        const labelIp = document.createElement('label');
+        labelIp.textContent = "IP: "
+        const ip = document.createElement('input');
+        let originalIp = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.ip : '';
+        ip.value = originalIp;
+        ip.oninput = () => isValidForm();
+        const labelShareName = document.createElement('label');
+        labelShareName.textContent = "Cartella condivisa: "
+        const shareName = document.createElement('input');
+        let originalShareName = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.share_name : '';
+        shareName.value = originalShareName;
+        shareName.oninput = () => isValidForm();
+        const labelSubPath = document.createElement('label');
+        labelSubPath.textContent = "Sotto cartella: "
+        const subPath = document.createElement('input');
+        let originalSubPath = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.sub_path : '';
+        subPath.value = originalSubPath;
+        subPath.oninput = () => isValidForm();
+        const labelUsername = document.createElement('label');
+        labelUsername.textContent = "Username: "
+        const username = document.createElement('input');
+        let originalUsername = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.username : '';
+        username.value = originalUsername;
+        username.oninput = () => isValidForm();
+        const labelPassword = document.createElement('label');
+        labelPassword.textContent = "Password: "
+        const password = document.createElement('input');
+        let originalPassword = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.password : '';
+        password.value = originalPassword;
+        password.oninput = () => isValidForm();
+        const testConnectionButton = document.createElement('button');
+        testConnectionButton.textContent = "Testa connessione";
+        testConnectionButton.disabled = originalIp ? false : true;
+        testConnectionButton.onclick = () => {
+            fetch('/api/sync-folder/test', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                const message = res.mounted ? "Connesso correttamente" : "Non connessono";
+                const color = res.mounted ? 'rgb(208, 255, 208)' : 'rgb(255, 208, 208)';
+                showSnackbar("snackbar", message, color, 'black');
+            });
+        }
+        const deleteRemoteFolderButton = document.createElement('button');
+        deleteRemoteFolderButton.textContent = "Elimina";
+        deleteRemoteFolderButton.disabled = originalIp ? false : true;
+        deleteRemoteFolderButton.onclick = () => {
+            fetch('/api/sync-folder', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                const message = res.deleted ? "Connessione eliminata" : "Errore generico durante l'eliminazione";
+                const color = res.deleted ? 'rgb(208, 255, 208)' : 'rgb(255, 208, 208)';
+                if (res.deleted) {
+                    originalIp = "";
+                    ip.value = "";
+                    originalShareName = "";
+                    shareName.value = "";
+                    originalSubPath = "";
+                    subPath.value = "";
+                    originalUsername = "";
+                    username.value = "";
+                    originalPassword = "";
+                    password.value = "";
+                    testConnectionButton.disabled = true;
+                    deleteRemoteFolderButton.disabled = true;
+                    saveRemoteFolderButton.disabled = true;
+                }
+                showSnackbar("snackbar", message, color, 'black');
+            });
+        }
+        const saveRemoteFolderButton = document.createElement('button');
+        saveRemoteFolderButton.textContent = "Salva";
+        saveRemoteFolderButton.disabled = true;
+        saveRemoteFolderButton.onclick = () => {
+            fetch('/api/sync-folder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "ip": ip.value,
+                    "share_name": shareName.value,
+                    "sub_path": subPath.value,
+                    "username": username.value,
+                    "password": password.value
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                const message = res.remote_folder ? `Configurazione salvata correttamente` : "Configurazione non salvata";
+                const color = res.remote_folder ? 'white' : 'rgb(255, 208, 208)';
+                if (res.remote_folder) {
+                    originalIp = res.remote_folder.ip;
+                    originalShareName = res.remote_folder.share_name;
+                    originalSubPath = res.remote_folder.sub_path;
+                    originalUsername = res.remote_folder.username;
+                    originalPassword = res.remote_folder.password;
+                    testConnectionButton.disabled = false;
+                    deleteRemoteFolderButton.disabled = false;
+                    saveRemoteFolderButton.disabled = true;
+                }
+                showSnackbar("snackbar", message, color, 'black');
+            });
+        }
+        const isValidForm = (() => {
+            if (
+                ip.value.length > 0 &&
+                shareName.value.length > 0 &&
+                subPath.value.length > 0 &&
+                username.value.length > 0 &&
+                password.value.length > 0 &&
+                (
+                    ip.value !== originalIp ||
+                    shareName.value !== originalShareName || 
+                    subPath.value !== originalSubPath ||
+                    username.value !== originalUsername ||
+                    password.value !== originalPassword
+                )
+            ) {
+                testConnectionButton.disabled = originalIp ? false : true;
+                deleteRemoteFolderButton.disabled = originalIp ? false : true;
+                saveRemoteFolderButton.disabled = false;
+            } else {
+                testConnectionButton.disabled = originalIp ? false : true;
+                deleteRemoteFolderButton.disabled = originalIp ? false : true;
+                saveRemoteFolderButton.disabled = true;
+            }
+        })
         // CONFIGURAZIONE DEGLI ACCESSI
         const divAccess = document.createElement('div');
         const h1Access = document.createElement('h3');
@@ -466,33 +603,71 @@ async function loadSetupWeighers() {
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(br.cloneNode(true));
         settings.appendChild(divReport);
+        // //////////////////////////////////////////////////////
+        // settings.appendChild(br.cloneNode(true));
+        // // CONFIGURATION OF DIRECTORIES
+        // const divDirectories = document.createElement('div');
+        // const h1Directories = document.createElement('h3');
+        // divDirectories.classList.toggle("borders");
+        // divDirectories.classList.toggle("aliceblue");
+        // h1Directories.textContent = 'Percosi di salvataggio';
+        // divDirectories.appendChild(br.cloneNode(true));
+        // divDirectories.appendChild(h1Directories);
+        // divDirectories.appendChild(br.cloneNode(true));
+        // divDirectories.appendChild(labelSavePdfPath);
+        // divDirectories.appendChild(savePdfPath);
+        // divDirectories.appendChild(savePdfPathButton);
+        // divDirectories.appendChild(br.cloneNode(true));
+        // divDirectories.appendChild(br.cloneNode(true));
+        // divDirectories.appendChild(labelSaveCsvPath);
+        // divDirectories.appendChild(saveCsvPath);
+        // divDirectories.appendChild(saveCsvPathButton);
+        // divDirectories.appendChild(br.cloneNode(true));
+        // divDirectories.appendChild(br.cloneNode(true));
+        // divDirectories.appendChild(labelSaveImgPath);
+        // divDirectories.appendChild(saveImgPath);
+        // divDirectories.appendChild(saveImgPathButton);
+        // divDirectories.appendChild(br.cloneNode(true));
+        // divDirectories.appendChild(br.cloneNode(true));
+        // settings.appendChild(divDirectories);
         //////////////////////////////////////////////////////
         settings.appendChild(br.cloneNode(true));
-        // CONFIGURATION OF DIRECTORIES
-        const divDirectories = document.createElement('div');
-        const h1Directories = document.createElement('h3');
-        divDirectories.classList.toggle("borders");
-        divDirectories.classList.toggle("aliceblue");
-        h1Directories.textContent = 'Percosi di salvataggio';
-        divDirectories.appendChild(br.cloneNode(true));
-        divDirectories.appendChild(h1Directories);
-        divDirectories.appendChild(br.cloneNode(true));
-        divDirectories.appendChild(labelSavePdfPath);
-        divDirectories.appendChild(savePdfPath);
-        divDirectories.appendChild(savePdfPathButton);
-        divDirectories.appendChild(br.cloneNode(true));
-        divDirectories.appendChild(br.cloneNode(true));
-        divDirectories.appendChild(labelSaveCsvPath);
-        divDirectories.appendChild(saveCsvPath);
-        divDirectories.appendChild(saveCsvPathButton);
-        divDirectories.appendChild(br.cloneNode(true));
-        divDirectories.appendChild(br.cloneNode(true));
-        divDirectories.appendChild(labelSaveImgPath);
-        divDirectories.appendChild(saveImgPath);
-        divDirectories.appendChild(saveImgPathButton);
-        divDirectories.appendChild(br.cloneNode(true));
-        divDirectories.appendChild(br.cloneNode(true));
-        settings.appendChild(divDirectories);
+        // CONFIGURATION OF SYNC REMOTE FOLDER
+        const divSyncRemoteFolder = document.createElement('div');
+        const h1SyncRemoteFolder = document.createElement('h3');
+        divSyncRemoteFolder.classList.toggle("borders");
+        divSyncRemoteFolder.classList.toggle("aliceblue");
+        h1SyncRemoteFolder.textContent = 'Sincronizzazione cartella remota';
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(h1SyncRemoteFolder);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelIp);
+        divSyncRemoteFolder.appendChild(ip);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelShareName);
+        divSyncRemoteFolder.appendChild(shareName);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelSubPath);
+        divSyncRemoteFolder.appendChild(subPath);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelUsername);
+        divSyncRemoteFolder.appendChild(username);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelPassword);
+        divSyncRemoteFolder.appendChild(password);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(testConnectionButton);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(deleteRemoteFolderButton);
+        divSyncRemoteFolder.appendChild(saveRemoteFolderButton);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        settings.appendChild(divSyncRemoteFolder);
         //////////////////////////////////////////////////////
         settings.appendChild(br.cloneNode(true));
         data = data["weighers"];
