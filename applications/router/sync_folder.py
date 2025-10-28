@@ -27,16 +27,17 @@ from modules.md_sync_folder.dto import SyncFolderDTO
 from libs.lb_sync_folder import mount_remote
 from modules.md_sync_folder.dto import SyncFolderDTO
 import modules.md_sync_folder.md_sync_folder as md_sync_folder
+from libs.lb_utils import createThread, startThread
 
 class SyncFolderRouter:
     def __init__(self):
         self.router = APIRouter()
         
         config = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
+
         if config:
-            status = md_sync_folder.module_sync_folder.create_remote_connection(config=SyncFolderDTO(**config), local_dir=lb_config.g_config["app_api"]["sync_folder"]["local_dir"], mount_point=lb_config.g_config["app_api"]["sync_folder"]["mount_point"])
-            import libs.lb_log as lb_log
-            lb_log.info(f"Sync Folder mounted at startup: {status}")
+            thread = createThread(md_sync_folder.module_sync_folder.create_remote_connection, args=(SyncFolderDTO(**config), lb_config.g_config["app_api"]["sync_folder"]["local_dir"], lb_config.g_config["app_api"]["sync_folder"]["mount_point"]))
+            startThread(thread=thread)
 
         # Aggiungi le rotte
         self.router.add_api_route('', self.getSyncFolder, methods=['GET'], dependencies=[Depends(is_super_admin)])
@@ -63,5 +64,5 @@ class SyncFolderRouter:
         return { "deleted": True }
     
     async def TestSyncFolder(self):
-        mounted = md_sync_folder.module_sync_folder.test_connection()
-        return { "mounted": mounted }
+        connected, remote_path, status = md_sync_folder.module_sync_folder.test_connection()
+        return { "mounted": connected, "remote_path": remote_path, "status": status }

@@ -423,6 +423,43 @@ def exist_serial_port(port_name):
 		result, message = exist_serial_port_windows(port_name)
 	return result, message
 
+import threading
+
+def makedirs_with_timeout(path, timeout=5, exist_ok=True):
+    """
+    Crea directory con timeout per evitare blocchi su mount remoti.
+    
+    Args:
+        path: Percorso della directory da creare
+        timeout: Timeout in secondi (default: 5)
+        exist_ok: Se True, non genera errore se la directory esiste
+    
+    Returns:
+        bool: True se successo, False se timeout o errore
+    """
+    success = False
+    error = None
+    
+    def _makedirs():
+        try:
+            os.makedirs(path, exist_ok=exist_ok)
+            success = True
+        except Exception as e:
+            error = e
+    
+    thread = threading.Thread(target=_makedirs)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout=timeout)
+    
+    if thread.is_alive():
+        error = f"Timeout durante creazione directory: {path}"
+    
+    if error:
+        error = f"Errore creazione directory: {error}"
+    
+    return success, error
+
 # Function to scan local directory and add existing files/directories to queue
 def scan_local_dir(local_dir):
 	# Pending files queue
@@ -434,6 +471,7 @@ def scan_local_dir(local_dir):
 		for file_name in files:
 			file_path = os.path.join(root, file_name)
 			pending_files.append(file_path)
+	lb_log.warning(len(pending_files))
 	return pending_files
 
 # Function to mount the remote share
@@ -441,21 +479,21 @@ def mount_remote(ip, share_name, username, password, local_dir, mount_point):
 	umount_remote(mount_point)
 	if is_linux():
 		cmd = [
-            'mount', '-t', 'cifs', f'//{ip}/{share_name}', mount_point,
-            '-o', f'username={username},password={password}'
-        ]
+			'mount', '-t', 'cifs', f'//{ip}/{share_name}', mount_point,
+			'-o', f'username={username},password={password}'
+		]
 		try:
 			os.chmod(local_dir, 0o777)  # Ensure directory is writable (adjust as needed)
 		except Exception as e:
 			pass
 	elif is_windows():
 		cmd = [
-            'net', 'use', mount_point, f'\\\\{ip}\\{share_name}',
-            f'/user:{username}', password
-        ]
+			'net', 'use', mount_point, f'\\\\{ip}\\{share_name}',
+			f'/user:{username}', password
+		]
 	try:
 		subprocess.check_call(cmd)
-        # Verify mount is not empty
+		# Verify mount is not empty
 		if not os.listdir(mount_point):
 			return False
 		return True
@@ -498,44 +536,110 @@ def umount_remote(mount_point):
 			return False
 	return False
 
+def get_remote_connection_status(mount_point):
+	"""
+	Verifica lo stato della connessione alla cartella remota.
+
+	Args:
+		mount_point: Il punto di mount (Linux) o lettera di unità (Windows)
+
+	Returns:
+		dict: Dizionario con informazioni sulla connessione
+				{
+					'connected': bool,
+					'mount_point': str,
+					'remote_path': str o None,
+					'status': str
+				}
+	"""
+	connected = False
+	remote_path = None,
+	status = 'disconnected'
+	
+	if is_linux():
+		# Verifica se il mount point è montato
+		if os.path.ismount(mount_point):
+			connected = True
+			status = 'connected'
+			
+			# Ottieni informazioni dettagliate dal file /proc/mounts
+			try:
+				with open('/proc/mounts', 'r') as f:
+					for line in f:
+						parts = line.split()
+						if len(parts) >= 2 and parts[1] == mount_point:
+							remote_path = parts[0]
+							break
+			except Exception as e:
+				lb_log.error(f"Errore lettura /proc/mounts: {e}")
+		else:
+			status = 'not mounted'
+			
+	elif is_windows():
+		try:
+			# Esegui comando 'net use' per vedere le connessioni attive
+			output = subprocess.check_output(['net', 'use'], text=True)
+			
+			for line in output.split('\n'):
+				if mount_point in line:
+					connected = True
+					status = 'connected'
+					
+					# Estrai il percorso remoto dalla riga
+					parts = line.split()
+					for part in parts:
+						if part.startswith('\\\\'):
+							remote_path = part
+							break
+					break
+			else:
+				status = 'not connected'
+				
+		except subprocess.CalledProcessError as e:
+			lb_log.error(f"Errore esecuzione 'net use': {e}")
+			status = 'error checking status'
+
+	return connected, remote_path, status
+
 # Function to copy a file or directory to remote
 def copy_to_remote(file_path, local_dir, mount_point, sub_path):
-    # Calculate relative path from local_dir
-    rel_path = os.path.relpath(file_path, local_dir)
-    # Normalize paths for comparison
-    norm_sub_path = os.path.normpath(sub_path).replace('\\', '/')
-    norm_rel_path = os.path.normpath(rel_path).replace('\\', '/')
-    # Remove sub_path from rel_path if it exists to avoid duplication
-    if norm_sub_path and norm_rel_path.startswith(norm_sub_path + '/'):
-        rel_path = rel_path[len(sub_path) + 1:]
-    elif norm_sub_path and norm_rel_path == norm_sub_path:
-        if os.path.isdir(file_path):
-            # Copy contents of the folder to the remote sub_path
-            for child in os.listdir(file_path):
-                child_path = os.path.join(file_path, child)
-                remote_child_path = os.path.join(mount_point, sub_path, child)
-                remote_child_dir = os.path.dirname(remote_child_path)
-                os.makedirs(remote_child_dir, exist_ok=True)
-                if os.path.isdir(child_path):
-                    shutil.copytree(child_path, remote_child_path, dirs_exist_ok=True)
-                else:
-                    shutil.copy(child_path, remote_child_path)
-            return True
-        else:
-            rel_path = os.path.basename(file_path)
-    # Construct remote path
-    remote_path = os.path.join(mount_point, sub_path, rel_path) if rel_path else os.path.join(mount_point, sub_path, os.path.basename(file_path))
-    remote_path = os.path.normpath(remote_path)  # Normalize path to handle separators
-    remote_dir = os.path.dirname(remote_path)
-    os.makedirs(remote_dir, exist_ok=True)
-    try:
-        if os.path.isdir(file_path):
-            shutil.copytree(file_path, remote_path, dirs_exist_ok=True)
-        else:
-            shutil.copy(file_path, remote_path)
-        return True
-    except IOError as e:
-        return False
+	# Calculate relative path from local_dir
+	rel_path = os.path.relpath(file_path, local_dir)
+	# Normalize paths for comparison
+	norm_sub_path = os.path.normpath(sub_path).replace('\\', '/')
+	norm_rel_path = os.path.normpath(rel_path).replace('\\', '/')
+	# Remove sub_path from rel_path if it exists to avoid duplication
+	if norm_sub_path and norm_rel_path.startswith(norm_sub_path + '/'):
+		rel_path = rel_path[len(sub_path) + 1:]
+	elif norm_sub_path and norm_rel_path == norm_sub_path:
+		if os.path.isdir(file_path):
+			# Copy contents of the folder to the remote sub_path
+			for child in os.listdir(file_path):
+				child_path = os.path.join(file_path, child)
+				remote_child_path = os.path.join(mount_point, sub_path, child)
+				remote_child_dir = os.path.dirname(remote_child_path)
+				os.makedirs(remote_child_dir, exist_ok=True)
+				if os.path.isdir(child_path):
+					shutil.copytree(child_path, remote_child_path, dirs_exist_ok=True)
+				else:
+					shutil.copy(child_path, remote_child_path)
+			return True
+		else:
+			rel_path = os.path.basename(file_path)
+	# Construct remote path
+	remote_path = os.path.join(mount_point, sub_path, rel_path) if rel_path else os.path.join(mount_point, sub_path, os.path.basename(file_path))
+	remote_path = os.path.normpath(remote_path)  # Normalize path to handle separators
+	remote_dir = os.path.dirname(remote_path)
+	# os.makedirs(remote_dir, exist_ok=True)
+	makedirs_with_timeout(remote_dir, timeout=5, exist_ok=True)
+	try:
+		if os.path.isdir(file_path):
+			shutil.copytree(file_path, remote_path, dirs_exist_ok=True)
+		else:
+			shutil.copy(file_path, remote_path)
+		return True
+	except IOError as e:
+		return False
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA LIBRERIA ================
@@ -622,31 +726,31 @@ def enable_serial_port_windows(port_name):
 
 
 def is_serial_port_in_use(serial_port_name):
-    """
-    Controlla se la porta seriale è in uso provando ad aprirla in scrittura.
-    """
-    try:
-        port_handle = open(serial_port_name, 'w')
-        port_handle.close()
-        message = f"Port {serial_port_name} is not in use"
-        return False, message
-    except PermissionError:
-        message = f"Port {serial_port_name} is in use"
-        return True, message
-    except Exception as e:
-        message = f"Error checking port {serial_port_name}: {e}"
-        return False, message
+	"""
+	Controlla se la porta seriale è in uso provando ad aprirla in scrittura.
+	"""
+	try:
+		port_handle = open(serial_port_name, 'w')
+		port_handle.close()
+		message = f"Port {serial_port_name} is not in use"
+		return False, message
+	except PermissionError:
+		message = f"Port {serial_port_name} is in use"
+		return True, message
+	except Exception as e:
+		message = f"Error checking port {serial_port_name}: {e}"
+		return False, message
 
 def list_serial_port_linux():
 	try:
 		ports = serial.tools.list_ports.comports()
 		serial_ports = []
-        # Itera su ogni porta trovata
+		# Itera su ogni porta trovata
 		for port_info in sorted(ports):	
 			port_data = {
-                "port": port_info.device,
-                "using": is_serial_port_in_use(port_info.device)
-            }
+				"port": port_info.device,
+				"using": is_serial_port_in_use(port_info.device)
+			}
 			serial_ports.append(port_data)
 		return True, serial_ports
 	except Exception as e:
@@ -656,12 +760,12 @@ def list_serial_port_windows():
 	try:
 		ports = serial.tools.list_ports.comports()
 		serial_ports = []
-        # Itera su ogni porta trovata
+		# Itera su ogni porta trovata
 		for port_info in sorted(ports):
 			port_data = {
-                "port": port_info.device,
-                "using": is_serial_port_in_use(port_info.device)
-            }
+				"port": port_info.device,
+				"using": is_serial_port_in_use(port_info.device)
+			}
 			serial_ports.append(port_data)
 		return True, serial_ports
 	except Exception as e:
@@ -678,25 +782,25 @@ def exist_serial_port_linux(port_name):
 		return False, e
 
 def exist_serial_port_windows(port_name):
-    try:
-        # Percorso del registro che contiene le informazioni sulle porte COM
-        registry_path = r"HARDWARE\DEVICEMAP\SERIALCOMM"
-        
-        # Accede alla chiave del registro delle porte seriali
-        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, registry_path)
+	try:
+		# Percorso del registro che contiene le informazioni sulle porte COM
+		registry_path = r"HARDWARE\DEVICEMAP\SERIALCOMM"
+		
+		# Accede alla chiave del registro delle porte seriali
+		reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, registry_path)
 
-        # Ottieni il numero di voci presenti nella chiave del registro
-        num_entries = winreg.QueryInfoKey(reg_key)[1]
-        
-        # Controlla se la porta cercata è presente nel registro
-        for i in range(num_entries):
-            entry_name, entry_value, _ = winreg.EnumValue(reg_key, i)
-            if entry_value == port_name:  # Verifica se il valore corrisponde al nome della porta
-                return True, None  # La porta esiste
+		# Ottieni il numero di voci presenti nella chiave del registro
+		num_entries = winreg.QueryInfoKey(reg_key)[1]
+		
+		# Controlla se la porta cercata è presente nel registro
+		for i in range(num_entries):
+			entry_name, entry_value, _ = winreg.EnumValue(reg_key, i)
+			if entry_value == port_name:  # Verifica se il valore corrisponde al nome della porta
+				return True, None  # La porta esiste
 
-        # Se la porta non è trovata nel registro, restituisce False
-        return False, f"Port {port_name} does not exist."
-    
-    except Exception as e:
-        return False, f"Error checking serial port {port_name}: {str(e)}"
+		# Se la porta non è trovata nel registro, restituisce False
+		return False, f"Port {port_name} does not exist."
+	
+	except Exception as e:
+		return False, f"Error checking serial port {port_name}: {str(e)}"
 # ==============================================================

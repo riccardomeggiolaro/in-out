@@ -28,7 +28,7 @@ def init():
 	lb_log.info("init")
 	module_sync_folder = ModuleSyncFolder()
 	thread = createThread(module_sync_folder.start)
-	startThread(thread)
+	startThread(thread=thread)
 	lb_log.info("end")
 
 def start():
@@ -46,9 +46,12 @@ class FileHandler(FileSystemEventHandler):
 class ModuleSyncFolder:
 	def __init__(self):
 		self.observer = None
-		self.config = None
-		self.local_dir = None
-		self.mount_point = None
+		self.config = SyncFolderDTO(**lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]) if lb_config.g_config["app_api"]["sync_folder"]["remote_folder"] else None
+		self.local_dir = lb_config.g_config["app_api"]["sync_folder"]["local_dir"]
+		self.mount_point = lb_config.g_config["app_api"]["sync_folder"]["mount_point"]
+		lb_log.warning(self.config)
+		lb_log.warning(self.local_dir)
+		lb_log.warning(self.mount_point)
 		
 	def create_remote_connection(self, config: SyncFolderDTO, local_dir: str, mount_point: str):
 		if self.mount_point and self.mount_point != mount_point:
@@ -58,6 +61,7 @@ class ModuleSyncFolder:
 		self.local_dir = local_dir
 		self.mount_point = mount_point
 		files = lb_system.scan_local_dir(local_dir)
+		lb_log.error(f"Pending files length: {len(files)}")
 		for file in files:
 			pending_files.append(file)
 		self.create_observer(local_dir)
@@ -75,7 +79,7 @@ class ModuleSyncFolder:
 			self.observer = None
 
 	def test_connection(self):
-		return lb_system.is_mounted(self.mount_point)
+		return lb_system.get_remote_connection_status(self.mount_point)
 
 	def create_observer(self, local_dir):
 		if self.observer and self.observer.is_alive():
@@ -86,7 +90,7 @@ class ModuleSyncFolder:
 		self.observer.start()
   
 	def start(self):
-		lb_log.error("Starting sync folder module")
+		lb_log.info("Starting sync folder module")
 		
 		# Lista delle estensioni da escludere (aggiungi quelle che ti servono)
 		excluded_extensions = ['.db', '.db-journal']  # Modifica secondo necessità
@@ -116,9 +120,12 @@ class ModuleSyncFolder:
 					except Exception as e:
 						lb_log.error(f"Failed to remove {file_path}: {e}")
 				else:
-					if self.config:
+					if self.config and not lb_system.is_mounted(self.mount_point):
 						self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
 					lb_log.warning(f"Retrying {file_path} after delay")
 					time.sleep(1)  # Retry after delay
 			else:
+				if self.config and not lb_system.is_mounted(self.mount_point):
+					self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
+				time.sleep(1)  # Retry after delay
 				time.sleep(1)  # Idle wait
