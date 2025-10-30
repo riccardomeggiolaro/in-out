@@ -35,6 +35,7 @@
             "local_dir": "/var/lib/in-out",
             "mount_point": "/mnt/sync-folder",
             "remote_folder": {
+                "domain": "BARON",
                 "ip": "10.0.5.105",
                 "password": "uPZa6eY2Ik",
                 "share_name": "gh5",

@@ -475,12 +475,15 @@ def scan_local_dir(local_dir):
 	return pending_files
 
 # Function to mount the remote share
-def mount_remote(ip, share_name, username, password, local_dir, mount_point):
+def mount_remote(ip, domain, share_name, username, password, local_dir, mount_point):
 	umount_remote(mount_point)
 	if is_linux():
+		params = f'username={username},password={password}'
+		if domain:
+			params = params + f",domain={domain}"
 		cmd = [
 			'mount', '-t', 'cifs', f'//{ip}/{share_name}', mount_point,
-			'-o', f'username={username},password={password}'
+			'-o', params
 		]
 		try:
 			os.chmod(local_dir, 0o777)  # Ensure directory is writable (adjust as needed)

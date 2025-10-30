@@ -11,8 +11,6 @@ import libs.lb_config as lb_config
 import time
 import os
 import time
-import shutil
-import subprocess
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import libs.lb_system as lb_system
@@ -49,19 +47,19 @@ class ModuleSyncFolder:
 		self.config = SyncFolderDTO(**lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]) if lb_config.g_config["app_api"]["sync_folder"]["remote_folder"] else None
 		self.local_dir = lb_config.g_config["app_api"]["sync_folder"]["local_dir"]
 		self.mount_point = lb_config.g_config["app_api"]["sync_folder"]["mount_point"]
-		lb_log.warning(self.config)
-		lb_log.warning(self.local_dir)
-		lb_log.warning(self.mount_point)
+		# lb_log.warning(self.config)
+		# lb_log.warning(self.local_dir)
+		# lb_log.warning(self.mount_point)
 		
 	def create_remote_connection(self, config: SyncFolderDTO, local_dir: str, mount_point: str):
 		if self.mount_point and self.mount_point != mount_point:
 			lb_system.umount_remote(self.mount_point)
-		mounted = lb_system.mount_remote(config.ip, config.share_name, config.username, config.password, local_dir, mount_point)
+		mounted = lb_system.mount_remote(config.ip, config.domain, config.share_name, config.username, config.password, local_dir, mount_point)
 		self.config = config
 		self.local_dir = local_dir
 		self.mount_point = mount_point
 		files = lb_system.scan_local_dir(local_dir)
-		lb_log.error(f"Pending files length: {len(files)}")
+		# lb_log.error(f"Pending files length: {len(files)}")
 		for file in files:
 			pending_files.append(file)
 		self.create_observer(local_dir)
@@ -90,7 +88,7 @@ class ModuleSyncFolder:
 		self.observer.start()
   
 	def start(self):
-		lb_log.info("Starting sync folder module")
+		# lb_log.info("Starting sync folder module")
 		
 		# Lista delle estensioni da escludere (aggiungi quelle che ti servono)
 		excluded_extensions = ['.db', '.db-journal']  # Modifica secondo necessità
@@ -104,7 +102,7 @@ class ModuleSyncFolder:
 				
 				# Controlla se l'estensione è nella lista delle escluse
 				if file_extension in excluded_extensions:
-					lb_log.info(f"Skipping file {file_path} with excluded extension {file_extension}")
+					# lb_log.info(f"Skipping file {file_path} with excluded extension {file_extension}")
 					pending_files.popleft()
 					continue
 				
@@ -113,19 +111,20 @@ class ModuleSyncFolder:
 						# Only remove files, not directories
 						if not os.path.isdir(file_path):
 							os.remove(file_path)
-							lb_log.info(f"Removed file {file_path} from local directory")
+							# lb_log.info(f"Removed file {file_path} from local directory")
 						else:
-							lb_log.info(f"Keeping directory {file_path} in local directory")
+							# lb_log.info(f"Keeping directory {file_path} in local directory")
+							pass
 						pending_files.popleft()
 					except Exception as e:
-						lb_log.error(f"Failed to remove {file_path}: {e}")
+						# lb_log.error(f"Failed to remove {file_path}: {e}")
+						pass
 				else:
 					if self.config and not lb_system.is_mounted(self.mount_point):
 						self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
-					lb_log.warning(f"Retrying {file_path} after delay")
+					# lb_log.warning(f"Retrying {file_path} after delay")
 					time.sleep(1)  # Retry after delay
 			else:
 				if self.config and not lb_system.is_mounted(self.mount_point):
 					self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
 				time.sleep(1)  # Retry after delay
-				time.sleep(1)  # Idle wait

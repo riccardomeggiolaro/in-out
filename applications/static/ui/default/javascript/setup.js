@@ -423,13 +423,19 @@ async function loadSetupWeighers() {
             })
         }
         const labelIp = document.createElement('label');
-        labelIp.textContent = "IP: "
+        labelIp.textContent = "IP: * "
         const ip = document.createElement('input');
         let originalIp = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.ip : '';
         ip.value = originalIp;
         ip.oninput = () => isValidForm();
+        const labelDomain = document.createElement('label');
+        labelDomain.textContent = "Dominio: "
+        const domain = document.createElement('input');
+        let originalDomain = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.domain : '';
+        domain.value = originalDomain;
+        domain.oninput = () => isValidForm();
         const labelShareName = document.createElement('label');
-        labelShareName.textContent = "Cartella condivisa: "
+        labelShareName.textContent = "Cartella condivisa: * "
         const shareName = document.createElement('input');
         let originalShareName = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.share_name : '';
         shareName.value = originalShareName;
@@ -441,13 +447,13 @@ async function loadSetupWeighers() {
         subPath.value = originalSubPath;
         subPath.oninput = () => isValidForm();
         const labelUsername = document.createElement('label');
-        labelUsername.textContent = "Username: "
+        labelUsername.textContent = "Username: * "
         const username = document.createElement('input');
         let originalUsername = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.username : '';
         username.value = originalUsername;
         username.oninput = () => isValidForm();
         const labelPassword = document.createElement('label');
-        labelPassword.textContent = "Password: "
+        labelPassword.textContent = "Password: * "
         const password = document.createElement('input');
         let originalPassword = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.password : '';
         password.value = originalPassword;
@@ -487,6 +493,8 @@ async function loadSetupWeighers() {
                     originalIp = "";
                     ip.value = "";
                     originalShareName = "";
+                    domain.value = "";
+                    originalDomain = "";
                     shareName.value = "";
                     originalSubPath = "";
                     subPath.value = "";
@@ -512,6 +520,7 @@ async function loadSetupWeighers() {
                 },
                 body: JSON.stringify({
                     "ip": ip.value,
+                    "domain": domain.value,
                     "share_name": shareName.value,
                     "sub_path": subPath.value,
                     "username": username.value,
@@ -524,6 +533,7 @@ async function loadSetupWeighers() {
                 const color = res.remote_folder ? 'white' : 'rgb(255, 208, 208)';
                 if (res.remote_folder) {
                     originalIp = res.remote_folder.ip;
+                    originalDomain = res.remote_folder.domain;
                     originalShareName = res.remote_folder.share_name;
                     originalSubPath = res.remote_folder.sub_path;
                     originalUsername = res.remote_folder.username;
@@ -539,11 +549,11 @@ async function loadSetupWeighers() {
             if (
                 ip.value.length > 0 &&
                 shareName.value.length > 0 &&
-                subPath.value.length > 0 &&
                 username.value.length > 0 &&
                 password.value.length > 0 &&
                 (
                     ip.value !== originalIp ||
+                    domain.value !== originalDomain ||
                     shareName.value !== originalShareName || 
                     subPath.value !== originalSubPath ||
                     username.value !== originalUsername ||
@@ -643,6 +653,10 @@ async function loadSetupWeighers() {
         divSyncRemoteFolder.appendChild(br.cloneNode(true));
         divSyncRemoteFolder.appendChild(labelIp);
         divSyncRemoteFolder.appendChild(ip);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelDomain);
+        divSyncRemoteFolder.appendChild(domain);
         divSyncRemoteFolder.appendChild(br.cloneNode(true));
         divSyncRemoteFolder.appendChild(br.cloneNode(true));
         divSyncRemoteFolder.appendChild(labelShareName);

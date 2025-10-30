@@ -4,6 +4,7 @@ from pydantic import validator
 
 class SyncFolderDTO(BaseModel):
     ip: str
+    domain: Optional[str] = ""
     share_name: str
     sub_path: Optional[str] = ""
     username: str
