@@ -236,6 +236,8 @@ class EgtAf03(Terminal):
 						self.pesa_real_time.unite_measure = ""
 						self.diagnostic.vl = ""
 						self.diagnostic.rz = ""
+					if self.pesa_real_time.status == "ER":
+						self.pesa_real_time.status = "ST"
 					callCallback(self.callback_realtime) # chiamo callback
 				######### Se in esecuzione la diagnostica ###########################################################################
 				elif self.modope == "DIAGNOSTIC":

@@ -136,10 +136,15 @@
                             "weighing": {
                                 "cams": [],
                                 "report": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
-                                "set_rele": []
+                                "set_rele": [
+                                    {
+                                        "rele": "1",
+                                        "set": 1
+                                    }
+                                ]
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -151,8 +156,10 @@
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
-                        "printer_name": "TSC_MB241",
-                        "rele": {},
+                        "printer_name": null,
+                        "rele": {
+                            "1": 1
+                        },
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,

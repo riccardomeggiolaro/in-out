@@ -1,7 +1,7 @@
 from fastapi import Request, HTTPException
 from typing import Dict, Union
 from libs.multi_language_messages import multi_language_data
-from pathlib import Path
+import pandas as pd
 
 base_path_applications = None
 
@@ -29,3 +29,11 @@ def just_locked_message(action_to_do, table_name, username, weigher_name):
     if weigher_name:
         message += f" è in uso sulla pesa '{weigher_name}'"
     return message
+
+def convert_value(x, expected_type):
+    if pd.isna(x):
+        return x
+    # Se il tipo atteso è stringa e il valore è numerico, convertilo in stringa
+    if expected_type is str and isinstance(x, (int, float)):
+        return str(x)
+    return x

@@ -13,7 +13,7 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 import pandas as pd
 import numpy as np
-from applications.utils.utils import get_query_params
+from applications.utils.utils import get_query_params, convert_value
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.middleware.writable_user import is_writable_user
 
@@ -140,7 +140,9 @@ class VectorRouter(WebSocket):
                 if column not in df.columns:
                     df[column] = None  # Colonna assente nel file, aggiunta con valori null
                 else:
-                    # Verifica il tipo di dati della colonna esistente e consenti celle vuote
+                    df[column] = df[column].map(lambda x: convert_value(x, expected_type))
+
+                    # Dopo la conversione, verifica che tutti i valori siano del tipo atteso o NaN
                     if not df[column].map(lambda x: pd.isna(x) or isinstance(x, expected_type)).all():
                         raise HTTPException(status_code=400, detail=f"Column '{column}' must be of type {expected_type} if present")
 
