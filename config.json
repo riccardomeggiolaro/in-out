@@ -48,7 +48,7 @@
             "driver": true,
             "material": true,
             "note": true,
-            "operator": true,
+            "operator": false,
             "subject": true,
             "vector": true,
             "vehicle": true,

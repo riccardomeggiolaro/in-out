@@ -41,6 +41,7 @@ from libs.lb_printer import printer
 from applications.utils.utils_report import get_data_variables, generate_html_report, save_file_dir
 from applications.middleware.writable_user import is_writable_user
 import applications.utils.utils as utils
+from reportlab.lib.pagesizes import landscape
 
 class AccessRouter(WebSocket, PanelSirenRouter):
     def __init__(self):
@@ -480,10 +481,10 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 load_pid_weight2=load_pid_weight2
             )
 
-            # Create PDF with smaller margins
+            # Create PDF with landscape orientation and smaller margins
             buffer = BytesIO()
             doc = SimpleDocTemplate(buffer, 
-                                pagesize=A4, 
+                                pagesize=landscape(A4),  # Orientamento orizzontale
                                 leftMargin=15,
                                 rightMargin=15,
                                 topMargin=15,
@@ -555,6 +556,14 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             
             headers.extend(extends)
             col_widths.extend([38, 38, 38])
+
+            # Scala automaticamente le colonne per adattarle alla pagina
+            available_width = landscape(A4)[0] - doc.leftMargin - doc.rightMargin
+            total_width = sum(col_widths)
+            
+            if total_width > available_width:
+                scale_factor = available_width / total_width
+                col_widths = [w * scale_factor for w in col_widths]
 
             # Create table style with compact formatting
             table_style = TableStyle([
