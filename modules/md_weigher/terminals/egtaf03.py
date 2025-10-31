@@ -3,6 +3,7 @@ from libs.lb_utils import callCallback
 import re
 from modules.md_weigher.setup_terminal import Terminal
 from libs.lb_utils import sum_number
+from modules.md_weigher.globals import skip_response_messages
 
 class EgtAf03(Terminal):
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, continuous_transmission, node, terminal, run):
@@ -136,8 +137,8 @@ class EgtAf03(Terminal):
 				split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
 				length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
 				length_response = len(response) # ottengo la lunghezza della stringa della risposta
-				# if response.startswith("ERR"):
-				# 	pass
+				# if response in skip_response_messages:
+				# 	self.diagnostic.status = 200
 				if length_split_response == 5 and (length_response == 48 or length_response == 38):
 					gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
 					t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
@@ -195,8 +196,9 @@ class EgtAf03(Terminal):
 					self.diagnostic.status = 200
 				######### Se in esecuzione peso in tempo reale ######################################################################
 				elif self.modope == "REALTIME" or self.continuous_transmission:
-					# Controlla formato stringa del peso in tempo reale, se corretta aggiorna oggetto e chiama callback
-					if length_split_response == 7 and length_response == 53:
+					if response in skip_response_messages:
+						pass
+					elif length_split_response == 7 and length_response == 53:
 						nw = split_response[2].lstrip()
 						tare_without_pt = re.sub('[PT]', '', split_response[3]).lstrip()
 						gw = str(sum_number(nw, tare_without_pt))
@@ -241,8 +243,9 @@ class EgtAf03(Terminal):
 					callCallback(self.callback_realtime) # chiamo callback
 				######### Se in esecuzione la diagnostica ###########################################################################
 				elif self.modope == "DIAGNOSTIC":
-					# Controlla formato stringa della diagnostica, se corretta aggiorna oggetto e chiama callback
-					if length_split_response == 4 and length_response == 19:
+					if response in skip_response_messages:
+						pass
+					elif length_split_response == 4 and length_response == 19:
 						self.pesa_real_time.status = "diagnostic in progress"
 						if split_response[1] == "VL":
 							self.diagnostic.vl = str(split_response[2]).lstrip() + " " + str(split_response[3])
@@ -261,8 +264,9 @@ class EgtAf03(Terminal):
 					self.pesa_real_time.unite_measure = ""
 				######### Se in esecuzione pesata pid ###############################################################################
 				elif self.modope == "WEIGHING":
-					# Controlla formato stringa pesata pid, se corretta aggiorna oggetto
-					if length_split_response == 5 and (length_response == 48 or length_response == 38):
+					if response in skip_response_messages:
+						pass
+					elif length_split_response == 5 and (length_response == 48 or length_response == 38):
 						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
 						t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
 						nw = str(int(gw) - int(t))
@@ -310,16 +314,18 @@ class EgtAf03(Terminal):
 					self.diagnostic.status = 200
 				######### Se non è arrivata nessuna risposta ################################
 				elif self.modope == "OK":
-					# Controlla formato stringa, se corretto aggiorna ok_value
-					if length_response == 2 and response == "OK":
+					if response in skip_response_messages:
+						pass
+					elif length_response == 2 and response == "OK":
 						self.ok_value = response
 						self.diagnostic.status = 200
 					# Se formato stringa non valido setto ok_value a None
 					else:
 						self.diagnostic.status = 201
 				elif self.modope in ["OPENRELE", "CLOSERELE"]:
-					# Controlla formato stringa, se corretto aggiorna ok_value
-					if length_response == 2 and response == "OK":
+					if response in skip_response_messages:
+						pass
+					elif length_response == 2 and response == "OK":
 						self.diagnostic.status = 200
 						if self.modope == "OPENRELE":
 							key, value = self.port_rele
