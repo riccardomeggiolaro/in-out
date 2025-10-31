@@ -349,7 +349,10 @@ function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
     .then(res => res.json())
     .then(res => {
         if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-        else closePopup();
+        else {
+            closePopup();
+            populateListIn();
+        }
     });
 }
 
@@ -431,7 +434,10 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                 .then(res => res.json())
                 .then(res => {
                     if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-                    else closePopup();
+                    else {
+                        closePopup();
+                        populateListIn();
+                    }
                 });
             };
 
