@@ -916,6 +916,10 @@
             modal.style.opacity = '0';
             setTimeout(() => {
                 modal.style.display = 'none';
+                
+                // Riabilita tutti gli elementi del form prima del reset
+                document.querySelector('#edit-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+                
                 document.querySelector('#edit-instance-form').reset();
                 document.querySelectorAll('#edit-instance-modal .connection-fields').forEach(field => field.classList.remove('active'));
                 document.querySelectorAll('#edit-instance-modal .error-message').forEach(msg => msg.classList.remove('active'));
@@ -1027,7 +1031,6 @@
             const timeBetweenActions = parseFloat(document.querySelector('#edit-time-between-actions').value);
             
             let connection = {
-                instance_name: instanceId,
                 time_between_actions: timeBetweenActions
             };
 
@@ -1045,7 +1048,7 @@
             document.querySelector('#update-instance-btn').disabled = true;
             document.querySelector('#edit-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = true);
 
-            fetch('/api/config-weigher/instance/connection', {
+            fetch(`/api/config-weigher/instance/connection/${instanceId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'

@@ -42,7 +42,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/instance/node', self.DeleteInstanceWeigher, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/instance/node/endpoint', self.GetInstanceWeigherEndpoint, methods=['GET'])
 		self.router_config_weigher.add_api_route('/instance/connection', self.AddInstanceConnection, methods=['POST'])
-		self.router_config_weigher.add_api_route('/instance/connection', self.SetInstanceConnection, methods=['PATCH'])
+		self.router_config_weigher.add_api_route('/instance/connection/{instance_name}', self.SetInstanceConnection, methods=['PATCH'])
 		self.router_config_weigher.add_api_route('/instance/connection/{instance_name}', self.DeleteInstanceConnection, methods=['DELETE'])
 		self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 
@@ -144,6 +144,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		response = md_weigher.module_weigher.setInstanceConnection(instance_name=instance_name, conn=conn)
 		connection_to_save = response.copy()
 		del connection_to_save["connected"]
+		del connection_to_save["connecting"]
 		instance_to_save[instance_name]["connection"] = connection_to_save
 		lb_config.g_config["app_api"]["weighers"][instance_name] = instance_to_save[instance_name]
 		lb_config.saveconfig()
@@ -166,10 +167,15 @@ class ConfigWeigher(CommandWeigherRouter):
 				"port": connection.port,
 				"timeout": connection.timeout
 			})
-		response = md_weigher.module_weigher.setInstanceConnection(instance_name=instance_name, conn=conn)
-		connection_to_save = response.copy()
-		del connection_to_save["connected"]
-		lb_config.g_config["app_api"]["weighers"][instance_name] = connection_to_save
+		if conn.dict() != lb_config.g_config["app_api"]["weighers"][instance_name]["connection"]:
+			response = md_weigher.module_weigher.setInstanceConnection(instance_name=instance_name, conn=conn)
+			connection_to_save = response.copy()
+			del connection_to_save["connected"]
+			del connection_to_save["connecting"]
+			lb_config.g_config["app_api"]["weighers"][instance_name]["connection"] = connection_to_save
+		if connection.time_between_actions != lb_config.g_config["app_api"]["weighers"][instance_name]["time_between_actions"]:
+			new_time_set = md_weigher.module_weigher.setInstanceTimeBetweenActions(instance_name=instance_name, time_between_actions=connection.time_between_actions)
+			lb_config.g_config["app_api"]["weighers"][instance_name]["time_between_actions"] = new_time_set
 		lb_config.saveconfig()
 		return response
 
