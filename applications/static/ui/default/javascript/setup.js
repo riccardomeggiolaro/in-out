@@ -1316,6 +1316,16 @@ async function loadSetupWeighers() {
                             <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="1" required>
                         </div>
                     </div>
+                    <div style="display: flex; gap: 16px; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Genera CSV all'entrata</label><br>
+                            <input type="checkbox" name="csv_on_in">
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Genera CSV all'uscita</label><br>
+                            <input type="checkbox" name="csv_on_out">
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label><input type="checkbox" name="run" checked> In esecuzione</label>
                     </div>
@@ -1459,7 +1469,8 @@ async function loadSetupWeighers() {
                         <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
                         <p class="gray"><em>Peso massimo: ${data.max_weight}</em> <strong>-</strong> <em>Peso minimo: ${data.min_weight}</em> <strong>-</strong> <em>Divisione: ${data.division}</em><br></p>
                         <p class="gray"><em>Soglia massima: ${data.max_theshold ? data.max_theshold : 'Nessuna'}</em></p>
-                        <p class="gray"><em>Genera report all'entrata: ${data.events.weighing.report.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Genera report all'entrata: ${data.events.weighing.report.out ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Genera report all'entrata: ${data.events.weighing.report.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Genera report all'uscita: ${data.events.weighing.report.out ? 'Si' : 'No'}</em></p>
+                        <p class="gray"><em>Genera CSV all'entrata: ${data.events.weighing.csv.in ? 'Si' : 'No'}</em> <strong>-</strong> <em>Genera CSV all'uscita: ${data.events.weighing.csv.out ? 'Si' : 'No'}</em></p>
                         <p class="gray"><em>Stampa su: ${data.printer_name ? data.printer_name : 'Nessuna'}</em></p>
                         <p class="gray"><em>Numero di stampe: ${data.number_of_prints}</em></p>
                         <p class="gray"><em>In esecuzione: ${data.run ? 'Si' : 'No'}</em></p>
@@ -1578,6 +1589,16 @@ async function loadSetupWeighers() {
                             <div class="form-group" style="flex: 1;">
                                 <label for="number_of_prints">Numero di stampe:</label><br>
                                 <input type="number" name="number_of_prints" id="number_of_prints" min="1" max="5" value="${data.number_of_prints || 1}" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 16px; align-items: flex-end;">
+                            <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Genera CSV all'entrata</label><br>
+                                <input type="checkbox" name="csv_on_in" ${data.events?.weighing?.csv?.in ? 'checked' : ''}>
+                            </div>
+                            <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Genera CSV all'uscita</label><br>
+                                <input type="checkbox" name="csv_on_out" ${data.events?.weighing?.csv?.out ? 'checked' : ''}>
                             </div>
                         </div>
                         <div class="form-group">
