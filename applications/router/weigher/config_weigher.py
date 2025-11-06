@@ -175,6 +175,10 @@ class ConfigWeigher(CommandWeigherRouter):
                     "in": setup.report_on_in if setup.report_on_in is not None else False,
                     "out": setup.report_on_out if setup.report_on_out is not None else False
                 },
+                "csv": {
+                    "in": setup.csv_on_in if setup.csv_on_in is not None else False,
+                    "out": setup.csv_on_out if setup.csv_on_in is not None else False
+                },
                 "set_rele": [rele.dict() for rele in setup.weighing],
                 "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
             }
@@ -241,6 +245,10 @@ class ConfigWeigher(CommandWeigherRouter):
                 "report": {
                     "in": setup.report_on_in if setup.report_on_in is not None else False,
                     "out": setup.report_on_out if setup.report_on_out is not None else False
+                },
+                "csv": {
+                    "in": setup.csv_on_in if setup.csv_on_in is not None else False,
+                    "out": setup.csv_on_out if setup.csv_on_in is not None else False
                 },
                 "set_rele": [rele.dict() for rele in setup.weighing],
                 "cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]

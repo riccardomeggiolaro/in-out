@@ -174,25 +174,29 @@ class CallbackWeigher(Functions, WebSocket):
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
 			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
 			reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]  / "report"
-			print_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
-			print_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
-			print = print_out if tare > 0 or last_in_out.idWeight2 else print_in
+			report_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
+			report_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
+			generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
 			path_pdf = lb_config.g_config["app_api"]["path_pdf"]
 			name_file, variables, report = get_data_variables(last_in_out)
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
-			if report:
+			if generate_report and report:
 				html = generate_html_report(reports_dir, report, v=variables.dict())
 				pdf = printer.generate_pdf_from_html(html_content=html)
-				if print:
+				if pdf:
 					job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
-				# SALVA COPIA PDF
-				if path_pdf and pdf:
-					save_file_dir(path_pdf, name_file, pdf)
+					# SALVA COPIA PDF
+					if path_pdf:
+						save_file_dir(path_pdf, name_file, pdf)
+			csv_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["in"]
+			csv_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["out"]
+			generate_csv = csv_out if tare > 0 or last_in_out.idWeight2 else csv_in
 			path_csv = lb_config.g_config["app_api"]["path_csv"]
-			if path_csv:
+			if generate_csv and path_csv:
 				# SALVA I DATI DELLA PESATA IN UN FILE CSV
-				csv_data_line = generate_csv_report(variables)
-				save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv_data_line)
+				csv = generate_csv_report(variables)
+				if csv:
+					save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv)
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
 				i = 1

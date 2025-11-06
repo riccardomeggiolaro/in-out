@@ -125,3 +125,15 @@ class CamEventDTO(EVentDTO):
 
 class ReleEventDTO(EVentDTO):
 	rele: ReleDTO
+ 
+class SerialPortDTO(BaseModel):
+	baudrate: int = 19200
+	serial_port_name: str
+	timeout: float = 1
+	time_between_actions: float = 0.3
+
+class TcpDTO(BaseModel):
+	ip: str
+	port: int
+	timeout: float
+	time_between_actions: float = 0.3

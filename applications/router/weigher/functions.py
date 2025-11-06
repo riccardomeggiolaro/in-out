@@ -20,6 +20,7 @@ class Functions:
 		import libs.lb_log as lb_log
 
 		for instance_name, instance in md_weigher.module_weigher.instances.items():
+			self.switch_to_call_instance_weigher[instance_name] = {}
 			nodes_sockets = {}
 			for weigher_name, weigher in instance.nodes.items():
 				lb_log.warning(weigher_name)				

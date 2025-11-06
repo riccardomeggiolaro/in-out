@@ -382,7 +382,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             itemName = 'access';
-            nextElementSibling = false;
+            nextElementSibling = true;
             lastChar = 'a';
             canAlwaysDelete = true;
             listUrlPath = '/api/anagrafic/access/in-out/list';
@@ -392,6 +392,7 @@
             deleteUrlPath = '/api/anagrafic/access/last-weighing';
             websocketUrlPath = '/api/anagrafic/access';
             callback_close_popups = deselectAllAnagrafic;
+            populate_detail_tr = populateDetailTr;
             customQueryParams = 'excludeTestWeighing=true&';
             params = {
                 "accesso con targa": "vehicle.plate",
@@ -490,6 +491,32 @@
             imgElement.src = imageUrl;
             imgElement.alt = fileName;
             openPopup('img-popup');
+        }
+
+        function populateDetailTr(item) {
+            let content = ``;
+
+            // Add images to the .imgs div
+            if (item.weight1 && item.weight1.weighing_pictures.length > 0 || item.weight2 && item.weight2.weighing_pictures.length > 0) {
+                content += `
+                    <div class="imgs">
+                        <ul>
+                            <li>
+                `;
+                item.weight1.weighing_pictures.forEach(picture => {
+                    content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                });
+                item.weight2.weighing_pictures.forEach(picture => {
+                    content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                });
+                content += `
+                            </li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            return content;
         }
 
         function populateSuggestions(popup, suggestions, key, anagrafic, value) {

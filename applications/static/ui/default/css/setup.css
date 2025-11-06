@@ -103,7 +103,6 @@ input {
     border: 1px solid #ccc;
     font-size: 16px;
     width: 100%;
-    max-width: 300px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
     transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
 }
