@@ -8,6 +8,17 @@
     <link rel="stylesheet" href="/static/css/snackbar.css">
     <link rel="stylesheet" href="/static/css/setup.css"></link>
     <style>
+        #config > * {
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #config > h3,
+        #config > #sub-menu {
+            max-width: 1000px;
+        }
+
         .form-group { margin-bottom: 12px; }
         .form-group label { font-weight: 500; }
         .instance-container { display: none; }
@@ -133,8 +144,17 @@
         /* Stile modal */
         #new-instance-modal .modal-content,
         #edit-instance-modal .modal-content,
-        #confirm-delete-modal .modal-content {
+        #confirm-delete-modal .modal-content,
+        .add-node-modal .modal-content,
+        .edit-node-modal .modal-content,
+        .confirm-delete-node-modal .modal-content {
             min-width: 400px;
+        }
+
+        .add-node-modal .modal-content,
+        .edit-node-modal .modal-content {
+            min-width: 800px;
+            max-width: 90%;
         }
 
         #new-instance-modal select,
@@ -170,6 +190,59 @@
         .edit-instance-btn {
             margin-top: 10px;
             margin-right: 10px;
+        }
+
+        .cam, .rele {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .cam button, .rele button {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+
+        .node-content-detail {
+            padding: 10px;
+        }
+
+        .node-content-detail p {
+            margin: 5px 0;
+        }
+
+        .node-actions {
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .node-actions button {
+            padding: 8px 15px;
+        }
+
+        .cams-reles-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .cams-reles-section h5 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .cam-item, .rele-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-left: 3px solid #1967d2;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -430,7 +503,7 @@
         </div>
     </div>
 
-    <!-- Modal per conferma eliminazione -->
+    <!-- Modal per conferma eliminazione istanza -->
     <div id="confirm-delete-modal" class="modal">
         <div class="modal-content">
             <h3>Conferma Eliminazione</h3>
@@ -474,8 +547,67 @@
 
         let weighersData = {};
         let instanceToDelete = null;
+        let nodeToDelete = { instanceId: null, nodeId: null };
+        let printersList = [];
 
-        document.addEventListener("DOMContentLoaded", (e) => {
+        // Funzioni per aggiungere telecamere e relè
+        function addCam(instanceId, nodeId, picture = '', active = true) {
+            const container = document.querySelector(`#edit-node-form-${instanceId}-${nodeId} .cams-container`) ||
+                                document.querySelector(`#add-node-form-${instanceId} .cams-container`);
+            if (!container) return;
+
+            const camDiv = document.createElement('div');
+            camDiv.className = 'cam';
+            camDiv.innerHTML = `
+                <button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️</button>
+                <label>URL:</label>
+                <input type="url" class="cam-url" value="${picture}" placeholder="http://0.0.0.0/" style="width: 70%;">
+                <label><input type="checkbox" class="cam-active" ${active ? 'checked' : ''}> Attiva</label>
+            `;
+            container.appendChild(camDiv);
+        }
+
+        function addRele(instanceId, nodeId, number = '', status = 1, event = 'weighing') {
+            const container = document.querySelector(`#edit-node-form-${instanceId}-${nodeId} .reles-container`) ||
+                                document.querySelector(`#add-node-form-${instanceId} .reles-container`);
+
+            console.log(container)
+
+            if (!container) return;
+
+            const releDiv = document.createElement('div');
+            releDiv.className = 'rele';
+            releDiv.innerHTML = `
+                <button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️</button>
+                <label>Numero:</label>
+                <input type="number" class="rele-number" value="${number}" min="1" style="width: 80px;">
+                <select class="rele-status" style="width: 100px;">
+                    <option value="1" ${status === 1 ? 'selected' : ''}>Attiva</option>
+                    <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
+                </select>
+                <select class="rele-event" style="width: 180px;">
+                    <option value="weighing" ${event === 'weighing' ? 'selected' : ''}>Dopo la pesata</option>
+                    <option value="over_min" ${event === 'over_min' ? 'selected' : ''}>Sopra peso minimo</option>
+                    <option value="under_min" ${event === 'under_min' ? 'selected' : ''}>Sotto peso minimo</option>
+                </select>
+            `;
+            container.appendChild(releDiv);
+        }
+
+        // Carica lista stampanti
+        async function loadPrinters() {
+            try {
+                const response = await fetch('/api/printer/list');
+                printersList = await response.json();
+            } catch (error) {
+                console.error('Errore nel caricamento stampanti:', error);
+                printersList = [];
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async (e) => {
+            await loadPrinters();
+
             fetch('/api/config-weigher/configuration', {
                 headers: {
                     'Content-Type': 'application/json'
@@ -643,16 +775,47 @@
                 // Sotto-menu per i nodi
                 const nodeSubMenu = document.createElement('div');
                 nodeSubMenu.className = 'node-sub-menu';
+                nodeSubMenu.id = `node-sub-menu-${instanceId}`;
                 
                 const nodes = instance.nodes;
-                Object.keys(nodes).forEach((nodeId, nodeIndex) => {
-                    const nodeButton = document.createElement('button');
-                    nodeButton.className = 'menu-tab';
-                    if (nodeIndex === 0) nodeButton.classList.add('selected');
-                    nodeButton.textContent = `PESA ${nodeId}`;
-                    nodeButton.onclick = (e) => changeNodeTab(e, instanceId, nodeId);
-                    nodeSubMenu.appendChild(nodeButton);
-                });
+                
+                if (Object.keys(nodes).length === 0) {
+                    nodeSubMenu.innerHTML = '<p style="padding: 10px; color: #666;">Nessuna pesa configurata</p>';
+                } else {
+                    Object.keys(nodes).forEach((nodeId, nodeIndex) => {
+                        const nodeButton = document.createElement('button');
+                        nodeButton.className = 'menu-tab';
+                        if (nodeIndex === 0) nodeButton.classList.add('selected');
+                        
+                        const nodeText = document.createElement('span');
+                        nodeText.textContent = `PESA ${nodeId}`;
+                        nodeButton.appendChild(nodeText);
+
+                        // Bottone X per eliminare
+                        const nodeCloseBtn = document.createElement('span');
+                        nodeCloseBtn.className = 'tab-close';
+                        nodeCloseBtn.innerHTML = '×';
+                        nodeCloseBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            openConfirmDeleteNodeModal(instanceId, nodeId);
+                        };
+                        nodeButton.appendChild(nodeCloseBtn);
+
+                        nodeButton.onclick = (e) => {
+                            if (!e.target.classList.contains('tab-close')) {
+                                changeNodeTab(e, instanceId, nodeId);
+                            }
+                        };
+                        nodeSubMenu.appendChild(nodeButton);
+                    });
+
+                    // Aggiungi il bottone "+"
+                    const addNodeButton = document.createElement('button');
+                    addNodeButton.className = 'menu-tab add-tab';
+                    addNodeButton.textContent = '+';
+                    addNodeButton.onclick = () => openAddNodeModal(instanceId);
+                    nodeSubMenu.appendChild(addNodeButton);
+                }
 
                 // Contenuto dei nodi
                 const nodesContainer = document.createElement('div');
@@ -666,29 +829,77 @@
                     nodeContent.id = `node-${instanceId}-${nodeId}`;
                     if (nodeIndex === 0) nodeContent.classList.add('active');
 
+                    // Prepara HTML per telecamere
+                    let camsHtml = '';
+                    if (node.events?.weighing?.cams && node.events.weighing.cams.length > 0) {
+                        camsHtml = '<div class="cams-reles-section"><h5>TELECAMERE</h5>';
+                        node.events.weighing.cams.forEach(cam => {
+                            camsHtml += `
+                                <div class="cam-item">
+                                    <p><b>URL:</b> ${cam.picture}</p>
+                                    <p><b>Stato:</b> ${cam.active ? 'Attiva' : 'Disattiva'}</p>
+                                </div>
+                            `;
+                        });
+                        camsHtml += '</div>';
+                    }
+
+                    // Prepara HTML per relè
+                    let relesHtml = '';
+                    const allReles = [];
+                    if (node.events?.weighing?.set_rele) {
+                        node.events.weighing.set_rele.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Dopo la pesata' });
+                        });
+                    }
+                    if (node.events?.realtime?.over_min?.set_rele) {
+                        node.events.realtime.over_min.set_rele.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Sopra peso minimo' });
+                        });
+                    }
+                    if (node.events?.realtime?.under_min?.set_rele) {
+                        node.events.realtime.under_min.set_rele.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Sotto peso minimo' });
+                        });
+                    }
+
+                    if (allReles.length > 0) {
+                        relesHtml = '<div class="cams-reles-section"><h5>RELÈ</h5>';
+                        allReles.forEach(rele => {
+                            relesHtml += `
+                                <div class="rele-item">
+                                    <p><b>Relè:</b> ${rele.rele} - <b>Azione:</b> ${rele.set === 1 ? 'Attiva' : 'Disattiva'} - <b>Evento:</b> ${rele.event}</p>
+                                </div>
+                            `;
+                        });
+                        relesHtml += '</div>';
+                    }
+
                     nodeContent.innerHTML = `
-                        <br>
                         <h3>PESA ${nodeId}</h3>
-                        <br>
-                        <div>
-                            <label><b>Terminale</b>: ${node.terminal || 'N/A'}</label>
-                            <br>
-                            <br>
-                            <label><b>Peso massimo</b>: ${node.max_weight} kg</label>
-                            <br>
-                            <br>
-                            <label><b>Peso minimo</b>: ${node.min_weight} kg</label>
-                            <br>
-                            <br>
-                            <label><b>Divisione</b>: ${node.division}</label>
-                            <br>
-                            <br>
-                            <label><b>Attivo</b>: ${node.run ? 'Sì' : 'No'}</label>
-                            <br>
-                            <br>
-                            <label><b>Nodo</b>: ${node.node || 'N/A'}</label>
+                        <div class="node-content-detail">
+                            <p><b>Terminale</b>: ${node.terminal || 'N/A'}</p>
+                            <p><b>Nodo</b>: ${node.node || 'N/A'}</p>
+                            <p><b>Peso massimo</b>: ${node.max_weight} kg</p>
+                            <p><b>Peso minimo</b>: ${node.min_weight} kg</p>
+                            <p><b>Divisione</b>: ${node.division}</p>
+                            <p><b>Soglia massima</b>: ${node.max_theshold || 'N/A'}</p>
+                            <p><b>Attivo</b>: ${node.run ? 'Sì' : 'No'}</p>
+                            <p><b>Stampante</b>: ${node.printer_name || 'Nessuna'}</p>
+                            <p><b>Numero di stampe</b>: ${node.number_of_prints}</p>
+                            <p><b>Report in entrata</b>: ${node.events?.weighing?.report?.in ? 'Sì' : 'No'}</p>
+                            <p><b>Report in uscita</b>: ${node.events?.weighing?.report?.out ? 'Sì' : 'No'}</p>
+                            <p><b>CSV in entrata</b>: ${node.events?.weighing?.csv?.in ? 'Sì' : 'No'}</p>
+                            <p><b>CSV in uscita</b>: ${node.events?.weighing?.csv?.out ? 'Sì' : 'No'}</p>
+                            <p><b>Scaricare pesa dopo pesata</b>: ${node.need_take_of_weight_before_weighing ? 'Sì' : 'No'}</p>
+                            <p><b>Scaricare pesa all'avvio</b>: ${node.need_take_of_weight_on_startup ? 'Sì' : 'No'}</p>
+                            <p><b>Trasmissione continua</b>: ${node.continuous_transmission ? 'Sì' : 'No'}</p>
+                            ${camsHtml}
+                            ${relesHtml}
                         </div>
-                        <br>
+                        <div class="node-actions">
+                            <button onclick="openEditNodeModal('${instanceId}', '${nodeId}')">Modifica</button>
+                        </div>
                     `;
                     nodesContainer.appendChild(nodeContent);
                 });
@@ -698,6 +909,10 @@
                 instanceDiv.appendChild(nodeSubMenu);
                 instanceDiv.appendChild(nodesContainer);
                 instancesContent.appendChild(instanceDiv);
+
+                // Crea i modal per questa istanza
+                createAddNodeModal(instanceId);
+                createConfirmDeleteNodeModal(instanceId);
             });
 
             // Aggiungi il bottone "+"
@@ -707,6 +922,597 @@
             addButton.onclick = openNewInstanceModal;
             instanceSubMenu.appendChild(addButton);
         }
+
+        function createAddNodeModal(instanceId) {
+            const modal = document.createElement('div');
+            modal.id = `add-node-modal-${instanceId}`;
+            modal.className = 'modal add-node-modal';
+            
+            // Genera opzioni per le stampanti
+            let printerOptions = '<option value="">--- Nessuna ---</option>';
+            printersList.forEach(printer => {
+                printerOptions += `<option value="${printer.nome}">${printer.nome}</option>`;
+            });
+
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Aggiungi Pesa</h3>
+                    <br>
+                    <form id="add-node-form-${instanceId}" onsubmit="event.preventDefault()">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label><b>Nome pesa:</b> *</label>
+                                <input type="text" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Terminale:</b> *</label>
+                                <select name="terminal" required>
+                                    <option value="dgt1">dgt1</option>
+                                    <option value="egt-af03">egt-af03</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Nodo:</b></label>
+                                <input type="text" name="node">
+                            </div>
+                            <div class="form-group">
+                                <label><b>Peso massimo:</b> *</label>
+                                <input type="number" name="max_weight" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Peso minimo:</b> *</label>
+                                <input type="number" name="min_weight" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Divisione:</b> *</label>
+                                <input type="number" name="division" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Soglia massima:</b></label>
+                                <input type="number" name="max_theshold" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label><b>Stampante:</b></label>
+                                <select name="printer_name">
+                                    ${printerOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Numero di stampe:</b> *</label>
+                                <input type="number" name="number_of_prints" min="1" max="5" value="1" required>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                            <div class="form-group">
+                                <label><input type="checkbox" name="report_on_in"> Genera report all'entrata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="report_on_out"> Genera report all'uscita</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="csv_on_in"> Genera CSV all'entrata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="csv_on_out"> Genera CSV all'uscita</label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <div class="form-group">
+                                <label><input type="checkbox" name="run" checked> In esecuzione</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="need_take_of_weight_before_weighing" checked> Scaricare la pesa dopo pesata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="need_take_of_weight_on_startup" checked> Scaricare la pesa all'avvio</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="continuous_transmission"> Trasmissione continua</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label><b>Telecamere:</b></label>
+                            <button type="button" onclick="addCam('${instanceId}', null)">Aggiungi Telecamera</button>
+                            <div class="cams-container"></div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label><b>Relè:</b></label>
+                            <button type="button" onclick="addRele('${instanceId}', null)">Aggiungi Relè</button>
+                            <div class="reles-container"></div>
+                        </div>
+
+                        <div class="container-buttons right" style="margin-top: 20px;">
+                            <button type="button" onclick="closeAddNodeModal('${instanceId}')">Annulla</button>
+                            <button type="submit" onclick="saveNode('${instanceId}')">Salva</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function createConfirmDeleteNodeModal(instanceId) {
+            const modal = document.createElement('div');
+            modal.id = `confirm-delete-node-modal-${instanceId}`;
+            modal.className = 'modal confirm-delete-node-modal';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Conferma Eliminazione</h3>
+                    <br>
+                    <p>Sei sicuro di voler eliminare questa pesa?</p>
+                    <p><b id="node-to-delete-name-${instanceId}"></b></p>
+                    <br>
+                    <div class="container-buttons right">
+                        <button type="button" onclick="closeConfirmDeleteNodeModal('${instanceId}')">Annulla</button>
+                        <button type="button" class="red-button" onclick="confirmDeleteNode('${instanceId}')">Elimina</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function openAddNodeModal(instanceId) {
+            const modal = document.querySelector(`#add-node-modal-${instanceId}`);
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        function closeAddNodeModal(instanceId) {
+            const modal = document.querySelector(`#add-node-modal-${instanceId}`);
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Reset form
+                const form = modal.querySelector('form');
+                form.reset();
+                modal.querySelector('.cams-container').innerHTML = '';
+                modal.querySelector('.reles-container').innerHTML = '';
+            }, 300);
+        }
+
+function openEditNodeModal(instanceId, nodeId) {
+    const node = weighersData[instanceId].nodes[nodeId];
+    
+    // Rimuovi il modal esistente se presente
+    const existingModal = document.querySelector(`#edit-node-modal-${instanceId}-${nodeId}`);
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Crea sempre un nuovo modal
+    const modal = document.createElement('div');
+    modal.id = `edit-node-modal-${instanceId}-${nodeId}`;
+    modal.className = 'modal edit-node-modal';
+    
+    // Genera opzioni per le stampanti
+    let printerOptions = '<option value="">--- Nessuna ---</option>';
+    printersList.forEach(printer => {
+        const selected = node.printer_name === printer.nome ? 'selected' : '';
+        printerOptions += `<option value="${printer.nome}" ${selected}>${printer.nome}</option>`;
+    });
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>Modifica Pesa ${nodeId}</h3>
+            <br>
+            <form id="edit-node-form-${instanceId}-${nodeId}" onsubmit="event.preventDefault()">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label><b>Nome pesa:</b> *</label>
+                        <input type="text" name="name" value="${node.name || nodeId}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Terminale:</b> *</label>
+                        <select name="terminal" required>
+                            <option value="dgt1" ${node.terminal === 'dgt1' ? 'selected' : ''}>dgt1</option>
+                            <option value="egt-af03" ${node.terminal === 'egt-af03' ? 'selected' : ''}>egt-af03</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Nodo:</b></label>
+                        <input type="text" name="node" value="${node.node || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label><b>Peso massimo:</b> *</label>
+                        <input type="number" name="max_weight" min="1" value="${node.max_weight}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Peso minimo:</b> *</label>
+                        <input type="number" name="min_weight" min="1" value="${node.min_weight}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Divisione:</b> *</label>
+                        <input type="number" name="division" min="1" value="${node.division}" required>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Soglia massima:</b></label>
+                        <input type="number" name="max_theshold" min="1" value="${node.max_theshold || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label><b>Stampante:</b></label>
+                        <select name="printer_name">
+                            ${printerOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Numero di stampe:</b> *</label>
+                        <input type="number" name="number_of_prints" min="1" max="5" value="${node.number_of_prints}" required>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label><input type="checkbox" name="report_on_in" ${node.events?.weighing?.report?.in ? 'checked' : ''}> Genera report all'entrata</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report all'uscita</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV all'entrata</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="csv_on_out" ${node.events?.weighing?.csv?.out ? 'checked' : ''}> Genera CSV all'uscita</label>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label><input type="checkbox" name="run" ${node.run ? 'checked' : ''}> In esecuzione</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="need_take_of_weight_before_weighing" ${node.need_take_of_weight_before_weighing ? 'checked' : ''}> Scaricare la pesa dopo pesata</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="need_take_of_weight_on_startup" ${node.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa all'avvio</label>
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" name="continuous_transmission" ${node.continuous_transmission ? 'checked' : ''}> Trasmissione continua</label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label><b>Telecamere:</b></label>
+                    <button type="button" onclick="addCam('${instanceId}', '${nodeId}')">Aggiungi Telecamera</button>
+                    <div class="cams-container"></div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label><b>Relè:</b></label>
+                    <button type="button" onclick="addRele('${instanceId}', '${nodeId}')">Aggiungi Relè</button>
+                    <div class="reles-container"></div>
+                </div>
+
+                <div class="container-buttons right" style="margin-top: 20px;">
+                    <button type="button" onclick="closeEditNodeModal('${instanceId}', '${nodeId}')">Annulla</button>
+                    <button type="submit" onclick="updateNode('${instanceId}', '${nodeId}')">Aggiorna</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    // Aggiungi il modal al body
+    document.body.appendChild(modal);
+
+    // Aspetta che il DOM sia pronto prima di popolare i dati
+    setTimeout(() => {
+        // Popola telecamere esistenti
+        if (node.events?.weighing?.cams && Array.isArray(node.events.weighing.cams)) {
+            node.events.weighing.cams.forEach(cam => {
+                addCam(instanceId, nodeId, cam.picture || '', cam.active !== undefined ? cam.active : true);
+            });
+        }
+
+        // Popola relè esistenti - weighing
+        if (node.events?.weighing?.set_rele && Array.isArray(node.events.weighing.set_rele)) {
+            node.events.weighing.set_rele.forEach(rele => {
+                addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'weighing');
+            });
+        }
+        
+        // Popola relè esistenti - over_min
+        if (node.events?.realtime?.over_min?.set_rele && Array.isArray(node.events.realtime.over_min.set_rele)) {
+            node.events.realtime.over_min.set_rele.forEach(rele => {
+                addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'over_min');
+            });
+        }
+        
+        // Popola relè esistenti - under_min
+        if (node.events?.realtime?.under_min?.set_rele && Array.isArray(node.events.realtime.under_min.set_rele)) {
+            node.events.realtime.under_min.set_rele.forEach(rele => {
+                addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'under_min');
+            });
+        }
+
+        // Mostra il modal dopo aver popolato i dati
+        modal.style.display = 'block';
+        setTimeout(() => {
+            modal.style.opacity = '1';
+        }, 10);
+    }, 50);
+}
+
+        function closeEditNodeModal(instanceId, nodeId) {
+            const modal = document.querySelector(`#edit-node-modal-${instanceId}-${nodeId}`);
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        function updateNode(instanceId, nodeId) {
+            const form = document.querySelector(`#edit-node-form-${instanceId}-${nodeId}`);
+
+            // Raccogli i dati dal form
+            const formData = new FormData(form);
+            const data = {
+                cams: [],
+                weighing: [],
+                over_min: [],
+                under_min: []
+            };
+
+            // Campi semplici
+            for (let [key, value] of formData.entries()) {
+                if (key === 'name' || key === 'terminal' || key === 'node' || key === 'printer_name') {
+                    data[key] = value || null;
+                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || 
+                           key === 'max_theshold' || key === 'number_of_prints') {
+                    data[key] = value ? parseInt(value) : (key === 'number_of_prints' ? 1 : null);
+                }
+            }
+
+            // Checkbox
+            data.run = form.querySelector('[name="run"]').checked;
+            data.need_take_of_weight_before_weighing = form.querySelector('[name="need_take_of_weight_before_weighing"]').checked;
+            data.need_take_of_weight_on_startup = form.querySelector('[name="need_take_of_weight_on_startup"]').checked;
+            data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
+            data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
+            data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
+            data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
+
+            // Raccogli telecamere
+            form.querySelectorAll('.cam').forEach(cam => {
+                const url = cam.querySelector('.cam-url').value;
+                const active = cam.querySelector('.cam-active').checked;
+                if (url) {
+                    data.cams.push({ picture: url, active: active });
+                }
+            });
+
+            // Raccogli relè
+            form.querySelectorAll('.rele').forEach(rele => {
+                const number = rele.querySelector('.rele-number').value;
+                const status = parseInt(rele.querySelector('.rele-status').value);
+                const event = rele.querySelector('.rele-event').value;
+                if (number) {
+                    data[event].push({ rele: number, set: status });
+                }
+            });
+
+            // Aggiungi campi mancanti dall'API
+            data.maintaine_session_realtime_after_command = true;
+            data.diagnostic_has_priority_than_realtime = true;
+            data.always_execute_realtime_in_undeground = true;
+
+            // Invia i dati
+            fetch(`/api/config-weigher/instance/node?instance_name=${instanceId}&weigher_name=${nodeId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => {
+                        throw err;
+                    });
+                }
+                return res.json();
+            })
+            .then(response => {
+                showSnackbar("snackbar", "Pesa aggiornata con successo", 'rgb(208, 255, 208)', 'black');
+                closeEditNodeModal(instanceId, nodeId);
+                
+                // Ricarica i dati dell'istanza
+                fetch('/api/config-weigher/configuration')
+                    .then(res => res.json())
+                    .then(res => {
+                        weighersData = res.weighers;
+                        loadInstances(weighersData);
+                    });
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                let errorMessage = 'Errore nell\'aggiornamento della pesa';
+                if (error.detail && Array.isArray(error.detail)) {
+                    errorMessage = error.detail.map(err => err.msg).join(', ');
+                }
+                showSnackbar("snackbar", errorMessage, 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        function openConfirmDeleteNodeModal(instanceId, nodeId) {
+            nodeToDelete = { instanceId, nodeId };
+            
+            const modal = document.querySelector(`#confirm-delete-node-modal-${instanceId}`);
+            const nameElement = modal.querySelector(`#node-to-delete-name-${instanceId}`);
+            nameElement.textContent = `PESA ${nodeId}`;
+            
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        function closeConfirmDeleteNodeModal(instanceId) {
+            const modal = document.querySelector(`#confirm-delete-node-modal-${instanceId}`);
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                nodeToDelete = { instanceId: null, nodeId: null };
+            }, 300);
+        }
+
+        function confirmDeleteNode(instanceId) {
+            const { nodeId } = nodeToDelete;
+            if (!nodeId) return;
+
+            fetch(`/api/config-weigher/instance/node?instance_name=${instanceId}&weigher_name=${nodeId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Errore nell\'eliminazione della pesa');
+                }
+                return res.json();
+            })
+            .then(data => {
+                showSnackbar("snackbar", "Pesa eliminata con successo", 'rgb(208, 255, 208)', 'black');
+                closeConfirmDeleteNodeModal(instanceId);
+                
+                // Ricarica i dati
+                fetch('/api/config-weigher/configuration')
+                    .then(res => res.json())
+                    .then(res => {
+                        weighersData = res.weighers;
+                        loadInstances(weighersData);
+                    });
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                showSnackbar("snackbar", "Errore nell'eliminazione della pesa", 'rgb(255, 208, 208)', 'black');
+                closeConfirmDeleteNodeModal(instanceId);
+            });
+        }
+
+        function saveNode(instanceId) {
+            const form = document.querySelector(`#add-node-form-${instanceId}`);
+
+            // Raccogli i dati dal form
+            const formData = new FormData(form);
+            const data = {
+                cams: [],
+                weighing: [],
+                over_min: [],
+                under_min: []
+            };
+
+            // Campi semplici
+            for (let [key, value] of formData.entries()) {
+                if (key === 'name' || key === 'terminal' || key === 'node' || key === 'printer_name') {
+                    data[key] = value || null;
+                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || 
+                           key === 'max_theshold' || key === 'number_of_prints') {
+                    data[key] = value ? parseInt(value) : (key === 'number_of_prints' ? 1 : null);
+                }
+            }
+
+            // Checkbox
+            data.run = form.querySelector('[name="run"]').checked;
+            data.need_take_of_weight_before_weighing = form.querySelector('[name="need_take_of_weight_before_weighing"]').checked;
+            data.need_take_of_weight_on_startup = form.querySelector('[name="need_take_of_weight_on_startup"]').checked;
+            data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
+            data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
+            data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
+            data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
+
+            // Raccogli telecamere
+            form.querySelectorAll('.cam').forEach(cam => {
+                const url = cam.querySelector('.cam-url').value;
+                const active = cam.querySelector('.cam-active').checked;
+                if (url) {
+                    data.cams.push({ picture: url, active: active });
+                }
+            });
+
+            // Raccogli relè
+            form.querySelectorAll('.rele').forEach(rele => {
+                const number = rele.querySelector('.rele-number').value;
+                const status = parseInt(rele.querySelector('.rele-status').value);
+                const event = rele.querySelector('.rele-event').value;
+                if (number) {
+                    data[event].push({ rele: number, set: status });
+                }
+            });
+
+            // Aggiungi campi mancanti dall'API
+            data.maintaine_session_realtime_after_command = true;
+            data.diagnostic_has_priority_than_realtime = true;
+            data.always_execute_realtime_in_undeground = true;
+
+            // Invia i dati
+            fetch(`/api/config-weigher/instance/node?instance_name=${instanceId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => {
+                        throw err;
+                    });
+                }
+                return res.json();
+            })
+            .then(response => {
+                showSnackbar("snackbar", "Pesa aggiunta con successo", 'rgb(208, 255, 208)', 'black');
+                closeAddNodeModal(instanceId);
+                
+                // Ricarica i dati dell'istanza
+                fetch('/api/config-weigher/configuration')
+                    .then(res => res.json())
+                    .then(res => {
+                        weighersData = res.weighers;
+                        loadInstances(weighersData);
+                        
+                        // Vai automaticamente al tab della pesa appena creata
+                        const newNodeId = Object.keys(response)[0];
+                        if (newNodeId) {
+                            // Trova e clicca sul tab della nuova pesa
+                            setTimeout(() => {
+                                const nodeButtons = document.querySelectorAll(`#node-sub-menu-${instanceId} .menu-tab:not(.add-tab)`);
+                                nodeButtons.forEach(button => {
+                                    if (button.textContent.includes(newNodeId)) {
+                                        button.click();
+                                    }
+                                });
+                            }, 100);
+                        }
+                    });
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                let errorMessage = 'Errore nella creazione della pesa';
+                if (error.detail && Array.isArray(error.detail)) {
+                    errorMessage = error.detail.map(err => err.msg).join(', ');
+                }
+                showSnackbar("snackbar", errorMessage, 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        // Le restanti funzioni rimangono identiche al codice precedente...
+        // (addNewInstanceTab, updateInstanceDisplay, openEditInstanceModal, etc.)
+        // Per brevità non le ripeto qui, ma devono essere presenti nel codice finale
 
         function addNewInstanceTab(instanceId, instance) {
             const connectionName = getConnectionName(instance.connection);
@@ -807,15 +1613,27 @@
             `;
             connectionInfo.innerHTML = connectionHtml;
 
-            // Sotto-menu per i nodi (vuoto per ora, può essere aggiunto in seguito)
+            // Sotto-menu per i nodi (vuoto per ora)
             const nodeSubMenu = document.createElement('div');
             nodeSubMenu.className = 'node-sub-menu';
-            nodeSubMenu.innerHTML = '<p style="padding: 10px;">Nessuna pesa configurata</p>';
+            nodeSubMenu.id = `node-sub-menu-${instanceId}`;
+            nodeSubMenu.innerHTML = '<p style="padding: 10px; color: #666;">Nessuna pesa configurata</p>';
+
+            // Aggiungi bottone "+" per le pese
+            const addNodeButton = document.createElement('button');
+            addNodeButton.className = 'menu-tab add-tab';
+            addNodeButton.textContent = '+';
+            addNodeButton.onclick = () => openAddNodeModal(instanceId);
+            nodeSubMenu.appendChild(addNodeButton);
 
             instanceDiv.appendChild(connectionInfo);
             instanceDiv.appendChild(document.createElement('br'));
             instanceDiv.appendChild(nodeSubMenu);
             instancesContent.appendChild(instanceDiv);
+
+            // Crea i modal per questa istanza
+            createAddNodeModal(instanceId);
+            createConfirmDeleteNodeModal(instanceId);
         }
 
         function updateInstanceDisplay(instanceId) {
