@@ -15,8 +15,8 @@ fetch('navbar.html')
             users.forEach(user => user.style.display = "none");
         }
         if (res.level < 4) {
-            const setups = document.querySelectorAll(".page-of-setup");
-            setups.forEach(setup => setup.style.display = "none");
+            const configurations = document.querySelectorAll(".page-of-configuration");
+            configurations.forEach(configuration => configuration.style.display = "none");
         }
         const p = document.getElementById("hi-session-user");
         p.textContent = `Ciao, ${res.username}`;

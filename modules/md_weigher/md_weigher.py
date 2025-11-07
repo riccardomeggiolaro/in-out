@@ -183,9 +183,9 @@ class WeigherModule:
   		cb_rele: Callable[[str], any] = None,
     	cb_code_identify: Callable[[str], any] = None):
 		details = []
-		if any(setup.name == name for name in self.getAllInstanceWeigher(instance_name=instance_name)):
+		if any(weigher_name != setup.name and setup.name == name for name in self.getAllInstanceWeigher(instance_name=instance_name)):
 			details.append({"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}})
-		if any(setup.node == weigher["node"] for name, weigher in self.getAllInstanceWeigher(instance_name=instance_name).items()):
+		if any(weigher_name != name and setup.node == weigher["node"] for name, weigher in self.getAllInstanceWeigher(instance_name=instance_name).items()):
 			details.append({"type": "value_error", "loc": ["", "node"], "msg": "Nodo già esistente", "input": setup.node, "ctx": {"error":{}}})
 		if details:
 			raise HTTPException(status_code=400, detail=details)
