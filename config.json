@@ -155,7 +155,7 @@
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": true,
-                        "terminal": "dgt1"
+                        "terminal": "egt-af03"
                     }
                 },
                 "time_between_actions": 0.3

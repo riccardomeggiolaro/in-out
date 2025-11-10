@@ -191,7 +191,19 @@
             border-top-right-radius: 5px;
         }
 
-        /* Stile modal */
+        /* Stile modal - MODIFICATO per z-index e scrollabilità */
+        .modal {
+            z-index: 10000 !important; /* Z-index molto alto per essere sopra la navbar */
+            overflow-y: auto; /* Permette lo scroll verticale del modal */
+            padding: 20px; /* Aggiunge padding per evitare che il contenuto tocchi i bordi */
+        }
+
+        .modal .modal-content {
+            max-height: calc(100vh - 40px); /* Massima altezza meno il padding */
+            overflow-y: auto; /* Scroll verticale sul contenuto */
+            margin: auto;
+        }
+
         #new-instance-modal .modal-content,
         #edit-instance-modal .modal-content,
         #confirm-delete-modal .modal-content,
@@ -438,8 +450,10 @@
                 <div id="serial-fields" class="connection-fields">
                     <label for="serial-port"><b>Porta seriale:</b> *</label>
                     <br>
-                    <input type="text" id="serial-port" placeholder="es. /dev/ttyUSB0">
-                    <span id="serial-port-error" class="error-message">Inserire una porta seriale valida</span>
+                    <select id="serial-port">
+                        <option value="">Seleziona una porta...</option>
+                    </select>
+                    <span id="serial-port-error" class="error-message">Seleziona una porta seriale valida</span>
                     <br>
                     <br>
                     <label for="serial-baudrate"><b>Baudrate:</b> *</label>
@@ -517,8 +531,10 @@
                 <div id="edit-serial-fields" class="connection-fields">
                     <label for="edit-serial-port"><b>Porta seriale:</b> *</label>
                     <br>
-                    <input type="text" id="edit-serial-port" placeholder="es. /dev/ttyUSB0">
-                    <span id="edit-serial-port-error" class="error-message">Inserire una porta seriale valida</span>
+                    <select id="edit-serial-port">
+                        <option value="">Seleziona una porta...</option>
+                    </select>
+                    <span id="edit-serial-port-error" class="error-message">Seleziona una porta seriale valida</span>
                     <br>
                     <br>
                     <label for="edit-serial-baudrate"><b>Baudrate:</b> *</label>
@@ -599,6 +615,55 @@
         let instanceToDelete = null;
         let nodeToDelete = { instanceId: null, nodeId: null };
         let printersList = [];
+        let availableSerialPorts = [];
+
+        // Funzione per caricare le porte seriali disponibili
+        async function loadSerialPorts() {
+            try {
+                const response = await fetch('/api/generic/list/serial-ports');
+                const data = await response.json();
+                // Filtra solo le porte non in uso (using[0] === false)
+                availableSerialPorts = data.list_serial_ports.filter(port => !port.using[0]);
+                return availableSerialPorts;
+            } catch (error) {
+                console.error('Errore nel caricamento porte seriali:', error);
+                availableSerialPorts = [];
+                return [];
+            }
+        }
+
+        // Funzione per popolare il select delle porte seriali
+        function populateSerialPortSelect(selectId, selectedPort = '') {
+            const select = document.querySelector(`#${selectId}`);
+            if (!select) return;
+
+            // Salva il valore selezionato se esiste
+            const currentValue = select.value || selectedPort;
+            
+            // Pulisci le opzioni esistenti
+            select.innerHTML = '<option value="">Seleziona una porta...</option>';
+            
+            // Aggiungi le porte disponibili
+            availableSerialPorts.forEach(portInfo => {
+                const option = document.createElement('option');
+                option.value = portInfo.port;
+                option.textContent = portInfo.port;
+                select.appendChild(option);
+            });
+
+            // Se c'è un valore precedentemente selezionato, aggiungilo comunque (anche se in uso)
+            if (currentValue && !availableSerialPorts.find(p => p.port === currentValue)) {
+                const option = document.createElement('option');
+                option.value = currentValue;
+                option.textContent = `${currentValue} (in uso)`;
+                select.appendChild(option);
+            }
+
+            // Imposta il valore selezionato
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        }
 
         // Funzione globale per chiudere i modal cliccando fuori
         function setupModalClickOutside() {
@@ -688,6 +753,7 @@
             setupModalClickOutside();
             
             await loadPrinters();
+            await loadSerialPorts();
 
             fetch('/api/config-weigher/configuration', {
                 headers: {
@@ -755,7 +821,7 @@
         }
 
         function isValidSerialPort(port) {
-            return port.trim().length > 0 && (port.startsWith('/dev/') || port.startsWith('COM'));
+            return port.trim().length > 0;
         }
 
         function loadInstances(weighers, activeInstanceId = null, activeNodeId = null) {
@@ -1787,7 +1853,7 @@
             }
         }
 
-        function openEditInstanceModal(instanceId) {
+        async function openEditInstanceModal(instanceId) {
             const instance = weighersData[instanceId];
             
             document.querySelector('#edit-instance-id').value = instanceId;
@@ -1799,7 +1865,11 @@
                 document.querySelector('#edit-tcp-timeout').value = instance.connection.timeout;
             } else if (instance.connection.serial_port_name) {
                 document.querySelector('#edit-connection-type').value = 'serial';
-                document.querySelector('#edit-serial-port').value = instance.connection.serial_port_name;
+                
+                // Carica le porte seriali disponibili
+                await loadSerialPorts();
+                populateSerialPortSelect('edit-serial-port', instance.connection.serial_port_name);
+                
                 document.querySelector('#edit-serial-baudrate').value = instance.connection.baudrate;
                 document.querySelector('#edit-serial-timeout').value = instance.connection.timeout;
             }
@@ -1835,7 +1905,7 @@
             }, 300);
         }
 
-        function toggleEditConnectionFields() {
+        async function toggleEditConnectionFields() {
             const connectionType = document.querySelector('#edit-connection-type').value;
             const tcpFields = document.querySelector('#edit-tcp-fields');
             const serialFields = document.querySelector('#edit-serial-fields');
@@ -1851,6 +1921,9 @@
             if (connectionType === 'tcp') {
                 tcpFields.classList.add('active');
             } else if (connectionType === 'serial') {
+                // Carica le porte seriali disponibili
+                await loadSerialPorts();
+                populateSerialPortSelect('edit-serial-port');
                 serialFields.classList.add('active');
             }
 
@@ -2103,7 +2176,7 @@
             }, 300);
         }
 
-        function toggleConnectionFields() {
+        async function toggleConnectionFields() {
             const connectionType = document.querySelector('#connection-type').value;
             const tcpFields = document.querySelector('#tcp-fields');
             const serialFields = document.querySelector('#serial-fields');
@@ -2121,6 +2194,9 @@
                 tcpFields.classList.add('active');
                 commonFields.classList.add('active');
             } else if (connectionType === 'serial') {
+                // Carica le porte seriali disponibili
+                await loadSerialPorts();
+                populateSerialPortSelect('serial-port');
                 serialFields.classList.add('active');
                 commonFields.classList.add('active');
             }
