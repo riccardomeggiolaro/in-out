@@ -181,7 +181,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
 				modope="WEIGHING", 
-	          	data_assigned=data_assigned
+			  	data_assigned=data_assigned
 			)
 			access_id = access.id
 			if error_message:
@@ -219,11 +219,11 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		elif not access:
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-                	**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
-                 	"number_in_out": 1,
-                  	"type": "MANUALLY",
-                   	"hidden": True
-                }))
+					**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
+				 	"number_in_out": 1,
+				  	"type": "MANUALLY",
+				   	"hidden": True
+				}))
 			current_id = access.id
 		if not error_message:
 			data_assigned = DataAssignedDTO(**{"accessId": current_id, "userId": request.state.user.id})
@@ -277,7 +277,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					access = await self.addAccess(request=None, body=AddAccessDTO(**{
 						**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
 						"number_in_out": 1,
-	                  	"type": "MANUALLY",
+					  	"type": "MANUALLY",
 						"hidden": True
 					}))
 					idAccess = access.id
@@ -308,6 +308,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				return response
 			request.state.user = response
 		status_modope, command_executed, error_message = 500, False, ""
+		delete = False
 		mode = lb_config.g_config["app_api"]["mode"]
 		access = None
 		proc = {
@@ -323,8 +324,10 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
 		if mode == "MANUALLY":
 			error_message = f"Modalità automatica disattiva. Tentativo di pesatura {cam_message} bloccato"
+			delete = True
 		elif proc in self.automatic_weighing_process:
 			error_message = f"Pesatura automatica con '{identify_dto.identify}' già in esecuzione sulla pesa '{instance.weigher_name}'."
+			delete = True
 		else:
 			self.automatic_weighing_process.append(proc)
 			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
@@ -333,14 +336,17 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
 			if take_of_weight_on_startup is True:
 				error_message = "Scaricare la pesa dopo l'avvio del programma"
+				delete = True
 			elif take_of_weight_before_weighing is True:
 				error_message = "Scaricare la pesa prima di eseguire nuova pesata"
+				delete = True
 			else:
 				access = get_access_by_identify_if_uncomplete(identify=identify_dto.identify)
 				realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				min_weight = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["min_weight"]
 				if realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
 					error_message = f"Il peso deve essere maggiore di {min_weight} kg"
+					delete = True
 				elif access:
 					current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 					if current_weigher_data["id_selected"]["id"] != access["id"]:
@@ -348,8 +354,16 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 						try:
 							if access["type"].name == TypeAccess.RESERVATION.name and access["number_in_out"] is not None and realtime.tare != "0":
 								error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
+								delete = True
 							else:
-								await self.SetData(request=None, data_dto=DataDTO(**{"id_selected": {"id": access["id"]}}), instance=instance, need_to_confirm=True if mode == "SEMIAUTOMATIC" else False)
+								import libs.lb_log as lb_log
+								data_dto = DataDTO(**{"id_selected": {"id": access["id"]}})
+								need_to_confirm = True if mode == "SEMIAUTOMATIC" else False
+								lb_log.error("------------------")
+								lb_log.error(data_dto)
+								lb_log.error(need_to_confirm)
+								lb_log.error("------------------")
+								await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm)
 						except Exception as e:
 							error_message = e.detail
 					if not error_message:
@@ -372,19 +386,23 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 								if modope != "PRESETTARE" and current_modope != "PRESETTARE":
 									if current_weigher_data["id_selected"]["id"] != access["id"]:
 										error_message = f"Pesatura automatica interrotta. Accesso con '{identify_dto.identify}' deselezionato."
+										delete = True
 										await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 										break
 									if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division:
 										if current_tare == "0":
 											if timeout >= 0:
 												message = f"Impostando la tara per la pesatura automatica."
+												delete = True
 												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": message})
 										elif timeout >= 0:
 											error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
+											delete = True
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 											break
 									elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
 										error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
+										delete = True
 										await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 										break
 									elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
@@ -398,6 +416,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 													data_assigned=data_assigned)
 												if error_message:
 													error_message = f"Errore nella pesatura automatica: {error_message}. Ritento."
+													delete = True
 													await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 												if command_executed:
 													break
@@ -409,8 +428,9 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 							error_message = "Modalità automatica disattiva. Tentativo di pesatura in attesa di conferma dell'utente per la modalità semiautomatica"
 				else:
 					error_message = f"Accesso con '{identify_dto.identify}' non esistente."
+					delete = True
 			current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-			if error_message and access and current_weigher_data["id_selected"]["id"] == access["id"]:
+			if error_message and delete and access and current_weigher_data["id_selected"]["id"] == access["id"]:
 				await self.DeleteData(instance=instance)
 			self.automatic_weighing_process.remove(proc)
 		return {

@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "MANUALLY",
+        "mode": "SEMIAUTOMATIC",
         "panel": {},
         "path_content": "static/content",
         "path_csv": "/var/lib/in-out/csv",
@@ -63,7 +63,7 @@
             }
         },
         "use_badge": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_white_list": false,
         "weighers": {
             "1": {
@@ -134,6 +134,10 @@
                             },
                             "weighing": {
                                 "cams": [],
+                                "csv": {
+                                    "in": false,
+                                    "out": false
+                                },
                                 "report": {
                                     "in": false,
                                     "out": false
@@ -145,8 +149,8 @@
                         "max_theshold": null,
                         "max_weight": 60000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
@@ -154,7 +158,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": true,
+                        "take_of_weight_on_startup": false,
                         "terminal": "egt-af03"
                     }
                 },

@@ -5,6 +5,7 @@ body {
 }
 * {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    box-sizing: border-box;
 }
 .table-container {
     max-width: 900px;
@@ -80,7 +81,7 @@ th {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    z-index: 1000;
 }
 .overlay.active {
     display: block;
@@ -361,7 +362,9 @@ tfoot option {
 
 .popup.active {
     max-width: 400px !important;
-    width: 100%;
+    width: 90%;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
 }
 
 .form-content > div {
