@@ -77,3 +77,6 @@ webencodings==0.5.1
 websockets==15.0.1
 xlsxwriter==3.2.5
 zopfli==0.2.3.post1
+watchdog
+lxml
+aiofiles
