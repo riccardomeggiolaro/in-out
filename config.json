@@ -34,14 +34,7 @@
         "sync_folder": {
             "local_dir": "/var/lib/in-out",
             "mount_point": "/mnt/sync-folder",
-            "remote_folder": {
-                "domain": "",
-                "ip": "10.0.5.105",
-                "password": "uPZa6eY2Ik",
-                "share_name": "GH5\\Dev\\in-out",
-                "sub_path": "",
-                "username": "Riccardo Meggiolaro"
-            }
+            "remote_folder": null
         },
         "use_anagrafic": {
             "document_reference": true,
@@ -133,12 +126,18 @@
                                 }
                             },
                             "weighing": {
-                                "cams": [],
-                                "csv": {
-                                    "in": false,
-                                    "out": false
-                                },
+                                "cams": [
+                                    {
+                                        "active": true,
+                                        "live": "None",
+                                        "picture": "http://10.0.5.170/jpg/image.jpg"
+                                    }
+                                ],
                                 "report": {
+                                    "in": true,
+                                    "out": true
+                                },
+                                "csv": {
                                     "in": false,
                                     "out": false
                                 },

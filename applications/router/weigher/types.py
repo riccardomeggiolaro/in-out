@@ -40,11 +40,15 @@ class Data(BaseModel):
 class EventAction(BaseModel):
     take_picture: List[int] = []
     set_rele: List[object] = []
+
+class WeighingPicture(BaseModel):
+	path_name: str
     
 class Weight(BaseModel):
 	weight: Union[int, float] = None
 	date: Optional[datetime] = None
 	pid: Optional[str] = None
+	weighing_pictures: List[WeighingPicture] = []
     
 class Weight1(Weight):
     type: Optional[str] = None

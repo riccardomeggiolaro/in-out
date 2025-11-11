@@ -1,6 +1,6 @@
 from jinja2 import Environment, FileSystemLoader, meta
 import os
-from applications.router.weigher.types import ReportVariables
+from applications.router.weigher.types import ReportVariables, WeighingPicture
 import libs.lb_config as lb_config
 from modules.md_database.interfaces.subject import SubjectDataDTO
 from modules.md_database.interfaces.vector import VectorDataDTO
@@ -9,6 +9,7 @@ from modules.md_database.interfaces.vehicle import VehicleDataDTO
 from modules.md_database.interfaces.material import MaterialDataDTO
 from modules.md_database.interfaces.operator import OperatorDataDTO
 import json
+from applications.utils.utils import image_to_base64_data_uri
 
 def get_data_variables(in_out):
     report_in = lb_config.g_config["app_api"]["report_in"]
@@ -31,6 +32,13 @@ def get_data_variables(in_out):
         variables.weight1.date = in_out.weight1.date.strftime("%d/%m/%Y %H:%M")
         variables.weight1.pid = in_out.weight1.pid
         variables.weight1.weight = in_out.weight1.weight
+        if hasattr(in_out.weight1.__dict__, "weighing_pictures"):
+            for w in in_out.weight1.weighing_pictures:
+                path = lb_config.g_config["app_api"]["path_img"] + w.path_name
+                if os.path.exists(path):
+                    img = image_to_base64_data_uri(path)
+                    if img:
+                        variables.weight1.weighing_pictures.append(WeighingPicture(**{"path_name": img}))
     if in_out.idWeight2:
         pid = in_out.weight2.pid if in_out.weight2.pid else in_out.weight2.id
         if in_out.weight2.tare > 0:
@@ -42,6 +50,13 @@ def get_data_variables(in_out):
         variables.weight2.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M") if in_out.idWeight2 else ""
         variables.weight2.pid = in_out.weight2.pid if in_out.idWeight2 else ""
         variables.weight2.weight = in_out.weight2.weight if in_out.idWeight2 else ""
+        if hasattr(in_out.weight2.__dict__, "weighing_pictures"):
+            for w in in_out.weight2.weighing_pictures:
+                path = lb_config.g_config["app_api"]["path_img"] + w.path_name
+                if os.path.exists(path):
+                    img = image_to_base64_data_uri(path)
+                    if img:
+                        variables.weight2.weighing_pictures.append(WeighingPicture(**{"path_name": img}))
     variables.net_weight = in_out.net_weight
     name_file += ".pdf"
     return name_file, variables, report
@@ -65,6 +80,9 @@ def get_report_file(report_dir, report_name_file):
 
 def generate_html_report(reports_dir, report_name_file, v: ReportVariables = None):
     try:
+        import libs.lb_log as lb_log
+        lb_log.error(v)
+        
         # Setup path to reports
         env = Environment(loader=FileSystemLoader(reports_dir))
         

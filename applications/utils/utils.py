@@ -2,6 +2,8 @@ from fastapi import Request, HTTPException
 from typing import Dict, Union
 from libs.multi_language_messages import multi_language_data
 import pandas as pd
+import base64
+import mimetypes
 
 base_path_applications = None
 
@@ -37,3 +39,23 @@ def convert_value(x, expected_type):
     if expected_type is str and isinstance(x, (int, float)):
         return str(x)
     return x
+
+def image_to_base64_data_uri(image_path):
+    """
+    Converte un'immagine in data URI base64 completo
+    
+    Args:
+        image_path (str): Percorso del file immagine
+        
+    Returns:
+        str: Data URI completo (es: data:image/png;base64,...)
+    """
+    # Determina il MIME type
+    mime_type, _ = mimetypes.guess_type(image_path)
+    if mime_type is None:
+        mime_type = 'application/octet-stream'
+    
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    
+    return f"data:{mime_type};base64,{encoded_string}"
