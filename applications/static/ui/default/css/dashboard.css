@@ -776,6 +776,10 @@ hr {
     display: block;    
 }
 
+#reconnectionPopup {
+    z-index: 999;
+}
+
 /* Desktop navbar adjustments */
 @media (min-width: 1051px) {
     .box {
