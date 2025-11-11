@@ -193,7 +193,7 @@
 
         /* Stile modal - MODIFICATO per z-index e scrollabilità */
         .modal {
-            z-index: 10000 !important; /* Z-index molto alto per essere sopra la navbar */
+            z-index: 1000 !important; /* Z-index molto alto per essere sopra la navbar */
             overflow-y: auto; /* Permette lo scroll verticale del modal */
             padding: 20px; /* Aggiunge padding per evitare che il contenuto tocchi i bordi */
         }
@@ -209,14 +209,16 @@
         #confirm-delete-modal .modal-content,
         .add-node-modal .modal-content,
         .edit-node-modal .modal-content,
-        .confirm-delete-node-modal .modal-content {
-            min-width: 400px;
+        .confirm-delete-node-modal .modal-content,
+        .endpoint-modal .modal-content {
+            width: 400px;
+            max-width: 90%;
         }
 
         .add-node-modal .modal-content,
         .edit-node-modal .modal-content {
-            min-width: 800px;
-            max-width: 90%;
+            width: 800px;
+            width: 90%;
         }
 
         #new-instance-modal select,
@@ -305,6 +307,44 @@
             background: white;
             border-left: 3px solid #1967d2;
             border-radius: 3px;
+        }
+
+        /* Stile per il modal endpoint */
+        .endpoint-link-container {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+
+        .endpoint-link {
+            font-family: monospace;
+            font-size: 14px;
+            color: #1967d2;
+        }
+
+        .copy-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #1967d2;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .copy-button:hover {
+            background: #1557b0;
+        }
+
+        .example-body {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -690,6 +730,11 @@
                     } else if (modalId.startsWith('confirm-delete-node-modal-')) {
                         const instanceId = modalId.replace('confirm-delete-node-modal-', '');
                         closeConfirmDeleteNodeModal(instanceId);
+                    } else if (modalId.startsWith('endpoint-modal-')) {
+                        const parts = modalId.replace('endpoint-modal-', '').split('-');
+                        const instanceId = parts[0];
+                        const nodeId = parts.slice(1).join('-');
+                        closeEndpointModal(instanceId, nodeId);
                     }
                 }
             });
@@ -745,6 +790,105 @@
             } catch (error) {
                 console.error('Errore nel caricamento stampanti:', error);
                 printersList = [];
+            }
+        }
+
+        // Funzione per aprire il modal endpoint
+        function openEndpointModal(instanceId, nodeId) {
+            // Rimuovi il modal esistente se presente
+            const existingModal = document.querySelector(`#endpoint-modal-${instanceId}-${nodeId}`);
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Crea il modal
+            const modal = document.createElement('div');
+            modal.id = `endpoint-modal-${instanceId}-${nodeId}`;
+            modal.className = 'modal endpoint-modal';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Endpoint API - PESA ${nodeId}</h3>
+                    <br>
+                    <p><b>Link per pesate automatiche:</b></p>
+                    <div class="endpoint-link-container">
+                        <div class="endpoint-link" id="endpoint-link-${instanceId}-${nodeId}">Caricamento...</div>
+                    </div>
+                    <button class="copy-button" onclick="copyEndpointLink('${instanceId}', '${nodeId}')">📋 Copia Link</button>
+                    <br>
+                    <br>
+                    <p><b>Esempio di body da passare:</b></p>
+                    <div class="example-body">
+{
+    "identify": "GSGSGSJ"
+}
+                    </div>
+                    <br>
+                    <div class="container-buttons right">
+                        <button type="button" onclick="closeEndpointModal('${instanceId}', '${nodeId}')">Chiudi</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Mostra il modal
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+
+            // Carica l'endpoint dall'API
+            fetch(`/api/config-weigher/instance/node/endpoint?instance_name=${instanceId}&weigher_name=${nodeId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Errore nel caricamento dell\'endpoint');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+                    if (endpointElement && data.endpoint) {
+                        endpointElement.textContent = data.endpoint;
+                    } else {
+                        endpointElement.textContent = 'Endpoint non disponibile';
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+                    if (endpointElement) {
+                        endpointElement.textContent = 'Errore nel caricamento dell\'endpoint';
+                    }
+                });
+        }
+
+        // Funzione per chiudere il modal endpoint
+        function closeEndpointModal(instanceId, nodeId) {
+            const modal = document.querySelector(`#endpoint-modal-${instanceId}-${nodeId}`);
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        // Funzione per copiare il link endpoint
+        function copyEndpointLink(instanceId, nodeId) {
+            const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+            const link = endpointElement.textContent;
+            
+            if (link && link !== 'Caricamento...' && link !== 'Endpoint non disponibile' && link !== 'Errore nel caricamento dell\'endpoint') {
+                navigator.clipboard.writeText(link).then(() => {
+                    showSnackbar("snackbar", "Link copiato negli appunti", 'rgb(208, 255, 208)', 'black');
+                }).catch(err => {
+                    console.error('Errore nella copia:', err);
+                    showSnackbar("snackbar", "Errore nella copia del link", 'rgb(255, 208, 208)', 'black');
+                });
+            } else {
+                showSnackbar("snackbar", "Link non disponibile", 'rgb(255, 208, 208)', 'black');
             }
         }
 
@@ -1069,6 +1213,7 @@
                             ${relesHtml}
                         </div>
                         <div class="node-actions">
+                            <button onclick="openEndpointModal('${instanceId}', '${nodeId}')">Link API</button>
                             <button onclick="openEditNodeModal('${instanceId}', '${nodeId}')">Modifica</button>
                         </div>
                     `;

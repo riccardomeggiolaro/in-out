@@ -345,7 +345,9 @@ class ConfigWeigher(CommandWeigherRouter):
 		s.connect(("8.8.8.8", 80))
 		ip = s.getsockname()[0] if len(s.getsockname()) > 0 else "127.0.0.1"
 		s.close()
-		return f"http://{ip}/api/command-weigher{self.url_weighing_auto}?instance_name={instance.instance_name}&weigher_name={instance.weigher_name}&token={token}"
+		return {
+			"endpoint": f"http://{ip}/api/command-weigher{self.url_weighing_auto}?instance_name={instance.instance_name}&weigher_name={instance.weigher_name}&token={token}"
+		}
 
 	async def SetInstanceTimeBetweenActions(self, time: Union[int, float] = Depends(validate_time), instance: InstanceNameDTO = Depends(get_query_params_name)):
 		new_time_set = md_weigher.module_weigher.setInstanceTimeBetweenActions(instance_name=instance.instance_name, time_between_actions=time)
