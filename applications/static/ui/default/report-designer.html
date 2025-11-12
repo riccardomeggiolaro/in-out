@@ -2663,6 +2663,18 @@ ${pageClone.innerHTML}
 
         function downloadProjectLocal() {
             try {
+                // Chiedi il nome del file all'utente
+                const fileName = prompt('Come vuoi chiamare il file?', 'report');
+                
+                // Se l'utente annulla o non inserisce nulla, esci
+                if (fileName === null || fileName.trim() === '') {
+                    showNotification('Download annullato', false);
+                    return;
+                }
+                
+                // Pulisci il nome del file (rimuovi caratteri non validi)
+                const cleanFileName = fileName.trim().replace(/[^a-z0-9_\-]/gi, '_');
+                
                 const pagesContainer = document.getElementById('pagesContainer');
                 const pageFormat = document.getElementById('pageFormat').value;
                 const marginTop = document.getElementById('marginTop').value;
@@ -2738,13 +2750,13 @@ ${pageClone.innerHTML}
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'report_project.json';
+                a.download = `${cleanFileName}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                showNotification('📥 Download locale completato!');
+                showNotification(`📥 Download completato: ${cleanFileName}.json`);
             } catch (error) {
                 console.error('Errore download:', error);
                 showNotification('❌ Errore nel download locale', true);
