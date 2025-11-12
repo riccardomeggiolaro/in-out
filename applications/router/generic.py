@@ -254,7 +254,12 @@ class GenericRouter:
                 return FileResponse(
                     full_path,
                     media_type="text/html",
-                    headers={"Content-Disposition": f"attachment; filename={name_report_in}"}
+                    headers={
+                        "Content-Disposition": f"attachment; filename={name_report_in}",
+                        "Cache-Control": "no-cache, no-store, must-revalidate",
+                        "Pragma": "no-cache",
+                        "Expires": "0"
+                    },
                 )
         raise HTTPException(status_code=404, detail="Report not found")
 
@@ -313,7 +318,12 @@ class GenericRouter:
                 return FileResponse(
                     full_path,
                     media_type="text/html",
-                    headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
+                    headers={
+                        "Content-Disposition": f"attachment; filename={name_report_out}",
+                        "Cache-Control": "no-cache, no-store, must-revalidate",
+                        "Pragma": "no-cache",
+                        "Expires": "0"
+                    }
                 )
         raise HTTPException(status_code=404, detail="Report not found")
     

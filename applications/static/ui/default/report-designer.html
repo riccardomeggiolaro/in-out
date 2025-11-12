@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Report Designer - Jinja2 Compatible</title>
     <style>
         * {
@@ -927,30 +930,8 @@
             
             const componentType = e.dataTransfer.getData('componentType');
             
-            if (!canAddElement(canvas)) {
-                let targetCanvas = canvas;
-                const allPages = document.querySelectorAll('.canvas');
-                
-                let foundSpace = false;
-                for (let i = allPages.length - 1; i >= 0; i--) {
-                    if (canAddElement(allPages[i])) {
-                        targetCanvas = allPages[i];
-                        foundSpace = true;
-                        break;
-                    }
-                }
-                
-                if (!foundSpace) {
-                    targetCanvas = createNewPage();
-                    showNotification('Nuova pagina creata per contenere l\'elemento');
-                }
-                
-                addElement(componentType, targetCanvas);
-            } else {
-                addElement(componentType, canvas);
-            }
-            
-            redistributeElements();
+            // Aggiungi semplicemente l'elemento senza controlli
+            addElement(componentType, canvas);
             
             return false;
         }
@@ -1015,8 +996,6 @@
                 page.style.paddingLeft = marginLeft;
                 page.style.paddingRight = marginRight;
             });
-            
-            setTimeout(redistributeElements, 100);
         }
 
         function updatePageMarginsForElement(element) {
@@ -1130,8 +1109,6 @@
             }
             applyZoom();
             updateZoomDisplay();
-            
-            setTimeout(redistributeElements, 100);
         }
 
         function updateAllElementsFontSize(format) {
@@ -1183,8 +1160,6 @@
                     page.style.minHeight = '';
                 }
             });
-            
-            setTimeout(redistributeElements, 100);
         }
 
         function updateDefaultMarginsForFormat(format) {
@@ -2944,18 +2919,23 @@ ${pageClone.innerHTML}
 
         function loadDefaultTemplate(url, showNotificationMessage = true) {
             url = window.location.origin + url;
-            fetch(url)
-                .then(resp => {
-                    if (!resp.ok) throw new Error('Template non accessibile');
-                    return resp.json();
-                })
-                .then(state => {
-                    loadProjectState(state, showNotificationMessage);
-                })
-                .catch(err => {
-                    console.error('Errore nel caricamento del template:', err);
-                    alert('Errore nel caricamento del template default');
-                });
+            fetch(url, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            })
+            .then(resp => {
+                if (!resp.ok) throw new Error('Template non accessibile');
+                return resp.json();
+            })
+            .then(state => {
+                loadProjectState(state, showNotificationMessage);
+            })
+            .catch(err => {
+                console.error('Errore nel caricamento del template:', err);
+                alert('Errore nel caricamento del template default');
+            });
         }
     </script>
 </body>
