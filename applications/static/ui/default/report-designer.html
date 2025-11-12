@@ -328,10 +328,27 @@
             pointer-events: none;
         }
 
+        .flex-row {
+            display: flex;
+            gap: 5px;
+            margin: 2mm 0;
+            min-height: 20px;
+            position: relative;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .flex-row.drag-over-row {
+            background: rgba(102, 126, 234, 0.1);
+            outline: 2px dashed #667eea;
+        }
+
         .dropped-element {
             border: none;
             position: relative;
             transition: all 0.3s ease;
+            flex: 0 0 auto;
+            cursor: move;
         }
 
         .dropped-element:hover {
@@ -342,6 +359,35 @@
         .dropped-element.selected {
             border: 2px solid #667eea;
             background: rgba(102, 126, 234, 0.1);
+        }
+
+        .dropped-element.dragging-internal {
+            opacity: 0.4;
+        }
+
+        .drop-indicator {
+            position: absolute;
+            background: #667eea;
+            pointer-events: none;
+            z-index: 1000;
+            transition: all 0.2s ease;
+        }
+
+        .drop-indicator.horizontal {
+            width: 3px;
+            height: 100%;
+            top: 0;
+        }
+
+        .drop-indicator.vertical {
+            height: 3px;
+            width: 100%;
+            left: 0;
+        }
+
+        .drop-zone-highlight {
+            outline: 2px dashed #667eea;
+            background: rgba(102, 126, 234, 0.15);
         }
 
         .canvas .dropped-element table {
@@ -381,10 +427,12 @@
 
         .element-controls {
             position: absolute;
-            top: -30px;
+            top: -35px;
             right: 0;
             display: none;
-            gap: 5px;
+            gap: 3px;
+            flex-wrap: wrap;
+            max-width: 200px;
         }
 
         .dropped-element.selected .element-controls {
@@ -407,6 +455,12 @@
 
         .control-btn:hover {
             background: #764ba2;
+        }
+
+        .control-btn-separator {
+            width: 2px;
+            height: 25px;
+            background: rgba(255,255,255,0.3);
         }
 
         .properties-panel {
@@ -924,38 +978,79 @@
                 e.stopPropagation();
             }
             e.preventDefault();
-            
+
             const canvas = e.currentTarget;
             canvas.classList.remove('drag-over');
-            
+
+            const isInternal = e.dataTransfer.getData('isInternal') === 'true';
+            const elementId = e.dataTransfer.getData('elementId');
             const componentType = e.dataTransfer.getData('componentType');
-            
-            // Aggiungi semplicemente l'elemento senza controlli
-            addElement(componentType, canvas);
-            
+
+            if (isInternal && elementId) {
+                // Elemento interno che viene spostato
+                // La gestione è già fatta da handleRowDrop
+                return false;
+            }
+
+            if (!componentType) return false;
+
+            // Determina dove inserire l'elemento basandosi sulla posizione Y
+            const rect = canvas.getBoundingClientRect();
+            const mouseY = e.clientY - rect.top;
+            const rows = Array.from(canvas.querySelectorAll('.flex-row'));
+
+            if (rows.length === 0) {
+                // Nessuna riga esistente, crea una nuova
+                addElement(componentType, canvas);
+            } else {
+                // Trova la riga più vicina o l'inserimento tra righe
+                let insertBeforeRow = null;
+                let minDistance = Infinity;
+
+                rows.forEach(row => {
+                    const rowRect = row.getBoundingClientRect();
+                    const rowY = rowRect.top - rect.top + rowRect.height / 2;
+                    const distance = Math.abs(mouseY - rowY);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        // Se il mouse è sopra il centro della riga, inserisci prima
+                        if (mouseY < rowY) {
+                            insertBeforeRow = row;
+                        } else {
+                            insertBeforeRow = row.nextElementSibling;
+                        }
+                    }
+                });
+
+                addElement(componentType, canvas, null, insertBeforeRow);
+            }
+
             return false;
         }
 
         function redistributeElements() {
             const format = document.getElementById('pageFormat').value;
             if (format === 'Receipt80') return;
-            
+
             const allPages = document.querySelectorAll('.canvas');
-            const allElements = [];
-            
+            const allRows = [];
+
             allPages.forEach(page => {
-                const elements = page.querySelectorAll('.dropped-element');
-                elements.forEach(el => {
-                    allElements.push(el.cloneNode(true));
-                    el.remove();
+                const rows = page.querySelectorAll('.flex-row');
+                rows.forEach(row => {
+                    allRows.push(row.cloneNode(true));
+                    row.remove();
                 });
             });
-            
+
             let currentPageIndex = 0;
             let currentPage = allPages[currentPageIndex];
-            
-            allElements.forEach(element => {
-                if (!canAddElement(currentPage, element.offsetHeight)) {
+
+            allRows.forEach(row => {
+                const rowHeight = row.offsetHeight || 50; // Stima se non disponibile
+
+                if (!canAddElement(currentPage, rowHeight)) {
                     currentPageIndex++;
                     if (currentPageIndex >= allPages.length) {
                         currentPage = createNewPage();
@@ -963,18 +1058,27 @@
                         currentPage = allPages[currentPageIndex];
                     }
                 }
-                
-                currentPage.appendChild(element);
-                makeElementInteractive(element);
+
+                currentPage.appendChild(row);
+                makeRowInteractive(row);
+
+                // Rendi interattivi tutti gli elementi nella riga
+                const elements = row.querySelectorAll('.dropped-element');
+                elements.forEach(el => {
+                    makeElementInteractive(el);
+                    if (el.dataset.type === 'table') {
+                        setupTableCellSelection(el);
+                    }
+                });
             });
-            
+
             for (let i = allPages.length - 1; i > 0; i--) {
                 if (allPages[i].querySelectorAll('.dropped-element').length === 0) {
                     allPages[i].closest('.page-wrapper').remove();
                     totalPages--;
                 }
             }
-            
+
             if (format !== 'Custom') {
                 document.querySelectorAll('.canvas').forEach(page => {
                     page.style.width = '';
@@ -1234,19 +1338,108 @@
             if (e.preventDefault) {
                 e.preventDefault();
             }
-            e.dataTransfer.dropEffect = 'copy';
-            e.currentTarget.classList.add('drag-over');
+
+            const isInternal = e.dataTransfer.types.includes('elementid');
+            e.dataTransfer.dropEffect = isInternal ? 'move' : 'copy';
+
+            const canvas = e.currentTarget;
+            canvas.classList.add('drag-over');
+
+            // Mostra indicatore di inserimento tra righe
+            const rect = canvas.getBoundingClientRect();
+            const mouseY = e.clientY - rect.top;
+            const rows = Array.from(canvas.querySelectorAll('.flex-row'));
+
+            // Rimuovi indicatori precedenti dal canvas
+            canvas.querySelectorAll('.drop-indicator').forEach(ind => ind.remove());
+
+            if (rows.length > 0) {
+                let insertBeforeRow = null;
+                let minDistance = Infinity;
+
+                rows.forEach(row => {
+                    const rowRect = row.getBoundingClientRect();
+                    const rowTop = rowRect.top - rect.top;
+                    const rowBottom = rowRect.bottom - rect.top;
+                    const rowCenter = rowTop + (rowBottom - rowTop) / 2;
+
+                    // Distanza dal top e bottom della riga
+                    const distanceTop = Math.abs(mouseY - rowTop);
+                    const distanceBottom = Math.abs(mouseY - rowBottom);
+
+                    if (distanceTop < minDistance) {
+                        minDistance = distanceTop;
+                        insertBeforeRow = row;
+                    }
+
+                    if (distanceBottom < minDistance) {
+                        minDistance = distanceBottom;
+                        insertBeforeRow = row.nextElementSibling;
+                    }
+                });
+
+                // Mostra indicatore
+                if (minDistance < 30) { // Solo se abbastanza vicino
+                    const indicator = document.createElement('div');
+                    indicator.className = 'drop-indicator vertical';
+
+                    if (insertBeforeRow) {
+                        const targetRect = insertBeforeRow.getBoundingClientRect();
+                        indicator.style.top = (targetRect.top - rect.top - 2) + 'px';
+                    } else {
+                        // Inserimento alla fine
+                        const lastRow = rows[rows.length - 1];
+                        const lastRect = lastRow.getBoundingClientRect();
+                        indicator.style.top = (lastRect.bottom - rect.top + 2) + 'px';
+                    }
+
+                    canvas.appendChild(indicator);
+                }
+            }
+
             return false;
         }
 
         function handleDragLeave(e) {
-            e.currentTarget.classList.remove('drag-over');
+            const canvas = e.currentTarget;
+            canvas.classList.remove('drag-over');
+            // Rimuovi indicatori quando si lascia il canvas
+            canvas.querySelectorAll('.drop-indicator').forEach(ind => ind.remove());
         }
 
-        function addElement(type, container) {
+        function addElement(type, container, targetRow = null, insertBefore = null) {
             const element = createElementByType(type);
-            container.appendChild(element);
+
+            // Se c'è una riga target specificata, aggiungi l'elemento lì
+            if (targetRow && targetRow.classList.contains('flex-row')) {
+                if (insertBefore) {
+                    targetRow.insertBefore(element, insertBefore);
+                } else {
+                    targetRow.appendChild(element);
+                }
+            } else {
+                // Altrimenti crea una nuova riga
+                const flexRow = document.createElement('div');
+                flexRow.className = 'flex-row';
+                flexRow.appendChild(element);
+
+                if (insertBefore) {
+                    container.insertBefore(flexRow, insertBefore);
+                } else {
+                    container.appendChild(flexRow);
+                }
+
+                // Aggiungi drag and drop alla riga
+                makeRowInteractive(flexRow);
+            }
+
             makeElementInteractive(element);
+        }
+
+        function makeRowInteractive(row) {
+            row.addEventListener('dragover', handleRowDragOver);
+            row.addEventListener('drop', handleRowDrop);
+            row.addEventListener('dragleave', handleRowDragLeave);
         }
 
         function createElementByType(type) {
@@ -1313,6 +1506,10 @@
                 <div class="element-controls" onclick="event.stopPropagation()">
                     <button class="control-btn" onclick="moveUp(this)" title="Sposta su">↑</button>
                     <button class="control-btn" onclick="moveDown(this)" title="Sposta giù">↓</button>
+                    <div class="control-btn-separator"></div>
+                    <button class="control-btn" onclick="moveLeft(this)" title="Sposta sinistra">←</button>
+                    <button class="control-btn" onclick="moveRight(this)" title="Sposta destra">→</button>
+                    <div class="control-btn-separator"></div>
                     <button class="control-btn" onclick="deleteElement(this)" title="Elimina">×</button>
                 </div>
             `;
@@ -1354,6 +1551,7 @@
         }
 
         function makeElementInteractive(element) {
+            // Click handler
             element.removeEventListener('click', element._clickHandler);
             element._clickHandler = function(e) {
                 if (!e.target.matches('td, th')) {
@@ -1362,10 +1560,36 @@
                 e.stopPropagation();
             };
             element.addEventListener('click', element._clickHandler);
-            
+
+            // Drag handlers per elementi già nel canvas
+            element.draggable = true;
+            element.addEventListener('dragstart', handleElementDragStart);
+            element.addEventListener('dragend', handleElementDragEnd);
+
             if (element.dataset.type === 'table') {
                 setupTableCellSelection(element);
             }
+        }
+
+        function handleElementDragStart(e) {
+            e.stopPropagation();
+            const element = e.target.closest('.dropped-element');
+            element.classList.add('dragging-internal');
+
+            // Salva l'ID dell'elemento per identificarlo dopo
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('elementId', element.dataset.elementId);
+            e.dataTransfer.setData('isInternal', 'true');
+        }
+
+        function handleElementDragEnd(e) {
+            e.target.closest('.dropped-element').classList.remove('dragging-internal');
+
+            // Rimuovi tutti gli indicatori di drop
+            document.querySelectorAll('.drop-indicator').forEach(ind => ind.remove());
+            document.querySelectorAll('.drop-zone-highlight').forEach(el => {
+                el.classList.remove('drop-zone-highlight');
+            });
         }
 
         function selectElement(element) {
@@ -2201,16 +2425,52 @@
 
         function moveUp(btn) {
             const element = btn.closest('.dropped-element');
-            const prev = element.previousElementSibling;
-            if (prev) {
-                element.parentNode.insertBefore(element, prev);
+            const row = element.closest('.flex-row');
+            if (!row) return;
+
+            const prevRow = row.previousElementSibling;
+            if (prevRow && prevRow.classList.contains('flex-row')) {
+                // Se l'elemento è l'unico nella riga, sposta l'intera riga
+                if (row.children.length === 1) {
+                    row.parentNode.insertBefore(row, prevRow);
+                } else {
+                    // Altrimenti sposta l'elemento nella riga precedente
+                    prevRow.appendChild(element);
+                    cleanupEmptyRows();
+                }
             }
         }
 
         function moveDown(btn) {
             const element = btn.closest('.dropped-element');
+            const row = element.closest('.flex-row');
+            if (!row) return;
+
+            const nextRow = row.nextElementSibling;
+            if (nextRow && nextRow.classList.contains('flex-row')) {
+                // Se l'elemento è l'unico nella riga, sposta l'intera riga
+                if (row.children.length === 1) {
+                    row.parentNode.insertBefore(nextRow, row);
+                } else {
+                    // Altrimenti sposta l'elemento nella riga successiva (all'inizio)
+                    nextRow.insertBefore(element, nextRow.firstChild);
+                    cleanupEmptyRows();
+                }
+            }
+        }
+
+        function moveLeft(btn) {
+            const element = btn.closest('.dropped-element');
+            const prev = element.previousElementSibling;
+            if (prev && prev.classList.contains('dropped-element')) {
+                element.parentNode.insertBefore(element, prev);
+            }
+        }
+
+        function moveRight(btn) {
+            const element = btn.closest('.dropped-element');
             const next = element.nextElementSibling;
-            if (next) {
+            if (next && next.classList.contains('dropped-element')) {
                 element.parentNode.insertBefore(next, element);
             }
         }
@@ -2222,6 +2482,142 @@
                 selectedElement = null;
                 selectedTableCell = null;
                 showProperties(null);
+                cleanupEmptyRows();
+            }
+        }
+
+        function cleanupEmptyRows() {
+            // Rimuovi righe vuote
+            document.querySelectorAll('.flex-row').forEach(row => {
+                if (row.children.length === 0) {
+                    row.remove();
+                }
+            });
+        }
+
+        function handleRowDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const row = e.currentTarget;
+            row.classList.add('drag-over-row');
+
+            // Calcola la posizione per l'indicatore di drop
+            const rect = row.getBoundingClientRect();
+            const elements = Array.from(row.querySelectorAll('.dropped-element:not(.dragging-internal)'));
+
+            // Rimuovi indicatori precedenti
+            document.querySelectorAll('.drop-indicator').forEach(ind => ind.remove());
+
+            if (elements.length === 0) {
+                // Riga vuota - mostra indicatore al centro
+                return;
+            }
+
+            // Trova l'elemento più vicino al cursore
+            const mouseX = e.clientX - rect.left;
+            let closestElement = null;
+            let closestDistance = Infinity;
+            let insertBefore = false;
+
+            elements.forEach(el => {
+                const elRect = el.getBoundingClientRect();
+                const elCenter = elRect.left + elRect.width / 2 - rect.left;
+                const distance = Math.abs(mouseX - elCenter);
+
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestElement = el;
+                    insertBefore = mouseX < elCenter;
+                }
+            });
+
+            // Mostra indicatore di drop
+            if (closestElement) {
+                const indicator = document.createElement('div');
+                indicator.className = 'drop-indicator horizontal';
+                const elRect = closestElement.getBoundingClientRect();
+                const rowRect = row.getBoundingClientRect();
+
+                if (insertBefore) {
+                    indicator.style.left = (elRect.left - rowRect.left - 2) + 'px';
+                } else {
+                    indicator.style.left = (elRect.right - rowRect.left + 2) + 'px';
+                }
+
+                row.appendChild(indicator);
+            }
+        }
+
+        function handleRowDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over-row');
+        }
+
+        function handleRowDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const row = e.currentTarget;
+            row.classList.remove('drag-over-row');
+
+            const isInternal = e.dataTransfer.getData('isInternal') === 'true';
+            const elementId = e.dataTransfer.getData('elementId');
+            const componentType = e.dataTransfer.getData('componentType');
+
+            // Rimuovi indicatori
+            document.querySelectorAll('.drop-indicator').forEach(ind => ind.remove());
+
+            if (isInternal && elementId) {
+                // Spostamento di elemento esistente
+                const draggedElement = document.querySelector(`[data-element-id="${elementId}"]`);
+                if (!draggedElement) return;
+
+                const rect = row.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const elements = Array.from(row.querySelectorAll('.dropped-element:not(.dragging-internal)'));
+
+                if (elements.length === 0) {
+                    // Riga vuota
+                    row.appendChild(draggedElement);
+                } else {
+                    // Trova posizione di inserimento
+                    let insertBeforeElement = null;
+                    elements.forEach(el => {
+                        const elRect = el.getBoundingClientRect();
+                        const elCenter = elRect.left + elRect.width / 2 - rect.left;
+                        if (mouseX < elCenter && !insertBeforeElement) {
+                            insertBeforeElement = el;
+                        }
+                    });
+
+                    if (insertBeforeElement) {
+                        row.insertBefore(draggedElement, insertBeforeElement);
+                    } else {
+                        row.appendChild(draggedElement);
+                    }
+                }
+
+                cleanupEmptyRows();
+            } else if (componentType) {
+                // Nuovo elemento dalla sidebar
+                const rect = row.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const elements = Array.from(row.children);
+
+                let insertBeforeElement = null;
+                if (elements.length > 0) {
+                    elements.forEach(el => {
+                        if (el.classList.contains('dropped-element')) {
+                            const elRect = el.getBoundingClientRect();
+                            const elCenter = elRect.left + elRect.width / 2 - rect.left;
+                            if (mouseX < elCenter && !insertBeforeElement) {
+                                insertBeforeElement = el;
+                            }
+                        }
+                    });
+                }
+
+                addElement(componentType, null, row, insertBeforeElement);
             }
         }
 
@@ -2307,22 +2703,30 @@
                 const pageClone = page.cloneNode(true);
 
                 pageClone.querySelectorAll('.element-controls').forEach(el => el.remove());
+
+                // Gestisci flex-rows
+                pageClone.querySelectorAll('.flex-row').forEach(row => {
+                    row.classList.remove('flex-row', 'drag-over-row');
+                    row.classList.add('report-flex-row');
+                });
+
                 pageClone.querySelectorAll('.dropped-element').forEach(el => {
-                    el.classList.remove('dropped-element', 'selected');
+                    el.classList.remove('dropped-element', 'selected', 'dragging-internal');
                     el.removeAttribute('data-element-id');
                     el.removeAttribute('data-type');
+                    el.removeAttribute('draggable');
                     el.style.border = 'none';
                     el.style.background = 'none';
                 });
-                
+
                 pageClone.querySelectorAll('.table-cell-selected').forEach(el => {
                     el.classList.remove('table-cell-selected');
                 });
-                
+
                 pageClone.querySelectorAll('[contenteditable]').forEach(el => {
                     el.removeAttribute('contenteditable');
                 });
-                
+
                 pageClone.querySelectorAll('[data-colspan]').forEach(el => {
                     const colspan = el.getAttribute('data-colspan');
                     if (colspan && colspan !== '1') {
@@ -2332,6 +2736,7 @@
                 });
 
                 pageClone.querySelectorAll('.vertical-guide').forEach(el => el.remove());
+                pageClone.querySelectorAll('.drop-indicator').forEach(el => el.remove());
 
                 let pageContent = `<div class="report-container"`;
                 if (index > 0) {
@@ -2377,7 +2782,19 @@ ${pageClone.innerHTML}
             margin-right: auto;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        
+
+        .report-flex-row {
+            display: flex;
+            gap: 5px;
+            margin: 2mm 0;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .report-flex-row > * {
+            flex: 0 0 auto;
+        }
+
         h1, h2, h3, h4, h5, h6 {
             color: #2c3e50;
         }
@@ -2792,7 +3209,32 @@ ${pageClone.innerHTML}
         function loadProjectState(state, showNotificationMessage = true) {
             const pagesContainer = document.getElementById('pagesContainer');
             pagesContainer.innerHTML = state.canvas;
-            
+
+            // Converti vecchi template senza flex-rows
+            const allCanvases = pagesContainer.querySelectorAll('.canvas');
+            allCanvases.forEach(canvas => {
+                // Trova elementi dropped che sono figli diretti del canvas (vecchio formato)
+                const directChildren = Array.from(canvas.children).filter(child =>
+                    child.classList.contains('dropped-element')
+                );
+
+                // Se ci sono elementi diretti, wrappali in flex-rows
+                if (directChildren.length > 0) {
+                    directChildren.forEach(child => {
+                        const flexRow = document.createElement('div');
+                        flexRow.className = 'flex-row';
+                        canvas.insertBefore(flexRow, child);
+                        flexRow.appendChild(child);
+                    });
+                }
+            });
+
+            // Rendi interattive le flex-rows
+            const allRows = pagesContainer.querySelectorAll('.flex-row');
+            allRows.forEach(row => {
+                makeRowInteractive(row);
+            });
+
             const allElements = pagesContainer.querySelectorAll('.dropped-element');
             allElements.forEach(el => {
                 makeElementInteractive(el);
@@ -2800,17 +3242,17 @@ ${pageClone.innerHTML}
                     setupTableCellSelection(el);
                 }
             });
-            
+
             const allCanvases = pagesContainer.querySelectorAll('.canvas');
             allCanvases.forEach(canvas => {
                 canvas.removeEventListener('dragover', canvas._dragOverHandler);
                 canvas.removeEventListener('drop', canvas._dropHandler);
                 canvas.removeEventListener('dragleave', canvas._dragLeaveHandler);
-                
+
                 canvas._dragOverHandler = handleDragOver;
                 canvas._dropHandler = handleDrop;
                 canvas._dragLeaveHandler = handleDragLeave;
-                
+
                 canvas.addEventListener('dragover', canvas._dragOverHandler);
                 canvas.addEventListener('drop', canvas._dropHandler);
                 canvas.addEventListener('dragleave', canvas._dragLeaveHandler);
