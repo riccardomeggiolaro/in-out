@@ -738,6 +738,10 @@
                     <i>🖼️</i>
                     Immagine
                 </div>
+                <div class="component-item" draggable="true" data-type="carousel">
+                    <i>🎠</i>
+                    Carosello
+                </div>
                 <div class="component-item" draggable="true" data-type="divider">
                     <i>➖</i>
                     Separatore
@@ -1297,9 +1301,31 @@
                     wrapper.style.textAlign = "center";
                     content = `
                         <div data-image-container>
-                            <img alt="Immagine" 
-                                 style="width: 50mm; height: 37.5mm; display: inline-block;" 
+                            <img alt="Immagine"
+                                 style="width: 50mm; height: 37.5mm; display: inline-block;"
                                  data-width-mm="50" data-height-mm="37.5" data-image-type="file">
+                        </div>
+                    `;
+                    break;
+                case 'carousel':
+                    wrapper.style.textAlign = "center";
+                    content = `
+                        <div data-carousel-container style="display: flex; flex-wrap: wrap; gap: 5mm; justify-content: center;">
+                            <img src="{{ weight2.weighing_pictures[0:1]|map(attribute='path_name')|first|default('') }}"
+                                 alt="Immagine 1"
+                                 style="width: 50mm; height: 37.5mm;"
+                                 data-width-mm="50"
+                                 data-height-mm="37.5">
+                            <img src="{{ weight2.weighing_pictures[1:2]|map(attribute='path_name')|first|default('') }}"
+                                 alt="Immagine 2"
+                                 style="width: 50mm; height: 37.5mm;"
+                                 data-width-mm="50"
+                                 data-height-mm="37.5">
+                            <img src="{{ weight2.weighing_pictures[2:3]|map(attribute='path_name')|first|default('') }}"
+                                 alt="Immagine 3"
+                                 style="width: 50mm; height: 37.5mm;"
+                                 data-width-mm="50"
+                                 data-height-mm="37.5">
                         </div>
                     `;
                     break;
@@ -1613,6 +1639,62 @@
                         </div>
                     `;
                     break;
+                case 'carousel':
+                    const carouselContainer = element.querySelector('[data-carousel-container]');
+                    const carouselImages = carouselContainer.querySelectorAll('img');
+                    const imageCount = carouselImages.length;
+                    const firstCarouselImg = carouselImages[0];
+                    const carouselWidthMm = firstCarouselImg ? (firstCarouselImg.dataset.widthMm || '50') : '50';
+                    const carouselHeightMm = firstCarouselImg ? (firstCarouselImg.dataset.heightMm || '37.5') : '37.5';
+                    const carouselGap = carouselContainer.style.gap.replace('mm', '') || '5';
+                    const carouselAlign = carouselContainer.style.justifyContent || 'center';
+
+                    propertiesHTML += `
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #ffeaa7;">
+                            <h4 style="margin: 0 0 15px 0; color: #856404;">🎠 Proprietà Carosello</h4>
+
+                            <div class="property-group">
+                                <label>Numero di Immagini</label>
+                                <input type="number" value="${imageCount}" min="1" max="20" onchange="changeCarouselImageCount(this.value)">
+                            </div>
+
+                            <div class="property-group">
+                                <label>Dimensioni Immagini</label>
+                                <div class="dimension-group">
+                                    <div class="dimension-input">
+                                        <input type="number" value="${carouselWidthMm}" min="5" max="200" step="0.5"
+                                            onchange="changeCarouselImageWidth(this.value)" placeholder="Larghezza">
+                                        <span>mm</span>
+                                    </div>
+                                    <div class="dimension-input">
+                                        <input type="number" value="${carouselHeightMm}" min="5" max="200" step="0.5"
+                                            onchange="changeCarouselImageHeight(this.value)" placeholder="Altezza">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                                <small style="color: #666; margin-top: 5px; display: block;">
+                                    Lascia un campo vuoto per mantenere le proporzioni
+                                </small>
+                            </div>
+
+                            <div class="property-group">
+                                <label>Spazio tra immagini (mm)</label>
+                                <input type="number" value="${carouselGap}" min="0" max="50" step="0.5" onchange="changeCarouselGap(this.value)">
+                            </div>
+
+                            <div class="property-group">
+                                <label>Allineamento Carosello</label>
+                                <select onchange="changeCarouselAlignment(this.value)">
+                                    <option value="center" ${carouselAlign === 'center' ? 'selected' : ''}>Centro</option>
+                                    <option value="flex-start" ${carouselAlign === 'flex-start' ? 'selected' : ''}>Sinistra</option>
+                                    <option value="flex-end" ${carouselAlign === 'flex-end' ? 'selected' : ''}>Destra</option>
+                                    <option value="space-between" ${carouselAlign === 'space-between' ? 'selected' : ''}>Spazio tra</option>
+                                    <option value="space-around" ${carouselAlign === 'space-around' ? 'selected' : ''}>Spazio intorno</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                    break;
                 case 'table':
                     const table = element.querySelector('table');
                     const currentPadding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
@@ -1871,6 +1953,91 @@
         function changeImageAlignment(alignment) {
             if (!selectedElement) return;
             selectedElement.style.textAlign = alignment;
+        }
+
+        function changeCarouselImageCount(count) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const newCount = parseInt(count) || 1;
+            const currentImages = container.querySelectorAll('img');
+            const currentCount = currentImages.length;
+
+            const widthMm = currentImages[0]?.dataset.widthMm || '50';
+            const heightMm = currentImages[0]?.dataset.heightMm || '37.5';
+
+            if (newCount > currentCount) {
+                for (let i = currentCount; i < newCount; i++) {
+                    const img = document.createElement('img');
+                    img.src = `{{ weight2.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.alt = `Immagine ${i + 1}`;
+                    img.style.width = widthMm + 'mm';
+                    img.style.height = heightMm + 'mm';
+                    img.dataset.widthMm = widthMm;
+                    img.dataset.heightMm = heightMm;
+                    container.appendChild(img);
+                }
+            } else if (newCount < currentCount) {
+                for (let i = currentCount - 1; i >= newCount; i--) {
+                    currentImages[i].remove();
+                }
+            }
+
+            showProperties(selectedElement);
+        }
+
+        function changeCarouselImageWidth(value) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                if (value.trim() === '') {
+                    img.style.width = 'auto';
+                    img.dataset.widthMm = '';
+                } else {
+                    const width = parseFloat(value) || 50;
+                    img.style.width = width + 'mm';
+                    img.dataset.widthMm = width;
+                }
+            });
+        }
+
+        function changeCarouselImageHeight(value) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                if (value.trim() === '') {
+                    img.style.height = 'auto';
+                    img.dataset.heightMm = '';
+                } else {
+                    const height = parseFloat(value) || 37.5;
+                    img.style.height = height + 'mm';
+                    img.dataset.heightMm = height;
+                }
+            });
+        }
+
+        function changeCarouselGap(value) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const gap = parseFloat(value) || 0;
+            container.style.gap = gap + 'mm';
+        }
+
+        function changeCarouselAlignment(alignment) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            container.style.justifyContent = alignment;
         }
 
         function insertQuickVariable(variable) {
