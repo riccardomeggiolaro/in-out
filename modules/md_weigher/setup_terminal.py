@@ -319,8 +319,12 @@ class __SetupWeigher(__SetupWeigherConnection):
 							if self.take_of_weight_before_weighing is True:
 								return 500,	"Scaricare la pesa prima di eseguire nuova pesata"
 							self.weight.data_assigned = data_assigned
-						else:
+						elif self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status != "ST":
+							return 500, f"Il peso non è stabile" # ritorno errore se il peso non era valido
+						elif self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) <= self.min_weight:
 							return 500, f"Il peso deve essere maggiore di {self.min_weight} kg" # ritorno errore se il peso non era valido
+						elif self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) > self.max_weight:
+							return 500, f"Il peso deve essere inferiore di {self.max_weight} kg" # ritorno errore se il peso non era valido
 					self.modope_to_execute = mod # se tutte le condizioni sono andate a buon fine imposto il mod passato come comando da eseguire
 					callCallback(self.callback_action_in_execution)
 					return 100, None # ritorno il successo

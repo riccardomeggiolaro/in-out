@@ -209,12 +209,12 @@
         #confirm-delete-modal .modal-content,
         .add-node-modal .modal-content,
         .edit-node-modal .modal-content,
-        .confirm-delete-node-modal .modal-content,
-        .endpoint-modal .modal-content {
+        .confirm-delete-node-modal .modal-content {
             width: 400px;
             max-width: 90%;
         }
 
+        .endpoint-modal .modal-content,
         .add-node-modal .modal-content,
         .edit-node-modal .modal-content {
             width: 800px;
@@ -316,6 +316,8 @@
             border-radius: 5px;
             margin: 15px 0;
             word-break: break-all;
+            max-height: 80px;
+            overflow-y: auto;
         }
 
         .endpoint-link {
@@ -345,6 +347,34 @@
             margin: 15px 0;
             font-family: monospace;
             font-size: 14px;
+        }
+
+        /* Stile migliorato per il modal endpoint */
+        .endpoint-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-content label {
+            font-weight: bold;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .endpoint-item .endpoint-link-container {
+            flex: 1;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .endpoint-item .copy-button {
+            margin: 0;
+            padding: 8px 12px;
+            min-width: auto;
+            font-size: 16px;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -810,18 +840,61 @@
                 <div class="modal-content">
                     <h3>Endpoint API - PESA ${nodeId}</h3>
                     <br>
-                    <p><b>Link per pesate automatiche:</b></p>
-                    <div class="endpoint-link-container">
-                        <div class="endpoint-link" id="endpoint-link-${instanceId}-${nodeId}">Caricamento...</div>
+                    
+                    <label>Protocollo:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-protocol-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'protocol')">📋</button>
                     </div>
-                    <button class="copy-button" onclick="copyEndpointLink('${instanceId}', '${nodeId}')">📋 Copia Link</button>
-                    <br>
+                    
+                    <label>IP:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-ip-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'ip')">📋</button>
+                    </div>
+                    
+                    <label>Porta:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-port-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'port')">📋</button>
+                    </div>
+                    
+                    <label>Hostname:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-hostname-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'hostname')">📋</button>
+                    </div>
+                    
+                    <label>Path:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-path-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'path')">📋</button>
+                    </div>
+                    
+                    <label>URL Completo:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-link-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'full')">📋</button>
+                    </div>
+                    
                     <br>
                     <p><b>Esempio di body da passare:</b></p>
                     <div class="example-body">
-{
-    "identify": "GSGSGSJ"
-}
+        {
+            "identify": "AB123CD"
+        }
                     </div>
                     <br>
                     <div class="container-buttons right">
@@ -847,20 +920,145 @@
                     return res.json();
                 })
                 .then(data => {
-                    const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
-                    if (endpointElement && data.endpoint) {
-                        endpointElement.textContent = data.endpoint;
+                    if (data.endpoint) {
+                        // Parse dell'URL
+                        try {
+                            const url = new URL(data.endpoint);
+                            const protocol = url.protocol.replace(':', ''); // Rimuove i due punti
+                            const ip = url.hostname;
+                            const port = url.port;
+                            const hostname = `${url.protocol}//${url.host}`;
+                            const path = url.pathname + url.search;
+                            
+                            // Aggiorna gli elementi
+                            const protocolElement = document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`);
+                            const ipElement = document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`);
+                            const portElement = document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`);
+                            const hostnameElement = document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`);
+                            const pathElement = document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`);
+                            const fullElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+                            
+                            if (protocolElement) protocolElement.textContent = protocol;
+                            if (ipElement) ipElement.textContent = ip;
+                            if (portElement) portElement.textContent = port || 'Default';
+                            if (hostnameElement) hostnameElement.textContent = hostname;
+                            if (pathElement) pathElement.textContent = path;
+                            if (fullElement) fullElement.textContent = data.endpoint;
+                        } catch (e) {
+                            console.error('Errore nel parsing dell\'URL:', e);
+                            document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`).textContent = data.endpoint;
+                        }
                     } else {
-                        endpointElement.textContent = 'Endpoint non disponibile';
+                        document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`).textContent = 'Endpoint non disponibile';
                     }
                 })
                 .catch(error => {
                     console.error('Errore:', error);
-                    const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
-                    if (endpointElement) {
-                        endpointElement.textContent = 'Errore nel caricamento dell\'endpoint';
-                    }
+                    document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento dell\'endpoint';
                 });
+        }
+
+        // Funzione per copiare le diverse parti dell'endpoint
+        function copyEndpointPart(instanceId, nodeId, part) {
+            let element, text;
+            
+            switch(part) {
+                case 'protocol':
+                    element = document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`);
+                    break;
+                case 'ip':
+                    element = document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`);
+                    break;
+                case 'port':
+                    element = document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`);
+                    break;
+                case 'hostname':
+                    element = document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`);
+                    break;
+                case 'path':
+                    element = document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`);
+                    break;
+                case 'full':
+                    element = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+                    break;
+            }
+            
+            if (element) {
+                text = element.textContent;
+            }
+            
+            if (text && text !== 'Caricamento...' && text !== 'Endpoint non disponibile' && 
+                text !== 'Errore nel caricamento dell\'endpoint' && text !== 'Non disponibile' && 
+                text !== 'Errore nel parsing' && text !== 'Errore nel caricamento' && text !== 'Default') {
+                
+                // Prova prima con l'API Clipboard moderna
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const partName = part === 'protocol' ? 'Protocollo' : 
+                                        part === 'ip' ? 'IP' : 
+                                        part === 'port' ? 'Porta' : 
+                                        part === 'hostname' ? 'Hostname' : 
+                                        part === 'path' ? 'Path' : 'URL';
+                        showSnackbar("snackbar", `${partName} copiato negli appunti`, 'rgb(208, 255, 208)', 'black');
+                    }).catch(err => {
+                        console.error('Errore nella copia:', err);
+                        // Fallback se clipboard API fallisce
+                        copyTextFallback(text, part);
+                    });
+                } else {
+                    // Fallback per browser che non supportano clipboard API o connessioni non sicure
+                    copyTextFallback(text, part);
+                }
+            } else {
+                showSnackbar("snackbar", "Contenuto non disponibile", 'rgb(255, 208, 208)', 'black');
+            }
+        }
+
+        // Funzione di fallback per copiare testo senza clipboard API
+        function copyTextFallback(text, part) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            
+            try {
+                textArea.select();
+                textArea.setSelectionRange(0, 99999); // Per mobile
+                const successful = document.execCommand('copy');
+                
+                if (successful) {
+                    const partName = part === 'protocol' ? 'Protocollo' : 
+                                    part === 'ip' ? 'IP' : 
+                                    part === 'port' ? 'Porta' : 
+                                    part === 'hostname' ? 'Hostname' : 
+                                    part === 'path' ? 'Path' : 'URL';
+                    showSnackbar("snackbar", `${partName} copiato negli appunti`, 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Errore nella copia del testo", 'rgb(255, 208, 208)', 'black');
+                }
+            } catch (err) {
+                console.error('Errore nel fallback della copia:', err);
+                showSnackbar("snackbar", "Impossibile copiare il testo. Copia manualmente.", 'rgb(255, 208, 208)', 'black');
+            } finally {
+                document.body.removeChild(textArea);
+            }
         }
 
         // Funzione per chiudere il modal endpoint

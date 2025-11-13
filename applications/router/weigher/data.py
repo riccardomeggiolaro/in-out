@@ -26,11 +26,11 @@ class DataRouter(CallbackWeigher):
 		
 		self.router_data = APIRouter()
 	
-		self.router_data.add_api_route('', self.GetDataInExecution, methods=['GET'])
+		self.router_data.add_api_route('', self.GetData, methods=['GET'])
 		self.router_data.add_api_route('', self.SetData, methods=['PATCH'])
 		self.router_data.add_api_route('', self.DeleteData, methods=['DELETE'])
  
-	async def GetDataInExecution(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def GetData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
 	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False):

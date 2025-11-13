@@ -780,6 +780,10 @@ hr {
     z-index: 999;
 }
 
+#confirmPopup {
+    align-items: initial;
+}
+
 /* Desktop navbar adjustments */
 @media (min-width: 1051px) {
     .box {

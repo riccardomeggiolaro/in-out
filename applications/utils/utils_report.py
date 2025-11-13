@@ -32,7 +32,7 @@ def get_data_variables(in_out):
         variables.weight1.date = in_out.weight1.date.strftime("%d/%m/%Y %H:%M")
         variables.weight1.pid = in_out.weight1.pid
         variables.weight1.weight = in_out.weight1.weight
-        if hasattr(in_out.weight1.__dict__, "weighing_pictures"):
+        if "weighing_pictures" in in_out.weight1.__dict__:
             for w in in_out.weight1.weighing_pictures:
                 path = lb_config.g_config["app_api"]["path_img"] + w.path_name
                 if os.path.exists(path):
@@ -50,7 +50,7 @@ def get_data_variables(in_out):
         variables.weight2.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M") if in_out.idWeight2 else ""
         variables.weight2.pid = in_out.weight2.pid if in_out.idWeight2 else ""
         variables.weight2.weight = in_out.weight2.weight if in_out.idWeight2 else ""
-        if hasattr(in_out.weight2.__dict__, "weighing_pictures"):
+        if "weighing_pictures" in in_out.weight2.__dict__:
             for w in in_out.weight2.weighing_pictures:
                 path = lb_config.g_config["app_api"]["path_img"] + w.path_name
                 if os.path.exists(path):
@@ -80,9 +80,6 @@ def get_report_file(report_dir, report_name_file):
 
 def generate_html_report(reports_dir, report_name_file, v: ReportVariables = None):
     try:
-        import libs.lb_log as lb_log
-        lb_log.error(v)
-        
         # Setup path to reports
         env = Environment(loader=FileSystemLoader(reports_dir))
         
