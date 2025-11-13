@@ -1310,7 +1310,7 @@
                 case 'carousel':
                     wrapper.style.textAlign = "center";
                     content = `
-                        <div data-carousel-container style="display: flex; flex-wrap: wrap; gap: 5mm; justify-content: center;">
+                        <div data-carousel-container data-weight-source="weight2" style="display: flex; flex-wrap: wrap; gap: 5mm; justify-content: center;">
                             <img src="{{ weight2.weighing_pictures[0:1]|map(attribute='path_name')|first|default('') }}"
                                  alt="Immagine 1"
                                  style="width: 50mm; height: 37.5mm;"
@@ -1648,14 +1648,23 @@
                     const carouselHeightMm = firstCarouselImg ? (firstCarouselImg.dataset.heightMm || '37.5') : '37.5';
                     const carouselGap = carouselContainer.style.gap.replace('mm', '') || '5';
                     const carouselAlign = carouselContainer.style.justifyContent || 'center';
+                    const weightSource = carouselContainer.dataset.weightSource || 'weight2';
 
                     propertiesHTML += `
                         <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #ffeaa7;">
                             <h4 style="margin: 0 0 15px 0; color: #856404;">🎠 Proprietà Carosello</h4>
 
                             <div class="property-group">
+                                <label>Sorgente Immagini</label>
+                                <select onchange="changeCarouselWeightSource(this.value)">
+                                    <option value="weight1" ${weightSource === 'weight1' ? 'selected' : ''}>Peso ENTRATA (weight1)</option>
+                                    <option value="weight2" ${weightSource === 'weight2' ? 'selected' : ''}>Peso USCITA (weight2)</option>
+                                </select>
+                            </div>
+
+                            <div class="property-group">
                                 <label>Numero di Immagini</label>
-                                <input type="number" value="${imageCount}" min="1" max="20" onchange="changeCarouselImageCount(this.value)">
+                                <input id="carouselImageCountInput" type="number" value="${imageCount}" min="1" max="20" onchange="changeCarouselImageCount(this.value)">
                             </div>
 
                             <div class="property-group">
@@ -1966,11 +1975,12 @@
 
             const widthMm = currentImages[0]?.dataset.widthMm || '50';
             const heightMm = currentImages[0]?.dataset.heightMm || '37.5';
+            const weightSource = container.dataset.weightSource || 'weight2';
 
             if (newCount > currentCount) {
                 for (let i = currentCount; i < newCount; i++) {
                     const img = document.createElement('img');
-                    img.src = `{{ weight2.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.src = `{{ ${weightSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
                     img.alt = `Immagine ${i + 1}`;
                     img.style.width = widthMm + 'mm';
                     img.style.height = heightMm + 'mm';
@@ -1985,6 +1995,23 @@
             }
 
             showProperties(selectedElement);
+            setTimeout(() => {
+                const input = document.getElementById('carouselImageCountInput');
+                if (input) input.focus();
+            }, 0);
+        }
+
+        function changeCarouselWeightSource(source) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            container.dataset.weightSource = source;
+
+            const images = container.querySelectorAll('img');
+            images.forEach((img, index) => {
+                img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+            });
         }
 
         function changeCarouselImageWidth(value) {
