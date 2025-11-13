@@ -1337,20 +1337,23 @@
                     content = `
                         <div data-carousel-container data-weight-source="weight2" style="display: flex; flex-wrap: wrap; gap: 5mm; justify-content: center;">
                             <img src="{{ weight2.weighing_pictures[0:1]|map(attribute='path_name')|first|default('') }}"
-                                 alt="Immagine 1"
+                                 alt="Uscita img 1"
                                  style="width: 50mm; height: 37.5mm;"
                                  data-width-mm="50"
-                                 data-height-mm="37.5">
+                                 data-height-mm="37.5"
+                                 data-source="weight2">
                             <img src="{{ weight2.weighing_pictures[1:2]|map(attribute='path_name')|first|default('') }}"
-                                 alt="Immagine 2"
+                                 alt="Uscita img 2"
                                  style="width: 50mm; height: 37.5mm;"
                                  data-width-mm="50"
-                                 data-height-mm="37.5">
+                                 data-height-mm="37.5"
+                                 data-source="weight2">
                             <img src="{{ weight2.weighing_pictures[2:3]|map(attribute='path_name')|first|default('') }}"
-                                 alt="Immagine 3"
+                                 alt="Uscita img 3"
                                  style="width: 50mm; height: 37.5mm;"
                                  data-width-mm="50"
-                                 data-height-mm="37.5">
+                                 data-height-mm="37.5"
+                                 data-source="weight2">
                         </div>
                     `;
                     break;
@@ -1462,7 +1465,7 @@
                 </div>
             `;
 
-            if (type !== 'image') {
+            if (type !== 'image' && type !== 'carousel') {
                 propertiesHTML += `
                     <div class="jinja-section">
                         <h4>🔤 Variabili Jinja2</h4>
@@ -2015,7 +2018,7 @@
                     for (let i = currentCount; i < newCount; i++) {
                         const img1 = document.createElement('img');
                         img1.src = `{{ weight1.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
-                        img1.alt = `Entrata ${i + 1}`;
+                        img1.alt = `Entrata img ${i + 1}`;
                         img1.style.width = widthMm + 'mm';
                         img1.style.height = heightMm + 'mm';
                         img1.dataset.widthMm = widthMm;
@@ -2035,7 +2038,7 @@
                     for (let i = currentCount; i < newCount; i++) {
                         const img2 = document.createElement('img');
                         img2.src = `{{ weight2.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
-                        img2.alt = `Uscita ${i + 1}`;
+                        img2.alt = `Uscita img ${i + 1}`;
                         img2.style.width = widthMm + 'mm';
                         img2.style.height = heightMm + 'mm';
                         img2.dataset.widthMm = widthMm;
@@ -2062,12 +2065,13 @@
             } else {
                 // Modalità singola sorgente
                 const currentCount = currentImages.length;
+                const altPrefix = weightSource === 'weight1' ? 'Entrata' : 'Uscita';
 
                 if (newCount > currentCount) {
                     for (let i = currentCount; i < newCount; i++) {
                         const img = document.createElement('img');
                         img.src = `{{ ${weightSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
-                        img.alt = `Immagine ${i + 1}`;
+                        img.alt = `${altPrefix} img ${i + 1}`;
                         img.style.width = widthMm + 'mm';
                         img.style.height = heightMm + 'mm';
                         img.dataset.widthMm = widthMm;
@@ -2116,7 +2120,7 @@
                 for (let i = 0; i < count; i++) {
                     const img = document.createElement('img');
                     img.src = `{{ ${otherSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
-                    img.alt = `${otherSource === 'weight1' ? 'Entrata' : 'Uscita'} ${i + 1}`;
+                    img.alt = `${otherSource === 'weight1' ? 'Entrata' : 'Uscita'} img ${i + 1}`;
                     img.style.width = widthMm + 'mm';
                     img.style.height = heightMm + 'mm';
                     img.dataset.widthMm = widthMm;
@@ -2136,20 +2140,23 @@
                 // Passaggio da "both" a singola sorgente: mantieni solo le immagini della sorgente selezionata
                 const imagesToKeep = container.querySelectorAll(`img[data-source="${source}"]`);
                 const imagesToRemove = container.querySelectorAll(`img[data-source]:not([data-source="${source}"])`);
+                const altPrefix = source === 'weight1' ? 'Entrata' : 'Uscita';
 
                 imagesToRemove.forEach(img => img.remove());
 
                 // Aggiorna gli indici delle immagini rimanenti
                 imagesToKeep.forEach((img, index) => {
                     img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
-                    img.alt = `Immagine ${index + 1}`;
+                    img.alt = `${altPrefix} img ${index + 1}`;
                 });
 
             } else {
                 // Passaggio tra weight1 e weight2: aggiorna tutte le sorgenti
+                const altPrefix = source === 'weight1' ? 'Entrata' : 'Uscita';
                 currentImages.forEach((img, index) => {
                     img.dataset.source = source;
                     img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.alt = `${altPrefix} img ${index + 1}`;
                 });
             }
 
