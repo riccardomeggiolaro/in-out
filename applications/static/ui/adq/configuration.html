@@ -1,0 +1,2892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <link rel="stylesheet" href="/static/css/setup.css"></link>
+    <style>
+        #config > * {
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #config > h3,
+        #config > #sub-menu {
+            max-width: 1000px;
+        }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { font-weight: 500; }
+        .instance-container { display: none; }
+        .instance-container.active { display: block; }
+        .instance-sub-menu { margin-bottom: 20px; }
+        .node-sub-menu { margin: 10px 0; }
+        .node-tab-content { display: none; }
+        .node-tab-content.active { display: block; }
+
+        /* Stile tab Chrome */
+        #sub-menu,
+        #instance-sub-menu,
+        .node-sub-menu {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #dee1e6;
+            padding: 0;
+            margin-bottom: 0;
+            position: relative;
+        }
+
+        /* Scrollable tabs */
+        #instance-sub-menu,
+        .node-sub-menu {
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc #f1f3f4;
+        }
+
+        #instance-sub-menu::-webkit-scrollbar,
+        .node-sub-menu::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        #instance-sub-menu::-webkit-scrollbar-track,
+        .node-sub-menu::-webkit-scrollbar-track {
+            background: #f1f3f4;
+        }
+
+        #instance-sub-menu::-webkit-scrollbar-thumb,
+        .node-sub-menu::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        #instance-sub-menu::-webkit-scrollbar-thumb:hover,
+        .node-sub-menu::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        .menu-tab {
+            position: relative;
+            background: #f1f3f4;
+            border: none;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 10px 20px;
+            padding-right: 35px;
+            margin-right: 2px;
+            margin-bottom: -2px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 1;
+            pointer-events: auto;
+            box-shadow: none;
+            color: #5f6368;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .menu-tab:hover:not(.selected) {
+            background: #e8eaed;
+            box-shadow: none;
+        }
+
+        .menu-tab.selected {
+            background: white;
+            color: #1967d2;
+            border-bottom: 2px solid white;
+            z-index: 1;
+            box-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.1),
+                -1px 0 0 rgba(0, 0, 0, 0.04),
+                1px 0 0 rgba(0, 0, 0, 0.04);
+        }
+
+        .menu-tab:enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .menu-tab.add-tab {
+            position: sticky;
+            right: 0;
+            background: #f1f3f4;
+            color: #5f6368;
+            font-size: 20px;
+            padding: 10px 15px;
+            margin-left: 0;
+            border-left: 2px solid #dee1e6;
+            z-index: 2;
+            flex-shrink: 0;
+            box-shadow: -4px 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-tab.add-tab::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background: linear-gradient(to right, transparent, #f1f3f4);
+            pointer-events: none;
+        }
+
+        .menu-tab.add-tab:hover {
+            background: #e8eaed;
+        }
+
+        /* Stile X per chiudere tab */
+        .tab-close {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+            color: #5f6368;
+            background: transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .menu-tab:hover .tab-close {
+            display: flex;
+        }
+
+        .tab-close:hover {
+            background: rgba(95, 99, 104, 0.1);
+            color: #202124;
+            box-shadow: none;
+        }
+
+        /* Aggiusta i container per allinearsi con i tab */
+        .borders.aliceblue {
+            margin-top: 0;
+            border-top-left-radius: 0;
+        }
+
+        .instance-container .borders.aliceblue:first-child {
+            border-top-left-radius: 0;
+            border-top-right-radius: 5px;
+        }
+
+        /* Stile modal - MODIFICATO per z-index e scrollabilità */
+        .modal {
+            z-index: 1000 !important; /* Z-index molto alto per essere sopra la navbar */
+            overflow-y: auto; /* Permette lo scroll verticale del modal */
+            padding: 20px; /* Aggiunge padding per evitare che il contenuto tocchi i bordi */
+        }
+
+        .modal .modal-content {
+            max-height: calc(100vh - 40px); /* Massima altezza meno il padding */
+            overflow-y: auto; /* Scroll verticale sul contenuto */
+            margin: auto;
+        }
+
+        #new-instance-modal .modal-content,
+        #edit-instance-modal .modal-content,
+        #confirm-delete-modal .modal-content,
+        .add-node-modal .modal-content,
+        .edit-node-modal .modal-content,
+        .confirm-delete-node-modal .modal-content {
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .endpoint-modal .modal-content,
+        .add-node-modal .modal-content,
+        .edit-node-modal .modal-content {
+            width: 800px;
+            max-width: 90%;
+        }
+
+        #new-instance-modal select,
+        #new-instance-modal input,
+        #edit-instance-modal select,
+        #edit-instance-modal input {
+            margin-top: 5px;
+        }
+
+        .connection-fields {
+            display: none;
+        }
+
+        .connection-fields.active {
+            display: block;
+        }
+
+        .input-error {
+            border-color: #dc3545 !important;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 3px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .edit-instance-btn {
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        .cam, .rele {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .cam button, .rele button {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+
+        .node-content-detail {
+            padding: 10px;
+        }
+
+        .node-content-detail p {
+            margin: 5px 0;
+        }
+
+        .node-actions {
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .node-actions button {
+            padding: 8px 15px;
+        }
+
+        .cams-reles-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .cams-reles-section h5 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .cam-item, .rele-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-left: 3px solid #1967d2;
+            border-radius: 3px;
+        }
+
+        /* Stile per il modal endpoint */
+        .endpoint-link-container {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            word-break: break-all;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .endpoint-link {
+            font-family: monospace;
+            font-size: 14px;
+            color: #1967d2;
+        }
+
+        .copy-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #1967d2;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .copy-button:hover {
+            background: #1557b0;
+        }
+
+        .example-body {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        /* Stile migliorato per il modal endpoint */
+        .endpoint-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .modal-content label {
+            font-weight: bold;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .endpoint-item .endpoint-link-container {
+            flex: 1;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .endpoint-item .copy-button {
+            margin: 0;
+            padding: 8px 12px;
+            min-width: auto;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div id="config">
+        <h3>CONFIGURAZIONE</h3>
+        <br>
+        <div id="sub-menu">
+            <button class="menu-tab selected" onclick="changeSetupTab(event, 'settings')">SETTAGGI</button>
+            <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">TERMINALI</button>
+        </div>
+        <br>
+        <div id="tabs">
+            <div id="settings" class="tab">
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>ACCESSI</h3>
+                    <br>
+                    <div>
+                        <label><b>Funzionamento</b>: </label>
+                        <input type="radio" name="option" value="MANUALLY" id="radio-0" oninput="setMode(this.value)">
+                        <label for="radio-0">Manuale</label>
+                        <input type="radio" name="option" value="AUTOMATIC" id="radio-1" oninput="setMode(this.value)">
+                        <label for="radio-1">Automatico</label>
+                        <input type="radio" name="option" value="SEMIAUTOMATIC" id="radio-2" oninput="setMode(this.value)">
+                        <label for="radio-2">Semiautomatico</label>
+                    </div>
+                    <br>
+                    <label for="reservetion">Usa <b>prenotazioni</b>: </label>
+                    <input type="checkbox" id="reservation" onclick="setUseReservation(this.checked)">
+                    <br>
+                    <br>
+                    <label for="badge">Usa <b>badge</b> per riconoscimento tramite tessere: </label>
+                    <input type="checkbox" id="badge" onclick="setUseBadge(this.checked)">
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>Report</h3>
+                    <br>
+                    <label for="report-copy">Ritorna copia del report a chi effettua la pesata: </label>
+                    <input type="checkbox" id="report-copy" onclick="setReturnCopy(this.checked)">
+                    <br>
+                    <br>
+                    <label for="entry-report">Report di stampa per <b>l'entrata</b>: </label>
+                    <button onclick="openTemplateEditor('entrata')">Apri report designer</button>
+                    <br>
+                    <br>
+                    <label for="exit-report">Report di stampa per <b>l'uscita</b>: </label>
+                    <button onclick="openTemplateEditor('uscita')">Apri report designer</button>
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <form id="sync-folder" onsubmit="event.preventDefault()">
+                        <br>
+                        <h3>Sincronizzazione cartella remota</h3>
+                        <br>
+                        <label for="ip">IP: *</label>
+                        <input type="text" id="ip">
+                        <br>
+                        <br>
+                        <label for="domain">Dominio: </label>
+                        <input type="text" id="domain">
+                        <br>
+                        <br>
+                        <label for="shared-folder">Cartella condivisa: *</label>
+                        <input type="text" id="shared-folder">
+                        <br>
+                        <br>
+                        <label for="sub-folder">Sotto cartella: </label>
+                        <input type="text" id="sub-folder">
+                        <br>
+                        <br>
+                        <label for="username">Username: *</label>
+                        <input type="text" id="username">
+                        <br>
+                        <br>
+                        <label for="password">Password: *</label>
+                        <input type="text" id="password">
+                        <br>
+                        <br>
+                        <button id="test-connection" onclick="testSyncFolder()">Testa connessione</button>
+                        <br>
+                        <br>
+                        <button id="delete-connection" onclick="deleteSyncFolder()">Elimina</button>
+                        <button id="save-connection" onclick="saveSyncFolder()">Salva</button>
+                        <br>
+                        <br>
+                    </form>
+                </div>
+            </div>
+            <div id="instances" class="tab">
+                <div id="instance-sub-menu" class="instance-sub-menu"></div>
+                <div id="instances-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per nuova istanza -->
+    <div id="new-instance-modal" class="modal">
+        <div class="modal-content">
+            <h3>Nuova Istanza</h3>
+            <br>
+            <form id="new-instance-form" onsubmit="event.preventDefault()">
+                <label for="connection-type"><b>Tipo di connessione:</b></label>
+                <br>
+                <select id="connection-type" onchange="toggleConnectionFields()">
+                    <option value="">Seleziona...</option>
+                    <option value="tcp">TCP/IP</option>
+                    <option value="serial">Seriale</option>
+                </select>
+                <br>
+                <br>
+                
+                <!-- Campi TCP -->
+                <div id="tcp-fields" class="connection-fields">
+                    <label for="tcp-ip"><b>IP:</b> *</label>
+                    <br>
+                    <input type="text" id="tcp-ip" placeholder="es. 10.0.5.178">
+                    <span id="tcp-ip-error" class="error-message">Inserire un IP valido</span>
+                    <br>
+                    <br>
+                    <label for="tcp-port"><b>Porta:</b> *</label>
+                    <br>
+                    <input type="number" id="tcp-port" placeholder="es. 4001" min="1" max="65535">
+                    <span id="tcp-port-error" class="error-message">Porta deve essere tra 1 e 65535</span>
+                    <br>
+                    <br>
+                    <label for="tcp-timeout"><b>Timeout (secondi):</b> *</label>
+                    <br>
+                    <input type="number" step="0.1" id="tcp-timeout" placeholder="es. 2.0" min="0.1">
+                    <span id="tcp-timeout-error" class="error-message">Timeout deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                </div>
+
+                <!-- Campi Seriale -->
+                <div id="serial-fields" class="connection-fields">
+                    <label for="serial-port"><b>Porta seriale:</b> *</label>
+                    <br>
+                    <select id="serial-port">
+                        <option value="">Seleziona una porta...</option>
+                    </select>
+                    <span id="serial-port-error" class="error-message">Seleziona una porta seriale valida</span>
+                    <br>
+                    <br>
+                    <label for="serial-baudrate"><b>Baudrate:</b> *</label>
+                    <br>
+                    <input type="number" id="serial-baudrate" placeholder="es. 9600" min="1">
+                    <span id="serial-baudrate-error" class="error-message">Baudrate deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                    <label for="serial-timeout"><b>Timeout (secondi):</b> *</label>
+                    <br>
+                    <input type="number" step="0.1" id="serial-timeout" placeholder="es. 1.0" min="0.1">
+                    <span id="serial-timeout-error" class="error-message">Timeout deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                </div>
+
+                <!-- Campo comune per entrambi i tipi -->
+                <div id="common-fields" class="connection-fields">
+                    <label for="time-between-actions"><b>Tempo tra azioni (secondi):</b> *</label>
+                    <br>
+                    <input type="number" step="0.1" id="time-between-actions" placeholder="es. 0.3" min="0.1">
+                    <span id="time-between-actions-error" class="error-message">Deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                </div>
+
+                <div class="container-buttons right">
+                    <button type="button" onclick="closeNewInstanceModal()">Annulla</button>
+                    <button type="button" id="save-instance-btn" onclick="saveNewInstance()" disabled>Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal per modifica istanza -->
+    <div id="edit-instance-modal" class="modal">
+        <div class="modal-content">
+            <h3>Modifica Istanza</h3>
+            <br>
+            <form id="edit-instance-form" onsubmit="event.preventDefault()">
+                <input type="hidden" id="edit-instance-id">
+                
+                <label for="edit-connection-type"><b>Tipo di connessione:</b></label>
+                <br>
+                <select id="edit-connection-type" onchange="toggleEditConnectionFields()">
+                    <option value="tcp">TCP/IP</option>
+                    <option value="serial">Seriale</option>
+                </select>
+                <br>
+                <br>
+                
+                <!-- Campi TCP -->
+                <div id="edit-tcp-fields" class="connection-fields">
+                    <label for="edit-tcp-ip"><b>IP:</b> *</label>
+                    <br>
+                    <input type="text" id="edit-tcp-ip" placeholder="es. 10.0.5.178">
+                    <span id="edit-tcp-ip-error" class="error-message">Inserire un IP valido</span>
+                    <br>
+                    <br>
+                    <label for="edit-tcp-port"><b>Porta:</b> *</label>
+                    <br>
+                    <input type="number" id="edit-tcp-port" placeholder="es. 4001" min="1" max="65535">
+                    <span id="edit-tcp-port-error" class="error-message">Porta deve essere tra 1 e 65535</span>
+                    <br>
+                    <br>
+                    <label for="edit-tcp-timeout"><b>Timeout (secondi):</b> *</label>
+                    <br>
+                    <input type="number" step="0.1" id="edit-tcp-timeout" placeholder="es. 2.0" min="0.1">
+                    <span id="edit-tcp-timeout-error" class="error-message">Timeout deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                </div>
+
+                <!-- Campi Seriale -->
+                <div id="edit-serial-fields" class="connection-fields">
+                    <label for="edit-serial-port"><b>Porta seriale:</b> *</label>
+                    <br>
+                    <select id="edit-serial-port">
+                        <option value="">Seleziona una porta...</option>
+                    </select>
+                    <span id="edit-serial-port-error" class="error-message">Seleziona una porta seriale valida</span>
+                    <br>
+                    <br>
+                    <label for="edit-serial-baudrate"><b>Baudrate:</b> *</label>
+                    <br>
+                    <input type="number" id="edit-serial-baudrate" placeholder="es. 9600" min="1">
+                    <span id="edit-serial-baudrate-error" class="error-message">Baudrate deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                    <label for="edit-serial-timeout"><b>Timeout (secondi):</b> *</label>
+                    <br>
+                    <input type="number" step="0.1" id="edit-serial-timeout" placeholder="es. 1.0" min="0.1">
+                    <span id="edit-serial-timeout-error" class="error-message">Timeout deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                </div>
+
+                <!-- Campo comune per entrambi i tipi -->
+                <div id="edit-common-fields" class="connection-fields">
+                    <label for="edit-time-between-actions"><b>Tempo tra azioni (secondi):</b> *</label>
+                    <br>
+                    <input type="number" step="0.1" id="edit-time-between-actions" placeholder="es. 0.3" min="0.1">
+                    <span id="edit-time-between-actions-error" class="error-message">Deve essere maggiore di 0</span>
+                    <br>
+                    <br>
+                </div>
+
+                <div class="container-buttons right">
+                    <button type="button" onclick="closeEditInstanceModal()">Annulla</button>
+                    <button type="button" id="update-instance-btn" onclick="updateInstance()" disabled>Aggiorna</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal per conferma eliminazione istanza -->
+    <div id="confirm-delete-modal" class="modal">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <br>
+            <p>Sei sicuro di voler eliminare questa istanza?</p>
+            <p><b id="instance-to-delete-name"></b></p>
+            <br>
+            <div class="container-buttons right">
+                <button type="button" onclick="closeConfirmDeleteModal()">Annulla</button>
+                <button type="button" class="red-button" onclick="confirmDeleteInstance()">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+    
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script>
+        document.querySelector('#instances').style.display = "none";
+
+        const radio0 = document.querySelector("#radio-0");
+        const radio1 = document.querySelector("#radio-1");
+        const radio2 = document.querySelector("#radio-2");
+        const useReservation = document.querySelector("#reservation");
+        const useBadge = document.querySelector("#badge");
+        const reportCopy = document.querySelector("#report-copy");
+        const syncFolder = document.querySelector("#sync-folder");
+        const ip = document.querySelector("#ip");
+        const domain = document.querySelector("#domain");
+        const sharedFolder = document.querySelector("#shared-folder");
+        const subFolder = document.querySelector("#sub-folder");
+        const username = document.querySelector("#username");
+        const password = document.querySelector("#password");
+        const testConnection = document.querySelector("#test-connection");
+        const deleteConnection = document.querySelector("#delete-connection");
+        const saveConnection = document.querySelector("#save-connection");
+
+        let weighersData = {};
+        let instanceToDelete = null;
+        let nodeToDelete = { instanceId: null, nodeId: null };
+        let printersList = [];
+        let availableSerialPorts = [];
+
+        // Funzione per caricare le porte seriali disponibili
+        async function loadSerialPorts() {
+            try {
+                const response = await fetch('/api/generic/list/serial-ports');
+                const data = await response.json();
+                // Filtra solo le porte non in uso (using[0] === false)
+                availableSerialPorts = data.list_serial_ports.filter(port => !port.using[0]);
+                return availableSerialPorts;
+            } catch (error) {
+                console.error('Errore nel caricamento porte seriali:', error);
+                availableSerialPorts = [];
+                return [];
+            }
+        }
+
+        // Funzione per popolare il select delle porte seriali
+        function populateSerialPortSelect(selectId, selectedPort = '') {
+            const select = document.querySelector(`#${selectId}`);
+            if (!select) return;
+
+            // Salva il valore selezionato se esiste
+            const currentValue = select.value || selectedPort;
+            
+            // Pulisci le opzioni esistenti
+            select.innerHTML = '<option value="">Seleziona una porta...</option>';
+            
+            // Aggiungi le porte disponibili
+            availableSerialPorts.forEach(portInfo => {
+                const option = document.createElement('option');
+                option.value = portInfo.port;
+                option.textContent = portInfo.port;
+                select.appendChild(option);
+            });
+
+            // Se c'è un valore precedentemente selezionato, aggiungilo comunque (anche se in uso)
+            if (currentValue && !availableSerialPorts.find(p => p.port === currentValue)) {
+                const option = document.createElement('option');
+                option.value = currentValue;
+                option.textContent = `${currentValue} (in uso)`;
+                select.appendChild(option);
+            }
+
+            // Imposta il valore selezionato
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        }
+
+        // Funzione globale per chiudere i modal cliccando fuori
+        function setupModalClickOutside() {
+            document.addEventListener('click', function(event) {
+                // Controlla se il click è su un elemento con classe "modal"
+                if (event.target.classList.contains('modal')) {
+                    const modalId = event.target.id;
+                    
+                    // Chiudi il modal appropriato
+                    if (modalId === 'new-instance-modal') {
+                        closeNewInstanceModal();
+                    } else if (modalId === 'edit-instance-modal') {
+                        closeEditInstanceModal();
+                    } else if (modalId === 'confirm-delete-modal') {
+                        closeConfirmDeleteModal();
+                    } else if (modalId.startsWith('add-node-modal-')) {
+                        const instanceId = modalId.replace('add-node-modal-', '');
+                        closeAddNodeModal(instanceId);
+                    } else if (modalId.startsWith('edit-node-modal-')) {
+                        const parts = modalId.replace('edit-node-modal-', '').split('-');
+                        const instanceId = parts[0];
+                        const nodeId = parts.slice(1).join('-');
+                        closeEditNodeModal(instanceId, nodeId);
+                    } else if (modalId.startsWith('confirm-delete-node-modal-')) {
+                        const instanceId = modalId.replace('confirm-delete-node-modal-', '');
+                        closeConfirmDeleteNodeModal(instanceId);
+                    } else if (modalId.startsWith('endpoint-modal-')) {
+                        const parts = modalId.replace('endpoint-modal-', '').split('-');
+                        const instanceId = parts[0];
+                        const nodeId = parts.slice(1).join('-');
+                        closeEndpointModal(instanceId, nodeId);
+                    }
+                }
+            });
+        }
+
+        // Funzioni per aggiungere telecamere e relè
+        function addCam(instanceId, nodeId, picture = '', active = true) {
+            const container = document.querySelector(`#edit-node-form-${instanceId}-${nodeId} .cams-container`) ||
+                                document.querySelector(`#add-node-form-${instanceId} .cams-container`);
+            if (!container) return;
+
+            const camDiv = document.createElement('div');
+            camDiv.className = 'cam';
+            camDiv.innerHTML = `
+                <button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️</button>
+                <label>URL:</label>
+                <input type="url" class="cam-url" value="${picture}" placeholder="http://0.0.0.0/" style="width: 70%;">
+                <label><input type="checkbox" class="cam-active" ${active ? 'checked' : ''}> Attiva</label>
+            `;
+            container.appendChild(camDiv);
+        }
+
+        function addRele(instanceId, nodeId, number = '', status = 1, event = 'weighing') {
+            const container = document.querySelector(`#edit-node-form-${instanceId}-${nodeId} .reles-container`) ||
+                                document.querySelector(`#add-node-form-${instanceId} .reles-container`);
+
+            if (!container) return;
+
+            const releDiv = document.createElement('div');
+            releDiv.className = 'rele';
+            releDiv.innerHTML = `
+                <button type="button" class="delete-btn" onclick="this.parentElement.remove()">🗑️</button>
+                <label>Numero:</label>
+                <input type="number" class="rele-number" value="${number}" min="1" style="width: 80px;">
+                <select class="rele-status" style="width: 100px;">
+                    <option value="1" ${status === 1 ? 'selected' : ''}>Attiva</option>
+                    <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
+                </select>
+                <select class="rele-event" style="width: 180px;">
+                    <option value="weighing" ${event === 'weighing' ? 'selected' : ''}>Dopo la pesata</option>
+                    <option value="over_min" ${event === 'over_min' ? 'selected' : ''}>Sopra peso minimo</option>
+                    <option value="under_min" ${event === 'under_min' ? 'selected' : ''}>Sotto peso minimo</option>
+                </select>
+            `;
+            container.appendChild(releDiv);
+        }
+
+        // Carica lista stampanti
+        async function loadPrinters() {
+            try {
+                const response = await fetch('/api/printer/list');
+                printersList = await response.json();
+            } catch (error) {
+                console.error('Errore nel caricamento stampanti:', error);
+                printersList = [];
+            }
+        }
+
+        // Funzione per aprire il modal endpoint
+        function openEndpointModal(instanceId, nodeId) {
+            // Rimuovi il modal esistente se presente
+            const existingModal = document.querySelector(`#endpoint-modal-${instanceId}-${nodeId}`);
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Crea il modal
+            const modal = document.createElement('div');
+            modal.id = `endpoint-modal-${instanceId}-${nodeId}`;
+            modal.className = 'modal endpoint-modal';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Endpoint API - PESA ${nodeId}</h3>
+                    <br>
+                    
+                    <label>Protocollo:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-protocol-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'protocol')">📋</button>
+                    </div>
+                    
+                    <label>IP:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-ip-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'ip')">📋</button>
+                    </div>
+                    
+                    <label>Porta:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-port-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'port')">📋</button>
+                    </div>
+                    
+                    <label>Hostname:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-hostname-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'hostname')">📋</button>
+                    </div>
+                    
+                    <label>Path:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-path-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'path')">📋</button>
+                    </div>
+                    
+                    <label>URL Completo:</label>
+                    <div class="endpoint-item">
+                        <div class="endpoint-link-container">
+                            <div class="endpoint-link" id="endpoint-link-${instanceId}-${nodeId}">Caricamento...</div>
+                        </div>
+                        <button class="copy-button" onclick="copyEndpointPart('${instanceId}', '${nodeId}', 'full')">📋</button>
+                    </div>
+                    
+                    <br>
+                    <p><b>Esempio di body da passare:</b></p>
+                    <div class="example-body">
+        {
+            "identify": "AB123CD"
+        }
+                    </div>
+                    <br>
+                    <div class="container-buttons right">
+                        <button type="button" onclick="closeEndpointModal('${instanceId}', '${nodeId}')">Chiudi</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Mostra il modal
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+
+            // Carica l'endpoint dall'API
+            fetch(`/api/config-weigher/instance/node/endpoint?instance_name=${instanceId}&weigher_name=${nodeId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Errore nel caricamento dell\'endpoint');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.endpoint) {
+                        // Parse dell'URL
+                        try {
+                            const url = new URL(data.endpoint);
+                            const protocol = url.protocol.replace(':', ''); // Rimuove i due punti
+                            const ip = url.hostname;
+                            const port = url.port;
+                            const hostname = `${url.protocol}//${url.host}`;
+                            const path = url.pathname + url.search;
+                            
+                            // Aggiorna gli elementi
+                            const protocolElement = document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`);
+                            const ipElement = document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`);
+                            const portElement = document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`);
+                            const hostnameElement = document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`);
+                            const pathElement = document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`);
+                            const fullElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+                            
+                            if (protocolElement) protocolElement.textContent = protocol;
+                            if (ipElement) ipElement.textContent = ip;
+                            if (portElement) portElement.textContent = port || 'Default';
+                            if (hostnameElement) hostnameElement.textContent = hostname;
+                            if (pathElement) pathElement.textContent = path;
+                            if (fullElement) fullElement.textContent = data.endpoint;
+                        } catch (e) {
+                            console.error('Errore nel parsing dell\'URL:', e);
+                            document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`).textContent = 'Errore nel parsing';
+                            document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`).textContent = data.endpoint;
+                        }
+                    } else {
+                        document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`).textContent = 'Non disponibile';
+                        document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`).textContent = 'Endpoint non disponibile';
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento';
+                    document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`).textContent = 'Errore nel caricamento dell\'endpoint';
+                });
+        }
+
+        // Funzione per copiare le diverse parti dell'endpoint
+        function copyEndpointPart(instanceId, nodeId, part) {
+            let element, text;
+            
+            switch(part) {
+                case 'protocol':
+                    element = document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`);
+                    break;
+                case 'ip':
+                    element = document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`);
+                    break;
+                case 'port':
+                    element = document.querySelector(`#endpoint-port-${instanceId}-${nodeId}`);
+                    break;
+                case 'hostname':
+                    element = document.querySelector(`#endpoint-hostname-${instanceId}-${nodeId}`);
+                    break;
+                case 'path':
+                    element = document.querySelector(`#endpoint-path-${instanceId}-${nodeId}`);
+                    break;
+                case 'full':
+                    element = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+                    break;
+            }
+            
+            if (element) {
+                text = element.textContent;
+            }
+            
+            if (text && text !== 'Caricamento...' && text !== 'Endpoint non disponibile' && 
+                text !== 'Errore nel caricamento dell\'endpoint' && text !== 'Non disponibile' && 
+                text !== 'Errore nel parsing' && text !== 'Errore nel caricamento' && text !== 'Default') {
+                
+                // Prova prima con l'API Clipboard moderna
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const partName = part === 'protocol' ? 'Protocollo' : 
+                                        part === 'ip' ? 'IP' : 
+                                        part === 'port' ? 'Porta' : 
+                                        part === 'hostname' ? 'Hostname' : 
+                                        part === 'path' ? 'Path' : 'URL';
+                        showSnackbar("snackbar", `${partName} copiato negli appunti`, 'rgb(208, 255, 208)', 'black');
+                    }).catch(err => {
+                        console.error('Errore nella copia:', err);
+                        // Fallback se clipboard API fallisce
+                        copyTextFallback(text, part);
+                    });
+                } else {
+                    // Fallback per browser che non supportano clipboard API o connessioni non sicure
+                    copyTextFallback(text, part);
+                }
+            } else {
+                showSnackbar("snackbar", "Contenuto non disponibile", 'rgb(255, 208, 208)', 'black');
+            }
+        }
+
+        // Funzione di fallback per copiare testo senza clipboard API
+        function copyTextFallback(text, part) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            
+            try {
+                textArea.select();
+                textArea.setSelectionRange(0, 99999); // Per mobile
+                const successful = document.execCommand('copy');
+                
+                if (successful) {
+                    const partName = part === 'protocol' ? 'Protocollo' : 
+                                    part === 'ip' ? 'IP' : 
+                                    part === 'port' ? 'Porta' : 
+                                    part === 'hostname' ? 'Hostname' : 
+                                    part === 'path' ? 'Path' : 'URL';
+                    showSnackbar("snackbar", `${partName} copiato negli appunti`, 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Errore nella copia del testo", 'rgb(255, 208, 208)', 'black');
+                }
+            } catch (err) {
+                console.error('Errore nel fallback della copia:', err);
+                showSnackbar("snackbar", "Impossibile copiare il testo. Copia manualmente.", 'rgb(255, 208, 208)', 'black');
+            } finally {
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Funzione per chiudere il modal endpoint
+        function closeEndpointModal(instanceId, nodeId) {
+            const modal = document.querySelector(`#endpoint-modal-${instanceId}-${nodeId}`);
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        // Funzione per copiare il link endpoint
+        function copyEndpointLink(instanceId, nodeId) {
+            const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
+            const link = endpointElement.textContent;
+            
+            if (link && link !== 'Caricamento...' && link !== 'Endpoint non disponibile' && link !== 'Errore nel caricamento dell\'endpoint') {
+                navigator.clipboard.writeText(link).then(() => {
+                    showSnackbar("snackbar", "Link copiato negli appunti", 'rgb(208, 255, 208)', 'black');
+                }).catch(err => {
+                    console.error('Errore nella copia:', err);
+                    showSnackbar("snackbar", "Errore nella copia del link", 'rgb(255, 208, 208)', 'black');
+                });
+            } else {
+                showSnackbar("snackbar", "Link non disponibile", 'rgb(255, 208, 208)', 'black');
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async (e) => {
+            // Inizializza la funzione per chiudere i modal cliccando fuori
+            setupModalClickOutside();
+            
+            await loadPrinters();
+            await loadSerialPorts();
+
+            fetch('/api/config-weigher/configuration', {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.mode == "MANUALLY") {
+                    radio0.checked = true;
+                } else if (res.mode == "AUTOMATIC") {
+                    radio1.checked = true;
+                } else if (res.mode == "SEMIAUTOMATIC") {
+                    radio2.checked = true;
+                }
+
+                if (res.use_reservation) useReservation.checked = true;
+
+                if (res.use_badge) useBadge.checked = true;
+
+                if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
+
+                if (res.sync_folder.remote_folder) {
+                    ip.value = res.sync_folder.remote_folder.ip;
+                    ip.dataset.lastSaved = res.sync_folder.remote_folder.ip;
+                    domain.value = res.sync_folder.remote_folder.domain;
+                    domain.dataset.lastSaved = res.sync_folder.remote_folder.domain;
+                    sharedFolder.value = res.sync_folder.remote_folder.share_name;
+                    sharedFolder.dataset.lastSaved = res.sync_folder.remote_folder.share_name;
+                    subFolder.value = res.sync_folder.remote_folder.sub_path;
+                    subFolder.dataset.lastSaved = res.sync_folder.remote_folder.sub_path;
+                    username.value = res.sync_folder.remote_folder.username;
+                    username.dataset.lastSaved = res.sync_folder.remote_folder.username;
+                    password.value = res.sync_folder.remote_folder.password;
+                    password.dataset.lastSaved = res.sync_folder.remote_folder.password;
+                } else {
+                    testConnection.disabled = true;
+                    deleteConnection.disabled = true;
+                }
+                saveConnection.disabled = true;
+
+                // Salva i dati e genera i tab delle istanze
+                weighersData = res.weighers;
+                loadInstances(weighersData);
+            });
+        });
+
+        function getConnectionName(connection) {
+            if (connection.ip) {
+                return `TCP ${connection.ip}:${connection.port}`;
+            } else if (connection.serial_port_name) {
+                return `Seriale ${connection.serial_port_name}`;
+            }
+            return 'Sconosciuta';
+        }
+
+        function isValidIP(ip) {
+            const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (!ipPattern.test(ip)) return false;
+            const parts = ip.split('.');
+            return parts.every(part => {
+                const num = parseInt(part, 10);
+                return num >= 0 && num <= 255;
+            });
+        }
+
+        function isValidSerialPort(port) {
+            return port.trim().length > 0;
+        }
+
+        function loadInstances(weighers, activeInstanceId = null, activeNodeId = null) {
+            const instanceSubMenu = document.querySelector('#instance-sub-menu');
+            const instancesContent = document.querySelector('#instances-content');
+            instanceSubMenu.innerHTML = '';
+            instancesContent.innerHTML = '';
+
+            // Ordina le chiavi per mantenere un ordine consistente
+            const sortedInstanceIds = Object.keys(weighers).sort();
+
+            // Se non specificato, usa la prima istanza come attiva
+            if (!activeInstanceId && sortedInstanceIds.length > 0) {
+                activeInstanceId = sortedInstanceIds[0];
+            }
+
+            sortedInstanceIds.forEach((instanceId, index) => {
+                const instance = weighers[instanceId];
+                const connectionName = getConnectionName(instance.connection);
+                const isActiveInstance = instanceId === activeInstanceId;
+
+                // Crea il bottone per l'istanza
+                const instanceButton = document.createElement('button');
+                instanceButton.className = 'menu-tab';
+                instanceButton.dataset.instanceId = instanceId;
+                if (isActiveInstance) instanceButton.classList.add('selected');
+                
+                // Testo del tab
+                const tabText = document.createElement('span');
+                tabText.textContent = connectionName;
+                instanceButton.appendChild(tabText);
+                
+                // Bottone X per chiudere
+                const closeBtn = document.createElement('span');
+                closeBtn.className = 'tab-close';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openConfirmDeleteModal(instanceId);
+                };
+                instanceButton.appendChild(closeBtn);
+                
+                instanceButton.onclick = (e) => {
+                    if (!e.target.classList.contains('tab-close')) {
+                        changeInstanceTab(e, instanceId);
+                    }
+                };
+                
+                instanceSubMenu.appendChild(instanceButton);
+
+                // Crea il container per l'istanza
+                const instanceDiv = document.createElement('div');
+                instanceDiv.className = 'instance-container';
+                instanceDiv.id = `instance-${instanceId}`;
+                if (isActiveInstance) instanceDiv.classList.add('active');
+
+                // Informazioni sulla connessione
+                const connectionInfo = document.createElement('div');
+                connectionInfo.className = 'borders aliceblue';
+                
+                let connectionHtml = `
+                    <br>
+                    <h3>CONNESSIONE</h3>
+                    <br>
+                    <div>
+                `;
+
+                if (instance.connection.ip) {
+                    connectionHtml += `
+                        <label><b>Tipo</b>: TCP/IP</label>
+                        <br>
+                        <br>
+                        <label><b>IP</b>: ${instance.connection.ip}</label>
+                        <br>
+                        <br>
+                        <label><b>Porta</b>: ${instance.connection.port}</label>
+                        <br>
+                        <br>
+                        <label><b>Timeout</b>: ${instance.connection.timeout}s</label>
+                    `;
+                } else if (instance.connection.serial_port_name) {
+                    connectionHtml += `
+                        <label><b>Tipo</b>: Seriale</label>
+                        <br>
+                        <br>
+                        <label><b>Porta seriale</b>: ${instance.connection.serial_port_name}</label>
+                        <br>
+                        <br>
+                        <label><b>Baudrate</b>: ${instance.connection.baudrate}</label>
+                        <br>
+                        <br>
+                        <label><b>Timeout</b>: ${instance.connection.timeout}s</label>
+                    `;
+                }
+
+                connectionHtml += `
+                        <br>
+                        <br>
+                        <label><b>Tempo tra azioni</b>: ${instance.time_between_actions}s</label>
+                    </div>
+                    <br>
+                    <button class="edit-instance-btn" onclick="openEditInstanceModal('${instanceId}')">Modifica</button>
+                    <br>
+                `;
+                connectionInfo.innerHTML = connectionHtml;
+
+                // Sotto-menu per i nodi
+                const nodeSubMenu = document.createElement('div');
+                nodeSubMenu.className = 'node-sub-menu';
+                nodeSubMenu.id = `node-sub-menu-${instanceId}`;
+                
+                const nodes = instance.nodes;
+                
+                if (Object.keys(nodes).length === 0) {
+                    // CORREZIONE: Rimuovi il messaggio "Nessuna pesa configurata" così il + appare subito
+                    // nodeSubMenu.innerHTML = '<p style="padding: 10px; color: #666;">Nessuna pesa configurata</p>';
+                } else {
+                    // Ordina anche i nodi per mantenere ordine consistente
+                    const sortedNodeIds = Object.keys(nodes).sort();
+                    
+                    // Se non specificato e questa è l'istanza attiva, usa il primo nodo come attivo
+                    if (!activeNodeId && isActiveInstance && sortedNodeIds.length > 0) {
+                        activeNodeId = sortedNodeIds[0];
+                    }
+
+                    sortedNodeIds.forEach((nodeId, nodeIndex) => {
+                        const isActiveNode = (isActiveInstance && nodeId === activeNodeId);
+                        
+                        const nodeButton = document.createElement('button');
+                        nodeButton.className = 'menu-tab';
+                        if (isActiveNode) nodeButton.classList.add('selected');
+                        
+                        const nodeText = document.createElement('span');
+                        nodeText.textContent = `PESA ${nodeId}`;
+                        nodeButton.appendChild(nodeText);
+
+                        // Bottone X per eliminare
+                        const nodeCloseBtn = document.createElement('span');
+                        nodeCloseBtn.className = 'tab-close';
+                        nodeCloseBtn.innerHTML = '×';
+                        nodeCloseBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            openConfirmDeleteNodeModal(instanceId, nodeId);
+                        };
+                        nodeButton.appendChild(nodeCloseBtn);
+
+                        nodeButton.onclick = (e) => {
+                            if (!e.target.classList.contains('tab-close')) {
+                                changeNodeTab(e, instanceId, nodeId);
+                            }
+                        };
+                        nodeSubMenu.appendChild(nodeButton);
+                    });
+                }
+
+                // CORREZIONE: Aggiungi sempre il bottone "+" sia quando ci sono nodi che quando non ce ne sono
+                const addNodeButton = document.createElement('button');
+                addNodeButton.className = 'menu-tab add-tab';
+                addNodeButton.textContent = '+';
+                addNodeButton.onclick = () => openAddNodeModal(instanceId);
+                nodeSubMenu.appendChild(addNodeButton);
+
+                // Contenuto dei nodi
+                const nodesContainer = document.createElement('div');
+                nodesContainer.className = 'nodes-container';
+                nodesContainer.style.marginTop = '0';
+
+                // Ordina anche qui i nodi
+                const sortedNodeIds = Object.keys(nodes).sort();
+                sortedNodeIds.forEach((nodeId, nodeIndex) => {
+                    const node = nodes[nodeId];
+                    const isActiveNode = (isActiveInstance && nodeId === activeNodeId);
+                    
+                    const nodeContent = document.createElement('div');
+                    nodeContent.className = 'node-tab-content borders aliceblue';
+                    nodeContent.id = `node-${instanceId}-${nodeId}`;
+                    if (isActiveNode) nodeContent.classList.add('active');
+
+                    // Prepara HTML per telecamere
+                    let camsHtml = '';
+                    if (node.events?.weighing?.cams && node.events.weighing.cams.length > 0) {
+                        camsHtml = '<div class="cams-reles-section"><h5>TELECAMERE</h5>';
+                        node.events.weighing.cams.forEach(cam => {
+                            camsHtml += `
+                                <div class="cam-item">
+                                    <p><b>URL:</b> ${cam.picture}</p>
+                                    <p><b>Stato:</b> ${cam.active ? 'Attiva' : 'Disattiva'}</p>
+                                </div>
+                            `;
+                        });
+                        camsHtml += '</div>';
+                    }
+
+                    // Prepara HTML per relè
+                    let relesHtml = '';
+                    const allReles = [];
+                    if (node.events?.weighing?.set_rele) {
+                        node.events.weighing.set_rele.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Dopo la pesata' });
+                        });
+                    }
+                    if (node.events?.realtime?.over_min?.set_rele) {
+                        node.events.realtime.over_min.set_rele.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Sopra peso minimo' });
+                        });
+                    }
+                    if (node.events?.realtime?.under_min?.set_rele) {
+                        node.events.realtime.under_min.set_rele.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Sotto peso minimo' });
+                        });
+                    }
+
+                    if (allReles.length > 0) {
+                        relesHtml = '<div class="cams-reles-section"><h5>RELÈ</h5>';
+                        allReles.forEach(rele => {
+                            relesHtml += `
+                                <div class="rele-item">
+                                    <p><b>Relè:</b> ${rele.rele} - <b>Azione:</b> ${rele.set === 1 ? 'Attiva' : 'Disattiva'} - <b>Evento:</b> ${rele.event}</p>
+                                </div>
+                            `;
+                        });
+                        relesHtml += '</div>';
+                    }
+
+                    nodeContent.innerHTML = `
+                        <h3>PESA ${nodeId}</h3>
+                        <div class="node-content-detail">
+                            <p><b>Terminale</b>: ${node.terminal || 'N/A'}</p>
+                            <p><b>Nodo</b>: ${node.node || 'N/A'}</p>
+                            <p><b>Peso massimo</b>: ${node.max_weight} kg</p>
+                            <p><b>Peso minimo</b>: ${node.min_weight} kg</p>
+                            <p><b>Divisione</b>: ${node.division}</p>
+                            <p><b>Soglia massima</b>: ${node.max_theshold || 'N/A'}</p>
+                            <p><b>Attivo</b>: ${node.run ? 'Sì' : 'No'}</p>
+                            <p><b>Stampante</b>: ${node.printer_name || 'Nessuna'}</p>
+                            <p><b>Numero di stampe</b>: ${node.number_of_prints}</p>
+                            <p><b>Report in entrata</b>: ${node.events?.weighing?.report?.in ? 'Sì' : 'No'}</p>
+                            <p><b>Report in uscita</b>: ${node.events?.weighing?.report?.out ? 'Sì' : 'No'}</p>
+                            <p><b>CSV in entrata</b>: ${node.events?.weighing?.csv?.in ? 'Sì' : 'No'}</p>
+                            <p><b>CSV in uscita</b>: ${node.events?.weighing?.csv?.out ? 'Sì' : 'No'}</p>
+                            <p><b>Scaricare pesa dopo pesata</b>: ${node.need_take_of_weight_before_weighing ? 'Sì' : 'No'}</p>
+                            <p><b>Scaricare pesa all'avvio</b>: ${node.need_take_of_weight_on_startup ? 'Sì' : 'No'}</p>
+                            <p><b>Trasmissione continua</b>: ${node.continuous_transmission ? 'Sì' : 'No'}</p>
+                            ${camsHtml}
+                            ${relesHtml}
+                        </div>
+                        <div class="node-actions">
+                            <button onclick="openEndpointModal('${instanceId}', '${nodeId}')">Link API</button>
+                            <button onclick="openEditNodeModal('${instanceId}', '${nodeId}')">Modifica</button>
+                        </div>
+                    `;
+                    nodesContainer.appendChild(nodeContent);
+                });
+
+                instanceDiv.appendChild(connectionInfo);
+                instanceDiv.appendChild(document.createElement('br'));
+                instanceDiv.appendChild(nodeSubMenu);
+                instanceDiv.appendChild(nodesContainer);
+                instancesContent.appendChild(instanceDiv);
+
+                // Crea i modal per questa istanza
+                createAddNodeModal(instanceId);
+                createConfirmDeleteNodeModal(instanceId);
+            });
+
+            // Aggiungi il bottone "+"
+            const addButton = document.createElement('button');
+            addButton.className = 'menu-tab add-tab';
+            addButton.textContent = '+';
+            addButton.onclick = openNewInstanceModal;
+            instanceSubMenu.appendChild(addButton);
+        }
+
+        function createAddNodeModal(instanceId) {
+            const modal = document.createElement('div');
+            modal.id = `add-node-modal-${instanceId}`;
+            modal.className = 'modal add-node-modal';
+            
+            // Genera opzioni per le stampanti
+            let printerOptions = '<option value="">--- Nessuna ---</option>';
+            printersList.forEach(printer => {
+                printerOptions += `<option value="${printer.nome}">${printer.nome}</option>`;
+            });
+
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Aggiungi Pesa</h3>
+                    <br>
+                    <form id="add-node-form-${instanceId}" onsubmit="event.preventDefault()">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label><b>Nome pesa:</b> *</label>
+                                <input type="text" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Terminale:</b> *</label>
+                                <select name="terminal" required>
+                                    <option value="dgt1">dgt1</option>
+                                    <option value="egt-af03">egt-af03</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Nodo:</b></label>
+                                <input type="text" name="node">
+                            </div>
+                            <div class="form-group">
+                                <label><b>Peso massimo:</b> *</label>
+                                <input type="number" name="max_weight" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Peso minimo:</b> *</label>
+                                <input type="number" name="min_weight" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Divisione:</b> *</label>
+                                <input type="number" name="division" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Soglia massima:</b></label>
+                                <input type="number" name="max_theshold" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label><b>Stampante:</b></label>
+                                <select name="printer_name">
+                                    ${printerOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Numero di stampe:</b> *</label>
+                                <input type="number" name="number_of_prints" min="1" max="5" value="1" required>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                            <div class="form-group">
+                                <label><input type="checkbox" name="report_on_in"> Genera report all'entrata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="report_on_out"> Genera report all'uscita</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="csv_on_in"> Genera CSV all'entrata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="csv_on_out"> Genera CSV all'uscita</label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <div class="form-group">
+                                <label><input type="checkbox" name="run" checked> In esecuzione</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="need_take_of_weight_before_weighing" checked> Scaricare la pesa dopo pesata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="need_take_of_weight_on_startup" checked> Scaricare la pesa all'avvio</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="continuous_transmission"> Trasmissione continua</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label><b>Telecamere:</b></label>
+                            <button type="button" onclick="addCam('${instanceId}', null)">Aggiungi Telecamera</button>
+                            <div class="cams-container"></div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label><b>Relè:</b></label>
+                            <button type="button" onclick="addRele('${instanceId}', null)">Aggiungi Relè</button>
+                            <div class="reles-container"></div>
+                        </div>
+
+                        <div class="container-buttons right" style="margin-top: 20px;">
+                            <button type="button" onclick="closeAddNodeModal('${instanceId}')">Annulla</button>
+                            <button type="submit" onclick="saveNode('${instanceId}')">Salva</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function createConfirmDeleteNodeModal(instanceId) {
+            const modal = document.createElement('div');
+            modal.id = `confirm-delete-node-modal-${instanceId}`;
+            modal.className = 'modal confirm-delete-node-modal';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Conferma Eliminazione</h3>
+                    <br>
+                    <p>Sei sicuro di voler eliminare questa pesa?</p>
+                    <p><b id="node-to-delete-name-${instanceId}"></b></p>
+                    <br>
+                    <div class="container-buttons right">
+                        <button type="button" onclick="closeConfirmDeleteNodeModal('${instanceId}')">Annulla</button>
+                        <button type="button" class="red-button" onclick="confirmDeleteNode('${instanceId}')">Elimina</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function openAddNodeModal(instanceId) {
+            const modal = document.querySelector(`#add-node-modal-${instanceId}`);
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        function closeAddNodeModal(instanceId) {
+            const modal = document.querySelector(`#add-node-modal-${instanceId}`);
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Reset form
+                const form = modal.querySelector('form');
+                form.reset();
+                modal.querySelector('.cams-container').innerHTML = '';
+                modal.querySelector('.reles-container').innerHTML = '';
+            }, 300);
+        }
+
+        function openEditNodeModal(instanceId, nodeId) {
+            const node = weighersData[instanceId].nodes[nodeId];
+            
+            // Rimuovi il modal esistente se presente
+            const existingModal = document.querySelector(`#edit-node-modal-${instanceId}-${nodeId}`);
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Crea sempre un nuovo modal
+            const modal = document.createElement('div');
+            modal.id = `edit-node-modal-${instanceId}-${nodeId}`;
+            modal.className = 'modal edit-node-modal';
+            
+            // Genera opzioni per le stampanti
+            let printerOptions = '<option value="">--- Nessuna ---</option>';
+            printersList.forEach(printer => {
+                const selected = node.printer_name === printer.nome ? 'selected' : '';
+                printerOptions += `<option value="${printer.nome}" ${selected}>${printer.nome}</option>`;
+            });
+
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Modifica Pesa ${nodeId}</h3>
+                    <br>
+                    <form id="edit-node-form-${instanceId}-${nodeId}" onsubmit="event.preventDefault()">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label><b>Nome pesa:</b> *</label>
+                                <input type="text" name="name" value="${node.name || nodeId}" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Terminale:</b> *</label>
+                                <select name="terminal" required>
+                                    <option value="dgt1" ${node.terminal === 'dgt1' ? 'selected' : ''}>dgt1</option>
+                                    <option value="egt-af03" ${node.terminal === 'egt-af03' ? 'selected' : ''}>egt-af03</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Nodo:</b></label>
+                                <input type="text" name="node" value="${node.node || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label><b>Peso massimo:</b> *</label>
+                                <input type="number" name="max_weight" min="1" value="${node.max_weight}" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Peso minimo:</b> *</label>
+                                <input type="number" name="min_weight" min="1" value="${node.min_weight}" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Divisione:</b> *</label>
+                                <input type="number" name="division" min="1" value="${node.division}" required>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Soglia massima:</b></label>
+                                <input type="number" name="max_theshold" min="1" value="${node.max_theshold || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label><b>Stampante:</b></label>
+                                <select name="printer_name">
+                                    ${printerOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label><b>Numero di stampe:</b> *</label>
+                                <input type="number" name="number_of_prints" min="1" max="5" value="${node.number_of_prints}" required>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                            <div class="form-group">
+                                <label><input type="checkbox" name="report_on_in" ${node.events?.weighing?.report?.in ? 'checked' : ''}> Genera report all'entrata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report all'uscita</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV all'entrata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="csv_on_out" ${node.events?.weighing?.csv?.out ? 'checked' : ''}> Genera CSV all'uscita</label>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <div class="form-group">
+                                <label><input type="checkbox" name="run" ${node.run ? 'checked' : ''}> In esecuzione</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="need_take_of_weight_before_weighing" ${node.need_take_of_weight_before_weighing ? 'checked' : ''}> Scaricare la pesa dopo pesata</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="need_take_of_weight_on_startup" ${node.need_take_of_weight_on_startup ? 'checked' : ''}> Scaricare la pesa all'avvio</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="continuous_transmission" ${node.continuous_transmission ? 'checked' : ''}> Trasmissione continua</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label><b>Telecamere:</b></label>
+                            <button type="button" onclick="addCam('${instanceId}', '${nodeId}')">Aggiungi Telecamera</button>
+                            <div class="cams-container"></div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label><b>Relè:</b></label>
+                            <button type="button" onclick="addRele('${instanceId}', '${nodeId}')">Aggiungi Relè</button>
+                            <div class="reles-container"></div>
+                        </div>
+
+                        <div class="container-buttons right" style="margin-top: 20px;">
+                            <button type="button" onclick="closeEditNodeModal('${instanceId}', '${nodeId}')">Annulla</button>
+                            <button type="submit" onclick="updateNode('${instanceId}', '${nodeId}')">Aggiorna</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            // Aggiungi il modal al body
+            document.body.appendChild(modal);
+
+            // Aspetta che il DOM sia pronto prima di popolare i dati
+            setTimeout(() => {
+                // Popola telecamere esistenti
+                if (node.events?.weighing?.cams && Array.isArray(node.events.weighing.cams)) {
+                    node.events.weighing.cams.forEach(cam => {
+                        addCam(instanceId, nodeId, cam.picture || '', cam.active !== undefined ? cam.active : true);
+                    });
+                }
+
+                // Popola relè esistenti - weighing
+                if (node.events?.weighing?.set_rele && Array.isArray(node.events.weighing.set_rele)) {
+                    node.events.weighing.set_rele.forEach(rele => {
+                        addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'weighing');
+                    });
+                }
+                
+                // Popola relè esistenti - over_min
+                if (node.events?.realtime?.over_min?.set_rele && Array.isArray(node.events.realtime.over_min.set_rele)) {
+                    node.events.realtime.over_min.set_rele.forEach(rele => {
+                        addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'over_min');
+                    });
+                }
+                
+                // Popola relè esistenti - under_min
+                if (node.events?.realtime?.under_min?.set_rele && Array.isArray(node.events.realtime.under_min.set_rele)) {
+                    node.events.realtime.under_min.set_rele.forEach(rele => {
+                        addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'under_min');
+                    });
+                }
+
+                // Mostra il modal dopo aver popolato i dati
+                modal.style.display = 'block';
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                }, 10);
+            }, 50);
+        }
+
+        function closeEditNodeModal(instanceId, nodeId) {
+            const modal = document.querySelector(`#edit-node-modal-${instanceId}-${nodeId}`);
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        function updateNode(instanceId, nodeId) {
+            const form = document.querySelector(`#edit-node-form-${instanceId}-${nodeId}`);
+
+            // Raccogli i dati dal form
+            const formData = new FormData(form);
+            const data = {
+                cams: [],
+                weighing: [],
+                over_min: [],
+                under_min: []
+            };
+
+            // Campi semplici
+            for (let [key, value] of formData.entries()) {
+                if (key === 'name' || key === 'terminal' || key === 'node' || key === 'printer_name') {
+                    data[key] = value || null;
+                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || 
+                           key === 'max_theshold' || key === 'number_of_prints') {
+                    data[key] = value ? parseInt(value) : (key === 'number_of_prints' ? 1 : null);
+                }
+            }
+
+            // Checkbox
+            data.run = form.querySelector('[name="run"]').checked;
+            data.need_take_of_weight_before_weighing = form.querySelector('[name="need_take_of_weight_before_weighing"]').checked;
+            data.need_take_of_weight_on_startup = form.querySelector('[name="need_take_of_weight_on_startup"]').checked;
+            data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
+            data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
+            data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
+            data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
+
+            // Raccogli telecamere
+            form.querySelectorAll('.cam').forEach(cam => {
+                const url = cam.querySelector('.cam-url').value;
+                const active = cam.querySelector('.cam-active').checked;
+                if (url) {
+                    data.cams.push({ picture: url, active: active });
+                }
+            });
+
+            // Raccogli relè
+            form.querySelectorAll('.rele').forEach(rele => {
+                const number = rele.querySelector('.rele-number').value;
+                const status = parseInt(rele.querySelector('.rele-status').value);
+                const event = rele.querySelector('.rele-event').value;
+                if (number) {
+                    data[event].push({ rele: number, set: status });
+                }
+            });
+
+            // Aggiungi campi mancanti dall'API
+            data.maintaine_session_realtime_after_command = true;
+            data.diagnostic_has_priority_than_realtime = true;
+            data.always_execute_realtime_in_undeground = true;
+
+            // Invia i dati
+            fetch(`/api/config-weigher/instance/node?instance_name=${instanceId}&weigher_name=${nodeId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => {
+                        throw err;
+                    });
+                }
+                return res.json();
+            })
+            .then(response => {
+                showSnackbar("snackbar", "Pesa aggiornata con successo", 'rgb(208, 255, 208)', 'black');
+                closeEditNodeModal(instanceId, nodeId);
+                
+                // Ricarica i dati mantenendo la selezione corrente
+                fetch('/api/config-weigher/configuration')
+                    .then(res => res.json())
+                    .then(res => {
+                        weighersData = res.weighers;
+                        loadInstances(weighersData, instanceId, nodeId);
+                    });
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                let errorMessage = 'Errore nell\'aggiornamento della pesa';
+                if (error.detail && Array.isArray(error.detail)) {
+                    errorMessage = error.detail.map(err => err.msg).join(', ');
+                }
+                showSnackbar("snackbar", errorMessage, 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        function openConfirmDeleteNodeModal(instanceId, nodeId) {
+            nodeToDelete = { instanceId, nodeId };
+            
+            const modal = document.querySelector(`#confirm-delete-node-modal-${instanceId}`);
+            const nameElement = modal.querySelector(`#node-to-delete-name-${instanceId}`);
+            nameElement.textContent = `PESA ${nodeId}`;
+            
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        function closeConfirmDeleteNodeModal(instanceId) {
+            const modal = document.querySelector(`#confirm-delete-node-modal-${instanceId}`);
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                nodeToDelete = { instanceId: null, nodeId: null };
+            }, 300);
+        }
+
+        function confirmDeleteNode(instanceId) {
+            const { nodeId } = nodeToDelete;
+            if (!nodeId) return;
+
+            fetch(`/api/config-weigher/instance/node?instance_name=${instanceId}&weigher_name=${nodeId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Errore nell\'eliminazione della pesa');
+                }
+                return res.json();
+            })
+            .then(data => {
+                showSnackbar("snackbar", "Pesa eliminata con successo", 'rgb(208, 255, 208)', 'black');
+                closeConfirmDeleteNodeModal(instanceId);
+                
+                // Ricarica i dati mantenendo l'istanza selezionata
+                fetch('/api/config-weigher/configuration')
+                    .then(res => res.json())
+                    .then(res => {
+                        weighersData = res.weighers;
+                        loadInstances(weighersData, instanceId, null);
+                    });
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                showSnackbar("snackbar", "Errore nell'eliminazione della pesa", 'rgb(255, 208, 208)', 'black');
+                closeConfirmDeleteNodeModal(instanceId);
+            });
+        }
+
+        function saveNode(instanceId) {
+            const form = document.querySelector(`#add-node-form-${instanceId}`);
+
+            // Raccogli i dati dal form
+            const formData = new FormData(form);
+            const data = {
+                cams: [],
+                weighing: [],
+                over_min: [],
+                under_min: []
+            };
+
+            // Campi semplici
+            for (let [key, value] of formData.entries()) {
+                if (key === 'name' || key === 'terminal' || key === 'node' || key === 'printer_name') {
+                    data[key] = value || null;
+                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || 
+                           key === 'max_theshold' || key === 'number_of_prints') {
+                    data[key] = value ? parseInt(value) : (key === 'number_of_prints' ? 1 : null);
+                }
+            }
+
+            // Checkbox
+            data.run = form.querySelector('[name="run"]').checked;
+            data.need_take_of_weight_before_weighing = form.querySelector('[name="need_take_of_weight_before_weighing"]').checked;
+            data.need_take_of_weight_on_startup = form.querySelector('[name="need_take_of_weight_on_startup"]').checked;
+            data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
+            data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
+            data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
+            data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
+
+            // Raccogli telecamere
+            form.querySelectorAll('.cam').forEach(cam => {
+                const url = cam.querySelector('.cam-url').value;
+                const active = cam.querySelector('.cam-active').checked;
+                if (url) {
+                    data.cams.push({ picture: url, active: active });
+                }
+            });
+
+            // Raccogli relè
+            form.querySelectorAll('.rele').forEach(rele => {
+                const number = rele.querySelector('.rele-number').value;
+                const status = parseInt(rele.querySelector('.rele-status').value);
+                const event = rele.querySelector('.rele-event').value;
+                if (number) {
+                    data[event].push({ rele: number, set: status });
+                }
+            });
+
+            // Aggiungi campi mancanti dall'API
+            data.maintaine_session_realtime_after_command = true;
+            data.diagnostic_has_priority_than_realtime = true;
+            data.always_execute_realtime_in_undeground = true;
+
+            // Invia i dati
+            fetch(`/api/config-weigher/instance/node?instance_name=${instanceId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => {
+                        throw err;
+                    });
+                }
+                return res.json();
+            })
+            .then(response => {
+                showSnackbar("snackbar", "Pesa aggiunta con successo", 'rgb(208, 255, 208)', 'black');
+                closeAddNodeModal(instanceId);
+                
+                // Ottieni l'ID della nuova pesa
+                const newNodeId = Object.keys(response)[0];
+                
+                // Ricarica i dati selezionando automaticamente la nuova pesa
+                fetch('/api/config-weigher/configuration')
+                    .then(res => res.json())
+                    .then(res => {
+                        weighersData = res.weighers;
+                        loadInstances(weighersData, instanceId, newNodeId);
+                    });
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                let errorMessage = 'Errore nella creazione della pesa';
+                if (error.detail && Array.isArray(error.detail)) {
+                    errorMessage = error.detail.map(err => err.msg).join(', ');
+                }
+                showSnackbar("snackbar", errorMessage, 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        function addNewInstanceTab(instanceId, instance) {
+            const connectionName = getConnectionName(instance.connection);
+            const instanceSubMenu = document.querySelector('#instance-sub-menu');
+            const instancesContent = document.querySelector('#instances-content');
+
+            // Rimuovi la selezione da tutti i tab
+            document.querySelectorAll('#instance-sub-menu .menu-tab:not(.add-tab)').forEach(button => {
+                button.classList.remove("selected");
+            });
+            document.querySelectorAll('.instance-container').forEach(div => {
+                div.classList.remove("active");
+            });
+
+            // Trova il bottone "+" e inserisci il nuovo tab prima di esso
+            const addButton = instanceSubMenu.querySelector('.add-tab');
+            
+            // Crea il nuovo bottone per l'istanza
+            const instanceButton = document.createElement('button');
+            instanceButton.className = 'menu-tab selected';
+            instanceButton.dataset.instanceId = instanceId;
+            
+            // Testo del tab
+            const tabText = document.createElement('span');
+            tabText.textContent = connectionName;
+            instanceButton.appendChild(tabText);
+            
+            // Bottone X per chiudere
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'tab-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                openConfirmDeleteModal(instanceId);
+            };
+            instanceButton.appendChild(closeBtn);
+            
+            instanceButton.onclick = (e) => {
+                if (!e.target.classList.contains('tab-close')) {
+                    changeInstanceTab(e, instanceId);
+                }
+            };
+            
+            instanceSubMenu.insertBefore(instanceButton, addButton);
+
+            // Crea il container per la nuova istanza
+            const instanceDiv = document.createElement('div');
+            instanceDiv.className = 'instance-container active';
+            instanceDiv.id = `instance-${instanceId}`;
+
+            // Informazioni sulla connessione
+            const connectionInfo = document.createElement('div');
+            connectionInfo.className = 'borders aliceblue';
+            
+            let connectionHtml = `
+                <br>
+                <h3>CONNESSIONE</h3>
+                <br>
+                <div>
+            `;
+
+            if (instance.connection.ip) {
+                connectionHtml += `
+                    <label><b>Tipo</b>: TCP/IP</label>
+                    <br>
+                    <br>
+                    <label><b>IP</b>: ${instance.connection.ip}</label>
+                    <br>
+                    <br>
+                    <label><b>Porta</b>: ${instance.connection.port}</label>
+                    <br>
+                    <br>
+                    <label><b>Timeout</b>: ${instance.connection.timeout}s</label>
+                `;
+            } else if (instance.connection.serial_port_name) {
+                connectionHtml += `
+                    <label><b>Tipo</b>: Seriale</label>
+                    <br>
+                    <br>
+                    <label><b>Porta seriale</b>: ${instance.connection.serial_port_name}</label>
+                    <br>
+                    <br>
+                    <label><b>Baudrate</b>: ${instance.connection.baudrate}</label>
+                    <br>
+                    <br>
+                    <label><b>Timeout</b>: ${instance.connection.timeout}s</label>
+                `;
+            }
+
+            connectionHtml += `
+                    <br>
+                    <br>
+                    <label><b>Tempo tra azioni</b>: ${instance.time_between_actions}s</label>
+                </div>
+                <br>
+                <button class="edit-instance-btn" onclick="openEditInstanceModal('${instanceId}')">Modifica</button>
+                <br>
+            `;
+            connectionInfo.innerHTML = connectionHtml;
+
+            // Sotto-menu per i nodi (vuoto per ora)
+            const nodeSubMenu = document.createElement('div');
+            nodeSubMenu.className = 'node-sub-menu';
+            nodeSubMenu.id = `node-sub-menu-${instanceId}`;
+
+            // Aggiungi bottone "+" per le pese
+            const addNodeButton = document.createElement('button');
+            addNodeButton.className = 'menu-tab add-tab';
+            addNodeButton.textContent = '+';
+            addNodeButton.onclick = () => openAddNodeModal(instanceId);
+            nodeSubMenu.appendChild(addNodeButton);
+
+            instanceDiv.appendChild(connectionInfo);
+            instanceDiv.appendChild(document.createElement('br'));
+            instanceDiv.appendChild(nodeSubMenu);
+            instancesContent.appendChild(instanceDiv);
+
+            // Crea i modal per questa istanza
+            createAddNodeModal(instanceId);
+            createConfirmDeleteNodeModal(instanceId);
+        }
+
+        function updateInstanceDisplay(instanceId) {
+            const instance = weighersData[instanceId];
+            const connectionName = getConnectionName(instance.connection);
+
+            // Aggiorna il testo del tab
+            const instanceButton = document.querySelector(`#instance-sub-menu .menu-tab[data-instance-id="${instanceId}"]`);
+            if (instanceButton) {
+                const tabText = instanceButton.querySelector('span:first-child');
+                tabText.textContent = connectionName;
+            }
+
+            // Aggiorna il contenuto dell'istanza
+            const connectionInfo = document.querySelector(`#instance-${instanceId} .borders.aliceblue`);
+            if (connectionInfo) {
+                let connectionHtml = `
+                    <br>
+                    <h3>CONNESSIONE</h3>
+                    <br>
+                    <div>
+                `;
+
+                if (instance.connection.ip) {
+                    connectionHtml += `
+                        <label><b>Tipo</b>: TCP/IP</label>
+                        <br>
+                        <br>
+                        <label><b>IP</b>: ${instance.connection.ip}</label>
+                        <br>
+                        <br>
+                        <label><b>Porta</b>: ${instance.connection.port}</label>
+                        <br>
+                        <br>
+                        <label><b>Timeout</b>: ${instance.connection.timeout}s</label>
+                    `;
+                } else if (instance.connection.serial_port_name) {
+                    connectionHtml += `
+                        <label><b>Tipo</b>: Seriale</label>
+                        <br>
+                        <br>
+                        <label><b>Porta seriale</b>: ${instance.connection.serial_port_name}</label>
+                        <br>
+                        <br>
+                        <label><b>Baudrate</b>: ${instance.connection.baudrate}</label>
+                        <br>
+                        <br>
+                        <label><b>Timeout</b>: ${instance.connection.timeout}s</label>
+                    `;
+                }
+
+                connectionHtml += `
+                        <br>
+                        <br>
+                        <label><b>Tempo tra azioni</b>: ${instance.time_between_actions}s</label>
+                    </div>
+                    <br>
+                    <button class="edit-instance-btn" onclick="openEditInstanceModal('${instanceId}')">Modifica</button>
+                    <br>
+                `;
+                connectionInfo.innerHTML = connectionHtml;
+            }
+        }
+
+        async function openEditInstanceModal(instanceId) {
+            const instance = weighersData[instanceId];
+            
+            document.querySelector('#edit-instance-id').value = instanceId;
+            
+            if (instance.connection.ip) {
+                document.querySelector('#edit-connection-type').value = 'tcp';
+                document.querySelector('#edit-tcp-ip').value = instance.connection.ip;
+                document.querySelector('#edit-tcp-port').value = instance.connection.port;
+                document.querySelector('#edit-tcp-timeout').value = instance.connection.timeout;
+            } else if (instance.connection.serial_port_name) {
+                document.querySelector('#edit-connection-type').value = 'serial';
+                
+                // Carica le porte seriali disponibili
+                await loadSerialPorts();
+                populateSerialPortSelect('edit-serial-port', instance.connection.serial_port_name);
+                
+                document.querySelector('#edit-serial-baudrate').value = instance.connection.baudrate;
+                document.querySelector('#edit-serial-timeout').value = instance.connection.timeout;
+            }
+            
+            document.querySelector('#edit-time-between-actions').value = instance.time_between_actions;
+            
+            // Mostra i campi corretti
+            toggleEditConnectionFields();
+            
+            const modal = document.querySelector('#edit-instance-modal');
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+            
+            validateEditInstanceForm();
+        }
+
+        function closeEditInstanceModal() {
+            const modal = document.querySelector('#edit-instance-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                
+                // Riabilita tutti gli elementi del form prima del reset
+                document.querySelector('#edit-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+                
+                document.querySelector('#edit-instance-form').reset();
+                document.querySelectorAll('#edit-instance-modal .connection-fields').forEach(field => field.classList.remove('active'));
+                document.querySelectorAll('#edit-instance-modal .error-message').forEach(msg => msg.classList.remove('active'));
+                document.querySelectorAll('#edit-instance-modal input').forEach(input => input.classList.remove('input-error'));
+                document.querySelector('#update-instance-btn').disabled = true;
+            }, 300);
+        }
+
+        async function toggleEditConnectionFields() {
+            const connectionType = document.querySelector('#edit-connection-type').value;
+            const tcpFields = document.querySelector('#edit-tcp-fields');
+            const serialFields = document.querySelector('#edit-serial-fields');
+            const commonFields = document.querySelector('#edit-common-fields');
+
+            // Reset errori
+            document.querySelectorAll('#edit-instance-modal .error-message').forEach(msg => msg.classList.remove('active'));
+            document.querySelectorAll('#edit-instance-modal input:not([type="hidden"])').forEach(input => input.classList.remove('input-error'));
+
+            tcpFields.classList.remove('active');
+            serialFields.classList.remove('active');
+
+            if (connectionType === 'tcp') {
+                tcpFields.classList.add('active');
+            } else if (connectionType === 'serial') {
+                // Carica le porte seriali disponibili
+                await loadSerialPorts();
+                populateSerialPortSelect('edit-serial-port');
+                serialFields.classList.add('active');
+            }
+
+            commonFields.classList.add('active');
+            validateEditInstanceForm();
+        }
+
+        function validateEditInstanceForm() {
+            const connectionType = document.querySelector('#edit-connection-type').value;
+            const timeBetweenActions = document.querySelector('#edit-time-between-actions').value;
+            const updateBtn = document.querySelector('#update-instance-btn');
+            let isValid = true;
+
+            // Reset errori
+            document.querySelectorAll('#edit-instance-modal .error-message').forEach(msg => msg.classList.remove('active'));
+            document.querySelectorAll('#edit-instance-form input:not([type="hidden"])').forEach(input => input.classList.remove('input-error'));
+
+            if (connectionType === 'tcp') {
+                const tcpIp = document.querySelector('#edit-tcp-ip');
+                const tcpPort = document.querySelector('#edit-tcp-port');
+                const tcpTimeout = document.querySelector('#edit-tcp-timeout');
+
+                if (!tcpIp.value || !isValidIP(tcpIp.value)) {
+                    tcpIp.classList.add('input-error');
+                    document.querySelector('#edit-tcp-ip-error').classList.add('active');
+                    isValid = false;
+                }
+
+                const port = parseInt(tcpPort.value);
+                if (!tcpPort.value || port < 1 || port > 65535) {
+                    tcpPort.classList.add('input-error');
+                    document.querySelector('#edit-tcp-port-error').classList.add('active');
+                    isValid = false;
+                }
+
+                const timeout = parseFloat(tcpTimeout.value);
+                if (!tcpTimeout.value || timeout <= 0) {
+                    tcpTimeout.classList.add('input-error');
+                    document.querySelector('#edit-tcp-timeout-error').classList.add('active');
+                    isValid = false;
+                }
+
+            } else if (connectionType === 'serial') {
+                const serialPort = document.querySelector('#edit-serial-port');
+                const serialBaudrate = document.querySelector('#edit-serial-baudrate');
+                const serialTimeout = document.querySelector('#edit-serial-timeout');
+
+                if (!serialPort.value || !isValidSerialPort(serialPort.value)) {
+                    serialPort.classList.add('input-error');
+                    document.querySelector('#edit-serial-port-error').classList.add('active');
+                    isValid = false;
+                }
+
+                const baudrate = parseInt(serialBaudrate.value);
+                if (!serialBaudrate.value || baudrate <= 0) {
+                    serialBaudrate.classList.add('input-error');
+                    document.querySelector('#edit-serial-baudrate-error').classList.add('active');
+                    isValid = false;
+                }
+
+                const timeout = parseFloat(serialTimeout.value);
+                if (!serialTimeout.value || timeout <= 0) {
+                    serialTimeout.classList.add('input-error');
+                    document.querySelector('#edit-serial-timeout-error').classList.add('active');
+                    isValid = false;
+                }
+            }
+
+            const timeBetweenActionsInput = document.querySelector('#edit-time-between-actions');
+            const time = parseFloat(timeBetweenActions);
+            if (!timeBetweenActions || time <= 0) {
+                timeBetweenActionsInput.classList.add('input-error');
+                document.querySelector('#edit-time-between-actions-error').classList.add('active');
+                isValid = false;
+            }
+
+            updateBtn.disabled = !isValid;
+        }
+
+        document.querySelector('#edit-instance-form').addEventListener('input', validateEditInstanceForm);
+
+        function updateInstance() {
+            const instanceId = document.querySelector('#edit-instance-id').value;
+            const connectionType = document.querySelector('#edit-connection-type').value;
+            const timeBetweenActions = parseFloat(document.querySelector('#edit-time-between-actions').value);
+            
+            let connection = {
+                time_between_actions: timeBetweenActions
+            };
+
+            if (connectionType === 'tcp') {
+                connection.ip = document.querySelector('#edit-tcp-ip').value;
+                connection.port = parseInt(document.querySelector('#edit-tcp-port').value);
+                connection.timeout = parseFloat(document.querySelector('#edit-tcp-timeout').value);
+            } else if (connectionType === 'serial') {
+                connection.serial_port_name = document.querySelector('#edit-serial-port').value;
+                connection.baudrate = parseInt(document.querySelector('#edit-serial-baudrate').value);
+                connection.timeout = parseFloat(document.querySelector('#edit-serial-timeout').value);
+            }
+
+            // Disabilita il form durante l'aggiornamento
+            document.querySelector('#update-instance-btn').disabled = true;
+            document.querySelector('#edit-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+
+            fetch(`/api/config-weigher/instance/connection/${instanceId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(connection)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Errore nell\'aggiornamento dell\'istanza');
+                }
+                return res.json();
+            })
+            .then(data => {
+                // Aggiorna i dati locali
+                const updatedInstance = weighersData[instanceId];
+                updatedInstance.time_between_actions = timeBetweenActions;
+                
+                if (connectionType === 'tcp') {
+                    updatedInstance.connection = {
+                        ip: connection.ip,
+                        port: connection.port,
+                        timeout: connection.timeout,
+                        connecting: false
+                    };
+                } else if (connectionType === 'serial') {
+                    updatedInstance.connection = {
+                        serial_port_name: connection.serial_port_name,
+                        baudrate: connection.baudrate,
+                        timeout: connection.timeout,
+                        connecting: false
+                    };
+                }
+
+                // Aggiorna l'interfaccia
+                updateInstanceDisplay(instanceId);
+
+                showSnackbar("snackbar", "Istanza aggiornata con successo", 'rgb(208, 255, 208)', 'black');
+                closeEditInstanceModal();
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                showSnackbar("snackbar", "Errore nell'aggiornamento dell'istanza", 'rgb(255, 208, 208)', 'black');
+                
+                // Riabilita il form in caso di errore
+                document.querySelector('#edit-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+                validateEditInstanceForm();
+            });
+        }
+
+        function openConfirmDeleteModal(instanceId) {
+            instanceToDelete = instanceId;
+            const instance = weighersData[instanceId];
+            const connectionName = getConnectionName(instance.connection);
+            
+            document.querySelector('#instance-to-delete-name').textContent = connectionName;
+            
+            const modal = document.querySelector('#confirm-delete-modal');
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        function closeConfirmDeleteModal() {
+            const modal = document.querySelector('#confirm-delete-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                instanceToDelete = null;
+            }, 300);
+        }
+
+        function confirmDeleteInstance() {
+            if (!instanceToDelete) return;
+
+            const instanceId = instanceToDelete;
+
+            fetch(`/api/config-weigher/instance/connection/${instanceId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Errore nell\'eliminazione dell\'istanza');
+                }
+                return res.json();
+            })
+            .then(data => {
+                // Rimuovi l'istanza dai dati
+                delete weighersData[instanceId];
+
+                // Rimuovi il tab e il contenuto dall'interfaccia
+                const instanceButton = document.querySelector(`#instance-sub-menu .menu-tab[data-instance-id="${instanceId}"]`);
+                const instanceContainer = document.querySelector(`#instance-${instanceId}`);
+                const wasActive = instanceContainer.classList.contains('active');
+
+                instanceButton.remove();
+                instanceContainer.remove();
+
+                // Se l'istanza eliminata era attiva, attiva un'altra istanza
+                if (wasActive) {
+                    const remainingButtons = document.querySelectorAll('#instance-sub-menu .menu-tab:not(.add-tab)');
+                    if (remainingButtons.length > 0) {
+                        const firstButton = remainingButtons[0];
+                        const firstInstanceId = firstButton.dataset.instanceId;
+                        firstButton.classList.add('selected');
+                        document.querySelector(`#instance-${firstInstanceId}`).classList.add('active');
+                    }
+                }
+
+                showSnackbar("snackbar", "Istanza eliminata con successo", 'rgb(208, 255, 208)', 'black');
+                closeConfirmDeleteModal();
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                showSnackbar("snackbar", "Errore nell'eliminazione dell'istanza", 'rgb(255, 208, 208)', 'black');
+                closeConfirmDeleteModal();
+            });
+        }
+
+        function openNewInstanceModal() {
+            const modal = document.querySelector('#new-instance-modal');
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+            }, 10);
+        }
+
+        function closeNewInstanceModal() {
+            const modal = document.querySelector('#new-instance-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                
+                // RIABILITA tutti gli elementi prima di resettare
+                document.querySelector('#new-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+                
+                document.querySelector('#new-instance-form').reset();
+                document.querySelectorAll('.connection-fields').forEach(field => field.classList.remove('active'));
+                document.querySelectorAll('.error-message').forEach(msg => msg.classList.remove('active'));
+                document.querySelectorAll('input').forEach(input => input.classList.remove('input-error'));
+                document.querySelector('#save-instance-btn').disabled = true;
+            }, 300);
+        }
+
+        async function toggleConnectionFields() {
+            const connectionType = document.querySelector('#connection-type').value;
+            const tcpFields = document.querySelector('#tcp-fields');
+            const serialFields = document.querySelector('#serial-fields');
+            const commonFields = document.querySelector('#common-fields');
+
+            tcpFields.classList.remove('active');
+            serialFields.classList.remove('active');
+            commonFields.classList.remove('active');
+
+            // Reset errori
+            document.querySelectorAll('.error-message').forEach(msg => msg.classList.remove('active'));
+            document.querySelectorAll('input').forEach(input => input.classList.remove('input-error'));
+
+            if (connectionType === 'tcp') {
+                tcpFields.classList.add('active');
+                commonFields.classList.add('active');
+            } else if (connectionType === 'serial') {
+                // Carica le porte seriali disponibili
+                await loadSerialPorts();
+                populateSerialPortSelect('serial-port');
+                serialFields.classList.add('active');
+                commonFields.classList.add('active');
+            }
+
+            validateNewInstanceForm();
+        }
+
+        function validateNewInstanceForm() {
+            const connectionType = document.querySelector('#connection-type').value;
+            const timeBetweenActions = document.querySelector('#time-between-actions').value;
+            const saveBtn = document.querySelector('#save-instance-btn');
+            let isValid = true;
+
+            // Reset errori
+            document.querySelectorAll('.error-message').forEach(msg => msg.classList.remove('active'));
+            document.querySelectorAll('#new-instance-form input').forEach(input => input.classList.remove('input-error'));
+
+            if (connectionType === 'tcp') {
+                const tcpIp = document.querySelector('#tcp-ip');
+                const tcpPort = document.querySelector('#tcp-port');
+                const tcpTimeout = document.querySelector('#tcp-timeout');
+
+                // Validazione IP
+                if (!tcpIp.value || !isValidIP(tcpIp.value)) {
+                    tcpIp.classList.add('input-error');
+                    document.querySelector('#tcp-ip-error').classList.add('active');
+                    isValid = false;
+                }
+
+                // Validazione Porta
+                const port = parseInt(tcpPort.value);
+                if (!tcpPort.value || port < 1 || port > 65535) {
+                    tcpPort.classList.add('input-error');
+                    document.querySelector('#tcp-port-error').classList.add('active');
+                    isValid = false;
+                }
+
+                // Validazione Timeout
+                const timeout = parseFloat(tcpTimeout.value);
+                if (!tcpTimeout.value || timeout <= 0) {
+                    tcpTimeout.classList.add('input-error');
+                    document.querySelector('#tcp-timeout-error').classList.add('active');
+                    isValid = false;
+                }
+
+            } else if (connectionType === 'serial') {
+                const serialPort = document.querySelector('#serial-port');
+                const serialBaudrate = document.querySelector('#serial-baudrate');
+                const serialTimeout = document.querySelector('#serial-timeout');
+
+                // Validazione Porta Seriale
+                if (!serialPort.value || !isValidSerialPort(serialPort.value)) {
+                    serialPort.classList.add('input-error');
+                    document.querySelector('#serial-port-error').classList.add('active');
+                    isValid = false;
+                }
+
+                // Validazione Baudrate
+                const baudrate = parseInt(serialBaudrate.value);
+                if (!serialBaudrate.value || baudrate <= 0) {
+                    serialBaudrate.classList.add('input-error');
+                    document.querySelector('#serial-baudrate-error').classList.add('active');
+                    isValid = false;
+                }
+
+                // Validazione Timeout
+                const timeout = parseFloat(serialTimeout.value);
+                if (!serialTimeout.value || timeout <= 0) {
+                    serialTimeout.classList.add('input-error');
+                    document.querySelector('#serial-timeout-error').classList.add('active');
+                    isValid = false;
+                }
+            } else {
+                isValid = false;
+            }
+
+            // Validazione Tempo tra azioni (comune)
+            if (connectionType) {
+                const timeBetweenActionsInput = document.querySelector('#time-between-actions');
+                const time = parseFloat(timeBetweenActions);
+                if (!timeBetweenActions || time <= 0) {
+                    timeBetweenActionsInput.classList.add('input-error');
+                    document.querySelector('#time-between-actions-error').classList.add('active');
+                    isValid = false;
+                }
+            }
+
+            saveBtn.disabled = !isValid;
+        }
+
+        // Aggiungi listener per validazione
+        document.querySelector('#new-instance-form').addEventListener('input', validateNewInstanceForm);
+
+        function saveNewInstance() {
+            const connectionType = document.querySelector('#connection-type').value;
+            const timeBetweenActions = parseFloat(document.querySelector('#time-between-actions').value);
+            let connection = {
+                time_between_actions: timeBetweenActions
+            };
+
+            if (connectionType === 'tcp') {
+                connection.ip = document.querySelector('#tcp-ip').value;
+                connection.port = parseInt(document.querySelector('#tcp-port').value);
+                connection.timeout = parseFloat(document.querySelector('#tcp-timeout').value);
+            } else if (connectionType === 'serial') {
+                connection.serial_port_name = document.querySelector('#serial-port').value;
+                connection.baudrate = parseInt(document.querySelector('#serial-baudrate').value);
+                connection.timeout = parseFloat(document.querySelector('#serial-timeout').value);
+            }
+
+            // Disabilita il form durante il salvataggio
+            document.querySelector('#save-instance-btn').disabled = true;
+            document.querySelector('#new-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+
+            fetch('/api/config-weigher/instance/connection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(connection)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Errore nella creazione dell\'istanza');
+                }
+                return res.json();
+            })
+            .then(data => {
+                // Aggiungi la nuova istanza ai dati
+                const newInstanceId = data.instance_id || Object.keys(weighersData).length + 1;
+                const newInstance = {
+                    connection: connectionType === 'tcp' ? {
+                        ip: connection.ip,
+                        port: connection.port,
+                        timeout: connection.timeout,
+                        connecting: false
+                    } : {
+                        serial_port_name: connection.serial_port_name,
+                        baudrate: connection.baudrate,
+                        timeout: connection.timeout,
+                        connecting: false
+                    },
+                    time_between_actions: timeBetweenActions,
+                    nodes: {}
+                };
+
+                weighersData[newInstanceId] = newInstance;
+
+                // Aggiungi il nuovo tab all'interfaccia
+                addNewInstanceTab(newInstanceId, newInstance);
+
+                showSnackbar("snackbar", "Istanza creata con successo", 'rgb(208, 255, 208)', 'black');
+                closeNewInstanceModal();
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                showSnackbar("snackbar", "Errore nella creazione dell'istanza", 'rgb(255, 208, 208)', 'black');
+                
+                // Riabilita il form in caso di errore
+                document.querySelector('#new-instance-form').querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+                validateNewInstanceForm();
+            });
+        }
+
+        function changeInstanceTab(event, instanceId) {
+            document.querySelectorAll('#instance-sub-menu .menu-tab:not(.add-tab)').forEach(button => button.classList.remove("selected"));
+            document.querySelectorAll('.instance-container').forEach(div => div.classList.remove("active"));
+            
+            document.querySelector(`#instance-${instanceId}`).classList.add("active");
+            event.currentTarget.classList.add("selected");
+        }
+
+        function changeNodeTab(event, instanceId, nodeId) {
+            const instance = document.querySelector(`#instance-${instanceId}`);
+            instance.querySelectorAll('.node-sub-menu .menu-tab:not(.add-tab)').forEach(button => button.classList.remove("selected"));
+            instance.querySelectorAll('.node-tab-content').forEach(div => div.classList.remove("active"));
+            
+            document.querySelector(`#node-${instanceId}-${nodeId}`).classList.add("active");
+            event.currentTarget.classList.add("selected");
+        }
+
+        syncFolder.addEventListener("input", (e) => {
+            if (
+                ip.value &&
+                sharedFolder.value &&
+                username.value &&
+                password.value &&
+                (
+                    ip.value !== ip.dataset.lastSaved ||
+                    sharedFolder.value !== sharedFolder.dataset.lastSaved ||
+                    username.value !== username.dataset.lastSaved ||
+                    password.value !== password.dataset.lastSaved
+                )
+            ) {
+                saveConnection.disabled = false;
+            } else {
+                saveConnection.disabled = true;
+            }
+        })
+
+        function changeSetupTab(event, tab) {
+            document.querySelectorAll('#sub-menu .menu-tab').forEach(button => button.classList.remove("selected"));
+            document.querySelectorAll(".tab").forEach(div => div.style.display = 'none');
+            document.querySelector(`#${tab}`).style.display = "block";
+            event.target.classList.toggle("selected");
+        }
+
+        function setMode(mode) {
+            fetch(`/api/config-weigher/configuration/mode/${mode}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setUseReservation(status) {
+            fetch(`/api/config-weigher/configuration/use-reservation/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setUseBadge(status) {
+            fetch(`/api/config-weigher/configuration/use-badge/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setReturnCopy(status) {
+            fetch(`/api/config-weigher/configuration/return-pdf-copy-after-weighing/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function openTemplateEditor(type) {
+            window.open(`/report-designer/${type}`, '_blank');
+        }
+
+        function testSyncFolder() {
+            fetch(`/api/sync-folder/test`, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.mounted === true) {
+                    showSnackbar("snackbar", "Cartella remota sincronizzazione", 'rgb(208, 255, 208)', 'black');
+                } else if (res.mounted === false) {
+                    showSnackbar("snackbar", 'Cartella remota non sincronizzata correttamente', 'rgb(255, 208, 208)', 'black');
+                }
+            });
+        }
+
+        function deleteSyncFolder() {
+            fetch(`/api/sync-folder`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (res.status !== 200) {
+                    showSnackbar("snackbar", 'Errore nella eliminazione', 'rgb(255, 208, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Sincronizzazione remota eliminata", 'rgb(208, 255, 208)', 'black');
+                    ip.value = '';
+                    ip.dataset.lastSaved = '';
+                    domain.value = '';
+                    domain.dataset.lastSaved = '';
+                    sharedFolder.value = '';
+                    sharedFolder.dataset.lastSaved = '';
+                    subFolder.value = '';
+                    subFolder.dataset.lastSaved = '';
+                    username.value = '';
+                    username.dataset.lastSaved = '';
+                    password.value = '';
+                    password.dataset.lastSaved = '';
+                    testConnection.disabled = true;
+                    deleteConnection.disabled = true;
+                    saveConnection.disabled = true;
+                }
+            });
+        }
+
+        function saveSyncFolder() {
+            syncFolder.querySelectorAll("input, button").forEach(e => e.disabled = true);
+            fetch(`/api/sync-folder`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "ip": ip.value,
+                    "domain": domain.value,
+                    "share_name": sharedFolder.value,
+                    "sub_path": subFolder.value,
+                    "username": username.value,
+                    "password": password.value
+                })
+            })
+            .then(res => {
+                const status = res.status;
+                return res.json()
+                .then(value => {
+                    if (status !== 200) {
+                        const message = value.detail ? value.detail[0].msg.replace("Value error, ", "") : 'Errore nel salvataggio';
+                        showSnackbar("snackbar", message, 'rgb(255, 208, 208)', 'black');
+                    }
+                    else {
+                        showSnackbar("snackbar", "Cartella remota configurata", 'rgb(208, 255, 208)', 'black');
+                    }
+                    return value;
+                });
+            })
+            .then(res => {
+                syncFolder.querySelectorAll("input").forEach(e => e.disabled = false);
+                if (res.remote_folder) {
+                    ip.dataset.lastSaved = res.remote_folder.ip;
+                    domain.dataset.lastSaved = res.remote_folder.domain;
+                    sharedFolder.dataset.lastSaved = res.remote_folder.share_name;
+                    subFolder.dataset.lastSaved = res.remote_folder.sub_path;
+                    username.dataset.lastSaved = res.remote_folder.username;
+                    password.dataset.lastSaved = res.remote_folder.password;
+                    testConnection.disabled = false;
+                    deleteConnection.disabled = false;
+                    saveConnection.disabled = true;
+                } else if (ip.dataset.lastSaved) {
+                    testConnection.disabled = false;
+                    deleteConnection.disabled = false;
+                    saveConnection.disabled = false;
+                }
+            })
+        }
+    </script>
+</body>
+</html>

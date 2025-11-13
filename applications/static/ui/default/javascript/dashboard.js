@@ -1065,6 +1065,7 @@ async function confirmSemiAutomatic() {
 }
 
 function handleNeedToConfirm(plate) {
+    console.log(plate);
     confirmWeighing = confirmSemiAutomatic;
     document.getElementById("over_max_theshold_description").innerHTML = 
         `Lettura automatica della targa <strong>'${plate}'</strong>. <br> Effettuare la pesatura?`;

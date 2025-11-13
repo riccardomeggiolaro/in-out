@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Report Designer - Jinja2 Compatible</title>
     <style>
         * {
@@ -735,6 +738,10 @@
                     <i>🖼️</i>
                     Immagine
                 </div>
+                <div class="component-item" draggable="true" data-type="carousel">
+                    <i>🎠</i>
+                    Carosello
+                </div>
                 <div class="component-item" draggable="true" data-type="divider">
                     <i>➖</i>
                     Separatore
@@ -927,30 +934,8 @@
             
             const componentType = e.dataTransfer.getData('componentType');
             
-            if (!canAddElement(canvas)) {
-                let targetCanvas = canvas;
-                const allPages = document.querySelectorAll('.canvas');
-                
-                let foundSpace = false;
-                for (let i = allPages.length - 1; i >= 0; i--) {
-                    if (canAddElement(allPages[i])) {
-                        targetCanvas = allPages[i];
-                        foundSpace = true;
-                        break;
-                    }
-                }
-                
-                if (!foundSpace) {
-                    targetCanvas = createNewPage();
-                    showNotification('Nuova pagina creata per contenere l\'elemento');
-                }
-                
-                addElement(componentType, targetCanvas);
-            } else {
-                addElement(componentType, canvas);
-            }
-            
-            redistributeElements();
+            // Aggiungi semplicemente l'elemento senza controlli
+            addElement(componentType, canvas);
             
             return false;
         }
@@ -1015,8 +1000,6 @@
                 page.style.paddingLeft = marginLeft;
                 page.style.paddingRight = marginRight;
             });
-            
-            setTimeout(redistributeElements, 100);
         }
 
         function updatePageMarginsForElement(element) {
@@ -1130,8 +1113,6 @@
             }
             applyZoom();
             updateZoomDisplay();
-            
-            setTimeout(redistributeElements, 100);
         }
 
         function updateAllElementsFontSize(format) {
@@ -1183,8 +1164,6 @@
                     page.style.minHeight = '';
                 }
             });
-            
-            setTimeout(redistributeElements, 100);
         }
 
         function updateDefaultMarginsForFormat(format) {
@@ -1322,9 +1301,34 @@
                     wrapper.style.textAlign = "center";
                     content = `
                         <div data-image-container>
-                            <img alt="Immagine" 
-                                 style="width: 50mm; height: 37.5mm; display: inline-block;" 
+                            <img alt="Immagine"
+                                 style="width: 50mm; height: 37.5mm; display: inline-block;"
                                  data-width-mm="50" data-height-mm="37.5" data-image-type="file">
+                        </div>
+                    `;
+                    break;
+                case 'carousel':
+                    wrapper.style.textAlign = "center";
+                    content = `
+                        <div data-carousel-container data-weight-source="weight2" style="display: flex; flex-wrap: wrap; gap: 5mm; justify-content: center;">
+                            <img src="{{ weight2.weighing_pictures[0:1]|map(attribute='path_name')|first|default('') }}"
+                                 alt="Uscita img 1"
+                                 style="width: 50mm; height: 37.5mm;"
+                                 data-width-mm="50"
+                                 data-height-mm="37.5"
+                                 data-source="weight2">
+                            <img src="{{ weight2.weighing_pictures[1:2]|map(attribute='path_name')|first|default('') }}"
+                                 alt="Uscita img 2"
+                                 style="width: 50mm; height: 37.5mm;"
+                                 data-width-mm="50"
+                                 data-height-mm="37.5"
+                                 data-source="weight2">
+                            <img src="{{ weight2.weighing_pictures[2:3]|map(attribute='path_name')|first|default('') }}"
+                                 alt="Uscita img 3"
+                                 style="width: 50mm; height: 37.5mm;"
+                                 data-width-mm="50"
+                                 data-height-mm="37.5"
+                                 data-source="weight2">
                         </div>
                     `;
                     break;
@@ -1436,11 +1440,11 @@
                 </div>
             `;
 
-            if (type !== 'image') {
+            if (type !== 'image' && type !== 'carousel') {
                 propertiesHTML += `
                     <div class="jinja-section">
                         <h4>🔤 Variabili Jinja2</h4>
-                        
+
                         <div class="property-group">
                             <label>Seleziona Variabile da Inserire</label>
                             <select onchange="insertQuickVariable(this.value); this.value='';">
@@ -1468,7 +1472,7 @@
                                 <option value="{{ net_weight }}">{{ net_weight }} - Peso NETTO</option>
                             </select>
                         </div>
-                        
+
                         <div class="property-group">
                             <small style="color: #666;">
                                 ${type === 'table' ? 'Clicca su una cella della tabella per selezionarla, poi scegli la variabile.' : 'Clicca nel testo dove vuoi inserire la variabile, poi selezionala dal menu sopra.'}
@@ -1635,6 +1639,75 @@
                                 <option value="left" ${textAlign === 'left' ? 'selected' : ''}>Sinistra</option>
                                 <option value="right" ${textAlign === 'right' ? 'selected' : ''}>Destra</option>
                             </select>
+                        </div>
+                    `;
+                    break;
+                case 'carousel':
+                    const carouselContainer = element.querySelector('[data-carousel-container]');
+                    const carouselImages = carouselContainer.querySelectorAll('img');
+                    const totalImages = carouselImages.length;
+                    const firstCarouselImg = carouselImages[0];
+                    const carouselWidthMm = firstCarouselImg ? (firstCarouselImg.dataset.widthMm || '50') : '50';
+                    const carouselHeightMm = firstCarouselImg ? (firstCarouselImg.dataset.heightMm || '37.5') : '37.5';
+                    const carouselGap = carouselContainer.style.gap.replace('mm', '') || '5';
+                    const carouselAlign = carouselContainer.style.justifyContent || 'center';
+                    const weightSource = carouselContainer.dataset.weightSource || 'weight2';
+
+                    // Se è "both", mostra il numero per singola sorgente, altrimenti il totale
+                    const displayCount = weightSource === 'both' ? Math.floor(totalImages / 2) : totalImages;
+
+                    propertiesHTML += `
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #ffeaa7;">
+                            <h4 style="margin: 0 0 15px 0; color: #856404;">🎠 Proprietà Carosello</h4>
+
+                            <div class="property-group">
+                                <label>Sorgente Immagini</label>
+                                <select onchange="changeCarouselWeightSource(this.value)">
+                                    <option value="weight1" ${weightSource === 'weight1' ? 'selected' : ''}>Peso ENTRATA (weight1)</option>
+                                    <option value="weight2" ${weightSource === 'weight2' ? 'selected' : ''}>Peso USCITA (weight2)</option>
+                                    <option value="both" ${weightSource === 'both' ? 'selected' : ''}>Entrata e Uscita (entrambe)</option>
+                                </select>
+                            </div>
+
+                            <div class="property-group">
+                                <label>Numero di Immagini${weightSource === 'both' ? ' (per sorgente)' : ''}</label>
+                                <input id="carouselImageCountInput" type="number" value="${displayCount}" min="1" max="20" onchange="changeCarouselImageCount(this.value)">
+                            </div>
+
+                            <div class="property-group">
+                                <label>Dimensioni Immagini</label>
+                                <div class="dimension-group">
+                                    <div class="dimension-input">
+                                        <input type="number" value="${carouselWidthMm}" min="5" max="200" step="0.5"
+                                            onchange="changeCarouselImageWidth(this.value)" placeholder="Larghezza">
+                                        <span>mm</span>
+                                    </div>
+                                    <div class="dimension-input">
+                                        <input type="number" value="${carouselHeightMm}" min="5" max="200" step="0.5"
+                                            onchange="changeCarouselImageHeight(this.value)" placeholder="Altezza">
+                                        <span>mm</span>
+                                    </div>
+                                </div>
+                                <small style="color: #666; margin-top: 5px; display: block;">
+                                    Lascia un campo vuoto per mantenere le proporzioni
+                                </small>
+                            </div>
+
+                            <div class="property-group">
+                                <label>Spazio tra immagini (mm)</label>
+                                <input type="number" value="${carouselGap}" min="0" max="50" step="0.5" onchange="changeCarouselGap(this.value)">
+                            </div>
+
+                            <div class="property-group">
+                                <label>Allineamento Carosello</label>
+                                <select onchange="changeCarouselAlignment(this.value)">
+                                    <option value="center" ${carouselAlign === 'center' ? 'selected' : ''}>Centro</option>
+                                    <option value="flex-start" ${carouselAlign === 'flex-start' ? 'selected' : ''}>Sinistra</option>
+                                    <option value="flex-end" ${carouselAlign === 'flex-end' ? 'selected' : ''}>Destra</option>
+                                    <option value="space-between" ${carouselAlign === 'space-between' ? 'selected' : ''}>Spazio tra</option>
+                                    <option value="space-around" ${carouselAlign === 'space-around' ? 'selected' : ''}>Spazio intorno</option>
+                                </select>
+                            </div>
                         </div>
                     `;
                     break;
@@ -1896,6 +1969,226 @@
         function changeImageAlignment(alignment) {
             if (!selectedElement) return;
             selectedElement.style.textAlign = alignment;
+        }
+
+        function changeCarouselImageCount(count) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const newCount = parseInt(count) || 1;
+            const currentImages = container.querySelectorAll('img');
+            const weightSource = container.dataset.weightSource || 'weight2';
+
+            const widthMm = currentImages[0]?.dataset.widthMm || '50';
+            const heightMm = currentImages[0]?.dataset.heightMm || '37.5';
+
+            if (weightSource === 'both') {
+                // Modalità "both": newCount è per sorgente, quindi totale = newCount * 2
+                const currentCount = Math.floor(currentImages.length / 2);
+                const targetTotal = newCount * 2;
+
+                if (newCount > currentCount) {
+                    // Aggiungi immagini per weight1
+                    for (let i = currentCount; i < newCount; i++) {
+                        const img1 = document.createElement('img');
+                        img1.src = `{{ weight1.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                        img1.alt = `Entrata img ${i + 1}`;
+                        img1.style.width = widthMm + 'mm';
+                        img1.style.height = heightMm + 'mm';
+                        img1.dataset.widthMm = widthMm;
+                        img1.dataset.heightMm = heightMm;
+                        img1.dataset.source = 'weight1';
+
+                        // Inserisci weight1 prima di tutte le immagini weight2
+                        const firstWeight2 = container.querySelector('img[data-source="weight2"]');
+                        if (firstWeight2) {
+                            container.insertBefore(img1, firstWeight2);
+                        } else {
+                            container.appendChild(img1);
+                        }
+                    }
+
+                    // Aggiungi immagini per weight2
+                    for (let i = currentCount; i < newCount; i++) {
+                        const img2 = document.createElement('img');
+                        img2.src = `{{ weight2.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                        img2.alt = `Uscita img ${i + 1}`;
+                        img2.style.width = widthMm + 'mm';
+                        img2.style.height = heightMm + 'mm';
+                        img2.dataset.widthMm = widthMm;
+                        img2.dataset.heightMm = heightMm;
+                        img2.dataset.source = 'weight2';
+                        container.appendChild(img2);
+                    }
+                } else if (newCount < currentCount) {
+                    // Rimuovi immagini in eccesso
+                    const toRemove = currentCount - newCount;
+
+                    // Rimuovi da weight1
+                    const weight1Images = container.querySelectorAll('img[data-source="weight1"]');
+                    for (let i = weight1Images.length - 1; i >= newCount; i--) {
+                        weight1Images[i].remove();
+                    }
+
+                    // Rimuovi da weight2
+                    const weight2Images = container.querySelectorAll('img[data-source="weight2"]');
+                    for (let i = weight2Images.length - 1; i >= newCount; i--) {
+                        weight2Images[i].remove();
+                    }
+                }
+            } else {
+                // Modalità singola sorgente
+                const currentCount = currentImages.length;
+                const altPrefix = weightSource === 'weight1' ? 'Entrata' : 'Uscita';
+
+                if (newCount > currentCount) {
+                    for (let i = currentCount; i < newCount; i++) {
+                        const img = document.createElement('img');
+                        img.src = `{{ ${weightSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                        img.alt = `${altPrefix} img ${i + 1}`;
+                        img.style.width = widthMm + 'mm';
+                        img.style.height = heightMm + 'mm';
+                        img.dataset.widthMm = widthMm;
+                        img.dataset.heightMm = heightMm;
+                        img.dataset.source = weightSource;
+                        container.appendChild(img);
+                    }
+                } else if (newCount < currentCount) {
+                    for (let i = currentCount - 1; i >= newCount; i--) {
+                        currentImages[i].remove();
+                    }
+                }
+            }
+
+            showProperties(selectedElement);
+            setTimeout(() => {
+                const input = document.getElementById('carouselImageCountInput');
+                if (input) input.focus();
+            }, 0);
+        }
+
+        function changeCarouselWeightSource(source) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const oldSource = container.dataset.weightSource || 'weight2';
+            container.dataset.weightSource = source;
+
+            const currentImages = Array.from(container.querySelectorAll('img'));
+            const widthMm = currentImages[0]?.dataset.widthMm || '50';
+            const heightMm = currentImages[0]?.dataset.heightMm || '37.5';
+
+            if (source === 'both') {
+                // Passaggio a "both": duplica le immagini aggiungendo l'altra sorgente
+                const count = currentImages.length;
+                const otherSource = oldSource === 'weight1' ? 'weight2' : 'weight1';
+
+                // Aggiorna le immagini esistenti con data-source
+                currentImages.forEach((img, index) => {
+                    img.dataset.source = oldSource;
+                    img.src = `{{ ${oldSource}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+                });
+
+                // Aggiungi le immagini dell'altra sorgente
+                for (let i = 0; i < count; i++) {
+                    const img = document.createElement('img');
+                    img.src = `{{ ${otherSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.alt = `${otherSource === 'weight1' ? 'Entrata' : 'Uscita'} img ${i + 1}`;
+                    img.style.width = widthMm + 'mm';
+                    img.style.height = heightMm + 'mm';
+                    img.dataset.widthMm = widthMm;
+                    img.dataset.heightMm = heightMm;
+                    img.dataset.source = otherSource;
+                    container.appendChild(img);
+                }
+
+                // Riordina: prima weight1, poi weight2
+                const weight1Images = Array.from(container.querySelectorAll('img[data-source="weight1"]'));
+                const weight2Images = Array.from(container.querySelectorAll('img[data-source="weight2"]'));
+                container.innerHTML = '';
+                weight1Images.forEach(img => container.appendChild(img));
+                weight2Images.forEach(img => container.appendChild(img));
+
+            } else if (oldSource === 'both') {
+                // Passaggio da "both" a singola sorgente: mantieni solo le immagini della sorgente selezionata
+                const imagesToKeep = container.querySelectorAll(`img[data-source="${source}"]`);
+                const imagesToRemove = container.querySelectorAll(`img[data-source]:not([data-source="${source}"])`);
+                const altPrefix = source === 'weight1' ? 'Entrata' : 'Uscita';
+
+                imagesToRemove.forEach(img => img.remove());
+
+                // Aggiorna gli indici delle immagini rimanenti
+                imagesToKeep.forEach((img, index) => {
+                    img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.alt = `${altPrefix} img ${index + 1}`;
+                });
+
+            } else {
+                // Passaggio tra weight1 e weight2: aggiorna tutte le sorgenti
+                const altPrefix = source === 'weight1' ? 'Entrata' : 'Uscita';
+                currentImages.forEach((img, index) => {
+                    img.dataset.source = source;
+                    img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.alt = `${altPrefix} img ${index + 1}`;
+                });
+            }
+
+            showProperties(selectedElement);
+        }
+
+        function changeCarouselImageWidth(value) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                if (value.trim() === '') {
+                    img.style.width = 'auto';
+                    img.dataset.widthMm = '';
+                } else {
+                    const width = parseFloat(value) || 50;
+                    img.style.width = width + 'mm';
+                    img.dataset.widthMm = width;
+                }
+            });
+        }
+
+        function changeCarouselImageHeight(value) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const images = container.querySelectorAll('img');
+            images.forEach(img => {
+                if (value.trim() === '') {
+                    img.style.height = 'auto';
+                    img.dataset.heightMm = '';
+                } else {
+                    const height = parseFloat(value) || 37.5;
+                    img.style.height = height + 'mm';
+                    img.dataset.heightMm = height;
+                }
+            });
+        }
+
+        function changeCarouselGap(value) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            const gap = parseFloat(value) || 0;
+            container.style.gap = gap + 'mm';
+        }
+
+        function changeCarouselAlignment(alignment) {
+            if (!selectedElement) return;
+            const container = selectedElement.querySelector('[data-carousel-container]');
+            if (!container) return;
+
+            container.style.justifyContent = alignment;
         }
 
         function insertQuickVariable(variable) {
@@ -2688,6 +2981,18 @@ ${pageClone.innerHTML}
 
         function downloadProjectLocal() {
             try {
+                // Chiedi il nome del file all'utente
+                const fileName = prompt('Come vuoi chiamare il file?', 'report');
+                
+                // Se l'utente annulla o non inserisce nulla, esci
+                if (fileName === null || fileName.trim() === '') {
+                    showNotification('Download annullato', false);
+                    return;
+                }
+                
+                // Pulisci il nome del file (rimuovi caratteri non validi)
+                const cleanFileName = fileName.trim().replace(/[^a-z0-9_\-]/gi, '_');
+                
                 const pagesContainer = document.getElementById('pagesContainer');
                 const pageFormat = document.getElementById('pageFormat').value;
                 const marginTop = document.getElementById('marginTop').value;
@@ -2763,13 +3068,13 @@ ${pageClone.innerHTML}
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'report_project.json';
+                a.download = `${cleanFileName}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                showNotification('📥 Download locale completato!');
+                showNotification(`📥 Download completato: ${cleanFileName}.json`);
             } catch (error) {
                 console.error('Errore download:', error);
                 showNotification('❌ Errore nel download locale', true);
@@ -2944,18 +3249,23 @@ ${pageClone.innerHTML}
 
         function loadDefaultTemplate(url, showNotificationMessage = true) {
             url = window.location.origin + url;
-            fetch(url)
-                .then(resp => {
-                    if (!resp.ok) throw new Error('Template non accessibile');
-                    return resp.json();
-                })
-                .then(state => {
-                    loadProjectState(state, showNotificationMessage);
-                })
-                .catch(err => {
-                    console.error('Errore nel caricamento del template:', err);
-                    alert('Errore nel caricamento del template default');
-                });
+            fetch(url, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            })
+            .then(resp => {
+                if (!resp.ok) throw new Error('Template non accessibile');
+                return resp.json();
+            })
+            .then(state => {
+                loadProjectState(state, showNotificationMessage);
+            })
+            .catch(err => {
+                console.error('Errore nel caricamento del template:', err);
+                alert('Errore nel caricamento del template default');
+            });
         }
     </script>
 </body>
