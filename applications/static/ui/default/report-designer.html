@@ -1642,13 +1642,16 @@
                 case 'carousel':
                     const carouselContainer = element.querySelector('[data-carousel-container]');
                     const carouselImages = carouselContainer.querySelectorAll('img');
-                    const imageCount = carouselImages.length;
+                    const totalImages = carouselImages.length;
                     const firstCarouselImg = carouselImages[0];
                     const carouselWidthMm = firstCarouselImg ? (firstCarouselImg.dataset.widthMm || '50') : '50';
                     const carouselHeightMm = firstCarouselImg ? (firstCarouselImg.dataset.heightMm || '37.5') : '37.5';
                     const carouselGap = carouselContainer.style.gap.replace('mm', '') || '5';
                     const carouselAlign = carouselContainer.style.justifyContent || 'center';
                     const weightSource = carouselContainer.dataset.weightSource || 'weight2';
+
+                    // Se è "both", mostra il numero per singola sorgente, altrimenti il totale
+                    const displayCount = weightSource === 'both' ? Math.floor(totalImages / 2) : totalImages;
 
                     propertiesHTML += `
                         <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid #ffeaa7;">
@@ -1659,12 +1662,13 @@
                                 <select onchange="changeCarouselWeightSource(this.value)">
                                     <option value="weight1" ${weightSource === 'weight1' ? 'selected' : ''}>Peso ENTRATA (weight1)</option>
                                     <option value="weight2" ${weightSource === 'weight2' ? 'selected' : ''}>Peso USCITA (weight2)</option>
+                                    <option value="both" ${weightSource === 'both' ? 'selected' : ''}>Entrata e Uscita (entrambe)</option>
                                 </select>
                             </div>
 
                             <div class="property-group">
-                                <label>Numero di Immagini</label>
-                                <input id="carouselImageCountInput" type="number" value="${imageCount}" min="1" max="20" onchange="changeCarouselImageCount(this.value)">
+                                <label>Numero di Immagini${weightSource === 'both' ? ' (per sorgente)' : ''}</label>
+                                <input id="carouselImageCountInput" type="number" value="${displayCount}" min="1" max="20" onchange="changeCarouselImageCount(this.value)">
                             </div>
 
                             <div class="property-group">
@@ -1971,26 +1975,85 @@
 
             const newCount = parseInt(count) || 1;
             const currentImages = container.querySelectorAll('img');
-            const currentCount = currentImages.length;
+            const weightSource = container.dataset.weightSource || 'weight2';
 
             const widthMm = currentImages[0]?.dataset.widthMm || '50';
             const heightMm = currentImages[0]?.dataset.heightMm || '37.5';
-            const weightSource = container.dataset.weightSource || 'weight2';
 
-            if (newCount > currentCount) {
-                for (let i = currentCount; i < newCount; i++) {
-                    const img = document.createElement('img');
-                    img.src = `{{ ${weightSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
-                    img.alt = `Immagine ${i + 1}`;
-                    img.style.width = widthMm + 'mm';
-                    img.style.height = heightMm + 'mm';
-                    img.dataset.widthMm = widthMm;
-                    img.dataset.heightMm = heightMm;
-                    container.appendChild(img);
+            if (weightSource === 'both') {
+                // Modalità "both": newCount è per sorgente, quindi totale = newCount * 2
+                const currentCount = Math.floor(currentImages.length / 2);
+                const targetTotal = newCount * 2;
+
+                if (newCount > currentCount) {
+                    // Aggiungi immagini per weight1
+                    for (let i = currentCount; i < newCount; i++) {
+                        const img1 = document.createElement('img');
+                        img1.src = `{{ weight1.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                        img1.alt = `Entrata ${i + 1}`;
+                        img1.style.width = widthMm + 'mm';
+                        img1.style.height = heightMm + 'mm';
+                        img1.dataset.widthMm = widthMm;
+                        img1.dataset.heightMm = heightMm;
+                        img1.dataset.source = 'weight1';
+
+                        // Inserisci weight1 prima di tutte le immagini weight2
+                        const firstWeight2 = container.querySelector('img[data-source="weight2"]');
+                        if (firstWeight2) {
+                            container.insertBefore(img1, firstWeight2);
+                        } else {
+                            container.appendChild(img1);
+                        }
+                    }
+
+                    // Aggiungi immagini per weight2
+                    for (let i = currentCount; i < newCount; i++) {
+                        const img2 = document.createElement('img');
+                        img2.src = `{{ weight2.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                        img2.alt = `Uscita ${i + 1}`;
+                        img2.style.width = widthMm + 'mm';
+                        img2.style.height = heightMm + 'mm';
+                        img2.dataset.widthMm = widthMm;
+                        img2.dataset.heightMm = heightMm;
+                        img2.dataset.source = 'weight2';
+                        container.appendChild(img2);
+                    }
+                } else if (newCount < currentCount) {
+                    // Rimuovi immagini in eccesso
+                    const toRemove = currentCount - newCount;
+
+                    // Rimuovi da weight1
+                    const weight1Images = container.querySelectorAll('img[data-source="weight1"]');
+                    for (let i = weight1Images.length - 1; i >= newCount; i--) {
+                        weight1Images[i].remove();
+                    }
+
+                    // Rimuovi da weight2
+                    const weight2Images = container.querySelectorAll('img[data-source="weight2"]');
+                    for (let i = weight2Images.length - 1; i >= newCount; i--) {
+                        weight2Images[i].remove();
+                    }
                 }
-            } else if (newCount < currentCount) {
-                for (let i = currentCount - 1; i >= newCount; i--) {
-                    currentImages[i].remove();
+            } else {
+                // Modalità singola sorgente
+                const currentCount = currentImages.length;
+
+                if (newCount > currentCount) {
+                    for (let i = currentCount; i < newCount; i++) {
+                        const img = document.createElement('img');
+                        img.src = `{{ ${weightSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                        img.alt = `Immagine ${i + 1}`;
+                        img.style.width = widthMm + 'mm';
+                        img.style.height = heightMm + 'mm';
+                        img.dataset.widthMm = widthMm;
+                        img.dataset.heightMm = heightMm;
+                        img.dataset.source = weightSource;
+                        container.appendChild(img);
+                    }
+                } else if (newCount < currentCount) {
+                    for (let i = currentCount - 1; i >= newCount; i--) {
+                        currentImages[i].remove();
+                    }
                 }
             }
 
@@ -2006,12 +2069,66 @@
             const container = selectedElement.querySelector('[data-carousel-container]');
             if (!container) return;
 
+            const oldSource = container.dataset.weightSource || 'weight2';
             container.dataset.weightSource = source;
 
-            const images = container.querySelectorAll('img');
-            images.forEach((img, index) => {
-                img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
-            });
+            const currentImages = Array.from(container.querySelectorAll('img'));
+            const widthMm = currentImages[0]?.dataset.widthMm || '50';
+            const heightMm = currentImages[0]?.dataset.heightMm || '37.5';
+
+            if (source === 'both') {
+                // Passaggio a "both": duplica le immagini aggiungendo l'altra sorgente
+                const count = currentImages.length;
+                const otherSource = oldSource === 'weight1' ? 'weight2' : 'weight1';
+
+                // Aggiorna le immagini esistenti con data-source
+                currentImages.forEach((img, index) => {
+                    img.dataset.source = oldSource;
+                    img.src = `{{ ${oldSource}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+                });
+
+                // Aggiungi le immagini dell'altra sorgente
+                for (let i = 0; i < count; i++) {
+                    const img = document.createElement('img');
+                    img.src = `{{ ${otherSource}.weighing_pictures[${i}:${i+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.alt = `${otherSource === 'weight1' ? 'Entrata' : 'Uscita'} ${i + 1}`;
+                    img.style.width = widthMm + 'mm';
+                    img.style.height = heightMm + 'mm';
+                    img.dataset.widthMm = widthMm;
+                    img.dataset.heightMm = heightMm;
+                    img.dataset.source = otherSource;
+                    container.appendChild(img);
+                }
+
+                // Riordina: prima weight1, poi weight2
+                const weight1Images = Array.from(container.querySelectorAll('img[data-source="weight1"]'));
+                const weight2Images = Array.from(container.querySelectorAll('img[data-source="weight2"]'));
+                container.innerHTML = '';
+                weight1Images.forEach(img => container.appendChild(img));
+                weight2Images.forEach(img => container.appendChild(img));
+
+            } else if (oldSource === 'both') {
+                // Passaggio da "both" a singola sorgente: mantieni solo le immagini della sorgente selezionata
+                const imagesToKeep = container.querySelectorAll(`img[data-source="${source}"]`);
+                const imagesToRemove = container.querySelectorAll(`img[data-source]:not([data-source="${source}"])`);
+
+                imagesToRemove.forEach(img => img.remove());
+
+                // Aggiorna gli indici delle immagini rimanenti
+                imagesToKeep.forEach((img, index) => {
+                    img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+                    img.alt = `Immagine ${index + 1}`;
+                });
+
+            } else {
+                // Passaggio tra weight1 e weight2: aggiorna tutte le sorgenti
+                currentImages.forEach((img, index) => {
+                    img.dataset.source = source;
+                    img.src = `{{ ${source}.weighing_pictures[${index}:${index+1}]|map(attribute='path_name')|first|default('') }}`;
+                });
+            }
+
+            showProperties(selectedElement);
         }
 
         function changeCarouselImageWidth(value) {
