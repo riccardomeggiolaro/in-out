@@ -739,6 +739,7 @@ function updateUIRealtime(e) {
         const numeric = isNumeric(data_weight_realtime.gross_weight);
         const gross_weight = Number(data_weight_realtime.gross_weight);
         const tare_weight = Number(data_weight_realtime.tare);
+        if (gross_weight < minWeightValue) closePopup("confirmPopup");
         // if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
         //     if (tare_weight == 0 && selectedIdWeight === null) {
         //         tareButton.disabled = false;
@@ -820,6 +821,8 @@ function updateUIRealtime(e) {
             // NUOVO: Controlla need_to_confirm dopo aver aggiornato selectedIdWeight
             if (obj.id_selected.need_to_confirm === true) {
                 handleNeedToConfirm(obj.data_in_execution.vehicle.plate.replace("⭐", ""));
+            } else {
+                closePopup("confirmPopup");
             }
             
             if (selectedIdWeight !== null) {

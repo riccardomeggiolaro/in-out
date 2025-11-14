@@ -21,6 +21,7 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.utils.utils_report import get_data_variables, generate_html_report, generate_csv_report, save_file_dir
 from libs.lb_printer import printer
 import applications.utils.utils as utils
+import threading
 
 class CallbackWeigher(Functions, WebSocket):
 	def __init__(self):
@@ -42,7 +43,11 @@ class CallbackWeigher(Functions, WebSocket):
 			except:
 				pass
 			if type(numeric_gross_weight) in [float, int]:
-				if numeric_gross_weight <= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call_instance_weigher[instance_name][weigher_name] in [0, None]:
+				if numeric_gross_weight < lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call_instance_weigher[instance_name][weigher_name] in [0, None]:
+					data = self.getData(instance_name=instance_name, weigher_name=weigher_name)
+					if data["id_selected"]["need_to_confirm"] is True:
+						self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
+						thread = threading.Thread()
 					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
 						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
@@ -169,6 +174,7 @@ class CallbackWeigher(Functions, WebSocket):
 			############################
 			# RIMUOVE TUTTI I DATA IN ESECUZIONE E L'ID SELEZIONATO SULLA DASHBAORD
 			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
+			threading.Thread(target=self.Callback_DataInExecution, args=(instance_name, weigher_name)).start()
 			############################
 			# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
 			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
