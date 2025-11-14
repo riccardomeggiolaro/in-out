@@ -2872,7 +2872,7 @@ ${pageClone.innerHTML}
                     return html
                         .replace(/\n/g, ' ')
                         .replace(/\s+/g, ' ')
-                        .replace(/"/g, "'")
+                        // RIMOSSA la riga: .replace(/"/g, "'")
                         .trim();
                 }
 
@@ -3109,7 +3109,18 @@ ${pageClone.innerHTML}
 
         function loadProjectState(state, showNotificationMessage = true) {
             const pagesContainer = document.getElementById('pagesContainer');
-            pagesContainer.innerHTML = state.canvas;
+            
+            // CORREZIONE: Usa DOMParser invece di innerHTML per evitare problemi con gli apici
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(state.canvas, 'text/html');
+            
+            // Svuota il container
+            pagesContainer.innerHTML = '';
+            
+            // Copia i nodi dal documento parsato
+            Array.from(doc.body.childNodes).forEach(node => {
+                pagesContainer.appendChild(node.cloneNode(true));
+            });
             
             const allElements = pagesContainer.querySelectorAll('.dropped-element');
             allElements.forEach(el => {
