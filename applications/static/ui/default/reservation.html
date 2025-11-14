@@ -978,7 +978,9 @@
                         content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
                     });
 
-                    if (weighing.weight1.weighing_pictures.length > 0 && weighing.weight2) content += "•";
+                    if (weighing.weight1.weighing_pictures.length > 0 && weighing.weight2 && weighing.weight2.weighing_pictures.length > 0) {
+                        content += "<h3 class='margin-auto'>•</h3>";
+                    }
                 }
 
                 if (weighing.weight2) {

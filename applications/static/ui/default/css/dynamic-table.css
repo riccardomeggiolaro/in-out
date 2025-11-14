@@ -434,3 +434,8 @@ input:invalid {
 .detail-cell {
     background-color: white !important;
 }
+
+.margin-auto {
+    margin-top: auto;
+    margin-bottom: auto;
+}

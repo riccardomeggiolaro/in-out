@@ -494,26 +494,34 @@
         }
 
         function populateDetailTr(weighing) {
-            let content = `<div class="imgs">`;
+            let content = '';
 
-            // Add images to the .imgs div
-            if (weighing.weight1) {
-                weighing.weight1.weighing_pictures.forEach(picture => {
-                    content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
-                });
+            if (weighing.weight1 && weighing.weight1.weighing_pictures.length > 0 || weighing.weight2 && weighing.weight2.weighing_pictures.length > 0) {
+                content = `
+                    <ul class="list-detail-tr">
+                        <div class="imgs list-detail-tr">`;
 
-                if (weighing.weight1.weighing_pictures.length > 0 && weighing.weight2) content += "•";
+                // Add images to the .imgs div
+                if (weighing.weight1) {
+                    weighing.weight1.weighing_pictures.forEach(picture => {
+                        content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                    });
+
+                    if (weighing.weight1.weighing_pictures.length > 0 && weighing.weight2 && weighing.weight2.weighing_pictures.length > 0) {
+                        content += "<h3 class='margin-auto'>•</h3>";
+                    }
+                }
+
+                if (weighing.weight2) {
+                    weighing.weight2.weighing_pictures.forEach(picture => {
+                        content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                    });
+                }
+
+                content += `
+                        </div>
+                    </ul>`;
             }
-
-            if (weighing.weight2) {
-                weighing.weight2.weighing_pictures.forEach(picture => {
-                    content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
-                });
-            }
-
-            content += `
-                    </div>
-                </li>`;
 
             return content;
         }
