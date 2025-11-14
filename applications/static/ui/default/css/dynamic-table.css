@@ -31,7 +31,6 @@ table td:last-child,
 table th:last-child {
   white-space: nowrap; /* Evita il wrapping del testo */
   width: 1px;
-  max-width: 130px; /* Evita che la colonna si espanda */
 }
 th, td {
     padding: 10px;

@@ -493,28 +493,27 @@
             openPopup('img-popup');
         }
 
-        function populateDetailTr(item) {
-            let content = ``;
+        function populateDetailTr(weighing) {
+            let content = `<div class="imgs">`;
 
             // Add images to the .imgs div
-            if (item.weight1 && item.weight1.weighing_pictures.length > 0 || item.weight2 && item.weight2.weighing_pictures.length > 0) {
-                content += `
-                    <div class="imgs">
-                        <ul>
-                            <li>
-                `;
-                item.weight1.weighing_pictures.forEach(picture => {
+            if (weighing.weight1) {
+                weighing.weight1.weighing_pictures.forEach(picture => {
                     content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
                 });
-                item.weight2.weighing_pictures.forEach(picture => {
-                    content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
-                });
-                content += `
-                            </li>
-                        </ul>
-                    </div>
-                `;
+
+                if (weighing.weight1.weighing_pictures.length > 0 && weighing.weight2) content += "•";
             }
+
+            if (weighing.weight2) {
+                weighing.weight2.weighing_pictures.forEach(picture => {
+                    content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
+                });
+            }
+
+            content += `
+                    </div>
+                </li>`;
 
             return content;
         }

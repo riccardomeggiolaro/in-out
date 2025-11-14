@@ -977,6 +977,8 @@
                     weighing.weight1.weighing_pictures.forEach(picture => {
                         content += `<img src="/images${picture.path_name}" onclick="getImageWeighing('/images${picture.path_name}')">`;
                     });
+
+                    if (weighing.weight1.weighing_pictures.length > 0 && weighing.weight2) content += "•";
                 }
 
                 if (weighing.weight2) {
