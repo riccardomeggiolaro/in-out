@@ -140,7 +140,7 @@
                         },
                         "maintaine_session_realtime_after_command": true,
                         "max_theshold": null,
-                        "max_weight": 500,
+                        "max_weight": 60000,
                         "min_weight": 200,
                         "need_take_of_weight_before_weighing": false,
                         "need_take_of_weight_on_startup": false,
