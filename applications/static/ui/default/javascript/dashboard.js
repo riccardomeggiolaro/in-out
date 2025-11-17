@@ -65,6 +65,8 @@ let confirmWeighing;
 
 let access_id;
 
+let handleClickNeedToConfirm;
+
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
 const container = document.querySelector('.ins');
@@ -1074,7 +1076,8 @@ function handleNeedToConfirm(plate) {
         `Lettura automatica della targa <strong>'${plate}'</strong>. <br> Effettuare la pesatura?`;
     openPopup('confirmPopup');
     const closeButton = document.querySelector('#confirmPopup .close-button');
-    const handleClick = () => {
+    if (handleClickNeedToConfirm) closeButton.removeEventListener('click', handleClickNeedToConfirm); // Rimuovi il vecchio listener
+    handleClickNeedToConfirm = () => {
         fetch(`/api/data${currentWeigherPath}`, {
             method: 'DELETE',
             headers: {
@@ -1085,11 +1088,10 @@ function handleNeedToConfirm(plate) {
         .then(r => {
             if (r === 200) {
                 closePopup();
-                closeButton.removeEventListener('click', handleClick); // Rimuove l'evento
             }
         });
     };
-    closeButton.addEventListener('click', handleClick);
+    closeButton.addEventListener('click', handleClickNeedToConfirm);
 }
 
 function disableAllElements() {

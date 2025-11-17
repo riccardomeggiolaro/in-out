@@ -246,7 +246,7 @@ class CallbackWeigher(Functions, WebSocket):
 			else:
 				loop = asyncio.get_event_loop()
 				loop.run_until_complete(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
-		except RuntimeError:
+		except Exception:
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(self.getData(instance_name=instance_name, weigher_name=weigher_name)))
 
 	def Callback_ActionInExecution(self, instance_name: str, weigher_name: str, action_in_execution: str):
