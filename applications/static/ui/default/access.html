@@ -499,7 +499,9 @@
             if (weighing.weight1 && weighing.weight1.weighing_pictures.length > 0 || weighing.weight2 && weighing.weight2.weighing_pictures.length > 0) {
                 content = `
                     <ul class="list-detail-tr">
-                        <div class="imgs list-detail-tr">`;
+                        <li>
+                            <p>
+                                <div class="imgs list-detail-tr">`;
 
                 // Add images to the .imgs div
                 if (weighing.weight1) {
@@ -519,7 +521,9 @@
                 }
 
                 content += `
-                        </div>
+                                </div>
+                            </p>
+                        </li>
                     </ul>`;
             }
 

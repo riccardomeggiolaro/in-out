@@ -835,8 +835,7 @@ function editRow(item) {
 
 const deletePopup = document.getElementById('delete-popup');
 deletePopup.querySelector('#save-btn').addEventListener('click', () => {
-    let queryParams = !nextElementSibling && itemName === "access" ? 'deleteAccessIfislastInOut=true' : '';
-    fetch(`${deleteUrlPath}/${currentId}?${queryParams}`, {
+    fetch(`${deleteUrlPath}/${currentId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
@@ -1044,7 +1043,9 @@ function connectWebSocket() {
                                     .then(_ => {
                                         currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
                                         if (isExpandedRow())  {
-                                            toggleExpandRow(currentRow);
+                                            try {
+                                                toggleExpandRow(currentRow);
+                                            } catch {}
                                         }
                                     })
                                 }, { once: true });

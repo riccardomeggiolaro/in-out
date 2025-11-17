@@ -334,7 +334,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		elif Data(**{}) != Data(**current_data):
 			error_message = f"Sulla pesa '{instance.weigher_name}' sono già presenti dati in esecuzione. Attendi che gli operatori completino le operazioni manuali prima di avviare una nuova pesatura automatica."
 		else:
-			self.automatic_weighing_process.append(proc)
 			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 			division = weigher["division"]
 			take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
@@ -363,6 +362,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 						except Exception as e:
 							error_message = e.detail
 					if not error_message:
+						self.automatic_weighing_process.append(proc)
 						if mode == "AUTOMATIC":
 							async def handleAutomatic():
 								data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
