@@ -845,9 +845,8 @@ function updateUIRealtime(e) {
             if (obj.id_selected.need_to_confirm === true) {
                 handleNeedToConfirm(obj.data_in_execution.vehicle.plate.replace("⭐", ""));
             }
-            
-            populateListIn();
         }
+        populateListIn();
     } else if (obj.access) {
         populateListIn();
     } else if (obj.message) {

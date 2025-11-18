@@ -1036,7 +1036,7 @@ function connectWebSocket() {
                     let currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
                     if (tr) {
                         if (firstKey === "weighing") {
-                            if (isExpandedRow() && data.data["weighing"].id == currentId) {
+                            if (isExpandedRow() && data.data["weighing"].id == currentId && config["use_reservation"] === true) {
                                 currentRowExtended.querySelector('li:first-child p').classList.toggle('deleted');
                                 currentRowExtended.querySelector('li:first-child p').addEventListener('animationend', async () => {
                                     await updateTable()
