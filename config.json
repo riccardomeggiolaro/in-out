@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "MANUALLY",
+        "mode": "AUTOMATIC",
         "panel": {},
         "path_content": "static/content",
         "path_csv": "/var/lib/in-out/csv",
@@ -56,7 +56,7 @@
             }
         },
         "use_badge": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_white_list": false,
         "weighers": {
             "1": {

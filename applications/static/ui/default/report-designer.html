@@ -636,7 +636,7 @@
             <h1>📄 Report Designer - {{ type }}</h1>
             <div class="toolbar">
                 <button class="btn btn-primary" onclick="loadDefaultTemplate('{{ default_report_template }}')">Ripristina ultimo salvato</button>
-                <select id="defaultReportSelect" onfocus="populateTemplates('{{ type }}')" onchange="loadDefaultTemplate(this.value)">
+                <select id="defaultReportSelect" onfocus="populateTemplates('{{ type_default_report }}')" onchange="loadDefaultTemplate(this.value)">
                     <option>--Template di default--</option>
                 </select>
                 <button class="btn btn-primary" onclick="previewReport()">👁️ Anteprima</button>
@@ -3230,7 +3230,7 @@ ${pageClone.innerHTML}
             if (showNotificationMessage) showNotification('Progetto importato con successo! Ora puoi modificarlo.');
         }
 
-        async function populateTemplates(type) {
+        async function populateTemplates(type_default_report) {
             const select = document.getElementById('defaultReportSelect');
             const baseUrl = '/api/generic/list/default-reports';
             
@@ -3244,7 +3244,7 @@ ${pageClone.innerHTML}
                 
                 Object.keys(data).forEach(folder => {
                     data[folder].forEach(file => {
-                        if (file.includes(type)) {
+                        if (file.includes(type_default_report)) {
                             const option = document.createElement('option');
                             option.value = `/static/content/report/default-report/${folder}/${file}`;
                             option.textContent = file;

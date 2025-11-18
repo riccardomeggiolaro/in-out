@@ -127,6 +127,7 @@ def init():
 		try:
 			nome_variabile = ""
 			type = "ENTRATA"
+			type_default_report = "IN"
 			file_path = path_ui / "report-designer.html"
 			
 			if not file_path.is_file():
@@ -139,6 +140,7 @@ def init():
 			# Sostituisci le variabili
 			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
 			html_content = html_content.replace('{{ type }}', type)
+			html_content = html_content.replace('{{ type_default_report }}', type_default_report)
 			html_content = html_content.replace('{{ default_report_template }}', '/static/content/report/weight_in.json')
 			html_content = html_content.replace('{{ report }}', 'report_in')
 			
@@ -157,6 +159,7 @@ def init():
 		try:
 			nome_variabile = ""
 			type = "USCITA"
+			type_defualt_report = "OUT"
 			file_path = path_ui / "report-designer.html"
 			
 			if not file_path.is_file():
@@ -169,6 +172,7 @@ def init():
 			# Sostituisci le variabili
 			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
 			html_content = html_content.replace('{{ type }}', type)
+			html_content = html_content.replace('{{ type_default_report }}', type_defualt_report)
 			html_content = html_content.replace('{{ default_report_template }}', '/static/content/report/weight_out.json')
 			html_content = html_content.replace('{{ report }}', 'report_out')
 			
