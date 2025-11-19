@@ -1065,7 +1065,7 @@ async function handlePesata2() {
 }
 
 async function confirmSemiAutomatic() {
-    if (data_weight_realtime.potential_net_weight !== null || /[1-9]/.test(String(data_weight_realtime.tare))) outWeighing(false);
+    if (document.querySelector('.list-in li.selected') || /[1-9]/.test(String(data_weight_realtime.tare))) outWeighing(false);
     else inWeighing(false);
 }
 

@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "AUTOMATIC",
+        "mode": "SEMIAUTOMATIC",
         "panel": {},
         "path_content": "static/content",
         "path_csv": "/var/lib/in-out/csv",
