@@ -43,11 +43,13 @@ def mainprg():
 
 	import modules.md_tunnel_connections.md_tunnel_connections as md_tunnel_connections
 
+	import modules.md_desktop_interface.md_desktop_interface as md_desktop_interface
+
 	import applications.app_api as app_api
 
 	APPS = [app_api]
 
-	MODULES = [md_weigher, md_sync_folder]
+	MODULES = [md_weigher, md_sync_folder, md_desktop_interface]
 
 	# Carica thread per i mdouli esterni.
 

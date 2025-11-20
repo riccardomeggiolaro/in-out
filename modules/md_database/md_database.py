@@ -4,12 +4,12 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from enum import Enum as PyEnum
 from datetime import datetime
 import libs.lb_config as lb_config
-from libs.lb_utils import hash_password
+from libs.lb_utils import hash_password, base_path
 
 # Database connection
 Base = declarative_base()
-path_database = lb_config.g_config['app_api']['path_database']
-engine = create_engine(f"sqlite:///{path_database}")
+path_database = f"sqlite:///{base_path}/{lb_config.g_config['app_api']['path_database']}"
+engine = create_engine(path_database)
 SessionLocal = sessionmaker(bind=engine)
 
 # Model for User table

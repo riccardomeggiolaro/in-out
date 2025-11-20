@@ -58,7 +58,8 @@ def generate_pyinstaller_command():
     # File statici obbligatori
     static_files = [
         ('config.json', '.'),
-        ('service.log', '.')
+        ('service.log', '.'),
+        ('database.db', '.')
     ]
     
     for src, dst in static_files:

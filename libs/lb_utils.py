@@ -5,6 +5,9 @@ import libs.lb_config as lb_config
 import libs.lb_log as lb_log
 import threading
 import bcrypt
+from pathlib import Path
+
+base_path = Path(__file__).parent.parent.resolve()
 
 # Definizione di CustomBaseModel che estende BaseModel di Pydantic.
 class CustomBaseModel(BaseModel):
