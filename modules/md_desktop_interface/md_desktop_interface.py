@@ -10,6 +10,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 import socket
+import threading
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 from libs.lb_utils import createThread, startThread, closeThread
@@ -42,12 +43,125 @@ class DesktopInterface:
         self.status_label = None
         self.thread_interface = None
         self.thread_update_ip = None
+        self.thread_ipc_server = None
         self.enabled = True
         self.interface_closed_by_user = False  # Flag per sapere se chiusa dall'utente
-        
+
+        # Configurazione IPC per single-instance
+        self.ipc_port = self._get_ipc_port()
+        self.ipc_server_socket = None
+        self.ipc_running = False
+
+        # Verifica se esiste già un'istanza in esecuzione
+        if self._try_connect_to_existing_instance():
+            lb_log.info("Istanza già in esecuzione - richiesta apertura interfaccia inviata")
+            # Non avviare nulla, l'istanza esistente aprirà l'interfaccia
+            self.enabled = False
+            return
+
+        # Nessuna istanza esistente - avvia il server IPC
+        self._start_ipc_server()
+
         # Avvia l'interfaccia desktop
         self._start_interface()
     
+    def _get_ipc_port(self):
+        """Calcola la porta IPC basandosi sul nome dell'applicazione"""
+        # Usa una porta fissa basata sul nome dell'app per garantire consistenza
+        app_name = getattr(lb_config, 'g_name', 'BARON')
+        # Genera un numero di porta nell'intervallo 50000-60000 basato sull'hash del nome
+        port_base = 50000
+        port_offset = hash(app_name) % 10000
+        return port_base + port_offset
+
+    def _try_connect_to_existing_instance(self):
+        """Tenta di connettersi a un'istanza già in esecuzione"""
+        try:
+            # Tenta di connettersi al server IPC
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.settimeout(2)  # Timeout di 2 secondi
+            client_socket.connect(('127.0.0.1', self.ipc_port))
+
+            # Invia comando per mostrare l'interfaccia
+            client_socket.sendall(b'SHOW\n')
+
+            # Attendi conferma
+            response = client_socket.recv(1024)
+            client_socket.close()
+
+            if response == b'OK':
+                lb_log.info(f"Comando SHOW inviato con successo all'istanza esistente sulla porta {self.ipc_port}")
+                return True
+            else:
+                lb_log.warning(f"Risposta inattesa dall'istanza esistente: {response}")
+                return True  # Comunque c'è un'istanza in esecuzione
+
+        except (socket.timeout, ConnectionRefusedError, OSError) as e:
+            # Nessuna istanza in esecuzione o non raggiungibile
+            lb_log.info(f"Nessuna istanza esistente trovata sulla porta {self.ipc_port}: {e}")
+            return False
+        except Exception as e:
+            lb_log.error(f"Errore nel tentativo di connessione all'istanza esistente: {e}")
+            return False
+
+    def _start_ipc_server(self):
+        """Avvia il server IPC per ricevere richieste da altre istanze"""
+        try:
+            self.ipc_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.ipc_server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.ipc_server_socket.bind(('127.0.0.1', self.ipc_port))
+            self.ipc_server_socket.listen(5)
+            self.ipc_running = True
+
+            # Avvia il thread del server IPC
+            self.thread_ipc_server = threading.Thread(target=self._run_ipc_server, daemon=True)
+            self.thread_ipc_server.start()
+
+            lb_log.info(f"Server IPC avviato sulla porta {self.ipc_port}")
+
+        except Exception as e:
+            lb_log.error(f"Errore nell'avvio del server IPC: {e}")
+            self.ipc_running = False
+
+    def _run_ipc_server(self):
+        """Loop del server IPC per ricevere connessioni"""
+        lb_log.info("Thread server IPC avviato")
+
+        while self.ipc_running and self.enabled:
+            try:
+                # Accetta connessioni in ingresso con timeout
+                self.ipc_server_socket.settimeout(1.0)
+
+                try:
+                    client_socket, client_address = self.ipc_server_socket.accept()
+                except socket.timeout:
+                    continue  # Nessuna connessione, riprova
+
+                lb_log.info(f"Connessione IPC ricevuta da {client_address}")
+
+                # Ricevi il comando
+                data = client_socket.recv(1024)
+                command = data.decode('utf-8').strip()
+
+                lb_log.info(f"Comando IPC ricevuto: {command}")
+
+                # Gestisci il comando
+                if command == 'SHOW':
+                    # Mostra l'interfaccia
+                    self.show_interface()
+                    client_socket.sendall(b'OK')
+                else:
+                    lb_log.warning(f"Comando IPC sconosciuto: {command}")
+                    client_socket.sendall(b'UNKNOWN_COMMAND')
+
+                client_socket.close()
+
+            except Exception as e:
+                if self.ipc_running:  # Logga solo se non stiamo chiudendo
+                    lb_log.error(f"Errore nel server IPC: {e}")
+
+        lb_log.info("Thread server IPC terminato")
+
     def _start_interface(self):
         """Avvia l'interfaccia desktop in un thread separato"""
         # Controlla se l'interfaccia desktop è abilitata nella configurazione
@@ -55,7 +169,7 @@ class DesktopInterface:
         if desktop_config.get("enabled", True):  # Default abilitato se non specificato
             self.thread_interface = createThread(self._run_interface, ())
             startThread(self.thread_interface)
-            
+
             # Avvia il thread di aggiornamento IP
             self.thread_update_ip = createThread(self._update_ip_loop, ())
             startThread(self.thread_update_ip)
@@ -344,7 +458,7 @@ class DesktopInterface:
         """Spegne completamente il programma BARON"""
         try:
             lb_log.info("Richiesta spegnimento programma dall'interfaccia desktop")
-            
+
             # Mostra dialog di conferma
             from tkinter import messagebox
             result = messagebox.askyesno(
@@ -352,24 +466,32 @@ class DesktopInterface:
                 "Sei sicuro di voler spegnere completamente il programma BARON?",
                 parent=self.window
             )
-            
+
             if result:  # Se l'utente clicca "Sì"
                 lb_log.info("Spegnimento confermato - avvio shutdown")
-                
+
                 # Ferma tutti i loop del sistema
                 lb_config.g_enabled = False
-                
+
                 # Forza chiusura interfaccia
                 self.enabled = False
-                
+
+                # Ferma il server IPC
+                self.ipc_running = False
+                if self.ipc_server_socket:
+                    try:
+                        self.ipc_server_socket.close()
+                    except:
+                        pass
+
                 # Chiudi la finestra
                 if self.window:
                     self.window.destroy()
-                
+
                 # Termina il programma
                 import os
                 os._exit(0)
-                
+
         except Exception as e:
             lb_log.error(f"Errore nello spegnimento: {e}")
             import os
@@ -525,12 +647,21 @@ class DesktopInterface:
     def closeInterface(self):
         """Chiude l'interfaccia desktop"""
         self.enabled = False
-        
+
+        # Ferma il server IPC
+        self.ipc_running = False
+        if self.ipc_server_socket:
+            try:
+                self.ipc_server_socket.close()
+            except:
+                pass
+            self.ipc_server_socket = None
+
         # Chiude il thread di aggiornamento IP
         if self.thread_update_ip:
             closeThread(self.thread_update_ip)
             self.thread_update_ip = None
-        
+
         # Chiude la finestra
         if self.window:
             try:
@@ -539,12 +670,12 @@ class DesktopInterface:
             except:
                 pass
             self.window = None
-        
+
         # Chiude il thread dell'interfaccia
         if self.thread_interface:
             closeThread(self.thread_interface)
             self.thread_interface = None
-        
+
         lb_log.info("Interfaccia desktop chiusa")
 
 # ==============================================================
