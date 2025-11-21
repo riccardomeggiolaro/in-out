@@ -4,11 +4,11 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from enum import Enum as PyEnum
 from datetime import datetime
 import libs.lb_config as lb_config
-from libs.lb_utils import hash_password, base_path
+from libs.lb_utils import hash_password, base_path as base_dir
 
 # Database connection
 Base = declarative_base()
-path_database = f"sqlite:///{base_path}/{lb_config.g_config['app_api']['path_database']}"
+path_database = f"sqlite:///{base_dir}/{lb_config.g_config['app_api']['path_database']}"
 engine = create_engine(path_database)
 SessionLocal = sessionmaker(bind=engine)
 
@@ -115,6 +115,32 @@ class WeighingPicture(Base):
     idWeighing = Column(Integer, ForeignKey('weighing.id'))
 
     weighing = relationship("Weighing", back_populates="weighing_pictures")
+
+class WeighingTerminal(Base):
+    __tablename__ = 'weighing_terminal'
+    type = Column(String, nullable=True)
+    id = Column(String, nullable=True)
+    bil = Column(String, nullable=True)
+    datetime1 = Column(DateTime, nullable=True, primary_key=True, index=True)
+    date1 = Column(String, nullable=True)
+    time1 = Column(String, nullable=True)
+    datetime2 = Column(DateTime, nullable=True, primary_key=True, index=True)
+    date2 = Column(String, nullable=True)
+    time2 = Column(String, nullable=True)
+    prog1 = Column(String, nullable=True)
+    prog2 = Column(String, nullable=True)
+    badge = Column(String, nullable=True)
+    plate = Column(String, nullable=True, primary_key=True, index=True)
+    customer = Column(String, nullable=True, primary_key=True, index=True)
+    supplier = Column(String, nullable=True, primary_key=True, index=True)
+    material = Column(String, nullable=True, primary_key=True, index=True)
+    notes1 = Column(String, nullable=True)
+    notes2 = Column(String, nullable=True)
+    weight1 = Column(Integer, nullable=True)
+    pid1 = Column(String, nullable=True)
+    weight2 = Column(Integer, nullable=True)
+    pid2 = Column(String, nullable=True)
+    net_weight = Column(Integer, nullable=True)
 
 class TypeSubjectEnum(PyEnum):
     CUSTOMER = "Cliente"
@@ -242,6 +268,7 @@ table_models = {
     'access': Access,
     'lock_record': LockRecord,
     'weighing_picture': WeighingPicture,
+    'weighing_terminal': WeighingTerminal,
     'in_out': InOut  # ADDED: missing from original
 }
 
@@ -252,10 +279,11 @@ upload_file_datas_required_columns = {
     "vehicle": {"plate": str, "description": str, "tare": int},
     "material": {"description": str},
     "operator": {"description": str},
-    "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str}
+    "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str},
+    "weighing_terminal": {"type": str, "id": str, "bil": str, "datetime1": str, "date1": str, "time1": str, "datetime2": str, "date2": str, "time2": str, "prog1": str, "prog2": str, "badge": str, "plate": str, "customer": str, "supplier": str, "material": str, "notes1": str, "notes2": str, "weight1": int, "pid1": str, "weight2": int, "pid2": str, "net_weight": int}
 }
 
-instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut]
+instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal]
 
 # Create tables
 Base.metadata.create_all(engine)

@@ -1,12 +1,12 @@
 {
     "app_api": {
-        "mode": "SEMIAUTOMATIC",
+        "mode": "MANUALLY",
         "panel": {},
         "path_content": "static/content",
-        "path_csv": "/var/lib/in-out/csv",
+        "path_csv": "csv",
         "path_database": "database.db",
-        "path_img": "/var/lib/in-out/images",
-        "path_pdf": "/var/lib/in-out/pdf",
+        "path_img": "images",
+        "path_pdf": "pdf",
         "path_ui": "static/ui/default",
         "port": 80,
         "report_in": "weight_in.json",
@@ -56,7 +56,7 @@
             }
         },
         "use_badge": false,
-        "use_reservation": true,
+        "use_reservation": false,
         "use_white_list": false,
         "weighers": {
             "1": {
@@ -119,30 +119,14 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "1",
-                                            "set": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "1",
-                                            "set": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
-                                "cams": [
-                                    {
-                                        "active": false,
-                                        "live": "None",
-                                        "picture": "http://Pesatura:Baronpesi2025@10.0.5.172/ISAPI/Streaming/channels/1/picture"
-                                    }
-                                ],
+                                "cams": [],
                                 "csv": {
                                     "in": false,
                                     "out": false
@@ -151,12 +135,7 @@
                                     "in": true,
                                     "out": true
                                 },
-                                "set_rele": [
-                                    {
-                                        "rele": "1",
-                                        "set": 1
-                                    }
-                                ]
+                                "set_rele": []
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -169,9 +148,7 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 0
-                        },
+                        "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,

@@ -7,5 +7,6 @@ manager_anagrafics = {
     "vehicle": ConnectionManager(),
     "material": ConnectionManager(),
     "operator": ConnectionManager(),
-    "access": ConnectionManager()
+    "access": ConnectionManager(),
+    "weighing-terminal": ConnectionManager()
 }

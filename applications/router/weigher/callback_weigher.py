@@ -1,6 +1,6 @@
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
-from modules.md_weigher.types import Realtime, Diagnostic, Weight
+from modules.md_weigher.types import Realtime, Diagnostic, Weight, WeightTerminal
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
 from modules.md_database.md_database import AccessStatus, TypeAccess
@@ -22,6 +22,7 @@ from applications.utils.utils_report import get_data_variables, generate_html_re
 from libs.lb_printer import printer
 import applications.utils.utils as utils
 import threading
+from libs.lb_utils import base_path
 
 class CallbackWeigher(Functions, WebSocket):
 	def __init__(self):
@@ -183,7 +184,7 @@ class CallbackWeigher(Functions, WebSocket):
 			report_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
 			report_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
 			generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
-			path_pdf = lb_config.g_config["app_api"]["path_pdf"]
+			path_pdf = f"{base_path}/{lb_config.g_config['app_api']['path_pdf']}"
 			name_file, variables, report = get_data_variables(last_in_out)
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
 			if generate_report and report:
@@ -197,7 +198,7 @@ class CallbackWeigher(Functions, WebSocket):
 			csv_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["in"]
 			csv_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["out"]
 			generate_csv = csv_out if tare > 0 or last_in_out.idWeight2 else csv_in
-			path_csv = lb_config.g_config["app_api"]["path_csv"]
+			path_csv = f"{base_path}/{lb_config.g_config['app_api']['path_csv']}"
 			if generate_csv and path_csv:
 				# SALVA I DATI DELLA PESATA IN UN FILE CSV
 				csv = generate_csv_report(variables)
@@ -210,7 +211,7 @@ class CallbackWeigher(Functions, WebSocket):
 					if cam["active"]:
 						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 						if image_captured_details["image"]:
-							base_folder_path = lb_config.g_config["app_api"]["path_img"]
+							base_folder_path = f"{base_path}/{lb_config.g_config['app_api']['path_img']}"
 							sub_folder_path = structure_folder_rule()
 							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
 							save_bytes_to_file(image_captured_details["image"], file_name, f"{base_folder_path}{sub_folder_path}")
@@ -235,6 +236,9 @@ class CallbackWeigher(Functions, WebSocket):
 			for weigher in weighers_data[instance]:
 				weight = {"access": {}}
 				asyncio.run(weighers_data[instance][weigher]["sockets"].manager_realtime.broadcast(weight))
+
+	def Callback_WeighingTerminal(self, instance_name: str, weigher_name: str, weight_terminal: WeightTerminal):
+		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight_terminal.dict()))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):
 		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"command_executed": ok_value}))

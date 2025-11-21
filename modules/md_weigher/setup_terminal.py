@@ -1,4 +1,4 @@
-from modules.md_weigher.types import Realtime, Diagnostic, Weight, Tare
+from modules.md_weigher.types import Realtime, Diagnostic, Weight, Tare, WeightTerminal
 from modules.md_weigher.dto import SetupWeigherDTO
 from libs.lb_system import Connection
 from libs.lb_utils import checkCallbackFormat, callCallback
@@ -139,6 +139,29 @@ class __SetupWeigher(__SetupWeigherConnection):
 			},
 			"data_assigned": None
 		})
+		self.weight_terminal: WeightTerminal = WeightTerminal(**{
+			"type": "",
+			"id": "",
+			"bil": "",
+			"date1": "",
+			"hour1": "",
+			"date2": "",
+			"hour2": "",
+			"prog1": "",
+			"prog2": "",
+			"badge": "",
+			"plate": "",
+			"customer": "",
+			"supplier": "",
+			"material": "",
+			"notes1": "",
+			"notes2": "",
+			"weight1": "",
+			"pid1": "",
+			"weight2": "",
+			"pid2": "",
+			"net_weight": ""
+		})
 		self.ok_value: str = ""
 		self.modope: str = ""
 		self.modope_to_execute: str = ""
@@ -149,6 +172,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_realtime: str = ""
 		self.callback_diagnostic: str = ""
 		self.callback_weighing: str = ""
+		self.callback_weighing_terminal: str = ""
 		self.callback_tare_ptare_zero: str = ""
 		self.callback_data_in_execution: str = ""
 		self.callback_action_in_execution: str = ""
@@ -218,7 +242,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 		weigher_name: str,
 		cb_realtime: Callable[[dict], any] = None, 
 		cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+		cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
   		cb_data_in_execution: Callable[[dict], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -233,6 +258,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		check_cb_weighing = checkCallbackFormat(cb_weighing) # controllo se la funzione cb_weighing è richiamabile
 		if check_cb_weighing: # se è richiamabile assegna alla globale callback_weighing la funzione passata come parametro
 			self.callback_weighing = lambda: cb_weighing(self.self_config.name, weigher_name, self.weight)
+		check_cb_weighing_terminal = checkCallbackFormat(cb_weighing_terminal) # controllo se la funzione cb_weighing_terminal è richiamabile
+		if check_cb_weighing_terminal: # se è richiamabile assegna alla globale callback_weighing_terminal la funzione passata come parametro
+			self.callback_weighing_terminal = lambda: cb_weighing_terminal(self.self_config.name, weigher_name, self.weight_terminal)
 		check_cb_tare_ptare_zero = checkCallbackFormat(cb_tare_ptare_zero) # controllo se la funzione cb_tare_ptare_zero è richiamabile
 		if check_cb_tare_ptare_zero: # se è richiamabile assegna alla globale callback_tare_ptare_zero la funzione passata come parametro
 			self.callback_tare_ptare_zero = lambda: cb_tare_ptare_zero(self.self_config.name, weigher_name, self.ok_value)

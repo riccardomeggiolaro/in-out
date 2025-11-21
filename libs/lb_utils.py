@@ -6,8 +6,10 @@ import libs.lb_log as lb_log
 import threading
 import bcrypt
 from pathlib import Path
+import sys
+import os
 
-base_path = Path(__file__).parent.parent.resolve()
+base_path = Path(os.path.dirname(sys.executable)).resolve() if hasattr(sys, 'frozen') else Path(__file__).parent.parent.resolve()
 
 # Definizione di CustomBaseModel che estende BaseModel di Pydantic.
 class CustomBaseModel(BaseModel):

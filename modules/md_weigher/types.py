@@ -44,6 +44,29 @@ class Weight(BaseModel):
 	weight_executed: WeightExecuted
 	data_assigned: Optional[Any] = None
 
+class WeightTerminal(BaseModel):
+	type: str = ""
+	id: str = ""
+	bil: str = ""
+	date1: str = ""
+	hour1: str= ""
+	date2: str = ""
+	hour2: str = ""
+	prog1: str = ""
+	prog2: str = ""
+	badge: str = ""
+	plate: str = ""
+	customer: str = ""
+	supplier: str = ""
+	material: str = ""
+	notes1: str = ""
+	notes2: str = ""
+	weight1: str = ""
+	pid1: str = ""
+	weight2: str = ""
+	pid2: str = ""
+	net_weight: str = ""
+
 class SetupWeigher(CustomBaseModel):
 	max_weight: int
 	min_weight: int

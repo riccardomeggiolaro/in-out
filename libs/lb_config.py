@@ -9,6 +9,7 @@ import time
 import libs.lb_log as lb_log
 from dateutil import tz
 import sys
+from pathlib import Path
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI FUORI DALLA LIBRERIA ==================
@@ -149,7 +150,7 @@ def init():
 
 	# Ottiene il percorso della directory del modulo corrente.
 	# Determina il percorso base a seconda se l'applicazione è in esecuzione come eseguibile o come sorgente
-	base_path = sys._MEIPASS if hasattr(sys, 'frozen') else os.path.abspath(".")
+	base_path = Path(os.path.dirname(sys.executable)).resolve() if hasattr(sys, 'frozen') else Path(__file__).parent.parent.resolve()
 	config_path = os.path.join(base_path, "")
 	g_workpath = config_path.replace("/lib", "/")
 

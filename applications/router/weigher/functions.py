@@ -35,6 +35,7 @@ class Functions:
 			cb_realtime=self.Callback_Realtime, 
 			cb_diagnostic=self.Callback_Diagnostic, 
 			cb_weighing=self.Callback_Weighing, 
+			cb_weighing_terminal=self.Callback_WeighingTerminal,
 			cb_tare_ptare_zero=self.Callback_TarePTareZero,
 			cb_action_in_execution=self.Callback_ActionInExecution,
 			cb_rele=self.Callback_Rele,

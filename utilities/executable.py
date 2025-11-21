@@ -52,7 +52,8 @@ def generate_pyinstaller_command():
     cmd = [
         'pyinstaller',
         '--onefile',
-        '--name', 'in-out'  # Nome dell'eseguibile
+        '--name', 'program',  # Nome dell'eseguibile
+        '--distpath', 'dist/in-out'
     ]
     
     # File statici obbligatori
@@ -147,12 +148,11 @@ def run_pyinstaller(cmd):
 def check_executable():
     """Controlla se l'eseguibile è stato creato"""
     executable_path = None
-    
-    if os.path.exists('dist'):
-        # Cerca l'eseguibile
-        for file in os.listdir('dist'):
-            if os.path.isfile(os.path.join('dist', file)):
-                executable_path = os.path.join('dist', file)
+    dist_folder = 'dist/in-out'
+    if os.path.exists(dist_folder):
+        for file in os.listdir(dist_folder):
+            if os.path.isfile(os.path.join(dist_folder, file)):
+                executable_path = os.path.join(dist_folder, file)
                 break
     
     if executable_path and os.path.exists(executable_path):
