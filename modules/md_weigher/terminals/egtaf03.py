@@ -139,8 +139,65 @@ class EgtAf03(Terminal):
 				length_response = len(response) # ottengo la lunghezza della stringa della risposta
 				# if response in skip_response_messages:
 				# 	self.diagnostic.status = 200
+				######### Se arriva pesata dal terminale ###########################################################################
+				if length_split_response == 1:
+					split_csv_response = response.split(";") # creo un array di sotto stringhe splittando la risposta per ogni punto e virgola
+					self.weight_terminal.type = split_csv_response[0]
+					self.weight_terminal.id = split_csv_response[1]
+					self.weight_terminal.bil = split_csv_response[2]
+					self.weight_terminal.date1 = split_csv_response[3]
+					self.weight_terminal.hour1 = split_csv_response[4]
+					self.weight_terminal.date2 = split_csv_response[5]
+					self.weight_terminal.hour2 = split_csv_response[6]
+					self.weight_terminal.prog1 = split_csv_response[7]
+					self.weight_terminal.prog2 = split_csv_response[8]
+					self.weight_terminal.badge = split_csv_response[9]
+					self.weight_terminal.plate = split_csv_response[10]
+					self.weight_terminal.customer = split_csv_response[11]
+					self.weight_terminal.supplier = split_csv_response[12]
+					self.weight_terminal.material = split_csv_response[13]
+					self.weight_terminal.notes1 = split_csv_response[14]
+					self.weight_terminal.notes2 = split_csv_response[15]
+					self.weight_terminal.weight1 = split_csv_response[16]
+					self.weight_terminal.pid1 = split_csv_response[17]
+					self.weight_terminal.weight2 = split_csv_response[18]
+					self.weight_terminal.pid2 = split_csv_response[19]
+					self.weight_terminal.net_weight = split_csv_response[20]
+					self.diagnostic.status = 200
+					if self.modope == "REALTIME":
+						lb_log.warning(f"CODE: {self.code_identify}")
+						if self.modope == "REALTIME":
+							something_else = self.read(log=True, without_error=True)
+							lb_log.warning(f"SOMETHING ELSE: {something_else}")
+							if something_else:
+								split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
+								length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
+								length_response = len(response) # ottengo la lunghezza della stringa della risposta
+								# self.modope_to_execute = "OK"
+					callCallback(self.callback_weighing_terminal)
+					self.weight_terminal.type = ""
+					self.weight_terminal.id = ""
+					self.weight_terminal.bil = ""
+					self.weight_terminal.date1 = ""
+					self.weight_terminal.hour1 = ""
+					self.weight_terminal.date2 = ""
+					self.weight_terminal.hour2 = ""
+					self.weight_terminal.prog1 = ""
+					self.weight_terminal.prog2 = ""
+					self.weight_terminal.badge = ""
+					self.weight_terminal.plate = ""
+					self.weight_terminal.customer = ""
+					self.weight_terminal.supplier = ""
+					self.weight_terminal.material = ""
+					self.weight_terminal.notes1 = ""
+					self.weight_terminal.notes2 = ""
+					self.weight_terminal.weight1 = ""
+					self.weight_terminal.pid1 = ""
+					self.weight_terminal.weight2 = ""
+					self.weight_terminal.pid2 = ""
+					self.weight_terminal.net_weight = ""
 				######### Se arriva pesata dal pid ###########################################################################
-				if length_split_response == 5 and (length_response == 48 or length_response == 38):
+				elif length_split_response == 5 and (length_response == 48 or length_response == 38):
 					gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
 					t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
 					nw = str(int(gw) - int(t))
@@ -180,62 +237,6 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.log = None
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 					self.weight.data_assigned = None
-				######### Se arriva pesata dal terminale ###########################################################################
-				elif length_split_response == 21:
-					self.weight_terminal["type"] = split_response[0]
-					self.weight_terminal["id"] = split_response[1]
-					self.weight_terminal["bil"] = split_response[2]
-					self.weight_terminal["date1"] = split_response[3]
-					self.weight_terminal["hour1"] = split_response[4]
-					self.weight_terminal["date2"] = split_response[5]
-					self.weight_terminal["hour2"] = split_response[6]
-					self.weight_terminal["prog1"] = split_response[7]
-					self.weight_terminal["prog2"] = split_response[8]
-					self.weight_terminal["badge"] = split_response[9]
-					self.weight_terminal["plate"] = split_response[10]
-					self.weight_terminal["customer"] = split_response[11]
-					self.weight_terminal["supplier"] = split_response[12]
-					self.weight_terminal["material"] = split_response[13]
-					self.weight_terminal["notes1"] = split_response[14]
-					self.weight_terminal["notes2"] = split_response[15]
-					self.weight_terminal["weight1"] = split_response[16]
-					self.weight_terminal["pid1"] = split_response[17]
-					self.weight_terminal["weight2"] = split_response[18]
-					self.weight_terminal["pid2"] = split_response[19]
-					self.weight_terminal["net_weight"] = split_response[20]
-					self.diagnostic.status = 200
-					if self.modope == "REALTIME":
-						lb_log.warning(f"CODE: {self.code_identify}")
-						if self.modope == "REALTIME":
-							something_else = self.read(log=True, without_error=True)
-							lb_log.warning(f"SOMETHING ELSE: {something_else}")
-							if something_else:
-								split_response = response.split(",") # creo un array di sotto stringhe splittando la risposta per ogni virgola
-								length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
-								length_response = len(response) # ottengo la lunghezza della stringa della risposta
-								# self.modope_to_execute = "OK"
-					callCallback(self.callback_weighing_terminal)
-					self.weight_terminal["type"] = ""
-					self.weight_terminal["id"] = ""
-					self.weight_terminal["bil"] = ""
-					self.weight_terminal["date1"] = ""
-					self.weight_terminal["hour1"] = ""
-					self.weight_terminal["date2"] = ""
-					self.weight_terminal["hour2"] = ""
-					self.weight_terminal["prog1"] = ""
-					self.weight_terminal["prog2"] = ""
-					self.weight_terminal["badge"] = ""
-					self.weight_terminal["plate"] = ""
-					self.weight_terminal["customer"] = ""
-					self.weight_terminal["supplier"] = ""
-					self.weight_terminal["material"] = ""
-					self.weight_terminal["notes1"] = ""
-					self.weight_terminal["notes2"] = ""
-					self.weight_terminal["weight1"] = ""
-					self.weight_terminal["pid1"] = ""
-					self.weight_terminal["weight2"] = ""
-					self.weight_terminal["pid2"] = ""
-					self.weight_terminal["net_weight"] = ""
 				######### Se arriva codice identificativo ###########################################################################
 				elif length_split_response == 1 and length_response == 15 and "$" in response:
 					self.code_identify = response.replace("$", "").strip()

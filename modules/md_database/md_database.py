@@ -116,32 +116,6 @@ class WeighingPicture(Base):
 
     weighing = relationship("Weighing", back_populates="weighing_pictures")
 
-class WeighingTerminal(Base):
-    __tablename__ = 'weighing_terminal'
-    type = Column(String, nullable=True)
-    id = Column(String, nullable=True)
-    bil = Column(String, nullable=True)
-    datetime1 = Column(DateTime, nullable=True, primary_key=True, index=True)
-    date1 = Column(String, nullable=True)
-    time1 = Column(String, nullable=True)
-    datetime2 = Column(DateTime, nullable=True, primary_key=True, index=True)
-    date2 = Column(String, nullable=True)
-    time2 = Column(String, nullable=True)
-    prog1 = Column(String, nullable=True)
-    prog2 = Column(String, nullable=True)
-    badge = Column(String, nullable=True)
-    plate = Column(String, nullable=True, primary_key=True, index=True)
-    customer = Column(String, nullable=True, primary_key=True, index=True)
-    supplier = Column(String, nullable=True, primary_key=True, index=True)
-    material = Column(String, nullable=True, primary_key=True, index=True)
-    notes1 = Column(String, nullable=True)
-    notes2 = Column(String, nullable=True)
-    weight1 = Column(Integer, nullable=True)
-    pid1 = Column(String, nullable=True)
-    weight2 = Column(Integer, nullable=True)
-    pid2 = Column(String, nullable=True)
-    net_weight = Column(Integer, nullable=True)
-
 class TypeSubjectEnum(PyEnum):
     CUSTOMER = "Cliente"
     SUPPLIER = "Fornitore"
@@ -156,6 +130,32 @@ class TypeAccess(PyEnum):
     RESERVATION = "Prenotazione"
     MANUALLY = "Manuale"
     TEST = "Test"
+
+class WeighingTerminal(Base):
+    __tablename__ = 'weighing_terminal'
+    id = Column(String, nullable=True)
+    bil = Column(String, nullable=True)
+    badge = Column(String, nullable=True, primary_key=True, index=True)
+    plate = Column(String, nullable=True, primary_key=True, index=True)
+    typeSubject = Column(Enum(TypeSubjectEnum), default=None, nullable=True)
+    subject = Column(String, nullable=True, primary_key=True, index=True)
+    material = Column(String, nullable=True, primary_key=True, index=True)
+    notes1 = Column(String, nullable=True)
+    notes2 = Column(String, nullable=True)
+    datetime1 = Column(DateTime, nullable=True, primary_key=True, index=True)
+    date1 = Column(String, nullable=True)
+    time1 = Column(String, nullable=True)
+    datetime2 = Column(DateTime, nullable=True, primary_key=True, index=True)
+    date2 = Column(String, nullable=True)
+    time2 = Column(String, nullable=True)
+    prog1 = Column(String, nullable=True, primary_key=True, index=True)
+    prog2 = Column(String, nullable=True, primary_key=True, index=True)
+    weight1 = Column(Integer, nullable=True)
+    pid1 = Column(String, nullable=True, primary_key=True, index=True)
+    weight2 = Column(Integer, nullable=True)
+    pid2 = Column(String, nullable=True, primary_key=True, index=True)
+    net_weight = Column(Integer, nullable=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
 # Model for Access table
 class Access(Base):

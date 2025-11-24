@@ -4,10 +4,48 @@
         <link rel="icon" href="/static/content/baronpesi_favicon.png">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Operatori</title>
+        <title>Accessi</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
+        <style>
+            .table-container {
+                max-width: 2000px;
+            }
+            .permanentFilter {
+                padding: 0px 0px 10px 0px;
+            }
+            #filter\.access\.status {
+                width: 200px;
+                color: black;
+            }
+            #dateRange {
+                width: 100%;
+            }
+            .popup.active {
+                max-width: 800px !important;
+            }
+            .detail-cell {
+                padding: 0px;
+            }
+            .detail-cell img:hover {
+                cursor: pointer;
+            }
+            .list-detail-tr li {
+                list-style-type: disc;
+            }
+            .imgs {
+                display: flex;
+                gap: 10px;
+            }
+            .imgs img {
+                width: 100px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     </head>
 <body>
     <div id="navbar-container"></div>
@@ -17,12 +55,63 @@
     <div class="table-container">
         <div class="title">
             <h2>Pesate</h2>
+            <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
+                <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
+                <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
+            </div>
         </div>
         <table>
-            <thead>
-                <tr id="filters">
+            <thead id="filters">
+                <tr>
+                    <td colspan="13" class="permanentFilter">
+                        <select id="filter.access.status" name="access.status" onchange="updateTable()">
+                            <option value="">Tutte</option>
+                            <option value="ENTERED">Aperte</option>
+                            <option value="CLOSED">Chiuse</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
                     <th name="plate">
-                        <input id="filter.plate" name="plate" type="text" placeholder="targa" oninput="updateTable()" autocomplete="off">
+                        <input id="filter.plate" name="plate" type="text" placeholder="Targa" oninput="updateTable()">
+                    </th>
+                    <th name="subject">
+                        <input id="filter.subject" name="subject" type="text" placeholder="Soggetto" oninput="updateTable()">
+                    </th>
+                    <th name="material">
+                        <input id="filter.material" name="material" type="text" placeholder="Materiale" oninput="updateTable()">
+                    </th>
+                    <th name="notes1">
+                        Note 1
+                    </th>
+                    <th name="notes2">
+                        Note 2
+                    </th>
+                    <th name="date_created">
+                        <input type="text" id="dateRange" placeholder="Data pesate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
+                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
+                    </th>
+                    <th name="prog1">
+                        <input id="filter.prog1" name="prog1" type="text" placeholder="Prog 1" oninput="updateTable()">
+                    </th>
+                    <th name="prog2">
+                        <input id="filter.prog2" name="prog2" type="text" placeholder="Prog 2" oninput="updateTable()">
+                    </th>
+                    <th name="pid1">
+                        <input id="filter.pid1" name="pid1" type="text" placeholder="Pid 1" oninput="updateTable()">
+                    </th>
+                    <th name="pid2">
+                        <input id="filter.pid2" name="pid2" type="text" placeholder="Pid 2" oninput="updateTable()">
+                    </th>
+                    <th name="weight1">
+                        Peso 1 (kg)
+                    </th>
+                    <th name="weight2">
+                        Peso 2 (kg)
+                    </th>
+                    <th name="net_weight">
+                        Netto (kg)
                     </th>
                     <th></th>
                 </tr>
@@ -31,7 +120,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" style="text-align: center;">
+                    <td colspan="13" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -49,14 +138,54 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['delete-popup'])"></div>
-    
+    <div class="overlay" id="overlay" onclick="closePopups(['edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
+
+    <div id="add-popup" class="modal-content popup">
+        <div id="add-edit">
+            <h3 id="add-edit-title">Aggiungi Accesso</h3>
+            <form id="add-edit-form">
+                <!-- Form fields will be dynamically added here -->
+            </form>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closePopups(['add-popup'])">Annulla</button>
+                <button id="save-btn" class="save-btn" disabled>Salva</button><br>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-popup" class="modal-content popup">
+        <div id="add-edit">
+            <h3 id="add-edit-title">Modifica Accesso</h3>
+            <form id="add-edit-form">
+                <!-- Form fields will be dynamically added here -->
+            </form>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
+                <button id="save-btn" class="save-btn" disabled>Salva</button><br>
+            </div>
+        </div>
+    </div>
+
     <div id="delete-popup" class="modal-content popup">
-        <h3>Elimina operatore:</h3>
-        <p><u><em><span id="description"></span></em></u></p>
-        <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
-            <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+        <div id="delete">
+            <h3>Eliminare ultima pesata dell'accesso?</h3>
+            <div class="container-buttons right">                
+                <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
+                <button id="save-btn" class="delete-save-btn">Elimina</button><br>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-popup" class="modal-content popup">
+        <div id="confirm">
+            <h3 id="confirm-title">Conferma</h3>
+            <div id="confirm-content">
+                <!-- Confirmation content will be dynamically added here -->
+            </div>
+            <div class="container-buttons right">                
+                <button class="cancel-btn" onclick="closePopups(['confirm-popup'])">Annulla</button>
+                <button id="save-btn" class="confirm-save-btn">Conferma</button><br>
+            </div>
         </div>
     </div>
 
@@ -69,16 +198,55 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
+        const fromDate = document.querySelector('#filter\\.fromDate');
+        const toDate = document.querySelector('#filter\\.toDate');
+
         document.addEventListener("DOMContentLoaded", () => {
             itemName = 'weighing-terminal';
-            nextElementSibling = false;
+            nextElementSibling = true;
+            lastChar = 'a';
+            canAlwaysDelete = true;
             listUrlPath = '/api/anagrafic/weighing-terminal/list';
-            deleteUrlPath = '/api/anagrafic/weighing-terminal';
+            exportUrlPath = '/api/anagrafic/weighing-terminal/export'
             websocketUrlPath = '/api/anagrafic/weighing-terminal';
             params = {
-                'targa': 'weighing-terminal.plate'
+                "pesata con il veicolo": "plate",
+                "pesata con il soggetto": "subject",
+                "pesata con il pid": "pid1",
+                "pesata con il pid": "pid2",
+                "pesata con id": "id"
             }
             init();
+        });
+
+        flatpickr("#dateRange", {
+            locale: {
+                rangeSeparator: ' / '
+            },
+            mode: 'range',
+            // allowInput: true,
+            dateFormat: "d-m-Y", // Formato della data
+            onClose: function(selectedDates, dateStr, instance) {
+                document.querySelector('#dateRange').setSelectionRange(0, 0);
+                const firstDay = selectedDates[0];
+                let secondDay = selectedDates[1];
+                // Verifica se una data è selezionata o meno
+                if (firstDay && secondDay === undefined) {
+                    secondDay = new Date(Date.now());
+                    secondDay.setHours(12, 0, 0, 0);
+                } else if (selectedDates.length === 2 && firstDay == secondDay) {
+                    secondDay.setHours(12, 0, 0, 0);
+                }
+                // Imposta l'istanza flatpickr con le date selezionate
+                instance.setDate([firstDay, secondDay]);
+                const adjustedFirstDay = new Date(firstDay);
+                adjustedFirstDay.setHours(12, 0, 0, 0);
+                const adjustedSecondDay = new Date(secondDay);
+                adjustedSecondDay.setHours(12, 0, 0, 0);
+                fromDate.valueAsDate = adjustedFirstDay;
+                toDate.valueAsDate = adjustedSecondDay;
+                updateTable();
+            }
         });
     </script>
 </body>

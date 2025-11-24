@@ -62,7 +62,7 @@
             "1": {
                 "connection": {
                     "ip": "10.0.5.178",
-                    "port": 4001,
+                    "port": 23,
                     "timeout": 2.0
                 },
                 "nodes": {
@@ -132,8 +132,8 @@
                                     "out": false
                                 },
                                 "report": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
                                 "set_rele": []
                             }

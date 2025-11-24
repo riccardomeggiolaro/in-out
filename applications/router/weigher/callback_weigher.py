@@ -238,6 +238,7 @@ class CallbackWeigher(Functions, WebSocket):
 				asyncio.run(weighers_data[instance][weigher]["sockets"].manager_realtime.broadcast(weight))
 
 	def Callback_WeighingTerminal(self, instance_name: str, weigher_name: str, weight_terminal: WeightTerminal):
+		lb_log.error(weight_terminal)
 		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight_terminal.dict()))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):

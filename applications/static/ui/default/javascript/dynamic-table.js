@@ -322,14 +322,25 @@ function populateTable(data) {
                 }
             })
         }
-        if (item.weight1 && item.weight1.date && isValidDate(item.weight1.date)) {
-            date1 = new Date(item.weight1.date).toLocaleString('it-IT', options);
-            item.access.date_created = date1;
+        if (item.weight1) {
+            if (item.weight1.date && isValidDate(item.weight1.date)) {
+                date1 = new Date(item.weight1.date).toLocaleString('it-IT', options);
+                item.access.date_created = date1;
+            } else if (item.datetime1 && isValidDate(item.datetime1)) {
+                date1 = new Date(item.datetime1).toLocaleString('it-IT', options);
+                item.date_created = date1;
+            }
         }
-        if (item.weight2 && item.weight2.date && isValidDate(item.weight2.date)) {
-            date2 = new Date(item.weight2.date).toLocaleString('it-IT', options);
-            if (date1 && date2) item.access.date_created += ` - ${date2}`;
-            else if (!date1 && date2) item.access.date_created = date2;
+        if (item.weight2) {
+            if (item.weight2.date && isValidDate(item.weight2.date)) {
+                date2 = new Date(item.weight2.date).toLocaleString('it-IT', options);
+                if (date1 && date2) item.access.date_created += ` - ${date2}`;
+                else if (!date1 && date2) item.access.date_created = date2;
+            } else if (item.datetime2 && isValidDate(item.datetime2)) {
+                date2 = new Date(item.datetime2).toLocaleString('it-IT', options);
+                if (date1 && date2) item.date_created += ` - ${date2}`;
+                else if (!date1 && date2) item.date_created = date2;
+            }
         }
         if (!item.weight1 && item.weight2) {
             item.weight1 = {
@@ -494,7 +505,7 @@ function createRow(table, columns, item, idInout) {
     };
     const permanentAccess = document.createElement("span");
     permanentAccess.textContent = "⭐";
-    if (itemName !== "pid") {
+    if (!["pid", "weighing-terminal"].includes(itemName)) {
         if (itemName === "access" && item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
         if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
