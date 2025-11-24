@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import func, case, and_, or_
 from sqlalchemy.orm import selectinload, defer, load_only
 from sqlalchemy.sql import exists, and_, or_
 from modules.md_database.md_database import SessionLocal, InOut, Access, AccessStatus, TypeAccess, Weighing, User, WeighingTerminal
@@ -80,6 +80,7 @@ def get_list_weighing_from_terminal(
                     else:
                         raise ValueError(f"Column '{key}' not found in WeighingTerminal table.")
 
+        # Gestione fromDate: usa datetime1 se disponibile, altrimenti datetime2
         if fromDate:
             if isinstance(fromDate, str):
                 try:
@@ -96,8 +97,14 @@ def get_list_weighing_from_terminal(
                         except ValueError:
                             continue
             if isinstance(fromDate, (datetime, date)):
-                query = query.filter(WeighingTerminal.date_created >= fromDate)
+                query = query.filter(
+                    or_(
+                        and_(WeighingTerminal.datetime1.isnot(None), WeighingTerminal.datetime1 >= fromDate),
+                        and_(WeighingTerminal.datetime1.is_(None), WeighingTerminal.datetime2 >= fromDate)
+                    )
+                )
 
+        # Gestione toDate: usa datetime2 se disponibile, altrimenti datetime1
         if toDate:
             if isinstance(toDate, str):
                 try:
@@ -114,7 +121,20 @@ def get_list_weighing_from_terminal(
                         except ValueError:
                             continue
             if isinstance(toDate, (datetime, date)):
-                query = query.filter(WeighingTerminal.date_created <= toDate)
+                query = query.filter(
+                    or_(
+                        and_(WeighingTerminal.datetime2.isnot(None), WeighingTerminal.datetime2 <= toDate),
+                        and_(WeighingTerminal.datetime2.is_(None), WeighingTerminal.datetime1 <= toDate)
+                    )
+                )
+
+        # Escludi record senza nessuna data (caso teorico)
+        query = query.filter(
+            or_(
+                WeighingTerminal.datetime1.isnot(None),
+                WeighingTerminal.datetime2.isnot(None)
+            )
+        )
 
         total_rows = query.count()
 
