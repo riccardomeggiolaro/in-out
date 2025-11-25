@@ -35,7 +35,9 @@ fetch('navbar.html')
         if (p) p.textContent = `Ciao, ${userRes.username}`;
         const pDesktop = document.getElementById("hi-session-user-desktop");
         if (pDesktop) pDesktop.textContent = `Ciao, ${userRes.username}`;
-        
+
+        document.querySelector("#ver").textContent = configRes.ver;
+
         // Gestisci i risultati della configurazione
         if (!configRes.use_recordings) {
             const pageOfRecordings = document.querySelectorAll(".page-of-recordings");

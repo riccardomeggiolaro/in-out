@@ -1,4 +1,20 @@
 <style>
+    .in-out-ver {
+        margin: 0;
+        padding: 0;
+        z-index: 1001;
+        position: absolute;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.5), inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+        padding: 0px 5px 0px 5px;
+        border-radius: 8px 0px 0px 0px;
+        bottom: 0;
+        right: 0;
+        background-color: white;
+    }
+    .in-out-ver span {
+        font-size: 0.8rem;
+    }
+
     #navbar,
     .dropdown {
         margin: 0;
@@ -356,6 +372,7 @@
         }
     }
 </style>
+<div class="in-out-ver"><span>ver</span> <b id="ver">1.0.0</b></div>
 <div id="navbar">
     <!-- DESKTOP NAVBAR -->
     <nav class="navbar-desktop">

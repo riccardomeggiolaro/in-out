@@ -48,7 +48,13 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 
 	async def GetAllConfiguration(self):
-		return lb_config.g_config["app_api"]
+		ver = { "ver": lb_config.g_config["ver"] }
+		app_api = lb_config.g_config["app_api"]
+		configuration = {
+			**ver,
+			**app_api
+		}
+		return configuration
 
 	async def SetMode(self, mode: str):
 		lb_config.g_config["app_api"]["mode"] = mode
