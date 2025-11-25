@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, func
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, func, Date, Time
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, object_session
 from sqlalchemy.ext.hybrid import hybrid_property
 from enum import Enum as PyEnum
@@ -133,27 +133,28 @@ class TypeAccess(PyEnum):
 
 class WeighingTerminal(Base):
     __tablename__ = 'weighing_terminal'
-    id = Column(String, nullable=True)
+    id = Column(Integer, primary_key=True, index=True)
+    id_terminal = Column(String, nullable=True, index=True)
     bil = Column(String, nullable=True)
-    badge = Column(String, nullable=True, primary_key=True, index=True)
-    plate = Column(String, nullable=True, primary_key=True, index=True)
-    typeSubject = Column(Enum(TypeSubjectEnum), default=None, nullable=True)
-    subject = Column(String, nullable=True, primary_key=True, index=True)
-    material = Column(String, nullable=True, primary_key=True, index=True)
+    badge = Column(String, nullable=True, index=True)
+    plate = Column(String, nullable=True, index=True)
+    customer = Column(String, nullable=True, index=True)
+    supplier = Column(String, nullable=True, index=True)
+    material = Column(String, nullable=True, index=True)
     notes1 = Column(String, nullable=True)
     notes2 = Column(String, nullable=True)
-    datetime1 = Column(DateTime, nullable=True, primary_key=True, index=True)
+    datetime1 = Column(DateTime, nullable=True, index=True)
     date1 = Column(String, nullable=True)
     time1 = Column(String, nullable=True)
-    datetime2 = Column(DateTime, nullable=True, primary_key=True, index=True)
+    datetime2 = Column(DateTime, nullable=True, index=True)
     date2 = Column(String, nullable=True)
     time2 = Column(String, nullable=True)
-    prog1 = Column(String, nullable=True, primary_key=True, index=True)
-    prog2 = Column(String, nullable=True, primary_key=True, index=True)
+    prog1 = Column(String, nullable=True, index=True)
+    prog2 = Column(String, nullable=True, index=True)
     weight1 = Column(Integer, nullable=True)
-    pid1 = Column(String, nullable=True, primary_key=True, index=True)
+    pid1 = Column(String, nullable=True, index=True)
     weight2 = Column(Integer, nullable=True)
-    pid2 = Column(String, nullable=True, primary_key=True, index=True)
+    pid2 = Column(String, nullable=True, index=True)
     net_weight = Column(Integer, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 

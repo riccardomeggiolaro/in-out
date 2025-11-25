@@ -29,7 +29,7 @@ def get_list_weighing_from_terminal(
         # Costruisci dinamicamente la lista delle colonne da caricare
         columns_to_load = ["bil", "net_weight"]
         if load_subject:
-            columns_to_load += ["typeSubject", "subject"]
+            columns_to_load += ["customer", "supplier"]
         if load_vehicle:
             columns_to_load.append("plate")
         if load_material:
@@ -39,13 +39,13 @@ def get_list_weighing_from_terminal(
             if load_note:
                 columns_to_load.append("notes1")
         if load_date_weight1:
-            columns_to_load.append("date1")
+            columns_to_load.append("datetime1")
         if load_pid_weight2:
             columns_to_load += ["prog2", "pid2", "weight2"]
             if load_note:
                 columns_to_load.append("notes2")
         if load_date_weight2:
-            columns_to_load.append("date2")
+            columns_to_load.append("datetime2")
 
         # Usa load_only per caricare solo le colonne richieste
         if columns_to_load:
@@ -152,14 +152,14 @@ def get_list_weighing_from_terminal(
         else:
             query = query.order_by(WeighingTerminal.date_created.desc())
 
-        if limit is not None:
-            query = query.limit(limit)
-        if offset is not None:
-            query = query.offset(offset)
         if only_in_out_with_weight2:
             query = query.filter(WeighingTerminal.weight2 != None)
         if only_in_out_without_weight2:
             query = query.filter(WeighingTerminal.weight2 == None)
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
 
         accesses = query.all()
         return accesses, total_rows

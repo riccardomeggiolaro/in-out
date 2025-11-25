@@ -165,7 +165,8 @@ class WeighingTerminalRouter(WebSocket):
                     row["Targa"] = weighing.plate
                 
                 if load_subject:
-                    row["Cliente/Fornitore"] = weighing.subject
+                    row["Cliente"] = weighing.customer
+                    row["Fornitore"] = weighing.supplier
                 
                 if load_material:
                     row["Materiale"] = weighing.material
@@ -263,7 +264,7 @@ class WeighingTerminalRouter(WebSocket):
             # Create PDF with landscape orientation and smaller margins
             buffer = BytesIO()
             doc = SimpleDocTemplate(buffer, 
-                                pagesize=A4,  # Orientamento orizzontale
+                                pagesize=landscape(A4),  # Orientamento orizzontale
                                 leftMargin=15,
                                 rightMargin=15,
                                 topMargin=15,
@@ -272,7 +273,7 @@ class WeighingTerminalRouter(WebSocket):
 
             # Add title with smaller spacing
             styles = getSampleStyleSheet()
-            title = Paragraph("Lista Pesate", styles['Heading2'])
+            title = Paragraph("Registrature", styles['Heading2'])
             story.append(title)
             story.append(Spacer(1, 0.2*inch))
 
@@ -291,9 +292,11 @@ class WeighingTerminalRouter(WebSocket):
                 col_widths.append(30)
             
             if load_subject:
-                headers.append('Cliente/Forn.')
+                headers.append('Cliente')
                 col_widths.append(55)
-            
+                headers.append('Fornitore')
+                col_widths.append(55)
+
             if load_material:
                 headers.append('Materiale')
                 col_widths.append(55)
@@ -329,7 +332,7 @@ class WeighingTerminalRouter(WebSocket):
             col_widths.extend([38, 38, 38])
 
             # Scala automaticamente le colonne per adattarle alla pagina
-            available_width = A4[0] - doc.leftMargin - doc.rightMargin
+            available_width = landscape(A4)[0] - doc.leftMargin - doc.rightMargin
             total_width = sum(col_widths)
             
             if total_width > available_width:
@@ -359,7 +362,8 @@ class WeighingTerminalRouter(WebSocket):
                     row.append(str(weighing.plate if weighing.plate else '')[:6])
                 
                 if load_subject:
-                    row.append(str(weighing.subject if weighing.subject else '')[:18])
+                    row.append(str(weighing.customer if weighing.customer else '')[:18])
+                    row.append(str(weighing.supplier if weighing.supplier else '')[:18])
                 
                 if load_material:
                     row.append(str(weighing.material if weighing.material else '')[:12])

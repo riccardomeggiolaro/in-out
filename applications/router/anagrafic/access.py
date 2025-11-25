@@ -391,7 +391,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             df = pd.DataFrame(in_out_list)
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df.to_excel(writer, sheet_name="Pesate", index=False)
+                df.to_excel(writer, sheet_name="Accessi", index=False)
 
             output.seek(0)
             return StreamingResponse(
@@ -493,7 +493,7 @@ class AccessRouter(WebSocket, PanelSirenRouter):
 
             # Add title with smaller spacing
             styles = getSampleStyleSheet()
-            title = Paragraph("Lista Pesate", styles['Heading2'])
+            title = Paragraph("Accessi", styles['Heading2'])
             story.append(title)
             story.append(Spacer(1, 0.2*inch))
 

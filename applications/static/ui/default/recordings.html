@@ -4,7 +4,7 @@
         <link rel="icon" href="/static/content/baronpesi_favicon.png">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Accessi</title>
+        <title>Registrature</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -54,7 +54,7 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Pesate</h2>
+            <h2>Registrature</h2>
             <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
                 <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
@@ -63,7 +63,7 @@
         <table>
             <thead id="filters">
                 <tr>
-                    <td colspan="13" class="permanentFilter">
+                    <td colspan="14" class="permanentFilter">
                         <select id="filter.access.status" name="access.status" onchange="updateTable()">
                             <option value="">Tutte</option>
                             <option value="ENTERED">Aperte</option>
@@ -75,8 +75,11 @@
                     <th name="plate">
                         <input id="filter.plate" name="plate" type="text" placeholder="Targa" oninput="updateTable()">
                     </th>
-                    <th name="subject">
-                        <input id="filter.subject" name="subject" type="text" placeholder="Soggetto" oninput="updateTable()">
+                    <th name="customer">
+                        <input id="filter.customer" name="customer" type="text" placeholder="Cliente" oninput="updateTable()">
+                    </th>
+                    <th name="supplier">
+                        <input id="filter.supplier" name="supplier" type="text" placeholder="Fornitore" oninput="updateTable()">
                     </th>
                     <th name="material">
                         <input id="filter.material" name="material" type="text" placeholder="Materiale" oninput="updateTable()">
@@ -120,7 +123,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="13" style="text-align: center;">
+                    <td colspan="14" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>

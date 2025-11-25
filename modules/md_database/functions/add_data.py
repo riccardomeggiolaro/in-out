@@ -105,6 +105,8 @@ def add_data(table_name: str, data):
                     detail=f"Conflitto sui vincoli di unicità. I seguenti valori sono duplicati: {conflict_details}"
                 )
             else:
+                import libs.lb_log as lb_log
+                lb_log.error(e)
                 # Fallback se non riusciamo a determinare i conflitti specifici
                 raise HTTPException(
                     status_code=400,

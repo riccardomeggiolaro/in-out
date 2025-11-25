@@ -56,6 +56,7 @@
             }
         },
         "use_badge": false,
+        "use_recordings": false,
         "use_reservation": false,
         "use_white_list": false,
         "weighers": {

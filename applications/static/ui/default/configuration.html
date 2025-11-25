@@ -4,7 +4,7 @@
     <link rel="icon" href="/static/content/baronpesi_favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Configurazione</title>
     <link rel="stylesheet" href="/static/css/snackbar.css">
     <link rel="stylesheet" href="/static/css/setup.css"></link>
     <style>
@@ -416,6 +416,16 @@
                 <br>
                 <div class="borders aliceblue">
                     <br>
+                    <h3>REGISTRATURE</h3>
+                    <br>
+                    <label for="reservetion">Usa pesate effettuate da terminale: </label>
+                    <input type="checkbox" id="recordings" onclick="setUseRecordings(this.checked)">
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
                     <h3>Report</h3>
                     <br>
                     <label for="report-copy">Ritorna copia del report a chi effettua la pesata: </label>
@@ -669,6 +679,7 @@
         const radio2 = document.querySelector("#radio-2");
         const useReservation = document.querySelector("#reservation");
         const useBadge = document.querySelector("#badge");
+        const useRecordings = document.querySelector("#recordings");
         const reportCopy = document.querySelector("#report-copy");
         const syncFolder = document.querySelector("#sync-folder");
         const ip = document.querySelector("#ip");
@@ -1115,6 +1126,8 @@
                 if (res.use_reservation) useReservation.checked = true;
 
                 if (res.use_badge) useBadge.checked = true;
+
+                if (res.use_recordings) useRecordings.checked = true;
 
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
 
@@ -2765,6 +2778,28 @@
                 }
             })
             .then(res => res.json());
+        }
+
+        function setUseRecordings(status) {
+            fetch(`/api/config-weigher/configuration/use-recordings/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                // Rimuovi il vecchio script navbar.js
+                const oldScript = document.querySelector('script[src*="navbar.js"]');
+                if (oldScript) {
+                    oldScript.remove();
+                }
+                
+                // Crea e inserisci il nuovo script
+                const newScript = document.createElement('script');
+                newScript.src = '/static/javascript/navbar.js?t=' + Date.now();
+                document.body.appendChild(newScript);
+            });
         }
 
         function setUseBadge(status) {

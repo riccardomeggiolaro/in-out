@@ -1,52 +1,77 @@
 fetch('navbar.html')
 .then(response => response.text())
-.then(data => {
+.then(async (data) => {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = '/login';
-    fetch('/api/auth/me', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.level < 3) {
+    
+    try {
+        // Esegui entrambe le chiamate in parallelo e attendi il completamento
+        const [userRes, configRes] = await Promise.all([
+            fetch('/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(res => res.json()),
+            fetch('/api/config-weigher/configuration', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(res => res.json())
+        ]);
+        
+        // PRIMA inserisci l'HTML nel DOM
+        document.getElementById('navbar-container').innerHTML = data;
+        
+        // POI gestisci i risultati dell'autenticazione
+        if (userRes.level < 3) {
             const users = document.querySelectorAll(".page-of-users");
             users.forEach(user => user.style.display = "none");
         }
-        if (res.level < 4) {
+        if (userRes.level < 4) {
             const configurations = document.querySelectorAll(".page-of-configuration");
             configurations.forEach(configuration => configuration.style.display = "none");
         }
         const p = document.getElementById("hi-session-user");
-        p.textContent = `Ciao, ${res.username}`;
+        if (p) p.textContent = `Ciao, ${userRes.username}`;
         const pDesktop = document.getElementById("hi-session-user-desktop");
-        pDesktop.textContent = `Ciao, ${res.username}`;
-    });
-    // Inserisci l'HTML modificato
-    document.getElementById('navbar-container').innerHTML = data;
-    // Colora il link attivo
-    const currentPath = window.location.pathname;
-    document.querySelectorAll('.side-menu-navbar li').forEach(li => {
-        const link = li.querySelector('a');
-        if (link && link.getAttribute('href') === currentPath) {
-            link.classList.add('active-link-navbar');
-            if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
-                document.querySelector('.arrow-dropdown-navbar').classList.toggle('up');
-                document.querySelector('.dropdown-navbar').classList.toggle('active');
-            }
+        if (pDesktop) pDesktop.textContent = `Ciao, ${userRes.username}`;
+        
+        // Gestisci i risultati della configurazione
+        if (!configRes.use_recordings) {
+            const pageOfRecordings = document.querySelectorAll(".page-of-recordings");
+            pageOfRecordings.forEach(recordings => recordings.style.display = "none");            
         }
-    })
-    document.querySelectorAll('.navbar-desktop li').forEach(li => {
-        const link = li.querySelector('a');
-        if (link && link.getAttribute('href') === currentPath) {
-            link.classList.add('active-link-navbar');
-            if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
-                document.querySelector('.arrow-dropdown-navbar').classList.toggle('up');
-                document.querySelector('.dropdown-navbar').classList.toggle('active');
+        
+        // Colora il link attivo
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.side-menu-navbar li').forEach(li => {
+            const link = li.querySelector('a');
+            if (link && link.getAttribute('href') === currentPath) {
+                link.classList.add('active-link-navbar');
+                if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
+                    const arrow = document.querySelector('.arrow-dropdown-navbar');
+                    const dropdown = document.querySelector('.dropdown-navbar');
+                    if (arrow) arrow.classList.toggle('up');
+                    if (dropdown) dropdown.classList.toggle('active');
+                }
             }
-        }
-    });
+        });
+        document.querySelectorAll('.navbar-desktop li').forEach(li => {
+            const link = li.querySelector('a');
+            if (link && link.getAttribute('href') === currentPath) {
+                link.classList.add('active-link-navbar');
+                if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
+                    const arrow = document.querySelector('.arrow-dropdown-navbar');
+                    const dropdown = document.querySelector('.dropdown-navbar');
+                    if (arrow) arrow.classList.toggle('up');
+                    if (dropdown) dropdown.classList.toggle('active');
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Errore nel caricamento della navbar:', error);
+    }
 });
 
 function toggleMenu(element) {
