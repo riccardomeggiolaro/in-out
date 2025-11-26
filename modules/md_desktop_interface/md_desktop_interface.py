@@ -357,7 +357,7 @@ class DesktopInterface:
         """Crea la finestra dell'interfaccia"""
         try:
             # Ottieni nome e versione dalla configurazione
-            app_name = lb_config.g_config["program"]
+            app_name = lb_config.g_config["name"]
             app_version = lb_config.g_config["ver"]
             
             # Crea la finestra principale
