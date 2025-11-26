@@ -190,3 +190,7 @@ service.log
 /dist
 
 /build
+
+.csv
+.pdf
+.images

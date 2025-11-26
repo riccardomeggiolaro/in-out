@@ -3,10 +3,10 @@
         "mode": "MANUALLY",
         "panel": {},
         "path_content": "static/content",
-        "path_csv": "../csv",
-        "path_database": "../database.db",
-        "path_img": "../images",
-        "path_pdf": "../pdf",
+        "path_csv": "csv",
+        "path_database": "database.db",
+        "path_img": "images",
+        "path_pdf": "pdf",
         "path_ui": "static/ui/default",
         "port": 80,
         "report_in": "weight_in.json",
@@ -88,8 +88,8 @@
                                     "out": false
                                 },
                                 "report": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "set_rele": []
                             }
