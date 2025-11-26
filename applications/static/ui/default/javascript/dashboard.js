@@ -152,7 +152,7 @@ window.onbeforeunload = function() {
 // Chiudi il popup quando si fa clic all'esterno
 window.onclick = function(event) {
     const popup = document.getElementById(currentPopup);
-    if (event.target === popup && currentPopup !== "reconnectionPopup" && confirmWeighing === null) {
+    if (event.target === popup && currentPopup !== "reconnectionPopup" && !confirmWeighing) {
         closePopup(currentPopup);
     }
 };

@@ -1,6 +1,4 @@
 {
-    "program": "in-out",
-    "ver": "2.1.5",
     "app_api": {
         "mode": "MANUALLY",
         "panel": {},
@@ -72,51 +70,6 @@
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
                         "continuous_transmission": false,
-                        "data": {
-                            "data_in_execution": {
-                                "document_reference": null,
-                                "driver": {
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "material": {
-                                    "description": null,
-                                    "id": null
-                                },
-                                "note": null,
-                                "operator": {
-                                    "description": null,
-                                    "id": null
-                                },
-                                "subject": {
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "typeSubject": "CUSTOMER",
-                                "vector": {
-                                    "cfpiva": null,
-                                    "id": null,
-                                    "social_reason": null,
-                                    "telephone": null
-                                },
-                                "vehicle": {
-                                    "description": null,
-                                    "id": null,
-                                    "plate": null,
-                                    "tare": null
-                                }
-                            },
-                            "id_selected": {
-                                "id": null,
-                                "need_to_confirm": false,
-                                "weight1": null
-                            },
-                            "number_in_out": 1,
-                            "type": "MANUALLY"
-                        },
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
                         "events": {
@@ -166,5 +119,7 @@
         "max-size-mb": 10
     },
     "name": "in-out",
-    "secret_key": "$2b$12$PAHE4kh6lnXo3w9SF9tj7O"
+    "program": "in-out",
+    "secret_key": "$2b$12$PAHE4kh6lnXo3w9SF9tj7O",
+    "ver": "3.0.0"
 }

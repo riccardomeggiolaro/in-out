@@ -233,7 +233,6 @@ class ConfigWeigher(CommandWeigherRouter):
 		del weigher_created[setup.name]["status"]
 		weigher_created[setup.name]["printer_name"] = setup.printer_name
 		weigher_created[setup.name]["number_of_prints"] = setup.number_of_prints
-		weigher_created[setup.name]["data"] = Data(**{}).dict()
 		weigher_created[setup.name]["max_theshold"] = setup.max_theshold
 		weigher_created[setup.name]["events"] = {
 			"realtime": {
