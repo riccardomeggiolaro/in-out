@@ -674,6 +674,15 @@ def test_sftp_connection(ip, port, username, password):
 def copy_to_ftp(file_path, local_dir, ip, port, username, password, sub_path):
 	"""Copy file to FTP server"""
 	try:
+		# Skip if file doesn't exist or is a directory
+		if not os.path.exists(file_path):
+			lb_log.warning(f"FTP: File {file_path} does not exist, skipping")
+			return False
+
+		if os.path.isdir(file_path):
+			# For directories, just return True to remove from queue
+			return True
+
 		ftp = FTP()
 		ftp.connect(ip, port, timeout=10)
 		ftp.login(username, password)
@@ -685,29 +694,28 @@ def copy_to_ftp(file_path, local_dir, ip, port, username, password, sub_path):
 		# Create remote directories if needed
 		remote_dir = os.path.dirname(remote_path)
 		if remote_dir:
-			try:
-				ftp.cwd(remote_dir)
-			except error_perm:
-				# Directory doesn't exist, create it
-				dirs = remote_dir.split('/')
-				current = ''
-				for d in dirs:
-					if d:
-						current = f"{current}/{d}" if current else d
-						try:
-							ftp.mkd(current)
-						except error_perm:
-							pass  # Directory already exists
+			# Create all parent directories
+			dirs = remote_dir.split('/')
+			current = ''
+			for d in dirs:
+				if d:
+					current = f"{current}/{d}" if current else d
+					try:
+						ftp.mkd(current)
+						lb_log.info(f"FTP: Created directory {current}")
+					except error_perm:
+						pass  # Directory already exists
 
 		# Upload file
-		if os.path.isfile(file_path):
-			with open(file_path, 'rb') as f:
-				ftp.storbinary(f'STOR {remote_path}', f)
+		lb_log.info(f"FTP: Uploading {file_path} to {remote_path}")
+		with open(file_path, 'rb') as f:
+			ftp.storbinary(f'STOR {remote_path}', f)
 
 		ftp.quit()
+		lb_log.info(f"FTP: Successfully uploaded {file_path}")
 		return True
 	except Exception as e:
-		lb_log.error(f"FTP copy error: {e}")
+		lb_log.error(f"FTP copy error for {file_path}: {e}")
 		return False
 
 def copy_to_sftp(file_path, local_dir, ip, port, username, password, sub_path):
@@ -715,7 +723,20 @@ def copy_to_sftp(file_path, local_dir, ip, port, username, password, sub_path):
 	if paramiko is None:
 		lb_log.error("paramiko library not installed")
 		return False
+
+	transport = None
+	sftp = None
+
 	try:
+		# Skip if file doesn't exist or is a directory
+		if not os.path.exists(file_path):
+			lb_log.warning(f"SFTP: File {file_path} does not exist, skipping")
+			return False
+
+		if os.path.isdir(file_path):
+			# For directories, just return True to remove from queue
+			return True
+
 		transport = paramiko.Transport((ip, port))
 		transport.connect(username=username, password=password)
 		sftp = paramiko.SFTPClient.from_transport(transport)
@@ -736,22 +757,28 @@ def copy_to_sftp(file_path, local_dir, ip, port, username, password, sub_path):
 						sftp.stat(current)
 					except IOError:
 						sftp.mkdir(current)
+						lb_log.info(f"SFTP: Created directory {current}")
 
 		# Upload file
-		if os.path.isfile(file_path):
-			sftp.put(file_path, remote_path)
-		elif os.path.isdir(file_path):
-			# For directories, just ensure they exist
-			try:
-				sftp.stat(remote_path)
-			except IOError:
-				sftp.mkdir(remote_path)
+		lb_log.info(f"SFTP: Uploading {file_path} to {remote_path}")
+		sftp.put(file_path, remote_path)
 
 		sftp.close()
 		transport.close()
+		lb_log.info(f"SFTP: Successfully uploaded {file_path}")
 		return True
 	except Exception as e:
-		lb_log.error(f"SFTP copy error: {e}")
+		lb_log.error(f"SFTP copy error for {file_path}: {e}")
+		if sftp:
+			try:
+				sftp.close()
+			except:
+				pass
+		if transport:
+			try:
+				transport.close()
+			except:
+				pass
 		return False
 
 # ==============================================================
