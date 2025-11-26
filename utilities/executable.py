@@ -145,14 +145,46 @@ def run_pyinstaller(cmd):
         print("❌ PyInstaller non trovato. Installalo con: pip install pyinstaller")
         return False
 
+def copy_config_files():
+    """Copia i file di configurazione nella directory dell'eseguibile"""
+    print("\n📋 Copia file di configurazione...")
+    
+    dist_folder = 'dist/in-out'
+    config_files = ['config.json', 'service.log', 'database.db']
+    
+    if not os.path.exists(dist_folder):
+        print(f"❌ Cartella {dist_folder} non trovata!")
+        return False
+    
+    copied_files = 0
+    for config_file in config_files:
+        if os.path.exists(config_file):
+            dest_path = os.path.join(dist_folder, config_file)
+            try:
+                shutil.copy2(config_file, dest_path)
+                print(f"  ✅ Copiato: {config_file} -> {dest_path}")
+                copied_files += 1
+            except Exception as e:
+                print(f"  ❌ Errore nella copia di {config_file}: {e}")
+        else:
+            print(f"  ⚠️  File non trovato: {config_file}")
+    
+    if copied_files > 0:
+        print(f"✅ {copied_files} file di configurazione copiati con successo")
+        return True
+    else:
+        print("⚠️  Nessun file di configurazione copiato")
+        return False
+
 def check_executable():
     """Controlla se l'eseguibile è stato creato"""
     executable_path = None
     dist_folder = 'dist/in-out'
     if os.path.exists(dist_folder):
         for file in os.listdir(dist_folder):
-            if os.path.isfile(os.path.join(dist_folder, file)):
-                executable_path = os.path.join(dist_folder, file)
+            file_path = os.path.join(dist_folder, file)
+            if os.path.isfile(file_path) and not file.endswith(('.json', '.log', '.db')):
+                executable_path = file_path
                 break
     
     if executable_path and os.path.exists(executable_path):
@@ -208,11 +240,15 @@ def main():
         executable_path = check_executable()
         
         if executable_path:
-            # 7. Opzionalmente esegui l'app
+            # 7. Copia file di configurazione
+            copy_config_files()
+            
+            # 8. Opzionalmente esegui l'app
             run_executable(executable_path)
             
             print(f"\n🎉 Processo completato!")
             print(f"📁 Eseguibile disponibile in: {executable_path}")
+            print(f"📁 Directory distribuzione: dist/in-out/")
         else:
             sys.exit(1)
     else:
