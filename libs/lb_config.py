@@ -1,8 +1,3 @@
-# ==============================================================
-# 		GESTIONE CONFIGURAZIONE				=
-# ==============================================================
-
-# ==== LIBRERIE DA IMPORTARE ===================================
 import os
 import json
 import time
@@ -10,7 +5,6 @@ import libs.lb_log as lb_log
 from dateutil import tz
 import sys
 from pathlib import Path
-# ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI FUORI DALLA LIBRERIA ==================
 # Funzione per salvare le configurazioni in un file JSON specificato.

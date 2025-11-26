@@ -1,10 +1,3 @@
-# ==============================================================
-# = Module......: md_desktop_interface                       =
-# = Description.: Interfaccia desktop per visualizzare IP   =
-# = Author......: Sistema BARON PESI                         =
-# = Last rev....: 0.0001                                     =
-# ==============================================================
-
 # ==== LIBRERIE DA IMPORTARE ===================================
 import time
 import tkinter as tk

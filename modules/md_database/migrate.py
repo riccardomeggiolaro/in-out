@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base, table_models
+from modules.md_database.md_database import Base, table_models
 import libs.lb_config as lb_config
 
 def migrate_tables():

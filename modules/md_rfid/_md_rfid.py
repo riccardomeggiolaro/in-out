@@ -1,13 +1,3 @@
-# ==============================================================
-# = Module......: md_apromix_rfid					   =
-# = Description.: Interfaccia di lettura tessere rfid		=
-# = Author......: Riccardo Meggiolaro				   =
-# = Last rev....: 0.0002					   =
-# -------------------------------------------------------------=
-# 0.0002 : Implementato....
-# 0.0001 : Creazione del modulo
-# ==============================================================
-
 # ==== Dati necessari nel file .json dentro setup per la corretta funzione del modulo
 		# "apromix_rfid": {
 		#	 "serialport": {
@@ -22,8 +12,8 @@
 import inspect
 __frame = inspect.currentframe()
 namefile = inspect.getfile(__frame).split("/")[-1].replace(".py", "")
-import lib.lb_log as lb_log
-import lib.lb_config as lb_config
+import libs.lb_log as lb_log
+import libs.lb_config as lb_config
 import time
 import serial
 import binascii

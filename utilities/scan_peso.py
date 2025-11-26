@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 import socket
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def test_ip(ip, port=4001, timeout=2):
-    """Prova a connettersi e inviare comando SN"""
+def test_ip(ip, port, comando, timeout):
+    """Prova a connettersi e inviare comando"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
@@ -13,13 +12,13 @@ def test_ip(ip, port=4001, timeout=2):
         sock.connect((ip, port))
         print(f"[+] {ip}:{port} - Connesso!")
         
-        # Invia comando SN + CRLF
-        comando = b"SN\r\n"
-        sock.sendall(comando)
-        print(f"[>] {ip}:{port} - Inviato: SN\\r\\n")
+        # Invia comando + CRLF
+        comando_bytes = comando.encode('ascii') + b"\r\n"
+        sock.sendall(comando_bytes)
+        print(f"[>] {ip}:{port} - Inviato: {comando}\\r\\n")
         
         # Ricevi risposta
-        sock.settimeout(3)
+        sock.settimeout(timeout + 1)
         risposta = sock.recv(1024)
         
         if risposta:
@@ -44,14 +43,21 @@ def test_ip(ip, port=4001, timeout=2):
     return None
 
 def main():
-    # Range di IP da testare
-    base_ip = "10.0.5."
-    start = 1
-    end = 254
-    port = 4001
+    print("=" * 60)
+    print("SCANNER DISPOSITIVI DI PESATURA")
+    print("=" * 60)
     
-    print(f"[*] Scansione rete {base_ip}0/24 sulla porta {port}")
-    print(f"[*] Comando: SN\\r\\n")
+    # Input parametri
+    base_ip = input("\nInserisci l'IP base (es. 10.0.5.): ").strip()
+    start = int(input("Inserisci IP iniziale (es. 1): ").strip())
+    end = int(input("Inserisci IP finale (es. 254): ").strip())
+    port = int(input("Inserisci porta (es. 4001): ").strip())
+    comando = input("Inserisci comando da inviare (es. SN): ").strip()
+    timeout = float(input("Inserisci timeout in secondi (es. 2): ").strip())
+    
+    print(f"\n[*] Scansione rete {base_ip}{start}-{end} sulla porta {port}")
+    print(f"[*] Comando: {comando}\\r\\n")
+    print(f"[*] Timeout: {timeout}s")
     print("-" * 60)
     
     risultati = []
@@ -62,7 +68,7 @@ def main():
         
         for i in range(start, end + 1):
             ip = f"{base_ip}{i}"
-            futures.append(executor.submit(test_ip, ip, port))
+            futures.append(executor.submit(test_ip, ip, port, comando, timeout))
         
         # Raccogli risultati
         for future in as_completed(futures):
@@ -77,10 +83,10 @@ def main():
     
     if risultati:
         for ip, risposta in risultati:
-            print(f"\n[!] {ip}:4001")
+            print(f"\n[!] {ip}:{port}")
             print(f"    Risposta: {risposta.decode('ascii', errors='ignore')}")
     else:
-        print("[!] Nessun dispositivo ha risposto sulla porta 4001")
+        print(f"[!] Nessun dispositivo ha risposto sulla porta {port}")
 
 if __name__ == "__main__":
     main()

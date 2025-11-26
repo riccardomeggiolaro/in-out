@@ -1,17 +1,3 @@
-# ssh_client = None
-# if lb_config.g_config["app_api"]["ssh_client"]:
-# 	ssh_client = lb_config.g_config["app_api"]["ssh_client"]
-# 	ssh_client["local_port"] = lb_config.g_config["app_api"]["port"]
-# 	ssh_client = createThread(ssh_tunnel, (SshClientConnection(**ssh_client),))
-# 	startThread(ssh_client)
-
-# ==============================================================
-# = Module......: md_dgt1					   =
-# = Description.: Interfaccia di pesatura con più terminali =
-# = Author......: Riccardo Meggiolaro				   =
-# = Last rev....: 0.0002					   =
-# ==============================================================
-
 # ==== LIBRERIE DA IMPORTARE ===================================
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config

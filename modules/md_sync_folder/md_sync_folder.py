@@ -1,10 +1,3 @@
-# ==============================================================
-# = Module......: md_dgt1					   =
-# = Description.: Interfaccia di pesatura con più terminali =
-# = Author......: Riccardo Meggiolaro				   =
-# = Last rev....: 0.0002					   =
-# ==============================================================
-
 # ==== LIBRERIE DA IMPORTARE ===================================
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config

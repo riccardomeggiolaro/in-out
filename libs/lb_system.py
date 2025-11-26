@@ -1,8 +1,3 @@
-# ==============================================================
-# 		GESTIONE SISTEMA				=
-# ==============================================================
-
-# ==== LIBRERIE DA IMPORTARE ===================================
 import os
 import libs.lb_log as lb_log
 import platform
@@ -23,7 +18,6 @@ try:
 except ImportError:
 	winreg = None
 	wmi = None
-# ==============================================================
 
 class Connection(BaseModel):
 	def try_connection(self):

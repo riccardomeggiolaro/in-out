@@ -1,14 +1,8 @@
-# ==============================================================
-# 		GESTIONE LOGGER				=
-# ==============================================================
-
-# ==== LIBRERIE DA IMPORTARE ===================================
 import os
 import time
 import inspect
 import libs.lb_config as lb_config
 from datetime import datetime
-# ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DA MODULI ESTERNI =================
 # Funzione per stampare messaggi di debug con informazioni aggiuntive.
