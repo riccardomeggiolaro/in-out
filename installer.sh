@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e # Termina lo script in caso di errore
 
+SCRIPT_DIR="$(dirname "$0")"
+cd "$SCRIPT_DIR"
+BASE_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/"
+
 # Funzione per controllare se un pacchetto è installato
 is_installed() {
     dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
@@ -50,13 +54,13 @@ else
     echo "ATTENZIONE: L'utente baronpesi non esiste sul sistema."
 fi
 
-# Installa python3.13-venv se non è presente
-if ! is_installed python3.13-venv; then
-    echo "Installazione di python3.13-venv..."
+# Installa python3.11-venv se non è presente
+if ! is_installed python3.11-venv; then
+    echo "Installazione di python3.11-venv..."
     sudo apt update
-    sudo apt install -y python3.13-venv
+    sudo apt install -y python3.11-venv
 else
-    echo "python3.13-venv è già installato, procedo..."
+    echo "python3.11-venv è già installato, procedo..."
 fi
 
 # Installa python3-dev se non è presente
@@ -75,6 +79,36 @@ if ! is_installed python3-pip; then
     sudo apt install -y python3-pip
 else
     echo "python3-pip è già installato, procedo..."
+fi
+
+# Controlla e crea l'ambiente virtuale se non esiste
+if [[ ! -d ".venv" ]]; then
+    echo "Creazione dell'ambiente virtuale .venv..."
+    python3 -m venv .venv
+    VENV_NUOVO=true
+else
+    VENV_NUOVO=false
+    echo "L'ambiente virtuale .venv esiste già, procedo..."
+fi
+
+# Attiva l'ambiente virtuale
+source .venv/bin/activate
+
+# Controlla se `pip`, `setuptools` e `wheel` sono aggiornati
+if ! python -c "import pkg_resources; pkg_resources.require(['pip', 'setuptools', 'wheel'])" &>/dev/null; then
+    echo "Aggiornamento di pip, setuptools e wheel..."
+    pip install --upgrade pip setuptools wheel
+else
+    echo "pip, setuptools e wheel sono già aggiornati, procedo..."
+fi
+
+# Installa i requisiti solo se l'ambiente è nuovo o se mancano pacchetti
+if [ -f "requirements.txt" ] && { [ "$VENV_NUOVO" = true ] || ! pip freeze --quiet | grep -q -f requirements.txt; }; then
+    echo "Installazione delle dipendenze da requirements.txt..."
+    pip cache purge
+    pip install -r requirements.txt
+else
+    echo "Tutte le dipendenze sono già installate, procedo..."
 fi
 
 # Installa CUPS, libcups2-dev e libcupsimage2 se non sono presenti
@@ -162,24 +196,40 @@ else
     echo "ufw è già attivo."
 fi
 
+# Esegui l'installer nella cartella tmt-cups
+TMT_CUPS_DIR="./tmt-cups"
+if [ -d "$TMT_CUPS_DIR" ]; then
+    echo "Cartella tmt-cups trovata, esecuzione dell'installer..."
+    if [ -f "$TMT_CUPS_DIR/install.sh" ]; then
+        echo "Esecuzione di $TMT_CUPS_DIR/installer.sh..."
+        cd "$TMT_CUPS_DIR"
+        sudo bash install.sh
+        echo "Installer tmt-cups completato."
+    else
+        echo "ATTENZIONE: File installer.sh non trovato in $TMT_CUPS_DIR!"
+    fi
+else
+    echo "ATTENZIONE: Cartella tmt-cups non trovata nella directory dello script!"
+fi
+
 # Crea il servizio systemd se non esiste
 if [ ! -f /etc/systemd/system/in-out.service ]; then
     echo "Creazione del servizio systemd in-out.service..."
-    sudo bash -c 'cat << EOF > /etc/systemd/system/in-out.service
+    sudo bash -c "cat << EOF > /etc/systemd/system/in-out.service
 [Unit]
 Description=In-Out Service
 After=network.target
 
 [Service]
-ExecStart=/bin/bash /etc/in-out/start.sh
-WorkingDirectory=/etc/in-out
+ExecStart= source ${BASE_DIR}.venv/bin.activate && python3 ${BASE_DIR}main.py
+WorkingDirectory=${BASE_DIR}
 User=root
 Group=root
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF"
     echo "Servizio systemd in-out.service creato!"
 else
     echo "Il servizio systemd in-out.service esiste già!"
@@ -195,21 +245,5 @@ sudo systemctl enable in-out.service
 sudo systemctl start in-out.service
 
 echo "Il servizio in-out è stato avviato e verrà eseguito all'avvio della macchina."
-
-# Esegui l'installer nella cartella tmt-cups
-TMT_CUPS_DIR="$SCRIPT_DIR/tmt-cups"
-if [ -d "$TMT_CUPS_DIR" ]; then
-    echo "Cartella tmt-cups trovata, esecuzione dell'installer..."
-    if [ -f "$TMT_CUPS_DIR/install.sh" ]; then
-        echo "Esecuzione di $TMT_CUPS_DIR/installer.sh..."
-        cd "$TMT_CUPS_DIR"
-        sudo bash install.sh
-        echo "Installer tmt-cups completato."
-    else
-        echo "ATTENZIONE: File installer.sh non trovato in $TMT_CUPS_DIR!"
-    fi
-else
-    echo "ATTENZIONE: Cartella tmt-cups non trovata nella directory dello script!"
-fi
 
 echo "Installazione completa!"
