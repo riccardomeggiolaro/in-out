@@ -162,21 +162,6 @@ else
     echo "ufw è già attivo."
 fi
 
-# Crea le cartelle necessarie (senza errori se già esistono)
-mkdir -p /var/lib/in-out
-mkdir -p /var/lib/in-out/images
-mkdir -p /var/lib/in-out/reports
-mkdir -p /var/lib/in-out/pdf
-
-# Copia tutti i file dalla cartella template (accanto a installer.sh) nella cartella reports
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -d "$SCRIPT_DIR/template_reports" ]; then
-    sudo cp -r "$SCRIPT_DIR/template_reports/." /var/lib/in-out/reports/
-    echo "Template copiati in /var/lib/in-out/reports/"
-else
-    echo "ATTENZIONE: la cartella template non esiste nella directory dello script!"
-fi
-
 # Crea il servizio systemd se non esiste
 if [ ! -f /etc/systemd/system/in-out.service ]; then
     echo "Creazione del servizio systemd in-out.service..."
