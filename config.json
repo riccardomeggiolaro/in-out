@@ -32,9 +32,18 @@
             "user": "root"
         },
         "sync_folder": {
-            "local_dir": "/var/lib/in-out",
+            "local_dir": "/home/riccardo/Scrivania/projects/LOCAL/in-out-new/in-out",
             "mount_point": "/mnt/sync-folder",
-            "remote_folder": null
+            "remote_folder": {
+                "domain": "BARON",
+                "ip": "10.0.5.105",
+                "password": "uPZa6eY2Ik",
+                "port": 445,
+                "protocol": "samba",
+                "share_name": "GH5/Dev/in-out",
+                "sub_path": "",
+                "username": "Riccardo Meggiolaro"
+            }
         },
         "use_anagrafic": {
             "document_reference": true,

@@ -1,4 +1,3 @@
-# ==== LIBRERIE DA IMPORTARE ===================================
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 import time
@@ -10,7 +9,6 @@ import libs.lb_system as lb_system
 from modules.md_sync_folder.gloabls import pending_files
 from modules.md_sync_folder.dto import SyncFolderDTO
 from libs.lb_utils import createThread, startThread
-# ==============================================================
 
 name_module = "md_sync_folder"
 
