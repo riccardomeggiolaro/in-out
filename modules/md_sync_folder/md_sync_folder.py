@@ -45,16 +45,33 @@ class ModuleSyncFolder:
 		# lb_log.warning(self.mount_point)
 		
 	def create_remote_connection(self, config: SyncFolderDTO, local_dir: str, mount_point: str):
+		# Clean up existing connection if protocol is samba
 		if self.mount_point and self.mount_point != mount_point:
 			lb_system.umount_remote(self.mount_point)
-		mounted = lb_system.mount_remote(config.ip, config.domain, config.share_name, config.username, config.password, local_dir, mount_point)
+
+		mounted = False
+
+		# Handle connection based on protocol
+		if config.protocol == 'samba':
+			mounted = lb_system.mount_remote(config.ip, config.domain, config.share_name, config.username, config.password, local_dir, mount_point)
+		elif config.protocol == 'ftp':
+			# Test FTP connection
+			connected, _, _ = lb_system.test_ftp_connection(config.ip, config.port, config.username, config.password)
+			mounted = connected
+		elif config.protocol == 'sftp':
+			# Test SFTP connection
+			connected, _, _ = lb_system.test_sftp_connection(config.ip, config.port, config.username, config.password)
+			mounted = connected
+
 		self.config = config
 		self.local_dir = local_dir
-		self.mount_point = mount_point
+		self.mount_point = mount_point if config.protocol == 'samba' else None
+
+		# Scan local directory for existing files
 		files = lb_system.scan_local_dir(local_dir)
-		# lb_log.error(f"Pending files length: {len(files)}")
 		for file in files:
 			pending_files.append(file)
+
 		self.create_observer(local_dir)
 		return mounted
 
@@ -70,7 +87,17 @@ class ModuleSyncFolder:
 			self.observer = None
 
 	def test_connection(self):
-		return lb_system.get_remote_connection_status(self.mount_point)
+		if not self.config:
+			return False, None, 'no configuration'
+
+		if self.config.protocol == 'samba':
+			return lb_system.get_remote_connection_status(self.mount_point)
+		elif self.config.protocol == 'ftp':
+			return lb_system.test_ftp_connection(self.config.ip, self.config.port, self.config.username, self.config.password)
+		elif self.config.protocol == 'sftp':
+			return lb_system.test_sftp_connection(self.config.ip, self.config.port, self.config.username, self.config.password)
+
+		return False, None, 'unknown protocol'
 
 	def create_observer(self, local_dir):
 		if self.observer and self.observer.is_alive():
@@ -87,19 +114,35 @@ class ModuleSyncFolder:
 		excluded_extensions = ['.db', '.db-journal']  # Modifica secondo necessità
 		
 		while lb_config.g_enabled:
-			if pending_files and self.mount_point:
+			if pending_files and self.config:
 				file_path = pending_files[0]
-				
+
 				# Ottieni l'estensione del file
 				file_extension = os.path.splitext(file_path)[1].lower()
-				
+
 				# Controlla se l'estensione è nella lista delle escluse
 				if file_extension in excluded_extensions:
 					# lb_log.info(f"Skipping file {file_path} with excluded extension {file_extension}")
 					pending_files.popleft()
 					continue
-				
-				if lb_system.is_mounted(self.mount_point) and lb_system.copy_to_remote(file_path, self.local_dir, self.mount_point, self.config.sub_path):
+
+				copy_success = False
+
+				# Handle copy based on protocol
+				if self.config.protocol == 'samba':
+					if lb_system.is_mounted(self.mount_point):
+						copy_success = lb_system.copy_to_remote(file_path, self.local_dir, self.mount_point, self.config.sub_path)
+					else:
+						# Try to reconnect
+						self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
+						time.sleep(1)
+						continue
+				elif self.config.protocol == 'ftp':
+					copy_success = lb_system.copy_to_ftp(file_path, self.local_dir, self.config.ip, self.config.port, self.config.username, self.config.password, self.config.sub_path)
+				elif self.config.protocol == 'sftp':
+					copy_success = lb_system.copy_to_sftp(file_path, self.local_dir, self.config.ip, self.config.port, self.config.username, self.config.password, self.config.sub_path)
+
+				if copy_success:
 					try:
 						# Only remove files, not directories
 						if not os.path.isdir(file_path):
@@ -113,11 +156,9 @@ class ModuleSyncFolder:
 						# lb_log.error(f"Failed to remove {file_path}: {e}")
 						pass
 				else:
-					if self.config and not lb_system.is_mounted(self.mount_point):
-						self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
 					# lb_log.warning(f"Retrying {file_path} after delay")
 					time.sleep(1)  # Retry after delay
 			else:
-				if self.config and not lb_system.is_mounted(self.mount_point):
+				if self.config and self.config.protocol == 'samba' and self.mount_point and not lb_system.is_mounted(self.mount_point):
 					self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
 				time.sleep(1)  # Retry after delay

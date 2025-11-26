@@ -418,6 +418,11 @@ def exist_serial_port(port_name):
 	return result, message
 
 import threading
+from ftplib import FTP, error_perm
+try:
+	import paramiko
+except ImportError:
+	paramiko = None
 
 def makedirs_with_timeout(path, timeout=5, exist_ok=True):
     """
@@ -637,6 +642,118 @@ def copy_to_remote(file_path, local_dir, mount_point, sub_path):
 		return True
 	except IOError as e:
 		return False
+
+# FTP/SFTP Connection Management
+def test_ftp_connection(ip, port, username, password):
+	"""Test FTP connection"""
+	try:
+		ftp = FTP()
+		ftp.connect(ip, port, timeout=10)
+		ftp.login(username, password)
+		ftp.quit()
+		return True, None, 'connected'
+	except Exception as e:
+		lb_log.error(f"FTP connection error: {e}")
+		return False, None, f'error: {str(e)}'
+
+def test_sftp_connection(ip, port, username, password):
+	"""Test SFTP connection"""
+	if paramiko is None:
+		return False, None, 'error: paramiko library not installed'
+	try:
+		transport = paramiko.Transport((ip, port))
+		transport.connect(username=username, password=password)
+		sftp = paramiko.SFTPClient.from_transport(transport)
+		sftp.close()
+		transport.close()
+		return True, None, 'connected'
+	except Exception as e:
+		lb_log.error(f"SFTP connection error: {e}")
+		return False, None, f'error: {str(e)}'
+
+def copy_to_ftp(file_path, local_dir, ip, port, username, password, sub_path):
+	"""Copy file to FTP server"""
+	try:
+		ftp = FTP()
+		ftp.connect(ip, port, timeout=10)
+		ftp.login(username, password)
+
+		# Calculate relative path
+		rel_path = os.path.relpath(file_path, local_dir)
+		remote_path = os.path.join(sub_path, rel_path).replace('\\', '/')
+
+		# Create remote directories if needed
+		remote_dir = os.path.dirname(remote_path)
+		if remote_dir:
+			try:
+				ftp.cwd(remote_dir)
+			except error_perm:
+				# Directory doesn't exist, create it
+				dirs = remote_dir.split('/')
+				current = ''
+				for d in dirs:
+					if d:
+						current = f"{current}/{d}" if current else d
+						try:
+							ftp.mkd(current)
+						except error_perm:
+							pass  # Directory already exists
+
+		# Upload file
+		if os.path.isfile(file_path):
+			with open(file_path, 'rb') as f:
+				ftp.storbinary(f'STOR {remote_path}', f)
+
+		ftp.quit()
+		return True
+	except Exception as e:
+		lb_log.error(f"FTP copy error: {e}")
+		return False
+
+def copy_to_sftp(file_path, local_dir, ip, port, username, password, sub_path):
+	"""Copy file to SFTP server"""
+	if paramiko is None:
+		lb_log.error("paramiko library not installed")
+		return False
+	try:
+		transport = paramiko.Transport((ip, port))
+		transport.connect(username=username, password=password)
+		sftp = paramiko.SFTPClient.from_transport(transport)
+
+		# Calculate relative path
+		rel_path = os.path.relpath(file_path, local_dir)
+		remote_path = os.path.join(sub_path, rel_path).replace('\\', '/')
+
+		# Create remote directories if needed
+		remote_dir = os.path.dirname(remote_path)
+		if remote_dir:
+			dirs = remote_dir.split('/')
+			current = ''
+			for d in dirs:
+				if d:
+					current = f"{current}/{d}" if current else d
+					try:
+						sftp.stat(current)
+					except IOError:
+						sftp.mkdir(current)
+
+		# Upload file
+		if os.path.isfile(file_path):
+			sftp.put(file_path, remote_path)
+		elif os.path.isdir(file_path):
+			# For directories, just ensure they exist
+			try:
+				sftp.stat(remote_path)
+			except IOError:
+				sftp.mkdir(remote_path)
+
+		sftp.close()
+		transport.close()
+		return True
+	except Exception as e:
+		lb_log.error(f"SFTP copy error: {e}")
+		return False
+
 # ==============================================================
 
 # ==== FUNZIONI RICHIAMABILI DENTRO LA LIBRERIA ================

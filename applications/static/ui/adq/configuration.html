@@ -437,18 +437,34 @@
                         <br>
                         <h3>Sincronizzazione cartella remota</h3>
                         <br>
+                        <label for="protocol">Protocollo: *</label>
+                        <select id="protocol" onchange="onProtocolChange()">
+                            <option value="samba">Samba/CIFS</option>
+                            <option value="ftp">FTP</option>
+                            <option value="sftp">SFTP</option>
+                        </select>
+                        <br>
+                        <br>
                         <label for="ip">IP: *</label>
                         <input type="text" id="ip">
                         <br>
                         <br>
-                        <label for="domain">Dominio: </label>
-                        <input type="text" id="domain">
+                        <label for="port">Porta:</label>
+                        <input type="number" id="port" placeholder="Default: Samba=445, FTP=21, SFTP=22">
                         <br>
                         <br>
-                        <label for="shared-folder">Cartella condivisa: *</label>
-                        <input type="text" id="shared-folder">
-                        <br>
-                        <br>
+                        <div id="domain-field">
+                            <label for="domain">Dominio: </label>
+                            <input type="text" id="domain">
+                            <br>
+                            <br>
+                        </div>
+                        <div id="shared-folder-field">
+                            <label for="shared-folder">Cartella condivisa: *</label>
+                            <input type="text" id="shared-folder">
+                            <br>
+                            <br>
+                        </div>
                         <label for="sub-folder">Sotto cartella: </label>
                         <input type="text" id="sub-folder">
                         <br>
@@ -671,9 +687,13 @@
         const useBadge = document.querySelector("#badge");
         const reportCopy = document.querySelector("#report-copy");
         const syncFolder = document.querySelector("#sync-folder");
+        const protocol = document.querySelector("#protocol");
         const ip = document.querySelector("#ip");
+        const port = document.querySelector("#port");
         const domain = document.querySelector("#domain");
+        const domainField = document.querySelector("#domain-field");
         const sharedFolder = document.querySelector("#shared-folder");
+        const sharedFolderField = document.querySelector("#shared-folder-field");
         const subFolder = document.querySelector("#sub-folder");
         const username = document.querySelector("#username");
         const password = document.querySelector("#password");
@@ -1119,18 +1139,23 @@
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
 
                 if (res.sync_folder.remote_folder) {
+                    protocol.value = res.sync_folder.remote_folder.protocol || 'samba';
+                    protocol.dataset.lastSaved = res.sync_folder.remote_folder.protocol || 'samba';
                     ip.value = res.sync_folder.remote_folder.ip;
                     ip.dataset.lastSaved = res.sync_folder.remote_folder.ip;
-                    domain.value = res.sync_folder.remote_folder.domain;
-                    domain.dataset.lastSaved = res.sync_folder.remote_folder.domain;
-                    sharedFolder.value = res.sync_folder.remote_folder.share_name;
-                    sharedFolder.dataset.lastSaved = res.sync_folder.remote_folder.share_name;
-                    subFolder.value = res.sync_folder.remote_folder.sub_path;
-                    subFolder.dataset.lastSaved = res.sync_folder.remote_folder.sub_path;
+                    port.value = res.sync_folder.remote_folder.port || '';
+                    port.dataset.lastSaved = res.sync_folder.remote_folder.port || '';
+                    domain.value = res.sync_folder.remote_folder.domain || '';
+                    domain.dataset.lastSaved = res.sync_folder.remote_folder.domain || '';
+                    sharedFolder.value = res.sync_folder.remote_folder.share_name || '';
+                    sharedFolder.dataset.lastSaved = res.sync_folder.remote_folder.share_name || '';
+                    subFolder.value = res.sync_folder.remote_folder.sub_path || '';
+                    subFolder.dataset.lastSaved = res.sync_folder.remote_folder.sub_path || '';
                     username.value = res.sync_folder.remote_folder.username;
                     username.dataset.lastSaved = res.sync_folder.remote_folder.username;
                     password.value = res.sync_folder.remote_folder.password;
                     password.dataset.lastSaved = res.sync_folder.remote_folder.password;
+                    onProtocolChange();
                 } else {
                     testConnection.disabled = true;
                     deleteConnection.disabled = true;
@@ -2791,6 +2816,27 @@
             window.open(`/report-designer/${type}`, '_blank');
         }
 
+        function onProtocolChange() {
+            const selectedProtocol = protocol.value;
+
+            // Show/hide fields based on protocol
+            if (selectedProtocol === 'samba') {
+                domainField.style.display = 'block';
+                sharedFolderField.style.display = 'block';
+                if (!port.value) {
+                    port.placeholder = 'Default: 445';
+                }
+            } else {
+                domainField.style.display = 'none';
+                sharedFolderField.style.display = 'none';
+                if (selectedProtocol === 'ftp') {
+                    port.placeholder = 'Default: 21';
+                } else if (selectedProtocol === 'sftp') {
+                    port.placeholder = 'Default: 22';
+                }
+            }
+        }
+
         function testSyncFolder() {
             fetch(`/api/sync-folder/test`, {
                 headers: {
@@ -2819,8 +2865,12 @@
                     showSnackbar("snackbar", 'Errore nella eliminazione', 'rgb(255, 208, 208)', 'black');
                 } else {
                     showSnackbar("snackbar", "Sincronizzazione remota eliminata", 'rgb(208, 255, 208)', 'black');
+                    protocol.value = 'samba';
+                    protocol.dataset.lastSaved = '';
                     ip.value = '';
                     ip.dataset.lastSaved = '';
+                    port.value = '';
+                    port.dataset.lastSaved = '';
                     domain.value = '';
                     domain.dataset.lastSaved = '';
                     sharedFolder.value = '';
@@ -2831,6 +2881,7 @@
                     username.dataset.lastSaved = '';
                     password.value = '';
                     password.dataset.lastSaved = '';
+                    onProtocolChange();
                     testConnection.disabled = true;
                     deleteConnection.disabled = true;
                     saveConnection.disabled = true;
@@ -2839,20 +2890,33 @@
         }
 
         function saveSyncFolder() {
-            syncFolder.querySelectorAll("input, button").forEach(e => e.disabled = true);
+            syncFolder.querySelectorAll("input, button, select").forEach(e => e.disabled = true);
+
+            const body = {
+                "protocol": protocol.value,
+                "ip": ip.value,
+                "username": username.value,
+                "password": password.value,
+                "sub_path": subFolder.value
+            };
+
+            // Add port if specified
+            if (port.value) {
+                body.port = parseInt(port.value);
+            }
+
+            // Add protocol-specific fields
+            if (protocol.value === 'samba') {
+                body.domain = domain.value;
+                body.share_name = sharedFolder.value;
+            }
+
             fetch(`/api/sync-folder`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    "ip": ip.value,
-                    "domain": domain.value,
-                    "share_name": sharedFolder.value,
-                    "sub_path": subFolder.value,
-                    "username": username.value,
-                    "password": password.value
-                })
+                body: JSON.stringify(body)
             })
             .then(res => {
                 const status = res.status;
@@ -2869,14 +2933,19 @@
                 });
             })
             .then(res => {
-                syncFolder.querySelectorAll("input").forEach(e => e.disabled = false);
+                syncFolder.querySelectorAll("input, select").forEach(e => e.disabled = false);
                 if (res.remote_folder) {
+                    protocol.dataset.lastSaved = res.remote_folder.protocol || 'samba';
+                    protocol.value = res.remote_folder.protocol || 'samba';
                     ip.dataset.lastSaved = res.remote_folder.ip;
-                    domain.dataset.lastSaved = res.remote_folder.domain;
-                    sharedFolder.dataset.lastSaved = res.remote_folder.share_name;
-                    subFolder.dataset.lastSaved = res.remote_folder.sub_path;
+                    port.dataset.lastSaved = res.remote_folder.port || '';
+                    port.value = res.remote_folder.port || '';
+                    domain.dataset.lastSaved = res.remote_folder.domain || '';
+                    sharedFolder.dataset.lastSaved = res.remote_folder.share_name || '';
+                    subFolder.dataset.lastSaved = res.remote_folder.sub_path || '';
                     username.dataset.lastSaved = res.remote_folder.username;
                     password.dataset.lastSaved = res.remote_folder.password;
+                    onProtocolChange();
                     testConnection.disabled = false;
                     deleteConnection.disabled = false;
                     saveConnection.disabled = true;
