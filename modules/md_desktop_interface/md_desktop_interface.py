@@ -1,7 +1,7 @@
 # ==============================================================
 # = Module......: md_desktop_interface                       =
 # = Description.: Interfaccia desktop per visualizzare IP   =
-# = Author......: Sistema BARON                              =
+# = Author......: Sistema BARON PESI                         =
 # = Last rev....: 0.0001                                     =
 # ==============================================================
 
@@ -11,10 +11,12 @@ import tkinter as tk
 from tkinter import ttk
 import socket
 import threading
+import webbrowser
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 from libs.lb_utils import createThread, startThread, closeThread
 import sys
+import os
 if sys.platform == "win32":
     import win32gui
     import win32con
@@ -50,6 +52,7 @@ class DesktopInterface:
         self.thread_ipc_server = None
         self.enabled = True
         self.interface_closed_by_user = False  # Flag per sapere se chiusa dall'utente
+        self.current_ip = None  # Memorizza l'IP corrente
 
         # Configurazione IPC per single-instance
         self.ipc_port = self._get_ipc_port()
@@ -72,7 +75,7 @@ class DesktopInterface:
     def _get_ipc_port(self):
         """Calcola la porta IPC basandosi sul nome dell'applicazione"""
         # Usa una porta fissa basata sul nome dell'app per garantire consistenza
-        app_name = getattr(lb_config, 'g_name', 'BARON')
+        app_name = getattr(lb_config, 'g_name', 'BARON PESI')
         # Genera un numero di porta nell'intervallo 50000-60000 basato sull'hash del nome
         port_base = 50000
         port_offset = hash(app_name) % 10000
@@ -340,88 +343,109 @@ class DesktopInterface:
         self.status_label = None
         lb_log.info("Thread interfaccia GUI terminato")
     
+    def _open_browser(self, event=None):
+        """Apre il browser con l'URL dell'applicazione"""
+        try:
+            if self.current_ip and self.current_ip != "N/A" and self.current_ip != "Caricamento...":
+                url = f"http://{self.current_ip}:80"
+                lb_log.info(f"Apertura browser: {url}")
+                webbrowser.open(url)
+        except Exception as e:
+            lb_log.error(f"Errore nell'apertura browser: {e}")
+    
     def _create_window(self):
         """Crea la finestra dell'interfaccia"""
         try:
+            # Ottieni nome e versione dalla configurazione
+            app_name = lb_config.g_config["program"]
+            app_version = lb_config.g_config["ver"]
+            
             # Crea la finestra principale
-            app_name = getattr(lb_config, 'g_name', 'BARON')
             self.window = tk.Tk()
-            self.window.title(f"BARON {app_name}")
+            self.window.title(app_name)  # Solo il nome dell'app nella barra
             
-            # Disabilita il pulsante X e imposta il protocollo per minimizzare
-            self.window.protocol("WM_DELETE_WINDOW", lambda: self.window.iconify())
+            # Imposta l'icona - METODO ALTERNATIVO PIÙ AFFIDABILE
+            try:
+                icon_path = os.path.join(os.path.dirname(__file__), "icon.ico")
+                if os.path.exists(icon_path):
+                    # Su Windows usa iconbitmap
+                    if sys.platform == "win32":
+                        self.window.iconbitmap(icon_path)
+                        lb_log.info(f"✅ Icona caricata (Windows): {icon_path}")
+                    else:
+                        # Su Linux/Mac usa PhotoImage
+                        from PIL import Image, ImageTk
+                        icon_image = Image.open(icon_path)
+                        icon_photo = ImageTk.PhotoImage(icon_image)
+                        self.window.iconphoto(True, icon_photo)
+                        lb_log.info(f"✅ Icona caricata (Linux/Mac): {icon_path}")
+                else:
+                    lb_log.warning(f"⚠️ File icon.ico non trovato in: {icon_path}")
+            except Exception as e:
+                lb_log.warning(f"⚠️ Impossibile caricare l'icona: {e}")
             
-            # Dimensioni iniziali compatibili con TUTTI i PC
-            self.window.geometry("350x280")
-            self.window.resizable(True, True)  # RIDIMENSIONABILE dall'utente
-            self.window.minsize(300, 250)  # Dimensioni minime per funzionalità
-            # Nessun maxsize = può ingrandire quanto vuole
+            # Imposta il protocollo per spegnere il programma quando si clicca X
+            self.window.protocol("WM_DELETE_WINDOW", self._shutdown_program)
+            
+            # Dimensioni ridotte per centrare meglio il contenuto
+            self.window.geometry("350x200")
+            self.window.resizable(True, True)
+            self.window.minsize(300, 180)
             
             # Configura lo stile
             style = ttk.Style()
             style.theme_use('clam')
             
-            # Frame principale con padding ridotto per PC piccoli
-            main_frame = ttk.Frame(self.window, padding="15")
-            main_frame.pack(fill=tk.BOTH, expand=True)
+            # Frame principale CENTRATO verticalmente
+            main_frame = ttk.Frame(self.window)
+            main_frame.place(relx=0.5, rely=0.5, anchor='center')  # Centra tutto
             
-            # FRAME SUPERIORE - contenuto fisso
-            top_frame = ttk.Frame(main_frame)
-            top_frame.pack(fill=tk.X, pady=(0, 5))
-            
-            # Titolo (font ridotto per PC piccoli)
+            # Titolo BARON PESI
             title_label = ttk.Label(
-                top_frame, 
-                text=f"BARON {app_name}",
+                main_frame, 
+                text=f"BARON PESI {app_name}",
                 font=('Arial', 14, 'bold')
             )
             title_label.pack()
             
-            # Etichetta IP
-            ip_title = ttk.Label(top_frame, text="Indirizzo IP:", font=('Arial', 10))
-            ip_title.pack(pady=(8, 0))
+            # Versione subito sotto
+            version_label = ttk.Label(
+                main_frame,
+                text=f"v{app_version}",
+                font=('Arial', 11, 'bold'),
+                foreground='#333333'
+            )
+            version_label.pack()
+            
+            # Etichetta URL - CLICCABILE
+            ip_title = ttk.Label(
+                main_frame, 
+                text="URL Applicazione (clicca per aprire):", 
+                font=('Arial', 10)
+            )
+            ip_title.pack(pady=(10, 0))
             
             self.ip_label = ttk.Label(
-                top_frame, 
+                main_frame, 
                 text="Caricamento...",
-                font=('Arial', 18, 'bold'),
-                foreground='blue'
+                font=('Arial', 14, 'bold'),
+                foreground='blue',
+                cursor='hand2'
             )
-            self.ip_label.pack(pady=(3, 8))
+            self.ip_label.pack(pady=(3, 0))
             
-            # Separatore
-            separator = ttk.Separator(top_frame, orient='horizontal')
-            separator.pack(fill=tk.X, pady=3)
+            # Rendi l'IP cliccabile
+            self.ip_label.bind('<Button-1>', self._open_browser)
             
-            # FRAME CENTRALE - status che si espande con la finestra
-            middle_frame = ttk.Frame(main_frame)
-            middle_frame.pack(fill=tk.BOTH, expand=True, pady=3)  # Si espande
-            
+            # Status label per altri IP
             self.status_label = ttk.Label(
-                middle_frame,
-                text="Inizializzazione...",
+                main_frame,
+                text="",
                 font=('Arial', 9),
                 justify=tk.CENTER,
-                wraplength=300,  # Si adatta al ridimensionamento
-                anchor='center'
+                foreground='#666666'
             )
-            self.status_label.pack(expand=True, fill=tk.BOTH)
-            
-            # FRAME INFERIORE - pulsante SEMPRE in fondo
-            bottom_frame = ttk.Frame(main_frame)
-            bottom_frame.pack(fill=tk.X, side=tk.BOTTOM)
-            
-            # Separatore
-            separator2 = ttk.Separator(bottom_frame, orient='horizontal')
-            separator2.pack(fill=tk.X, pady=(5, 8))
-            
-            # Pulsante Spegni Programma - SEMPRE VISIBILE
-            self.shutdown_button = ttk.Button(
-                bottom_frame,
-                text="🔴 Spegni Programma",
-                command=self._shutdown_program
-            )
-            self.shutdown_button.pack(pady=(0, 5))
+            self.status_label.pack(pady=(10, 0))
             
             # Posiziona la finestra al centro dello schermo
             self.window.update_idletasks()
@@ -432,18 +456,15 @@ class DesktopInterface:
             
             # Calcola posizione centrata
             x = max(0, (screen_width - 350) // 2)
-            y = max(0, (screen_height - 280) // 2)
+            y = max(0, (screen_height - 200) // 2)
             
             # Se lo schermo è troppo piccolo, posiziona in alto a sinistra
-            if screen_width < 400 or screen_height < 320:
+            if screen_width < 400 or screen_height < 240:
                 x, y = 10, 10
             
             self.window.geometry(f"+{x}+{y}")
             
-            # Bind evento ridimensionamento per aggiornare wraplength
-            self.window.bind('<Configure>', self._on_window_resize)
-            
-            lb_log.info(f"Interfaccia desktop ridimensionabile creata 350x280 su schermo {screen_width}x{screen_height}")
+            lb_log.info(f"Interfaccia desktop centrata creata 350x200 su schermo {screen_width}x{screen_height}")
             
         except Exception as e:
             lb_log.error(f"Errore nella creazione interfaccia: {e}")
@@ -454,16 +475,10 @@ class DesktopInterface:
     
     def _on_window_resize(self, event):
         """Gestisce il ridimensionamento della finestra"""
-        try:
-            # Aggiorna il wraplength del testo in base alla larghezza della finestra
-            if event.widget == self.window and self.status_label:
-                new_width = max(200, self.window.winfo_width() - 60)  # Margine 60px
-                self.status_label.configure(wraplength=new_width)
-        except Exception as e:
-            pass  # Ignora errori durante il ridimensionamento
+        pass  # Non più necessario con layout centrato
     
     def _shutdown_program(self):
-        """Spegne completamente il programma BARON"""
+        """Spegne completamente il programma BARON PESI"""
         try:
             lb_log.info("Richiesta spegnimento programma dall'interfaccia desktop")
 
@@ -471,7 +486,7 @@ class DesktopInterface:
             from tkinter import messagebox
             result = messagebox.askyesno(
                 "Conferma Spegnimento",
-                "Sei sicuro di voler spegnere completamente il programma BARON?",
+                "Sei sicuro di voler spegnere completamente il programma BARON PESI?",
                 parent=self.window
             )
 
@@ -539,18 +554,22 @@ class DesktopInterface:
     def _update_labels(self, primary_ip, all_ips):
         """Aggiorna le etichette nell'interfaccia"""
         try:
+            # Memorizza l'IP corrente per il click
+            self.current_ip = primary_ip
+            
             if self.ip_label:
-                self.ip_label.config(text=primary_ip)
+                # Mostra URL completo con protocollo
+                if primary_ip and primary_ip != "N/A" and primary_ip != "Caricamento...":
+                    full_url = f"http://{primary_ip}:80"
+                    self.ip_label.config(text=full_url)
+                else:
+                    self.ip_label.config(text=primary_ip)
             
             if self.status_label:
-                # Ottieni nome e versione in modo sicuro
-                app_name = getattr(lb_config, 'g_name', 'BARON')
-                app_version = getattr(lb_config, 'g_vers', '1.0')
-                
-                status_text = f"BARON {app_name} v{app_version}\n"
-                status_text += f"Status: {'RUNNING' if lb_config.g_enabled else 'STOPPED'}\n"
+                # Mostra solo gli altri IP
+                status_text = ""
                 if len(all_ips) > 1:
-                    status_text += f"Altri IP: {', '.join(all_ips[1:])}"
+                    status_text = f"Altri IP: {', '.join(all_ips[1:])}"
                 self.status_label.config(text=status_text)
         except Exception as e:
             lb_log.error(f"Errore nell'aggiornamento etichette: {e}")

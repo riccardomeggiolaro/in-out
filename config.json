@@ -1,4 +1,5 @@
 {
+    "program": "in-out",
     "ver": "2.1.5",
     "app_api": {
         "mode": "MANUALLY",
