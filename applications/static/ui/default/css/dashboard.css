@@ -470,9 +470,8 @@ button:active {
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
     }
 
-    /* Pulsante chiusura per anagrafic e ins */
+    /* Pulsante chiusura per anagrafic e ins - solo su mobile */
     .close-tab-button {
-        display: none;
         position: absolute;
         top: 15px;
         right: 15px;
@@ -481,6 +480,7 @@ button:active {
         width: 40px;
         height: 40px;
         border-radius: 50%;
+        display: none;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
@@ -855,6 +855,18 @@ hr {
     right: 0;
     z-index: 900;
     pointer-events: none;
+}
+
+/* Nascondi i pulsanti X di default */
+.close-tab-button {
+    display: none;
+}
+
+/* Assicurati che i pulsanti X siano nascosti su schermi grandi */
+@media (min-width: 801px) {
+    .close-tab-button {
+        display: none !important;
+    }
 }
 
 .tab-button {
