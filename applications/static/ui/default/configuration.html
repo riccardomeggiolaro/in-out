@@ -447,8 +447,20 @@
                         <br>
                         <h3>Sincronizzazione cartella remota</h3>
                         <br>
+                        <label for="protocol">Protocollo: *</label>
+                        <select id="protocol">
+                            <option value="samba">Samba/CIFS</option>
+                            <option value="ftp">FTP</option>
+                            <option value="sftp">SFTP</option>
+                        </select>
+                        <br>
+                        <br>
                         <label for="ip">IP: *</label>
                         <input type="text" id="ip">
+                        <br>
+                        <br>
+                        <label for="port">Porta: *</label>
+                        <input type="number" id="port" min="1" max="65535">
                         <br>
                         <br>
                         <label for="domain">Dominio: </label>
@@ -682,7 +694,9 @@
         const useRecordings = document.querySelector("#recordings");
         const reportCopy = document.querySelector("#report-copy");
         const syncFolder = document.querySelector("#sync-folder");
+        const protocol = document.querySelector("#protocol");
         const ip = document.querySelector("#ip");
+        const port = document.querySelector("#port");
         const domain = document.querySelector("#domain");
         const sharedFolder = document.querySelector("#shared-folder");
         const subFolder = document.querySelector("#sub-folder");
@@ -1132,8 +1146,12 @@
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
 
                 if (res.sync_folder.remote_folder) {
+                    protocol.value = res.sync_folder.remote_folder.protocol || 'samba';
+                    protocol.dataset.lastSaved = res.sync_folder.remote_folder.protocol || 'samba';
                     ip.value = res.sync_folder.remote_folder.ip;
                     ip.dataset.lastSaved = res.sync_folder.remote_folder.ip;
+                    port.value = res.sync_folder.remote_folder.port || getDefaultPort(protocol.value);
+                    port.dataset.lastSaved = res.sync_folder.remote_folder.port || getDefaultPort(protocol.value);
                     domain.value = res.sync_folder.remote_folder.domain;
                     domain.dataset.lastSaved = res.sync_folder.remote_folder.domain;
                     sharedFolder.value = res.sync_folder.remote_folder.share_name;
@@ -1144,6 +1162,7 @@
                     username.dataset.lastSaved = res.sync_folder.remote_folder.username;
                     password.value = res.sync_folder.remote_folder.password;
                     password.dataset.lastSaved = res.sync_folder.remote_folder.password;
+                    updateFieldsVisibility();
                 } else {
                     testConnection.disabled = true;
                     deleteConnection.disabled = true;
@@ -2734,15 +2753,48 @@
             event.currentTarget.classList.add("selected");
         }
 
+        // Helper function to get default port based on protocol
+        function getDefaultPort(proto) {
+            if (proto === 'samba') return 445;
+            if (proto === 'ftp') return 21;
+            if (proto === 'sftp') return 22;
+            return '';
+        }
+
+        // Helper function to update field visibility based on protocol
+        function updateFieldsVisibility() {
+            const domainLabel = document.querySelector('label[for="domain"]');
+            if (protocol.value === 'samba') {
+                domainLabel.style.display = '';
+                domain.style.display = '';
+            } else {
+                domainLabel.style.display = 'none';
+                domain.style.display = 'none';
+            }
+        }
+
+        // Protocol change listener
+        protocol.addEventListener("change", () => {
+            port.value = getDefaultPort(protocol.value);
+            port.dataset.lastSaved = getDefaultPort(protocol.value);
+            updateFieldsVisibility();
+        });
+
         syncFolder.addEventListener("input", (e) => {
             if (
+                protocol.value &&
                 ip.value &&
+                port.value &&
                 sharedFolder.value &&
                 username.value &&
                 password.value &&
                 (
+                    protocol.value !== protocol.dataset.lastSaved ||
                     ip.value !== ip.dataset.lastSaved ||
+                    port.value != port.dataset.lastSaved ||
+                    domain.value !== domain.dataset.lastSaved ||
                     sharedFolder.value !== sharedFolder.dataset.lastSaved ||
+                    subFolder.value !== subFolder.dataset.lastSaved ||
                     username.value !== username.dataset.lastSaved ||
                     password.value !== password.dataset.lastSaved
                 )
@@ -2854,8 +2906,12 @@
                     showSnackbar("snackbar", 'Errore nella eliminazione', 'rgb(255, 208, 208)', 'black');
                 } else {
                     showSnackbar("snackbar", "Sincronizzazione remota eliminata", 'rgb(208, 255, 208)', 'black');
+                    protocol.value = 'samba';
+                    protocol.dataset.lastSaved = 'samba';
                     ip.value = '';
                     ip.dataset.lastSaved = '';
+                    port.value = getDefaultPort('samba');
+                    port.dataset.lastSaved = getDefaultPort('samba');
                     domain.value = '';
                     domain.dataset.lastSaved = '';
                     sharedFolder.value = '';
@@ -2866,6 +2922,7 @@
                     username.dataset.lastSaved = '';
                     password.value = '';
                     password.dataset.lastSaved = '';
+                    updateFieldsVisibility();
                     testConnection.disabled = true;
                     deleteConnection.disabled = true;
                     saveConnection.disabled = true;
@@ -2881,7 +2938,9 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    "protocol": protocol.value,
                     "ip": ip.value,
+                    "port": parseInt(port.value),
                     "domain": domain.value,
                     "share_name": sharedFolder.value,
                     "sub_path": subFolder.value,
@@ -2906,7 +2965,9 @@
             .then(res => {
                 syncFolder.querySelectorAll("input").forEach(e => e.disabled = false);
                 if (res.remote_folder) {
+                    protocol.dataset.lastSaved = res.remote_folder.protocol;
                     ip.dataset.lastSaved = res.remote_folder.ip;
+                    port.dataset.lastSaved = res.remote_folder.port;
                     domain.dataset.lastSaved = res.remote_folder.domain;
                     sharedFolder.dataset.lastSaved = res.remote_folder.share_name;
                     subFolder.dataset.lastSaved = res.remote_folder.sub_path;
