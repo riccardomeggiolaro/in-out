@@ -22,7 +22,14 @@
             "module": "rfidserialrfid",
             "setup": {}
         },
-        "siren": {},
+        "siren": {
+            "endpoint": "http://localhost",
+            "ip": "100.100.100.101",
+            "password": "318101",
+            "port": 80,
+            "timeout": 5.0,
+            "username": "marco"
+        },
         "ssh_reverse_tunneling": {
             "forwarding_port": 80,
             "local_port": 80,

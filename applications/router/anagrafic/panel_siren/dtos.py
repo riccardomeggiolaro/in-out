@@ -2,7 +2,7 @@ from pydantic import BaseModel, validator
 from typing import Optional
 
 class Configuration(BaseModel):
-    ip: int
+    ip: str
     port: int
     username: Optional[str] = None
     password: Optional[str] = None
