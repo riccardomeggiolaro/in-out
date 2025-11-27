@@ -403,6 +403,11 @@ button:active {
     color: white;
 }
 
+/* Nascondi completamente i pulsanti X di default (su desktop) */
+.close-tab-button {
+    display: none !important;
+}
+
 /* Updated media queries */
 @media (max-width: 800px) {
     .display-wrapper,
@@ -414,29 +419,163 @@ button:active {
         justify-content: center;
     }
 
+    /* Mostra le linguette su schermi piccoli */
+    .mobile-tabs {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 900;
+        pointer-events: none;
+    }
+
+    /* Stili per i bottoni delle linguette */
+    .tab-button {
+        position: fixed;
+        bottom: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #1362b8;
+        color: white;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: auto;
+        z-index: 901;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .tab-button:hover {
+        transform: scale(1.1);
+        background-color: #0d4d8f;
+    }
+
+    .tab-button:active {
+        transform: scale(0.95);
+    }
+
+    .tab-left {
+        left: 20px;
+    }
+
+    .tab-right {
+        right: 20px;
+    }
+
+    /* Badge di notifica */
+    .notification-badge {
+        display: none;
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #ff4444;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 1rem;
+        font-weight: bold;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .notification-badge.show {
+        display: flex;
+    }
+
+    .notification-badge::after {
+        content: "!";
+    }
+
+    /* Overlay scuro quando i tab sono aperti */
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 949;
+        display: none;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .mobile-overlay.show {
+        display: block;
+    }
+
+    /* Stile per anagrafic e ins su mobile */
     .anagrafic, .ins {
         width: 100%;
         height: 100vh;
-        transition: right 0.3s ease-in-out;
-        position: absolute;
+        position: fixed;
         top: 0;
-        display: none;
+        z-index: 950;
+        display: flex;
+        flex-direction: column;
+        background-color: aliceblue;
+        transition: transform 0.3s ease-in-out;
+        overflow-y: auto;
     }
 
     .anagrafic {
-        left: 100%;
+        left: 0;
+        transform: translateX(-100%);
     }
 
     .anagrafic.active {
-        left: auto;
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
     }
 
     .ins {
-        right: 100%;
+        right: 0;
+        transform: translateX(100%);
     }
 
     .ins.active {
-        left: auto;
+        transform: translateX(0);
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Pulsante chiusura per anagrafic e ins */
+    .close-tab-button {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background-color: #ff4444;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 951;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border: none;
+        padding: 0;
+    }
+
+    .close-tab-button-left {
+        left: 15px;
+        right: auto;
+    }
+
+    /* Mostra i pulsanti X solo quando i tab sono attivi su mobile */
+    .anagrafic.active .close-tab-button,
+    .ins.active .close-tab-button {
+        display: flex !important;
     }
 
     .weight {
