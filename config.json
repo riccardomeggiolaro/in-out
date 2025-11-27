@@ -33,7 +33,6 @@
         },
         "sync_folder": {
             "local_dir": "/home/riccardo/Scrivania/projects/LOCAL/in-out-new/in-out",
-            "sub_paths": ["pdf", "csv", "images"],
             "mount_point": "/mnt/sync-folder",
             "remote_folder": {
                 "domain": "BARON",
@@ -44,7 +43,12 @@
                 "share_name": "GH5/Dev/in-out",
                 "sub_path": "",
                 "username": "Riccardo Meggiolaro"
-            }
+            },
+            "sub_paths": [
+                "pdf",
+                "csv",
+                "images"
+            ]
         },
         "use_anagrafic": {
             "document_reference": true,
@@ -76,7 +80,51 @@
                     "port": 23,
                     "timeout": 2.0
                 },
-                "nodes": {},
+                "nodes": {
+                    "P1": {
+                        "always_execute_realtime_in_undeground": true,
+                        "continuous_transmission": false,
+                        "diagnostic_has_priority_than_realtime": true,
+                        "division": 1,
+                        "events": {
+                            "realtime": {
+                                "over_min": {
+                                    "set_rele": []
+                                },
+                                "under_min": {
+                                    "set_rele": []
+                                }
+                            },
+                            "weighing": {
+                                "cams": [],
+                                "csv": {
+                                    "in": true,
+                                    "out": true
+                                },
+                                "report": {
+                                    "in": true,
+                                    "out": true
+                                },
+                                "set_rele": []
+                            }
+                        },
+                        "maintaine_session_realtime_after_command": true,
+                        "max_theshold": null,
+                        "max_weight": 60000,
+                        "min_weight": 200,
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": true,
+                        "node": null,
+                        "number_of_prints": 1,
+                        "port_rele": null,
+                        "printer_name": null,
+                        "rele": {},
+                        "run": true,
+                        "take_of_weight_before_weighing": false,
+                        "take_of_weight_on_startup": true,
+                        "terminal": "egt-af03"
+                    }
+                },
                 "time_between_actions": 0.3
             }
         }
