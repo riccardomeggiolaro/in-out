@@ -443,59 +443,108 @@
                 </div>
                 <br>
                 <div class="borders aliceblue">
-                    <form id="sync-folder" onsubmit="event.preventDefault()">
-                        <br>
-                        <h3>Sincronizzazione cartella remota</h3>
-                        <br>
-                        <label for="protocol">Protocollo: *</label>
-                        <select id="protocol">
-                            <option value="samba">Samba/CIFS</option>
-                            <option value="ftp">FTP</option>
-                            <option value="sftp">SFTP</option>
-                        </select>
-                        <br>
-                        <br>
-                        <label for="ip">IP: *</label>
-                        <input type="text" id="ip">
-                        <br>
-                        <br>
-                        <label for="port">Porta: *</label>
-                        <input type="number" id="port" min="1" max="65535">
-                        <br>
-                        <br>
-                        <label for="domain">Dominio: </label>
-                        <input type="text" id="domain">
-                        <br>
-                        <br>
-                        <label for="shared-folder">Cartella condivisa: *</label>
-                        <input type="text" id="shared-folder">
-                        <br>
-                        <br>
-                        <label for="sub-folder">Sotto cartella: </label>
-                        <input type="text" id="sub-folder">
-                        <br>
-                        <br>
-                        <label for="username">Username: *</label>
-                        <input type="text" id="username">
-                        <br>
-                        <br>
-                        <label for="password">Password: *</label>
-                        <input type="text" id="password">
-                        <br>
-                        <br>
-                        <button id="test-connection" onclick="testSyncFolder()">Testa connessione</button>
-                        <br>
-                        <br>
-                        <button id="delete-connection" onclick="deleteSyncFolder()">Elimina</button>
-                        <button id="save-connection" onclick="saveSyncFolder()">Salva</button>
-                        <br>
-                        <br>
-                    </form>
+                    <br>
+                    <h3>Sincronizzazione cartella remota</h3>
+                    <br>
+
+                    <!-- Vista quando non c'è connessione -->
+                    <div id="no-sync-connection" style="display: none; text-align: center; padding: 20px;">
+                        <p style="color: #666; margin-bottom: 15px;">Nessuna connessione configurata</p>
+                        <button onclick="openSyncFolderModal()">Aggiungi Connessione</button>
+                    </div>
+
+                    <!-- Vista quando c'è una connessione -->
+                    <div id="sync-connection-info" style="display: none;">
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 10px;">
+                                <strong>Protocollo:</strong>
+                                <span id="info-protocol"></span>
+
+                                <strong>Server:</strong>
+                                <span id="info-server"></span>
+
+                                <strong>Cartella:</strong>
+                                <span id="info-folder"></span>
+
+                                <strong>Username:</strong>
+                                <span id="info-username"></span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="testSyncFolder()">Testa Connessione</button>
+                            <button onclick="openSyncFolderModal()">Modifica</button>
+                            <button onclick="confirmDeleteSyncFolder()" style="background-color: #dc3545;">Elimina</button>
+                        </div>
+                    </div>
+                    <br>
                 </div>
             </div>
             <div id="instances" class="tab">
                 <div id="instance-sub-menu" class="instance-sub-menu"></div>
                 <div id="instances-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per configurazione Sync Folder -->
+    <div id="sync-folder-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="sync-folder-modal-title">Configura Sincronizzazione</h3>
+            <form id="sync-folder-form" onsubmit="event.preventDefault()">
+                <label for="modal-protocol">Protocollo: *</label>
+                <select id="modal-protocol">
+                    <option value="samba">Samba/CIFS</option>
+                    <option value="ftp">FTP</option>
+                    <option value="sftp">SFTP</option>
+                </select>
+                <br><br>
+
+                <label for="modal-ip">IP: *</label>
+                <input type="text" id="modal-ip" required>
+                <br><br>
+
+                <label for="modal-port">Porta: *</label>
+                <input type="number" id="modal-port" min="1" max="65535" required>
+                <br><br>
+
+                <label for="modal-domain" id="label-modal-domain">Dominio: </label>
+                <input type="text" id="modal-domain">
+                <br><br>
+
+                <label for="modal-shared-folder">Cartella condivisa: *</label>
+                <input type="text" id="modal-shared-folder" required>
+                <br><br>
+
+                <label for="modal-sub-folder">Sotto cartella: </label>
+                <input type="text" id="modal-sub-folder">
+                <br><br>
+
+                <label for="modal-username">Username: *</label>
+                <input type="text" id="modal-username" required>
+                <br><br>
+
+                <label for="modal-password">Password: *</label>
+                <input type="password" id="modal-password" required>
+                <br><br>
+
+                <div class="container-buttons right">
+                    <button type="button" class="cancel-btn" onclick="closeSyncFolderModal()">Annulla</button>
+                    <button type="submit" class="save-btn" onclick="saveSyncFolder()">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal di conferma eliminazione -->
+    <div id="delete-sync-folder-modal" class="modal">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <p>Sei sicuro di voler eliminare la configurazione della sincronizzazione remota?</p>
+            <br>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closeDeleteConfirmModal()">Annulla</button>
+                <button class="save-btn" style="background-color: #dc3545;" onclick="deleteSyncFolder()">Elimina</button>
             </div>
         </div>
     </div>
@@ -693,19 +742,30 @@
         const useBadge = document.querySelector("#badge");
         const useRecordings = document.querySelector("#recordings");
         const reportCopy = document.querySelector("#report-copy");
-        const syncFolder = document.querySelector("#sync-folder");
-        const protocol = document.querySelector("#protocol");
-        const ip = document.querySelector("#ip");
-        const port = document.querySelector("#port");
-        const domain = document.querySelector("#domain");
-        const sharedFolder = document.querySelector("#shared-folder");
-        const subFolder = document.querySelector("#sub-folder");
-        const username = document.querySelector("#username");
-        const password = document.querySelector("#password");
-        const testConnection = document.querySelector("#test-connection");
-        const deleteConnection = document.querySelector("#delete-connection");
-        const saveConnection = document.querySelector("#save-connection");
 
+        // Sync folder modal elements
+        const syncFolderModal = document.querySelector("#sync-folder-modal");
+        const deleteSyncFolderModal = document.querySelector("#delete-sync-folder-modal");
+        const noSyncConnection = document.querySelector("#no-sync-connection");
+        const syncConnectionInfo = document.querySelector("#sync-connection-info");
+
+        const modalProtocol = document.querySelector("#modal-protocol");
+        const modalIp = document.querySelector("#modal-ip");
+        const modalPort = document.querySelector("#modal-port");
+        const modalDomain = document.querySelector("#modal-domain");
+        const modalSharedFolder = document.querySelector("#modal-shared-folder");
+        const modalSubFolder = document.querySelector("#modal-sub-folder");
+        const modalUsername = document.querySelector("#modal-username");
+        const modalPassword = document.querySelector("#modal-password");
+        const labelModalDomain = document.querySelector("#label-modal-domain");
+
+        // Info display elements
+        const infoProtocol = document.querySelector("#info-protocol");
+        const infoServer = document.querySelector("#info-server");
+        const infoFolder = document.querySelector("#info-folder");
+        const infoUsername = document.querySelector("#info-username");
+
+        let currentSyncFolderConfig = null;
         let weighersData = {};
         let instanceToDelete = null;
         let nodeToDelete = { instanceId: null, nodeId: null };
@@ -1145,29 +1205,14 @@
 
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
 
+                // Load sync folder configuration
                 if (res.sync_folder.remote_folder) {
-                    protocol.value = res.sync_folder.remote_folder.protocol || 'samba';
-                    protocol.dataset.lastSaved = res.sync_folder.remote_folder.protocol || 'samba';
-                    ip.value = res.sync_folder.remote_folder.ip;
-                    ip.dataset.lastSaved = res.sync_folder.remote_folder.ip;
-                    port.value = res.sync_folder.remote_folder.port || getDefaultPort(protocol.value);
-                    port.dataset.lastSaved = res.sync_folder.remote_folder.port || getDefaultPort(protocol.value);
-                    domain.value = res.sync_folder.remote_folder.domain;
-                    domain.dataset.lastSaved = res.sync_folder.remote_folder.domain;
-                    sharedFolder.value = res.sync_folder.remote_folder.share_name;
-                    sharedFolder.dataset.lastSaved = res.sync_folder.remote_folder.share_name;
-                    subFolder.value = res.sync_folder.remote_folder.sub_path;
-                    subFolder.dataset.lastSaved = res.sync_folder.remote_folder.sub_path;
-                    username.value = res.sync_folder.remote_folder.username;
-                    username.dataset.lastSaved = res.sync_folder.remote_folder.username;
-                    password.value = res.sync_folder.remote_folder.password;
-                    password.dataset.lastSaved = res.sync_folder.remote_folder.password;
-                    updateFieldsVisibility();
+                    currentSyncFolderConfig = res.sync_folder.remote_folder;
+                    updateSyncFolderDisplay();
                 } else {
-                    testConnection.disabled = true;
-                    deleteConnection.disabled = true;
+                    currentSyncFolderConfig = null;
+                    updateSyncFolderDisplay();
                 }
-                saveConnection.disabled = true;
 
                 // Salva i dati e genera i tab delle istanze
                 weighersData = res.weighers;
@@ -2761,49 +2806,91 @@
             return '';
         }
 
-        // Helper function to update field visibility based on protocol
-        function updateFieldsVisibility() {
-            const domainLabel = document.querySelector('label[for="domain"]');
-            if (protocol.value === 'samba') {
-                domainLabel.style.display = '';
-                domain.style.display = '';
+        // Helper function to get protocol display name
+        function getProtocolDisplayName(proto) {
+            if (proto === 'samba') return 'Samba/CIFS';
+            if (proto === 'ftp') return 'FTP';
+            if (proto === 'sftp') return 'SFTP';
+            return proto;
+        }
+
+        // Update sync folder display based on current config
+        function updateSyncFolderDisplay() {
+            if (currentSyncFolderConfig) {
+                // Show connection info
+                noSyncConnection.style.display = 'none';
+                syncConnectionInfo.style.display = 'block';
+
+                // Update info display
+                infoProtocol.textContent = getProtocolDisplayName(currentSyncFolderConfig.protocol || 'samba');
+                infoServer.textContent = `${currentSyncFolderConfig.ip}:${currentSyncFolderConfig.port || getDefaultPort(currentSyncFolderConfig.protocol || 'samba')}`;
+                infoFolder.textContent = currentSyncFolderConfig.share_name + (currentSyncFolderConfig.sub_path ? '/' + currentSyncFolderConfig.sub_path : '');
+                infoUsername.textContent = currentSyncFolderConfig.username;
             } else {
-                domainLabel.style.display = 'none';
-                domain.style.display = 'none';
+                // Show no connection message
+                noSyncConnection.style.display = 'block';
+                syncConnectionInfo.style.display = 'none';
             }
         }
 
-        // Protocol change listener
-        protocol.addEventListener("change", () => {
-            port.value = getDefaultPort(protocol.value);
-            port.dataset.lastSaved = getDefaultPort(protocol.value);
-            updateFieldsVisibility();
+        // Open sync folder modal for create/edit
+        function openSyncFolderModal() {
+            if (currentSyncFolderConfig) {
+                // Edit mode - populate fields
+                modalProtocol.value = currentSyncFolderConfig.protocol || 'samba';
+                modalIp.value = currentSyncFolderConfig.ip;
+                modalPort.value = currentSyncFolderConfig.port || getDefaultPort(currentSyncFolderConfig.protocol || 'samba');
+                modalDomain.value = currentSyncFolderConfig.domain || '';
+                modalSharedFolder.value = currentSyncFolderConfig.share_name;
+                modalSubFolder.value = currentSyncFolderConfig.sub_path || '';
+                modalUsername.value = currentSyncFolderConfig.username;
+                modalPassword.value = currentSyncFolderConfig.password;
+            } else {
+                // Create mode - set defaults
+                modalProtocol.value = 'samba';
+                modalIp.value = '';
+                modalPort.value = 445;
+                modalDomain.value = '';
+                modalSharedFolder.value = '';
+                modalSubFolder.value = '';
+                modalUsername.value = '';
+                modalPassword.value = '';
+            }
+            updateModalFieldsVisibility();
+            syncFolderModal.style.display = 'block';
+        }
+
+        // Close sync folder modal
+        function closeSyncFolderModal() {
+            syncFolderModal.style.display = 'none';
+        }
+
+        // Update field visibility in modal based on protocol
+        function updateModalFieldsVisibility() {
+            if (modalProtocol.value === 'samba') {
+                labelModalDomain.style.display = '';
+                modalDomain.style.display = '';
+            } else {
+                labelModalDomain.style.display = 'none';
+                modalDomain.style.display = 'none';
+            }
+        }
+
+        // Protocol change listener for modal
+        modalProtocol.addEventListener("change", () => {
+            modalPort.value = getDefaultPort(modalProtocol.value);
+            updateModalFieldsVisibility();
         });
 
-        syncFolder.addEventListener("input", (e) => {
-            if (
-                protocol.value &&
-                ip.value &&
-                port.value &&
-                sharedFolder.value &&
-                username.value &&
-                password.value &&
-                (
-                    protocol.value !== protocol.dataset.lastSaved ||
-                    ip.value !== ip.dataset.lastSaved ||
-                    port.value != port.dataset.lastSaved ||
-                    domain.value !== domain.dataset.lastSaved ||
-                    sharedFolder.value !== sharedFolder.dataset.lastSaved ||
-                    subFolder.value !== subFolder.dataset.lastSaved ||
-                    username.value !== username.dataset.lastSaved ||
-                    password.value !== password.dataset.lastSaved
-                )
-            ) {
-                saveConnection.disabled = false;
-            } else {
-                saveConnection.disabled = true;
-            }
-        })
+        // Open delete confirmation modal
+        function confirmDeleteSyncFolder() {
+            deleteSyncFolderModal.style.display = 'block';
+        }
+
+        // Close delete confirmation modal
+        function closeDeleteConfirmModal() {
+            deleteSyncFolderModal.style.display = 'none';
+        }
 
         function changeSetupTab(event, tab) {
             document.querySelectorAll('#sub-menu .menu-tab').forEach(button => button.classList.remove("selected"));
@@ -2906,46 +2993,31 @@
                     showSnackbar("snackbar", 'Errore nella eliminazione', 'rgb(255, 208, 208)', 'black');
                 } else {
                     showSnackbar("snackbar", "Sincronizzazione remota eliminata", 'rgb(208, 255, 208)', 'black');
-                    protocol.value = 'samba';
-                    protocol.dataset.lastSaved = 'samba';
-                    ip.value = '';
-                    ip.dataset.lastSaved = '';
-                    port.value = getDefaultPort('samba');
-                    port.dataset.lastSaved = getDefaultPort('samba');
-                    domain.value = '';
-                    domain.dataset.lastSaved = '';
-                    sharedFolder.value = '';
-                    sharedFolder.dataset.lastSaved = '';
-                    subFolder.value = '';
-                    subFolder.dataset.lastSaved = '';
-                    username.value = '';
-                    username.dataset.lastSaved = '';
-                    password.value = '';
-                    password.dataset.lastSaved = '';
-                    updateFieldsVisibility();
-                    testConnection.disabled = true;
-                    deleteConnection.disabled = true;
-                    saveConnection.disabled = true;
+                    currentSyncFolderConfig = null;
+                    updateSyncFolderDisplay();
+                    closeDeleteConfirmModal();
                 }
             });
         }
 
         function saveSyncFolder() {
-            syncFolder.querySelectorAll("input, button").forEach(e => e.disabled = true);
+            // Disable modal buttons during save
+            syncFolderModal.querySelectorAll("input, button, select").forEach(e => e.disabled = true);
+
             fetch(`/api/sync-folder`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    "protocol": protocol.value,
-                    "ip": ip.value,
-                    "port": parseInt(port.value),
-                    "domain": domain.value,
-                    "share_name": sharedFolder.value,
-                    "sub_path": subFolder.value,
-                    "username": username.value,
-                    "password": password.value
+                    "protocol": modalProtocol.value,
+                    "ip": modalIp.value,
+                    "port": parseInt(modalPort.value),
+                    "domain": modalDomain.value,
+                    "share_name": modalSharedFolder.value,
+                    "sub_path": modalSubFolder.value,
+                    "username": modalUsername.value,
+                    "password": modalPassword.value
                 })
             })
             .then(res => {
@@ -2963,25 +3035,20 @@
                 });
             })
             .then(res => {
-                syncFolder.querySelectorAll("input").forEach(e => e.disabled = false);
+                // Re-enable modal form
+                syncFolderModal.querySelectorAll("input, button, select").forEach(e => e.disabled = false);
+
                 if (res.remote_folder) {
-                    protocol.dataset.lastSaved = res.remote_folder.protocol;
-                    ip.dataset.lastSaved = res.remote_folder.ip;
-                    port.dataset.lastSaved = res.remote_folder.port;
-                    domain.dataset.lastSaved = res.remote_folder.domain;
-                    sharedFolder.dataset.lastSaved = res.remote_folder.share_name;
-                    subFolder.dataset.lastSaved = res.remote_folder.sub_path;
-                    username.dataset.lastSaved = res.remote_folder.username;
-                    password.dataset.lastSaved = res.remote_folder.password;
-                    testConnection.disabled = false;
-                    deleteConnection.disabled = false;
-                    saveConnection.disabled = true;
-                } else if (ip.dataset.lastSaved) {
-                    testConnection.disabled = false;
-                    deleteConnection.disabled = false;
-                    saveConnection.disabled = false;
+                    currentSyncFolderConfig = res.remote_folder;
+                    updateSyncFolderDisplay();
+                    closeSyncFolderModal();
                 }
             })
+            .catch(err => {
+                // Re-enable modal form on error
+                syncFolderModal.querySelectorAll("input, button, select").forEach(e => e.disabled = false);
+                showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
+            });
         }
     </script>
 </body>
