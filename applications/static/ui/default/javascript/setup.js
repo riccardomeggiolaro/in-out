@@ -422,18 +422,74 @@ async function loadSetupWeighers() {
                 }
             })
         }
+        const labelProtocol = document.createElement('label');
+        labelProtocol.textContent = "Protocollo: * "
+        const protocol = document.createElement('select');
+        const protocolOptions = [
+            { value: 'samba', text: 'Samba/CIFS' },
+            { value: 'ftp', text: 'FTP' },
+            { value: 'sftp', text: 'SFTP' }
+        ];
+        protocolOptions.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.text = opt.text;
+            protocol.appendChild(option);
+        });
+        let originalProtocol = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.protocol || 'samba' : 'samba';
+        protocol.value = originalProtocol;
+        protocol.onchange = () => {
+            updatePortDefault();
+            updateFieldsVisibility();
+            isValidForm();
+        };
+
         const labelIp = document.createElement('label');
         labelIp.textContent = "IP: * "
         const ip = document.createElement('input');
         let originalIp = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.ip : '';
         ip.value = originalIp;
         ip.oninput = () => isValidForm();
+
+        const labelPort = document.createElement('label');
+        labelPort.textContent = "Porta: * "
+        const port = document.createElement('input');
+        port.type = 'number';
+        const getDefaultPort = (proto) => {
+            if (proto === 'samba') return 445;
+            if (proto === 'ftp') return 21;
+            if (proto === 'sftp') return 22;
+            return '';
+        };
+        let originalPort = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.port || getDefaultPort(originalProtocol) : getDefaultPort(originalProtocol);
+        port.value = originalPort;
+        port.oninput = () => isValidForm();
+
+        const updatePortDefault = () => {
+            port.value = getDefaultPort(protocol.value);
+            originalPort = port.value;
+        };
+
         const labelDomain = document.createElement('label');
         labelDomain.textContent = "Dominio: "
         const domain = document.createElement('input');
         let originalDomain = data.sync_folder.remote_folder ? data.sync_folder.remote_folder.domain : '';
         domain.value = originalDomain;
         domain.oninput = () => isValidForm();
+
+        const updateFieldsVisibility = () => {
+            // Domain is only visible for Samba
+            if (protocol.value === 'samba') {
+                labelDomain.style.display = '';
+                domain.style.display = '';
+            } else {
+                labelDomain.style.display = 'none';
+                domain.style.display = 'none';
+            }
+        };
+
+        // Initialize field visibility
+        updateFieldsVisibility();
         const labelShareName = document.createElement('label');
         labelShareName.textContent = "Cartella condivisa: * "
         const shareName = document.createElement('input');
@@ -490,8 +546,12 @@ async function loadSetupWeighers() {
                 const message = res.deleted ? "Connessione eliminata" : "Errore generico durante l'eliminazione";
                 const color = res.deleted ? 'rgb(208, 255, 208)' : 'rgb(255, 208, 208)';
                 if (res.deleted) {
+                    originalProtocol = "samba";
+                    protocol.value = "samba";
                     originalIp = "";
                     ip.value = "";
+                    originalPort = getDefaultPort("samba");
+                    port.value = originalPort;
                     originalShareName = "";
                     domain.value = "";
                     originalDomain = "";
@@ -502,6 +562,7 @@ async function loadSetupWeighers() {
                     username.value = "";
                     originalPassword = "";
                     password.value = "";
+                    updateFieldsVisibility();
                     testConnectionButton.disabled = true;
                     deleteRemoteFolderButton.disabled = true;
                     saveRemoteFolderButton.disabled = true;
@@ -519,7 +580,9 @@ async function loadSetupWeighers() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    "protocol": protocol.value,
                     "ip": ip.value,
+                    "port": parseInt(port.value),
                     "domain": domain.value,
                     "share_name": shareName.value,
                     "sub_path": subPath.value,
@@ -532,7 +595,9 @@ async function loadSetupWeighers() {
                 const message = res.remote_folder ? `Configurazione salvata correttamente` : "Configurazione non salvata";
                 const color = res.remote_folder ? 'white' : 'rgb(255, 208, 208)';
                 if (res.remote_folder) {
+                    originalProtocol = res.remote_folder.protocol;
                     originalIp = res.remote_folder.ip;
+                    originalPort = res.remote_folder.port;
                     originalDomain = res.remote_folder.domain;
                     originalShareName = res.remote_folder.share_name;
                     originalSubPath = res.remote_folder.sub_path;
@@ -547,14 +612,18 @@ async function loadSetupWeighers() {
         }
         const isValidForm = (() => {
             if (
+                protocol.value.length > 0 &&
                 ip.value.length > 0 &&
+                port.value.length > 0 &&
                 shareName.value.length > 0 &&
                 username.value.length > 0 &&
                 password.value.length > 0 &&
                 (
+                    protocol.value !== originalProtocol ||
                     ip.value !== originalIp ||
+                    port.value != originalPort ||
                     domain.value !== originalDomain ||
-                    shareName.value !== originalShareName || 
+                    shareName.value !== originalShareName ||
                     subPath.value !== originalSubPath ||
                     username.value !== originalUsername ||
                     password.value !== originalPassword
@@ -651,8 +720,16 @@ async function loadSetupWeighers() {
         divSyncRemoteFolder.appendChild(br.cloneNode(true));
         divSyncRemoteFolder.appendChild(h1SyncRemoteFolder);
         divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelProtocol);
+        divSyncRemoteFolder.appendChild(protocol);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
         divSyncRemoteFolder.appendChild(labelIp);
         divSyncRemoteFolder.appendChild(ip);
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(br.cloneNode(true));
+        divSyncRemoteFolder.appendChild(labelPort);
+        divSyncRemoteFolder.appendChild(port);
         divSyncRemoteFolder.appendChild(br.cloneNode(true));
         divSyncRemoteFolder.appendChild(br.cloneNode(true));
         divSyncRemoteFolder.appendChild(labelDomain);
