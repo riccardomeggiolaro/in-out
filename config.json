@@ -41,7 +41,7 @@
                 "port": 445,
                 "protocol": "samba",
                 "share_name": "GH5/Dev/in-out",
-                "sub_path": "uPZa6eY2Ik",
+                "sub_path": "",
                 "username": "Riccardo Meggiolaro"
             },
             "sub_paths": [
