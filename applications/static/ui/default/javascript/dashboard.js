@@ -15,6 +15,7 @@ let currentInput;
 let anagraficViewed = false;
 let insViewed = false;
 let lastDataInExecution = null;
+let lastInsCount = 0;
 
 let connected;
 
@@ -135,6 +136,7 @@ selectedIdWeigher.addEventListener('change', (event) => {
         anagraficViewed = false;
         insViewed = false;
         lastDataInExecution = null;
+        lastInsCount = 0;
 
         closeWebSocket();
         document.getElementById('netWeight').innerText = "N/A";
@@ -1243,7 +1245,7 @@ function checkInitialData() {
                 dataInExecution.note ||
                 dataInExecution.document_reference;
 
-            if (hasAnagraficData && !anagraficViewed && window.innerWidth <= 800) {
+            if (hasAnagraficData && window.innerWidth <= 800) {
                 document.getElementById('badgeAnagrafic').classList.add('show');
             }
 
@@ -1251,15 +1253,27 @@ function checkInitialData() {
             lastDataInExecution = JSON.stringify(dataInExecution);
         }
 
-        // Controlla se ci sono accessi nella lista ins
+        // Controlla se ci sono accessi nella lista ins e inizializza il contatore
+        const listIn = document.querySelector('.list-in');
+        if (listIn) {
+            lastInsCount = listIn.children.length;
+        }
         checkInsData();
     }, 1000);
 }
 
 function checkInsData() {
     const listIn = document.querySelector('.list-in');
-    if (listIn && listIn.children.length > 0 && !insViewed && window.innerWidth <= 800) {
-        document.getElementById('badgeIns').classList.add('show');
+    if (listIn && window.innerWidth <= 800) {
+        const currentCount = listIn.children.length;
+
+        // Se il numero di accessi è cambiato o ce ne sono di nuovi
+        if (currentCount > 0 && currentCount !== lastInsCount) {
+            insViewed = false; // Resetta il flag quando cambiano gli accessi
+            document.getElementById('badgeIns').classList.add('show');
+        }
+
+        lastInsCount = currentCount;
     }
 }
 
@@ -1269,8 +1283,10 @@ function checkDataChanges() {
 
     const currentData = JSON.stringify(dataInExecution);
 
-    // Se i dati sono cambiati e anagrafic non è visualizzato
-    if (currentData !== lastDataInExecution && !anagraficViewed) {
+    // Se i dati sono cambiati
+    if (currentData !== lastDataInExecution) {
+        // Resetta il flag e mostra il badge quando i dati cambiano
+        anagraficViewed = false;
         document.getElementById('badgeAnagrafic').classList.add('show');
     }
 
@@ -1279,10 +1295,17 @@ function checkDataChanges() {
 
 // Osserva i cambiamenti nella lista ins
 const insObserver = new MutationObserver(() => {
-    if (window.innerWidth <= 800 && !insViewed) {
+    if (window.innerWidth <= 800) {
         const listIn = document.querySelector('.list-in');
-        if (listIn && listIn.children.length > 0) {
-            document.getElementById('badgeIns').classList.add('show');
+        if (listIn) {
+            const currentCount = listIn.children.length;
+
+            // Se il numero di accessi è cambiato
+            if (currentCount > 0 && currentCount !== lastInsCount) {
+                insViewed = false; // Resetta il flag
+                document.getElementById('badgeIns').classList.add('show');
+                lastInsCount = currentCount;
+            }
         }
     }
 });
