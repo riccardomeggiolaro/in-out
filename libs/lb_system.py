@@ -452,19 +452,43 @@ def makedirs_with_timeout(path, timeout=5, exist_ok=True):
     if error:
         error = f"Errore creazione directory: {error}"
     
+    lb_log.info(error)
+    
     return success, error
 
 # Function to scan local directory and add existing files/directories to queue
-def scan_local_dir(local_dir):
-	# Pending files queue
+def scan_local_dir(local_dir, sub_paths=None):
+	"""
+	Scan local directory and add existing files/directories to queue
+	
+	Args:
+		local_dir: Base directory to scan
+		sub_paths: Optional list of sub-paths to scan. If None, scans entire local_dir.
+				   Example: ['reports', 'data/output'] will scan only those subdirectories
+	"""
 	pending_files = deque()
-	for root, dirs, files in os.walk(local_dir):
-		for dir_name in dirs:
-			dir_path = os.path.join(root, dir_name)
-			pending_files.append(dir_path)
-		for file_name in files:
-			file_path = os.path.join(root, file_name)
-			pending_files.append(file_path)
+	
+	# Se non sono specificati sub_paths, scansiona tutto local_dir
+	if sub_paths is None:
+		paths_to_scan = [local_dir]
+	else:
+		# Crea i path completi combinando local_dir con i sub_paths
+		paths_to_scan = [os.path.join(local_dir, sub_path) for sub_path in sub_paths]
+	
+	for path in paths_to_scan:
+		# Verifica che il path esista
+		if not os.path.exists(path):
+			lb_log.warning(f"Path {path} does not exist, skipping")
+			continue
+			
+		for root, dirs, files in os.walk(path):
+			for dir_name in dirs:
+				dir_path = os.path.join(root, dir_name)
+				pending_files.append(dir_path)
+			for file_name in files:
+				file_path = os.path.join(root, file_name)
+				pending_files.append(file_path)
+	
 	lb_log.warning(len(pending_files))
 	return pending_files
 
@@ -602,9 +626,12 @@ def get_remote_connection_status(mount_point):
 def copy_to_remote(file_path, local_dir, mount_point, sub_path):
 	# Calculate relative path from local_dir
 	rel_path = os.path.relpath(file_path, local_dir)
+	lb_log.info(rel_path)
 	# Normalize paths for comparison
 	norm_sub_path = os.path.normpath(sub_path).replace('\\', '/')
 	norm_rel_path = os.path.normpath(rel_path).replace('\\', '/')
+	lb_log.info(norm_sub_path)
+	lb_log.info(norm_rel_path)
 	# Remove sub_path from rel_path if it exists to avoid duplication
 	if norm_sub_path and norm_rel_path.startswith(norm_sub_path + '/'):
 		rel_path = rel_path[len(sub_path) + 1:]

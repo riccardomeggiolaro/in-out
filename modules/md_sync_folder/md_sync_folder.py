@@ -2,7 +2,6 @@ import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 import time
 import os
-import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import libs.lb_system as lb_system
@@ -29,8 +28,32 @@ def stop():
 
 # Watchdog handler for file and directory creations
 class FileHandler(FileSystemEventHandler):
+	def __init__(self, local_dir, sub_paths=None):
+		super().__init__()
+		self.local_dir = local_dir
+		self.sub_paths = sub_paths
+		# Crea i path completi per il filtro
+		if sub_paths:
+			self.allowed_paths = [os.path.join(local_dir, sp) for sp in sub_paths]
+		else:
+			self.allowed_paths = None
+	
+	def _is_path_allowed(self, path):
+		"""Controlla se il path è in uno dei sub_paths consentiti"""
+		if self.allowed_paths is None:
+			return True  # Se non ci sono filtri, accetta tutto
+		
+		# Verifica se il path inizia con uno dei path consentiti
+		for allowed_path in self.allowed_paths:
+			if path.startswith(allowed_path):
+				return True
+		return False
+	
 	def on_created(self, event):
-		pending_files.append(event.src_path)
+		# Filtra solo i path consentiti
+		if self._is_path_allowed(event.src_path):
+			pending_files.append(event.src_path)
+			lb_log.warning(event.src_path)
 
 class ModuleSyncFolder:
 	def __init__(self):
@@ -38,9 +61,7 @@ class ModuleSyncFolder:
 		self.config = SyncFolderDTO(**lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]) if lb_config.g_config["app_api"]["sync_folder"]["remote_folder"] else None
 		self.local_dir = lb_config.g_config["app_api"]["sync_folder"]["local_dir"]
 		self.mount_point = lb_config.g_config["app_api"]["sync_folder"]["mount_point"]
-		# lb_log.warning(self.config)
-		# lb_log.warning(self.local_dir)
-		# lb_log.warning(self.mount_point)
+		self.sub_paths = lb_config.g_config["app_api"]["sync_folder"]["sub_paths"]
 		
 	def create_remote_connection(self, config: SyncFolderDTO, local_dir: str, mount_point: str):
 		if self.mount_point and self.mount_point != mount_point:
@@ -49,7 +70,7 @@ class ModuleSyncFolder:
 		self.config = config
 		self.local_dir = local_dir
 		self.mount_point = mount_point
-		files = lb_system.scan_local_dir(local_dir)
+		files = lb_system.scan_local_dir(local_dir, self.sub_paths)  # Passa sub_paths
 		# lb_log.error(f"Pending files length: {len(files)}")
 		for file in files:
 			pending_files.append(file)
@@ -75,14 +96,13 @@ class ModuleSyncFolder:
 			self.observer.stop()
 			self.observer.join()
 		self.observer = Observer()
-		self.observer.schedule(FileHandler(), local_dir, recursive=True)
+		# Passa sub_paths al FileHandler per filtrare gli eventi
+		self.observer.schedule(FileHandler(local_dir, self.sub_paths), local_dir, recursive=True)
 		self.observer.start()
   
 	def start(self):
-		# lb_log.info("Starting sync folder module")
-		
-		# Lista delle estensioni da escludere (aggiungi quelle che ti servono)
-		excluded_extensions = ['.db', '.db-journal']  # Modifica secondo necessità
+		# Lista delle estensioni da escludere
+		excluded_extensions = ['.db', '.db-journal']
 		
 		while lb_config.g_enabled:
 			if pending_files and self.mount_point:
@@ -93,7 +113,6 @@ class ModuleSyncFolder:
 				
 				# Controlla se l'estensione è nella lista delle escluse
 				if file_extension in excluded_extensions:
-					# lb_log.info(f"Skipping file {file_path} with excluded extension {file_extension}")
 					pending_files.popleft()
 					continue
 				
@@ -102,20 +121,17 @@ class ModuleSyncFolder:
 						# Only remove files, not directories
 						if not os.path.isdir(file_path):
 							os.remove(file_path)
-							# lb_log.info(f"Removed file {file_path} from local directory")
+							lb_log.info(f"Removed file {file_path} from local directory")
 						else:
-							# lb_log.info(f"Keeping directory {file_path} in local directory")
-							pass
+							lb_log.info(f"Keeping directory {file_path} in local directory")
 						pending_files.popleft()
 					except Exception as e:
-						# lb_log.error(f"Failed to remove {file_path}: {e}")
-						pass
+						lb_log.error(f"Failed to remove {file_path}: {e}")
 				else:
 					if self.config and not lb_system.is_mounted(self.mount_point):
 						self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
-					# lb_log.warning(f"Retrying {file_path} after delay")
-					time.sleep(1)  # Retry after delay
+					time.sleep(1)
 			else:
 				if self.config and not lb_system.is_mounted(self.mount_point):
 					self.create_remote_connection(config=self.config, local_dir=self.local_dir, mount_point=self.mount_point)
-				time.sleep(1)  # Retry after delay
+				time.sleep(1)
