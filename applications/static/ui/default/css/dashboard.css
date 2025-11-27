@@ -403,6 +403,11 @@ button:active {
     color: white;
 }
 
+/* Nascondi completamente i pulsanti X di default (su desktop) */
+.close-tab-button {
+    display: none !important;
+}
+
 /* Updated media queries */
 @media (max-width: 800px) {
     .display-wrapper,
@@ -551,7 +556,7 @@ button:active {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        display: none !important;
+        display: none;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
