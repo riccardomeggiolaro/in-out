@@ -16,6 +16,7 @@ let currentInput;
 let anagraficViewed = false;
 let insViewed = false;
 let lastDataInExecution = null;
+let lastInsCount = 0;
 
 let connected;
 
@@ -136,6 +137,7 @@ selectedIdWeigher.addEventListener('change', (event) => {
         anagraficViewed = false;
         insViewed = false;
         lastDataInExecution = null;
+        lastInsCount = 0;
 
         closeWebSocket();
         document.getElementById('netWeight').innerText = "N/A";
@@ -324,8 +326,6 @@ async function populateListIn() {
                 inline: 'start'
             });
         }
-        // Controlla se ci sono accessi e mostra il badge se necessario
-        checkInsData();
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -835,9 +835,6 @@ function updateUIRealtime(e) {
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
 
-        // Controlla se i dati sono cambiati e mostra il badge se necessario
-        checkDataChanges();
-
         if (obj.type === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
                 element.disabled = false;
@@ -883,8 +880,6 @@ function updateUIRealtime(e) {
         populateListIn();
     } else if (obj.access) {
         populateListIn();
-        // Controlla se ci sono nuovi accessi e mostra il badge
-        checkInsData();
     } else if (obj.message) {
         showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
@@ -1244,7 +1239,7 @@ function checkInitialData() {
                 dataInExecution.note ||
                 dataInExecution.document_reference;
 
-            if (hasAnagraficData && !anagraficViewed && window.innerWidth <= 800) {
+            if (hasAnagraficData && window.innerWidth <= 800) {
                 document.getElementById('badgeAnagrafic').classList.add('show');
             }
 
@@ -1252,15 +1247,26 @@ function checkInitialData() {
             lastDataInExecution = JSON.stringify(dataInExecution);
         }
 
-        // Controlla se ci sono accessi nella lista ins
-        checkInsData();
+        // Controlla se ci sono accessi nella lista ins e inizializza il contatore
+        const listIn = document.querySelector('.list-in');
+        if (listIn) {
+            lastInsCount = listIn.children.length;
+        }
     }, 1000);
 }
 
 function checkInsData() {
     const listIn = document.querySelector('.list-in');
-    if (listIn && listIn.children.length > 0 && !insViewed && window.innerWidth <= 800) {
-        document.getElementById('badgeIns').classList.add('show');
+    if (listIn && window.innerWidth <= 800) {
+        const currentCount = listIn.children.length;
+
+        // Se il numero di accessi è cambiato o ce ne sono di nuovi
+        if (currentCount > 0 && currentCount !== lastInsCount) {
+            insViewed = false; // Resetta il flag quando cambiano gli accessi
+            document.getElementById('badgeIns').classList.add('show');
+        }
+
+        lastInsCount = currentCount;
     }
 }
 
@@ -1270,8 +1276,10 @@ function checkDataChanges() {
 
     const currentData = JSON.stringify(dataInExecution);
 
-    // Se i dati sono cambiati e anagrafic non è visualizzato
-    if (currentData !== lastDataInExecution && !anagraficViewed) {
+    // Se i dati sono cambiati
+    if (currentData !== lastDataInExecution && !document.querySelector(".anagrafic").classList.contains("active")) {
+        // Resetta il flag e mostra il badge quando i dati cambiano
+        anagraficViewed = false;
         document.getElementById('badgeAnagrafic').classList.add('show');
     }
 
@@ -1280,10 +1288,17 @@ function checkDataChanges() {
 
 // Osserva i cambiamenti nella lista ins
 const insObserver = new MutationObserver(() => {
-    if (window.innerWidth <= 800 && !insViewed) {
+    if (window.innerWidth <= 800) {
         const listIn = document.querySelector('.list-in');
-        if (listIn && listIn.children.length > 0) {
-            document.getElementById('badgeIns').classList.add('show');
+        if (listIn) {
+            const currentCount = listIn.children.length;
+
+            // Se il numero di accessi è cambiato
+            if (currentCount > 0 && currentCount !== lastInsCount) {
+                insViewed = false; // Resetta il flag
+                document.getElementById('badgeIns').classList.add('show');
+                lastInsCount = currentCount;
+            }
         }
     }
 });
