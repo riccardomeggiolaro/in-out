@@ -417,6 +417,77 @@ button:active {
     /* Mostra le linguette su schermi piccoli */
     .mobile-tabs {
         display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 900;
+        pointer-events: none;
+    }
+
+    /* Stili per i bottoni delle linguette */
+    .tab-button {
+        position: fixed;
+        bottom: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #1362b8;
+        color: white;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: auto;
+        z-index: 901;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .tab-button:hover {
+        transform: scale(1.1);
+        background-color: #0d4d8f;
+    }
+
+    .tab-button:active {
+        transform: scale(0.95);
+    }
+
+    .tab-left {
+        left: 20px;
+    }
+
+    .tab-right {
+        right: 20px;
+    }
+
+    /* Badge di notifica */
+    .notification-badge {
+        display: none;
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #ff4444;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 1rem;
+        font-weight: bold;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .notification-badge.show {
+        display: flex;
+    }
+
+    .notification-badge::after {
+        content: "!";
     }
 
     /* Overlay scuro quando i tab sono aperti */
@@ -470,7 +541,7 @@ button:active {
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
     }
 
-    /* Pulsante chiusura per anagrafic e ins - solo su mobile */
+    /* Pulsante chiusura per anagrafic e ins */
     .close-tab-button {
         position: absolute;
         top: 15px;
@@ -480,7 +551,7 @@ button:active {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        display: none;
+        display: none !important;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
@@ -496,9 +567,10 @@ button:active {
         right: auto;
     }
 
+    /* Mostra i pulsanti X solo quando i tab sono attivi su mobile */
     .anagrafic.active .close-tab-button,
     .ins.active .close-tab-button {
-        display: flex;
+        display: flex !important;
     }
 
     .weight {
@@ -844,92 +916,6 @@ hr {
 
 #confirmPopup {
     align-items: initial;
-}
-
-/* Mobile tabs (linguette) */
-.mobile-tabs {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 900;
-    pointer-events: none;
-}
-
-/* Nascondi i pulsanti X di default */
-.close-tab-button {
-    display: none;
-}
-
-/* Assicurati che i pulsanti X siano nascosti su schermi grandi */
-@media (min-width: 801px) {
-    .close-tab-button {
-        display: none !important;
-    }
-}
-
-.tab-button {
-    position: fixed;
-    bottom: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #1362b8;
-    color: white;
-    border: 3px solid white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    pointer-events: auto;
-    z-index: 901;
-    transition: transform 0.2s ease, background-color 0.2s ease;
-}
-
-.tab-button:hover {
-    transform: scale(1.1);
-    background-color: #0d4d8f;
-}
-
-.tab-button:active {
-    transform: scale(0.95);
-}
-
-.tab-left {
-    left: 20px;
-}
-
-.tab-right {
-    right: 20px;
-}
-
-.notification-badge {
-    display: none;
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #ff4444;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    font-size: 1rem;
-    font-weight: bold;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid white;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.notification-badge.show {
-    display: flex;
-}
-
-.notification-badge::after {
-    content: "!";
 }
 
 /* Desktop navbar adjustments */
