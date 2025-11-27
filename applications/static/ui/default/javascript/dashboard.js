@@ -2,11 +2,19 @@ window.addEventListener('load', () => {
     setTimeout(_ => {
         document.querySelector('.loading').style.display = 'none';
         document.querySelector('.container').style.display = 'flex';
+
+        // Inizializza il sistema di notifiche per i tab
+        initTabNotifications();
     }, 300);
 })
 
 let currentPopup;
 let currentInput;
+
+// Variabili per gestire i tab mobili
+let anagraficViewed = false;
+let insViewed = false;
+let lastDataInExecution = null;
 
 let connected;
 
@@ -123,6 +131,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 selectedIdWeigher.addEventListener('change', (event) => {
     currentWeigherPath = event.target.value;
     if (currentWeigherPath) {
+        // Reset dei flag di visualizzazione per il nuovo pesatore
+        anagraficViewed = false;
+        insViewed = false;
+        lastDataInExecution = null;
+
         closeWebSocket();
         document.getElementById('netWeight').innerText = "N/A";
         document.getElementById('uniteMisure').innerText = "N/A";
@@ -132,12 +145,27 @@ selectedIdWeigher.addEventListener('change', (event) => {
         getInstanceWeigher(currentWeigherPath)
         getData(currentWeigherPath)
         .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
-        .then(() => populateListIn());
+        .then(() => populateListIn())
+        .then(() => {
+            // Controlla i dati iniziali dopo il cambio pesatore
+            checkInitialData();
+        });
     }
 });
 
 // Aggiorna lo stile quando la finestra viene ridimensionata
 window.addEventListener('resize', updateStyle);
+
+// Gestisci il ridimensionamento per i tab mobili
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 800) {
+        // Chiudi i tab se aperti e nascondi i badge
+        closeTab('anagrafic');
+        closeTab('ins');
+        document.getElementById('badgeAnagrafic').classList.remove('show');
+        document.getElementById('badgeIns').classList.remove('show');
+    }
+});
 observer.observe(listIn, { childList: true, subtree: true });
 
 // Aggiungi gli event listener per gli eventi online e offline
@@ -295,6 +323,8 @@ async function populateListIn() {
                 inline: 'start'
             });
         }
+        // Controlla se ci sono accessi e mostra il badge se necessario
+        checkInsData();
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -803,7 +833,10 @@ function updateUIRealtime(e) {
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
-        
+
+        // Controlla se i dati sono cambiati e mostra il badge se necessario
+        checkDataChanges();
+
         if (obj.type === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
                 element.disabled = false;
@@ -813,21 +846,21 @@ function updateUIRealtime(e) {
                 element.disabled = true;
             });
         }
-        
+
         if (obj.id_selected.id != selectedIdWeight) {
             if (selectedIdWeight !== null) {
                 const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
                 if (previouslySelected) previouslySelected.classList.remove('selected');
             }
             selectedIdWeight = obj.id_selected.id;
-            
+
             // NUOVO: Controlla need_to_confirm dopo aver aggiornato selectedIdWeight
             if (obj.id_selected.need_to_confirm === true) {
                 handleNeedToConfirm(obj.data_in_execution.vehicle.plate.replace("⭐", ""));
             } else {
                 closePopup("confirmPopup");
             }
-            
+
             if (selectedIdWeight !== null) {
                 const newlySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
                 if (newlySelected) newlySelected.classList.add('selected');
@@ -849,6 +882,8 @@ function updateUIRealtime(e) {
         populateListIn();
     } else if (obj.access) {
         populateListIn();
+        // Controlla se ci sono nuovi accessi e mostra il badge
+        checkInsData();
     } else if (obj.message) {
         showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
@@ -1128,3 +1163,134 @@ function getParamsFromQueryString() {
 
   return result;
 }
+
+// ===== FUNZIONI PER GESTIRE I TAB MOBILI =====
+
+function toggleTab(tabName) {
+    const anagraficElement = document.querySelector('.anagrafic');
+    const insElement = document.querySelector('.ins');
+    const overlay = document.getElementById('mobileOverlay');
+
+    if (tabName === 'anagrafic') {
+        // Chiudi ins se aperto
+        insElement.classList.remove('active');
+
+        // Toggle anagrafic
+        const wasActive = anagraficElement.classList.contains('active');
+        anagraficElement.classList.toggle('active');
+
+        // Mostra/nascondi overlay
+        if (anagraficElement.classList.contains('active')) {
+            overlay.classList.add('show');
+            anagraficViewed = true;
+            document.getElementById('badgeAnagrafic').classList.remove('show');
+        } else {
+            overlay.classList.remove('show');
+        }
+    } else if (tabName === 'ins') {
+        // Chiudi anagrafic se aperto
+        anagraficElement.classList.remove('active');
+
+        // Toggle ins
+        const wasActive = insElement.classList.contains('active');
+        insElement.classList.toggle('active');
+
+        // Mostra/nascondi overlay
+        if (insElement.classList.contains('active')) {
+            overlay.classList.add('show');
+            insViewed = true;
+            document.getElementById('badgeIns').classList.remove('show');
+        } else {
+            overlay.classList.remove('show');
+        }
+    }
+}
+
+function closeTab(tabName) {
+    const element = document.querySelector(`.${tabName}`);
+    const overlay = document.getElementById('mobileOverlay');
+    if (element) {
+        element.classList.remove('active');
+        overlay.classList.remove('show');
+    }
+}
+
+function closeAllTabs() {
+    const anagraficElement = document.querySelector('.anagrafic');
+    const insElement = document.querySelector('.ins');
+    const overlay = document.getElementById('mobileOverlay');
+
+    if (anagraficElement) anagraficElement.classList.remove('active');
+    if (insElement) insElement.classList.remove('active');
+    if (overlay) overlay.classList.remove('show');
+}
+
+function initTabNotifications() {
+    // Controlla se ci sono già dati in esecuzione al caricamento della pagina
+    checkInitialData();
+}
+
+function checkInitialData() {
+    // Questa funzione verrà chiamata dopo che getData() ha popolato dataInExecution
+    setTimeout(() => {
+        if (dataInExecution) {
+            // Controlla se ci sono dati compilati in anagrafic
+            const hasAnagraficData =
+                (dataInExecution.vehicle && dataInExecution.vehicle.plate) ||
+                (dataInExecution.subject && dataInExecution.subject.social_reason) ||
+                (dataInExecution.vector && dataInExecution.vector.social_reason) ||
+                (dataInExecution.material && dataInExecution.material.description) ||
+                dataInExecution.note ||
+                dataInExecution.document_reference;
+
+            if (hasAnagraficData && !anagraficViewed && window.innerWidth <= 800) {
+                document.getElementById('badgeAnagrafic').classList.add('show');
+            }
+
+            // Salva lo stato iniziale
+            lastDataInExecution = JSON.stringify(dataInExecution);
+        }
+
+        // Controlla se ci sono accessi nella lista ins
+        checkInsData();
+    }, 1000);
+}
+
+function checkInsData() {
+    const listIn = document.querySelector('.list-in');
+    if (listIn && listIn.children.length > 0 && !insViewed && window.innerWidth <= 800) {
+        document.getElementById('badgeIns').classList.add('show');
+    }
+}
+
+function checkDataChanges() {
+    // Controlla solo se siamo su mobile
+    if (window.innerWidth > 800) return;
+
+    const currentData = JSON.stringify(dataInExecution);
+
+    // Se i dati sono cambiati e anagrafic non è visualizzato
+    if (currentData !== lastDataInExecution && !anagraficViewed) {
+        document.getElementById('badgeAnagrafic').classList.add('show');
+    }
+
+    lastDataInExecution = currentData;
+}
+
+// Osserva i cambiamenti nella lista ins
+const insObserver = new MutationObserver(() => {
+    if (window.innerWidth <= 800 && !insViewed) {
+        const listIn = document.querySelector('.list-in');
+        if (listIn && listIn.children.length > 0) {
+            document.getElementById('badgeIns').classList.add('show');
+        }
+    }
+});
+
+// Inizia ad osservare quando il DOM è pronto
+document.addEventListener('DOMContentLoaded', () => {
+    const listIn = document.querySelector('.list-in');
+    if (listIn) {
+        insObserver.observe(listIn, { childList: true, subtree: true });
+    }
+});

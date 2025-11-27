@@ -17,6 +17,22 @@
 </head>
 <body>
     <div id="navbar-container"></div>
+
+    <!-- Overlay scuro per i tab mobili -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeAllTabs()"></div>
+
+    <!-- Linguette per aprire anagrafic e ins su schermi piccoli -->
+    <div class="mobile-tabs">
+        <button class="tab-button tab-left" id="tabAnagrafic" onclick="toggleTab('anagrafic')">
+            <span>📝</span>
+            <span class="notification-badge" id="badgeAnagrafic"></span>
+        </button>
+        <button class="tab-button tab-right" id="tabIns" onclick="toggleTab('ins')">
+            <span>📋</span>
+            <span class="notification-badge" id="badgeIns"></span>
+        </button>
+    </div>
+
     <div class="box">
         <div class="loading">
             <img class="img-loading" src="/static/content/baronpesi_logo.png" alt="Logo Baron Pesi">
@@ -24,6 +40,7 @@
         <div class="container">
             <div class="display-wrapper">
                 <div class="item anagrafic">
+                    <button class="close-tab-button" onclick="closeTab('anagrafic')">✕</button>
                     <div>
                         <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>VEICOLO</strong></p>
                         <span class="containerPlateVehicle">
@@ -103,6 +120,7 @@
                     </div>            
                 </div>
                 <div class="item ins">
+                    <button class="close-tab-button close-tab-button-left" onclick="closeTab('ins')">✕</button>
                     <h2>Accessi</h3>
                     <hr>
                     <ul class="list-in">
