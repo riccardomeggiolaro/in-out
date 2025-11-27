@@ -376,6 +376,13 @@
             font-size: 16px;
             flex-shrink: 0;
         }
+        .domain-group {
+            display: block;
+        }
+
+        .domain-group.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -508,9 +515,11 @@
                 <input type="number" id="modal-port" min="1" max="65535" required>
                 <br><br>
 
-                <label for="modal-domain" id="label-modal-domain">Dominio: </label>
-                <input type="text" id="modal-domain">
-                <br><br>
+                <div id="domain-group" class="domain-group">
+                    <label for="modal-domain" id="label-modal-domain">Dominio: </label>
+                    <input type="text" id="modal-domain">
+                    <br><br>
+                </div>
 
                 <label for="modal-shared-folder">Cartella condivisa: *</label>
                 <input type="text" id="modal-shared-folder" required>
@@ -525,7 +534,7 @@
                 <br><br>
 
                 <label for="modal-password">Password: *</label>
-                <input type="password" id="modal-password" required>
+                <input type="text" id="modal-password" required>
                 <br><br>
 
                 <div class="container-buttons right">
@@ -762,6 +771,7 @@
         // Info display elements
         const infoProtocol = document.querySelector("#info-protocol");
         const infoServer = document.querySelector("#info-server");
+        const domainGroup = document.querySelector("#domain-group");
         const infoFolder = document.querySelector("#info-folder");
         const infoUsername = document.querySelector("#info-username");
 
@@ -850,6 +860,12 @@
                         const instanceId = parts[0];
                         const nodeId = parts.slice(1).join('-');
                         closeEndpointModal(instanceId, nodeId);
+                    } else if (modalId === 'confirm-delete-modal') {
+                        closeConfirmDeleteModal();
+                    } else if (modalId === 'sync-folder-modal') {
+                        closeSyncFolderModal();
+                    } else if (modalId === 'delete-sync-folder-modal') {
+                        closeDeleteConfirmModal();
                     }
                 }
             });
@@ -992,9 +1008,7 @@
 
             // Mostra il modal
             modal.style.display = 'block';
-            setTimeout(() => {
-                modal.style.opacity = '1';
-            }, 10);
+            modal.style.opacity = '1';
 
             // Carica l'endpoint dall'API
             fetch(`/api/config-weigher/instance/node/endpoint?instance_name=${instanceId}&weigher_name=${nodeId}`)
@@ -1652,9 +1666,7 @@
         function openAddNodeModal(instanceId) {
             const modal = document.querySelector(`#add-node-modal-${instanceId}`);
             modal.style.display = 'block';
-            setTimeout(() => {
-                modal.style.opacity = '1';
-            }, 10);
+            modal.style.opacity = '1';
         }
 
         function closeAddNodeModal(instanceId) {
@@ -1825,9 +1837,7 @@
 
                 // Mostra il modal dopo aver popolato i dati
                 modal.style.display = 'block';
-                setTimeout(() => {
-                    modal.style.opacity = '1';
-                }, 10);
+                modal.style.opacity = '1';
             }, 50);
         }
 
@@ -1944,9 +1954,7 @@
             nameElement.textContent = `PESA ${nodeId}`;
             
             modal.style.display = 'block';
-            setTimeout(() => {
-                modal.style.opacity = '1';
-            }, 10);
+            modal.style.opacity = '1';
         }
 
         function closeConfirmDeleteNodeModal(instanceId) {
@@ -2301,9 +2309,7 @@
             
             const modal = document.querySelector('#edit-instance-modal');
             modal.style.display = 'block';
-            setTimeout(() => {
-                modal.style.opacity = '1';
-            }, 10);
+            modal.style.opacity = '1';
             
             validateEditInstanceForm();
         }
@@ -2507,9 +2513,7 @@
             
             const modal = document.querySelector('#confirm-delete-modal');
             modal.style.display = 'block';
-            setTimeout(() => {
-                modal.style.opacity = '1';
-            }, 10);
+            modal.style.opacity = '1';
         }
 
         function closeConfirmDeleteModal() {
@@ -2574,9 +2578,7 @@
         function openNewInstanceModal() {
             const modal = document.querySelector('#new-instance-modal');
             modal.style.display = 'block';
-            setTimeout(() => {
-                modal.style.opacity = '1';
-            }, 10);
+            modal.style.opacity = '1';
         }
 
         function closeNewInstanceModal() {
@@ -2858,21 +2860,22 @@
             }
             updateModalFieldsVisibility();
             syncFolderModal.style.display = 'block';
+            syncFolderModal.style.opacity = '1';
         }
 
         // Close sync folder modal
         function closeSyncFolderModal() {
-            syncFolderModal.style.display = 'none';
+            syncFolderModal.style.opacity = '0';
+            setTimeout(() => {
+                syncFolderModal.style.display = 'none';
+            }, 300);
         }
 
-        // Update field visibility in modal based on protocol
         function updateModalFieldsVisibility() {
             if (modalProtocol.value === 'samba') {
-                labelModalDomain.style.display = '';
-                modalDomain.style.display = '';
+                domainGroup.classList.remove('hidden');
             } else {
-                labelModalDomain.style.display = 'none';
-                modalDomain.style.display = 'none';
+                domainGroup.classList.add('hidden');
             }
         }
 
@@ -2885,11 +2888,15 @@
         // Open delete confirmation modal
         function confirmDeleteSyncFolder() {
             deleteSyncFolderModal.style.display = 'block';
+            deleteSyncFolderModal.style.opacity = '1';
         }
 
         // Close delete confirmation modal
         function closeDeleteConfirmModal() {
-            deleteSyncFolderModal.style.display = 'none';
+            deleteSyncFolderModal.style.opacity = '0';
+            setTimeout(() => {
+                deleteSyncFolderModal.style.display = 'none';
+            }, 300);
         }
 
         function changeSetupTab(event, tab) {

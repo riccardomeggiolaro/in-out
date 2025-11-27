@@ -24,7 +24,6 @@ import time
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
 from modules.md_sync_folder.dto import SyncFolderDTO
-from modules.md_sync_folder.dto import SyncFolderDTO
 import modules.md_sync_folder.md_sync_folder as md_sync_folder
 from libs.lb_utils import createThread, startThread
 
