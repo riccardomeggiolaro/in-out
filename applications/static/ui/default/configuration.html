@@ -486,6 +486,83 @@
                     </div>
                     <br>
                 </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>Configurazione Panel</h3>
+                    <br>
+
+                    <!-- Vista quando non c'è configurazione -->
+                    <div id="no-panel-config" style="display: none; text-align: center; padding: 20px;">
+                        <p style="color: #666; margin-bottom: 15px;">Nessuna configurazione presente</p>
+                        <button onclick="openPanelModal()">Aggiungi Configurazione</button>
+                    </div>
+
+                    <!-- Vista quando c'è configurazione -->
+                    <div id="panel-config-info" style="display: none;">
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <div style="display: grid; grid-template-columns: 200px 1fr; gap: 10px; margin-bottom: 10px;">
+                                <strong>IP:</strong>
+                                <span id="panel-info-ip"></span>
+
+                                <strong>Porta:</strong>
+                                <span id="panel-info-port"></span>
+
+                                <strong>Timeout (s):</strong>
+                                <span id="panel-info-timeout"></span>
+
+                                <strong>Max Lunghezza Testo:</strong>
+                                <span id="panel-info-max-string"></span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="openPanelModal()">Modifica</button>
+                            <button onclick="confirmDeletePanel()" style="background-color: #dc3545;">Elimina</button>
+                        </div>
+                    </div>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>Configurazione Siren</h3>
+                    <br>
+
+                    <!-- Vista quando non c'è configurazione -->
+                    <div id="no-siren-config" style="display: none; text-align: center; padding: 20px;">
+                        <p style="color: #666; margin-bottom: 15px;">Nessuna configurazione presente</p>
+                        <button onclick="openSirenModal()">Aggiungi Configurazione</button>
+                    </div>
+
+                    <!-- Vista quando c'è configurazione -->
+                    <div id="siren-config-info" style="display: none;">
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <div style="display: grid; grid-template-columns: 200px 1fr; gap: 10px; margin-bottom: 10px;">
+                                <strong>IP:</strong>
+                                <span id="siren-info-ip"></span>
+
+                                <strong>Porta:</strong>
+                                <span id="siren-info-port"></span>
+
+                                <strong>Timeout (s):</strong>
+                                <span id="siren-info-timeout"></span>
+
+                                <strong>Endpoint:</strong>
+                                <span id="siren-info-endpoint"></span>
+
+                                <strong>Username:</strong>
+                                <span id="siren-info-username"></span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="openSirenModal()">Modifica</button>
+                            <button onclick="confirmDeleteSiren()" style="background-color: #dc3545;">Elimina</button>
+                        </div>
+                    </div>
+                    <br>
+                </div>
             </div>
             <div id="instances" class="tab">
                 <div id="instance-sub-menu" class="instance-sub-menu"></div>
@@ -554,6 +631,98 @@
             <div class="container-buttons right">
                 <button class="cancel-btn" onclick="closeDeleteConfirmModal()">Annulla</button>
                 <button class="save-btn" style="background-color: #dc3545;" onclick="deleteSyncFolder()">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per configurazione Panel -->
+    <div id="panel-modal" class="modal">
+        <div class="modal-content">
+            <h3>Configura Panel</h3>
+            <form id="panel-form" onsubmit="event.preventDefault()">
+                <label for="panel-ip">IP: *</label>
+                <input type="text" id="panel-ip" required>
+                <br><br>
+
+                <label for="panel-port">Porta: *</label>
+                <input type="number" id="panel-port" min="1" max="65535" required>
+                <br><br>
+
+                <label for="panel-timeout">Timeout (secondi): *</label>
+                <input type="number" step="0.1" id="panel-timeout" min="0.1" required>
+                <br><br>
+
+                <label for="panel-max-string">Max lunghezza testo: *</label>
+                <input type="number" id="panel-max-string" min="1" required>
+                <br><br>
+
+                <div class="container-buttons right">
+                    <button type="button" class="cancel-btn" onclick="closePanelModal()">Annulla</button>
+                    <button type="submit" class="save-btn" onclick="savePanel()">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal di conferma eliminazione Panel -->
+    <div id="delete-panel-modal" class="modal">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <p>Sei sicuro di voler eliminare la configurazione del Panel?</p>
+            <br>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closeDeletePanelModal()">Annulla</button>
+                <button class="save-btn" style="background-color: #dc3545;" onclick="deletePanel()">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per configurazione Siren -->
+    <div id="siren-modal" class="modal">
+        <div class="modal-content">
+            <h3>Configura Siren</h3>
+            <form id="siren-form" onsubmit="event.preventDefault()">
+                <label for="siren-ip">IP: *</label>
+                <input type="text" id="siren-ip" required>
+                <br><br>
+
+                <label for="siren-port">Porta: *</label>
+                <input type="number" id="siren-port" min="1" max="65535" required>
+                <br><br>
+
+                <label for="siren-timeout">Timeout (secondi): *</label>
+                <input type="number" step="0.1" id="siren-timeout" min="0.1" required>
+                <br><br>
+
+                <label for="siren-endpoint">Endpoint: *</label>
+                <input type="text" id="siren-endpoint" required>
+                <br><br>
+
+                <label for="siren-username">Username:</label>
+                <input type="text" id="siren-username">
+                <br><br>
+
+                <label for="siren-password">Password:</label>
+                <input type="password" id="siren-password">
+                <br><br>
+
+                <div class="container-buttons right">
+                    <button type="button" class="cancel-btn" onclick="closeSirenModal()">Annulla</button>
+                    <button type="submit" class="save-btn" onclick="saveSiren()">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal di conferma eliminazione Siren -->
+    <div id="delete-siren-modal" class="modal">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <p>Sei sicuro di voler eliminare la configurazione della Siren?</p>
+            <br>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closeDeleteSirenModal()">Annulla</button>
+                <button class="save-btn" style="background-color: #dc3545;" onclick="deleteSiren()">Elimina</button>
             </div>
         </div>
     </div>
@@ -775,7 +944,40 @@
         const infoFolder = document.querySelector("#info-folder");
         const infoUsername = document.querySelector("#info-username");
 
+        // Panel elements
+        const panelModal = document.querySelector("#panel-modal");
+        const deletePanelModal = document.querySelector("#delete-panel-modal");
+        const noPanelConfig = document.querySelector("#no-panel-config");
+        const panelConfigInfo = document.querySelector("#panel-config-info");
+        const panelIp = document.querySelector("#panel-ip");
+        const panelPort = document.querySelector("#panel-port");
+        const panelTimeout = document.querySelector("#panel-timeout");
+        const panelMaxString = document.querySelector("#panel-max-string");
+        const panelInfoIp = document.querySelector("#panel-info-ip");
+        const panelInfoPort = document.querySelector("#panel-info-port");
+        const panelInfoTimeout = document.querySelector("#panel-info-timeout");
+        const panelInfoMaxString = document.querySelector("#panel-info-max-string");
+
+        // Siren elements
+        const sirenModal = document.querySelector("#siren-modal");
+        const deleteSirenModal = document.querySelector("#delete-siren-modal");
+        const noSirenConfig = document.querySelector("#no-siren-config");
+        const sirenConfigInfo = document.querySelector("#siren-config-info");
+        const sirenIp = document.querySelector("#siren-ip");
+        const sirenPort = document.querySelector("#siren-port");
+        const sirenTimeout = document.querySelector("#siren-timeout");
+        const sirenEndpoint = document.querySelector("#siren-endpoint");
+        const sirenUsername = document.querySelector("#siren-username");
+        const sirenPassword = document.querySelector("#siren-password");
+        const sirenInfoIp = document.querySelector("#siren-info-ip");
+        const sirenInfoPort = document.querySelector("#siren-info-port");
+        const sirenInfoTimeout = document.querySelector("#siren-info-timeout");
+        const sirenInfoEndpoint = document.querySelector("#siren-info-endpoint");
+        const sirenInfoUsername = document.querySelector("#siren-info-username");
+
         let currentSyncFolderConfig = null;
+        let currentPanelConfig = null;
+        let currentSirenConfig = null;
         let weighersData = {};
         let instanceToDelete = null;
         let nodeToDelete = { instanceId: null, nodeId: null };
@@ -866,6 +1068,14 @@
                         closeSyncFolderModal();
                     } else if (modalId === 'delete-sync-folder-modal') {
                         closeDeleteConfirmModal();
+                    } else if (modalId === 'panel-modal') {
+                        closePanelModal();
+                    } else if (modalId === 'delete-panel-modal') {
+                        closeDeletePanelModal();
+                    } else if (modalId === 'siren-modal') {
+                        closeSirenModal();
+                    } else if (modalId === 'delete-siren-modal') {
+                        closeDeleteSirenModal();
                     }
                 }
             });
@@ -1226,6 +1436,24 @@
                 } else {
                     currentSyncFolderConfig = null;
                     updateSyncFolderDisplay();
+                }
+
+                // Load panel configuration
+                if (res.panel && Object.keys(res.panel).length > 0) {
+                    currentPanelConfig = res.panel;
+                    updatePanelDisplay();
+                } else {
+                    currentPanelConfig = null;
+                    updatePanelDisplay();
+                }
+
+                // Load siren configuration
+                if (res.siren && Object.keys(res.siren).length > 0) {
+                    currentSirenConfig = res.siren;
+                    updateSirenDisplay();
+                } else {
+                    currentSirenConfig = null;
+                    updateSirenDisplay();
                 }
 
                 // Salva i dati e genera i tab delle istanze
@@ -3055,6 +3283,281 @@
                 // Re-enable modal form on error
                 syncFolderModal.querySelectorAll("input, button, select").forEach(e => e.disabled = false);
                 showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        // ============= PANEL FUNCTIONS =============
+
+        // Update panel display based on current config
+        function updatePanelDisplay() {
+            if (currentPanelConfig) {
+                // Show config info
+                noPanelConfig.style.display = 'none';
+                panelConfigInfo.style.display = 'block';
+
+                // Update info display
+                panelInfoIp.textContent = currentPanelConfig.ip;
+                panelInfoPort.textContent = currentPanelConfig.port;
+                panelInfoTimeout.textContent = currentPanelConfig.timeout || 5;
+                panelInfoMaxString.textContent = currentPanelConfig.max_string_content;
+            } else {
+                // Show no config message
+                noPanelConfig.style.display = 'block';
+                panelConfigInfo.style.display = 'none';
+            }
+        }
+
+        // Open panel modal for create/edit
+        function openPanelModal() {
+            if (currentPanelConfig) {
+                // Edit mode - populate fields
+                panelIp.value = currentPanelConfig.ip;
+                panelPort.value = currentPanelConfig.port;
+                panelTimeout.value = currentPanelConfig.timeout || 5;
+                panelMaxString.value = currentPanelConfig.max_string_content;
+            } else {
+                // Create mode - set defaults
+                panelIp.value = '';
+                panelPort.value = '';
+                panelTimeout.value = 5;
+                panelMaxString.value = 128;
+            }
+            panelModal.style.display = 'block';
+            panelModal.style.opacity = '1';
+        }
+
+        // Close panel modal
+        function closePanelModal() {
+            panelModal.style.opacity = '0';
+            setTimeout(() => {
+                panelModal.style.display = 'none';
+            }, 300);
+        }
+
+        // Open delete confirmation modal for panel
+        function confirmDeletePanel() {
+            deletePanelModal.style.display = 'block';
+            deletePanelModal.style.opacity = '1';
+        }
+
+        // Close delete confirmation modal for panel
+        function closeDeletePanelModal() {
+            deletePanelModal.style.opacity = '0';
+            setTimeout(() => {
+                deletePanelModal.style.display = 'none';
+            }, 300);
+        }
+
+        // Save panel configuration
+        function savePanel() {
+            // Disable modal buttons during save
+            panelModal.querySelectorAll("input, button").forEach(e => e.disabled = true);
+
+            fetch(`/api/configuration/panel`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "ip": panelIp.value,
+                    "port": parseInt(panelPort.value),
+                    "timeout": parseFloat(panelTimeout.value),
+                    "max_string_content": parseInt(panelMaxString.value)
+                })
+            })
+            .then(res => {
+                const status = res.status;
+                return res.json()
+                .then(value => {
+                    if (status !== 200) {
+                        const message = value.detail ? value.detail[0].msg.replace("Value error, ", "") : 'Errore nel salvataggio';
+                        showSnackbar("snackbar", message, 'rgb(255, 208, 208)', 'black');
+                    }
+                    else {
+                        showSnackbar("snackbar", "Configurazione Panel salvata", 'rgb(208, 255, 208)', 'black');
+                    }
+                    return value;
+                });
+            })
+            .then(res => {
+                // Re-enable modal form
+                panelModal.querySelectorAll("input, button").forEach(e => e.disabled = false);
+
+                if (res) {
+                    currentPanelConfig = res;
+                    updatePanelDisplay();
+                    closePanelModal();
+                }
+            })
+            .catch(err => {
+                // Re-enable modal form on error
+                panelModal.querySelectorAll("input, button").forEach(e => e.disabled = false);
+                showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        // Delete panel configuration
+        function deletePanel() {
+            fetch(`/api/configuration/panel`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (res.status !== 200) {
+                    showSnackbar("snackbar", 'Errore nella eliminazione', 'rgb(255, 208, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Configurazione Panel eliminata", 'rgb(208, 255, 208)', 'black');
+                    currentPanelConfig = null;
+                    updatePanelDisplay();
+                    closeDeletePanelModal();
+                }
+            });
+        }
+
+        // ============= SIREN FUNCTIONS =============
+
+        // Update siren display based on current config
+        function updateSirenDisplay() {
+            if (currentSirenConfig) {
+                // Show config info
+                noSirenConfig.style.display = 'none';
+                sirenConfigInfo.style.display = 'block';
+
+                // Update info display
+                sirenInfoIp.textContent = currentSirenConfig.ip;
+                sirenInfoPort.textContent = currentSirenConfig.port;
+                sirenInfoTimeout.textContent = currentSirenConfig.timeout || 5;
+                sirenInfoEndpoint.textContent = currentSirenConfig.endpoint || '-';
+                sirenInfoUsername.textContent = currentSirenConfig.username || '-';
+            } else {
+                // Show no config message
+                noSirenConfig.style.display = 'block';
+                sirenConfigInfo.style.display = 'none';
+            }
+        }
+
+        // Open siren modal for create/edit
+        function openSirenModal() {
+            if (currentSirenConfig) {
+                // Edit mode - populate fields
+                sirenIp.value = currentSirenConfig.ip;
+                sirenPort.value = currentSirenConfig.port;
+                sirenTimeout.value = currentSirenConfig.timeout || 5;
+                sirenEndpoint.value = currentSirenConfig.endpoint || '';
+                sirenUsername.value = currentSirenConfig.username || '';
+                sirenPassword.value = currentSirenConfig.password || '';
+            } else {
+                // Create mode - set defaults
+                sirenIp.value = '';
+                sirenPort.value = '';
+                sirenTimeout.value = 5;
+                sirenEndpoint.value = '';
+                sirenUsername.value = '';
+                sirenPassword.value = '';
+            }
+            sirenModal.style.display = 'block';
+            sirenModal.style.opacity = '1';
+        }
+
+        // Close siren modal
+        function closeSirenModal() {
+            sirenModal.style.opacity = '0';
+            setTimeout(() => {
+                sirenModal.style.display = 'none';
+            }, 300);
+        }
+
+        // Open delete confirmation modal for siren
+        function confirmDeleteSiren() {
+            deleteSirenModal.style.display = 'block';
+            deleteSirenModal.style.opacity = '1';
+        }
+
+        // Close delete confirmation modal for siren
+        function closeDeleteSirenModal() {
+            deleteSirenModal.style.opacity = '0';
+            setTimeout(() => {
+                deleteSirenModal.style.display = 'none';
+            }, 300);
+        }
+
+        // Save siren configuration
+        function saveSiren() {
+            // Disable modal buttons during save
+            sirenModal.querySelectorAll("input, button").forEach(e => e.disabled = true);
+
+            const body = {
+                "ip": sirenIp.value,
+                "port": parseInt(sirenPort.value),
+                "timeout": parseFloat(sirenTimeout.value),
+                "endpoint": sirenEndpoint.value
+            };
+
+            // Add optional fields only if they have values
+            if (sirenUsername.value) {
+                body.username = sirenUsername.value;
+            }
+            if (sirenPassword.value) {
+                body.password = sirenPassword.value;
+            }
+
+            fetch(`/api/configuration/siren`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+            .then(res => {
+                const status = res.status;
+                return res.json()
+                .then(value => {
+                    if (status !== 200) {
+                        const message = value.detail ? value.detail[0].msg.replace("Value error, ", "") : 'Errore nel salvataggio';
+                        showSnackbar("snackbar", message, 'rgb(255, 208, 208)', 'black');
+                    }
+                    else {
+                        showSnackbar("snackbar", "Configurazione Siren salvata", 'rgb(208, 255, 208)', 'black');
+                    }
+                    return value;
+                });
+            })
+            .then(res => {
+                // Re-enable modal form
+                sirenModal.querySelectorAll("input, button").forEach(e => e.disabled = false);
+
+                if (res) {
+                    currentSirenConfig = res;
+                    updateSirenDisplay();
+                    closeSirenModal();
+                }
+            })
+            .catch(err => {
+                // Re-enable modal form on error
+                sirenModal.querySelectorAll("input, button").forEach(e => e.disabled = false);
+                showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        // Delete siren configuration
+        function deleteSiren() {
+            fetch(`/api/configuration/siren`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => {
+                if (res.status !== 200) {
+                    showSnackbar("snackbar", 'Errore nella eliminazione', 'rgb(255, 208, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Configurazione Siren eliminata", 'rgb(208, 255, 208)', 'black');
+                    currentSirenConfig = null;
+                    updateSirenDisplay();
+                    closeDeleteSirenModal();
+                }
             });
         }
     </script>
