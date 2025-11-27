@@ -3,9 +3,6 @@ window.addEventListener('load', () => {
     setTimeout(_ => {
         document.querySelector('.loading').style.display = 'none';
         document.querySelector('.container').style.display = 'flex';
-
-        // Inizializza il sistema di notifiche per i tab
-        initTabNotifications();
     }, 300);
 })
 
@@ -149,10 +146,6 @@ selectedIdWeigher.addEventListener('change', (event) => {
         getData(currentWeigherPath)
         .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
         .then(() => populateListIn())
-        .then(() => {
-            // Controlla i dati iniziali dopo il cambio pesatore
-            checkInitialData();
-        });
     }
 });
 

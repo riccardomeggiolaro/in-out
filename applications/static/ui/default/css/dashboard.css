@@ -538,6 +538,7 @@ button:active {
     .anagrafic.active {
         transform: translateX(0);
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        z-index: 1001;
     }
 
     .ins {
@@ -548,6 +549,7 @@ button:active {
     .ins.active {
         transform: translateX(0);
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+        z-index: 1001;
     }
 
     /* Pulsante chiusura per anagrafic e ins */
@@ -569,11 +571,6 @@ button:active {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         border: none;
         padding: 0;
-    }
-
-    .close-tab-button-left {
-        left: 15px;
-        right: auto;
     }
 
     /* Mostra i pulsanti X solo quando i tab sono attivi su mobile */
