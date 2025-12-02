@@ -1333,7 +1333,7 @@
                     `;
                     break;
                 case 'divider':
-                    content = `<hr style="border: none; border-top: 2px solid #e0e0e0; margin: 0; padding: 0;">`;
+                    content = `<hr style="border: none; border-top-width: 2px; border-top-style: solid; border-top-color: #e0e0e0; margin: 0; padding: 0; opacity: 1;">`;
                     wrapper.style.padding = "0";
                     break;
             }
@@ -1757,23 +1757,39 @@
                         `;
                     }
 
+                    const tableBorderColor = table.style.borderColor || getComputedStyle(table.querySelector('th, td')).borderColor || '#dddddd';
+                    const firstCell = table.querySelector('th, td');
+                    const bordersVisible = firstCell && getComputedStyle(firstCell).borderStyle !== 'none';
+
                     propertiesHTML += `
                         <div style="background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 10px 0; color: #333;">📊 Proprietà Globali Tabella</h4>
-                            
+                            <h4 style="margin: 0 0 10px 0; color: #000;">📊 Proprietà Globali Tabella</h4>
+
                             <div class="property-group">
                                 <label>Numero Colonne</label>
                                 <input id="inputTableColumns" type="number" value="${currentCols}" min="1" max="10" onchange="changeTableColumns(this, this.value);">
                             </div>
-                            
+
                             <div class="property-group">
                                 <label>Numero Righe</label>
                                 <input id="inputTableRows" type="number" value="${currentRows}" min="1" max="20" onchange="changeTableRows(this.value)">
                             </div>
-                            
+
                             <div class="property-group">
                                 <label>Padding Celle (mm)</label>
                                 <input type="number" value="${currentPadding}" min="1" max="10" step="0.5" onchange="changeTablePadding(this.value)">
+                            </div>
+
+                            <div class="property-group">
+                                <label style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="checkbox" ${bordersVisible ? 'checked' : ''} onchange="toggleTableBorders(this.checked)" style="width: auto; cursor: pointer;">
+                                    <span>Mostra bordi</span>
+                                </label>
+                            </div>
+
+                            <div class="property-group" id="borderColorGroup" style="display: ${bordersVisible ? 'block' : 'none'};">
+                                <label>Colore bordo</label>
+                                <input type="color" value="${rgbToHex(tableBorderColor)}" onchange="changeTableBorderColor(this.value)">
                             </div>
                         </div>
                     `;
@@ -1799,10 +1815,15 @@
                 case 'divider':
                     const hr = element.querySelector('hr');
                     const currentThickness = hr.style.borderTopWidth.replace('px', '') || '2';
+                    const currentColor = hr.style.borderTopColor || '#e0e0e0';
                     propertiesHTML += `
                         <div class="property-group">
                             <label>Spessore linea (mm)</label>
                             <input type="number" value="${currentThickness}" min="1" max="10" onchange="changeDividerThickness(this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label>Colore linea</label>
+                            <input type="color" value="${currentColor}" onchange="changeDividerColor(this.value)">
                         </div>
                     `;
                     break;
@@ -2477,6 +2498,75 @@
             }
         }
 
+        function changeDividerColor(color) {
+            if (!selectedElement) return;
+            const hr = selectedElement.querySelector('hr');
+            if (hr) {
+                hr.style.borderTopColor = color;
+            }
+        }
+
+        function changeTableBorderColor(color) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (table) {
+                table.style.borderColor = color;
+                const cells = table.querySelectorAll('td, th');
+                cells.forEach(cell => {
+                    cell.style.borderColor = color;
+                });
+            }
+        }
+
+        function toggleTableBorders(show) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+
+            const cells = table.querySelectorAll('td, th');
+
+            if (show) {
+                // Mostra i bordi
+                table.style.borderCollapse = 'collapse';
+                cells.forEach(cell => {
+                    cell.style.border = '0.3mm solid #ddd';
+                });
+            } else {
+                // Nascondi i bordi
+                cells.forEach(cell => {
+                    cell.style.border = 'none';
+                });
+            }
+
+            // Mostra/nascondi il color picker
+            const borderColorGroup = document.getElementById('borderColorGroup');
+            if (borderColorGroup) {
+                borderColorGroup.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function rgbToHex(rgb) {
+            // Se è già in formato hex, ritorna così com'è
+            if (rgb.startsWith('#')) {
+                return rgb;
+            }
+
+            // Gestisce rgb(r, g, b) o rgba(r, g, b, a)
+            const result = rgb.match(/\d+/g);
+            if (!result || result.length < 3) {
+                return '#dddddd'; // valore di default
+            }
+
+            const r = parseInt(result[0]);
+            const g = parseInt(result[1]);
+            const b = parseInt(result[2]);
+
+            return '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+
         function insertTextInTableCell(cell, text) {
             if (!cell) return;
             
@@ -2684,7 +2774,7 @@ ${pageClone.innerHTML}
 
         body {
             font-family: ${globalFont};
-            color: #333;
+            color: #000;
             margin: 0;
             font-size: ${fontSize};
         }
@@ -2872,7 +2962,7 @@ ${pageClone.innerHTML}
                     return html
                         .replace(/\n/g, ' ')
                         .replace(/\s+/g, ' ')
-                        .replace(/"/g, "'")
+                        // RIMOSSA la riga: .replace(/"/g, "'")
                         .trim();
                 }
 
@@ -3004,7 +3094,7 @@ ${pageClone.innerHTML}
                     return html
                         .replace(/\n/g, ' ')
                         .replace(/\s+/g, ' ')
-                        .replace(/"/g, "'")
+                        // RIMOSSA la riga: .replace(/"/g, "'")
                         .trim();
                 }
 
@@ -3109,7 +3199,18 @@ ${pageClone.innerHTML}
 
         function loadProjectState(state, showNotificationMessage = true) {
             const pagesContainer = document.getElementById('pagesContainer');
-            pagesContainer.innerHTML = state.canvas;
+            
+            // CORREZIONE: Usa DOMParser invece di innerHTML per evitare problemi con gli apici
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(state.canvas, 'text/html');
+            
+            // Svuota il container
+            pagesContainer.innerHTML = '';
+            
+            // Copia i nodi dal documento parsato
+            Array.from(doc.body.childNodes).forEach(node => {
+                pagesContainer.appendChild(node.cloneNode(true));
+            });
             
             const allElements = pagesContainer.querySelectorAll('.dropped-element');
             allElements.forEach(el => {
@@ -3219,7 +3320,7 @@ ${pageClone.innerHTML}
             if (showNotificationMessage) showNotification('Progetto importato con successo! Ora puoi modificarlo.');
         }
 
-        async function populateTemplates(type) {
+        async function populateTemplates(type_default_report) {
             const select = document.getElementById('defaultReportSelect');
             const baseUrl = '/api/generic/list/default-reports';
             
@@ -3233,7 +3334,7 @@ ${pageClone.innerHTML}
                 
                 Object.keys(data).forEach(folder => {
                     data[folder].forEach(file => {
-                        if (file.includes(type)) {
+                        if (file.includes(type_default_report)) {
                             const option = document.createElement('option');
                             option.value = `/static/content/report/default-report/${folder}/${file}`;
                             option.textContent = file;
