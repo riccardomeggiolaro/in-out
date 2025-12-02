@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Report Designer - Jinja2 Compatible</title>
+    <title>Report Designer - {{ type }}</title>
     <style>
         * {
             margin: 0;
@@ -529,7 +529,7 @@
         }
 
         .modal-header h2 {
-            color: #333;
+            color: #000;
         }
 
         .close-modal {
@@ -541,7 +541,7 @@
         }
 
         .close-modal:hover {
-            color: #333;
+            color: #000;
         }
 
         .code-output {
@@ -636,7 +636,7 @@
             <h1>📄 Report Designer - {{ type }}</h1>
             <div class="toolbar">
                 <button class="btn btn-primary" onclick="loadDefaultTemplate('{{ default_report_template }}')">Ripristina ultimo salvato</button>
-                <select id="defaultReportSelect" onfocus="populateTemplates('{{ type }}')" onchange="loadDefaultTemplate(this.value)">
+                <select id="defaultReportSelect" onfocus="populateTemplates('{{ type_default_report }}')" onchange="loadDefaultTemplate(this.value)">
                     <option>--Template di default--</option>
                 </select>
                 <button class="btn btn-primary" onclick="previewReport()">👁️ Anteprima</button>
@@ -1759,7 +1759,7 @@
 
                     propertiesHTML += `
                         <div style="background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-                            <h4 style="margin: 0 0 10px 0; color: #333;">📊 Proprietà Globali Tabella</h4>
+                            <h4 style="margin: 0 0 10px 0; color: #000;">📊 Proprietà Globali Tabella</h4>
                             
                             <div class="property-group">
                                 <label>Numero Colonne</label>
@@ -2684,7 +2684,7 @@ ${pageClone.innerHTML}
 
         body {
             font-family: ${globalFont};
-            color: #333;
+            color: #000;
             margin: 0;
             font-size: ${fontSize};
         }
@@ -2872,7 +2872,7 @@ ${pageClone.innerHTML}
                     return html
                         .replace(/\n/g, ' ')
                         .replace(/\s+/g, ' ')
-                        .replace(/"/g, "'")
+                        // RIMOSSA la riga: .replace(/"/g, "'")
                         .trim();
                 }
 
@@ -3004,7 +3004,7 @@ ${pageClone.innerHTML}
                     return html
                         .replace(/\n/g, ' ')
                         .replace(/\s+/g, ' ')
-                        .replace(/"/g, "'")
+                        // RIMOSSA la riga: .replace(/"/g, "'")
                         .trim();
                 }
 
@@ -3109,7 +3109,18 @@ ${pageClone.innerHTML}
 
         function loadProjectState(state, showNotificationMessage = true) {
             const pagesContainer = document.getElementById('pagesContainer');
-            pagesContainer.innerHTML = state.canvas;
+            
+            // CORREZIONE: Usa DOMParser invece di innerHTML per evitare problemi con gli apici
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(state.canvas, 'text/html');
+            
+            // Svuota il container
+            pagesContainer.innerHTML = '';
+            
+            // Copia i nodi dal documento parsato
+            Array.from(doc.body.childNodes).forEach(node => {
+                pagesContainer.appendChild(node.cloneNode(true));
+            });
             
             const allElements = pagesContainer.querySelectorAll('.dropped-element');
             allElements.forEach(el => {
@@ -3219,7 +3230,7 @@ ${pageClone.innerHTML}
             if (showNotificationMessage) showNotification('Progetto importato con successo! Ora puoi modificarlo.');
         }
 
-        async function populateTemplates(type) {
+        async function populateTemplates(type_default_report) {
             const select = document.getElementById('defaultReportSelect');
             const baseUrl = '/api/generic/list/default-reports';
             
@@ -3233,7 +3244,7 @@ ${pageClone.innerHTML}
                 
                 Object.keys(data).forEach(folder => {
                     data[folder].forEach(file => {
-                        if (file.includes(type)) {
+                        if (file.includes(type_default_report)) {
                             const option = document.createElement('option');
                             option.value = `/static/content/report/default-report/${folder}/${file}`;
                             option.textContent = file;
