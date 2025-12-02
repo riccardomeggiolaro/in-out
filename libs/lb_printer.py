@@ -226,6 +226,7 @@ class HTMLPrinter:
                         options = {
                             'copies': str(number_of_prints),
                             'TmtSpeed': '4',  # Velocità lenta per qualità massima
+                            'scaling': '100'
                         }
                         
                         job_id = self.conn.printFile(
