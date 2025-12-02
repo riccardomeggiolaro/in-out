@@ -143,7 +143,8 @@ class HTMLPrinter:
 
     def print_pdf(self, pdf_bytes, printer_name: str, number_of_prints: int = 1):
         """
-        Invia un file PDF (bytes) alla stampante specificata, per number_of_print copie.
+        Invia un file PDF (bytes) alla stampante specificata.
+        Auto-rileva stampanti termiche e ottimizza la qualità.
         """
         import tempfile
         import os
@@ -166,27 +167,102 @@ class HTMLPrinter:
 
             printer_status = printers[printer_name].get('printer-state', None)
             if printer_status == cups.IPP_PRINTER_STOPPED:
-                message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline. La stampa rimarrà in coda."
+                message1 = f"Avviso: La stampante '{printer_name}' è attualmente ferma o offline."
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
-                pdf_file.write(pdf_bytes)
-                pdf_file.flush()
+            # AUTO-DETECT: Rileva se è stampante termica
+            printer_info = printers[printer_name]
+            driver = printer_info.get('printer-make-and-model', '').lower()
+            
+            # Criteri di rilevamento
+            is_thermal = (
+                'rastertotmt' in driver or
+                'thermal' in driver or
+                'escpos' in driver or
+                'tm-' in driver.lower() or
+                'star' in driver.lower()
+            )
+            
+            # Fallback: controlla larghezza carta (termiche < 100mm = 283 punti a 72dpi)
+            if not is_thermal:
                 try:
-                    options = {
-                        'orientation-requested': '3',
-                        'landscape': '0',
-                        'fit-to-page': 'true',
-                        'copies': str(number_of_prints)  # <-- aggiunto qui
-                    }
-                    job_id = self.conn.printFile(
-                        printer_name,
-                        pdf_file.name,
-                        "PDF Print Job",
-                        options
-                    )
-                    message2 = f"Stampa inviata alla stampante '{printer_name}' con successo ({number_of_prints} copie)."
-                finally:
-                    os.unlink(pdf_file.name)
+                    ppd_path = self.conn.getPPD(printer_name)
+                    with open(ppd_path, 'r') as f:
+                        ppd_content = f.read()
+                        # Cerca larghezza in punti (es. PageSize[204 841.8])
+                        import re
+                        match = re.search(r'PageSize\[(\d+\.?\d*)\s+\d+', ppd_content)
+                        if match:
+                            width = float(match.group(1))
+                            is_thermal = width < 283  # ~100mm
+                except:
+                    pass  # Se fallisce, assume NON termica
+            
+            # STAMPA: Logica differenziata
+            if is_thermal:
+                # === STAMPANTE TERMICA: Pre-processing per qualità ===
+                try:
+                    import pypdfium2 as pdfium
+                    from PIL import Image
+                except ImportError:
+                    message1 = "Libreria pypdfium2 mancante. Installa con: pip install pypdfium2"
+                    message2 = "Stampa non inviata."
+                    return job_id, message1, message2
+                
+                pdf = pdfium.PdfDocument(pdf_bytes)
+                page = pdf[0]
+                
+                # Rendering a 203dpi (risoluzione nativa stampanti termiche)
+                bitmap = page.render(scale=203/72, rotation=0)
+                pil_image = bitmap.to_pil()
+                
+                # Converti in B/N puro con threshold (elimina sgranatura)
+                grayscale = pil_image.convert('L')
+                bw_image = grayscale.point(lambda x: 0 if x < 128 else 255, mode='1')
+                
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as img_file:
+                    bw_image.save(img_file.name, format='PNG', optimize=True)
+                    
+                    try:
+                        options = {
+                            'copies': str(number_of_prints),
+                            'TmtSpeed': '4',  # Velocità lenta per qualità massima
+                        }
+                        
+                        job_id = self.conn.printFile(
+                            printer_name,
+                            img_file.name,
+                            "Thermal Print Job",
+                            options
+                        )
+                        message2 = f"Stampa termica inviata a '{printer_name}' ({number_of_prints} copie)."
+                    finally:
+                        os.unlink(img_file.name)
+                        
+                pdf.close()
+                
+            else:
+                # === STAMPANTE A4: Stampa PDF diretto ===
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
+                    pdf_file.write(pdf_bytes)
+                    pdf_file.flush()
+                    
+                    try:
+                        options = {
+                            'orientation-requested': '3',
+                            'landscape': '0',
+                            'fit-to-page': 'true',
+                            'copies': str(number_of_prints),
+                        }
+                        
+                        job_id = self.conn.printFile(
+                            printer_name,
+                            pdf_file.name,
+                            "PDF Print Job",
+                            options
+                        )
+                        message2 = f"Stampa inviata a '{printer_name}' ({number_of_prints} copie)."
+                    finally:
+                        os.unlink(pdf_file.name)
 
         except Exception as e:
             message1 = f"Errore nella gestione delle stampanti: {e}"

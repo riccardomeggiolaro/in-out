@@ -124,7 +124,7 @@
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
-                        "printer_name": null,
+                        "printer_name": "USB",
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
