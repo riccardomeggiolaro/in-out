@@ -1758,7 +1758,8 @@
                     }
 
                     const tableBorderColor = table.style.borderColor || getComputedStyle(table.querySelector('th, td')).borderColor || '#dddddd';
-                    const tableOpacity = element.style.opacity || '1';
+                    const firstCell = table.querySelector('th, td');
+                    const bordersVisible = firstCell && getComputedStyle(firstCell).borderStyle !== 'none';
 
                     propertiesHTML += `
                         <div style="background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
@@ -1780,14 +1781,15 @@
                             </div>
 
                             <div class="property-group">
-                                <label>Colore bordo</label>
-                                <input type="color" value="${rgbToHex(tableBorderColor)}" onchange="changeTableBorderColor(this.value)">
+                                <label style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="checkbox" ${bordersVisible ? 'checked' : ''} onchange="toggleTableBorders(this.checked)" style="width: auto; cursor: pointer;">
+                                    <span>Mostra bordi</span>
+                                </label>
                             </div>
 
-                            <div class="property-group">
-                                <label>Opacità (%)</label>
-                                <input type="range" value="${parseFloat(tableOpacity) * 100}" min="0" max="100" step="1" oninput="changeTableOpacity(this.value); this.nextElementSibling.textContent = this.value + '%'">
-                                <span style="margin-left: 10px; font-weight: bold;">${Math.round(parseFloat(tableOpacity) * 100)}%</span>
+                            <div class="property-group" id="borderColorGroup" style="display: ${bordersVisible ? 'block' : 'none'};">
+                                <label>Colore bordo</label>
+                                <input type="color" value="${rgbToHex(tableBorderColor)}" onchange="changeTableBorderColor(this.value)">
                             </div>
                         </div>
                     `;
@@ -1814,7 +1816,6 @@
                     const hr = element.querySelector('hr');
                     const currentThickness = hr.style.borderTopWidth.replace('px', '') || '2';
                     const currentColor = hr.style.borderTopColor || '#e0e0e0';
-                    const currentOpacity = hr.style.opacity || '1';
                     propertiesHTML += `
                         <div class="property-group">
                             <label>Spessore linea (mm)</label>
@@ -1823,11 +1824,6 @@
                         <div class="property-group">
                             <label>Colore linea</label>
                             <input type="color" value="${currentColor}" onchange="changeDividerColor(this.value)">
-                        </div>
-                        <div class="property-group">
-                            <label>Opacità (%)</label>
-                            <input type="range" value="${parseFloat(currentOpacity) * 100}" min="0" max="100" step="1" oninput="changeDividerOpacity(this.value); this.nextElementSibling.textContent = this.value + '%'">
-                            <span style="margin-left: 10px; font-weight: bold;">${Math.round(parseFloat(currentOpacity) * 100)}%</span>
                         </div>
                     `;
                     break;
@@ -2510,14 +2506,6 @@
             }
         }
 
-        function changeDividerOpacity(value) {
-            if (!selectedElement) return;
-            const hr = selectedElement.querySelector('hr');
-            if (hr) {
-                hr.style.opacity = value / 100;
-            }
-        }
-
         function changeTableBorderColor(color) {
             if (!selectedElement) return;
             const table = selectedElement.querySelector('table');
@@ -2530,9 +2518,31 @@
             }
         }
 
-        function changeTableOpacity(value) {
+        function toggleTableBorders(show) {
             if (!selectedElement) return;
-            selectedElement.style.opacity = value / 100;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+
+            const cells = table.querySelectorAll('td, th');
+
+            if (show) {
+                // Mostra i bordi
+                table.style.borderCollapse = 'collapse';
+                cells.forEach(cell => {
+                    cell.style.border = '0.3mm solid #ddd';
+                });
+            } else {
+                // Nascondi i bordi
+                cells.forEach(cell => {
+                    cell.style.border = 'none';
+                });
+            }
+
+            // Mostra/nascondi il color picker
+            const borderColorGroup = document.getElementById('borderColorGroup');
+            if (borderColorGroup) {
+                borderColorGroup.style.display = show ? 'block' : 'none';
+            }
         }
 
         function rgbToHex(rgb) {
