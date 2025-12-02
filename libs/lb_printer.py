@@ -120,25 +120,51 @@ class HTMLPrinter:
         """
         Genera un PDF con gestione corretta dei margini per WeasyPrint
         """
+        # CSS per migliorare la qualità di stampa
+        high_quality_css = CSS(string='''
+            @media print {
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                    color-adjust: exact !important;
+                    image-rendering: -webkit-optimize-contrast;
+                    image-rendering: crisp-edges;
+                    text-rendering: optimizeLegibility;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                }
+                img {
+                    image-rendering: high-quality;
+                    image-rendering: -webkit-optimize-contrast;
+                }
+            }
+        ''')
+
         # Genera il PDF
         pdf_bytes = None
         with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as html_file, \
             tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as pdf_file:
-            
+
             html_file.write(html_content.encode('utf-8'))
             html_file.flush()
-            
+
             try:
                 weasy_html = HTML(filename=html_file.name)
-                
-                weasy_html.write_pdf(pdf_file.name)
-                    
+
+                # Genera PDF con risoluzione 300 DPI (default è 96 DPI)
+                # Risoluzione più alta = maggiore qualità su stampanti piccole
+                weasy_html.write_pdf(
+                    pdf_file.name,
+                    stylesheets=[high_quality_css],
+                    resolution=300
+                )
+
                 with open(pdf_file.name, "rb") as f:
                     pdf_bytes = f.read()
             finally:
                 os.unlink(html_file.name)
                 os.unlink(pdf_file.name)
-        
+
         return pdf_bytes
 
     def print_pdf(self, pdf_bytes, printer_name: str, number_of_prints: int = 1):
@@ -172,11 +198,18 @@ class HTMLPrinter:
                 pdf_file.write(pdf_bytes)
                 pdf_file.flush()
                 try:
+                    # Opzioni ottimizzate per stampa di alta qualità
                     options = {
                         'orientation-requested': '3',
                         'landscape': '0',
                         'fit-to-page': 'true',
-                        'copies': str(number_of_prints)  # <-- aggiunto qui
+                        'copies': str(number_of_prints),
+                        # Impostazioni per stampanti termiche Epson (TM-T20II)
+                        'TmtSpeed': '4',  # Velocità più lenta = qualità massima
+                        'Resolution': '203x203dpi',  # Risoluzione nativa della stampante
+                        # Impostazioni CUPS per qualità di stampa
+                        'print-quality': '5',  # 5 = high quality
+                        'scaling': '100'  # Evita ridimensionamento che degrada la qualità
                     }
                     job_id = self.conn.printFile(
                         printer_name,
