@@ -4,7 +4,7 @@
         <link rel="icon" href="/static/content/baronpesi_favicon.png">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Registrature</title>
+        <title>Pesate terminale</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -54,7 +54,7 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Registrature</h2>
+            <h2>Pesate terminale</h2>
             <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
                 <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
@@ -123,7 +123,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="14" style="text-align: center;">
+                    <td colspan="15" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -141,7 +141,7 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['delete-popup'])"></div>
 
     <div id="add-popup" class="modal-content popup">
         <div id="add-edit">
@@ -171,7 +171,7 @@
 
     <div id="delete-popup" class="modal-content popup">
         <div id="delete">
-            <h3>Eliminare ultima pesata dell'accesso?</h3>
+            <h3>Eliminare pesata registrata?</h3>
             <div class="container-buttons right">                
                 <button class="cancel-btn" onclick="closePopups(['delete-popup'])">Annulla</button>
                 <button id="save-btn" class="delete-save-btn">Elimina</button><br>
@@ -211,6 +211,7 @@
             canAlwaysDelete = true;
             listUrlPath = '/api/anagrafic/weighing-terminal/list';
             exportUrlPath = '/api/anagrafic/weighing-terminal/export'
+            deleteUrlPath = '/api/anagrafic/weighing-terminal';
             websocketUrlPath = '/api/anagrafic/weighing-terminal';
             params = {
                 "pesata con il veicolo": "plate",

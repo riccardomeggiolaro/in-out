@@ -132,7 +132,7 @@ class TypeAccess(PyEnum):
     TEST = "Test"
 
 class WeighingTerminal(Base):
-    __tablename__ = 'weighing_terminal'
+    __tablename__ = 'weighing-terminal'
     id = Column(Integer, primary_key=True, index=True)
     id_terminal = Column(String, nullable=True, index=True)
     bil = Column(String, nullable=True)
@@ -269,7 +269,7 @@ table_models = {
     'access': Access,
     'lock_record': LockRecord,
     'weighing_picture': WeighingPicture,
-    'weighing_terminal': WeighingTerminal,
+    'weighing-terminal': WeighingTerminal,
     'in_out': InOut  # ADDED: missing from original
 }
 
@@ -281,7 +281,7 @@ upload_file_datas_required_columns = {
     "material": {"description": str},
     "operator": {"description": str},
     "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str},
-    "weighing_terminal": {"type": str, "id": str, "bil": str, "datetime1": str, "date1": str, "time1": str, "datetime2": str, "date2": str, "time2": str, "prog1": str, "prog2": str, "badge": str, "plate": str, "customer": str, "supplier": str, "material": str, "notes1": str, "notes2": str, "weight1": int, "pid1": str, "weight2": int, "pid2": str, "net_weight": int}
+    "weighing-terminal": {"type": str, "id": str, "bil": str, "datetime1": str, "date1": str, "time1": str, "datetime2": str, "date2": str, "time2": str, "prog1": str, "prog2": str, "badge": str, "plate": str, "customer": str, "supplier": str, "material": str, "notes1": str, "notes2": str, "weight1": int, "pid1": str, "weight2": int, "pid2": str, "net_weight": int}
 }
 
 instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal]

@@ -23,7 +23,6 @@ class Functions:
 			self.switch_to_call_instance_weigher[instance_name] = {}
 			nodes_sockets = {}
 			for weigher_name, weigher in instance.nodes.items():
-				lb_log.warning(weigher_name)				
 				nodes_sockets[weigher_name] = {
 					"sockets": NodeConnectionManager(),
 					"data": Data(**{}).dict()

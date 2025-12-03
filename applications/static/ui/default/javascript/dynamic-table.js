@@ -512,6 +512,8 @@ function createRow(table, columns, item, idInout) {
         else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out && !item.weighings) actionsCell.appendChild(deleteButton);
         if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
+    } else if (itemName == "weighing-terminal") {
+        actionsCell.appendChild(deleteButton);
     }
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga
@@ -869,6 +871,7 @@ deletePopup.querySelector('#save-btn').addEventListener('click', () => {
 })
 
 function deleteRow(item) {
+    console.log(item)
     const funct = () => {
         if (callback_populate_select) callback_populate_select('#delete', item);
         currentId = item.id;
@@ -891,7 +894,7 @@ function deleteRow(item) {
             }
         }
     }
-    if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : item.weighings.length > 0) && !canAlwaysDelete) {
+    if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : (item.weighings ? item.weighings.length > 0 : false)) && !canAlwaysDelete) {
         const accesses_or_weighings = item.accesses ? "prenotazioni" : "pesate";
         document.querySelector('#confirm-title').textContent = "Attenzione!";
         document.querySelector('#confirm-content').textContent = `

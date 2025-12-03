@@ -245,13 +245,13 @@ class CallbackWeigher(Functions, WebSocket):
 			id = None
 			weighing_terminal = None
 			if weight_terminal.type == "2":
-				weighing_terminal = get_data_by_attributes("weighing_terminal", {
+				weighing_terminal = get_data_by_attributes("weighing-terminal", {
 					"id_terminal": weight_terminal.id,
 					"pid1": weight_terminal.pid1
 				})
 				id = weighing_terminal["id"] if weighing_terminal else None
 			if not id:
-				data = add_data("weighing_terminal", {
+				data = add_data("weighing-terminal", {
 					"id_terminal": weight_terminal.id or None,
 					"bil": weight_terminal.bil or None,
 					"badge": weight_terminal.badge or None,
@@ -305,7 +305,7 @@ class CallbackWeigher(Functions, WebSocket):
 					update_weighing_data["notes1"] = weight_terminal.notes1
 				if weight_terminal.notes2 and weight_terminal.notes2 != weighing_terminal["notes2"]:
 					update_weighing_data["notes2"] = weight_terminal.notes2
-				data = update_data("weighing_terminal", id, update_weighing_data)
+				data = update_data("weighing-terminal", id, update_weighing_data)
 				del data["datetime1"]
 				del data["datetime2"]
 				del data["date_created"]

@@ -22,7 +22,7 @@ class EgtAf03(Terminal):
 			self.valore_alterno = self.valore_alterno + 1 # incremento di 1 il valore alterno
 		elif self.modope == "REALTIME":
 			if self.continuous_transmission is False:
-				self.write("READ")
+				self.write("REXT")
 		elif self.modope == "OK":
 			self.write("DINT2710")
 		elif self.modope == "WEIGHING":

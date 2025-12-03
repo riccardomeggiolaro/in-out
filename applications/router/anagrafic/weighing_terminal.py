@@ -53,7 +53,7 @@ class WeighingTerminalRouter(WebSocket):
         self.router.add_api_route('/list', self.getListWeighingTerminals, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListAccessesXlsx, methods=['GET'])
         self.router.add_api_route('/export/pdf', self.exportListAccessesPdf, methods=['GET'])
-        self.router.add_api_route('/{id}', self.deleteAccess, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.deleteWeighing, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         
     async def getListWeighingTerminals(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, onlyInOutWithoutWeight2: Optional[bool] = False, onlyInOutWithWeight2: bool = False):
         try:
@@ -412,21 +412,15 @@ class WeighingTerminalRouter(WebSocket):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def deleteAccess(self, request: Request, id: int):
+    async def deleteWeighing(self, request: Request, id: int):
         locked_data = None
         try:
             if request:
-                locked_data = get_data_by_attributes('lock_record', {"table_name": "access", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+                locked_data = get_data_by_attributes('lock_record', {"table_name": "weighing-terminal", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
                 if not locked_data:
                     raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to update that")
-            check_access_weighings = get_data_by_id("access", id)
-            if check_access_weighings and len(check_access_weighings["in_out"]) > 0:
-                raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è assegnata a delle pesate salvate")
-            data = delete_data("access", id)
-            await self.broadcastDeleteAnagrafic("access", {"access": Access(**data).json()})
-
-            await broadcastMessageWebSocket({"access": {}})
-
+            data = delete_data("weighing-terminal", id)
+            await self.broadcastDeleteAnagrafic("weighing-terminal", {"weighing-terminal": Access(**data).json()})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
