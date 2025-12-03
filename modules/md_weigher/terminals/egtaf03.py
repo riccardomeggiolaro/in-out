@@ -256,8 +256,6 @@ class EgtAf03(Terminal):
 					self.diagnostic.status = 200
 				######### Se in esecuzione peso in tempo reale ######################################################################
 				elif self.modope == "REALTIME" or self.continuous_transmission:
-					lb_log.error(length_split_response)
-					lb_log.error(length_response)
 					if response in skip_response_messages:
 						pass
 					elif length_split_response == 7 and length_response == 53:
