@@ -1281,7 +1281,7 @@
                     break;
                 case 'table':
                     content = `
-                        <table style="width: 100%; border-collapse: collapse; font-size: inherit; table-layout: fixed;" data-padding="2mm" data-border-color="#ddd" data-show-borders="true">
+                        <table style="width: 100%; border-collapse: collapse; font-size: inherit; table-layout: fixed;" data-padding="2mm" data-border-color="#ddd" data-border-width="0.3" data-show-borders="true">
                             <thead>
                                 <tr>
                                     <th style="border: 0.3mm solid #ddd; padding: 2mm 3mm; text-align: left; white-space: nowrap; overflow: hidden;" contenteditable="true" data-colspan="1">Colonna 1</th>
@@ -1758,6 +1758,7 @@
                     }
 
                     const borderColor = table.dataset.borderColor || '#ddd';
+                    const borderWidth = table.dataset.borderWidth || '0.3';
                     const showBorders = table.dataset.showBorders !== 'false';
 
                     propertiesHTML += `
@@ -1784,6 +1785,11 @@
                                     <input type="checkbox" ${showBorders ? 'checked' : ''} onchange="changeTableBorderVisibility(this.checked)" style="cursor: pointer;">
                                     <span>Mostra bordi</span>
                                 </label>
+                            </div>
+
+                            <div class="property-group" style="${!showBorders ? 'opacity: 0.5; pointer-events: none;' : ''}">
+                                <label>Spessore bordi (mm)</label>
+                                <input type="number" value="${borderWidth}" min="0.1" max="5" step="0.1" onchange="changeTableBorderWidth(this.value)">
                             </div>
 
                             <div class="property-group" style="${!showBorders ? 'opacity: 0.5; pointer-events: none;' : ''}">
@@ -2285,6 +2291,7 @@
             const oldColspan = parseInt(selectedTableCell.getAttribute('data-colspan') || '1');
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
             const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
             const showBorders = table.dataset.showBorders !== 'false';
 
             let currentIndex = 0;
@@ -2313,7 +2320,7 @@
             } else if (colspanValue < oldColspan) {
                 for (let i = oldColspan - 1; i >= colspanValue; i--) {
                     const newCell = document.createElement(selectedTableCell.tagName === 'TH' ? 'th' : 'td');
-                    newCell.style.border = showBorders ? `0.3mm solid ${borderColor}` : 'none';
+                    newCell.style.border = showBorders ? `${borderWidth}mm solid ${borderColor}` : 'none';
                     newCell.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
                     newCell.style.textAlign = 'left';
                     newCell.style.whiteSpace = 'nowrap';
@@ -2391,6 +2398,7 @@
             const currentEffectiveCols = getEffectiveColumnCount(thead);
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
             const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
             const showBorders = table.dataset.showBorders !== 'false';
 
             if (newCols > currentEffectiveCols) {
@@ -2400,7 +2408,7 @@
                     const isHeader = rowIndex === 0;
                     for (let i = 0; i < cellsToAdd; i++) {
                         const newCell = isHeader ? document.createElement('th') : document.createElement('td');
-                        newCell.style.border = showBorders ? `0.3mm solid ${borderColor}` : 'none';
+                        newCell.style.border = showBorders ? `${borderWidth}mm solid ${borderColor}` : 'none';
                         newCell.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
                         newCell.style.textAlign = 'left';
                         newCell.style.whiteSpace = 'nowrap';
@@ -2453,6 +2461,7 @@
             const effectiveCols = getEffectiveColumnCount(theadRow);
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
             const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
             const showBorders = table.dataset.showBorders !== 'false';
 
             if (newRows > currentRows) {
@@ -2460,7 +2469,7 @@
                     const tr = document.createElement('tr');
                     for (let j = 0; j < effectiveCols; j++) {
                         const td = document.createElement('td');
-                        td.style.border = showBorders ? `0.3mm solid ${borderColor}` : 'none';
+                        td.style.border = showBorders ? `${borderWidth}mm solid ${borderColor}` : 'none';
                         td.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
                         td.style.textAlign = 'left';
                         td.style.whiteSpace = 'nowrap';
@@ -2518,11 +2527,28 @@
             if (!table) return;
 
             table.dataset.borderColor = color;
+            const borderWidth = table.dataset.borderWidth || '0.3';
             const cells = table.querySelectorAll('td, th');
             cells.forEach(cell => {
                 const currentBorder = cell.style.border;
                 if (currentBorder && currentBorder !== 'none') {
-                    cell.style.border = `0.3mm solid ${color}`;
+                    cell.style.border = `${borderWidth}mm solid ${color}`;
+                }
+            });
+        }
+
+        function changeTableBorderWidth(width) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+
+            table.dataset.borderWidth = width;
+            const borderColor = table.dataset.borderColor || '#ddd';
+            const cells = table.querySelectorAll('td, th');
+            cells.forEach(cell => {
+                const currentBorder = cell.style.border;
+                if (currentBorder && currentBorder !== 'none') {
+                    cell.style.border = `${width}mm solid ${borderColor}`;
                 }
             });
         }
@@ -2535,10 +2561,11 @@
             table.dataset.showBorders = show.toString();
             const cells = table.querySelectorAll('td, th');
             const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
 
             cells.forEach(cell => {
                 if (show) {
-                    cell.style.border = `0.3mm solid ${borderColor}`;
+                    cell.style.border = `${borderWidth}mm solid ${borderColor}`;
                 } else {
                     cell.style.border = 'none';
                 }
@@ -2724,6 +2751,7 @@
                 pageClone.querySelectorAll('table').forEach(table => {
                     table.removeAttribute('data-padding');
                     table.removeAttribute('data-border-color');
+                    table.removeAttribute('data-border-width');
                     table.removeAttribute('data-show-borders');
                 });
 

@@ -1281,7 +1281,7 @@
                     break;
                 case 'table':
                     content = `
-                        <table style="width: 100%; border-collapse: collapse; font-size: inherit; table-layout: fixed;" data-padding="2mm">
+                        <table style="width: 100%; border-collapse: collapse; font-size: inherit; table-layout: fixed;" data-padding="2mm" data-border-color="#ddd" data-border-width="0.3" data-show-borders="true">
                             <thead>
                                 <tr>
                                     <th style="border: 0.3mm solid #ddd; padding: 2mm 3mm; text-align: left; white-space: nowrap; overflow: hidden;" contenteditable="true" data-colspan="1">Colonna 1</th>
@@ -1333,7 +1333,7 @@
                     `;
                     break;
                 case 'divider':
-                    content = `<hr style="border: none; border-top: 2px solid #e0e0e0; margin: 0; padding: 0;">`;
+                    content = `<hr style="border: none; border-top: 2px solid #e0e0e0; margin: 0; padding: 0;" data-color="#e0e0e0">`;
                     wrapper.style.padding = "0";
                     break;
             }
@@ -1757,23 +1757,44 @@
                         `;
                     }
 
+                    const borderColor = table.dataset.borderColor || '#ddd';
+                    const borderWidth = table.dataset.borderWidth || '0.3';
+                    const showBorders = table.dataset.showBorders !== 'false';
+
                     propertiesHTML += `
                         <div style="background: #f0f0f0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                             <h4 style="margin: 0 0 10px 0; color: #000;">📊 Proprietà Globali Tabella</h4>
-                            
+
                             <div class="property-group">
                                 <label>Numero Colonne</label>
                                 <input id="inputTableColumns" type="number" value="${currentCols}" min="1" max="10" onchange="changeTableColumns(this, this.value);">
                             </div>
-                            
+
                             <div class="property-group">
                                 <label>Numero Righe</label>
                                 <input id="inputTableRows" type="number" value="${currentRows}" min="1" max="20" onchange="changeTableRows(this.value)">
                             </div>
-                            
+
                             <div class="property-group">
                                 <label>Padding Celle (mm)</label>
                                 <input type="number" value="${currentPadding}" min="1" max="10" step="0.5" onchange="changeTablePadding(this.value)">
+                            </div>
+
+                            <div class="property-group">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" ${showBorders ? 'checked' : ''} onchange="changeTableBorderVisibility(this.checked)" style="cursor: pointer;">
+                                    <span>Mostra bordi</span>
+                                </label>
+                            </div>
+
+                            <div class="property-group" style="${!showBorders ? 'opacity: 0.5; pointer-events: none;' : ''}">
+                                <label>Spessore bordi (mm)</label>
+                                <input type="number" value="${borderWidth}" min="0.1" max="5" step="0.1" onchange="changeTableBorderWidth(this.value)">
+                            </div>
+
+                            <div class="property-group" style="${!showBorders ? 'opacity: 0.5; pointer-events: none;' : ''}">
+                                <label>Colore bordi</label>
+                                <input type="color" value="${borderColor}" onchange="changeTableBorderColor(this.value)" style="width: 100%; height: 35px; cursor: pointer;">
                             </div>
                         </div>
                     `;
@@ -1799,10 +1820,15 @@
                 case 'divider':
                     const hr = element.querySelector('hr');
                     const currentThickness = hr.style.borderTopWidth.replace('px', '') || '2';
+                    const dividerColor = hr.dataset.color || '#e0e0e0';
                     propertiesHTML += `
                         <div class="property-group">
                             <label>Spessore linea (mm)</label>
                             <input type="number" value="${currentThickness}" min="1" max="10" onchange="changeDividerThickness(this.value)">
+                        </div>
+                        <div class="property-group">
+                            <label>Colore linea</label>
+                            <input type="color" value="${dividerColor}" onchange="changeDividerColor(this.value)" style="width: 100%; height: 35px; cursor: pointer;">
                         </div>
                     `;
                     break;
@@ -2264,6 +2290,9 @@
             const colspanValue = Math.max(1, parseInt(colspan) || 1);
             const oldColspan = parseInt(selectedTableCell.getAttribute('data-colspan') || '1');
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
+            const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
+            const showBorders = table.dataset.showBorders !== 'false';
 
             let currentIndex = 0;
             let cellIndex = 0;
@@ -2291,7 +2320,7 @@
             } else if (colspanValue < oldColspan) {
                 for (let i = oldColspan - 1; i >= colspanValue; i--) {
                     const newCell = document.createElement(selectedTableCell.tagName === 'TH' ? 'th' : 'td');
-                    newCell.style.border = '0.3mm solid #ddd';
+                    newCell.style.border = showBorders ? `${borderWidth}mm solid ${borderColor}` : 'none';
                     newCell.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
                     newCell.style.textAlign = 'left';
                     newCell.style.whiteSpace = 'nowrap';
@@ -2362,13 +2391,16 @@
             if (!selectedElement) return;
             const table = selectedElement.querySelector('table');
             if (!table) return;
-            
+
             const newCols = parseInt(cols) || 3;
             const thead = table.querySelector('thead tr');
             const tbodyRows = table.querySelectorAll('tbody tr');
             const currentEffectiveCols = getEffectiveColumnCount(thead);
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
-            
+            const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
+            const showBorders = table.dataset.showBorders !== 'false';
+
             if (newCols > currentEffectiveCols) {
                 const cellsToAdd = newCols - currentEffectiveCols;
                 const allRows = [thead, ...Array.from(tbodyRows)];
@@ -2376,7 +2408,7 @@
                     const isHeader = rowIndex === 0;
                     for (let i = 0; i < cellsToAdd; i++) {
                         const newCell = isHeader ? document.createElement('th') : document.createElement('td');
-                        newCell.style.border = '0.3mm solid #ddd';
+                        newCell.style.border = showBorders ? `${borderWidth}mm solid ${borderColor}` : 'none';
                         newCell.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
                         newCell.style.textAlign = 'left';
                         newCell.style.whiteSpace = 'nowrap';
@@ -2421,20 +2453,23 @@
             if (!selectedElement) return;
             const table = selectedElement.querySelector('table');
             if (!table) return;
-            
+
             const newRows = parseInt(rows) || 1;
             const tbody = table.querySelector('tbody');
             const currentRows = tbody.children.length;
             const theadRow = table.querySelector('thead tr');
             const effectiveCols = getEffectiveColumnCount(theadRow);
             const padding = table.dataset.padding ? table.dataset.padding.replace('mm', '') : '2';
-            
+            const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
+            const showBorders = table.dataset.showBorders !== 'false';
+
             if (newRows > currentRows) {
                 for (let i = currentRows; i < newRows; i++) {
                     const tr = document.createElement('tr');
                     for (let j = 0; j < effectiveCols; j++) {
                         const td = document.createElement('td');
-                        td.style.border = '0.3mm solid #ddd';
+                        td.style.border = showBorders ? `${borderWidth}mm solid ${borderColor}` : 'none';
                         td.style.padding = `${padding}mm ${parseFloat(padding) * 1.5}mm`;
                         td.style.textAlign = 'left';
                         td.style.whiteSpace = 'nowrap';
@@ -2475,6 +2510,69 @@
             if (hr) {
                 hr.style.borderTopWidth = value + 'px';
             }
+        }
+
+        function changeDividerColor(color) {
+            if (!selectedElement) return;
+            const hr = selectedElement.querySelector('hr');
+            if (hr) {
+                hr.dataset.color = color;
+                hr.style.borderTopColor = color;
+            }
+        }
+
+        function changeTableBorderColor(color) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+
+            table.dataset.borderColor = color;
+            const borderWidth = table.dataset.borderWidth || '0.3';
+            const cells = table.querySelectorAll('td, th');
+            cells.forEach(cell => {
+                const currentBorder = cell.style.border;
+                if (currentBorder && currentBorder !== 'none') {
+                    cell.style.border = `${borderWidth}mm solid ${color}`;
+                }
+            });
+        }
+
+        function changeTableBorderWidth(width) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+
+            table.dataset.borderWidth = width;
+            const borderColor = table.dataset.borderColor || '#ddd';
+            const cells = table.querySelectorAll('td, th');
+            cells.forEach(cell => {
+                const currentBorder = cell.style.border;
+                if (currentBorder && currentBorder !== 'none') {
+                    cell.style.border = `${width}mm solid ${borderColor}`;
+                }
+            });
+        }
+
+        function changeTableBorderVisibility(show) {
+            if (!selectedElement) return;
+            const table = selectedElement.querySelector('table');
+            if (!table) return;
+
+            table.dataset.showBorders = show.toString();
+            const cells = table.querySelectorAll('td, th');
+            const borderColor = table.dataset.borderColor || '#ddd';
+            const borderWidth = table.dataset.borderWidth || '0.3';
+
+            cells.forEach(cell => {
+                if (show) {
+                    cell.style.border = `${borderWidth}mm solid ${borderColor}`;
+                } else {
+                    cell.style.border = 'none';
+                }
+            });
+
+            // Aggiorna il pannello proprietà per riflettere il cambiamento
+            showProperties(selectedElement);
         }
 
         function insertTextInTableCell(cell, text) {
@@ -2649,6 +2747,19 @@
                     el.removeAttribute('data-colspan');
                 });
 
+                // Rimuovi data attributes delle tabelle
+                pageClone.querySelectorAll('table').forEach(table => {
+                    table.removeAttribute('data-padding');
+                    table.removeAttribute('data-border-color');
+                    table.removeAttribute('data-border-width');
+                    table.removeAttribute('data-show-borders');
+                });
+
+                // Rimuovi data attributes delle linee
+                pageClone.querySelectorAll('hr').forEach(hr => {
+                    hr.removeAttribute('data-color');
+                });
+
                 pageClone.querySelectorAll('.vertical-guide').forEach(el => el.remove());
 
                 let pageContent = `<div class="report-container"`;
@@ -2709,15 +2820,13 @@ ${pageClone.innerHTML}
             font-size: inherit;
             table-layout: fixed;
         }
-        
+
         th, td {
-            border: 0.3mm solid #ddd;
-            padding: 2mm 3mm;
             text-align: left;
             white-space: nowrap;
             overflow: hidden;
         }
-        
+
         th {
             background-color: #f8f9fa;
             font-weight: bold;
