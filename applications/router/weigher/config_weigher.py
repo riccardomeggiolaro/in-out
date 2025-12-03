@@ -284,7 +284,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		)
 		weigher_name = instance.weigher_name
 		is_changed_terminal = setup.terminal and setup.terminal != lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["terminal"]
-		if setup.name != "undefined":
+		if setup.name != "undefined" and setup.name != instance.weigher_name:
 			data = Data(**weighers_data[instance.instance_name][instance.weigher_name]["data"])
 			self.deleteInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 			self.addInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=setup.name, data=data)

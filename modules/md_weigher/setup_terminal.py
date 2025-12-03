@@ -208,6 +208,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 		}
 
 	def setSetup(self, setup: SetupWeigherDTO):
+		# if setup.name is not None:
+		# 	self.self_config.name = setup.name
 		if setup.max_weight is not None:
 			self.max_weight = setup.max_weight
 		if setup.min_weight is not None:
@@ -222,6 +224,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.continuous_transmission = setup.continuous_transmission
 		if setup.node != "undefined":
 			self.node = setup.node
+		# if setup.terminal is not None:
+		# 	self.terminal = setup.ter
 		if setup.run is not None:
 			self.run = setup.run
 		if setup.need_take_of_weight_on_startup is not None:
@@ -276,6 +280,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 		check_cb_code_identify = checkCallbackFormat(cb_code_identify)
 		if check_cb_code_identify:
 			self.callback_code_identify = lambda: cb_code_identify(self.self_config.name, weigher_name, self.code_identify)
+		lb_log.warning("---------------------")
+		lb_log.warning(self.self_config.name)
+		lb_log.warning(weigher_name)
+		lb_log.warning("---------------------")
 
 	# setta il modope_to_execute
 	def setModope(self, mod: str, presettare: Union[int, float] = 0, data_assigned: Any = None, port_rele: tuple = None):

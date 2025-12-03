@@ -572,13 +572,15 @@ class WeigherInstance:
   		cb_rele: Callable[[str], any] = None,
     	cb_code_identify: Callable[[str], any] = None):
 		result = self.nodes[name].setSetup(setup)
-		if setup.name != "undefined" or setup.terminal:
-			result["name"] = setup.name if setup.name != "undefined" else name
-			result["terminal"] = setup.terminal if setup.terminal else result["terminal"]
-			weigher_to_change = SetupWeigherDTO(**result)
-			self.deleteNode(name=name)
-			result = self.addNode(
-				setup=weigher_to_change,
+		result["name"] = setup.name if setup.name != "undefined" else name
+		terminal = result["terminal"]
+		result["terminal"] = setup.terminal if setup.terminal else result["terminal"]
+		if setup.name != name:
+			nodes_copy = self.nodes.copy()
+			nodes_copy[setup.name] = nodes_copy.pop(name)
+			self.nodes = nodes_copy
+			self.setActionWeigher(
+				setup.name,
 				cb_realtime=cb_realtime,
 				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
@@ -586,7 +588,22 @@ class WeigherInstance:
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
 				cb_rele=cb_rele,
-    			cb_code_identify=cb_code_identify)
+				cb_code_identify=cb_code_identify
+			)
+		if setup.terminal != terminal:
+			weigher_to_change = SetupWeigherDTO(**result)
+			self.deleteNode(name)
+			result = self.addNode(
+       			weigher_to_change,
+				cb_realtime=cb_realtime,
+				cb_diagnostic=cb_diagnostic,
+				cb_weighing=cb_weighing,
+				cb_weighing_terminal=cb_weighing_terminal,
+				cb_tare_ptare_zero=cb_tare_ptare_zero,
+				cb_action_in_execution=cb_action_in_execution,
+				cb_rele=cb_rele,
+				cb_code_identify=cb_code_identify
+	        )
 		return result
 
 	def deleteNode(self, name: str):
