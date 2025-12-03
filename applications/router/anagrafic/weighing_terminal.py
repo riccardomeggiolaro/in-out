@@ -273,7 +273,7 @@ class WeighingTerminalRouter(WebSocket):
 
             # Add title with smaller spacing
             styles = getSampleStyleSheet()
-            title = Paragraph("Registrature", styles['Heading2'])
+            title = Paragraph("Pesate terminali", styles['Heading2'])
             story.append(title)
             story.append(Spacer(1, 0.2*inch))
 
