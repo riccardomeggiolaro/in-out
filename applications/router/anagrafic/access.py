@@ -370,10 +370,12 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                         row["Operatore"] = ""              
                 
                 if load_date_weight1:
-                    row["Data 1"] = datetime.strftime(inout.weight1.date, "%d-%m-%Y %H:%M") if inout.weight1 else None
-                
+                    row["Data 1"] = datetime.strftime(inout.weight1.date, "%d-%m-%Y") if inout.weight1 else None
+                    row["Ora 1"] = datetime.strftime(inout.weight1.date, "%H:%M") if inout.weight1 else None
+                                    
                 if load_date_weight2:
-                    row["Data 2" if load_date_weight1 else "Data"] = datetime.strftime(inout.weight2.date, "%d-%m-%Y %H:%M") if inout.weight2 else None
+                    row["Data 2" if load_date_weight1 else "Data"] = datetime.strftime(inout.weight2.date, "%d-%m-%Y") if inout.weight2 else None
+                    row["Ora 2" if load_date_weight1 else "Ora"] = datetime.strftime(inout.weight2.date, "%H:%M") if inout.weight2 else None
                 
                 if load_pid_weight1:
                     row["Pid 1"] = inout.weight1.pid if inout.weight1 else None
@@ -537,10 +539,12 @@ class AccessRouter(WebSocket, PanelSirenRouter):
             
             if load_date_weight1:
                 headers.append('Data 1')
+                headers.append('Ora 1')
                 col_widths.append(46)
             
             if load_date_weight2:
                 headers.append('Data 2' if load_pid_weight1 else 'Data')
+                headers.append('Ora 2' if load_pid_weight1 else 'Ora')
                 col_widths.append(46)
             
             if load_pid_weight1:
@@ -615,12 +619,16 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                         row.append('')
                 
                 if load_date_weight1:
-                    date1 = datetime.strftime(inout.weight1.date, "%d-%m-%y %H:%M") if inout.weight1 else ''
+                    date1 = datetime.strftime(inout.weight1.date, "%d-%m-%y") if inout.weight1 else ''
+                    time1 = datetime.strftime(inout.weight1.date, "%H:%M") if inout.weight1 else ''
                     row.append(date1)
+                    row.append(time1)
                 
                 if load_date_weight2:
-                    date2 = datetime.strftime(inout.weight2.date, "%d-%m-%y %H:%M") if inout.weight2 else ''
+                    date2 = datetime.strftime(inout.weight2.date, "%d-%m-%y") if inout.weight2 else ''
+                    time2 = datetime.strftime(inout.weight2.date, "%H:%M") if inout.weight2 else ''
                     row.append(date2)
+                    row.append(time2)
                 
                 if load_pid_weight1:
                     row.append(str(inout.weight1.pid if inout.weight1 else '')[:12])

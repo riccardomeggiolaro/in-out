@@ -6,6 +6,9 @@ import libs.lb_log as lb_log
 import datetime as dt
 from weasyprint import HTML, CSS
 from lxml import html
+import tempfile
+import os
+import pypdfium2 as pdfium
 
 """
 Linux debian dependencies:
@@ -146,9 +149,6 @@ class HTMLPrinter:
         Invia un file PDF (bytes) alla stampante specificata.
         Auto-rileva stampanti termiche e ottimizza la qualità.
         """
-        import tempfile
-        import os
-
         job_id = None
         message1 = None
         message2 = None
@@ -200,14 +200,6 @@ class HTMLPrinter:
             # STAMPA: Logica differenziata
             if is_thermal:
                 # === STAMPANTE TERMICA: Pre-processing per qualità ===
-                try:
-                    import pypdfium2 as pdfium
-                    from PIL import Image
-                except ImportError:
-                    message1 = "Libreria pypdfium2 mancante. Installa con: pip install pypdfium2"
-                    message2 = "Stampa non inviata."
-                    return job_id, message1, message2
-                
                 pdf = pdfium.PdfDocument(pdf_bytes)
                 page = pdf[0]
                 

@@ -80,3 +80,4 @@ zopfli==0.2.3.post1
 watchdog
 lxml
 aiofiles
+pypdfium==2-5.1.0
