@@ -27,7 +27,7 @@ def get_list_weighing_from_terminal(
         query = session.query(WeighingTerminal)
 
         # Costruisci dinamicamente la lista delle colonne da caricare
-        columns_to_load = ["bil", "net_weight"]
+        columns_to_load = ["id", "id_terminal", "bil", "net_weight"]
         if load_subject:
             columns_to_load += ["customer", "supplier"]
         if load_vehicle:

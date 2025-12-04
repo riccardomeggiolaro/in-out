@@ -278,7 +278,7 @@ class CallbackWeigher(Functions, WebSocket):
 				del data["datetime1"]
 				del data["datetime2"]
 				del data["date_created"]
-				asyncio.run(self.broadcastAddAnagrafic("weighing-terminal", data))
+				asyncio.run(self.broadcastAddAnagrafic("weighing-terminal", {"weighing-terminal": data}))
 			else:
 				update_weighing_data = {
 					"type": weight_terminal.type,
@@ -309,7 +309,7 @@ class CallbackWeigher(Functions, WebSocket):
 				del data["datetime1"]
 				del data["datetime2"]
 				del data["date_created"]
-				asyncio.run(self.broadcastUpdateAnagrafic("weighing-terminal", data))
+				asyncio.run(self.broadcastUpdateAnagrafic("weighing-terminal", {"weighing-terminal": data}))
 			message = {
 				"message": f"Pesata eseguita da terminale! Pid: {weight_terminal.pid2 or weight_terminal.pid1}"
 			}

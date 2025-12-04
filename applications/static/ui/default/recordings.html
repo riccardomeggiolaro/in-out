@@ -72,6 +72,9 @@
                     </td>
                 </tr>
                 <tr>
+                    <th name="id_terminal">
+                        <input id="filter.id_terminal" name="id_terminal" type="text" placeholder="Id" oninput="updateTable()">
+                    </th>
                     <th name="plate">
                         <input id="filter.plate" name="plate" type="text" placeholder="Targa" oninput="updateTable()">
                     </th>
@@ -123,7 +126,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="15" style="text-align: center;">
+                    <td colspan="16" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -214,11 +217,10 @@
             deleteUrlPath = '/api/anagrafic/weighing-terminal';
             websocketUrlPath = '/api/anagrafic/weighing-terminal';
             params = {
-                "pesata con il veicolo": "plate",
-                "pesata con il soggetto": "subject",
-                "pesata con il pid": "pid1",
-                "pesata con il pid": "pid2",
-                "pesata con id": "id"
+                "pesata con il veicolo": "weighing-terminal.plate",
+                "pesata con il pid": "weighing-terminal.pid2",
+                "pesata con il pid": "weighing-terminal.pid1",
+                "pesata con id": "weighing-terminal.id_terminal"
             }
             init();
         });

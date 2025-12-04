@@ -6,6 +6,7 @@ from modules.md_database.interfaces.access import Access, AddAccessDTO, SetAcces
 from modules.md_database.interfaces.material import Material
 from modules.md_database.interfaces.operator import Operator
 from modules.md_database.interfaces.in_out import InOut
+from modules.md_database.interfaces.weighing_terminal import WeighingTerminal
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
 from modules.md_database.functions.get_list_accesses import get_list_accesses
@@ -53,7 +54,7 @@ class WeighingTerminalRouter(WebSocket):
         self.router.add_api_route('/list', self.getListWeighingTerminals, methods=['GET'])
         self.router.add_api_route('/export/xlsx', self.exportListAccessesXlsx, methods=['GET'])
         self.router.add_api_route('/export/pdf', self.exportListAccessesPdf, methods=['GET'])
-        self.router.add_api_route('/{id}', self.deleteWeighing, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
+        self.router.add_api_route('/{id}', self.deleteLastWeighing, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         
     async def getListWeighingTerminals(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, onlyInOutWithoutWeight2: Optional[bool] = False, onlyInOutWithWeight2: bool = False):
         try:
@@ -159,7 +160,9 @@ class WeighingTerminalRouter(WebSocket):
             weighing_terminal_list = []
             for weighing in data:
                 # Costruisci il dizionario dinamicamente solo con i campi caricati
-                row = {}
+                row = {
+                    "id": weighing.id_terminal
+                }
                 
                 if load_vehicle:
                     row["Targa"] = weighing.plate
@@ -178,10 +181,12 @@ class WeighingTerminalRouter(WebSocket):
                     row["Note2"] = weighing.notes2
                 
                 if load_date_weight1:
-                    row["Data 1"] = datetime.strftime(weighing.datetime1, "%d-%m-%Y %H:%M") if weighing.datetime1 else None
-                
+                    row["Data 1"] = datetime.strftime(weighing.datetime1, "%d-%m-%Y") if weighing.datetime1 else None
+                    row["Ora 1"] = datetime.strftime(weighing.datetime1, "%H:%M") if weighing.datetime1 else None                
+
                 if load_date_weight2:
-                    row["Data 2" if load_pid_weight1 else "Data"] = datetime.strftime(weighing.datetime2, "%d-%m-%Y %H:%M") if weighing.datetime2 else None
+                    row["Data 2" if load_pid_weight1 else "Data"] = datetime.strftime(weighing.datetime2, "%d-%m-%Y") if weighing.datetime2 else None
+                    row["Ora 2" if load_pid_weight1 else "Ora"] = datetime.strftime(weighing.datetime2, "%H:%M") if weighing.datetime2 else None
                 
                 if load_pid_weight1:
                     row["Pid 1"] = weighing.pid1
@@ -282,7 +287,7 @@ class WeighingTerminalRouter(WebSocket):
             header_color = colors.grey
 
             # Costruisci headers e colonne dinamicamente
-            headers = []
+            headers = ['Id']
             col_widths = []
 
             extends = ['Peso 1 (kg)', 'Peso 2 (kg)', 'Netto (kg)']
@@ -311,10 +316,12 @@ class WeighingTerminalRouter(WebSocket):
             
             if load_date_weight1:
                 headers.append('Data 1')
+                headers.append('Ora 1')
                 col_widths.append(46)
             
             if load_date_weight2:
                 headers.append('Data 2' if load_pid_weight1 else 'Data')
+                headers.append('Ora 2' if load_pid_weight1 else 'Ora')
                 col_widths.append(46)
             
             if load_pid_weight1:
@@ -356,7 +363,7 @@ class WeighingTerminalRouter(WebSocket):
             # Prepare table data with compact date format
             table_data = [headers]
             for weighing in data:
-                row = []
+                row = [str(weighing.id_terminal if weighing.id_terminal else '')]
                 
                 if load_vehicle:
                     row.append(str(weighing.plate if weighing.plate else '')[:6])
@@ -375,12 +382,16 @@ class WeighingTerminalRouter(WebSocket):
                     row.append(str(weighing.notes2 or '')[:18])
                 
                 if load_date_weight1:
-                    date1 = datetime.strftime(weighing.datetime1, "%d-%m-%y %H:%M") if weighing.datetime1 else ''
+                    date1 = datetime.strftime(weighing.datetime1, "%d-%m-%y") if weighing.datetime1 else ''
+                    time1 = datetime.strftime(weighing.datetime1, "%H:%M") if weighing.datetime1 else ''
                     row.append(date1)
+                    row.append(time1)
                 
                 if load_date_weight2:
-                    date2 = datetime.strftime(weighing.datetime2, "%d-%m-%y %H:%M") if weighing.datetime2 else ''
+                    date2 = datetime.strftime(weighing.datetime2, "%d-%m-%y") if weighing.datetime2 else ''
+                    time2 = datetime.strftime(weighing.datetime2, "%H:%M") if weighing.datetime2 else ''
                     row.append(date2)
+                    row.append(time2)
                 
                 if load_pid_weight1:
                     row.append(str(weighing.pid1 if weighing.pid1 else '')[:12])
@@ -412,15 +423,27 @@ class WeighingTerminalRouter(WebSocket):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
-    async def deleteWeighing(self, request: Request, id: int):
+    async def deleteLastWeighing(self, request: Request, id: int):
         locked_data = None
         try:
             if request:
                 locked_data = get_data_by_attributes('lock_record', {"table_name": "weighing-terminal", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
                 if not locked_data:
                     raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to update that")
-            data = delete_data("weighing-terminal", id)
-            await self.broadcastDeleteAnagrafic("weighing-terminal", {"weighing-terminal": Access(**data).json()})
+            data = get_data_by_id("weighing-terminal", id)
+            if data:
+                if not data["pid2"]:
+                    data = delete_data("weighing-terminal", id)
+                    del data["datetime1"]
+                    del data["datetime2"]
+                    del data["date_created"]
+                    await self.broadcastDeleteAnagrafic("weighing-terminal", {"weighing-terminal": data})
+                else:
+                    data = update_data("weighing-terminal", id, {"datetime2": "", "date2": "", "time2": "", "prog2": "", "pid2": "", "weight2": "", "net_weight": ""})
+                    del data["datetime1"]
+                    del data["datetime2"]
+                    del data["date_created"]
+                    await self.broadcastUpdateAnagrafic("weighing-terminal", {"weighing-terminal": data})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
