@@ -392,7 +392,7 @@
         <br>
         <div id="sub-menu">
             <button class="menu-tab selected" onclick="changeSetupTab(event, 'settings')">SETTAGGI</button>
-            <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">TERMINALI</button>
+            <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">INDICATORI</button>
         </div>
         <br>
         <div id="tabs">
@@ -425,7 +425,7 @@
                     <br>
                     <h3>REGISTRATORE</h3>
                     <br>
-                    <label for="reservetion">Registra <b>pesate</b> effettuate dai <b>terminali</b>: </label>
+                    <label for="reservetion">Registra <b>pesate</b> effettuate dagli <b>indicatori</b>: </label>
                     <input type="checkbox" id="recordings" onclick="setUseRecordings(this.checked)">
                     <br>
                     <br>
@@ -1482,7 +1482,7 @@
                     nodeContent.innerHTML = `
                         <h3>PESA ${nodeId}</h3>
                         <div class="node-content-detail">
-                            <p><b>Terminale</b>: ${node.terminal || 'N/A'}</p>
+                            <p><b>Indicatore</b>: ${node.terminal || 'N/A'}</p>
                             <p><b>Nodo</b>: ${node.node || 'N/A'}</p>
                             <p><b>Peso massimo</b>: ${node.max_weight} kg</p>
                             <p><b>Peso minimo</b>: ${node.min_weight} kg</p>
@@ -1550,7 +1550,7 @@
                                 <input type="text" name="name" required>
                             </div>
                             <div class="form-group">
-                                <label><b>Terminale:</b> *</label>
+                                <label><b>Indicatore:</b> *</label>
                                 <select name="terminal" required>
                                     <option value="dgt1">dgt1</option>
                                     <option value="egt-af03">egt-af03</option>
@@ -1714,7 +1714,7 @@
                                 <input type="text" name="name" value="${node.name || nodeId}" required>
                             </div>
                             <div class="form-group">
-                                <label><b>Terminale:</b> *</label>
+                                <label><b>Indicatore:</b> *</label>
                                 <select name="terminal" required>
                                     <option value="dgt1" ${node.terminal === 'dgt1' ? 'selected' : ''}>dgt1</option>
                                     <option value="egt-af03" ${node.terminal === 'egt-af03' ? 'selected' : ''}>egt-af03</option>
