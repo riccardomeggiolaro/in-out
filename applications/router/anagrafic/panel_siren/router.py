@@ -11,9 +11,9 @@ from applications.router.anagrafic.panel_siren.dtos import (
     Panel,
     Siren,
 )
+from applications.router.anagrafic.web_sockets import WebSocket
 
-
-class PanelSirenRouter:
+class PanelSirenRouter(WebSocket):
     """
     Router for Panel and Siren endpoints.
 
@@ -137,7 +137,7 @@ class PanelSirenRouter:
             self.buffer = self.buffer.replace(text, "", 1).strip()
         return self.buffer
 
-    async def sendMessagePanel(self, text: str):
+    async def sendMessagePanel(self, text: str, broadcastMessageBuffer: bool = True):
         """
         Send message to panel display.
 
@@ -155,6 +155,8 @@ class PanelSirenRouter:
             buf = self.editBuffer(text)
             adapter = self._get_panel_adapter()
             await adapter.send_message(buf)
+            if broadcastMessageBuffer:
+                await self.broadcastMessageAnagrafic("access", {"buffer": buf})
             return {"buffer": buf, "success": True}
         except Exception as e:
             self.buffer = old_buf

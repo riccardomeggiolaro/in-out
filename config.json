@@ -2,14 +2,18 @@
     "app_api": {
         "mode": "MANUALLY",
         "panel": {
-            "enabled": false,
-            "type": "disabled",
+            "config": {
+                "duration": 90,
+                "max_string_content": 3,
+                "panel_id": 16
+            },
             "connection": {
                 "ip": "0.0.0.0",
-                "port": 0,
+                "port": 5200,
                 "timeout": 5.0
             },
-            "config": {}
+            "enabled": true,
+            "type": "tcp_custom"
         },
         "path_content": "static/content",
         "path_csv": "csv",
@@ -32,19 +36,19 @@
             "setup": {}
         },
         "siren": {
-            "enabled": true,
-            "type": "http_digest",
+            "config": {
+                "endpoint": "http://localhost",
+                "method": "GET",
+                "password": "318101",
+                "username": "marco"
+            },
             "connection": {
                 "ip": "100.100.100.101",
                 "port": 80,
                 "timeout": 5.0
             },
-            "config": {
-                "endpoint": "http://localhost",
-                "method": "GET",
-                "username": "marco",
-                "password": "318101"
-            }
+            "enabled": true,
+            "type": "http_digest"
         },
         "ssh_reverse_tunneling": {
             "forwarding_port": 80,

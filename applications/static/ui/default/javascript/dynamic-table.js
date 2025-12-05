@@ -72,7 +72,7 @@ async function configuration() {
                     report.in = instance.nodes[weigher].events.weighing.report.in;
                     report.out = instance.nodes[weigher].events.weighing.report.out;
                 });
-                if (Object.keys(config.panel).length === 0) document.querySelectorAll(".li-panel-mode").forEach(li => li.style.display = "none");
+                if (config.panel.enabled) document.querySelectorAll(".li-panel-mode").forEach(li => li.style.display = "none");
                 if (!res.use_badge) {
                     document.querySelectorAll(".badge").forEach(input => {
                         if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {
@@ -180,7 +180,7 @@ async function updateTable() {
     const data = await res.json();
 
     totalRows = data.total_rows;
-    if (data.buffer) buffer = data.buffer;
+    if ("buffer" in data) buffer = data.buffer;
     populateTable(data.data);
     updatePageSelect();
     document.getElementById("total-rows").textContent = `Totale righe: ${totalRows}`;
@@ -518,11 +518,12 @@ function createRow(table, columns, item, idInout) {
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga
     row.addEventListener("mouseenter", () => {
+        console.log(config.panel.enabled)
         row.style.backgroundColor = 'whitesmoke';
         if (closeButton) closeButton.style.visibility = 'inherit';
         if (dataUser.level > 1) editButton.style.visibility = 'inherit';
         if (dataUser.level > 1) deleteButton.style.visibility = 'inherit';
-        if (Object.keys(config.panel).length !== 0 && callButton) callButton.style.visibility = 'inherit';
+        if (config.panel.enabled && callButton) callButton.style.visibility = 'inherit';
         if (pdfButton) pdfButton.style.visibility = 'inherit';
     });
     row.addEventListener("mouseleave", () => {
@@ -1144,6 +1145,8 @@ function connectWebSocket() {
                     }
                 } else if (data.action === "unlock") {
                     if (data.success === true) removeWebSocketRequest(data.idRequest);
+                } else if (data.action === "message") {
+                    if ("buffer" in data.data) updateTable();
                 }
             } else {
                 showSnackbar("snackbar", data.error, 'rgb(255, 208, 208)', 'black');

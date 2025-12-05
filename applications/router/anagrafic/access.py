@@ -43,7 +43,7 @@ from applications.middleware.writable_user import is_writable_user
 import applications.utils.utils as utils
 from reportlab.lib.pagesizes import landscape
 
-class AccessRouter(WebSocket, PanelSirenRouter):
+class AccessRouter(PanelSirenRouter):
     def __init__(self):
         super().__init__()
         
@@ -853,8 +853,11 @@ class AccessRouter(WebSocket, PanelSirenRouter):
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' ha già effettuato una pesata")
             elif data["vehicle"]["plate"] in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' è già presente nel buffer")
-            edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"])
-            await self.sendMessageSiren()
+            edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"], False)
+            try:
+                await self.sendMessageSiren()
+            except Exception as e:
+                pass
             data = update_data("access", id, {"status": AccessStatus.CALLED})
             access = Access(**data).json()
             await self.broadcastCallAnagrafic("access", {"access": access})
