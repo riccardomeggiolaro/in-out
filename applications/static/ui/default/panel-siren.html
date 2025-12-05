@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <title>Configurazione Pannello e Sirena - In-Out</title>
+    <link rel="stylesheet" href="/static/css/setup.css">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <style>
+        .config-section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .config-section h4 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #0b7dda;
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #da190b;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .adapter-info {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+        }
+
+        .adapter-info p {
+            margin: 0;
+            color: #1976D2;
+            font-size: 13px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .tab {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab.active {
+            display: block;
+        }
+
+        #sub-menu {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .menu-tab {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .menu-tab.selected {
+            color: #4CAF50;
+            border-bottom-color: #4CAF50;
+        }
+
+        .menu-tab:hover {
+            color: #4CAF50;
+        }
+
+        .test-section {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            margin-top: 24px;
+            border-radius: 4px;
+        }
+
+        .test-section h5 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #e65100;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .status-enabled {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-disabled {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+
+        input:invalid {
+            border-color: #f44336;
+        }
+
+        input:valid {
+            border-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <div id="config">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <h3>CONFIGURAZIONE PANNELLO E SIRENA</h3>
+        </div>
+
+        <div id="sub-menu">
+            <button class="menu-tab selected" onclick="changeTab('panel')">Pannello</button>
+            <button class="menu-tab" onclick="changeTab('siren')">Sirena</button>
+        </div>
+
+        <div id="tabs">
+            <!-- Panel Tab -->
+            <div id="panel" class="tab active">
+                <div class="config-section">
+                    <h4>
+                        Configurazione Pannello
+                        <span id="panel-status" class="status-badge"></span>
+                    </h4>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="panel-enabled" onchange="onPanelEnabledChange()">
+                        <label for="panel-enabled">Abilita Pannello</label>
+                    </div>
+
+                    <div id="panel-form" class="hidden">
+                        <div class="form-group">
+                            <label for="panel-type">Tipo Adapter *</label>
+                            <select id="panel-type" required onchange="onPanelTypeChange()">
+                                <option value="">-- Seleziona tipo --</option>
+                                <option value="tcp_custom">TCP Custom (Protocollo Binario)</option>
+                                <option value="tcp_raw">TCP Raw (Testo Semplice)</option>
+                                <option value="http_simple">HTTP Semplice (Senza Auth)</option>
+                                <option value="http_basic">HTTP Basic Auth</option>
+                                <option value="http_digest">HTTP Digest Auth</option>
+                                <option value="http_bearer">HTTP Bearer Token</option>
+                            </select>
+                        </div>
+
+                        <div id="panel-type-info" class="adapter-info hidden">
+                            <p></p>
+                        </div>
+
+                        <h4>Connessione</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="panel-ip">Indirizzo IP *</label>
+                                <input type="text" id="panel-ip" required placeholder="192.168.1.100"
+                                       pattern="^(\d{1,3}\.){3}\d{1,3}$">
+                            </div>
+                            <div class="form-group">
+                                <label for="panel-port">Porta *</label>
+                                <input type="number" id="panel-port" required placeholder="5000" min="1" max="65535">
+                            </div>
+                            <div class="form-group">
+                                <label for="panel-timeout">Timeout (secondi) *</label>
+                                <input type="number" id="panel-timeout" required placeholder="5.0"
+                                       min="0.1" step="0.1" value="5.0">
+                            </div>
+                        </div>
+
+                        <!-- TCP Custom Config -->
+                        <div id="panel-tcp-custom-config" class="hidden">
+                            <h4>Configurazione TCP Custom</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="panel-max-string">Lunghezza Massima Buffer</label>
+                                    <input type="number" id="panel-max-string" placeholder="100" min="1" value="100">
+                                </div>
+                                <div class="form-group">
+                                    <label for="panel-id">Panel ID (hex)</label>
+                                    <input type="number" id="panel-id" placeholder="16" min="0" max="255" value="16">
+                                </div>
+                                <div class="form-group">
+                                    <label for="panel-duration">Durata (decimi di secondo)</label>
+                                    <input type="number" id="panel-duration" placeholder="90" min="1" value="90">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TCP Raw Config -->
+                        <div id="panel-tcp-raw-config" class="hidden">
+                            <h4>Configurazione TCP Raw</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="panel-encoding">Encoding</label>
+                                    <input type="text" id="panel-encoding" placeholder="utf-8" value="utf-8">
+                                </div>
+                                <div class="form-group">
+                                    <label for="panel-line-ending">Fine Linea</label>
+                                    <input type="text" id="panel-line-ending" placeholder="\r\n" value="\r\n">
+                                </div>
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="panel-wait-response">
+                                    <label for="panel-wait-response">Attendi Risposta</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- HTTP Configs -->
+                        <div id="panel-http-config" class="hidden">
+                            <h4>Configurazione HTTP</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="panel-endpoint">Endpoint URL *</label>
+                                    <input type="text" id="panel-endpoint" placeholder="http://192.168.1.100/display">
+                                </div>
+                                <div class="form-group">
+                                    <label for="panel-method">Metodo HTTP</label>
+                                    <select id="panel-method">
+                                        <option value="GET">GET</option>
+                                        <option value="POST">POST</option>
+                                        <option value="PUT">PUT</option>
+                                        <option value="PATCH">PATCH</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="panel-query-param">Parametro Query (opzionale)</label>
+                                    <input type="text" id="panel-query-param" placeholder="text">
+                                </div>
+                            </div>
+
+                            <!-- HTTP Auth Fields -->
+                            <div id="panel-http-auth" class="hidden">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="panel-username">Username</label>
+                                        <input type="text" id="panel-username" placeholder="admin">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="panel-password">Password</label>
+                                        <input type="password" id="panel-password" placeholder="••••••">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- HTTP Bearer Token -->
+                            <div id="panel-http-bearer" class="hidden">
+                                <div class="form-group">
+                                    <label for="panel-token">Bearer Token</label>
+                                    <input type="text" id="panel-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-primary" onclick="savePanelConfig()">Salva Configurazione</button>
+                            <button class="btn btn-danger" onclick="disablePanelConfig()">Disabilita Pannello</button>
+                        </div>
+
+                        <div class="test-section">
+                            <h5>Test Pannello</h5>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <input type="text" id="panel-test-text" placeholder="Testo di test" style="flex: 1;">
+                                <button class="btn btn-secondary" onclick="testPanel()">Invia Test</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Siren Tab -->
+            <div id="siren" class="tab">
+                <div class="config-section">
+                    <h4>
+                        Configurazione Sirena
+                        <span id="siren-status" class="status-badge"></span>
+                    </h4>
+
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="siren-enabled" onchange="onSirenEnabledChange()">
+                        <label for="siren-enabled">Abilita Sirena</label>
+                    </div>
+
+                    <div id="siren-form" class="hidden">
+                        <div class="form-group">
+                            <label for="siren-type">Tipo Adapter *</label>
+                            <select id="siren-type" required onchange="onSirenTypeChange()">
+                                <option value="">-- Seleziona tipo --</option>
+                                <option value="http_simple">HTTP Semplice (Senza Auth)</option>
+                                <option value="http_basic">HTTP Basic Auth</option>
+                                <option value="http_digest">HTTP Digest Auth</option>
+                                <option value="http_bearer">HTTP Bearer Token</option>
+                                <option value="tcp_raw">TCP Raw</option>
+                            </select>
+                        </div>
+
+                        <div id="siren-type-info" class="adapter-info hidden">
+                            <p></p>
+                        </div>
+
+                        <h4>Connessione</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="siren-ip">Indirizzo IP *</label>
+                                <input type="text" id="siren-ip" required placeholder="192.168.1.101"
+                                       pattern="^(\d{1,3}\.){3}\d{1,3}$">
+                            </div>
+                            <div class="form-group">
+                                <label for="siren-port">Porta *</label>
+                                <input type="number" id="siren-port" required placeholder="80" min="1" max="65535">
+                            </div>
+                            <div class="form-group">
+                                <label for="siren-timeout">Timeout (secondi) *</label>
+                                <input type="number" id="siren-timeout" required placeholder="5.0"
+                                       min="0.1" step="0.1" value="5.0">
+                            </div>
+                        </div>
+
+                        <!-- HTTP Config -->
+                        <div id="siren-http-config" class="hidden">
+                            <h4>Configurazione HTTP</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="siren-endpoint">Endpoint URL *</label>
+                                    <input type="text" id="siren-endpoint" placeholder="http://192.168.1.101/buzzer">
+                                </div>
+                                <div class="form-group">
+                                    <label for="siren-method">Metodo HTTP</label>
+                                    <select id="siren-method">
+                                        <option value="GET">GET</option>
+                                        <option value="POST">POST</option>
+                                        <option value="PUT">PUT</option>
+                                        <option value="PATCH">PATCH</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- HTTP Auth Fields -->
+                            <div id="siren-http-auth" class="hidden">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="siren-username">Username</label>
+                                        <input type="text" id="siren-username" placeholder="admin">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="siren-password">Password</label>
+                                        <input type="password" id="siren-password" placeholder="••••••">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- HTTP Bearer Token -->
+                            <div id="siren-http-bearer" class="hidden">
+                                <div class="form-group">
+                                    <label for="siren-token">Bearer Token</label>
+                                    <input type="text" id="siren-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TCP Raw Config -->
+                        <div id="siren-tcp-raw-config" class="hidden">
+                            <h4>Configurazione TCP Raw</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="siren-encoding">Encoding</label>
+                                    <input type="text" id="siren-encoding" placeholder="utf-8" value="utf-8">
+                                </div>
+                                <div class="form-group">
+                                    <label for="siren-line-ending">Fine Linea</label>
+                                    <input type="text" id="siren-line-ending" placeholder="\r\n" value="\r\n">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn btn-primary" onclick="saveSirenConfig()">Salva Configurazione</button>
+                            <button class="btn btn-danger" onclick="disableSirenConfig()">Disabilita Sirena</button>
+                        </div>
+
+                        <div class="test-section">
+                            <h5>Test Sirena</h5>
+                            <button class="btn btn-secondary" onclick="testSiren()">Attiva Sirena</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="snackbar" class="snackbar"></div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script src="/static/javascript/panel-siren.js"></script>
+</body>
+</html>
