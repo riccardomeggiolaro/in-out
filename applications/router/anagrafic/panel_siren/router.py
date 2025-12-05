@@ -100,21 +100,27 @@ class PanelSirenRouter:
         """
         Add text to buffer respecting max_string_content limit.
 
+        max_string_content represents the maximum number of WORDS (not characters)
+        in the buffer. The buffer works as a scrolling display that keeps only
+        the last N words.
+
         Args:
             text: Text to add to buffer
 
         Returns:
             Updated buffer content
         """
-        max_content = self._get_max_string_content()
-        new_buffer = self.buffer + " " + text if self.buffer else text
+        words = self.buffer.split() if self.buffer else []
+        n = self._get_max_string_content()
+        if not n or n <= 0:
+            n = 1  # Default to 1 if not configured
 
-        # Trim buffer if exceeds max_string_content
-        if len(new_buffer) > max_content:
-            # Keep only the last max_content characters
-            new_buffer = new_buffer[-max_content:].lstrip()
+        # Keep only last N words if we already have N or more
+        new_buffer = self.buffer if n >= len(words) else ' '.join(words[-n:])
 
-        self.buffer = new_buffer
+        # Add new text (with space separator if buffer is not empty)
+        self.buffer = new_buffer + " " + text if new_buffer else text
+
         return self.buffer
 
     def undoBuffer(self, text: str) -> str:
