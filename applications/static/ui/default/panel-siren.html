@@ -280,18 +280,28 @@
                         <!-- TCP Custom Config -->
                         <div id="panel-tcp-custom-config" class="hidden">
                             <h4>Configurazione TCP Custom</h4>
+                            <div class="adapter-info" style="background-color: #fff9c4; border-left-color: #fbc02d;">
+                                <p style="color: #f57f17;">
+                                    ℹ️ <strong>Max Parole Buffer:</strong> Numero massimo di parole nel buffer a scorrimento.
+                                    Con valore 3, il pannello mostra le ultime 3 targhe/messaggi (es: "AAA BBB CCC").
+                                    Quando si aggiunge una quarta parola, la prima viene rimossa automaticamente.
+                                </p>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="panel-max-string">Lunghezza Massima Buffer</label>
-                                    <input type="number" id="panel-max-string" placeholder="100" min="1" value="100">
+                                    <label for="panel-max-string">Max Parole nel Buffer</label>
+                                    <input type="number" id="panel-max-string" placeholder="3" min="1" value="3"
+                                           title="Numero massimo di parole (targhe/messaggi) visualizzate contemporaneamente">
                                 </div>
                                 <div class="form-group">
-                                    <label for="panel-id">Panel ID (hex)</label>
-                                    <input type="number" id="panel-id" placeholder="16" min="0" max="255" value="16">
+                                    <label for="panel-id">Panel ID</label>
+                                    <input type="number" id="panel-id" placeholder="16" min="0" max="255" value="16"
+                                           title="ID univoco del pannello (default: 16)">
                                 </div>
                                 <div class="form-group">
-                                    <label for="panel-duration">Durata (decimi di secondo)</label>
-                                    <input type="number" id="panel-duration" placeholder="90" min="1" value="90">
+                                    <label for="panel-duration">Durata Visualizzazione</label>
+                                    <input type="number" id="panel-duration" placeholder="90" min="1" value="90"
+                                           title="Durata in decimi di secondo (90 = 9 secondi)">
                                 </div>
                             </div>
                         </div>

@@ -52,7 +52,7 @@ class PanelConfig(DeviceConfig):
         "type": "tcp_custom",
         "connection": {"ip": "192.168.1.100", "port": 5000, "timeout": 5.0},
         "config": {
-            "max_string_content": 100,
+            "max_string_content": 3,  # Max WORDS (not chars!) in scrolling buffer
             "panel_id": 16,
             "duration": 90
         }

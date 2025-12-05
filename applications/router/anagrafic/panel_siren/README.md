@@ -20,7 +20,7 @@ Protocollo binario custom per pannelli specifici (protocollo originale).
     "timeout": 5.0
   },
   "config": {
-    "max_string_content": 100,
+    "max_string_content": 3,  // Max 3 parole nel buffer (es: "AAA BBB CCC")
     "panel_id": 16,
     "duration": 90
   }
@@ -28,7 +28,9 @@ Protocollo binario custom per pannelli specifici (protocollo originale).
 ```
 
 **Parametri config:**
-- `max_string_content`: Lunghezza massima del buffer di messaggi
+- `max_string_content`: **Numero massimo di PAROLE** nel buffer a scorrimento (non caratteri!)
+  - Es: con valore 3, il buffer mantiene le ultime 3 parole ("AAA BBB CCC")
+  - Quando si aggiunge "DDD", diventa "BBB CCC DDD" (scorre)
 - `panel_id`: ID del pannello (default: 0x10 = 16)
 - `duration`: Durata visualizzazione in decimi di secondo (default: 0x5A = 90)
 
@@ -206,7 +208,7 @@ Dispositivo disabilitato (nessuna operazione).
         "timeout": 5.0
       },
       "config": {
-        "max_string_content": 100,
+        "max_string_content": 3  // Numero di parole!,
         "panel_id": 16,
         "duration": 90
       }
@@ -307,7 +309,7 @@ class MyCustomAdapter(BaseAdapter):
     "ip": "192.168.1.100",
     "port": 5000,
     "timeout": 5.0,
-    "max_string_content": 100
+    "max_string_content": 3  // Numero di parole!
   }
 }
 ```
@@ -324,7 +326,7 @@ class MyCustomAdapter(BaseAdapter):
       "timeout": 5.0
     },
     "config": {
-      "max_string_content": 100
+      "max_string_content": 3  // Numero di parole!
     }
   }
 }
