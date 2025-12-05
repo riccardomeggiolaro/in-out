@@ -82,14 +82,13 @@ class TcpCustomAdapter(BaseAdapter):
         Send a message to the panel using the custom binary protocol.
 
         Args:
-            message: Text message to display on panel
+            message: Text message to display on panel (empty string clears the panel)
 
         Raises:
-            ValueError: If message is not provided
             ConnectionError: If communication fails
         """
-        if not message:
-            raise ValueError("Message is required for TCP custom adapter")
+        if message is None:
+            message = ""
 
         panel = PanelMessage(panel_id=self.panel_id, duration=self.duration)
         packet = panel.build_message(message)
