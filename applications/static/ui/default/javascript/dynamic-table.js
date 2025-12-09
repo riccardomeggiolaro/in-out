@@ -431,7 +431,7 @@ function createRow(table, columns, item, idInout) {
     const actionsCell = document.createElement("td");
     actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra        
     let callButton;
-    if (item.vehicle && item.vehicle.plate && item.status && item.status === "Attesa" || item.status === "Chiamato") {
+    if (item.vehicle && item.vehicle.plate && item.status && (item.status === "Attesa" || item.status === "Chiamato") && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) {
         // Pulsante chiamata
         callButton = document.createElement("button");
         const textContent = !buffer.includes(item["vehicle"]["plate"]) ? "📢" : "🚫📢";
@@ -516,6 +516,10 @@ function createRow(table, columns, item, idInout) {
     };
     const permanentAccess = document.createElement("span");
     permanentAccess.textContent = "⭐";
+    const bookingAccess = document.createElement("span");
+    bookingAccess.textContent = "📅";
+    const manualAccess = document.createElement("span");
+    manualAccess.textContent = "✍️";
     if (!["pid", "weighing-terminal"].includes(itemName)) {
         if (itemName === "access" && item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
@@ -523,6 +527,8 @@ function createRow(table, columns, item, idInout) {
         else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out && !item.weighings) actionsCell.appendChild(deleteButton);
         if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
+        if (itemName === "access" && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) actionsCell.appendChild(bookingAccess);
+        if (itemName === "access" && item.type === "Manuale") actionsCell.appendChild(manualAccess);
     } else if (itemName == "weighing-terminal") {
         actionsCell.appendChild(deleteButton);
     }
