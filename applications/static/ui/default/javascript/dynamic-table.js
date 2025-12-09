@@ -407,6 +407,7 @@ function createRow(table, columns, item, idInout) {
     const row = document.createElement("tr");
     row.dataset.id = item.id;
     if (idInout) row.dataset.idInOut = idInout;
+    if (item.type) row.dataset.type = item.type;
     // Create cells for each column
     for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
         row.insertCell();

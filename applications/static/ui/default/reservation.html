@@ -729,11 +729,17 @@
                         return; // Skip se le colonne non esistono
                     }
                     
-                    const datetimeCell = cells[columns['date_created']]; 
-                    const statusCell = cells[columns['status']]; 
+                    const datetimeCell = cells[columns['date_created']];
+                    const statusCell = cells[columns['status']];
                     const elapsedCell = cells[columns['waiting']]; // Usa il mapping dinamico!
-                    
-                    if (statusCell.dataset.value === "Attesa") {
+                    const numberInOutCell = cells[columns['number_in_out']];
+
+                    // Only show timer for Reservation type with defined number_in_out
+                    const rowType = row.dataset.type;
+                    const numberInOutValue = numberInOutCell ? numberInOutCell.textContent : '';
+                    const isReservationWithNumberInOut = rowType === "Prenotazione" && numberInOutValue.includes("/");
+
+                    if (statusCell.dataset.value === "Attesa" && isReservationWithNumberInOut) {
                         const startDate = new Date(datetimeCell.dataset.value);
                         const now = new Date();
                         const diffMs = now - startDate;
