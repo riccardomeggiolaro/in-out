@@ -13,8 +13,9 @@ from applications.router.anagrafic.panel_siren.dtos import (
 )
 from applications.router.anagrafic.web_sockets import WebSocket
 from modules.md_database.md_database import AccessStatus
-from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
 from modules.md_database.functions.update_data import update_data
+import asyncio
 
 class PanelSirenRouter(WebSocket):
     """
@@ -32,6 +33,8 @@ class PanelSirenRouter(WebSocket):
         self._panel_adapter = None
         # Siren adapter (initialized lazily)
         self._siren_adapter = None
+
+        asyncio.run(self.clearBufferPanel())
 
         # Add routes
         self.panel_siren_router.add_api_route(
@@ -240,19 +243,12 @@ class PanelSirenRouter(WebSocket):
 
             # For each plate, find corresponding access with CALLED status and reset to WAITING
             for plate in plates:
-                try:
-                    # Search for access with this plate and CALLED status
-                    access_data = get_data_by_attributes(
-                        'access',
-                        {"vehicle.plate": plate, "status": AccessStatus.CALLED}
-                    )
+                # Search for access with this plate and CALLED status
+                access_data = get_access_by_plate_if_uncomplete(plate)
 
-                    # If found, reset status to WAITING
-                    if access_data:
-                        update_data("access", access_data["id"], {"status": AccessStatus.WAITING})
-                except Exception:
-                    # If not found or any error, continue to next plate
-                    continue
+                # If found, reset status to WAITING
+                if access_data and access_data["status"] == AccessStatus.CALLED:
+                    update_data("access", access_data["id"], {"status": AccessStatus.WAITING})
 
             # Clear buffer
             self.buffer = ""
