@@ -641,18 +641,18 @@
     <div id="snackbar" class="snackbar"></div>
 
     <!-- Booking Type Legend -->
-    <div style="position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.95); border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 100;">
-        <div style="font-weight: bold; margin-bottom: 8px; color: #333; font-size: 0.9rem;">Legenda:</div>
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
+    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.95); border: 1px solid #ddd; border-radius: 8px; padding: 10px 20px; font-size: 0.85rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 100;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <span style="font-weight: bold; color: #333; font-size: 0.9rem;">Legenda:</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 1.1rem;">📅</span>
                 <span style="color: #555;">Prenotazioni</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 1.1rem;">⭐</span>
                 <span style="color: #555;">Permanenti</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 1.1rem;">✍️</span>
                 <span style="color: #555;">Manuali</span>
             </div>
@@ -1180,20 +1180,36 @@
                 const response = await fetch('/api/anagrafic/configuration/panel');
                 const config = await response.json();
 
+                // Find waiting column index
+                const th = document.querySelector('th[name="waiting"]');
+                const waitingColumnIndex = th ? Array.from(th.parentNode.children).indexOf(th) : -1;
+
                 if (config && config.enabled) {
                     // Show buffer display
                     document.getElementById('panel-buffer-display').style.display = 'flex';
-                    // Show waiting column
-                    document.querySelectorAll('[name="waiting"]').forEach(el => {
-                        el.style.display = '';
-                    });
+                    // Show waiting column header
+                    if (th) th.style.display = '';
+                    // Show waiting column cells
+                    if (waitingColumnIndex >= 0) {
+                        document.querySelectorAll('tbody tr').forEach(row => {
+                            if (row.cells[waitingColumnIndex]) {
+                                row.cells[waitingColumnIndex].style.display = '';
+                            }
+                        });
+                    }
                 } else {
                     // Hide buffer display if panel not configured/enabled
                     document.getElementById('panel-buffer-display').style.display = 'none';
-                    // Hide waiting column
-                    document.querySelectorAll('[name="waiting"]').forEach(el => {
-                        el.style.display = 'none';
-                    });
+                    // Hide waiting column header
+                    if (th) th.style.display = 'none';
+                    // Hide waiting column cells
+                    if (waitingColumnIndex >= 0) {
+                        document.querySelectorAll('tbody tr').forEach(row => {
+                            if (row.cells[waitingColumnIndex]) {
+                                row.cells[waitingColumnIndex].style.display = 'none';
+                            }
+                        });
+                    }
                 }
             } catch (error) {
                 console.error('Error loading panel configuration:', error);
