@@ -180,7 +180,14 @@ async function updateTable() {
     const data = await res.json();
 
     totalRows = data.total_rows;
-    if ("buffer" in data) buffer = data.buffer;
+    if ("buffer" in data) {
+        buffer = data.buffer;
+        // Update panel buffer display if element exists
+        const bufferDisplay = document.getElementById('panel-buffer-text');
+        if (bufferDisplay) {
+            bufferDisplay.textContent = buffer || '---';
+        }
+    }
     populateTable(data.data);
     updatePageSelect();
     document.getElementById("total-rows").textContent = `Totale righe: ${totalRows}`;
