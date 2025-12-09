@@ -251,6 +251,15 @@
             display: block;
         }
 
+        /* Tab visibility - hide all tabs by default, show only settings */
+        .tab {
+            display: none;
+        }
+
+        #settings.tab {
+            display: block;
+        }
+
         .edit-instance-btn {
             margin-top: 10px;
             margin-right: 10px;
@@ -516,6 +525,7 @@
         <div id="sub-menu">
             <button class="menu-tab selected" onclick="changeSetupTab(event, 'settings')">SETTAGGI</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">INDICATORI</button>
+            <button class="menu-tab" onclick="changeSetupTab(event, 'sync-folder')">SYNC FOLDER</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'panel')">PANNELLO</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'siren')">SIRENA</button>
         </div>
@@ -574,9 +584,15 @@
                     <br>
                 </div>
                 <br>
+            </div>
+            <div id="instances" class="tab">
+                <div id="instance-sub-menu" class="instance-sub-menu"></div>
+                <div id="instances-content"></div>
+            </div>
+            <div id="sync-folder" class="tab">
                 <div class="borders aliceblue">
                     <br>
-                    <h3>Sincronizzazione cartella remota</h3>
+                    <h3>SINCRONIZZAZIONE CARTELLA REMOTA</h3>
                     <br>
 
                     <!-- Vista quando non c'è connessione -->
@@ -611,10 +627,6 @@
                     </div>
                     <br>
                 </div>
-            </div>
-            <div id="instances" class="tab">
-                <div id="instance-sub-menu" class="instance-sub-menu"></div>
-                <div id="instances-content"></div>
             </div>
             <div id="panel" class="tab">
                 <div class="borders aliceblue">
