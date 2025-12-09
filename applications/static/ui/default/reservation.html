@@ -60,10 +60,10 @@
         <div id="filters" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <input id="filter.permanent" name="permanent" type="checkbox" autocomplete="off" onchange="updateTable()">
-                <span>Solo permanenti</span>
+                <label for="filter.permanent">Solo permanenti</label>
             </div>
             <div id="panel-buffer-display" style="display: none; align-items: center; gap: 10px;">
-                <span style="font-size: 0.9rem;"><strong>Buffer:</strong> <span id="panel-buffer-text">---</span></span>
+                <span style="font-size: 0.9rem;"><strong>Buffer pannello:</strong> <span id="panel-buffer-text">---</span></span>
                 <button onclick="clearPanelBuffer()" style="padding: 5px 10px; font-size: 0.85rem;">Pulisci</button>
             </div>
         </div>
