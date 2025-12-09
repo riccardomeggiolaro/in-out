@@ -37,6 +37,12 @@ class PanelSirenRouter(WebSocket):
             "/cancel-message/panel", self.deleteMessagePanel, methods=["DELETE"]
         )
         self.panel_siren_router.add_api_route(
+            "/buffer/panel", self.getBufferPanel, methods=["GET"]
+        )
+        self.panel_siren_router.add_api_route(
+            "/buffer/panel", self.clearBufferPanel, methods=["DELETE"]
+        )
+        self.panel_siren_router.add_api_route(
             "/call/siren", self.sendMessageSiren, methods=["GET"]
         )
         self.panel_siren_router.add_api_route(
@@ -191,6 +197,35 @@ class PanelSirenRouter(WebSocket):
             adapter = self._get_panel_adapter()
             await adapter.send_message(buf)
             return {"buffer": buf, "success": True}
+        except Exception as e:
+            self.buffer = old_buf
+            status_code = getattr(e, "status_code", 500)
+            detail = getattr(e, "detail", str(e))
+            raise HTTPException(status_code=status_code, detail=detail)
+
+    async def getBufferPanel(self):
+        """
+        Get current panel buffer.
+
+        Returns:
+            Current buffer content
+        """
+        return {"buffer": self.buffer}
+
+    async def clearBufferPanel(self):
+        """
+        Clear panel buffer.
+
+        Returns:
+            Empty buffer confirmation
+        """
+        old_buf = self.buffer
+        try:
+            self.buffer = ""
+            adapter = self._get_panel_adapter()
+            await adapter.send_message("")
+            await self.broadcastMessageAnagrafic("access", {"buffer": ""})
+            return {"buffer": "", "success": True}
         except Exception as e:
             self.buffer = old_buf
             status_code = getattr(e, "status_code", 500)

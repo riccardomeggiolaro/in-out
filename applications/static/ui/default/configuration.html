@@ -987,6 +987,21 @@
         </div>
     </div>
 
+    <!-- Modal per test pannello -->
+    <div id="test-panel-modal" class="modal">
+        <div class="modal-content">
+            <h3>Test Pannello</h3>
+            <p>Inserisci il testo da testare (senza spazi):</p>
+            <input type="text" id="test-panel-input" placeholder="TEST" maxlength="50"
+                   oninput="this.value = this.value.replace(/\s/g, '')">
+            <br><br>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closeTestPanelModal()">Annulla</button>
+                <button class="save-btn" onclick="executeTestPanel()">Invia Test</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Modal per nuova istanza -->
     <div id="new-instance-modal" class="modal">
@@ -1296,6 +1311,16 @@
                         closeSyncFolderModal();
                     } else if (modalId === 'delete-sync-folder-modal') {
                         closeDeleteConfirmModal();
+                    } else if (modalId === 'panel-modal') {
+                        closePanelModal();
+                    } else if (modalId === 'delete-panel-modal') {
+                        closeDeletePanelModal();
+                    } else if (modalId === 'siren-modal') {
+                        closeSirenModal();
+                    } else if (modalId === 'delete-siren-modal') {
+                        closeDeleteSirenModal();
+                    } else if (modalId === 'test-panel-modal') {
+                        closeTestPanelModal();
                     }
                 }
             });
@@ -3407,6 +3432,8 @@
         }
 
         function testSyncFolder() {
+            showSnackbar("snackbar", "In attesa di risposta del test...", 'rgb(255, 255, 208)', 'black');
+
             fetch(`/api/sync-folder/test`, {
                 headers: {
                     'Content-Type': 'application/json'
@@ -3698,14 +3725,31 @@
             }
         }
 
-        async function testPanel() {
-            const text = prompt('Inserisci il testo da testare:', 'TEST');
-            if (!text) return;
+        function testPanel() {
+            document.getElementById('test-panel-input').value = 'TEST';
+            document.getElementById('test-panel-modal').style.display = 'block';
+        }
+
+        function closeTestPanelModal() {
+            document.getElementById('test-panel-modal').style.display = 'none';
+        }
+
+        async function executeTestPanel() {
+            const text = document.getElementById('test-panel-input').value.trim();
+            if (!text) {
+                showSnackbar("snackbar", "Inserisci un testo valido", 'rgb(255, 208, 208)', 'black');
+                return;
+            }
+
+            closeTestPanelModal();
+            showSnackbar("snackbar", "In attesa di risposta del test...", 'rgb(255, 255, 208)', 'black');
 
             try {
                 const response = await fetch(`/api/anagrafic/message/panel?text=${encodeURIComponent(text)}`);
                 if (response.ok) {
-                    showSnackbar("snackbar", "Test pannello completato", 'rgb(208, 255, 208)', 'black');
+                    const data = await response.json();
+                    const buffer = data.buffer || '';
+                    showSnackbar("snackbar", `Test pannello completato - Buffer: ${buffer}`, 'rgb(208, 255, 208)', 'black');
                 } else {
                     showSnackbar("snackbar", "Test pannello fallito", 'rgb(255, 208, 208)', 'black');
                 }
@@ -3898,6 +3942,8 @@
         }
 
         async function testSiren() {
+            showSnackbar("snackbar", "In attesa di risposta del test...", 'rgb(255, 255, 208)', 'black');
+
             try {
                 const response = await fetch('/api/anagrafic/call/siren');
                 if (response.ok) {
