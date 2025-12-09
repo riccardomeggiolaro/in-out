@@ -60,9 +60,15 @@
         <table>
             <thead id="filters">
                 <tr>
-                    <td colspan="13" name="permanent" class="permanentFilter">
-                        <input id="filter.permanent" name="permanent" type="checkbox" autocomplete="off" onchange="updateTable()">
-                        <span>Solo permanenti</span>
+                    <td colspan="13" name="permanent" class="permanentFilter" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <input id="filter.permanent" name="permanent" type="checkbox" autocomplete="off" onchange="updateTable()">
+                            <span>Solo permanenti</span>
+                        </div>
+                        <div id="panel-buffer-display" style="display: none; align-items: center; gap: 10px;">
+                            <span style="font-size: 0.9rem;"><strong>Buffer:</strong> <span id="panel-buffer-text">---</span></span>
+                            <button onclick="clearPanelBuffer()" style="padding: 5px 10px; font-size: 0.85rem;">Pulisci</button>
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -1139,6 +1145,61 @@
                 if (input.value != '') deselectAnagrafic(input.value, "material");
             })
         }
+
+        // Panel buffer management
+        let panelBufferInterval = null;
+
+        async function initPanelBufferDisplay() {
+            try {
+                // Check if panel is configured and enabled
+                const response = await fetch('/api/anagrafic/configuration/panel');
+                const config = await response.json();
+
+                if (config && config.enabled) {
+                    // Show buffer display
+                    document.getElementById('panel-buffer-display').style.display = 'flex';
+
+                    // Start polling buffer every 2 seconds
+                    updatePanelBuffer();
+                    panelBufferInterval = setInterval(updatePanelBuffer, 2000);
+                } else {
+                    // Hide buffer display if panel not configured/enabled
+                    document.getElementById('panel-buffer-display').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading panel configuration:', error);
+            }
+        }
+
+        async function updatePanelBuffer() {
+            try {
+                const response = await fetch('/api/anagrafic/buffer/panel');
+                const data = await response.json();
+                const bufferText = data.buffer || '---';
+                document.getElementById('panel-buffer-text').textContent = bufferText;
+            } catch (error) {
+                console.error('Error updating panel buffer:', error);
+            }
+        }
+
+        async function clearPanelBuffer() {
+            try {
+                const response = await fetch('/api/anagrafic/buffer/panel', { method: 'DELETE' });
+                if (response.ok) {
+                    document.getElementById('panel-buffer-text').textContent = '---';
+                    showSnackbar("snackbar", "Buffer pannello pulito", 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Errore nella pulizia del buffer", 'rgb(255, 208, 208)', 'black');
+                }
+            } catch (error) {
+                showSnackbar("snackbar", "Errore nella pulizia del buffer", 'rgb(255, 208, 208)', 'black');
+            }
+        }
+
+        // Initialize panel buffer display on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initPanelBufferDisplay();
+        });
     </script>
 </body>
 </html>
