@@ -115,8 +115,16 @@ class PanelSirenRouter(WebSocket):
         if not n or n <= 0:
             n = 1  # Default to 1 if not configured
 
-        # Keep only last N words if we already have N or more
-        new_buffer = self.buffer if n >= len(words) else ' '.join(words[-n:])
+        # Keep only last (N-1) words to make room for the new text
+        if len(words) < n:
+            # We have fewer than N words, keep all of them
+            new_buffer = self.buffer
+        elif n > 1:
+            # We have N or more words, keep only the last (N-1)
+            new_buffer = ' '.join(words[-(n-1):])
+        else:
+            # N=1 means only 1 word total, so clear buffer before adding new word
+            new_buffer = ''
 
         # Add new text (with space separator if buffer is not empty)
         self.buffer = new_buffer + " " + text if new_buffer else text
