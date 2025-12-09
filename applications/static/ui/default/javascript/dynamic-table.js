@@ -451,7 +451,7 @@ function createRow(table, columns, item, idInout) {
         actionsCell.appendChild(callButton);
     }
     let pdfButton;
-    if (itemName === "access" && "status" in item && item.status === "Attesa") {
+    if (itemName === "access" && "status" in item && item.status === "Attesa" && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) {
         const th = document.querySelector('th[name="waiting"]');
         const index = Array.from(th.parentNode.children).indexOf(th);
         startTimer(row, index, item.date_created);
