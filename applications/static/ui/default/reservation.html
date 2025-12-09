@@ -1147,8 +1147,6 @@
         }
 
         // Panel buffer management
-        let panelBufferInterval = null;
-
         async function initPanelBufferDisplay() {
             try {
                 // Check if panel is configured and enabled
@@ -1158,10 +1156,6 @@
                 if (config && config.enabled) {
                     // Show buffer display
                     document.getElementById('panel-buffer-display').style.display = 'flex';
-
-                    // Start polling buffer every 2 seconds
-                    updatePanelBuffer();
-                    panelBufferInterval = setInterval(updatePanelBuffer, 2000);
                 } else {
                     // Hide buffer display if panel not configured/enabled
                     document.getElementById('panel-buffer-display').style.display = 'none';
@@ -1171,22 +1165,10 @@
             }
         }
 
-        async function updatePanelBuffer() {
-            try {
-                const response = await fetch('/api/anagrafic/buffer/panel');
-                const data = await response.json();
-                const bufferText = data.buffer || '---';
-                document.getElementById('panel-buffer-text').textContent = bufferText;
-            } catch (error) {
-                console.error('Error updating panel buffer:', error);
-            }
-        }
-
         async function clearPanelBuffer() {
             try {
                 const response = await fetch('/api/anagrafic/buffer/panel', { method: 'DELETE' });
                 if (response.ok) {
-                    document.getElementById('panel-buffer-text').textContent = '---';
                     showSnackbar("snackbar", "Buffer pannello pulito", 'rgb(208, 255, 208)', 'black');
                 } else {
                     showSnackbar("snackbar", "Errore nella pulizia del buffer", 'rgb(255, 208, 208)', 'black');
