@@ -12,6 +12,9 @@ from applications.router.anagrafic.panel_siren.dtos import (
     Siren,
 )
 from applications.router.anagrafic.web_sockets import WebSocket
+from modules.md_database.md_database import AccessStatus
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
+from modules.md_database.functions.update_data import update_data
 
 class PanelSirenRouter(WebSocket):
     """
@@ -21,7 +24,8 @@ class PanelSirenRouter(WebSocket):
     """
 
     def __init__(self):
-        self.buffer = ""
+        # Load buffer from config if exists
+        self.buffer = lb_config.g_config.get("panel_buffer", "")
         self.panel_siren_router = APIRouter()
 
         # Panel adapter (initialized lazily)
@@ -102,6 +106,11 @@ class PanelSirenRouter(WebSocket):
         config = panel_config.get("config", {})
         return config.get("max_string_content", 100)  # Default to 100
 
+    def _save_buffer_to_config(self):
+        """Save buffer to config.json."""
+        lb_config.g_config["panel_buffer"] = self.buffer
+        lb_config.saveconfig()
+
     def editBuffer(self, text: str) -> str:
         """
         Add text to buffer respecting max_string_content limit.
@@ -135,6 +144,9 @@ class PanelSirenRouter(WebSocket):
         # Add new text (with space separator if buffer is not empty)
         self.buffer = new_buffer + " " + text if new_buffer else text
 
+        # Save buffer to config
+        self._save_buffer_to_config()
+
         return self.buffer
 
     def undoBuffer(self, text: str) -> str:
@@ -149,6 +161,8 @@ class PanelSirenRouter(WebSocket):
         """
         if text in self.buffer:
             self.buffer = self.buffer.replace(text, "", 1).strip()
+            # Save buffer to config
+            self._save_buffer_to_config()
         return self.buffer
 
     async def sendMessagePanel(self, text: str, broadcastMessageBuffer: bool = True):
@@ -214,17 +228,45 @@ class PanelSirenRouter(WebSocket):
 
     async def clearBufferPanel(self):
         """
-        Clear panel buffer.
+        Clear panel buffer and reset CALLED accesses to WAITING.
 
         Returns:
             Empty buffer confirmation
         """
         old_buf = self.buffer
         try:
+            # Get all plates from buffer (words in buffer)
+            plates = self.buffer.split() if self.buffer else []
+
+            # For each plate, find corresponding access with CALLED status and reset to WAITING
+            for plate in plates:
+                try:
+                    # Search for access with this plate and CALLED status
+                    access_data = get_data_by_attributes(
+                        'access',
+                        {"vehicle.plate": plate, "status": AccessStatus.CALLED}
+                    )
+
+                    # If found, reset status to WAITING
+                    if access_data:
+                        update_data("access", access_data["id"], {"status": AccessStatus.WAITING})
+                except Exception:
+                    # If not found or any error, continue to next plate
+                    continue
+
+            # Clear buffer
             self.buffer = ""
+
+            # Save buffer to config
+            self._save_buffer_to_config()
+
+            # Send empty message to panel
             adapter = self._get_panel_adapter()
             await adapter.send_message("")
+
+            # Broadcast buffer update
             await self.broadcastMessageAnagrafic("access", {"buffer": ""})
+
             return {"buffer": "", "success": True}
         except Exception as e:
             self.buffer = old_buf
