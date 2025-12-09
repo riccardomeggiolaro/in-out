@@ -525,7 +525,7 @@
         <div id="sub-menu">
             <button class="menu-tab selected" onclick="changeSetupTab(event, 'settings')">SETTAGGI</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">INDICATORI</button>
-            <button class="menu-tab" onclick="changeSetupTab(event, 'sync-folder')">SYNC FOLDER</button>
+            <button class="menu-tab" onclick="changeSetupTab(event, 'sync-folder')">SINC CARTELLA REM</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'panel')">PANNELLO</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'siren')">SIRENA</button>
         </div>
@@ -631,277 +631,78 @@
             <div id="panel" class="tab">
                 <div class="borders aliceblue">
                     <br>
-                    <h3>PANNELLO <span id="panel-status" class="status-badge"></span></h3>
+                    <h3>PANNELLO</h3>
                     <br>
 
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="panel-enabled" onchange="onPanelEnabledChange()">
-                        <label for="panel-enabled">Abilita Pannello</label>
-                    </div>
-                    <br>
-
-                    <div id="panel-form" class="hidden">
-                        <div class="form-group">
-                            <label for="panel-type">Tipo Adapter *</label>
-                            <select id="panel-type" required onchange="onPanelTypeChange()">
-                                <option value="">-- Seleziona tipo --</option>
-                                <option value="tcp_custom">TCP Custom (Protocollo Binario)</option>
-                                <option value="tcp_raw">TCP Raw (Testo Semplice)</option>
-                                <option value="http_simple">HTTP Semplice (Senza Auth)</option>
-                                <option value="http_basic">HTTP Basic Auth</option>
-                                <option value="http_digest">HTTP Digest Auth</option>
-                                <option value="http_bearer">HTTP Bearer Token</option>
-                            </select>
-                        </div>
-
-                        <div id="panel-type-info" class="adapter-info hidden">
-                            <p></p>
-                        </div>
-
-                        <h4>Connessione</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="panel-ip">Indirizzo IP *</label>
-                                <input type="text" id="panel-ip" required placeholder="192.168.1.100"
-                                       pattern="^(\d{1,3}\.){3}\d{1,3}$">
-                            </div>
-                            <div class="form-group">
-                                <label for="panel-port">Porta *</label>
-                                <input type="number" id="panel-port" required placeholder="5000" min="1" max="65535">
-                            </div>
-                            <div class="form-group">
-                                <label for="panel-timeout">Timeout (secondi) *</label>
-                                <input type="number" id="panel-timeout" required placeholder="5.0"
-                                       min="0.1" step="0.1" value="5.0">
-                            </div>
-                        </div>
-
-                        <!-- TCP Custom Config -->
-                        <div id="panel-tcp-custom-config" class="hidden">
-                            <h4>Configurazione TCP Custom</h4>
-                            <div class="adapter-info" style="background-color: #fff9c4; border-left-color: #fbc02d;">
-                                <p style="color: #f57f17;">
-                                    ℹ️ <strong>Max Parole Buffer:</strong> Numero massimo di parole nel buffer a scorrimento.
-                                    Con valore 3, il pannello mostra le ultime 3 targhe/messaggi (es: "AAA BBB CCC").
-                                    Quando si aggiunge una quarta parola, la prima viene rimossa automaticamente.
-                                </p>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="panel-max-string">Max Parole nel Buffer</label>
-                                    <input type="number" id="panel-max-string" placeholder="3" min="1" value="3"
-                                           title="Numero massimo di parole (targhe/messaggi) visualizzate contemporaneamente">
-                                </div>
-                                <div class="form-group">
-                                    <label for="panel-id">Panel ID</label>
-                                    <input type="number" id="panel-id" placeholder="16" min="0" max="255" value="16"
-                                           title="ID univoco del pannello (default: 16)">
-                                </div>
-                                <div class="form-group">
-                                    <label for="panel-duration">Durata Visualizzazione</label>
-                                    <input type="number" id="panel-duration" placeholder="90" min="1" value="90"
-                                           title="Durata in decimi di secondo (90 = 9 secondi)">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TCP Raw Config -->
-                        <div id="panel-tcp-raw-config" class="hidden">
-                            <h4>Configurazione TCP Raw</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="panel-encoding">Encoding</label>
-                                    <input type="text" id="panel-encoding" placeholder="utf-8" value="utf-8">
-                                </div>
-                                <div class="form-group">
-                                    <label for="panel-line-ending">Fine Linea</label>
-                                    <input type="text" id="panel-line-ending" placeholder="\r\n" value="\r\n">
-                                </div>
-                                <div class="form-group checkbox-group">
-                                    <input type="checkbox" id="panel-wait-response">
-                                    <label for="panel-wait-response">Attendi Risposta</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- HTTP Configs -->
-                        <div id="panel-http-config" class="hidden">
-                            <h4>Configurazione HTTP</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="panel-endpoint">Endpoint URL *</label>
-                                    <input type="text" id="panel-endpoint" placeholder="http://192.168.1.100/display">
-                                </div>
-                                <div class="form-group">
-                                    <label for="panel-method">Metodo HTTP</label>
-                                    <select id="panel-method">
-                                        <option value="GET">GET</option>
-                                        <option value="POST">POST</option>
-                                        <option value="PUT">PUT</option>
-                                        <option value="PATCH">PATCH</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="panel-query-param">Parametro Query (opzionale)</label>
-                                    <input type="text" id="panel-query-param" placeholder="text">
-                                </div>
-                            </div>
-
-                            <!-- HTTP Auth Fields -->
-                            <div id="panel-http-auth" class="hidden">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="panel-username">Username</label>
-                                        <input type="text" id="panel-username" placeholder="admin">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="panel-password">Password</label>
-                                        <input type="password" id="panel-password" placeholder="••••••">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- HTTP Bearer Token -->
-                            <div id="panel-http-bearer" class="hidden">
-                                <div class="form-group">
-                                    <label for="panel-token">Bearer Token</label>
-                                    <input type="text" id="panel-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="button-group">
-                            <button class="btn btn-primary" onclick="savePanelConfig()">Salva Configurazione</button>
-                            <button class="btn btn-danger" onclick="disablePanelConfig()">Disabilita Pannello</button>
-                        </div>
-
-                        <div class="test-section">
-                            <h5>Test Pannello</h5>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <input type="text" id="panel-test-text" placeholder="Testo di test" style="flex: 1;">
-                                <button class="btn btn-secondary" onclick="testPanel()">Invia Test</button>
-                            </div>
-                        </div>
+                    <!-- Vista quando non c'è configurazione -->
+                    <div id="no-panel-config" style="display: none; text-align: center; padding: 20px;">
+                        <p style="color: #666; margin-bottom: 15px;">Nessuna configurazione pannello</p>
+                        <button onclick="openPanelModal()">Aggiungi Configurazione</button>
                     </div>
 
+                    <!-- Vista quando c'è configurazione -->
+                    <div id="panel-config-info" style="display: none;">
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 10px;">
+                                <strong>Stato:</strong>
+                                <span id="panel-info-status"></span>
+
+                                <strong>Tipo Adapter:</strong>
+                                <span id="panel-info-type"></span>
+
+                                <strong>Connessione:</strong>
+                                <span id="panel-info-connection"></span>
+
+                                <div id="panel-info-config-extra" style="display: none; grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="testPanel()">Testa Pannello</button>
+                            <button onclick="openPanelModal()">Modifica</button>
+                            <button onclick="confirmDeletePanel()" style="background-color: #dc3545;">Elimina</button>
+                        </div>
+                    </div>
                     <br>
                 </div>
             </div>
             <div id="siren" class="tab">
                 <div class="borders aliceblue">
                     <br>
-                    <h3>SIRENA <span id="siren-status" class="status-badge"></span></h3>
+                    <h3>SIRENA</h3>
                     <br>
 
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="siren-enabled" onchange="onSirenEnabledChange()">
-                        <label for="siren-enabled">Abilita Sirena</label>
-                    </div>
-                    <br>
-
-                    <div id="siren-form" class="hidden">
-                        <div class="form-group">
-                            <label for="siren-type">Tipo Adapter *</label>
-                            <select id="siren-type" required onchange="onSirenTypeChange()">
-                                <option value="">-- Seleziona tipo --</option>
-                                <option value="http_simple">HTTP Semplice (Senza Auth)</option>
-                                <option value="http_basic">HTTP Basic Auth</option>
-                                <option value="http_digest">HTTP Digest Auth</option>
-                                <option value="http_bearer">HTTP Bearer Token</option>
-                                <option value="tcp_raw">TCP Raw</option>
-                            </select>
-                        </div>
-
-                        <div id="siren-type-info" class="adapter-info hidden">
-                            <p></p>
-                        </div>
-
-                        <h4>Connessione</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="siren-ip">Indirizzo IP *</label>
-                                <input type="text" id="siren-ip" required placeholder="192.168.1.101"
-                                       pattern="^(\d{1,3}\.){3}\d{1,3}$">
-                            </div>
-                            <div class="form-group">
-                                <label for="siren-port">Porta *</label>
-                                <input type="number" id="siren-port" required placeholder="80" min="1" max="65535">
-                            </div>
-                            <div class="form-group">
-                                <label for="siren-timeout">Timeout (secondi) *</label>
-                                <input type="number" id="siren-timeout" required placeholder="5.0"
-                                       min="0.1" step="0.1" value="5.0">
-                            </div>
-                        </div>
-
-                        <!-- HTTP Config -->
-                        <div id="siren-http-config" class="hidden">
-                            <h4>Configurazione HTTP</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="siren-endpoint">Endpoint URL *</label>
-                                    <input type="text" id="siren-endpoint" placeholder="http://192.168.1.101/buzzer">
-                                </div>
-                                <div class="form-group">
-                                    <label for="siren-method">Metodo HTTP</label>
-                                    <select id="siren-method">
-                                        <option value="GET">GET</option>
-                                        <option value="POST">POST</option>
-                                        <option value="PUT">PUT</option>
-                                        <option value="PATCH">PATCH</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- HTTP Auth Fields -->
-                            <div id="siren-http-auth" class="hidden">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="siren-username">Username</label>
-                                        <input type="text" id="siren-username" placeholder="admin">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="siren-password">Password</label>
-                                        <input type="password" id="siren-password" placeholder="••••••">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- HTTP Bearer Token -->
-                            <div id="siren-http-bearer" class="hidden">
-                                <div class="form-group">
-                                    <label for="siren-token">Bearer Token</label>
-                                    <input type="text" id="siren-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TCP Raw Config -->
-                        <div id="siren-tcp-raw-config" class="hidden">
-                            <h4>Configurazione TCP Raw</h4>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="siren-encoding">Encoding</label>
-                                    <input type="text" id="siren-encoding" placeholder="utf-8" value="utf-8">
-                                </div>
-                                <div class="form-group">
-                                    <label for="siren-line-ending">Fine Linea</label>
-                                    <input type="text" id="siren-line-ending" placeholder="\r\n" value="\r\n">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="button-group">
-                            <button class="btn btn-primary" onclick="saveSirenConfig()">Salva Configurazione</button>
-                            <button class="btn btn-danger" onclick="disableSirenConfig()">Disabilita Sirena</button>
-                        </div>
-
-                        <div class="test-section">
-                            <h5>Test Sirena</h5>
-                            <button class="btn btn-secondary" onclick="testSiren()">Attiva Sirena</button>
-                        </div>
+                    <!-- Vista quando non c'è configurazione -->
+                    <div id="no-siren-config" style="display: none; text-align: center; padding: 20px;">
+                        <p style="color: #666; margin-bottom: 15px;">Nessuna configurazione sirena</p>
+                        <button onclick="openSirenModal()">Aggiungi Configurazione</button>
                     </div>
 
+                    <!-- Vista quando c'è configurazione -->
+                    <div id="siren-config-info" style="display: none;">
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <div style="display: grid; grid-template-columns: 150px 1fr; gap: 10px; margin-bottom: 10px;">
+                                <strong>Stato:</strong>
+                                <span id="siren-info-status"></span>
+
+                                <strong>Tipo Adapter:</strong>
+                                <span id="siren-info-type"></span>
+
+                                <strong>Connessione:</strong>
+                                <span id="siren-info-connection"></span>
+
+                                <div id="siren-info-config-extra" style="display: none; grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="testSiren()">Testa Sirena</button>
+                            <button onclick="openSirenModal()">Modifica</button>
+                            <button onclick="confirmDeleteSiren()" style="background-color: #dc3545;">Elimina</button>
+                        </div>
+                    </div>
                     <br>
                 </div>
             </div>
@@ -968,6 +769,220 @@
             <div class="container-buttons right">
                 <button class="cancel-btn" onclick="closeDeleteConfirmModal()">Annulla</button>
                 <button class="save-btn" style="background-color: #dc3545;" onclick="deleteSyncFolder()">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per configurazione Pannello -->
+    <div id="panel-modal" class="modal">
+        <div class="modal-content" style="width: 600px; max-width: 90%;">
+            <h3 id="panel-modal-title">Configura Pannello</h3>
+            <form id="panel-form-modal" onsubmit="event.preventDefault()">
+                <label for="modal-panel-type">Tipo Adapter: *</label>
+                <select id="modal-panel-type" required onchange="onModalPanelTypeChange()">
+                    <option value="">-- Seleziona tipo --</option>
+                    <option value="tcp_custom">TCP Custom (Protocollo Binario)</option>
+                    <option value="tcp_raw">TCP Raw (Testo Semplice)</option>
+                    <option value="http_simple">HTTP Semplice (Senza Auth)</option>
+                    <option value="http_basic">HTTP Basic Auth</option>
+                    <option value="http_digest">HTTP Digest Auth</option>
+                    <option value="http_bearer">HTTP Bearer Token</option>
+                </select>
+                <br><br>
+
+                <label for="modal-panel-ip">Indirizzo IP: *</label>
+                <input type="text" id="modal-panel-ip" required placeholder="192.168.1.100" pattern="^(\d{1,3}\.){3}\d{1,3}$">
+                <br><br>
+
+                <label for="modal-panel-port">Porta: *</label>
+                <input type="number" id="modal-panel-port" required placeholder="5000" min="1" max="65535">
+                <br><br>
+
+                <label for="modal-panel-timeout">Timeout (secondi): *</label>
+                <input type="number" id="modal-panel-timeout" required placeholder="5.0" min="0.1" step="0.1" value="5.0">
+                <br><br>
+
+                <!-- TCP Custom Config -->
+                <div id="modal-panel-tcp-custom" class="hidden">
+                    <label for="modal-panel-max-string">Max Parole nel Buffer:</label>
+                    <input type="number" id="modal-panel-max-string" placeholder="3" min="1" value="3">
+                    <br><br>
+
+                    <label for="modal-panel-id">Panel ID:</label>
+                    <input type="number" id="modal-panel-id" placeholder="16" min="0" max="255" value="16">
+                    <br><br>
+
+                    <label for="modal-panel-duration">Durata Visualizzazione (decimi di secondo):</label>
+                    <input type="number" id="modal-panel-duration" placeholder="90" min="1" value="90">
+                    <br><br>
+                </div>
+
+                <!-- TCP Raw Config -->
+                <div id="modal-panel-tcp-raw" class="hidden">
+                    <label for="modal-panel-encoding">Encoding:</label>
+                    <input type="text" id="modal-panel-encoding" placeholder="utf-8" value="utf-8">
+                    <br><br>
+
+                    <label for="modal-panel-line-ending">Fine Linea:</label>
+                    <input type="text" id="modal-panel-line-ending" placeholder="\r\n" value="\r\n">
+                    <br><br>
+
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="modal-panel-wait-response">
+                        Attendi Risposta
+                    </label>
+                    <br>
+                </div>
+
+                <!-- HTTP Config -->
+                <div id="modal-panel-http" class="hidden">
+                    <label for="modal-panel-endpoint">Endpoint URL: *</label>
+                    <input type="text" id="modal-panel-endpoint" placeholder="http://192.168.1.100/display">
+                    <br><br>
+
+                    <label for="modal-panel-method">Metodo HTTP:</label>
+                    <select id="modal-panel-method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                    </select>
+                    <br><br>
+
+                    <label for="modal-panel-query-param">Parametro Query (opzionale):</label>
+                    <input type="text" id="modal-panel-query-param" placeholder="text">
+                    <br><br>
+                </div>
+
+                <!-- HTTP Auth -->
+                <div id="modal-panel-http-auth" class="hidden">
+                    <label for="modal-panel-username">Username:</label>
+                    <input type="text" id="modal-panel-username" placeholder="admin">
+                    <br><br>
+
+                    <label for="modal-panel-password">Password:</label>
+                    <input type="password" id="modal-panel-password" placeholder="••••••">
+                    <br><br>
+                </div>
+
+                <!-- HTTP Bearer -->
+                <div id="modal-panel-http-bearer" class="hidden">
+                    <label for="modal-panel-token">Bearer Token:</label>
+                    <input type="text" id="modal-panel-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <br><br>
+                </div>
+
+                <div class="container-buttons right">
+                    <button type="button" class="cancel-btn" onclick="closePanelModal()">Annulla</button>
+                    <button type="submit" class="save-btn" onclick="savePanelConfig()">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal di conferma eliminazione Pannello -->
+    <div id="delete-panel-modal" class="modal">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <p>Sei sicuro di voler eliminare la configurazione del pannello?</p>
+            <br>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closeDeletePanelModal()">Annulla</button>
+                <button class="save-btn" style="background-color: #dc3545;" onclick="deletePanel()">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per configurazione Sirena -->
+    <div id="siren-modal" class="modal">
+        <div class="modal-content" style="width: 600px; max-width: 90%;">
+            <h3 id="siren-modal-title">Configura Sirena</h3>
+            <form id="siren-form-modal" onsubmit="event.preventDefault()">
+                <label for="modal-siren-type">Tipo Adapter: *</label>
+                <select id="modal-siren-type" required onchange="onModalSirenTypeChange()">
+                    <option value="">-- Seleziona tipo --</option>
+                    <option value="http_simple">HTTP Semplice (Senza Auth)</option>
+                    <option value="http_basic">HTTP Basic Auth</option>
+                    <option value="http_digest">HTTP Digest Auth</option>
+                    <option value="http_bearer">HTTP Bearer Token</option>
+                    <option value="tcp_raw">TCP Raw</option>
+                </select>
+                <br><br>
+
+                <label for="modal-siren-ip">Indirizzo IP: *</label>
+                <input type="text" id="modal-siren-ip" required placeholder="192.168.1.101" pattern="^(\d{1,3}\.){3}\d{1,3}$">
+                <br><br>
+
+                <label for="modal-siren-port">Porta: *</label>
+                <input type="number" id="modal-siren-port" required placeholder="80" min="1" max="65535">
+                <br><br>
+
+                <label for="modal-siren-timeout">Timeout (secondi): *</label>
+                <input type="number" id="modal-siren-timeout" required placeholder="5.0" min="0.1" step="0.1" value="5.0">
+                <br><br>
+
+                <!-- HTTP Config -->
+                <div id="modal-siren-http" class="hidden">
+                    <label for="modal-siren-endpoint">Endpoint URL: *</label>
+                    <input type="text" id="modal-siren-endpoint" placeholder="http://192.168.1.101/buzzer">
+                    <br><br>
+
+                    <label for="modal-siren-method">Metodo HTTP:</label>
+                    <select id="modal-siren-method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                    </select>
+                    <br><br>
+                </div>
+
+                <!-- HTTP Auth -->
+                <div id="modal-siren-http-auth" class="hidden">
+                    <label for="modal-siren-username">Username:</label>
+                    <input type="text" id="modal-siren-username" placeholder="admin">
+                    <br><br>
+
+                    <label for="modal-siren-password">Password:</label>
+                    <input type="password" id="modal-siren-password" placeholder="••••••">
+                    <br><br>
+                </div>
+
+                <!-- HTTP Bearer -->
+                <div id="modal-siren-http-bearer" class="hidden">
+                    <label for="modal-siren-token">Bearer Token:</label>
+                    <input type="text" id="modal-siren-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <br><br>
+                </div>
+
+                <!-- TCP Raw Config -->
+                <div id="modal-siren-tcp-raw" class="hidden">
+                    <label for="modal-siren-encoding">Encoding:</label>
+                    <input type="text" id="modal-siren-encoding" placeholder="utf-8" value="utf-8">
+                    <br><br>
+
+                    <label for="modal-siren-line-ending">Fine Linea:</label>
+                    <input type="text" id="modal-siren-line-ending" placeholder="\r\n" value="\r\n">
+                    <br><br>
+                </div>
+
+                <div class="container-buttons right">
+                    <button type="button" class="cancel-btn" onclick="closeSirenModal()">Annulla</button>
+                    <button type="submit" class="save-btn" onclick="saveSirenConfig()">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal di conferma eliminazione Sirena -->
+    <div id="delete-siren-modal" class="modal">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <p>Sei sicuro di voler eliminare la configurazione della sirena?</p>
+            <br>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closeDeleteSirenModal()">Annulla</button>
+                <button class="save-btn" style="background-color: #dc3545;" onclick="deleteSiren()">Elimina</button>
             </div>
         </div>
     </div>
@@ -3482,132 +3497,160 @@
         // ============================================
 
         // Panel functions
+        let currentPanelConfig = null;
+
         async function loadPanelConfig() {
             try {
                 const response = await fetch('/api/anagrafic/configuration/panel');
                 const config = await response.json();
+                currentPanelConfig = config;
 
-                const statusBadge = document.querySelector('#panel-status');
-                const enabledCheckbox = document.querySelector('#panel-enabled');
-                const panelForm = document.querySelector('#panel-form');
+                const noPanelConfig = document.getElementById('no-panel-config');
+                const panelConfigInfo = document.getElementById('panel-config-info');
 
                 if (config && config.enabled && config.type !== 'disabled') {
-                    enabledCheckbox.checked = true;
-                    panelForm.classList.remove('hidden');
-                    statusBadge.textContent = 'Abilitato';
-                    statusBadge.className = 'status-badge status-enabled';
+                    noPanelConfig.style.display = 'none';
+                    panelConfigInfo.style.display = 'block';
 
-                    // Populate form
-                    document.querySelector('#panel-type').value = config.type || '';
-                    document.querySelector('#panel-ip').value = config.connection?.ip || '';
-                    document.querySelector('#panel-port').value = config.connection?.port || '';
-                    document.querySelector('#panel-timeout').value = config.connection?.timeout || 5.0;
+                    document.getElementById('panel-info-status').textContent = 'Abilitato';
+                    document.getElementById('panel-info-type').textContent = getAdapterTypeName(config.type);
+                    document.getElementById('panel-info-connection').textContent = `${config.connection.ip}:${config.connection.port}`;
 
+                    const extraDiv = document.getElementById('panel-info-config-extra');
+                    let extraHtml = '';
                     if (config.type === 'tcp_custom') {
-                        document.querySelector('#panel-max-string').value = config.config?.max_string_content || 3;
-                        document.querySelector('#panel-id').value = config.config?.panel_id || 16;
-                        document.querySelector('#panel-duration').value = config.config?.duration || 90;
+                        extraHtml = `<strong>Max Parole Buffer:</strong> ${config.config.max_string_content}<br><strong>Panel ID:</strong> ${config.config.panel_id}<br><strong>Durata:</strong> ${config.config.duration}`;
                     } else if (config.type === 'tcp_raw') {
-                        document.querySelector('#panel-encoding').value = config.config?.encoding || 'utf-8';
-                        document.querySelector('#panel-line-ending').value = config.config?.line_ending || '\\r\\n';
+                        extraHtml = `<strong>Encoding:</strong> ${config.config.encoding}<br><strong>Line Ending:</strong> ${config.config.line_ending}`;
                     } else if (config.type?.startsWith('http_')) {
-                        document.querySelector('#panel-endpoint').value = config.config?.endpoint || '';
-                        document.querySelector('#panel-method').value = config.config?.method || 'GET';
-                        document.querySelector('#panel-query-param').value = config.config?.query_param || '';
-                        document.querySelector('#panel-username').value = config.config?.username || '';
-                        document.querySelector('#panel-password').value = config.config?.password || '';
-                        document.querySelector('#panel-token').value = config.config?.token || '';
+                        extraHtml = `<strong>Endpoint:</strong> ${config.config.endpoint}<br><strong>Metodo:</strong> ${config.config.method}`;
                     }
-
-                    onPanelTypeChange();
+                    if (extraHtml) {
+                        extraDiv.innerHTML = extraHtml;
+                        extraDiv.style.display = 'block';
+                    } else {
+                        extraDiv.style.display = 'none';
+                    }
                 } else {
-                    enabledCheckbox.checked = false;
-                    panelForm.classList.add('hidden');
-                    statusBadge.textContent = 'Disabilitato';
-                    statusBadge.className = 'status-badge status-disabled';
+                    noPanelConfig.style.display = 'block';
+                    panelConfigInfo.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Errore nel caricamento configurazione pannello:', error);
             }
         }
 
-        function onPanelEnabledChange() {
-            const enabledCheckbox = document.querySelector('#panel-enabled');
-            const panelForm = document.querySelector('#panel-form');
-            const statusBadge = document.querySelector('#panel-status');
+        function openPanelModal() {
+            const modal = document.getElementById('panel-modal');
+            const title = document.getElementById('panel-modal-title');
+            document.getElementById('panel-form-modal').reset();
 
-            if (enabledCheckbox.checked) {
-                panelForm.classList.remove('hidden');
-                statusBadge.textContent = 'Abilitato';
-                statusBadge.className = 'status-badge status-enabled';
+            if (currentPanelConfig && currentPanelConfig.enabled && currentPanelConfig.type !== 'disabled') {
+                title.textContent = 'Modifica Configurazione Pannello';
+                document.getElementById('modal-panel-type').value = currentPanelConfig.type;
+                document.getElementById('modal-panel-ip').value = currentPanelConfig.connection.ip;
+                document.getElementById('modal-panel-port').value = currentPanelConfig.connection.port;
+                document.getElementById('modal-panel-timeout').value = currentPanelConfig.connection.timeout;
+
+                if (currentPanelConfig.type === 'tcp_custom') {
+                    document.getElementById('modal-panel-max-string').value = currentPanelConfig.config.max_string_content;
+                    document.getElementById('modal-panel-id').value = currentPanelConfig.config.panel_id;
+                    document.getElementById('modal-panel-duration').value = currentPanelConfig.config.duration;
+                } else if (currentPanelConfig.type === 'tcp_raw') {
+                    document.getElementById('modal-panel-encoding').value = currentPanelConfig.config.encoding;
+                    document.getElementById('modal-panel-line-ending').value = currentPanelConfig.config.line_ending;
+                    document.getElementById('modal-panel-wait-response').checked = currentPanelConfig.config.wait_response;
+                } else if (currentPanelConfig.type?.startsWith('http_')) {
+                    document.getElementById('modal-panel-endpoint').value = currentPanelConfig.config.endpoint;
+                    document.getElementById('modal-panel-method').value = currentPanelConfig.config.method;
+                    document.getElementById('modal-panel-query-param').value = currentPanelConfig.config.query_param || '';
+                    if (currentPanelConfig.type === 'http_basic' || currentPanelConfig.type === 'http_digest') {
+                        document.getElementById('modal-panel-username').value = currentPanelConfig.config.username || '';
+                        document.getElementById('modal-panel-password').value = currentPanelConfig.config.password || '';
+                    } else if (currentPanelConfig.type === 'http_bearer') {
+                        document.getElementById('modal-panel-token').value = currentPanelConfig.config.token || '';
+                    }
+                }
             } else {
-                panelForm.classList.add('hidden');
-                statusBadge.textContent = 'Disabilitato';
-                statusBadge.className = 'status-badge status-disabled';
+                title.textContent = 'Aggiungi Configurazione Pannello';
             }
+
+            onModalPanelTypeChange();
+            modal.style.display = 'flex';
         }
 
-        function onPanelTypeChange() {
-            const type = document.querySelector('#panel-type').value;
+        function closePanelModal() {
+            document.getElementById('panel-modal').style.display = 'none';
+        }
 
-            // Hide all sections
-            document.querySelector('#panel-tcp-custom-config').classList.add('hidden');
-            document.querySelector('#panel-tcp-raw-config').classList.add('hidden');
-            document.querySelector('#panel-http-config').classList.add('hidden');
-            document.querySelector('#panel-http-auth').classList.add('hidden');
-            document.querySelector('#panel-http-bearer').classList.add('hidden');
+        function onModalPanelTypeChange() {
+            const type = document.getElementById('modal-panel-type').value;
+            document.getElementById('modal-panel-tcp-custom').classList.add('hidden');
+            document.getElementById('modal-panel-tcp-raw').classList.add('hidden');
+            document.getElementById('modal-panel-http').classList.add('hidden');
+            document.getElementById('modal-panel-http-auth').classList.add('hidden');
+            document.getElementById('modal-panel-http-bearer').classList.add('hidden');
 
-            // Show relevant sections
             if (type === 'tcp_custom') {
-                document.querySelector('#panel-tcp-custom-config').classList.remove('hidden');
+                document.getElementById('modal-panel-tcp-custom').classList.remove('hidden');
             } else if (type === 'tcp_raw') {
-                document.querySelector('#panel-tcp-raw-config').classList.remove('hidden');
-            } else if (type.startsWith('http_')) {
-                document.querySelector('#panel-http-config').classList.remove('hidden');
+                document.getElementById('modal-panel-tcp-raw').classList.remove('hidden');
+            } else if (type?.startsWith('http_')) {
+                document.getElementById('modal-panel-http').classList.remove('hidden');
                 if (type === 'http_basic' || type === 'http_digest') {
-                    document.querySelector('#panel-http-auth').classList.remove('hidden');
+                    document.getElementById('modal-panel-http-auth').classList.remove('hidden');
                 } else if (type === 'http_bearer') {
-                    document.querySelector('#panel-http-bearer').classList.remove('hidden');
+                    document.getElementById('modal-panel-http-bearer').classList.remove('hidden');
                 }
             }
         }
 
         async function savePanelConfig() {
-            const type = document.querySelector('#panel-type').value;
-            const enabled = document.querySelector('#panel-enabled').checked;
-
-            const config = {
-                enabled: enabled,
-                type: type,
-                connection: {
-                    ip: document.querySelector('#panel-ip').value,
-                    port: parseInt(document.querySelector('#panel-port').value),
-                    timeout: parseFloat(document.querySelector('#panel-timeout').value)
-                },
-                config: {}
-            };
-
-            if (type === 'tcp_custom') {
-                config.config.max_string_content = parseInt(document.querySelector('#panel-max-string').value);
-                config.config.panel_id = parseInt(document.querySelector('#panel-id').value);
-                config.config.duration = parseInt(document.querySelector('#panel-duration').value);
-            } else if (type === 'tcp_raw') {
-                config.config.encoding = document.querySelector('#panel-encoding').value;
-                config.config.line_ending = document.querySelector('#panel-line-ending').value;
-            } else if (type.startsWith('http_')) {
-                config.config.endpoint = document.querySelector('#panel-endpoint').value;
-                config.config.method = document.querySelector('#panel-method').value;
-                config.config.query_param = document.querySelector('#panel-query-param').value || '';
-
-                if (type === 'http_basic' || type === 'http_digest') {
-                    config.config.username = document.querySelector('#panel-username').value;
-                    config.config.password = document.querySelector('#panel-password').value;
-                } else if (type === 'http_bearer') {
-                    config.config.token = document.querySelector('#panel-token').value;
-                }
-            }
-
             try {
+                const type = document.getElementById('modal-panel-type').value;
+                if (!type) {
+                    showSnackbar("snackbar", "Seleziona un tipo di adapter", 'rgb(255, 208, 208)', 'black');
+                    return;
+                }
+
+                const config = {
+                    enabled: true,
+                    type: type,
+                    connection: {
+                        ip: document.getElementById('modal-panel-ip').value,
+                        port: parseInt(document.getElementById('modal-panel-port').value),
+                        timeout: parseFloat(document.getElementById('modal-panel-timeout').value)
+                    },
+                    config: {}
+                };
+
+                if (type === 'tcp_custom') {
+                    config.config = {
+                        max_string_content: parseInt(document.getElementById('modal-panel-max-string').value) || 3,
+                        panel_id: parseInt(document.getElementById('modal-panel-id').value) || 16,
+                        duration: parseInt(document.getElementById('modal-panel-duration').value) || 90
+                    };
+                } else if (type === 'tcp_raw') {
+                    config.config = {
+                        encoding: document.getElementById('modal-panel-encoding').value || 'utf-8',
+                        line_ending: document.getElementById('modal-panel-line-ending').value || '\\r\\n',
+                        wait_response: document.getElementById('modal-panel-wait-response').checked || false
+                    };
+                } else if (type.startsWith('http_')) {
+                    config.config = {
+                        endpoint: document.getElementById('modal-panel-endpoint').value,
+                        method: document.getElementById('modal-panel-method').value || 'GET',
+                        query_param: document.getElementById('modal-panel-query-param').value || null
+                    };
+
+                    if (type === 'http_basic' || type === 'http_digest') {
+                        config.config.username = document.getElementById('modal-panel-username').value;
+                        config.config.password = document.getElementById('modal-panel-password').value;
+                    } else if (type === 'http_bearer') {
+                        config.config.token = document.getElementById('modal-panel-token').value;
+                    }
+                }
+
                 const response = await fetch('/api/anagrafic/configuration/panel', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -3616,6 +3659,7 @@
 
                 if (response.ok) {
                     showSnackbar("snackbar", "Configurazione pannello salvata", 'rgb(208, 255, 208)', 'black');
+                    closePanelModal();
                     await loadPanelConfig();
                 } else {
                     showSnackbar("snackbar", "Errore nel salvataggio", 'rgb(255, 208, 208)', 'black');
@@ -3626,7 +3670,15 @@
             }
         }
 
-        async function disablePanelConfig() {
+        function confirmDeletePanel() {
+            document.getElementById('delete-panel-modal').style.display = 'flex';
+        }
+
+        function closeDeletePanelModal() {
+            document.getElementById('delete-panel-modal').style.display = 'none';
+        }
+
+        async function deletePanel() {
             try {
                 const response = await fetch('/api/anagrafic/configuration/panel', {
                     method: 'DELETE',
@@ -3635,6 +3687,7 @@
 
                 if (response.ok) {
                     showSnackbar("snackbar", "Pannello disabilitato", 'rgb(208, 255, 208)', 'black');
+                    closeDeletePanelModal();
                     await loadPanelConfig();
                 } else {
                     showSnackbar("snackbar", "Errore nella disabilitazione", 'rgb(255, 208, 208)', 'black');
@@ -3646,9 +3699,11 @@
         }
 
         async function testPanel() {
-            const testText = document.querySelector('#panel-test-text').value || 'TEST';
+            const text = prompt('Inserisci il testo da testare:', 'TEST');
+            if (!text) return;
+
             try {
-                const response = await fetch(`/api/anagrafic/message/panel?text=${encodeURIComponent(testText)}`);
+                const response = await fetch(`/api/anagrafic/message/panel?text=${encodeURIComponent(text)}`);
                 if (response.ok) {
                     showSnackbar("snackbar", "Test pannello completato", 'rgb(208, 255, 208)', 'black');
                 } else {
@@ -3660,119 +3715,141 @@
         }
 
         // Siren functions
+        let currentSirenConfig = null;
+
         async function loadSirenConfig() {
             try {
                 const response = await fetch('/api/anagrafic/configuration/siren');
                 const config = await response.json();
+                currentSirenConfig = config;
 
-                const statusBadge = document.querySelector('#siren-status');
-                const enabledCheckbox = document.querySelector('#siren-enabled');
-                const sirenForm = document.querySelector('#siren-form');
+                const noSirenConfig = document.getElementById('no-siren-config');
+                const sirenConfigInfo = document.getElementById('siren-config-info');
 
                 if (config && config.enabled && config.type !== 'disabled') {
-                    enabledCheckbox.checked = true;
-                    sirenForm.classList.remove('hidden');
-                    statusBadge.textContent = 'Abilitato';
-                    statusBadge.className = 'status-badge status-enabled';
+                    noSirenConfig.style.display = 'none';
+                    sirenConfigInfo.style.display = 'block';
 
-                    // Populate form
-                    document.querySelector('#siren-type').value = config.type || '';
-                    document.querySelector('#siren-ip').value = config.connection?.ip || '';
-                    document.querySelector('#siren-port').value = config.connection?.port || '';
-                    document.querySelector('#siren-timeout').value = config.connection?.timeout || 5.0;
+                    document.getElementById('siren-info-status').textContent = 'Abilitato';
+                    document.getElementById('siren-info-type').textContent = getAdapterTypeName(config.type);
+                    document.getElementById('siren-info-connection').textContent = `${config.connection.ip}:${config.connection.port}`;
 
+                    const extraDiv = document.getElementById('siren-info-config-extra');
+                    let extraHtml = '';
                     if (config.type === 'tcp_raw') {
-                        document.querySelector('#siren-encoding').value = config.config?.encoding || 'utf-8';
-                        document.querySelector('#siren-line-ending').value = config.config?.line_ending || '\\r\\n';
+                        extraHtml = `<strong>Encoding:</strong> ${config.config.encoding}<br><strong>Line Ending:</strong> ${config.config.line_ending}`;
                     } else if (config.type?.startsWith('http_')) {
-                        document.querySelector('#siren-endpoint').value = config.config?.endpoint || '';
-                        document.querySelector('#siren-method').value = config.config?.method || 'GET';
-                        document.querySelector('#siren-username').value = config.config?.username || '';
-                        document.querySelector('#siren-password').value = config.config?.password || '';
-                        document.querySelector('#siren-token').value = config.config?.token || '';
+                        extraHtml = `<strong>Endpoint:</strong> ${config.config.endpoint}<br><strong>Metodo:</strong> ${config.config.method}`;
                     }
-
-                    onSirenTypeChange();
+                    if (extraHtml) {
+                        extraDiv.innerHTML = extraHtml;
+                        extraDiv.style.display = 'block';
+                    } else {
+                        extraDiv.style.display = 'none';
+                    }
                 } else {
-                    enabledCheckbox.checked = false;
-                    sirenForm.classList.add('hidden');
-                    statusBadge.textContent = 'Disabilitato';
-                    statusBadge.className = 'status-badge status-disabled';
+                    noSirenConfig.style.display = 'block';
+                    sirenConfigInfo.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Errore nel caricamento configurazione sirena:', error);
             }
         }
 
-        function onSirenEnabledChange() {
-            const enabledCheckbox = document.querySelector('#siren-enabled');
-            const sirenForm = document.querySelector('#siren-form');
-            const statusBadge = document.querySelector('#siren-status');
+        function openSirenModal() {
+            const modal = document.getElementById('siren-modal');
+            const title = document.getElementById('siren-modal-title');
+            document.getElementById('siren-form-modal').reset();
 
-            if (enabledCheckbox.checked) {
-                sirenForm.classList.remove('hidden');
-                statusBadge.textContent = 'Abilitato';
-                statusBadge.className = 'status-badge status-enabled';
+            if (currentSirenConfig && currentSirenConfig.enabled && currentSirenConfig.type !== 'disabled') {
+                title.textContent = 'Modifica Configurazione Sirena';
+                document.getElementById('modal-siren-type').value = currentSirenConfig.type;
+                document.getElementById('modal-siren-ip').value = currentSirenConfig.connection.ip;
+                document.getElementById('modal-siren-port').value = currentSirenConfig.connection.port;
+                document.getElementById('modal-siren-timeout').value = currentSirenConfig.connection.timeout;
+
+                if (currentSirenConfig.type?.startsWith('http_')) {
+                    document.getElementById('modal-siren-endpoint').value = currentSirenConfig.config.endpoint;
+                    document.getElementById('modal-siren-method').value = currentSirenConfig.config.method;
+                    if (currentSirenConfig.type === 'http_basic' || currentSirenConfig.type === 'http_digest') {
+                        document.getElementById('modal-siren-username').value = currentSirenConfig.config.username || '';
+                        document.getElementById('modal-siren-password').value = currentSirenConfig.config.password || '';
+                    } else if (currentSirenConfig.type === 'http_bearer') {
+                        document.getElementById('modal-siren-token').value = currentSirenConfig.config.token || '';
+                    }
+                } else if (currentSirenConfig.type === 'tcp_raw') {
+                    document.getElementById('modal-siren-encoding').value = currentSirenConfig.config.encoding;
+                    document.getElementById('modal-siren-line-ending').value = currentSirenConfig.config.line_ending;
+                }
             } else {
-                sirenForm.classList.add('hidden');
-                statusBadge.textContent = 'Disabilitato';
-                statusBadge.className = 'status-badge status-disabled';
+                title.textContent = 'Aggiungi Configurazione Sirena';
             }
+
+            onModalSirenTypeChange();
+            modal.style.display = 'flex';
         }
 
-        function onSirenTypeChange() {
-            const type = document.querySelector('#siren-type').value;
+        function closeSirenModal() {
+            document.getElementById('siren-modal').style.display = 'none';
+        }
 
-            // Hide all sections
-            document.querySelector('#siren-http-config').classList.add('hidden');
-            document.querySelector('#siren-http-auth').classList.add('hidden');
-            document.querySelector('#siren-http-bearer').classList.add('hidden');
-            document.querySelector('#siren-tcp-raw-config').classList.add('hidden');
+        function onModalSirenTypeChange() {
+            const type = document.getElementById('modal-siren-type').value;
+            document.getElementById('modal-siren-http').classList.add('hidden');
+            document.getElementById('modal-siren-http-auth').classList.add('hidden');
+            document.getElementById('modal-siren-http-bearer').classList.add('hidden');
+            document.getElementById('modal-siren-tcp-raw').classList.add('hidden');
 
-            // Show relevant sections
-            if (type === 'tcp_raw') {
-                document.querySelector('#siren-tcp-raw-config').classList.remove('hidden');
-            } else if (type.startsWith('http_')) {
-                document.querySelector('#siren-http-config').classList.remove('hidden');
+            if (type?.startsWith('http_')) {
+                document.getElementById('modal-siren-http').classList.remove('hidden');
                 if (type === 'http_basic' || type === 'http_digest') {
-                    document.querySelector('#siren-http-auth').classList.remove('hidden');
+                    document.getElementById('modal-siren-http-auth').classList.remove('hidden');
                 } else if (type === 'http_bearer') {
-                    document.querySelector('#siren-http-bearer').classList.remove('hidden');
+                    document.getElementById('modal-siren-http-bearer').classList.remove('hidden');
                 }
+            } else if (type === 'tcp_raw') {
+                document.getElementById('modal-siren-tcp-raw').classList.remove('hidden');
             }
         }
 
         async function saveSirenConfig() {
-            const type = document.querySelector('#siren-type').value;
-            const enabled = document.querySelector('#siren-enabled').checked;
-
-            const config = {
-                enabled: enabled,
-                type: type,
-                connection: {
-                    ip: document.querySelector('#siren-ip').value,
-                    port: parseInt(document.querySelector('#siren-port').value),
-                    timeout: parseFloat(document.querySelector('#siren-timeout').value)
-                },
-                config: {}
-            };
-
-            if (type === 'tcp_raw') {
-                config.config.encoding = document.querySelector('#siren-encoding').value;
-                config.config.line_ending = document.querySelector('#siren-line-ending').value;
-            } else if (type.startsWith('http_')) {
-                config.config.endpoint = document.querySelector('#siren-endpoint').value;
-                config.config.method = document.querySelector('#siren-method').value;
-
-                if (type === 'http_basic' || type === 'http_digest') {
-                    config.config.username = document.querySelector('#siren-username').value;
-                    config.config.password = document.querySelector('#siren-password').value;
-                } else if (type === 'http_bearer') {
-                    config.config.token = document.querySelector('#siren-token').value;
-                }
-            }
-
             try {
+                const type = document.getElementById('modal-siren-type').value;
+                if (!type) {
+                    showSnackbar("snackbar", "Seleziona un tipo di adapter", 'rgb(255, 208, 208)', 'black');
+                    return;
+                }
+
+                const config = {
+                    enabled: true,
+                    type: type,
+                    connection: {
+                        ip: document.getElementById('modal-siren-ip').value,
+                        port: parseInt(document.getElementById('modal-siren-port').value),
+                        timeout: parseFloat(document.getElementById('modal-siren-timeout').value)
+                    },
+                    config: {}
+                };
+
+                if (type.startsWith('http_')) {
+                    config.config = {
+                        endpoint: document.getElementById('modal-siren-endpoint').value,
+                        method: document.getElementById('modal-siren-method').value || 'GET'
+                    };
+
+                    if (type === 'http_basic' || type === 'http_digest') {
+                        config.config.username = document.getElementById('modal-siren-username').value;
+                        config.config.password = document.getElementById('modal-siren-password').value;
+                    } else if (type === 'http_bearer') {
+                        config.config.token = document.getElementById('modal-siren-token').value;
+                    }
+                } else if (type === 'tcp_raw') {
+                    config.config = {
+                        encoding: document.getElementById('modal-siren-encoding').value || 'utf-8',
+                        line_ending: document.getElementById('modal-siren-line-ending').value || '\\r\\n'
+                    };
+                }
+
                 const response = await fetch('/api/anagrafic/configuration/siren', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -3781,6 +3858,7 @@
 
                 if (response.ok) {
                     showSnackbar("snackbar", "Configurazione sirena salvata", 'rgb(208, 255, 208)', 'black');
+                    closeSirenModal();
                     await loadSirenConfig();
                 } else {
                     showSnackbar("snackbar", "Errore nel salvataggio", 'rgb(255, 208, 208)', 'black');
@@ -3791,7 +3869,15 @@
             }
         }
 
-        async function disableSirenConfig() {
+        function confirmDeleteSiren() {
+            document.getElementById('delete-siren-modal').style.display = 'flex';
+        }
+
+        function closeDeleteSirenModal() {
+            document.getElementById('delete-siren-modal').style.display = 'none';
+        }
+
+        async function deleteSiren() {
             try {
                 const response = await fetch('/api/anagrafic/configuration/siren', {
                     method: 'DELETE',
@@ -3800,6 +3886,7 @@
 
                 if (response.ok) {
                     showSnackbar("snackbar", "Sirena disabilitata", 'rgb(208, 255, 208)', 'black');
+                    closeDeleteSirenModal();
                     await loadSirenConfig();
                 } else {
                     showSnackbar("snackbar", "Errore nella disabilitazione", 'rgb(255, 208, 208)', 'black');
@@ -3821,6 +3908,19 @@
             } catch (error) {
                 showSnackbar("snackbar", "Errore nel test sirena", 'rgb(255, 208, 208)', 'black');
             }
+        }
+
+        // Helper function
+        function getAdapterTypeName(type) {
+            const names = {
+                'tcp_custom': 'TCP Custom',
+                'tcp_raw': 'TCP Raw',
+                'http_simple': 'HTTP Semplice',
+                'http_basic': 'HTTP Basic Auth',
+                'http_digest': 'HTTP Digest Auth',
+                'http_bearer': 'HTTP Bearer Token'
+            };
+            return names[type] || type;
         }
     </script>
 </body>
