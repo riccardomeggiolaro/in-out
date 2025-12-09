@@ -159,21 +159,23 @@ function isValidDate(dateStr) {
 async function updateTable() {
     let queryParams = '';
     if (itemName === "access") queryParams += customQueryParams;
-    const filters = document.querySelector('#filters');
-    filters.querySelectorAll('input').forEach(input => {
-        if (input.name && input.type != "checkbox" && input.value || input.name && input.type == "checkbox" && input.checked) {
-            if (input.type == 'text') queryParams += `${input.name}=${input.value}%&`;
-            else if (input.type == 'number') queryParams += `${input.name}=${input.value}&`;
-            else if (input.type == 'date') queryParams += `${input.name}=${input.value}&`;
-            else if (input.type == 'checkbox') queryParams += `${input.name}=${input.checked}&`;
-        }
-    })
-    filters.querySelectorAll('select').forEach(select => {
-        if (select.name === "access.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
-        else if (select.name === "access.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
-        else if (select.value) {
-            queryParams += `${select.name}=${select.value}&`;
-        }
+    const filters = document.querySelectorAll('#filters');
+    filters.forEach(container => {
+        container.querySelectorAll('input').forEach(input => {
+            if (input.name && input.type != "checkbox" && input.value || input.name && input.type == "checkbox" && input.checked) {
+                if (input.type == 'text') queryParams += `${input.name}=${input.value}%&`;
+                else if (input.type == 'number') queryParams += `${input.name}=${input.value}&`;
+                else if (input.type == 'date') queryParams += `${input.name}=${input.value}&`;
+                else if (input.type == 'checkbox') queryParams += `${input.name}=${input.checked}&`;
+            }
+        })
+        container.querySelectorAll('select').forEach(select => {
+            if (select.name === "access.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
+            else if (select.name === "access.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
+            else if (select.value) {
+                queryParams += `${select.name}=${select.value}&`;
+            }
+        })        
     })
     const offset = (currentPage - 1) * rowsPerPage;
     const res = await fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}&${queryParams}`);
@@ -197,23 +199,25 @@ async function updateTable() {
 
 async function exportTable(type) {
     let queryParams = 'excludeTestWeighing=true&filterDateAccess=true&onlyInOutWithWeight2=true&';
-    const filters = document.querySelector('#filters');
+    const filters = document.querySelectorAll('#filters');
     let name;
-    filters.querySelectorAll('input').forEach(input => {
-        if (input.name && input.value) {
-        name = itemName === "access" && !input.name.includes("access") ? `${itemName}.${input.name}` : input.name;
-            if (input.type == 'text') queryParams += `${name}=${input.value}%&`;
-            else if (input.type == 'number') queryParams += `${name}=${input.value}&`;
-            else if (input.type == 'date') queryParams += `${name}=${input.value}&`;
-        }
-    })
-    filters.querySelectorAll('select').forEach(select => {
-        name = itemName === "access" && !select.name.includes("access") ? `${itemName}.${select.name}` : select.name;
-        if (name === "access.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
-        else if (select.name === "access.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
-        else if (select.value) {
-            queryParams += `${name}=${select.value}&`;
-        }
+    filters.forEach(container => {
+        container.querySelectorAll('input').forEach(input => {
+            if (input.name && input.value) {
+            name = itemName === "access" && !input.name.includes("access") ? `${itemName}.${input.name}` : input.name;
+                if (input.type == 'text') queryParams += `${name}=${input.value}%&`;
+                else if (input.type == 'number') queryParams += `${name}=${input.value}&`;
+                else if (input.type == 'date') queryParams += `${name}=${input.value}&`;
+            }
+        })
+        container.querySelectorAll('select').forEach(select => {
+            name = itemName === "access" && !select.name.includes("access") ? `${itemName}.${select.name}` : select.name;
+            if (name === "access.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
+            else if (select.name === "access.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
+            else if (select.value) {
+                queryParams += `${name}=${select.value}&`;
+            }
+        })        
     })
     const offset = (currentPage - 1) * rowsPerPage;
     
