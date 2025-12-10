@@ -34,7 +34,10 @@ class PanelSirenRouter(WebSocket):
         # Siren adapter (initialized lazily)
         self._siren_adapter = None
 
-        asyncio.run(self.clearBufferPanel())
+        try:
+            asyncio.run(self.clearBufferPanel())
+        except Exception as e:
+            pass
 
         # Add routes
         self.panel_siren_router.add_api_route(
