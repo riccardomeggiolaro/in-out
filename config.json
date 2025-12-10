@@ -1,19 +1,15 @@
 {
     "app_api": {
-        "mode": "MANUALLY",
+        "mode": "AUTOMATIC",
         "panel": {
-            "config": {
-                "duration": 90,
-                "max_string_content": 3,
-                "panel_id": 16
-            },
+            "config": {},
             "connection": {
                 "ip": "0.0.0.0",
-                "port": 5200,
+                "port": 0,
                 "timeout": 5.0
             },
-            "enabled": true,
-            "type": "tcp_custom"
+            "enabled": false,
+            "type": "disabled"
         },
         "path_content": "static/content",
         "path_csv": "csv",
@@ -36,19 +32,14 @@
             "setup": {}
         },
         "siren": {
-            "config": {
-                "endpoint": "http://localhost",
-                "method": "GET",
-                "password": "318101",
-                "username": "marco"
-            },
+            "config": {},
             "connection": {
-                "ip": "100.100.100.101",
-                "port": 80,
+                "ip": "0.0.0.0",
+                "port": 0,
                 "timeout": 5.0
             },
-            "enabled": true,
-            "type": "http_digest"
+            "enabled": false,
+            "type": "disabled"
         },
         "ssh_reverse_tunneling": {
             "forwarding_port": 80,
@@ -61,16 +52,7 @@
         "sync_folder": {
             "local_dir": "/home/riccardo/Scrivania/projects/LOCAL/in-out-new/in-out",
             "mount_point": "/mnt/sync-folder",
-            "remote_folder": {
-                "domain": "BARON",
-                "ip": "10.0.5.105",
-                "password": "uPZa6eY2Ik",
-                "port": 445,
-                "protocol": "samba",
-                "share_name": "GH5/Dev/in-out",
-                "sub_path": "",
-                "username": "Riccardo Meggiolaro"
-            },
+            "remote_folder": null,
             "sub_paths": [
                 "pdf",
                 "csv",
@@ -100,62 +82,7 @@
         "use_recordings": true,
         "use_reservation": true,
         "use_white_list": false,
-        "weighers": {
-            "1": {
-                "connection": {
-                    "ip": "10.0.5.178",
-                    "port": 23,
-                    "timeout": 2.0
-                },
-                "nodes": {
-                    "P1": {
-                        "always_execute_realtime_in_undeground": true,
-                        "continuous_transmission": false,
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "events": {
-                            "realtime": {
-                                "over_min": {
-                                    "set_rele": []
-                                },
-                                "under_min": {
-                                    "set_rele": []
-                                }
-                            },
-                            "weighing": {
-                                "cams": [],
-                                "csv": {
-                                    "in": true,
-                                    "out": true
-                                },
-                                "report": {
-                                    "in": true,
-                                    "out": true
-                                },
-                                "set_rele": []
-                            }
-                        },
-                        "maintaine_session_realtime_after_command": true,
-                        "max_theshold": null,
-                        "max_weight": 60000,
-                        "min_weight": 200,
-                        "name": "P1",
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
-                        "node": null,
-                        "number_of_prints": 1,
-                        "port_rele": null,
-                        "printer_name": "USB-TM-T88VII",
-                        "rele": {},
-                        "run": true,
-                        "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
-                        "terminal": "egt-af03"
-                    }
-                },
-                "time_between_actions": 0.3
-            }
-        }
+        "weighers": {}
     },
     "log": {
         "max-size-mb": 10
