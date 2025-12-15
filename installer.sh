@@ -221,7 +221,7 @@ Description=In-Out Service
 After=network.target
 
 [Service]
-ExecStart= source ${BASE_DIR}.venv/bin.activate && python3 ${BASE_DIR}main.py
+ExecStart= ${BASE_DIR}/start.sh
 WorkingDirectory=${BASE_DIR}
 User=root
 Group=root
