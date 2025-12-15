@@ -49,7 +49,7 @@ def mainprg():
 
 	APPS = [app_api]
 
-	MODULES = [md_weigher, md_sync_folder, md_desktop_interface]
+	MODULES = [md_weigher, md_sync_folder]
 
 	# Carica thread per i mdouli esterni.
 

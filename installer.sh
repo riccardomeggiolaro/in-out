@@ -214,6 +214,8 @@ fi
 
 # Crea il servizio systemd se non esiste
 if [ ! -f /etc/systemd/system/in-out.service ]; then
+    START="${BASE_DIR}/start.sh"
+    sudo chmod +x ${START}
     echo "Creazione del servizio systemd in-out.service..."
     sudo bash -c "cat << EOF > /etc/systemd/system/in-out.service
 [Unit]
@@ -221,7 +223,7 @@ Description=In-Out Service
 After=network.target
 
 [Service]
-ExecStart= ${BASE_DIR}/start.sh
+ExecStart= ${START}
 WorkingDirectory=${BASE_DIR}
 User=root
 Group=root
