@@ -1482,8 +1482,9 @@
                             const ip = url.hostname;
                             const port = url.port;
                             const hostname = `${url.protocol}//${url.host}`;
-                            const path = url.pathname + url.search;
-                            
+                            let path = url.pathname + url.search;
+                            if (path.startsWith("/")) path = path.substring(1);
+
                             // Aggiorna gli elementi
                             const protocolElement = document.querySelector(`#endpoint-protocol-${instanceId}-${nodeId}`);
                             const ipElement = document.querySelector(`#endpoint-ip-${instanceId}-${nodeId}`);
