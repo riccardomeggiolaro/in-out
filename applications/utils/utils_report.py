@@ -1,4 +1,4 @@
-from jinja2 import Environment, FileSystemLoader, meta
+from jinja2 import Environment, FileSystemLoader, meta, Undefined
 import os
 from applications.router.weigher.types import ReportVariables, WeighingPicture
 import libs.lb_config as lb_config
@@ -57,16 +57,6 @@ def get_data_variables(in_out):
                     img = image_to_base64_data_uri(path)
                     if img:
                         variables.weight2.weighing_pictures.append(WeighingPicture(**{"path_name": img}))
-
-    # Imposta un default per weight1.type se non è stato impostato
-    if in_out.idWeight1 and (not variables.weight1.type or variables.weight1.type is None):
-        # Se è solo prima pesata (senza weight2), usa "1° Peso"
-        # Altrimenti usa "Pesata Entrata"
-        if not in_out.idWeight2:
-            variables.weight1.type = "1° Peso"
-        else:
-            variables.weight1.type = "Pesata Entrata"
-
     variables.net_weight = in_out.net_weight
     name_file += ".pdf"
     return name_file, variables, report
@@ -91,7 +81,8 @@ def get_report_file(report_dir, report_name_file):
 def generate_html_report(reports_dir, report_name_file, v: ReportVariables = None):
     try:
         # Setup path to reports
-        env = Environment(loader=FileSystemLoader(reports_dir))
+        # Configura Jinja2 per non crashare su variabili undefined
+        env = Environment(loader=FileSystemLoader(reports_dir), undefined=Undefined)
         
         file_path = os.path.join(reports_dir, report_name_file)
         
@@ -117,9 +108,6 @@ def generate_html_report(reports_dir, report_name_file, v: ReportVariables = Non
 
         # Create template data dictionary
         report_data = {var: v[var] if v and var in v else None for var in variables}
-        
-        # Rimuove tutte le variabili con valore None
-        report_data = delete_none_value(report_data)
 
         # Return the rendered report
         return report.render(**report_data)
