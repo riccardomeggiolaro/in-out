@@ -1466,6 +1466,9 @@
                                 <option value="{{ weight1.weight }}">{{ weight1.weight }} - Peso ENTRATA</option>
                                 <option value="{{ weight1.date }}">{{ weight1.date }} - Data ENTRATA</option>
                                 <option value="{{ weight1.pid }}">{{ weight1.pid }} - Pid ENTRATA</option>
+                                <option value="{{ weight1.type | default('1° Peso') }}">{{ weight1.type | default('1° Peso') }} - Tipo ENTRATA (1° Peso)</option>
+                                <option value="{{ weight1.type | default('Pesata Entrata') }}">{{ weight1.type | default('Pesata Entrata') }} - Tipo ENTRATA (Pesata Entrata)</option>
+                                <option value="{{ weight1.type | default('Entrata') }}">{{ weight1.type | default('Entrata') }} - Tipo ENTRATA (Entrata)</option>
                                 <option value="{{ weight2.weight }}">{{ weight2.weight }} - Peso USCITA</option>
                                 <option value="{{ weight2.date }}">{{ weight2.date }} - Data USCITA</option>
                                 <option value="{{ weight2.pid }}">{{ weight2.pid }} - Pid USCITA</option>
