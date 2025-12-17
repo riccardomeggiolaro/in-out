@@ -57,6 +57,16 @@ def get_data_variables(in_out):
                     img = image_to_base64_data_uri(path)
                     if img:
                         variables.weight2.weighing_pictures.append(WeighingPicture(**{"path_name": img}))
+
+    # Imposta un default per weight1.type se non è stato impostato
+    if in_out.idWeight1 and (not variables.weight1.type or variables.weight1.type is None):
+        # Se è solo prima pesata (senza weight2), usa "1° Peso"
+        # Altrimenti usa "Pesata Entrata"
+        if not in_out.idWeight2:
+            variables.weight1.type = "1° Peso"
+        else:
+            variables.weight1.type = "Pesata Entrata"
+
     variables.net_weight = in_out.net_weight
     name_file += ".pdf"
     return name_file, variables, report
