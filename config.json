@@ -146,7 +146,7 @@
         "max-size-mb": 10
     },
     "name": "in-out",
-    "panel_buffer": "",
+    "panel_buffer": "1111111",
     "secret_key": "$2b$12$PAHE4kh6lnXo3w9SF9tj7O",
     "ver": "3.0.0"
 }
