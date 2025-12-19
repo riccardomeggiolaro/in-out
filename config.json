@@ -2,14 +2,18 @@
     "app_api": {
         "mode": "AUTOMATIC",
         "panel": {
-            "config": {},
+            "config": {
+                "duration": 90,
+                "max_string_content": 3,
+                "panel_id": 16
+            },
             "connection": {
                 "ip": "0.0.0.0",
-                "port": 0,
+                "port": 5200,
                 "timeout": 5.0
             },
-            "enabled": false,
-            "type": "disabled"
+            "enabled": true,
+            "type": "tcp_custom"
         },
         "path_content": "static/content",
         "path_csv": "csv",

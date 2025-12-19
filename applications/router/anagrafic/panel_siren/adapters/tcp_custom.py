@@ -28,6 +28,9 @@ class PanelMessage:
         Returns:
             Binary packet ready to send
         """
+        if msg == "":
+            msg = " "  # Ensure at least one space for clearing
+
         self.data.clear()
         self.data.extend([0xFF, 0xFF, 0xFF, 0xFF])
         self.data.extend([0, 0])  # Placeholder for length
