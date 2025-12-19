@@ -28,6 +28,10 @@ class PanelMessage:
         Returns:
             Binary packet ready to send
         """
+        # Convert empty string to space for panel to accept the clear command
+        if msg == "":
+            msg = " "
+
         self.data.clear()
         self.data.extend([0xFF, 0xFF, 0xFF, 0xFF])
         self.data.extend([0, 0])  # Placeholder for length
