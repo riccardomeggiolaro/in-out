@@ -1089,7 +1089,7 @@ async function handlePesata2() {
 }
 
 async function confirmSemiAutomatic() {
-    if (document.querySelector('.list-in li.selected') || /[1-9]/.test(String(data_weight_realtime.tare))) outWeighing(false);
+    if (/[0-9]/.test(String(data_weight_realtime.potential_net_weight)) || /[1-9]/.test(String(data_weight_realtime.tare.replace("PT", "")))) outWeighing(false);
     else inWeighing(false);
 }
 

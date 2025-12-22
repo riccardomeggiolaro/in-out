@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "AUTOMATIC",
+        "mode": "SEMIAUTOMATIC",
         "panel": {
             "config": {
                 "duration": 90,
@@ -89,7 +89,7 @@
         "weighers": {
             "1": {
                 "connection": {
-                    "ip": "10.0.5.170",
+                    "ip": "10.0.5.178",
                     "port": 23,
                     "timeout": 3.0
                 },
@@ -125,8 +125,8 @@
                         "max_theshold": null,
                         "max_weight": 6000,
                         "min_weight": 200,
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
@@ -134,8 +134,8 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": true,
-                        "terminal": "dgt1"
+                        "take_of_weight_on_startup": false,
+                        "terminal": "egt-af03"
                     }
                 },
                 "time_between_actions": 0.3
@@ -146,7 +146,7 @@
         "max-size-mb": 10
     },
     "name": "in-out",
-    "panel_buffer": "1111111",
+    "panel_buffer": "",
     "secret_key": "$2b$12$PAHE4kh6lnXo3w9SF9tj7O",
     "ver": "3.0.0"
 }
