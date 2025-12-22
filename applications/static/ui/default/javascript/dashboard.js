@@ -1119,7 +1119,6 @@ function handleNeedToConfirm(plate) {
 }
 
 function disableAllElements() {
-    console.log("Disabling all buttons and inputs...");
     // Seleziona tutti i pulsanti e gli input
     const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
 
@@ -1130,7 +1129,6 @@ function disableAllElements() {
 }
 
 function enableAllElements() {
-    console.log("Enabling all buttons and inputs...");
     // Seleziona tutti i pulsanti e gli input
     const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
 
