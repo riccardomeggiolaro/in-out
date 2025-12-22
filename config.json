@@ -56,7 +56,16 @@
         "sync_folder": {
             "local_dir": "/home/riccardo/Scrivania/projects/LOCAL/in-out-new/in-out",
             "mount_point": "/mnt/sync-folder",
-            "remote_folder": null,
+            "remote_folder": {
+                "domain": "BARON",
+                "ip": "10.0.5.105",
+                "password": "uPZa6eY2Ik",
+                "port": 445,
+                "protocol": "samba",
+                "share_name": "GH5/Dev/in-out",
+                "sub_path": "",
+                "username": "Riccardo Meggiolaro"
+            },
             "sub_paths": [
                 "pdf",
                 "csv",
@@ -111,12 +120,12 @@
                             "weighing": {
                                 "cams": [],
                                 "csv": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "report": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "set_rele": []
                             }
@@ -125,6 +134,7 @@
                         "max_theshold": null,
                         "max_weight": 6000,
                         "min_weight": 200,
+                        "name": "P1",
                         "need_take_of_weight_before_weighing": false,
                         "need_take_of_weight_on_startup": false,
                         "node": null,

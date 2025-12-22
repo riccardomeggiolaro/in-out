@@ -189,6 +189,7 @@ class CallbackWeigher(Functions, WebSocket):
 			generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
 			path_pdf = f"{base_path}/{lb_config.g_config['app_api']['path_pdf']}"
 			name_file, variables, report = get_data_variables(last_in_out)
+			remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
 			if generate_report and report:
 				html = generate_html_report(reports_dir, report, v=variables.dict())
@@ -196,7 +197,7 @@ class CallbackWeigher(Functions, WebSocket):
 				if pdf:
 					job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
 					# SALVA COPIA PDF
-					if path_pdf:
+					if path_pdf and remote_folder:
 						save_file_dir(path_pdf, name_file, pdf)
 			csv_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["in"]
 			csv_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["out"]
