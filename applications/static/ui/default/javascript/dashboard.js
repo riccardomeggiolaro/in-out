@@ -256,7 +256,7 @@ async function getData(path) {
             handleNeedToConfirm(obj.vehicle.plate.replace("⭐", ""));
         }
         
-        if (res.id_selected.id !== null) {
+        if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
             const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
             buttonsAndInputs.forEach(element => {
                 element.disabled = true;
@@ -1119,6 +1119,7 @@ function handleNeedToConfirm(plate) {
 }
 
 function disableAllElements() {
+    console.log("Disabling all buttons and inputs...");
     // Seleziona tutti i pulsanti e gli input
     const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
 
@@ -1129,6 +1130,7 @@ function disableAllElements() {
 }
 
 function enableAllElements() {
+    console.log("Enabling all buttons and inputs...");
     // Seleziona tutti i pulsanti e gli input
     const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
 
