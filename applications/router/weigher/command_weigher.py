@@ -333,6 +333,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = f"Pesatura automatica già in esecuzione sulla pesa '{instance.weigher_name}' con identify '{existing_proc['identify']}'."
 		elif Data(**{}) != Data(**current_data):
 			error_message = f"Sulla pesa '{instance.weigher_name}' sono già presenti dati in esecuzione. Attendi che gli operatori completino le operazioni manuali prima di avviare una nuova pesatura automatica."
+		elif len(identify_dto.identify) < 4:
+			error_message = "L'identificativo deve essere di almeno 4 caratteri"
 		else:
 			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 			division = weigher["division"]
