@@ -321,21 +321,21 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			cam_message = cam_message + f" ricevuto da {request.client.host}"
 		else:
 			cam_message = cam_message + f" ricevuto da terminale"
-		if len(identify_dto.identify) < 4:
-			error_message = "L'identificativo deve essere di almeno 4 caratteri"
+		if len(identify_dto.identify) < 5:
+			error_message = "L'identificativo deve essere di almeno 5 caratteri"
 		else:
 			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
 			existing_proc = next(
 				(p for p in self.automatic_weighing_process if p["instance_name"] == instance.instance_name and p["weigher_name"] == instance.weigher_name),
 				None
 			)
-			current_data = await self.GetData(instance=instance)
+			# current_data = await self.GetData(instance=instance)
 			if mode == "MANUALLY":
 				error_message = f"Modalità automatica disattiva. Tentativo di pesatura {cam_message} bloccato"
 			elif existing_proc:
 				error_message = f"Pesatura automatica già in esecuzione sulla pesa '{instance.weigher_name}' con identify '{existing_proc['identify']}'."
-			elif Data(**{}) != Data(**current_data):
-				error_message = f"Sulla pesa '{instance.weigher_name}' sono già presenti dati in esecuzione. Attendi che gli operatori completino le operazioni manuali prima di avviare una nuova pesatura automatica."
+			# elif Data(**{}) != Data(**current_data):
+			# 	error_message = f"Sulla pesa '{instance.weigher_name}' sono già presenti dati in esecuzione. Attendi che gli operatori completino le operazioni manuali prima di avviare una nuova pesatura automatica."
 			else:
 				weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 				division = weigher["division"]
