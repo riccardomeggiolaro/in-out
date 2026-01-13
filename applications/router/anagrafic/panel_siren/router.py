@@ -16,6 +16,8 @@ from modules.md_database.md_database import AccessStatus
 from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
 from modules.md_database.functions.update_data import update_data
 import asyncio
+from datetime import datetime
+from typing import List, Dict
 
 class PanelSirenRouter(WebSocket):
     """
@@ -33,6 +35,9 @@ class PanelSirenRouter(WebSocket):
         self._panel_adapter = None
         # Siren adapter (initialized lazily)
         self._siren_adapter = None
+
+        # History of last 5 detected plates
+        self.recent_plates: List[Dict[str, str]] = []
 
         try:
             asyncio.run(self.clearBufferPanel())
@@ -72,6 +77,9 @@ class PanelSirenRouter(WebSocket):
         )
         self.panel_siren_router.add_api_route(
             "/configuration/siren", self.deleteConfigurationSiren, methods=["DELETE"]
+        )
+        self.panel_siren_router.add_api_route(
+            "/recent-plates", self.getRecentPlates, methods=["GET"]
         )
 
     def _get_panel_adapter(self):
@@ -116,6 +124,40 @@ class PanelSirenRouter(WebSocket):
         """Save buffer to config.json."""
         lb_config.g_config["panel_buffer"] = self.buffer
         lb_config.saveconfig()
+
+    def _add_plate_to_history(self, plate: str):
+        """
+        Add a plate to the recent plates history.
+        Keeps only the last 5 plates with their timestamps.
+
+        Args:
+            plate: License plate to add to history
+        """
+        # Filter out plates shorter than 5 characters
+        if len(plate) <= 4:
+            return
+
+        # Create entry with timestamp
+        plate_entry = {
+            "plate": plate,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # Add to beginning of list
+        self.recent_plates.insert(0, plate_entry)
+
+        # Keep only last 5 plates
+        if len(self.recent_plates) > 5:
+            self.recent_plates = self.recent_plates[:5]
+
+    async def getRecentPlates(self):
+        """
+        Get the list of recently detected license plates.
+
+        Returns:
+            List of last 5 detected plates with timestamps
+        """
+        return {"plates": self.recent_plates}
 
     def editBuffer(self, text: str) -> str:
         """
@@ -200,11 +242,16 @@ class PanelSirenRouter(WebSocket):
         """
         old_buf = self.buffer
         try:
+            # Add plate to history
+            self._add_plate_to_history(text)
+
             buf = self.editBuffer(text)
             adapter = self._get_panel_adapter()
             await adapter.send_message(buf)
             if broadcastMessageBuffer:
                 await self.broadcastMessageAnagrafic("access", {"buffer": buf})
+                # Broadcast updated plate history
+                await self.broadcastMessageAnagrafic("recent_plates", {"plates": self.recent_plates})
             return {"buffer": buf, "success": True}
         except Exception as e:
             self.buffer = old_buf
