@@ -281,8 +281,14 @@ async function populateListIn() {
                 if (item.in_out[0].idWeight1) content = item.in_out[0].weight1.pid;
                 else if (item.in_out[0].idWeight2) content = item.in_out[0].weight2.pid;
             }
-            if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
-            li.textContent = content;
+            if (item.vehicle && item.vehicle.plate) {
+                content = `${item.vehicle.plate}`;
+                // Add subject information below plate
+                if (item.subject && item.subject.social_reason) {
+                    content += `<br><small style="font-size: 0.85em; color: #666;">${item.subject.social_reason}</small>`;
+                }
+            }
+            li.innerHTML = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');
             li.addEventListener('click', async () => {

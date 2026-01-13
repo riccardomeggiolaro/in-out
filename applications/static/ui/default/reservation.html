@@ -1278,7 +1278,15 @@
         }
 
         async function callSiren() {
+            const sirenButton = document.getElementById('call-siren-button');
+            if (!sirenButton) return;
+
             try {
+                // Disable button during API call
+                sirenButton.disabled = true;
+                sirenButton.style.opacity = '0.6';
+                sirenButton.style.cursor = 'not-allowed';
+
                 const response = await fetch('/api/anagrafic/call/siren');
                 if (response.ok) {
                     showSnackbar("snackbar", "Sirena chiamata con successo", 'rgb(208, 255, 208)', 'black');
@@ -1287,6 +1295,11 @@
                 }
             } catch (error) {
                 showSnackbar("snackbar", "Errore nella chiamata della sirena", 'rgb(255, 208, 208)', 'black');
+            } finally {
+                // Re-enable button after response
+                sirenButton.disabled = false;
+                sirenButton.style.opacity = '1';
+                sirenButton.style.cursor = 'pointer';
             }
         }
 
