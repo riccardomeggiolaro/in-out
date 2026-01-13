@@ -751,10 +751,10 @@ button:active {
     transition: box-shadow 0.3s ease;
     width: 1000px;
     max-width: -webkit-fill-available; /* Chrome, Safari */
-    max-width: -moz-available;  
+    max-width: -moz-available;
     margin: 5px auto;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 .list-in li:hover {
     background-color: aliceblue;
@@ -764,6 +764,9 @@ button:active {
     background-color: #1362b8;
     color: white;
     border: 2px solid #1362b8;
+}
+.list-in li.selected small {
+    color: #e0e0e0;
 }
 
 .in-out {
