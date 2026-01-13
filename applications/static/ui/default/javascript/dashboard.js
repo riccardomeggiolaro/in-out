@@ -283,10 +283,18 @@ async function populateListIn() {
             }
             if (item.vehicle && item.vehicle.plate) {
                 content = `${item.vehicle.plate}`;
-                // Add subject information below plate
-                if (item.subject && item.subject.social_reason) {
-                    content += `<br><small style="font-size: 0.85em; color: #666;">${item.subject.social_reason}</small>`;
-                }
+            }
+
+            // Add subject and material information (always show if present)
+            let additionalInfo = [];
+            if (item.subject && item.subject.social_reason) {
+                additionalInfo.push(item.subject.social_reason);
+            }
+            if (item.in_out.length > 0 && item.in_out[0].material && item.in_out[0].material.description) {
+                additionalInfo.push(item.in_out[0].material.description);
+            }
+            if (additionalInfo.length > 0) {
+                content += `<br><small style="font-size: 0.85em; color: #666;">${additionalInfo.join(' - ')}</small>`;
             }
             li.innerHTML = content;
             li.setAttribute('data-id', item.id);
