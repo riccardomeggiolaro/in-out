@@ -87,6 +87,16 @@
                         <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
                     </div>
 
+                    <!-- Sezione Targhe Telecamere -->
+                    <div id="cameraPlatesContainer" style="width: 99%; max-width: 850px; margin: 0 auto 1rem; display: none;">
+                        <div style="background-color: white; border-radius: 8px; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #333;">📹 Targhe Rilevate Telecamere</h3>
+                            <div id="cameraPlatesList" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                                <!-- Le targhe verranno inserite qui dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="weight">
                         <h2 id="netWeight">------</h2>
                         <div class="info-container" id="info-container">

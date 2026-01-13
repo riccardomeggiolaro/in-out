@@ -158,6 +158,14 @@ class WeighingTerminal(Base):
     net_weight = Column(Integer, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
+class CameraPlateHistory(Base):
+    __tablename__ = 'camera_plate_history'
+    id = Column(Integer, primary_key=True, index=True)
+    camera_id = Column(String, nullable=False, index=True)
+    plate = Column(String(collation="NOCASE"), nullable=False, index=True)
+    timestamp = Column(DateTime, server_default=func.now(), default=datetime.now, index=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
+
 # Model for Access table
 class Access(Base):
     __tablename__ = 'access'
@@ -270,6 +278,7 @@ table_models = {
     'lock_record': LockRecord,
     'weighing_picture': WeighingPicture,
     'weighing-terminal': WeighingTerminal,
+    'camera_plate_history': CameraPlateHistory,
     'in_out': InOut  # ADDED: missing from original
 }
 
@@ -284,7 +293,7 @@ upload_file_datas_required_columns = {
     "weighing-terminal": {"type": str, "id": str, "bil": str, "datetime1": str, "date1": str, "time1": str, "datetime2": str, "date2": str, "time2": str, "prog1": str, "prog2": str, "badge": str, "plate": str, "customer": str, "supplier": str, "material": str, "notes1": str, "notes2": str, "weight1": int, "pid1": str, "weight2": int, "pid2": str, "net_weight": int}
 }
 
-instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal]
+instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal, CameraPlateHistory]
 
 # Create tables
 Base.metadata.create_all(engine)

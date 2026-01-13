@@ -1308,4 +1308,155 @@ document.addEventListener('DOMContentLoaded', () => {
     if (listIn) {
         insObserver.observe(listIn, { childList: true, subtree: true });
     }
+
+    // Carica le targhe delle telecamere all'avvio
+    loadCameraPlates();
+
+    // Connetti al WebSocket per aggiornamenti in tempo reale
+    connectCameraPlatesWebSocket();
 });
+
+// Funzione per caricare le targhe delle telecamere
+async function loadCameraPlates() {
+    try {
+        const response = await fetch('/api/anagrafic/camera-plate-history/list');
+        const result = await response.json();
+
+        if (result.success && result.data) {
+            displayCameraPlates(result.data);
+        }
+    } catch (error) {
+        console.error('Errore nel caricamento delle targhe telecamere:', error);
+    }
+}
+
+// Funzione per visualizzare le targhe nella dashboard
+function displayCameraPlates(cameraData) {
+    const container = document.getElementById('cameraPlatesContainer');
+    const platesList = document.getElementById('cameraPlatesList');
+
+    // Se non ci sono dati, nascondi il container
+    if (!cameraData || Object.keys(cameraData).length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // Mostra il container
+    container.style.display = 'block';
+    platesList.innerHTML = '';
+
+    // Per ogni telecamera, crea una sezione con le sue targhe
+    for (const [cameraId, plates] of Object.entries(cameraData)) {
+        const cameraSection = document.createElement('div');
+        cameraSection.style.cssText = 'background-color: #f8f9fa; border-radius: 6px; padding: 8px; min-width: 150px; flex: 1; max-width: 250px;';
+
+        const cameraTitle = document.createElement('div');
+        cameraTitle.style.cssText = 'font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #555;';
+        cameraTitle.textContent = `📹 ${cameraId}`;
+        cameraSection.appendChild(cameraTitle);
+
+        // Aggiungi le targhe
+        plates.forEach((plateData, index) => {
+            const plateButton = document.createElement('button');
+            plateButton.style.cssText = `
+                background-color: ${index === 0 ? '#4CAF50' : 'white'};
+                color: ${index === 0 ? 'white' : '#333'};
+                border: 2px solid ${index === 0 ? '#4CAF50' : '#ddd'};
+                border-radius: 4px;
+                padding: 6px 10px;
+                margin: 3px 0;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 0.9rem;
+                width: 100%;
+                transition: all 0.2s;
+            `;
+
+            const timestamp = new Date(plateData.timestamp);
+            const timeStr = timestamp.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+            plateButton.textContent = `${plateData.plate} • ${timeStr}`;
+            plateButton.title = `Clicca per selezionare questa targa\nRilevata: ${plateData.timestamp}`;
+
+            // Evento hover
+            plateButton.onmouseover = () => {
+                if (index !== 0) {
+                    plateButton.style.backgroundColor = '#e8f5e9';
+                    plateButton.style.borderColor = '#4CAF50';
+                }
+            };
+            plateButton.onmouseout = () => {
+                if (index !== 0) {
+                    plateButton.style.backgroundColor = 'white';
+                    plateButton.style.borderColor = '#ddd';
+                }
+            };
+
+            // Evento click per selezionare la targa
+            plateButton.onclick = () => selectCameraPlate(plateData.plate);
+
+            cameraSection.appendChild(plateButton);
+        });
+
+        platesList.appendChild(cameraSection);
+    }
+}
+
+// Funzione per selezionare una targa e impostarla come veicolo
+async function selectCameraPlate(plate) {
+    try {
+        // Imposta la targa nel campo veicolo
+        const plateInput = document.getElementById('currentPlateVehicle');
+        if (plateInput) {
+            plateInput.value = plate;
+        }
+
+        // Invia la selezione al backend
+        await setDataInExecutionOnCLick('vehicle', 'plate', plate);
+
+        // Mostra feedback visivo
+        showSnackbar("snackbar", `Targa ${plate} selezionata`, '#4CAF50', 'white');
+    } catch (error) {
+        console.error('Errore nella selezione della targa:', error);
+        showSnackbar("snackbar", 'Errore nella selezione della targa', 'rgb(255, 208, 208)', 'black');
+    }
+}
+
+// WebSocket per aggiornamenti in tempo reale delle targhe
+let cameraPlatesWebSocket = null;
+
+function connectCameraPlatesWebSocket() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/api/anagrafic/camera_plate_history?token=${token}`;
+
+        cameraPlatesWebSocket = new WebSocket(wsUrl);
+
+        cameraPlatesWebSocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                // Se riceviamo un aggiornamento, ricarica le targhe
+                if (data.action === 'add') {
+                    loadCameraPlates();
+                }
+            } catch (error) {
+                console.error('Errore nel parsing del messaggio WebSocket:', error);
+            }
+        };
+
+        cameraPlatesWebSocket.onerror = (error) => {
+            console.error('Errore WebSocket targhe telecamere:', error);
+        };
+
+        cameraPlatesWebSocket.onclose = () => {
+            // Riconnetti dopo 5 secondi
+            setTimeout(connectCameraPlatesWebSocket, 5000);
+        };
+    } catch (error) {
+        console.error('Errore nella connessione WebSocket targhe telecamere:', error);
+    }
+}
