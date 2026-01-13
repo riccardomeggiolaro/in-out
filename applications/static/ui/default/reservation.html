@@ -65,6 +65,7 @@
             <div id="panel-buffer-display" style="display: none; align-items: center; gap: 10px;">
                 <span style="font-size: 0.9rem;"><strong>Buffer pannello:</strong> <span id="panel-buffer-text">---</span></span>
                 <button onclick="clearPanelBuffer()" style="padding: 5px 10px; font-size: 0.85rem;">Pulisci</button>
+                <button id="call-siren-button" onclick="callSiren()" style="display: none; padding: 5px 10px; font-size: 0.85rem;">Chiama Sirena</button>
             </div>
         </div>
         <table>
@@ -667,6 +668,7 @@
         const fromDate = document.querySelector('#filter\\.fromDate');
         const toDate = document.querySelector('#filter\\.toDate');
         let isPanelEnabled = true; // Global state for panel configuration
+        let isSirenEnabled = false; // Global state for siren configuration
 
         // Apply waiting column visibility based on panel state
         function applyWaitingColumnVisibility() {
@@ -1247,9 +1249,51 @@
             }
         }
 
-        // Initialize panel buffer display on page load
+        // Siren call management
+        async function initSirenButton() {
+            try {
+                // Check if siren is configured and enabled
+                const response = await fetch('/api/anagrafic/configuration/siren');
+                const config = await response.json();
+
+                // Update global state
+                isSirenEnabled = config && config.enabled;
+
+                if (isSirenEnabled) {
+                    // Show siren button
+                    const sirenButton = document.getElementById('call-siren-button');
+                    if (sirenButton) {
+                        sirenButton.style.display = 'inline-block';
+                    }
+                } else {
+                    // Hide siren button if not configured/enabled
+                    const sirenButton = document.getElementById('call-siren-button');
+                    if (sirenButton) {
+                        sirenButton.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading siren configuration:', error);
+            }
+        }
+
+        async function callSiren() {
+            try {
+                const response = await fetch('/api/anagrafic/call/siren');
+                if (response.ok) {
+                    showSnackbar("snackbar", "Sirena chiamata con successo", 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Errore nella chiamata della sirena", 'rgb(255, 208, 208)', 'black');
+                }
+            } catch (error) {
+                showSnackbar("snackbar", "Errore nella chiamata della sirena", 'rgb(255, 208, 208)', 'black');
+            }
+        }
+
+        // Initialize panel buffer display and siren button on page load
         document.addEventListener('DOMContentLoaded', () => {
             initPanelBufferDisplay();
+            initSirenButton();
         });
     </script>
 </body>
