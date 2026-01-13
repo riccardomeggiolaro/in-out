@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "SEMIAUTOMATIC",
+        "mode": "AUTOMATIC",
         "panel": {
             "config": {
                 "duration": 90,
@@ -24,7 +24,7 @@
         "port": 80,
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
-        "return_pdf_copy_after_weighing": false,
+        "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -36,14 +36,17 @@
             "setup": {}
         },
         "siren": {
-            "config": {},
+            "config": {
+                "endpoint": "http://100.100.100.101/rpc/Switch.Set?id=0&on=true",
+                "method": "GET"
+            },
             "connection": {
-                "ip": "0.0.0.0",
-                "port": 0,
+                "ip": "100.100.100.102",
+                "port": 80,
                 "timeout": 5.0
             },
-            "enabled": false,
-            "type": "disabled"
+            "enabled": true,
+            "type": "http_simple"
         },
         "ssh_reverse_tunneling": {
             "forwarding_port": 80,
@@ -56,16 +59,7 @@
         "sync_folder": {
             "local_dir": "/home/riccardo/Scrivania/projects/LOCAL/in-out-new/in-out",
             "mount_point": "/mnt/sync-folder",
-            "remote_folder": {
-                "domain": "BARON",
-                "ip": "10.0.5.105",
-                "password": "uPZa6eY2Ik",
-                "port": 445,
-                "protocol": "samba",
-                "share_name": "GH5/Dev/in-out",
-                "sub_path": "",
-                "username": "Riccardo Meggiolaro"
-            },
+            "remote_folder": null,
             "sub_paths": [
                 "pdf",
                 "csv",
@@ -100,7 +94,7 @@
                 "connection": {
                     "ip": "10.0.5.178",
                     "port": 23,
-                    "timeout": 3.0
+                    "timeout": 2.0
                 },
                 "nodes": {
                     "P1": {
@@ -120,8 +114,8 @@
                             "weighing": {
                                 "cams": [],
                                 "csv": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
                                 "report": {
                                     "in": true,
@@ -132,15 +126,15 @@
                         },
                         "maintaine_session_realtime_after_command": true,
                         "max_theshold": null,
-                        "max_weight": 6000,
+                        "max_weight": 50000,
                         "min_weight": 200,
                         "name": "P1",
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": true,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
-                        "printer_name": null,
+                        "printer_name": "Canon_iR-ADV_C5235_5240_UFR_II",
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,

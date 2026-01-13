@@ -245,6 +245,8 @@ class CallbackWeigher(Functions, WebSocket):
 		if lb_config.g_config["app_api"]["use_recordings"]:
 			id = None
 			weighing_terminal = None
+			y1 = "Y" if weight_terminal.date1 and len(weight_terminal.date1.split("/")[-1]) == 4 else "y"
+			y2 = "Y" if weight_terminal.date2 and len(weight_terminal.date2.split("/")[-1]) == 4 else "y"
 			if weight_terminal.type == "2":
 				weighing_terminal = get_data_by_attributes("weighing-terminal", {
 					"id_terminal": weight_terminal.id,
@@ -262,11 +264,11 @@ class CallbackWeigher(Functions, WebSocket):
 					"material": weight_terminal.material or None,
 					"notes1": weight_terminal.notes1 or None,
 					"notes2": weight_terminal.notes2 or None,
-					"datetime1": datetime.strptime(f"{weight_terminal.date1} {weight_terminal.time1}", "%d/%m/%Y %H:%M") if weight_terminal.date1 and weight_terminal.time1 else None,
-					"date1": datetime.strptime(weight_terminal.date1, "%d/%m/%Y").date() if weight_terminal.date1 else None,
+					"datetime1": datetime.strptime(f"{weight_terminal.date1} {weight_terminal.time1}", f"%d/%m/%{y1} %H:%M") if weight_terminal.date1 and weight_terminal.time1 else None,
+					"date1": datetime.strptime(weight_terminal.date1, f"%d/%m/%{y1}").date() if weight_terminal.date1 else None,
 					"time1": datetime.strptime(weight_terminal.time1, "%H:%M").time().strftime("%H:%M") if weight_terminal.time1 else None,
-					"datetime2": datetime.strptime(f"{weight_terminal.date2} {weight_terminal.time2}", "%d/%m/%Y %H:%M") if weight_terminal.date2 and weight_terminal.time2 else None,
-					"date2": datetime.strptime(weight_terminal.date2, "%d/%m/%Y").date() if weight_terminal.date2 else None,
+					"datetime2": datetime.strptime(f"{weight_terminal.date2} {weight_terminal.time2}", f"%d/%m/%{y2} %H:%M") if weight_terminal.date2 and weight_terminal.time2 else None,
+					"date2": datetime.strptime(weight_terminal.date2, f"%d/%m/%{y2}").date() if weight_terminal.date2 else None,
 					"time2": datetime.strptime(weight_terminal.time2, "%H:%M").time().strftime("%H:%M") if weight_terminal.time2 else None,
 					"prog1": weight_terminal.prog1 or None,
 					"prog2": weight_terminal.prog2 or None,
@@ -284,8 +286,8 @@ class CallbackWeigher(Functions, WebSocket):
 				update_weighing_data = {
 					"type": weight_terminal.type,
 					"notes2": weight_terminal.notes2 or None,
-					"datetime2": datetime.strptime(f"{weight_terminal.date2} {weight_terminal.time2}", "%d/%m/%Y %H:%M") if weight_terminal.date2 and weight_terminal.time2 else None,
-					"date2": datetime.strptime(weight_terminal.date2, "%d/%m/%Y").date() if weight_terminal.date2 else None,
+					"datetime2": datetime.strptime(f"{weight_terminal.date2} {weight_terminal.time2}", f"%d/%m/%{y2} %H:%M") if weight_terminal.date2 and weight_terminal.time2 else None,
+					"date2": datetime.strptime(weight_terminal.date2, f"%d/%m/%{y2}").date() if weight_terminal.date2 else None,
 					"time2": datetime.strptime(weight_terminal.time2, "%H:%M").time().strftime("%H:%M") if weight_terminal.time2 else None,
 					"prog2": weight_terminal.prog2 or None,
 					"pid2": weight_terminal.pid2 or None,

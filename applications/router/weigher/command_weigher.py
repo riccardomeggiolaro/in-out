@@ -310,6 +310,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			request.state.user = response
 		mode = lb_config.g_config["app_api"]["mode"]
 		error_message = None
+		success_message = None
 		access = None
 		proc = {
 			"instance_name": instance.instance_name,
@@ -435,7 +436,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 										)
 									]
 								threading.Thread(target=lambda: asyncio.run(handleAutomatic())).start()
-								error_message = "Pesatura automatica in attesa di essere eseguita"
+								success_message = "Pesatura automatica presa in carico."
 							elif mode == "SEMIAUTOMATIC":
 								async def handleSemiautomatic():
 									data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
@@ -488,11 +489,17 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 										)
 									]
 								threading.Thread(target=lambda: asyncio.run(handleSemiautomatic())).start()
-								error_message = "Pesatura semiautomatica in attesa di conferma dell'utente per la modalità semiautomatica"
+								error_message = "Pesatura semiautomatica in attesa di conferma dall'operatore."
 					else:
 						error_message = f"Accesso con '{identify_dto.identify}' non esistente."
+		if error_message:
+			error_message = cam_message + f" - Errore: {error_message}"
+			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": error_message})
+		elif success_message:
+			success_message = cam_message + f" - {success_message}"
+			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": success_message})
 		return {
-			"message": error_message,
+			"message": error_message or success_message,
 			"access_id": access["id"] if access else None,
 			"identify_dto": identify_dto
 		}
