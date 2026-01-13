@@ -760,6 +760,9 @@ button:active {
     background-color: aliceblue;
     cursor: pointer;
 }
+.list-in li small {
+    color: #666;
+}
 .list-in li.selected {
     background-color: #1362b8;
     color: white;

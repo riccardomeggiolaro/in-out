@@ -294,7 +294,7 @@ async function populateListIn() {
                 additionalInfo.push(item.in_out[0].material.description);
             }
             if (additionalInfo.length > 0) {
-                content += `<br><small style="font-size: 0.85em; color: #666;">${additionalInfo.join(' - ')}</small>`;
+                content += `<br><small style="font-size: 0.85em;">${additionalInfo.join(' - ')}</small>`;
             }
             li.innerHTML = content;
             li.setAttribute('data-id', item.id);
