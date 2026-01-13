@@ -106,8 +106,16 @@ def generate_html_report(reports_dir, report_name_file, v: ReportVariables = Non
         # Trova le variabili non dichiarate nel template
         variables = meta.find_undeclared_variables(parsed_content)
 
-        # Create template data dictionary
-        report_data = {var: v[var] if v and var in v else None for var in variables}
+        # Rimuovi valori None dal dizionario v
+        if v:
+            v = delete_none_value(v)
+
+        # Create template data dictionary - non includere chiavi con valore None
+        # Questo permette ai filtri Jinja2 | default() di funzionare correttamente
+        report_data = {}
+        for var in variables:
+            if v and var in v and v[var] is not None:
+                report_data[var] = v[var]
 
         # Return the rendered report
         return report.render(**report_data)
