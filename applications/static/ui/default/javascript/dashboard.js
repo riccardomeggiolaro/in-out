@@ -1308,4 +1308,107 @@ document.addEventListener('DOMContentLoaded', () => {
     if (listIn) {
         insObserver.observe(listIn, { childList: true, subtree: true });
     }
+    // Load initial recent plates
+    loadRecentPlates();
+    // Connect to recent plates WebSocket
+    connectRecentPlatesWebSocket();
+});
+
+// Recent Plates WebSocket management
+let recentPlatesWebSocket = null;
+
+function updateRecentPlatesUI(plates) {
+    const recentPlatesList = document.getElementById('recent-plates-list');
+    if (!recentPlatesList) return;
+
+    if (!plates || plates.length === 0) {
+        recentPlatesList.innerHTML = '<li style="color: #888; font-style: italic;">Nessuna targa rilevata</li>';
+        return;
+    }
+
+    recentPlatesList.innerHTML = '';
+    plates.forEach(plateEntry => {
+        const li = document.createElement('li');
+        li.style.padding = '5px';
+        li.style.borderBottom = '1px solid #eee';
+        li.style.fontSize = '0.95rem';
+
+        const plateSpan = document.createElement('span');
+        plateSpan.style.fontWeight = 'bold';
+        plateSpan.textContent = plateEntry.plate;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.style.fontSize = '0.8rem';
+        timeSpan.style.color = '#666';
+        timeSpan.style.marginLeft = '10px';
+        const timestamp = new Date(plateEntry.timestamp);
+        timeSpan.textContent = timestamp.toLocaleTimeString('it-IT');
+
+        li.appendChild(plateSpan);
+        li.appendChild(timeSpan);
+        recentPlatesList.appendChild(li);
+    });
+}
+
+async function loadRecentPlates() {
+    try {
+        const response = await fetch('/api/anagrafic/recent-plates');
+        const data = await response.json();
+        updateRecentPlatesUI(data.plates);
+    } catch (error) {
+        console.error('Error loading recent plates:', error);
+    }
+}
+
+function connectRecentPlatesWebSocket() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found for WebSocket connection');
+        return;
+    }
+
+    let baseUrl = window.location.origin + pathname;
+    baseUrl = baseUrl.replace(/^http/, (match) => match === 'http' ? 'ws' : 'wss');
+    const websocketUrl = `${baseUrl}/api/anagrafic/recent_plates?token=${token}`;
+
+    if (recentPlatesWebSocket) {
+        recentPlatesWebSocket.close();
+    }
+
+    recentPlatesWebSocket = new WebSocket(websocketUrl);
+
+    recentPlatesWebSocket.onopen = () => {
+        console.log('Recent plates WebSocket connected');
+    };
+
+    recentPlatesWebSocket.onmessage = (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            if (message.action === 'message' && message.data && message.data.plates) {
+                updateRecentPlatesUI(message.data.plates);
+            }
+        } catch (error) {
+            console.error('Error parsing recent plates message:', error);
+        }
+    };
+
+    recentPlatesWebSocket.onerror = (error) => {
+        console.error('Recent plates WebSocket error:', error);
+    };
+
+    recentPlatesWebSocket.onclose = () => {
+        console.log('Recent plates WebSocket closed. Reconnecting in 3 seconds...');
+        setTimeout(() => {
+            if (document.visibilityState === 'visible') {
+                connectRecentPlatesWebSocket();
+            }
+        }, 3000);
+    };
+}
+
+// Reconnect WebSocket when page becomes visible
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && (!recentPlatesWebSocket || recentPlatesWebSocket.readyState !== WebSocket.OPEN)) {
+        connectRecentPlatesWebSocket();
+    }
 });
