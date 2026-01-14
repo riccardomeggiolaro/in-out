@@ -693,22 +693,40 @@ function connectWebSocket(path, exe) {
     })
 
     _data.addEventListener('error', () => {
-        // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
-        if (!isRefreshing && !isReconnecting) {
-            closeWebSocket();
+        console.log('WebSocket error event');
+        // Reset flag riconnessione
+        const wasReconnecting = isReconnecting;
+        isReconnecting = false;
+
+        closeWebSocket();
+
+        // Mostra sempre il popup tranne se stiamo refreshing
+        if (!isRefreshing) {
             showReconnectionPopup();
         }
     });
 
     _data.addEventListener('close', () => {
-        // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
-        if (!isRefreshing && !isReconnecting) {
+        console.log('WebSocket close event');
+        // Reset flag riconnessione
+        const wasReconnecting = isReconnecting;
+        isReconnecting = false;
+
+        // Mostra sempre il popup tranne se stiamo refreshing
+        if (!isRefreshing) {
             showReconnectionPopup();
         }
     });
 }
 
 function showReconnectionPopup() {
+    // Se il popup è già aperto, non fare nulla (già in riconnessione)
+    const popup = document.getElementById('reconnectionPopup');
+    if (popup && popup.style.display === 'flex') {
+        console.log('Popup già aperto, non ricreo tentativo');
+        return;
+    }
+
     // Disabilita tutti gli elementi TRANNE il dropdown per cambiare pesa
     const weigherSelect = document.querySelector('.list-weigher');
     const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
