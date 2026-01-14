@@ -923,7 +923,8 @@ hr {
 }
 
 #reconnectionPopup {
-    z-index: 999;
+    z-index: 1000;
+    align-items: initial;
 }
 
 #confirmPopup {
