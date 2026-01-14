@@ -552,7 +552,17 @@ function changeContent(type, value) {
 }
 
 function updateOnlineStatus() {
-    if (location.protocol === "https:") {
+    // Rileva quando il browser va offline (es. cavo staccato, wifi perso)
+    if (!navigator.onLine && _data && _data.readyState === WebSocket.OPEN) {
+        console.log('Browser offline rilevato - chiudo connessione WebSocket');
+        closeWebSocket();
+        if (!isRefreshing) {
+            disableAllElements();
+            reconnectionButton.disabled = false;
+            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Connessione di rete persa. Clicca ok per riconnettere...";
+            openPopup('reconnectionPopup');
+        }
+    } else if (location.protocol === "https:") {
         console.error("WebSocket error. Trying to reconnect...");
         document.querySelector('.loading').style.display = 'flex';
         document.querySelector('.container').style.display = 'none';
