@@ -705,16 +705,16 @@ function connectWebSocket(path, exe) {
     })
 
     _data.addEventListener('error', () => {
-        // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
-        if (!isRefreshing && !isReconnecting) {
+        // Avvia sempre la riconnessione automatica, tranne durante il refresh della pagina
+        if (!isRefreshing) {
             closeWebSocket();
             showReconnectionPopup();
         }
     });
 
     _data.addEventListener('close', () => {
-        // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
-        if (!isRefreshing && !isReconnecting) {
+        // Avvia sempre la riconnessione automatica, tranne durante il refresh della pagina
+        if (!isRefreshing) {
             showReconnectionPopup();
         }
     });
@@ -817,8 +817,8 @@ function startHeartbeatCheck() {
                 _data.close();
             }
 
-            // Mostra il popup SOLO se NON stiamo riconnettendo o aggiornando la pagina
-            if (!isRefreshing && !isReconnecting) {
+            // Avvia sempre la riconnessione automatica, tranne durante il refresh della pagina
+            if (!isRefreshing) {
                 showReconnectionPopup();
             }
         }
