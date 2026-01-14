@@ -538,7 +538,7 @@ button:active {
     .anagrafic.active {
         transform: translateX(0);
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-        z-index: 1003;
+        z-index: 1002;
     }
 
     .ins {
@@ -549,7 +549,7 @@ button:active {
     .ins.active {
         transform: translateX(0);
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
-        z-index: 1003;
+        z-index: 1002;
     }
 
     /* Pulsante chiusura per anagrafic e ins */
@@ -933,7 +933,6 @@ hr {
 
 #confirmPopup {
     align-items: initial;
-    z-index: 1001;
 }
 
 #confirmPopup .popup-content {
