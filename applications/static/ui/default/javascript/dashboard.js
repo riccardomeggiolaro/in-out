@@ -54,9 +54,7 @@ let _data;
 let reconnectTimeout;
 let lastHeartbeat;
 let heartbeatInterval;
-let reconnectionAttemptTimeout;
 let isReconnecting = false; // Flag per evitare popup durante riconnessione
-let autoReconnectInterval; // Intervallo per riconnessione automatica
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
@@ -567,7 +565,7 @@ function updateOnlineStatus() {
         console.error("WebSocket error. Trying to reconnect...");
         document.querySelector('.loading').style.display = 'flex';
         document.querySelector('.container').style.display = 'none';
-        startAutoReconnect();
+        showReconnectionPopup();
     }
 }
 
@@ -673,16 +671,6 @@ function connectWebSocket(path, exe) {
     });
 
     _data.addEventListener('open', () => {
-        // Cancella tutti i timeout e intervalli di riconnessione
-        if (reconnectionAttemptTimeout) {
-            clearTimeout(reconnectionAttemptTimeout);
-            reconnectionAttemptTimeout = null;
-        }
-        if (autoReconnectInterval) {
-            clearInterval(autoReconnectInterval);
-            autoReconnectInterval = null;
-        }
-
         // Connessione stabilita con successo
         isReconnecting = false;
 
@@ -721,51 +709,28 @@ function connectWebSocket(path, exe) {
 }
 
 function showReconnectionPopup() {
-    disableAllElements();
+    // Disabilita tutti gli elementi TRANNE il dropdown per cambiare pesa
+    const weigherSelect = document.querySelector('.list-weigher');
+    const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
+    buttonsAndInputs.forEach(element => {
+        if (element !== weigherSelect) {
+            element.disabled = true;
+        }
+    });
+
     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
     openPopup('reconnectionPopup');
-    startAutoReconnect();
-}
 
-function startAutoReconnect() {
-    // Ferma eventuali tentativi precedenti
-    if (autoReconnectInterval) {
-        clearInterval(autoReconnectInterval);
-    }
-    if (reconnectionAttemptTimeout) {
-        clearTimeout(reconnectionAttemptTimeout);
-    }
-
-    // Primo tentativo immediato
+    // Singolo tentativo di riconnessione che aspetta
     attemptReconnect();
-
-    // Riprova automaticamente ogni 3 secondi
-    autoReconnectInterval = setInterval(() => {
-        if (!_data || _data.readyState !== WebSocket.OPEN) {
-            console.log('Nuovo tentativo di riconnessione automatica...');
-            attemptReconnect();
-        } else {
-            // Connessione riuscita, ferma i tentativi
-            clearInterval(autoReconnectInterval);
-            autoReconnectInterval = null;
-        }
-    }, 3000);
 }
 
 function attemptReconnect() {
     isReconnecting = true;
     closeWebSocket();
 
-    console.log('Tentativo di riconnessione...');
+    console.log('Tentativo di riconnessione in corso, in attesa...');
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
-
-    // Timeout di 3 secondi per questo singolo tentativo
-    reconnectionAttemptTimeout = setTimeout(() => {
-        if (!_data || _data.readyState !== WebSocket.OPEN) {
-            console.log('Tentativo di riconnessione fallito, ritenterò...');
-            isReconnecting = false;
-        }
-    }, 3000);
 }
 
 function closeWebSocket() {
@@ -773,18 +738,6 @@ function closeWebSocket() {
     if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
         heartbeatInterval = null;
-    }
-
-    // Cancella eventuali timeout di riconnessione
-    if (reconnectionAttemptTimeout) {
-        clearTimeout(reconnectionAttemptTimeout);
-        reconnectionAttemptTimeout = null;
-    }
-
-    // Cancella intervallo di riconnessione automatica
-    if (autoReconnectInterval) {
-        clearInterval(autoReconnectInterval);
-        autoReconnectInterval = null;
     }
 
     if (_data) {
