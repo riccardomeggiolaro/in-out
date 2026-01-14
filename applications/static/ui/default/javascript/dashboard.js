@@ -773,13 +773,13 @@ function startHeartbeatCheck() {
         clearInterval(heartbeatInterval);
     }
 
-    // Controlla ogni secondo se sono arrivati messaggi dal server
+    // Controlla ogni 500ms se sono arrivati messaggi dal server
     heartbeatInterval = setInterval(() => {
         const now = Date.now();
         const timeSinceLastHeartbeat = now - lastHeartbeat;
 
-        // Se sono passati più di 3 secondi senza messaggi, considera la connessione persa
-        if (timeSinceLastHeartbeat > 3000) {
+        // Se sono passati più di 1 secondo senza messaggi, considera la connessione persa
+        if (timeSinceLastHeartbeat > 1000) {
             console.log('Heartbeat timeout: nessun messaggio ricevuto da ' + timeSinceLastHeartbeat + 'ms');
 
             // Ferma il controllo
@@ -799,7 +799,7 @@ function startHeartbeatCheck() {
                 openPopup('reconnectionPopup');
             }
         }
-    }, 1000); // Controlla ogni secondo
+    }, 500); // Controlla ogni 500ms per rilevare più velocemente
 }
 
 function isNumeric(value) {
