@@ -56,6 +56,7 @@ let lastHeartbeat;
 let heartbeatInterval;
 let reconnectionAttemptTimeout;
 let isReconnecting = false; // Flag per evitare popup durante riconnessione
+let autoReconnectInterval; // Intervallo per riconnessione automatica
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
@@ -560,16 +561,13 @@ function updateOnlineStatus() {
         console.log('Browser offline rilevato - chiudo connessione WebSocket');
         closeWebSocket();
         if (!isRefreshing) {
-            disableAllElements();
-            reconnectionButton.disabled = false;
-            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Connessione di rete persa. Clicca ok per riconnettere...";
-            openPopup('reconnectionPopup');
+            showReconnectionPopup();
         }
     } else if (location.protocol === "https:") {
         console.error("WebSocket error. Trying to reconnect...");
         document.querySelector('.loading').style.display = 'flex';
         document.querySelector('.container').style.display = 'none';
-        attemptReconnect();
+        startAutoReconnect();
     }
 }
 
@@ -675,10 +673,14 @@ function connectWebSocket(path, exe) {
     });
 
     _data.addEventListener('open', () => {
-        // Cancella il timeout del tentativo di riconnessione
+        // Cancella tutti i timeout e intervalli di riconnessione
         if (reconnectionAttemptTimeout) {
             clearTimeout(reconnectionAttemptTimeout);
             reconnectionAttemptTimeout = null;
+        }
+        if (autoReconnectInterval) {
+            clearInterval(autoReconnectInterval);
+            autoReconnectInterval = null;
         }
 
         // Connessione stabilita con successo
@@ -699,65 +701,69 @@ function connectWebSocket(path, exe) {
             .then(() => {
                 // Abilita tutti gli elementi solo dopo aver caricato i dati
                 enableAllElements();
-                reconnectionButton.disabled = true;
             });
     })
 
     _data.addEventListener('error', () => {
-        // Cancella eventuali timeout di riconnessione
-        if (reconnectionAttemptTimeout) {
-            clearTimeout(reconnectionAttemptTimeout);
-            reconnectionAttemptTimeout = null;
-        }
-
         // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
         if (!isRefreshing && !isReconnecting) {
             closeWebSocket();
-            disableAllElements();
-            reconnectionButton.disabled = false;
-            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
-            openPopup('reconnectionPopup');
+            showReconnectionPopup();
         }
     });
 
     _data.addEventListener('close', () => {
-        // Cancella eventuali timeout di riconnessione
-        if (reconnectionAttemptTimeout) {
-            clearTimeout(reconnectionAttemptTimeout);
-            reconnectionAttemptTimeout = null;
-        }
-
         // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
         if (!isRefreshing && !isReconnecting) {
-            disableAllElements();
-            reconnectionButton.disabled = false;
-            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
-            openPopup('reconnectionPopup');
+            showReconnectionPopup();
         }
     });
 }
 
-function attemptReconnect() {
-    reconnectionButton.disabled = true;
-    isReconnecting = true; // Flag per evitare popup durante riconnessione
-    closeWebSocket();
+function showReconnectionPopup() {
+    disableAllElements();
+    document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
+    openPopup('reconnectionPopup');
+    startAutoReconnect();
+}
 
-    // Cancella eventuali timeout precedenti
+function startAutoReconnect() {
+    // Ferma eventuali tentativi precedenti
+    if (autoReconnectInterval) {
+        clearInterval(autoReconnectInterval);
+    }
     if (reconnectionAttemptTimeout) {
         clearTimeout(reconnectionAttemptTimeout);
     }
 
-    document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
+    // Primo tentativo immediato
+    attemptReconnect();
+
+    // Riprova automaticamente ogni 3 secondi
+    autoReconnectInterval = setInterval(() => {
+        if (!_data || _data.readyState !== WebSocket.OPEN) {
+            console.log('Nuovo tentativo di riconnessione automatica...');
+            attemptReconnect();
+        } else {
+            // Connessione riuscita, ferma i tentativi
+            clearInterval(autoReconnectInterval);
+            autoReconnectInterval = null;
+        }
+    }, 3000);
+}
+
+function attemptReconnect() {
+    isReconnecting = true;
+    closeWebSocket();
+
+    console.log('Tentativo di riconnessione...');
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
 
-    // Timeout di 3 secondi per il tentativo di riconnessione
+    // Timeout di 3 secondi per questo singolo tentativo
     reconnectionAttemptTimeout = setTimeout(() => {
-        // Se dopo 3 secondi il WebSocket non è aperto, considera fallito il tentativo
         if (!_data || _data.readyState !== WebSocket.OPEN) {
-            console.log('Tentativo di riconnessione fallito dopo 3 secondi');
-            isReconnecting = false; // Reset flag
-            reconnectionButton.disabled = false;
-            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione fallita. Clicca ok per riprovare...";
+            console.log('Tentativo di riconnessione fallito, ritenterò...');
+            isReconnecting = false;
         }
     }, 3000);
 }
@@ -773,6 +779,12 @@ function closeWebSocket() {
     if (reconnectionAttemptTimeout) {
         clearTimeout(reconnectionAttemptTimeout);
         reconnectionAttemptTimeout = null;
+    }
+
+    // Cancella intervallo di riconnessione automatica
+    if (autoReconnectInterval) {
+        clearInterval(autoReconnectInterval);
+        autoReconnectInterval = null;
     }
 
     if (_data) {
@@ -807,10 +819,7 @@ function startHeartbeatCheck() {
 
             // Mostra il popup SOLO se NON stiamo riconnettendo o aggiornando la pagina
             if (!isRefreshing && !isReconnecting) {
-                disableAllElements();
-                reconnectionButton.disabled = false;
-                document.querySelector('#reconnectionPopup .popup-content p').textContent = "Connessione persa. Clicca ok per riconnettere...";
-                openPopup('reconnectionPopup');
+                showReconnectionPopup();
             }
         }
     }, 500); // Controlla ogni 500ms per rilevare più velocemente
