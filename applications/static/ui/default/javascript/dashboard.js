@@ -720,26 +720,25 @@ function connectWebSocket(path, exe) {
 }
 
 function showReconnectionPopup() {
-    // Se il popup è già aperto, non fare nulla (già in riconnessione)
     const popup = document.getElementById('reconnectionPopup');
-    if (popup && popup.style.display === 'flex') {
-        console.log('Popup già aperto, non ricreo tentativo');
-        return;
+    const isPopupAlreadyOpen = popup && popup.style.display === 'flex';
+
+    if (!isPopupAlreadyOpen) {
+        // Disabilita tutti gli elementi TRANNE il dropdown per cambiare pesa
+        const weigherSelect = document.querySelector('.list-weigher');
+        const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
+        buttonsAndInputs.forEach(element => {
+            if (element !== weigherSelect) {
+                element.disabled = true;
+            }
+        });
+
+        document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
+        openPopup('reconnectionPopup');
     }
 
-    // Disabilita tutti gli elementi TRANNE il dropdown per cambiare pesa
-    const weigherSelect = document.querySelector('.list-weigher');
-    const buttonsAndInputs = document.querySelectorAll('button, input, select, textarea, [role="button"]');
-    buttonsAndInputs.forEach(element => {
-        if (element !== weigherSelect) {
-            element.disabled = true;
-        }
-    });
-
-    document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
-    openPopup('reconnectionPopup');
-
-    // Singolo tentativo di riconnessione che aspetta
+    // SEMPRE fare un nuovo tentativo, anche se il popup è già aperto
+    console.log('Nuovo tentativo di riconnessione...');
     attemptReconnect();
 }
 
