@@ -54,6 +54,7 @@ let _data;
 let reconnectTimeout;
 let lastHeartbeat;
 let heartbeatInterval;
+let reconnectionAttemptTimeout;
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
@@ -666,8 +667,13 @@ function connectWebSocket(path, exe) {
     });
 
     _data.addEventListener('open', () => {
-        enableAllElements();
-        reconnectionButton.disabled = true;
+        // Cancella il timeout del tentativo di riconnessione
+        if (reconnectionAttemptTimeout) {
+            clearTimeout(reconnectionAttemptTimeout);
+            reconnectionAttemptTimeout = null;
+        }
+
+        // Chiudi immediatamente il popup
         closePopup('reconnectionPopup');
 
         // Inizializza il timestamp del primo heartbeat
@@ -675,9 +681,25 @@ function connectWebSocket(path, exe) {
 
         // Avvia il controllo periodico del heartbeat
         startHeartbeatCheck();
+
+        // Ricarica i dati dopo aver aperto la connessione
+        getInstanceWeigher(currentWeigherPath);
+        getData(currentWeigherPath)
+            .then(() => populateListIn())
+            .then(() => {
+                // Abilita tutti gli elementi solo dopo aver caricato i dati
+                enableAllElements();
+                reconnectionButton.disabled = true;
+            });
     })
 
     _data.addEventListener('error', () => {
+        // Cancella eventuali timeout di riconnessione
+        if (reconnectionAttemptTimeout) {
+            clearTimeout(reconnectionAttemptTimeout);
+            reconnectionAttemptTimeout = null;
+        }
+
         if (!isRefreshing) {
             closeWebSocket();
             disableAllElements();
@@ -688,6 +710,12 @@ function connectWebSocket(path, exe) {
     });
 
     _data.addEventListener('close', () => {
+        // Cancella eventuali timeout di riconnessione
+        if (reconnectionAttemptTimeout) {
+            clearTimeout(reconnectionAttemptTimeout);
+            reconnectionAttemptTimeout = null;
+        }
+
         if (!isRefreshing) {
             disableAllElements();
             reconnectionButton.disabled = false;
@@ -700,11 +728,24 @@ function connectWebSocket(path, exe) {
 function attemptReconnect() {
     reconnectionButton.disabled = true;
     closeWebSocket();
+
+    // Cancella eventuali timeout precedenti
+    if (reconnectionAttemptTimeout) {
+        clearTimeout(reconnectionAttemptTimeout);
+    }
+
     document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione in corso...";
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
-    getInstanceWeigher(currentWeigherPath);
-    getData(currentWeigherPath);
-    populateListIn(currentWeigherPath);
+
+    // Timeout di 3 secondi per il tentativo di riconnessione
+    reconnectionAttemptTimeout = setTimeout(() => {
+        // Se dopo 3 secondi il WebSocket non è aperto, considera fallito il tentativo
+        if (!_data || _data.readyState !== WebSocket.OPEN) {
+            console.log('Tentativo di riconnessione fallito dopo 3 secondi');
+            reconnectionButton.disabled = false;
+            document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione fallita. Clicca ok per riprovare...";
+        }
+    }, 3000);
 }
 
 function closeWebSocket() {
@@ -712,6 +753,12 @@ function closeWebSocket() {
     if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
         heartbeatInterval = null;
+    }
+
+    // Cancella eventuali timeout di riconnessione
+    if (reconnectionAttemptTimeout) {
+        clearTimeout(reconnectionAttemptTimeout);
+        reconnectionAttemptTimeout = null;
     }
 
     if (_data) {
