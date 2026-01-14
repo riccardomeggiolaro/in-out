@@ -581,6 +581,56 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
   
 	async def websocket_endpoint_realtime(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.connect(websocket)
+
+		# Invia immediatamente uno stato iniziale al client per evitare N/A
+		try:
+			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+			status = weigher["status"]
+
+			if status == 200:
+				# Bilancia collegata - invia stato di caricamento
+				await websocket.send_json({
+					"status": "Caricamento...",
+					"type": "--",
+					"net_weight": "0",
+					"gross_weight": "0",
+					"tare": "0",
+					"unite_measure": "kg",
+					"potential_net_weight": None
+				})
+				# Imposta immediatamente il modope a REALTIME per ricevere dati subito
+				modope_in_execution = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				if modope_in_execution in ["OK", "DIAGNOSTIC"]:
+					md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
+			else:
+				# Bilancia non collegata - invia errore
+				connecting = md_weigher.module_weigher.getInstanceConnecting(instance_name=instance.instance_name)
+				message = "Errore di connessione"
+				if connecting:
+					message = "Tentativo di connessione in corso..."
+				if status in [305, 201]:
+					message = "Errore di ricezione"
+				await websocket.send_json({
+					"status": message,
+					"type": "--",
+					"net_weight": "--",
+					"gross_weight": "--",
+					"tare": "--",
+					"unite_measure": "--",
+					"potential_net_weight": None
+				})
+		except Exception as e:
+			# In caso di errore, invia uno stato di default
+			await websocket.send_json({
+				"status": "Inizializzazione...",
+				"type": "--",
+				"net_weight": "0",
+				"gross_weight": "0",
+				"tare": "0",
+				"unite_measure": "kg",
+				"potential_net_weight": None
+			})
+
 		while instance.instance_name in weighers_data and instance.weigher_name in weighers_data[instance.instance_name]:
 			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 			status = weigher["status"]
