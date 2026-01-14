@@ -52,6 +52,8 @@ let data_weight_realtime = {
 
 let _data;
 let reconnectTimeout;
+let lastHeartbeat;
+let heartbeatInterval;
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
@@ -648,6 +650,8 @@ function connectWebSocket(path, exe) {
     _data = new WebSocket(websocketUrl);
 
     _data.addEventListener('message', (e) => {
+        // Aggiorna il timestamp dell'ultimo messaggio ricevuto
+        lastHeartbeat = Date.now();
         exe(e);
     });
 
@@ -655,6 +659,12 @@ function connectWebSocket(path, exe) {
         enableAllElements();
         reconnectionButton.disabled = true;
         closePopup('reconnectionPopup');
+
+        // Inizializza il timestamp del primo heartbeat
+        lastHeartbeat = Date.now();
+
+        // Avvia il controllo periodico del heartbeat
+        startHeartbeatCheck();
     })
 
     _data.addEventListener('error', () => {
@@ -688,10 +698,51 @@ function attemptReconnect() {
 }
 
 function closeWebSocket() {
+    // Ferma il controllo del heartbeat
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+    }
+
     if (_data) {
         _data.close(); // Chiude la connessione WebSocket
         _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
     }
+}
+
+function startHeartbeatCheck() {
+    // Ferma eventuali controlli precedenti
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+    }
+
+    // Controlla ogni secondo se sono arrivati messaggi dal server
+    heartbeatInterval = setInterval(() => {
+        const now = Date.now();
+        const timeSinceLastHeartbeat = now - lastHeartbeat;
+
+        // Se sono passati più di 3 secondi senza messaggi, considera la connessione persa
+        if (timeSinceLastHeartbeat > 3000) {
+            console.log('Heartbeat timeout: nessun messaggio ricevuto da ' + timeSinceLastHeartbeat + 'ms');
+
+            // Ferma il controllo
+            clearInterval(heartbeatInterval);
+            heartbeatInterval = null;
+
+            // Chiudi la connessione se ancora aperta
+            if (_data && _data.readyState === WebSocket.OPEN) {
+                _data.close();
+            }
+
+            // Mostra il popup di riconnessione se non stiamo già aggiornando la pagina
+            if (!isRefreshing) {
+                disableAllElements();
+                reconnectionButton.disabled = false;
+                document.querySelector('#reconnectionPopup .popup-content p').textContent = "Connessione persa. Clicca ok per riconnettere...";
+                openPopup('reconnectionPopup');
+            }
+        }
+    }, 1000); // Controlla ogni secondo
 }
 
 function isNumeric(value) {
