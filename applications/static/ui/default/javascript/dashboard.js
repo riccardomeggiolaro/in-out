@@ -656,7 +656,9 @@ function connectWebSocket(path, exe) {
     // Costruisci l'URL WebSocket
     const websocketUrl = `${baseUrl}/${path}`;
 
-    closeWebSocket(); // Chiude la connessione WebSocket precedente se esiste
+    // Durante la riconnessione automatica, preserva l'intervallo
+    const preserve = autoReconnectInterval !== null;
+    closeWebSocket(preserve); // Chiude la connessione WebSocket precedente se esiste
 
     _data = new WebSocket(websocketUrl);
 
@@ -754,7 +756,7 @@ function startAutoReconnect() {
 
 function attemptReconnect() {
     isReconnecting = true;
-    closeWebSocket();
+    closeWebSocket(true); // Preserva l'intervallo di riconnessione automatica
 
     console.log('Tentativo di riconnessione...');
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
@@ -768,7 +770,7 @@ function attemptReconnect() {
     }, 3000);
 }
 
-function closeWebSocket() {
+function closeWebSocket(preserveReconnectInterval = false) {
     // Ferma il controllo del heartbeat
     if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
@@ -781,8 +783,8 @@ function closeWebSocket() {
         reconnectionAttemptTimeout = null;
     }
 
-    // Cancella intervallo di riconnessione automatica
-    if (autoReconnectInterval) {
+    // Cancella intervallo di riconnessione automatica SOLO se non dobbiamo preservarlo
+    if (!preserveReconnectInterval && autoReconnectInterval) {
         clearInterval(autoReconnectInterval);
         autoReconnectInterval = null;
     }
