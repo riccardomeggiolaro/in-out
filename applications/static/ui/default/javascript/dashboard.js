@@ -55,6 +55,7 @@ let reconnectTimeout;
 let lastHeartbeat;
 let heartbeatInterval;
 let reconnectionAttemptTimeout;
+let isReconnecting = false; // Flag per evitare popup durante riconnessione
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
@@ -139,6 +140,7 @@ selectedIdWeigher.addEventListener('change', (event) => {
         lastDataInExecution = null;
         lastInsCount = 0;
 
+        isReconnecting = true; // Flag per evitare popup durante cambio pesa
         closeWebSocket();
         document.getElementById('netWeight').innerText = "N/A";
         document.getElementById('uniteMisure').innerText = "N/A";
@@ -663,6 +665,12 @@ function connectWebSocket(path, exe) {
     _data.addEventListener('message', (e) => {
         // Aggiorna il timestamp dell'ultimo messaggio ricevuto
         lastHeartbeat = Date.now();
+
+        // Avvia il controllo heartbeat solo dopo aver ricevuto il primo messaggio
+        if (!heartbeatInterval) {
+            startHeartbeatCheck();
+        }
+
         exe(e);
     });
 
@@ -673,14 +681,16 @@ function connectWebSocket(path, exe) {
             reconnectionAttemptTimeout = null;
         }
 
+        // Connessione stabilita con successo
+        isReconnecting = false;
+
         // Chiudi immediatamente il popup
         closePopup('reconnectionPopup');
 
         // Inizializza il timestamp del primo heartbeat
         lastHeartbeat = Date.now();
 
-        // Avvia il controllo periodico del heartbeat
-        startHeartbeatCheck();
+        // NON avviare subito il controllo heartbeat, aspetta il primo messaggio
 
         // Ricarica i dati dopo aver aperto la connessione
         getInstanceWeigher(currentWeigherPath);
@@ -700,7 +710,8 @@ function connectWebSocket(path, exe) {
             reconnectionAttemptTimeout = null;
         }
 
-        if (!isRefreshing) {
+        // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
+        if (!isRefreshing && !isReconnecting) {
             closeWebSocket();
             disableAllElements();
             reconnectionButton.disabled = false;
@@ -716,7 +727,8 @@ function connectWebSocket(path, exe) {
             reconnectionAttemptTimeout = null;
         }
 
-        if (!isRefreshing) {
+        // NON mostrare il popup se stiamo riconnettendo o cambiando pesa
+        if (!isRefreshing && !isReconnecting) {
             disableAllElements();
             reconnectionButton.disabled = false;
             document.querySelector('#reconnectionPopup .popup-content p').textContent = "Clicca ok per riconnettere...";
@@ -727,6 +739,7 @@ function connectWebSocket(path, exe) {
 
 function attemptReconnect() {
     reconnectionButton.disabled = true;
+    isReconnecting = true; // Flag per evitare popup durante riconnessione
     closeWebSocket();
 
     // Cancella eventuali timeout precedenti
@@ -742,6 +755,7 @@ function attemptReconnect() {
         // Se dopo 3 secondi il WebSocket non è aperto, considera fallito il tentativo
         if (!_data || _data.readyState !== WebSocket.OPEN) {
             console.log('Tentativo di riconnessione fallito dopo 3 secondi');
+            isReconnecting = false; // Reset flag
             reconnectionButton.disabled = false;
             document.querySelector('#reconnectionPopup .popup-content p').textContent = "Riconnessione fallita. Clicca ok per riprovare...";
         }
@@ -773,13 +787,13 @@ function startHeartbeatCheck() {
         clearInterval(heartbeatInterval);
     }
 
-    // Controlla ogni secondo se sono arrivati messaggi dal server
+    // Controlla ogni 500ms se sono arrivati messaggi dal server
     heartbeatInterval = setInterval(() => {
         const now = Date.now();
         const timeSinceLastHeartbeat = now - lastHeartbeat;
 
-        // Se sono passati più di 3 secondi senza messaggi, considera la connessione persa
-        if (timeSinceLastHeartbeat > 3000) {
+        // Se sono passati più di 1 secondo senza messaggi, considera la connessione persa
+        if (timeSinceLastHeartbeat > 1000) {
             console.log('Heartbeat timeout: nessun messaggio ricevuto da ' + timeSinceLastHeartbeat + 'ms');
 
             // Ferma il controllo
@@ -791,15 +805,15 @@ function startHeartbeatCheck() {
                 _data.close();
             }
 
-            // Mostra il popup di riconnessione se non stiamo già aggiornando la pagina
-            if (!isRefreshing) {
+            // Mostra il popup SOLO se NON stiamo riconnettendo o aggiornando la pagina
+            if (!isRefreshing && !isReconnecting) {
                 disableAllElements();
                 reconnectionButton.disabled = false;
                 document.querySelector('#reconnectionPopup .popup-content p').textContent = "Connessione persa. Clicca ok per riconnettere...";
                 openPopup('reconnectionPopup');
             }
         }
-    }, 1000); // Controlla ogni secondo
+    }, 500); // Controlla ogni 500ms per rilevare più velocemente
 }
 
 function isNumeric(value) {
