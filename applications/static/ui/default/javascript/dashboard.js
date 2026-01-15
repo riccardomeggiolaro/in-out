@@ -8,7 +8,7 @@ window.addEventListener('load', () => {
 
 let currentPopup;
 let currentInput;
-s
+
 // Variabili per gestire i tab mobili
 let anagraficViewed = false;
 let insViewed = false;

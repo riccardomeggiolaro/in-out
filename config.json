@@ -138,7 +138,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
+                        "take_of_weight_on_startup": true,
                         "terminal": "egt-af03"
                     }
                 },
