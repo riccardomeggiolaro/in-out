@@ -49,6 +49,12 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 			values['node'] = "undefined"
 		return values
 
+	@validator('name', pre=True, always=True)
+	def check_name_no_spaces(cls, v):
+		if v is not None and v != "undefined" and ' ' in v:
+			raise ValueError('Il nome non può contenere spazi')
+		return v
+
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):
 		if v is not None and v < 1:
@@ -86,6 +92,12 @@ class SetupWeigherDTO(BaseModel):
 	weighing: list[ReleDTO] = []
 	over_min: list[ReleDTO] = []
 	under_min: list[ReleDTO] = []
+
+	@validator('name', pre=True, always=True)
+	def check_name_no_spaces(cls, v):
+		if v is not None and ' ' in v:
+			raise ValueError('Il nome non può contenere spazi')
+		return v
 
 	@validator('max_weight', 'min_weight', 'division', pre=True, always=True)
 	def check_positive(cls, v):
