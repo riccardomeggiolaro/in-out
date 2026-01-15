@@ -130,8 +130,12 @@ class ConfigWeigher(CommandWeigherRouter):
 		return response
 
 	async def AddInstanceConnection(self, connection: Union[SerialPortDTO, TcpDTO]):
-		instance_name = str(len(lb_config.g_config["app_api"]["weighers"]) + 1)
+		instance_name = 0
 		conn = None
+		for key in lb_config.g_config["app_api"]["weighers"].keys():
+			key_to_int = int(key)
+			if key_to_int >= instance_name:
+				instance_name = str(key_to_int + 1)
 		if isinstance(connection, SerialPortDTO):
 			conn = SerialPort(**{
 				"baudrate": connection.baudrate,
