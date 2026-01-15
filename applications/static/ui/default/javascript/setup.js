@@ -1264,7 +1264,7 @@ async function loadSetupWeighers() {
                     <div style="display: flex; gap: 16px;">
                         <div class="form-group" style="flex: 1;">
                             <label for="name">Nome pesa:</label>
-                            <input type="text" name="name" id="name" required>
+                            <input type="text" name="name" id="name" pattern="\\S+" title="Il nome non può contenere spazi" required>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label for="terminal">Terminale:</label>
@@ -1539,7 +1539,7 @@ async function loadSetupWeighers() {
                         <div style="display: flex; gap: 16px;">
                             <div class="form-group" style="flex: 1;">
                                 <label for="name">Nome pesa:</label><br>
-                                <input type="text" name="name" id="name" value="${data.name || ''}" required>
+                                <input type="text" name="name" id="name" value="${data.name || ''}" pattern="\\S+" title="Il nome non può contenere spazi" required>
                             </div>
                             <div class="form-group" style="flex: 1;">
                                 <label for="terminal">Terminale:</label><br>
