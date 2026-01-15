@@ -1264,7 +1264,7 @@ async function loadSetupWeighers() {
                     <div style="display: flex; gap: 16px;">
                         <div class="form-group" style="flex: 1;">
                             <label for="name">Nome pesa:</label>
-                            <input type="text" name="name" id="name" pattern="\\S+" title="Il nome non può contenere spazi" required>
+                            <input type="text" name="name" id="name" required>
                         </div>
                         <div class="form-group" style="flex: 1;">
                             <label for="terminal">Terminale:</label>
@@ -1354,6 +1354,14 @@ async function loadSetupWeighers() {
             }
             
             populateAddContent();
+
+            // Rimuovi spazi automaticamente dal campo nome
+            const addNameInput = addWeigherModal.querySelector('input[name="name"]');
+            if (addNameInput) {
+                addNameInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\s/g, '');
+                });
+            }
 
             addWeigherModal.querySelector('.cancel-btn').addEventListener('click', () => {
                 addWeigherModal.style.display = 'none';
@@ -1539,7 +1547,7 @@ async function loadSetupWeighers() {
                         <div style="display: flex; gap: 16px;">
                             <div class="form-group" style="flex: 1;">
                                 <label for="name">Nome pesa:</label><br>
-                                <input type="text" name="name" id="name" value="${data.name || ''}" pattern="\\S+" title="Il nome non può contenere spazi" required>
+                                <input type="text" name="name" id="name" value="${data.name || ''}" required>
                             </div>
                             <div class="form-group" style="flex: 1;">
                                 <label for="terminal">Terminale:</label><br>
@@ -1652,6 +1660,14 @@ async function loadSetupWeighers() {
                     viewMode.style.display = 'none';
                     editMode.style.display = 'block';
                     populateEditContent(weigher);
+
+                    // Rimuovi spazi automaticamente dal campo nome
+                    const editNameInput = editMode.querySelector('input[name="name"]');
+                    if (editNameInput) {
+                        editNameInput.addEventListener('input', (e) => {
+                            e.target.value = e.target.value.replace(/\s/g, '');
+                        });
+                    }
                 });
 
                 viewMode.querySelector('.auto-weighing-btn').addEventListener('click', () => {
