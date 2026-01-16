@@ -89,7 +89,17 @@
         "use_recordings": false,
         "use_reservation": false,
         "use_white_list": false,
-        "weighers": {}
+        "weighers": {
+            "0": {
+                "connection": {
+                    "ip": "10.0.5.178",
+                    "port": 4001,
+                    "timeout": 3.0
+                },
+                "nodes": {},
+                "time_between_actions": 0.3
+            }
+        }
     },
     "log": {
         "max-size-mb": 10
