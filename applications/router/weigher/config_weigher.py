@@ -19,7 +19,6 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_sync_folder.dto import SyncFolderDTO
 import random
 import string
-from applications.app_api import app
 
 class ConfigWeigher(CommandWeigherRouter):
 	def __init__(self):
@@ -100,6 +99,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		return { "path_csv": path }
 
 	async def SavePathImg(self, body: PathDTO):
+		from applications.app_api import app
 		path = body.path if body.path else ''
 		lb_config.g_config["app_api"]["path_img"] = path
 		lb_config.saveconfig()
