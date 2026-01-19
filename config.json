@@ -107,12 +107,12 @@
                             "weighing": {
                                 "cams": [],
                                 "csv": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "report": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "set_rele": []
                             }
@@ -131,7 +131,7 @@
                         "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
+                        "take_of_weight_on_startup": true,
                         "terminal": "egt-af03"
                     }
                 },

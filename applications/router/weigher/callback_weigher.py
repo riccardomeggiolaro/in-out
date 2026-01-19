@@ -215,16 +215,16 @@ class CallbackWeigher(Functions, WebSocket):
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
 				i = 1
-				path_image = lb_config.g_config['app_api']['path_img']
-				if not path_image.startswith("/"):
-					path_image = f"{base_path}/{path_image}"
 				sub_folder_path = structure_folder_rule()
+				path_img = f"{lb_config.g_config['app_api']['path_img']}{sub_folder_path}"
+				if not path_img.startswith("/"):
+					path_img = f"{base_path}/{path_img}"
 				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 					if cam["active"]:
 						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 						if image_captured_details["image"]:
 							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
-							save_bytes_to_file(image_captured_details["image"], file_name, f"{path_image}{sub_folder_path}")
+							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
