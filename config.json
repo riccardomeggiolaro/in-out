@@ -2,18 +2,14 @@
     "app_api": {
         "mode": "MANUALLY",
         "panel": {
-            "config": {
-                "duration": 90,
-                "max_string_content": 3,
-                "panel_id": 16
-            },
+            "config": {},
             "connection": {
                 "ip": "0.0.0.0",
-                "port": 5200,
+                "port": 0,
                 "timeout": 5.0
             },
-            "enabled": true,
-            "type": "tcp_custom"
+            "enabled": false,
+            "type": "disabled"
         },
         "path_content": "static/content",
         "path_csv": "csv",
@@ -36,17 +32,14 @@
             "setup": {}
         },
         "siren": {
-            "config": {
-                "endpoint": "http://100.100.100.101/rpc/Switch.Set?id=0&on=true",
-                "method": "GET"
-            },
+            "config": {},
             "connection": {
-                "ip": "100.100.100.102",
-                "port": 80,
+                "ip": "0.0.0.0",
+                "port": 0,
                 "timeout": 5.0
             },
-            "enabled": true,
-            "type": "http_simple"
+            "enabled": false,
+            "type": "disabled"
         },
         "ssh_reverse_tunneling": {
             "forwarding_port": 80,
@@ -89,17 +82,7 @@
         "use_recordings": false,
         "use_reservation": false,
         "use_white_list": false,
-        "weighers": {
-            "0": {
-                "connection": {
-                    "ip": "10.0.5.178",
-                    "port": 4001,
-                    "timeout": 3.0
-                },
-                "nodes": {},
-                "time_between_actions": 0.3
-            }
-        }
+        "weighers": {}
     },
     "log": {
         "max-size-mb": 10
