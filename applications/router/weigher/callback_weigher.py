@@ -187,7 +187,9 @@ class CallbackWeigher(Functions, WebSocket):
 			report_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
 			report_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
 			generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
-			path_pdf = f"{base_path}/{lb_config.g_config['app_api']['path_pdf']}"
+			path_pdf = lb_config.g_config['app_api']['path_pdf']
+			if not path_pdf.startswith("/"):
+				path_pdf = f"{base_path}/{path_pdf}"
 			name_file, variables, report = get_data_variables(last_in_out)
 			remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
@@ -202,7 +204,9 @@ class CallbackWeigher(Functions, WebSocket):
 			csv_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["in"]
 			csv_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["out"]
 			generate_csv = csv_out if tare > 0 or last_in_out.idWeight2 else csv_in
-			path_csv = f"{base_path}/{lb_config.g_config['app_api']['path_csv']}"
+			path_csv = lb_config.g_config['app_api']['path_csv']
+			if not path_csv.startswith("/"):
+				path_csv = f"{base_path}/{path_csv}"
 			if generate_csv and path_csv:
 				# SALVA I DATI DELLA PESATA IN UN FILE CSV
 				csv = generate_csv_report(variables)
@@ -211,14 +215,16 @@ class CallbackWeigher(Functions, WebSocket):
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
 				i = 1
+				path_image = lb_config.g_config['app_api']['path_img']
+				if not path_image.startswith("/"):
+					path_image = f"{base_path}/{path_image}"
+				sub_folder_path = structure_folder_rule()
 				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
 					if cam["active"]:
 						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 						if image_captured_details["image"]:
-							base_folder_path = f"{base_path}/{lb_config.g_config['app_api']['path_img']}"
-							sub_folder_path = structure_folder_rule()
 							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
-							save_bytes_to_file(image_captured_details["image"], file_name, f"{base_folder_path}{sub_folder_path}")
+							save_bytes_to_file(image_captured_details["image"], file_name, f"{path_image}{sub_folder_path}")
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:

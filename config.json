@@ -12,10 +12,10 @@
             "type": "disabled"
         },
         "path_content": "static/content",
-        "path_csv": "csv",
-        "path_database": "database.db",
-        "path_img": "images",
-        "path_pdf": "pdf",
+        "path_csv": "/var/opt/in-out/csv",
+        "path_database": "/var/opt/in-out/database.db",
+        "path_img": "/var/opt/in-out/images",
+        "path_pdf": "/var/opt/in-out/pdf",
         "path_ui": "static/ui/default",
         "port": 80,
         "report_in": "weight_in.json",
@@ -50,7 +50,7 @@
             "user": "root"
         },
         "sync_folder": {
-            "local_dir": "/home/riccardo/Scrivania/projects/LOCAL/in-out-new/in-out",
+            "local_dir": "/var/opt/in-out",
             "mount_point": "/mnt/sync-folder",
             "remote_folder": null,
             "sub_paths": [
@@ -82,7 +82,62 @@
         "use_recordings": false,
         "use_reservation": false,
         "use_white_list": false,
-        "weighers": {}
+        "weighers": {
+            "0": {
+                "connection": {
+                    "ip": "10.0.5.178",
+                    "port": 23,
+                    "timeout": 3.0
+                },
+                "nodes": {
+                    "P1": {
+                        "always_execute_realtime_in_undeground": true,
+                        "continuous_transmission": false,
+                        "diagnostic_has_priority_than_realtime": true,
+                        "division": 1,
+                        "events": {
+                            "realtime": {
+                                "over_min": {
+                                    "set_rele": []
+                                },
+                                "under_min": {
+                                    "set_rele": []
+                                }
+                            },
+                            "weighing": {
+                                "cams": [],
+                                "csv": {
+                                    "in": false,
+                                    "out": false
+                                },
+                                "report": {
+                                    "in": false,
+                                    "out": false
+                                },
+                                "set_rele": []
+                            }
+                        },
+                        "maintaine_session_realtime_after_command": true,
+                        "max_theshold": null,
+                        "max_weight": 60000,
+                        "min_weight": 400,
+                        "name": "P1",
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": true,
+                        "node": null,
+                        "number_of_prints": 1,
+                        "port_rele": null,
+                        "printer_name": "Canon_iR-ADV_C5235_5240_UFR_II",
+                        "rele": {},
+                        "run": true,
+                        "take_of_weight_before_weighing": false,
+                        "take_of_weight_on_startup": false,
+                        "terminal": "egt-af03"
+                    }
+                },
+                "time_between_actions": 0.3
+            }
+        }
     },
     "log": {
         "max-size-mb": 10

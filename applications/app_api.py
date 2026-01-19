@@ -19,6 +19,7 @@ import os
 from fastapi.templating import Jinja2Templates
 from applications.middleware.auth import AuthMiddleware
 import applications.utils.utils as utils
+from libs.lb_utils import base_path
 # ==============================================================
 
 name_app = "app_api"
@@ -68,7 +69,9 @@ def init():
 	utils.base_path_applications = Path(__file__).parent
 	path_ui = utils.base_path_applications / lb_config.g_config["app_api"]["path_ui"]
 	path_content = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]
-	path_images = lb_config.g_config["app_api"]["path_img"] if os.path.exists(lb_config.g_config["app_api"]["path_img"]) else None
+	path_images = lb_config.g_config["app_api"]["path_img"]
+	if not path_images.startswith("/"):
+		path_images = f"{base_path}/{path_images}"
 	templates = Jinja2Templates(directory=str(path_ui))
 
 	app.add_middleware(
