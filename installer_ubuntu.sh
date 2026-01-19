@@ -148,6 +148,18 @@ else
     print_info "python3-pip è già installato"
 fi
 
+# Installa python3-tk se non è presente (richiesto per tkinter)
+TK_PKG="python$PYTHON_VERSION-tk"
+if ! is_installed "$TK_PKG"; then
+    print_info "Installazione di $TK_PKG (richiesto per tkinter)..."
+    apt install -y "$TK_PKG" || {
+        print_warning "Impossibile installare $TK_PKG, provo con python3-tk..."
+        apt install -y python3-tk
+    }
+else
+    print_info "$TK_PKG è già installato"
+fi
+
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".venv" ]]; then
     print_info "Creazione dell'ambiente virtuale .venv..."

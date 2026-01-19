@@ -81,6 +81,15 @@ else
     echo "python3-pip è già installato, procedo..."
 fi
 
+# Installa python3-tk se non è presente (richiesto per tkinter)
+if ! is_installed python3-tk; then
+    echo "Installazione di python3-tk (richiesto per tkinter)..."
+    sudo apt update
+    sudo apt install -y python3-tk
+else
+    echo "python3-tk è già installato, procedo..."
+fi
+
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".venv" ]]; then
     echo "Creazione dell'ambiente virtuale .venv..."
