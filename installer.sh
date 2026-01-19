@@ -112,6 +112,12 @@ else
     echo "I file sono già in $INSTALL_DIR, procedo..."
 fi
 
+# Crea la directory /var/opt/in-out con le sottocartelle pdf, csv e images
+echo "Creazione directory /var/opt/in-out con sottocartelle..."
+sudo mkdir -p /var/opt/in-out/{pdf,csv,images}
+sudo chown -R root:root /var/opt/in-out
+echo "Directory /var/opt/in-out creata con sottocartelle pdf, csv e images."
+
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".venv" ]]; then
     echo "Creazione dell'ambiente virtuale .venv..."
