@@ -3,7 +3,8 @@ set -e # Termina lo script in caso di errore
 
 SCRIPT_DIR="$(dirname "$0")"
 cd "$SCRIPT_DIR"
-BASE_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/"
+SOURCE_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+INSTALL_DIR="/opt/in-out"
 
 # Colori per output
 GREEN='\033[0;32m'
@@ -160,6 +161,26 @@ else
     print_info "$TK_PKG è già installato"
 fi
 
+# Installa CUPS, libcups2-dev e libcupsimage2 se non sono presenti (PRIMA di installare pacchetti pip)
+if ! is_installed cups || ! is_installed libcups2-dev || ! is_installed libcupsimage2; then
+    print_info "Installazione di CUPS, libcups2-dev e libcupsimage2..."
+    apt install -y cups libcups2-dev libcupsimage2
+else
+    print_info "CUPS e le sue dipendenze sono già installati"
+fi
+
+# Crea la directory di installazione /opt/in-out e copia i file
+if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
+    print_info "Creazione directory di installazione $INSTALL_DIR..."
+    mkdir -p "$INSTALL_DIR"
+    print_info "Copia dei file da $SOURCE_DIR a $INSTALL_DIR..."
+    cp -r "$SOURCE_DIR"/* "$INSTALL_DIR/"
+    chown -R root:root "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+else
+    print_info "I file sono già in $INSTALL_DIR"
+fi
+
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".venv" ]]; then
     print_info "Creazione dell'ambiente virtuale .venv..."
@@ -186,14 +207,6 @@ if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
 else
     print_warning "File requirements.txt non trovato!"
-fi
-
-# Installa CUPS, libcups2-dev e libcupsimage2 se non sono presenti
-if ! is_installed cups || ! is_installed libcups2-dev || ! is_installed libcupsimage2; then
-    print_info "Installazione di CUPS, libcups2-dev e libcupsimage2..."
-    apt install -y cups libcups2-dev libcupsimage2
-else
-    print_info "CUPS e le sue dipendenze sono già installati"
 fi
 
 # Controlla se l'ambiente desktop è MATE e installa system-config-printer
@@ -279,28 +292,28 @@ else
 fi
 
 # Esegui l'installer nella cartella tmt-cups
-TMT_CUPS_DIR="./tmt-cups"
+TMT_CUPS_DIR="$INSTALL_DIR/tmt-cups"
 if [ -d "$TMT_CUPS_DIR" ]; then
     print_info "Cartella tmt-cups trovata, esecuzione dell'installer..."
     if [ -f "$TMT_CUPS_DIR/install.sh" ]; then
         cd "$TMT_CUPS_DIR"
         bash install.sh
-        cd "$BASE_DIR"
+        cd "$INSTALL_DIR"
         print_info "Installer tmt-cups completato"
     else
         print_warning "File install.sh non trovato in $TMT_CUPS_DIR"
     fi
 else
-    print_warning "Cartella tmt-cups non trovata"
+    print_warning "Cartella tmt-cups non trovata in $INSTALL_DIR"
 fi
 
 # Crea il servizio systemd se non esiste
 SERVICE_FILE="/etc/systemd/system/in-out.service"
 if [ ! -f "$SERVICE_FILE" ]; then
-    START_SCRIPT="${BASE_DIR}start.sh"
+    START_SCRIPT="$INSTALL_DIR/start.sh"
 
     if [ ! -f "$START_SCRIPT" ]; then
-        print_error "File start.sh non trovato in $BASE_DIR"
+        print_error "File start.sh non trovato in $INSTALL_DIR"
         exit 1
     fi
 
@@ -314,7 +327,7 @@ After=network.target
 
 [Service]
 ExecStart=$START_SCRIPT
-WorkingDirectory=$BASE_DIR
+WorkingDirectory=$INSTALL_DIR
 User=root
 Group=root
 Restart=always

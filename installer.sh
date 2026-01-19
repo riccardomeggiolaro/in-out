@@ -3,7 +3,8 @@ set -e # Termina lo script in caso di errore
 
 SCRIPT_DIR="$(dirname "$0")"
 cd "$SCRIPT_DIR"
-BASE_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/"
+SOURCE_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+INSTALL_DIR="/opt/in-out"
 
 # Funzione per controllare se un pacchetto è installato
 is_installed() {
@@ -90,6 +91,27 @@ else
     echo "python3-tk è già installato, procedo..."
 fi
 
+# Installa CUPS, libcups2-dev e libcupsimage2 se non sono presenti (PRIMA di installare pacchetti pip)
+if ! is_installed cups || ! is_installed libcups2-dev || ! is_installed libcupsimage2; then
+    echo "Installazione di CUPS, libcups2-dev e libcupsimage2..."
+    sudo apt update
+    sudo apt install -y cups libcups2-dev libcupsimage2
+else
+    echo "CUPS, libcups2-dev e libcupsimage2 sono già installati, procedo..."
+fi
+
+# Crea la directory di installazione /opt/in-out e copia i file
+if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
+    echo "Creazione directory di installazione $INSTALL_DIR..."
+    sudo mkdir -p "$INSTALL_DIR"
+    echo "Copia dei file da $SOURCE_DIR a $INSTALL_DIR..."
+    sudo cp -r "$SOURCE_DIR"/* "$INSTALL_DIR/"
+    sudo chown -R root:root "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+else
+    echo "I file sono già in $INSTALL_DIR, procedo..."
+fi
+
 # Controlla e crea l'ambiente virtuale se non esiste
 if [[ ! -d ".venv" ]]; then
     echo "Creazione dell'ambiente virtuale .venv..."
@@ -118,15 +140,6 @@ if [ -f "requirements.txt" ] && { [ "$VENV_NUOVO" = true ] || ! pip freeze --qui
     pip install -r requirements.txt
 else
     echo "Tutte le dipendenze sono già installate, procedo..."
-fi
-
-# Installa CUPS, libcups2-dev e libcupsimage2 se non sono presenti
-if ! is_installed cups || ! is_installed libcups2-dev || ! is_installed libcupsimage2; then
-    echo "Installazione di CUPS, libcups2-dev e libcupsimage2..."
-    sudo apt update
-    sudo apt install -y cups libcups2-dev libcupsimage2
-else
-    echo "CUPS, libcups2-dev e libcupsimage2 sono già installati, procedo..."
 fi
 
 # Controlla se l'ambiente desktop è MATE e installa system-config-printer
@@ -206,24 +219,25 @@ else
 fi
 
 # Esegui l'installer nella cartella tmt-cups
-TMT_CUPS_DIR="./tmt-cups"
+TMT_CUPS_DIR="$INSTALL_DIR/tmt-cups"
 if [ -d "$TMT_CUPS_DIR" ]; then
     echo "Cartella tmt-cups trovata, esecuzione dell'installer..."
     if [ -f "$TMT_CUPS_DIR/install.sh" ]; then
-        echo "Esecuzione di $TMT_CUPS_DIR/installer.sh..."
+        echo "Esecuzione di $TMT_CUPS_DIR/install.sh..."
         cd "$TMT_CUPS_DIR"
         sudo bash install.sh
+        cd "$INSTALL_DIR"
         echo "Installer tmt-cups completato."
     else
-        echo "ATTENZIONE: File installer.sh non trovato in $TMT_CUPS_DIR!"
+        echo "ATTENZIONE: File install.sh non trovato in $TMT_CUPS_DIR!"
     fi
 else
-    echo "ATTENZIONE: Cartella tmt-cups non trovata nella directory dello script!"
+    echo "ATTENZIONE: Cartella tmt-cups non trovata in $INSTALL_DIR!"
 fi
 
 # Crea il servizio systemd se non esiste
 if [ ! -f /etc/systemd/system/in-out.service ]; then
-    START="${BASE_DIR}/start.sh"
+    START="$INSTALL_DIR/start.sh"
     sudo chmod +x ${START}
     echo "Creazione del servizio systemd in-out.service..."
     sudo bash -c "cat << EOF > /etc/systemd/system/in-out.service
@@ -232,8 +246,8 @@ Description=In-Out Service
 After=network.target
 
 [Service]
-ExecStart= ${START}
-WorkingDirectory=${BASE_DIR}
+ExecStart=${START}
+WorkingDirectory=${INSTALL_DIR}
 User=root
 Group=root
 Restart=always
