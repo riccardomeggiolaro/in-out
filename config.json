@@ -20,7 +20,7 @@
         "port": 80,
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
-        "return_pdf_copy_after_weighing": false,
+        "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
