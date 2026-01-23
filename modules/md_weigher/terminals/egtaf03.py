@@ -23,6 +23,7 @@ class EgtAf03(Terminal):
 		elif self.modope == "REALTIME":
 			if self.continuous_transmission is False:
 				self.write("REXT")
+				# self.write("READ")
 		elif self.modope == "OK":
 			self.write("DINT2710")
 		elif self.modope == "WEIGHING":
@@ -290,7 +291,7 @@ class EgtAf03(Terminal):
 					elif length_split_response == 5 and length_response == 20:
 						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
 						t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
-						nw = str(int(gw) - int(t))
+						nw = gw = str(sum_number(nw, tare_without_pt))
 						self.pesa_real_time.status = split_response[0]
 						self.pesa_real_time.type = split_response[1]
 						self.pesa_real_time.net_weight = nw
@@ -298,6 +299,23 @@ class EgtAf03(Terminal):
 						self.pesa_real_time.tare = t
 						self.weight.weight_executed.bil = split_response[1]
 						self.pesa_real_time.unite_measure = split_response[2][-2:]
+						self.diagnostic.status = 200
+						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
+							self.take_of_weight_on_startup = False
+							self.take_of_weight_before_weighing = False
+					elif length_split_response == 5 and length_response == 48:
+						nw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
+						t = (re.sub('[KkGg\x00\n]', '', split_response[3])).lstrip()
+						tare_without_pt = (re.sub('[PT]', '', t).lstrip())
+						gw = str(sum_number(nw, tare_without_pt))
+						unite_measure = split_response[2][-2:]
+						self.pesa_real_time.status = split_response[0]
+						self.pesa_real_time.type = "GS" if t == "0" else "NT"
+						self.pesa_real_time.net_weight = nw
+						self.pesa_real_time.gross_weight = gw
+						self.pesa_real_time.tare = t
+						self.pesa_real_time.unite_measure = unite_measure
+						self.code_identify = split_response[4].lstrip()
 						self.diagnostic.status = 200
 						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
 							self.take_of_weight_on_startup = False
@@ -316,6 +334,9 @@ class EgtAf03(Terminal):
 					if self.pesa_real_time.status == "ER":
 						self.pesa_real_time.status = "ST"
 					callCallback(self.callback_realtime) # chiamo callback
+					if self.code_identify:
+						callCallback(self.callback_code_identify)
+						self.code_identify = ""
 				######### Se in esecuzione la diagnostica ###########################################################################
 				elif self.modope == "DIAGNOSTIC":
 					if response in skip_response_messages:
