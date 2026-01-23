@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "MANUALLY",
+        "mode": "AUTOMATIC",
         "panel": {
             "config": {},
             "connection": {
