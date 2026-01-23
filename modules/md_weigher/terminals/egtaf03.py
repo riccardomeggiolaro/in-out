@@ -212,11 +212,12 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.pid = split_response[4]
 					self.weight.weight_executed.bil = split_response[1]
 					self.weight.weight_executed.status = split_response[0]
-					self.weight.weight_executed.executed = True
+					self.weight.weight_executed.executed = False if "NO" in split_response[4] else True
 					self.weight.weight_executed.log = response
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 					self.diagnostic.status = 200
-					self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
+					if "NO" not in split_response[4]:
+						self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
 					if self.modope == "REALTIME":
 						lb_log.warning(f"CODE: {self.code_identify}")
 						if self.modope == "REALTIME":
@@ -374,11 +375,12 @@ class EgtAf03(Terminal):
 						self.weight.weight_executed.pid = split_response[4]
 						self.weight.weight_executed.bil = split_response[1]
 						self.weight.weight_executed.status = split_response[0]
-						self.weight.weight_executed.executed = True
+						self.weight.weight_executed.executed = False if "NO" in split_response[4] else True
 						self.weight.weight_executed.log = response
 						self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 						self.diagnostic.status = 200
-						self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
+						if "NO" not in split_response[4]:
+							self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
 					else:
 						self.diagnostic.status = 201
