@@ -318,7 +318,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"identify": identify_dto.identify,
 			"host": request.client.host if request else "terminale"
 		}
-		cam_message = f'"{identify_dto.identify}" ricevuto da {proc['host']}'
+		cam_message = f'"{identify_dto.identify}" ricevuto da {proc["host"]}'
 		if len(identify_dto.identify) < 5:
 			error_message = "L'identificativo deve essere di almeno 5 caratteri"
 			broadcast_error_message = False
@@ -423,15 +423,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 														stable = stable + 1
 												else:
 													stable = 0
-									# Rimuovi il processo dalla lista in modo sicuro
-									self.automatic_weighing_process = [
-										p for p in self.automatic_weighing_process
-										if not (
-											p["instance_name"] == instance.instance_name and
-											p["weigher_name"] == instance.weigher_name and
-											p["identify"] == identify_dto.identify
-										)
-									]
 								threading.Thread(target=lambda: asyncio.run(handleAutomatic())).start()
 								success_message = "Pesatura automatica presa in carico."
 							elif mode == "SEMIAUTOMATIC":
@@ -476,15 +467,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 													stable += 1
 												else:
 													stable = 0
-									# Rimuovi il processo dalla lista in modo sicuro
-									self.automatic_weighing_process = [
-										p for p in self.automatic_weighing_process
-										if not (
-											p["instance_name"] == instance.instance_name and
-											p["weigher_name"] == instance.weigher_name and
-											p["identify"] == identify_dto.identify
-										)
-									]
 								threading.Thread(target=lambda: asyncio.run(handleSemiautomatic())).start()
 								success_message = "Pesatura semiautomatica in attesa di conferma dall'operatore."
 					else:

@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "AUTOMATIC",
+        "mode": "SEMIAUTOMATIC",
         "panel": {
             "config": {},
             "connection": {
@@ -79,7 +79,7 @@
             }
         },
         "use_badge": false,
-        "use_recordings": false,
+        "use_recordings": true,
         "use_reservation": true,
         "use_white_list": false,
         "weighers": {
@@ -87,7 +87,7 @@
                 "connection": {
                     "ip": "10.0.5.178",
                     "port": 23,
-                    "timeout": 3.0
+                    "timeout": 2.0
                 },
                 "nodes": {
                     "P1": {
@@ -98,10 +98,20 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "rele": "1",
+                                            "set": 0
+                                        }
+                                    ]
                                 },
                                 "under_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "rele": "1",
+                                            "set": 1
+                                        }
+                                    ]
                                 }
                             },
                             "weighing": {
@@ -114,7 +124,12 @@
                                     "in": true,
                                     "out": true
                                 },
-                                "set_rele": []
+                                "set_rele": [
+                                    {
+                                        "rele": "1",
+                                        "set": 1
+                                    }
+                                ]
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -122,13 +137,15 @@
                         "max_weight": 60000,
                         "min_weight": 400,
                         "name": "P1",
-                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_before_weighing": true,
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
-                        "printer_name": "Canon_iR-ADV_C5235_5240_UFR_II",
-                        "rele": {},
+                        "printer_name": null,
+                        "rele": {
+                            "1": 0
+                        },
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
