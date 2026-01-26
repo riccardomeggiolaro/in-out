@@ -422,7 +422,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 															await self.DeleteData(instance=instance)
 															await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 														if command_executed:
-															await self.DeleteData(instance=instance)
+															# Non elimina i dati in esecuzione perché lo fa già la callback Callback_Weighing
 															break
 													else:
 														stable = stable + 1
