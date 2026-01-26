@@ -423,6 +423,15 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 														stable = stable + 1
 												else:
 													stable = 0
+									# Rimuovi il processo dalla lista in modo sicuro
+									self.automatic_weighing_process = [
+										p for p in self.automatic_weighing_process
+										if not (
+											p["instance_name"] == instance.instance_name and
+											p["weigher_name"] == instance.weigher_name and
+											p["identify"] == identify_dto.identify
+										)
+									]
 								threading.Thread(target=lambda: asyncio.run(handleAutomatic())).start()
 								success_message = "Pesatura automatica presa in carico."
 							elif mode == "SEMIAUTOMATIC":
@@ -467,6 +476,15 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 													stable += 1
 												else:
 													stable = 0
+									# Rimuovi il processo dalla lista in modo sicuro
+									self.automatic_weighing_process = [
+										p for p in self.automatic_weighing_process
+										if not (
+											p["instance_name"] == instance.instance_name and
+											p["weigher_name"] == instance.weigher_name and
+											p["identify"] == identify_dto.identify
+										)
+									]
 								threading.Thread(target=lambda: asyncio.run(handleSemiautomatic())).start()
 								success_message = "Pesatura semiautomatica in attesa di conferma dall'operatore."
 					else:

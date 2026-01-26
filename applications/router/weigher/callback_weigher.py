@@ -88,19 +88,6 @@ class CallbackWeigher(Functions, WebSocket):
 		user = get_data_by_id("user", last_pesata.data_assigned.userId)
 		# lb_log.warning(last_pesata.data_assigned.userId)
 		if last_pesata.weight_executed.executed and not "NO" in last_pesata.weight_executed.pid:
-			# Rimuovi il processo dalla lista in modo sicuro
-			self.automatic_weighing_process = [
-				p for p in self.automatic_weighing_process
-				if not (
-					p["instance_name"] == instance_name and
-					p["weigher_name"] == weigher_name and
-					(
-         				p["identify"] == access.vehicle.plate or
-						p["identify"] == access.badge
-             		)
-				)
-			]
-			############################
 			# SALVATAGGIO DELLA PESATA
 			date = dt.datetime.now()
 			str_tare = last_pesata.weight_executed.tare.value
@@ -249,11 +236,8 @@ class CallbackWeigher(Functions, WebSocket):
 			delete_data("access", last_pesata.data_assigned.accessId)
 		# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
 		if not last_pesata.weight_executed.executed and access.hidden is False:
-			if any(p["instance_name"] == instance_name and p["weigher_name"] == weigher_name and (p["identify"] == access.vehicle.plate or p["identify"] == access.badge) for p in self.automatic_weighing_process):
-				asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"message": "Tentativo di pesatura.Non risucito. Riprovo..."}))
-			elif len(access.in_out) == 0:
-				# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE E NON C'E' NESSUN IN-OUT ELIMINA I DATI IN ESECUZIONE
-				self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
+			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE E NON C'E' NESSUN IN-OUT ELIMINA I DATI IN ESECUZIONE
+			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		weight = last_pesata.dict()
 		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
