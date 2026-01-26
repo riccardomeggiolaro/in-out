@@ -248,12 +248,11 @@ class CallbackWeigher(Functions, WebSocket):
 
 			if should_retry:
 				# RIPROVA LA PESATURA PERCHE' IL PESO E' ANCORA SOPRA AL MINIMO
-				md_weigher.module_weigher.setModope(
-					instance_name=instance_name,
-					weigher_name=weigher_name,
-					modope="WEIGHING",
-					data_assigned=last_pesata.data_assigned
-				)
+				# Accede direttamente al nodo per impostare modope_to_execute e data_assigned
+				# perché setModope fallirebbe con "WEIGHING in esecuzione" dato che modope è ancora WEIGHING
+				node = md_weigher.module_weigher.instances[instance_name].nodes[weigher_name]
+				node.weight.data_assigned = last_pesata.data_assigned
+				node.modope_to_execute = "WEIGHING"
 			else:
 				# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO O I DATI IN ESECUZIONE
 				if last_pesata.data_assigned.accessId and access.hidden is True:
