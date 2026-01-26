@@ -30,7 +30,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 
 		self.router_action_weigher = APIRouter()
 		self.url_weighing_auto = '/weighing/auto'
-		self.automatic_weighing_process = []
 
 		self.router_action_weigher.add_api_route('/realtime', self.StartRealtime, methods=['GET'])
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostic, methods=['GET'])
@@ -316,7 +315,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		proc = {
 			"instance_name": instance.instance_name,
 			"weigher_name": instance.weigher_name,
-			"identify": identify_dto.identify
+			"identify": identify_dto.identify,
+			"host": request.client.host if request else None
 		}
 		cam_message = f'"{identify_dto.identify}"'
 		if request is not None:
@@ -422,7 +422,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 															await self.DeleteData(instance=instance)
 															await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 														if command_executed:
-															# Non elimina i dati in esecuzione perché lo fa già la callback Callback_Weighing
 															break
 													else:
 														stable = stable + 1

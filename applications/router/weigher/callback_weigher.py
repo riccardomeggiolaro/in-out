@@ -232,34 +232,13 @@ class CallbackWeigher(Functions, WebSocket):
 					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
 					lb_log.warning(r)
-		elif not last_pesata.weight_executed.executed:
-			# CONTROLLA SE POSSIAMO RIPROVARE LA PESATURA (PESO ANCORA SOPRA AL MINIMO)
-			realtime = md_weigher.module_weigher.getRealtime(instance_name=instance_name, weigher_name=weigher_name)
-			min_weight = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"]
-
-			should_retry = False
-			if realtime.gross_weight and realtime.gross_weight != "" and realtime.status == "ST":
-				try:
-					numeric_gross_weight = float(realtime.gross_weight) if ("," in realtime.gross_weight or "." in realtime.gross_weight) else int(realtime.gross_weight)
-					if numeric_gross_weight >= min_weight:
-						should_retry = True
-				except:
-					pass
-
-			if should_retry:
-				# RIPROVA LA PESATURA PERCHE' IL PESO E' ANCORA SOPRA AL MINIMO
-				md_weigher.module_weigher.setModope(
-					instance_name=instance_name,
-					weigher_name=weigher_name,
-					modope="WEIGHING",
-					data_assigned=last_pesata.data_assigned
-				)
-			else:
-				# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO O I DATI IN ESECUZIONE
-				if last_pesata.data_assigned.accessId and access.hidden is True:
-					delete_data("access", last_pesata.data_assigned.accessId)
-				if len(access.in_out) == 0 and access.hidden is False:
-					self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
+		elif not last_pesata.weight_executed.executed and last_pesata.data_assigned.accessId and access.hidden is True:
+			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
+			delete_data("access", last_pesata.data_assigned.accessId)
+		# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
+		if not last_pesata.weight_executed.executed and len(access.in_out) == 0 and access.hidden is False:
+			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE E NON C'E' NESSUN IN-OUT ELIMINA I DATI IN ESECUZIONE
+			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		weight = last_pesata.dict()
 		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
