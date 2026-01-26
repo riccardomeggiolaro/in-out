@@ -316,13 +316,9 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"instance_name": instance.instance_name,
 			"weigher_name": instance.weigher_name,
 			"identify": identify_dto.identify,
-			"host": request.client.host if request else None
+			"host": request.client.host if request else "terminale"
 		}
-		cam_message = f'"{identify_dto.identify}"'
-		if request is not None:
-			cam_message = cam_message + f" ricevuto da {request.client.host}"
-		else:
-			cam_message = cam_message + f" ricevuto da terminale"
+		cam_message = f'"{identify_dto.identify}" ricevuto da {proc['host']}'
 		if len(identify_dto.identify) < 5:
 			error_message = "L'identificativo deve essere di almeno 5 caratteri"
 			broadcast_error_message = False
