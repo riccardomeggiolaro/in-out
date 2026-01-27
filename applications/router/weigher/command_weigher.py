@@ -588,11 +588,15 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			modope_on_close = "REALTIME" if always_execute_realtime_in_undeground else "OK"
 			if websocket not in weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections:
 				if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) == 0:
-					data = await self.GetData(instance=instance)
-					if data["id_selected"]["need_to_confirm"] is False:
-						await self.DeleteData(instance=instance)
-					await self.StopAllCommand(instance=instance)
-					md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
+					# Grace period: aspetta 1.5 secondi per dare tempo a un nuovo client di connettersi (es. durante refresh pagina)
+					await asyncio.sleep(1.5)
+					# Ricontrolla se nel frattempo si è connesso un nuovo client
+					if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) == 0:
+						data = await self.GetData(instance=instance)
+						if data["id_selected"]["need_to_confirm"] is False:
+							await self.DeleteData(instance=instance)
+						await self.StopAllCommand(instance=instance)
+						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
 			if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) > 0:
 				if status == 200:
@@ -644,8 +648,12 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			modope_on_close = "REALTIME" if always_execute_realtime_in_undeground else "OK"
 			if websocket not in weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.active_connections:
 				if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.active_connections) == 0:
-					await self.StopAllCommand(instance=instance)
-					md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
+					# Grace period: aspetta 1.5 secondi per dare tempo a un nuovo client di connettersi (es. durante refresh pagina)
+					await asyncio.sleep(1.5)
+					# Ricontrolla se nel frattempo si è connesso un nuovo client
+					if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.active_connections) == 0:
+						await self.StopAllCommand(instance=instance)
+						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
 			if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.active_connections) > 0:
 				if status == 200:
