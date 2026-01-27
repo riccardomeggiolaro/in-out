@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test WebSocket Connection</title>
+    <title>Test WebSocket Peso Realtime</title>
     <style>
         * {
             box-sizing: border-box;
@@ -77,13 +77,6 @@
         .btn-disconnect:hover {
             background: #ff3344;
         }
-        .btn-send {
-            background: #2ed573;
-            color: #000;
-        }
-        .btn-send:hover {
-            background: #26c066;
-        }
         .btn-clear {
             background: #747d8c;
             color: #fff;
@@ -108,12 +101,55 @@
             background: #2ed573;
             color: #000;
         }
+        .weight-display {
+            background: #0f0f23;
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .weight-value {
+            font-size: 72px;
+            font-weight: bold;
+            color: #2ed573;
+            font-family: 'Courier New', monospace;
+        }
+        .weight-unit {
+            font-size: 24px;
+            color: #aaa;
+            margin-left: 10px;
+        }
+        .weight-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .weight-info div {
+            color: #aaa;
+        }
+        .weight-info span {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        .weight-status {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        .weight-status.stable {
+            color: #2ed573;
+        }
+        .weight-status.unstable {
+            color: #ffa502;
+        }
         #log {
             background: #0f0f23;
             border: 1px solid #333;
             border-radius: 5px;
             padding: 15px;
-            height: 400px;
+            height: 300px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 13px;
@@ -125,10 +161,6 @@
         }
         .log-entry.info {
             color: #00d4ff;
-        }
-        .log-entry.sent {
-            color: #2ed573;
-            background: rgba(46, 213, 115, 0.1);
         }
         .log-entry.received {
             color: #ffa502;
@@ -149,57 +181,44 @@
         .row > div {
             flex: 1;
         }
-        textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #333;
-            border-radius: 5px;
-            background: #0f0f23;
-            color: #eee;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-            min-height: 100px;
-        }
-        textarea:focus {
-            outline: none;
-            border-color: #00d4ff;
-        }
-        .quick-actions {
+        .stats {
             display: flex;
+            gap: 20px;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
         }
-        .quick-actions button {
-            flex: 1;
+        .stat-box {
+            background: #0f0f23;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
             min-width: 120px;
+        }
+        .stat-box .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .stat-box .label {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Test WebSocket Connection <span id="status" class="status disconnected">DISCONNECTED</span></h1>
+        <h1>Test WebSocket Peso Realtime <span id="status" class="status disconnected">DISCONNECTED</span></h1>
 
         <div class="section">
             <h2>Connection Settings</h2>
             <div class="row">
                 <div>
-                    <label for="anagrafic">Anagrafic Type:</label>
-                    <select id="anagrafic">
-                        <option value="vehicle">vehicle</option>
-                        <option value="subject">subject</option>
-                        <option value="vector">vector</option>
-                        <option value="driver">driver</option>
-                        <option value="material">material</option>
-                        <option value="operator">operator</option>
-                        <option value="access">access</option>
-                        <option value="weighing-terminal">weighing-terminal</option>
-                    </select>
+                    <label for="instanceName">Instance Name:</label>
+                    <input type="text" id="instanceName" placeholder="es: scale1" value="">
                 </div>
                 <div>
-                    <label for="token">Token (from localStorage or manual):</label>
-                    <input type="text" id="token" placeholder="Enter token or leave empty to use localStorage">
+                    <label for="weigherName">Weigher Name:</label>
+                    <input type="text" id="weigherName" placeholder="es: weigher1" value="">
                 </div>
             </div>
             <div>
@@ -211,72 +230,69 @@
         </div>
 
         <div class="section">
-            <h2>Send Message</h2>
-            <label for="message">JSON Message:</label>
-            <textarea id="message">{
-    "action": "lock",
-    "anagrafic": "vehicle",
-    "idRecord": 1,
-    "type": "UPDATE",
-    "idRequest": 1
-}</textarea>
-            <button class="btn-send" onclick="sendMessage()">Send Message</button>
-
-            <div class="quick-actions">
-                <button onclick="setQuickMessage('lock')">Lock Record</button>
-                <button onclick="setQuickMessage('unlock')">Unlock Record</button>
-                <button onclick="setQuickMessage('call')">Call Anagrafic</button>
-                <button onclick="setQuickMessage('ping')">Ping</button>
+            <h2>Peso in Tempo Reale</h2>
+            <div class="weight-display">
+                <div>
+                    <span class="weight-value" id="weightValue">---</span>
+                    <span class="weight-unit" id="weightUnit">kg</span>
+                </div>
+                <div class="weight-info">
+                    <div>Lordo: <span id="grossWeight">---</span></div>
+                    <div>Tara: <span id="tareWeight">---</span></div>
+                    <div>Netto: <span id="netWeight">---</span></div>
+                </div>
+                <div class="weight-status" id="weightStatus">In attesa di connessione...</div>
+            </div>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="value" id="msgCount">0</div>
+                    <div class="label">Messaggi ricevuti</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value" id="msgRate">0</div>
+                    <div class="label">Msg/sec</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value" id="lastUpdate">--:--:--</div>
+                    <div class="label">Ultimo aggiornamento</div>
+                </div>
             </div>
         </div>
 
         <div class="section">
-            <h2>Log</h2>
+            <h2>Log Messaggi</h2>
             <button class="btn-clear" onclick="clearLog()">Clear Log</button>
+            <label><input type="checkbox" id="showRawMessages" checked> Mostra messaggi raw</label>
             <div id="log"></div>
         </div>
     </div>
 
     <script>
         let ws = null;
-        let requestIdCounter = 0;
+        let msgCount = 0;
+        let msgTimestamps = [];
 
-        // Load token from localStorage on page load
+        // Update URL when parameters change
+        document.getElementById('instanceName').addEventListener('input', updateWsUrl);
+        document.getElementById('weigherName').addEventListener('input', updateWsUrl);
+
         document.addEventListener('DOMContentLoaded', () => {
-            const savedToken = localStorage.getItem('token');
-            if (savedToken) {
-                document.getElementById('token').value = savedToken;
-                log('info', 'Token loaded from localStorage');
-            } else {
-                log('info', 'No token found in localStorage');
-            }
             updateWsUrl();
+            log('info', 'Pagina caricata. Inserisci instance_name e weigher_name per connetterti.');
         });
 
-        // Update URL when anagrafic changes
-        document.getElementById('anagrafic').addEventListener('change', updateWsUrl);
-        document.getElementById('token').addEventListener('input', updateWsUrl);
-
         function updateWsUrl() {
-            const anagrafic = document.getElementById('anagrafic').value;
-            const token = document.getElementById('token').value || localStorage.getItem('token') || '';
+            const instanceName = document.getElementById('instanceName').value;
+            const weigherName = document.getElementById('weigherName').value;
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const url = `${protocol}//${window.location.host}/api/anagrafic/${anagrafic}?token=${encodeURIComponent(token)}`;
+
+            let url = `${protocol}//${window.location.host}/api/command-weigher/realtime`;
+            const params = [];
+            if (instanceName) params.push(`instance_name=${encodeURIComponent(instanceName)}`);
+            if (weigherName) params.push(`weigher_name=${encodeURIComponent(weigherName)}`);
+            if (params.length > 0) url += '?' + params.join('&');
+
             document.getElementById('wsUrl').value = url;
-
-            // Update message anagrafic
-            updateMessageAnagrafic();
-        }
-
-        function updateMessageAnagrafic() {
-            const anagrafic = document.getElementById('anagrafic').value;
-            try {
-                const msg = JSON.parse(document.getElementById('message').value);
-                msg.anagrafic = anagrafic;
-                document.getElementById('message').value = JSON.stringify(msg, null, 4);
-            } catch (e) {
-                // Ignore parse errors
-            }
         }
 
         function setStatus(status) {
@@ -295,6 +311,11 @@
 
             logEl.appendChild(entry);
             logEl.scrollTop = logEl.scrollHeight;
+
+            // Keep only last 100 entries
+            while (logEl.children.length > 100) {
+                logEl.removeChild(logEl.firstChild);
+            }
         }
 
         function escapeHtml(text) {
@@ -308,127 +329,111 @@
             log('info', 'Log cleared');
         }
 
+        function updateWeightDisplay(data) {
+            // Update main weight value (use net_weight or gross_weight)
+            const weightValue = data.net_weight || data.gross_weight || '---';
+            document.getElementById('weightValue').textContent = weightValue;
+
+            // Update unit
+            if (data.unite_measure) {
+                document.getElementById('weightUnit').textContent = data.unite_measure;
+            }
+
+            // Update individual values
+            document.getElementById('grossWeight').textContent = data.gross_weight || '---';
+            document.getElementById('tareWeight').textContent = data.tare || '---';
+            document.getElementById('netWeight').textContent = data.net_weight || '---';
+
+            // Update status
+            const statusEl = document.getElementById('weightStatus');
+            if (data.status === 'ST') {
+                statusEl.textContent = 'STABILE';
+                statusEl.className = 'weight-status stable';
+            } else {
+                statusEl.textContent = 'INSTABILE (' + (data.status || 'N/A') + ')';
+                statusEl.className = 'weight-status unstable';
+            }
+
+            // Update last update time
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updateStats() {
+            document.getElementById('msgCount').textContent = msgCount;
+
+            // Calculate messages per second
+            const now = Date.now();
+            msgTimestamps.push(now);
+            // Keep only timestamps from last second
+            msgTimestamps = msgTimestamps.filter(t => now - t < 1000);
+            document.getElementById('msgRate').textContent = msgTimestamps.length;
+        }
+
         function connect() {
             if (ws && ws.readyState === WebSocket.OPEN) {
-                log('info', 'Already connected');
+                log('info', 'Già connesso');
                 return;
             }
 
             const url = document.getElementById('wsUrl').value;
 
-            log('info', `Connecting to: ${url}`);
+            log('info', `Connessione a: ${url}`);
             setStatus('connecting');
+            document.getElementById('weightStatus').textContent = 'Connessione in corso...';
 
             try {
                 ws = new WebSocket(url);
 
                 ws.onopen = () => {
-                    log('info', 'WebSocket connection OPENED');
+                    log('info', 'WebSocket CONNESSO');
                     setStatus('connected');
+                    document.getElementById('weightStatus').textContent = 'Connesso, in attesa dati...';
+                    msgCount = 0;
+                    msgTimestamps = [];
                 };
 
                 ws.onmessage = (event) => {
-                    log('received', `RECEIVED: ${event.data}`);
+                    msgCount++;
+                    updateStats();
+
+                    if (document.getElementById('showRawMessages').checked) {
+                        log('received', event.data);
+                    }
+
                     try {
                         const data = JSON.parse(event.data);
-                        log('received', `Parsed: ${JSON.stringify(data, null, 2)}`);
+                        updateWeightDisplay(data);
                     } catch (e) {
-                        // Not JSON, that's ok
+                        log('error', `Errore parsing JSON: ${e.message}`);
                     }
                 };
 
                 ws.onerror = (error) => {
-                    log('error', `WebSocket ERROR: ${error.message || 'Unknown error'}`);
+                    log('error', `WebSocket ERRORE: ${error.message || 'Errore sconosciuto'}`);
                     console.error('WebSocket error:', error);
                 };
 
                 ws.onclose = (event) => {
-                    log('info', `WebSocket CLOSED - Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}, Clean: ${event.wasClean}`);
+                    log('info', `WebSocket CHIUSO - Codice: ${event.code}, Motivo: ${event.reason || 'Nessun motivo'}, Clean: ${event.wasClean}`);
                     setStatus('disconnected');
+                    document.getElementById('weightStatus').textContent = 'Disconnesso';
                     ws = null;
                 };
 
             } catch (e) {
-                log('error', `Failed to create WebSocket: ${e.message}`);
+                log('error', `Errore creazione WebSocket: ${e.message}`);
                 setStatus('disconnected');
             }
         }
 
         function disconnect() {
             if (ws) {
-                log('info', 'Closing connection...');
+                log('info', 'Chiusura connessione...');
                 ws.close();
             } else {
-                log('info', 'Not connected');
+                log('info', 'Non connesso');
             }
         }
-
-        function sendMessage() {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                log('error', 'WebSocket is not connected');
-                return;
-            }
-
-            const message = document.getElementById('message').value;
-
-            try {
-                // Validate JSON
-                JSON.parse(message);
-                ws.send(message);
-                log('sent', `SENT: ${message}`);
-            } catch (e) {
-                log('error', `Invalid JSON: ${e.message}`);
-            }
-        }
-
-        function setQuickMessage(type) {
-            const anagrafic = document.getElementById('anagrafic').value;
-            requestIdCounter++;
-
-            let msg;
-            switch (type) {
-                case 'lock':
-                    msg = {
-                        action: 'lock',
-                        anagrafic: anagrafic,
-                        idRecord: 1,
-                        type: 'UPDATE',
-                        idRequest: requestIdCounter
-                    };
-                    break;
-                case 'unlock':
-                    msg = {
-                        action: 'unlock',
-                        anagrafic: anagrafic,
-                        idRecord: 1,
-                        idRequest: requestIdCounter
-                    };
-                    break;
-                case 'call':
-                    msg = {
-                        action: 'call',
-                        anagrafic: anagrafic,
-                        idRequest: requestIdCounter
-                    };
-                    break;
-                case 'ping':
-                    msg = {
-                        action: 'message',
-                        message: 'ping',
-                        idRequest: requestIdCounter
-                    };
-                    break;
-            }
-
-            document.getElementById('message').value = JSON.stringify(msg, null, 4);
-        }
-
-        // Handle Enter key in message textarea
-        document.getElementById('message').addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'Enter') {
-                sendMessage();
-            }
-        });
     </script>
 </body>
 </html>
