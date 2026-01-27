@@ -98,20 +98,10 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "2",
-                                            "set": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "rele": "2",
-                                            "set": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
@@ -124,12 +114,7 @@
                                     "in": true,
                                     "out": true
                                 },
-                                "set_rele": [
-                                    {
-                                        "rele": "2",
-                                        "set": 1
-                                    }
-                                ]
+                                "set_rele": []
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -141,11 +126,12 @@
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
-                        "port_rele": null,
+                        "port_rele": [
+                            "1",
+                            0
+                        ],
                         "printer_name": null,
-                        "rele": {
-                            "2": 1
-                        },
+                        "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
