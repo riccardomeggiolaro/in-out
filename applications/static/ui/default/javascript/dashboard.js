@@ -135,6 +135,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 selectedIdWeigher.addEventListener('change', (event) => {
     currentWeigherPath = event.target.value;
     if (currentWeigherPath) {
+        localStorage.setItem('currentWeigherPath', currentWeigherPath)
+
         // Reset dei flag di visualizzazione per il nuovo pesatore
         anagraficViewed = false;
         insViewed = false;
@@ -148,10 +150,6 @@ selectedIdWeigher.addEventListener('change', (event) => {
         document.getElementById('tare').innerText = "N/A";
         document.getElementById('status').innerText = "N/A";
         connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime)
-        getInstanceWeigher(currentWeigherPath)
-        getData(currentWeigherPath)
-        .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
-        .then(() => populateListIn())
     }
 });
 
