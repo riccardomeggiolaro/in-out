@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebSocket Connection</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .section {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #00d4ff;
+            font-size: 1.2em;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #0f0f23;
+            color: #eee;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-connect {
+            background: #00d4ff;
+            color: #000;
+        }
+        .btn-connect:hover {
+            background: #00b8e6;
+        }
+        .btn-disconnect {
+            background: #ff4757;
+            color: #fff;
+        }
+        .btn-disconnect:hover {
+            background: #ff3344;
+        }
+        .btn-send {
+            background: #2ed573;
+            color: #000;
+        }
+        .btn-send:hover {
+            background: #26c066;
+        }
+        .btn-clear {
+            background: #747d8c;
+            color: #fff;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.disconnected {
+            background: #ff4757;
+            color: #fff;
+        }
+        .status.connecting {
+            background: #ffa502;
+            color: #000;
+        }
+        .status.connected {
+            background: #2ed573;
+            color: #000;
+        }
+        #log {
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .log-entry.info {
+            color: #00d4ff;
+        }
+        .log-entry.sent {
+            color: #2ed573;
+            background: rgba(46, 213, 115, 0.1);
+        }
+        .log-entry.received {
+            color: #ffa502;
+            background: rgba(255, 165, 2, 0.1);
+        }
+        .log-entry.error {
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+        }
+        .log-entry .time {
+            color: #747d8c;
+            margin-right: 10px;
+        }
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .row > div {
+            flex: 1;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #0f0f23;
+            color: #eee;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .quick-actions button {
+            flex: 1;
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test WebSocket Connection <span id="status" class="status disconnected">DISCONNECTED</span></h1>
+
+        <div class="section">
+            <h2>Connection Settings</h2>
+            <div class="row">
+                <div>
+                    <label for="anagrafic">Anagrafic Type:</label>
+                    <select id="anagrafic">
+                        <option value="vehicle">vehicle</option>
+                        <option value="subject">subject</option>
+                        <option value="vector">vector</option>
+                        <option value="driver">driver</option>
+                        <option value="material">material</option>
+                        <option value="operator">operator</option>
+                        <option value="access">access</option>
+                        <option value="weighing-terminal">weighing-terminal</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="token">Token (from localStorage or manual):</label>
+                    <input type="text" id="token" placeholder="Enter token or leave empty to use localStorage">
+                </div>
+            </div>
+            <div>
+                <label for="wsUrl">WebSocket URL (auto-generated):</label>
+                <input type="text" id="wsUrl" readonly>
+            </div>
+            <button class="btn-connect" onclick="connect()">Connect</button>
+            <button class="btn-disconnect" onclick="disconnect()">Disconnect</button>
+        </div>
+
+        <div class="section">
+            <h2>Send Message</h2>
+            <label for="message">JSON Message:</label>
+            <textarea id="message">{
+    "action": "lock",
+    "anagrafic": "vehicle",
+    "idRecord": 1,
+    "type": "UPDATE",
+    "idRequest": 1
+}</textarea>
+            <button class="btn-send" onclick="sendMessage()">Send Message</button>
+
+            <div class="quick-actions">
+                <button onclick="setQuickMessage('lock')">Lock Record</button>
+                <button onclick="setQuickMessage('unlock')">Unlock Record</button>
+                <button onclick="setQuickMessage('call')">Call Anagrafic</button>
+                <button onclick="setQuickMessage('ping')">Ping</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Log</h2>
+            <button class="btn-clear" onclick="clearLog()">Clear Log</button>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let requestIdCounter = 0;
+
+        // Load token from localStorage on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('token');
+            if (savedToken) {
+                document.getElementById('token').value = savedToken;
+                log('info', 'Token loaded from localStorage');
+            } else {
+                log('info', 'No token found in localStorage');
+            }
+            updateWsUrl();
+        });
+
+        // Update URL when anagrafic changes
+        document.getElementById('anagrafic').addEventListener('change', updateWsUrl);
+        document.getElementById('token').addEventListener('input', updateWsUrl);
+
+        function updateWsUrl() {
+            const anagrafic = document.getElementById('anagrafic').value;
+            const token = document.getElementById('token').value || localStorage.getItem('token') || '';
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const url = `${protocol}//${window.location.host}/api/anagrafic/${anagrafic}?token=${encodeURIComponent(token)}`;
+            document.getElementById('wsUrl').value = url;
+
+            // Update message anagrafic
+            updateMessageAnagrafic();
+        }
+
+        function updateMessageAnagrafic() {
+            const anagrafic = document.getElementById('anagrafic').value;
+            try {
+                const msg = JSON.parse(document.getElementById('message').value);
+                msg.anagrafic = anagrafic;
+                document.getElementById('message').value = JSON.stringify(msg, null, 4);
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
+
+        function setStatus(status) {
+            const el = document.getElementById('status');
+            el.className = 'status ' + status;
+            el.textContent = status.toUpperCase();
+        }
+
+        function log(type, message) {
+            const logEl = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `<span class="time">[${time}]</span> ${escapeHtml(message)}`;
+
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            log('info', 'Log cleared');
+        }
+
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                log('info', 'Already connected');
+                return;
+            }
+
+            const url = document.getElementById('wsUrl').value;
+
+            log('info', `Connecting to: ${url}`);
+            setStatus('connecting');
+
+            try {
+                ws = new WebSocket(url);
+
+                ws.onopen = () => {
+                    log('info', 'WebSocket connection OPENED');
+                    setStatus('connected');
+                };
+
+                ws.onmessage = (event) => {
+                    log('received', `RECEIVED: ${event.data}`);
+                    try {
+                        const data = JSON.parse(event.data);
+                        log('received', `Parsed: ${JSON.stringify(data, null, 2)}`);
+                    } catch (e) {
+                        // Not JSON, that's ok
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    log('error', `WebSocket ERROR: ${error.message || 'Unknown error'}`);
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.onclose = (event) => {
+                    log('info', `WebSocket CLOSED - Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}, Clean: ${event.wasClean}`);
+                    setStatus('disconnected');
+                    ws = null;
+                };
+
+            } catch (e) {
+                log('error', `Failed to create WebSocket: ${e.message}`);
+                setStatus('disconnected');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                log('info', 'Closing connection...');
+                ws.close();
+            } else {
+                log('info', 'Not connected');
+            }
+        }
+
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                log('error', 'WebSocket is not connected');
+                return;
+            }
+
+            const message = document.getElementById('message').value;
+
+            try {
+                // Validate JSON
+                JSON.parse(message);
+                ws.send(message);
+                log('sent', `SENT: ${message}`);
+            } catch (e) {
+                log('error', `Invalid JSON: ${e.message}`);
+            }
+        }
+
+        function setQuickMessage(type) {
+            const anagrafic = document.getElementById('anagrafic').value;
+            requestIdCounter++;
+
+            let msg;
+            switch (type) {
+                case 'lock':
+                    msg = {
+                        action: 'lock',
+                        anagrafic: anagrafic,
+                        idRecord: 1,
+                        type: 'UPDATE',
+                        idRequest: requestIdCounter
+                    };
+                    break;
+                case 'unlock':
+                    msg = {
+                        action: 'unlock',
+                        anagrafic: anagrafic,
+                        idRecord: 1,
+                        idRequest: requestIdCounter
+                    };
+                    break;
+                case 'call':
+                    msg = {
+                        action: 'call',
+                        anagrafic: anagrafic,
+                        idRequest: requestIdCounter
+                    };
+                    break;
+                case 'ping':
+                    msg = {
+                        action: 'message',
+                        message: 'ping',
+                        idRequest: requestIdCounter
+                    };
+                    break;
+            }
+
+            document.getElementById('message').value = JSON.stringify(msg, null, 4);
+        }
+
+        // Handle Enter key in message textarea
+        document.getElementById('message').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
