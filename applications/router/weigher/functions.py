@@ -16,7 +16,6 @@ class Functions:
 		md_weigher.module_weigher.initializeModuleConfig(config=lb_config.g_config["app_api"]["weighers"])
 
 		self.switch_to_call_instance_weigher = {}
-		self.automatic_weighing_process = []
 
 		import libs.lb_log as lb_log
 

@@ -235,8 +235,7 @@ class CallbackWeigher(Functions, WebSocket):
 			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
 			delete_data("access", last_pesata.data_assigned.accessId)
 		# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
-		if not last_pesata.weight_executed.executed and access.hidden is False:
-			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE E NON C'E' NESSUN IN-OUT ELIMINA I DATI IN ESECUZIONE
+		if not last_pesata.weight_executed.executed and len(access.in_out) == 0 and access.hidden is False:
 			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		weight = last_pesata.dict()
@@ -348,9 +347,9 @@ class CallbackWeigher(Functions, WebSocket):
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 		
 	def Callback_Rele(self, instance_name: str, weigher_name: str, port_rele: tuple):
+		lb_log.warning(f"Callback_Rele: {port_rele}")
 		key, value = port_rele
 		result = {key: value}
-		lb_log.error(f"Rele {key} stato settato a {value}")
 		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][key] = value
 		lb_config.saveconfig()
 		try:

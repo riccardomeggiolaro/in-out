@@ -30,6 +30,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 
 		self.router_action_weigher = APIRouter()
 		self.url_weighing_auto = '/weighing/auto'
+		self.automatic_weighing_process = []
 
 		self.router_action_weigher.add_api_route('/realtime', self.StartRealtime, methods=['GET'])
 		self.router_action_weigher.add_api_route('/diagnostic', self.StartDiagnostic, methods=['GET'])
@@ -309,19 +310,20 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			request.state.user = response
 		mode = lb_config.g_config["app_api"]["mode"]
 		error_message = None
-		broadcast_error_message = True
 		success_message = None
 		access = None
 		proc = {
 			"instance_name": instance.instance_name,
 			"weigher_name": instance.weigher_name,
-			"identify": identify_dto.identify,
-			"host": request.client.host if request else "terminale"
+			"identify": identify_dto.identify
 		}
-		cam_message = f'"{identify_dto.identify}" ricevuto da {proc["host"]}'
+		cam_message = f'"{identify_dto.identify}"'
+		if request is not None:
+			cam_message = cam_message + f" ricevuto da {request.client.host}"
+		else:
+			cam_message = cam_message + f" ricevuto da terminale"
 		if len(identify_dto.identify) < 5:
 			error_message = "L'identificativo deve essere di almeno 5 caratteri"
-			broadcast_error_message = False
 		else:
 			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
 			existing_proc = next(
@@ -418,6 +420,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 															await self.DeleteData(instance=instance)
 															await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 														if command_executed:
+															await self.DeleteData(instance=instance)
 															break
 													else:
 														stable = stable + 1
@@ -486,10 +489,10 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 										)
 									]
 								threading.Thread(target=lambda: asyncio.run(handleSemiautomatic())).start()
-								success_message = "Pesatura semiautomatica in attesa di conferma dall'operatore."
+								error_message = "Pesatura semiautomatica in attesa di conferma dall'operatore."
 					else:
 						error_message = f"Accesso con '{identify_dto.identify}' non esistente."
-		if error_message and broadcast_error_message:
+		if error_message:
 			error_message = cam_message + f" - Errore: {error_message}"
 			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": error_message})
 		elif success_message:

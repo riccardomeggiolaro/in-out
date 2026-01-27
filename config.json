@@ -87,7 +87,7 @@
                 "connection": {
                     "ip": "10.0.5.178",
                     "port": 23,
-                    "timeout": 2.0
+                    "timeout": 3.0
                 },
                 "nodes": {
                     "P1": {
@@ -100,7 +100,7 @@
                                 "over_min": {
                                     "set_rele": [
                                         {
-                                            "rele": "1",
+                                            "rele": "2",
                                             "set": 0
                                         }
                                     ]
@@ -108,7 +108,7 @@
                                 "under_min": {
                                     "set_rele": [
                                         {
-                                            "rele": "1",
+                                            "rele": "2",
                                             "set": 1
                                         }
                                     ]
@@ -126,7 +126,7 @@
                                 },
                                 "set_rele": [
                                     {
-                                        "rele": "1",
+                                        "rele": "2",
                                         "set": 1
                                     }
                                 ]
@@ -144,7 +144,7 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 0
+                            "2": 1
                         },
                         "run": true,
                         "take_of_weight_before_weighing": false,
