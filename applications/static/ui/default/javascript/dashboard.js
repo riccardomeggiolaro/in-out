@@ -55,6 +55,8 @@ let reconnectTimeout;
 let reconnectionAttemptTimeout;
 let isReconnecting = false; // Flag per evitare popup durante riconnessione
 let autoReconnectInterval; // Intervallo per riconnessione automatica
+let pingInterval; // Intervallo per ping
+let pingTimeout; // Timeout per risposta pong
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
@@ -659,6 +661,18 @@ function connectWebSocket(path, exe) {
     _data = new WebSocket(websocketUrl);
 
     _data.addEventListener('message', (e) => {
+        // Gestisci pong
+        try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'pong') {
+                // Pong ricevuto, cancella il timeout
+                if (pingTimeout) {
+                    clearTimeout(pingTimeout);
+                    pingTimeout = null;
+                }
+                return;
+            }
+        } catch (err) {}
         exe(e);
     });
 
@@ -678,6 +692,9 @@ function connectWebSocket(path, exe) {
 
         // Chiudi immediatamente il popup
         closePopup('reconnectionPopup');
+
+        // Avvia ping interval
+        startPing();
 
         // Ricarica i dati dopo aver aperto la connessione
         getInstanceWeigher(currentWeigherPath);
@@ -753,7 +770,45 @@ function attemptReconnect() {
     }, 3000);
 }
 
+function startPing() {
+    // Ferma eventuali ping precedenti
+    if (pingInterval) {
+        clearInterval(pingInterval);
+    }
+    if (pingTimeout) {
+        clearTimeout(pingTimeout);
+    }
+
+    // Invia ping ogni 3 secondi
+    pingInterval = setInterval(() => {
+        if (_data && _data.readyState === WebSocket.OPEN) {
+            _data.send(JSON.stringify({type: 'ping'}));
+
+            // Se non ricevo pong entro 5 secondi, considera la connessione persa
+            pingTimeout = setTimeout(() => {
+                console.log('Ping timeout: nessun pong ricevuto');
+                if (_data) {
+                    _data.close();
+                }
+                if (!isRefreshing && !autoReconnectInterval) {
+                    showReconnectionPopup();
+                }
+            }, 5000);
+        }
+    }, 3000);
+}
+
 function closeWebSocket(preserveReconnectInterval = false) {
+    // Ferma ping
+    if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+    }
+    if (pingTimeout) {
+        clearTimeout(pingTimeout);
+        pingTimeout = null;
+    }
+
     // Cancella eventuali timeout di riconnessione
     if (reconnectionAttemptTimeout) {
         clearTimeout(reconnectionAttemptTimeout);

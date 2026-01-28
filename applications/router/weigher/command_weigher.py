@@ -370,6 +370,19 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
   
 	async def websocket_endpoint_realtime(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.connect(websocket)
+
+		# Task per gestire i ping dal client
+		async def handle_ping():
+			try:
+				while True:
+					data = await websocket.receive_json()
+					if data.get("type") == "ping":
+						await websocket.send_json({"type": "pong"})
+			except:
+				pass
+
+		ping_task = asyncio.create_task(handle_ping())
+
 		while instance.instance_name in weighers_data and instance.weigher_name in weighers_data[instance.instance_name]:
 			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 			status = weigher["status"]
@@ -422,6 +435,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
 			await asyncio.sleep(0.1)
+
+		ping_task.cancel()
 
 	async def websocket_endpoint_diagnostic(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_diagnostic.connect(websocket)
