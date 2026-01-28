@@ -829,8 +829,33 @@ function isNumeric(value) {
     return !isNaN(value) && value !== "";
 }
 
+function parseMultipleJSON(str) {
+    const results = [];
+    let depth = 0;
+    let start = -1;
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === '{') {
+            if (depth === 0) start = i;
+            depth++;
+        } else if (str[i] === '}') {
+            depth--;
+            if (depth === 0 && start !== -1) {
+                try {
+                    results.push(JSON.parse(str.substring(start, i + 1)));
+                } catch (e) {}
+                start = -1;
+            }
+        }
+    }
+    return results;
+}
+
 function updateUIRealtime(e) {
-    const obj = JSON.parse(e.data);
+    const objects = parseMultipleJSON(e.data);
+    objects.forEach(obj => processRealtimeObject(obj));
+}
+
+function processRealtimeObject(obj) {
     if (obj.command_in_executing) {
         if (obj.command_in_executing == "TARE") showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
         if (obj.command_in_executing == "PRESETTARE") showSnackbar("snackbar", "Preset tara", 'rgb(208, 255, 208)', 'black');
