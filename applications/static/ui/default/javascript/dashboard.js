@@ -805,7 +805,7 @@ function startHeartbeatCheck() {
         const timeSinceLastHeartbeat = now - lastHeartbeat;
 
         // Se sono passati più di 1 secondo senza messaggi, considera la connessione persa
-        if (timeSinceLastHeartbeat > 1000) {
+        if (timeSinceLastHeartbeat > 2000) {
             console.log('Heartbeat timeout: nessun messaggio ricevuto da ' + timeSinceLastHeartbeat + 'ms');
 
             // Ferma il controllo
