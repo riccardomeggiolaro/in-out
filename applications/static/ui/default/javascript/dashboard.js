@@ -52,11 +52,11 @@ let data_weight_realtime = {
 
 let _data;
 let reconnectTimeout;
-let lastHeartbeat;
-let heartbeatInterval;
 let reconnectionAttemptTimeout;
 let isReconnecting = false; // Flag per evitare popup durante riconnessione
 let autoReconnectInterval; // Intervallo per riconnessione automatica
+let pingInterval; // Intervallo per ping
+let pingTimeout; // Timeout per risposta pong
 
 let url = new URL(window.location.href);
 let currentWeigherPath = null;
@@ -661,14 +661,18 @@ function connectWebSocket(path, exe) {
     _data = new WebSocket(websocketUrl);
 
     _data.addEventListener('message', (e) => {
-        // Aggiorna il timestamp dell'ultimo messaggio ricevuto
-        lastHeartbeat = Date.now();
-
-        // Avvia il controllo heartbeat solo dopo aver ricevuto il primo messaggio
-        if (!heartbeatInterval) {
-            startHeartbeatCheck();
-        }
-
+        // Gestisci pong
+        try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'pong') {
+                // Pong ricevuto, cancella il timeout
+                if (pingTimeout) {
+                    clearTimeout(pingTimeout);
+                    pingTimeout = null;
+                }
+                return;
+            }
+        } catch (err) {}
         exe(e);
     });
 
@@ -689,10 +693,8 @@ function connectWebSocket(path, exe) {
         // Chiudi immediatamente il popup
         closePopup('reconnectionPopup');
 
-        // Inizializza il timestamp del primo heartbeat
-        lastHeartbeat = Date.now();
-
-        // NON avviare subito il controllo heartbeat, aspetta il primo messaggio
+        // Avvia ping interval
+        startPing();
 
         // Ricarica i dati dopo aver aperto la connessione
         getInstanceWeigher(currentWeigherPath);
@@ -768,11 +770,43 @@ function attemptReconnect() {
     }, 3000);
 }
 
+function startPing() {
+    // Ferma eventuali ping precedenti
+    if (pingInterval) {
+        clearInterval(pingInterval);
+    }
+    if (pingTimeout) {
+        clearTimeout(pingTimeout);
+    }
+
+    // Invia ping ogni 3 secondi
+    pingInterval = setInterval(() => {
+        if (_data && _data.readyState === WebSocket.OPEN) {
+            _data.send(JSON.stringify({type: 'ping'}));
+
+            // Se non ricevo pong entro 5 secondi, considera la connessione persa
+            pingTimeout = setTimeout(() => {
+                console.log('Ping timeout: nessun pong ricevuto');
+                if (_data) {
+                    _data.close();
+                }
+                if (!isRefreshing && !autoReconnectInterval) {
+                    showReconnectionPopup();
+                }
+            }, 5000);
+        }
+    }, 3000);
+}
+
 function closeWebSocket(preserveReconnectInterval = false) {
-    // Ferma il controllo del heartbeat
-    if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        heartbeatInterval = null;
+    // Ferma ping
+    if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+    }
+    if (pingTimeout) {
+        clearTimeout(pingTimeout);
+        pingTimeout = null;
     }
 
     // Cancella eventuali timeout di riconnessione
@@ -791,38 +825,6 @@ function closeWebSocket(preserveReconnectInterval = false) {
         _data.close(); // Chiude la connessione WebSocket
         _data = null;  // Imposta _data a null per indicare che la connessione è chiusa
     }
-}
-
-function startHeartbeatCheck() {
-    // Ferma eventuali controlli precedenti
-    if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-    }
-
-    // Controlla ogni 500ms se sono arrivati messaggi dal server
-    heartbeatInterval = setInterval(() => {
-        const now = Date.now();
-        const timeSinceLastHeartbeat = now - lastHeartbeat;
-
-        // Se sono passati più di 1 secondo senza messaggi, considera la connessione persa
-        if (timeSinceLastHeartbeat > 2000) {
-            console.log('Heartbeat timeout: nessun messaggio ricevuto da ' + timeSinceLastHeartbeat + 'ms');
-
-            // Ferma il controllo
-            clearInterval(heartbeatInterval);
-            heartbeatInterval = null;
-
-            // Chiudi la connessione se ancora aperta
-            if (_data && _data.readyState === WebSocket.OPEN) {
-                _data.close();
-            }
-
-            // Avvia la riconnessione automatica solo se non è già in corso
-            if (!isRefreshing && !autoReconnectInterval) {
-                showReconnectionPopup();
-            }
-        }
-    }, 500); // Controlla ogni 500ms per rilevare più velocemente
 }
 
 function isNumeric(value) {
