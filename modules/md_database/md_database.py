@@ -313,6 +313,7 @@ def create_default_users():
             
         # Check if cam capture user exists
         cam_capture_plate_user = db_session.query(User).filter(User.username == "camcaptureplate").first()
+        terminal = db_session.query(User).filter(User.username == "terminal").first()
         
         if cam_capture_plate_user is None:
             cam_capture_plate_user = User(
@@ -324,6 +325,17 @@ def create_default_users():
             db_session.add(cam_capture_plate_user)
             db_session.commit()
             print("Cam capture user created")
+
+        if terminal is None:
+            terminal = User(
+                username="terminal",
+                password=None,  # FIXED: explicitly set password to None
+                level=0,
+                description="Terminal"
+            )
+            db_session.add(terminal)
+            db_session.commit()
+            print("Weighing terminal user created")
 
 # Execute the function to create default users
 create_default_users()
