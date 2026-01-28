@@ -408,7 +408,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 												break
 											elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
 												if realtime.status == "ST":
-													if stable == 3:
+													if stable == 5:
 														data_assigned = DataAssignedDTO(**{"accessId": access["id"], "userId": request.state.user.id if request else None})
 														status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 															instance_name=instance.instance_name, 
