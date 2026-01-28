@@ -12,6 +12,8 @@ from datetime import datetime
 class DataAssignedDTO(BaseModel):
     accessId: int
     userId: int
+    mode: str = "MANUAL" # MANUAL or AUTOMATIC
+    identify_code: Optional[str] = None
 
 class DataInExecution(BaseModel):
 	typeSubject: Optional[str] = "CUSTOMER"
