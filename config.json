@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "AUTOMATIC",
+        "mode": "MANUALLY",
         "panel": {
             "config": {},
             "connection": {
@@ -20,7 +20,7 @@
         "port": 80,
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
-        "return_pdf_copy_after_weighing": true,
+        "return_pdf_copy_after_weighing": false,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -85,12 +85,12 @@
         "weighers": {
             "0": {
                 "connection": {
-                    "ip": "10.0.5.178",
+                    "ip": "10.0.5.174",
                     "port": 23,
                     "timeout": 3.0
                 },
                 "nodes": {
-                    "P1": {
+                    "3590-EGT": {
                         "always_execute_realtime_in_undeground": true,
                         "continuous_transmission": false,
                         "diagnostic_has_priority_than_realtime": true,
@@ -117,11 +117,11 @@
                             "weighing": {
                                 "cams": [],
                                 "csv": {
-                                    "in": true,
-                                    "out": true
+                                    "in": false,
+                                    "out": false
                                 },
                                 "report": {
-                                    "in": true,
+                                    "in": false,
                                     "out": true
                                 },
                                 "set_rele": [
@@ -136,7 +136,7 @@
                         "max_theshold": null,
                         "max_weight": 60000,
                         "min_weight": 400,
-                        "name": "P1",
+                        "name": "3590-EGT",
                         "need_take_of_weight_before_weighing": true,
                         "need_take_of_weight_on_startup": false,
                         "node": null,
@@ -152,7 +152,60 @@
                         "terminal": "egt-af03"
                     }
                 },
-                "time_between_actions": 0.3
+                "time_between_actions": 0.4
+            },
+            "1": {
+                "connection": {
+                    "ip": "10.0.5.180",
+                    "port": 4001,
+                    "timeout": 3.0
+                },
+                "nodes": {
+                    "3590-EQ": {
+                        "always_execute_realtime_in_undeground": true,
+                        "continuous_transmission": false,
+                        "diagnostic_has_priority_than_realtime": true,
+                        "division": 20,
+                        "events": {
+                            "realtime": {
+                                "over_min": {
+                                    "set_rele": []
+                                },
+                                "under_min": {
+                                    "set_rele": []
+                                }
+                            },
+                            "weighing": {
+                                "cams": [],
+                                "csv": {
+                                    "in": false,
+                                    "out": false
+                                },
+                                "report": {
+                                    "in": false,
+                                    "out": true
+                                },
+                                "set_rele": []
+                            }
+                        },
+                        "maintaine_session_realtime_after_command": true,
+                        "max_theshold": null,
+                        "max_weight": 60000,
+                        "min_weight": 400,
+                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_on_startup": false,
+                        "node": null,
+                        "number_of_prints": 1,
+                        "port_rele": null,
+                        "printer_name": null,
+                        "rele": {},
+                        "run": true,
+                        "take_of_weight_before_weighing": false,
+                        "take_of_weight_on_startup": false,
+                        "terminal": "egt-af03"
+                    }
+                },
+                "time_between_actions": 0.4
             }
         }
     },
