@@ -52,10 +52,11 @@ class WeigherModule:
 			self.instances[name] = instance
    		
 	def setApplicationCallback(
-		self, 
-		cb_realtime: Callable[[dict], any] = None, 
-		cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+		self,
+		cb_realtime: Callable[[dict], any] = None,
+		cb_diagnostic: Callable[[dict], any] = None,
+		cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -63,31 +64,10 @@ class WeigherModule:
     	cb_code_identify: Callable[[str], any] = None):
 		for name, instance in self.instances.items():
 			instance.setActionAllWeigher(
-				cb_realtime=cb_realtime, 
-				cb_diagnostic=cb_diagnostic, 
+				cb_realtime=cb_realtime,
+				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
-				cb_weighing_terminal=cb_weighing_terminal,
-				cb_tare_ptare_zero=cb_tare_ptare_zero,
-				cb_action_in_execution=cb_action_in_execution,
-				cb_rele=cb_rele,
-				cb_code_identify=cb_code_identify
-			)
-   
-	def setApplicationCallback(
-		self, 
-		cb_realtime: Callable[[dict], any] = None, 
-		cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
-		cb_weighing_terminal: Callable[[dict], any] = None,
-		cb_tare_ptare_zero: Callable[[str], any] = None,
-		cb_action_in_execution: Callable[[str], any] = None,
-  		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
-		for name, instance in self.instances.items():
-			instance.setActionAllWeigher(
-				cb_realtime=cb_realtime, 
-				cb_diagnostic=cb_diagnostic, 
-				cb_weighing=cb_weighing, 
+				cb_weighing_fallback=cb_weighing_fallback,
 				cb_weighing_terminal=cb_weighing_terminal,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
@@ -143,12 +123,13 @@ class WeigherModule:
 			return None
 
 	def addInstanceWeigher(
-    	self, 
-     	instance_name, 
+    	self,
+     	instance_name,
       	setup: SetupWeigherDTO,
-	  	cb_realtime: Callable[[dict], any] = None, 
-	   	cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+	  	cb_realtime: Callable[[dict], any] = None,
+	   	cb_diagnostic: Callable[[dict], any] = None,
+		cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -166,6 +147,7 @@ class WeigherModule:
 			cb_realtime=cb_realtime,
 			cb_diagnostic=cb_diagnostic,
 			cb_weighing=cb_weighing,
+			cb_weighing_fallback=cb_weighing_fallback,
 			cb_weighing_terminal=cb_weighing_terminal,
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
@@ -181,9 +163,10 @@ class WeigherModule:
   		instance_name,
     	weigher_name,
      	setup: ChangeSetupWeigherDTO,
-	  	cb_realtime: Callable[[dict], any] = None, 
-	   	cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+	  	cb_realtime: Callable[[dict], any] = None,
+	   	cb_diagnostic: Callable[[dict], any] = None,
+		cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -202,6 +185,7 @@ class WeigherModule:
 			cb_realtime=cb_realtime,
 			cb_diagnostic=cb_diagnostic,
 			cb_weighing=cb_weighing,
+			cb_weighing_fallback=cb_weighing_fallback,
 			cb_weighing_terminal=cb_weighing_terminal,
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
@@ -244,12 +228,13 @@ class WeigherModule:
 
 class WeigherInstance:
 	def __init__(
-		self, 
+		self,
 		name,
 		configuration: ConfigurationDTO,
-		cb_realtime: Callable[[dict], any] = None, 
-	 	cb_diagnostic: Callable[[dict], any] = None, 
-	  	cb_weighing: Callable[[dict], any] = None, 
+		cb_realtime: Callable[[dict], any] = None,
+	 	cb_diagnostic: Callable[[dict], any] = None,
+	  	cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 	   	cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -270,26 +255,27 @@ class WeigherInstance:
 		self.time_between_actions = configuration.time_between_actions
 		for key, value in configuration.nodes.items():
 			n = terminalsClasses[value.terminal](
-	   			self_config=self, 
+	   			self_config=self,
 		  		max_weight=value.max_weight,
-				min_weight=value.min_weight, 
-			 	division=value.division, 
+				min_weight=value.min_weight,
+			 	division=value.division,
 			  	maintaine_session_realtime_after_command=value.maintaine_session_realtime_after_command,
 			   	diagnostic_has_priority_than_realtime=value.diagnostic_has_priority_than_realtime,
 				always_execute_realtime_in_undeground=value.always_execute_realtime_in_undeground,
 				need_take_of_weight_before_weighing=value.need_take_of_weight_before_weighing,
 				need_take_of_weight_on_startup=value.need_take_of_weight_on_startup,
 				continuous_transmission=value.continuous_transmission,
-				node=value.node, 
+				node=value.node,
 				terminal=value.terminal,
 				run=value.run
 			)
 			n.initialize()
-			self.nodes[key] = n			
+			self.nodes[key] = n
 		self.setActionAllWeigher(
-			cb_realtime=cb_realtime, 
-			cb_diagnostic=cb_diagnostic, 
-			cb_weighing=cb_weighing, 
+			cb_realtime=cb_realtime,
+			cb_diagnostic=cb_diagnostic,
+			cb_weighing=cb_weighing,
+			cb_weighing_fallback=cb_weighing_fallback,
 			cb_weighing_terminal=cb_weighing_terminal,
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
@@ -517,28 +503,29 @@ class WeigherInstance:
 		return self.nodes[name].getSetup()
 
 	def addNode(
-		self, 
+		self,
 		setup: SetupWeigherDTO,
-	  	cb_realtime: Callable[[dict], any] = None, 
-	   	cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+	  	cb_realtime: Callable[[dict], any] = None,
+	   	cb_diagnostic: Callable[[dict], any] = None,
+		cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
 		cb_rele: Callable[[str], any] = None,
   		cb_code_identify: Callable[[str], any] = None):
 		n = terminalsClasses[setup.terminal](
-			self_config=self, 
-			max_weight=setup.max_weight, 
-			min_weight=setup.min_weight, 
-			division=setup.division, 
+			self_config=self,
+			max_weight=setup.max_weight,
+			min_weight=setup.min_weight,
+			division=setup.division,
 			maintaine_session_realtime_after_command=setup.maintaine_session_realtime_after_command,
 			diagnostic_has_priority_than_realtime=setup.diagnostic_has_priority_than_realtime,
 			always_execute_realtime_in_undeground=setup.always_execute_realtime_in_undeground,
    			need_take_of_weight_before_weighing=setup.need_take_of_weight_before_weighing,
 			need_take_of_weight_on_startup=setup.need_take_of_weight_on_startup,
 			continuous_transmission=setup.continuous_transmission,
-			node=setup.node, 
+			node=setup.node,
 			terminal=setup.terminal,
 			run=setup.run
 		)
@@ -551,6 +538,7 @@ class WeigherInstance:
 			cb_realtime=cb_realtime,
 			cb_diagnostic=cb_diagnostic,
 			cb_weighing=cb_weighing,
+			cb_weighing_fallback=cb_weighing_fallback,
 			cb_weighing_terminal=cb_weighing_terminal,
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
@@ -560,12 +548,13 @@ class WeigherInstance:
 		return self.nodes[setup.name].getSetup()
 
 	def setNode(
-    	self, 
+    	self,
      	name: str,
       	setup: ChangeSetupWeigherDTO = {},
-	  	cb_realtime: Callable[[dict], any] = None, 
-	   	cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+	  	cb_realtime: Callable[[dict], any] = None,
+	   	cb_diagnostic: Callable[[dict], any] = None,
+		cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -584,6 +573,7 @@ class WeigherInstance:
 				cb_realtime=cb_realtime,
 				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
+				cb_weighing_fallback=cb_weighing_fallback,
 				cb_weighing_terminal=cb_weighing_terminal,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
@@ -598,6 +588,7 @@ class WeigherInstance:
 				cb_realtime=cb_realtime,
 				cb_diagnostic=cb_diagnostic,
 				cb_weighing=cb_weighing,
+				cb_weighing_fallback=cb_weighing_fallback,
 				cb_weighing_terminal=cb_weighing_terminal,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
@@ -655,11 +646,12 @@ class WeigherInstance:
 		return status_modope, command_executed, error_message
 
 	def setActionWeigher(
-    	self, 
-     	weigher_name: str, 
-      	cb_realtime: Callable[[dict], any] = None, 
-       	cb_diagnostic: Callable[[dict], any] = None, 
-        cb_weighing: Callable[[dict], any] = None, 
+    	self,
+     	weigher_name: str,
+      	cb_realtime: Callable[[dict], any] = None,
+       	cb_diagnostic: Callable[[dict], any] = None,
+        cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
         cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -673,6 +665,7 @@ class WeigherInstance:
 					cb_realtime=cb_realtime,
 					cb_diagnostic=cb_diagnostic,
 					cb_weighing=cb_weighing,
+					cb_weighing_fallback=cb_weighing_fallback,
 					cb_weighing_terminal=cb_weighing_terminal,
 					cb_tare_ptare_zero=cb_tare_ptare_zero,
 					cb_action_in_execution=cb_action_in_execution,
@@ -681,10 +674,11 @@ class WeigherInstance:
 				)
 
 	def setActionAllWeigher(
-    	self, 
-    	cb_realtime: Callable[[dict], any] = None, 
-     	cb_diagnostic: Callable[[dict], any] = None, 
-      	cb_weighing: Callable[[dict], any] = None, 
+    	self,
+    	cb_realtime: Callable[[dict], any] = None,
+     	cb_diagnostic: Callable[[dict], any] = None,
+      	cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
        	cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
@@ -693,9 +687,10 @@ class WeigherInstance:
 		for name, weigher in self.nodes.items():
 			weigher.setAction(
 				weigher_name=name,
-       			cb_realtime=cb_realtime, 
-          		cb_diagnostic=cb_diagnostic, 
-            	cb_weighing=cb_weighing, 
+       			cb_realtime=cb_realtime,
+          		cb_diagnostic=cb_diagnostic,
+            	cb_weighing=cb_weighing,
+				cb_weighing_fallback=cb_weighing_fallback,
 				cb_weighing_terminal=cb_weighing_terminal,
              	cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,

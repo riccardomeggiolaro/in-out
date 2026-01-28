@@ -229,6 +229,7 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.executed = False if "NO" in split_response[4] else True
 					self.weight.weight_executed.log = response
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
+					self.weight.is_automatic = self.weight.data_assigned is not None
 					self.diagnostic.status = 200
 					if "NO" not in split_response[4]:
 						self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
@@ -242,7 +243,11 @@ class EgtAf03(Terminal):
 								length_split_response = len(split_response) # ottengo la lunghezza dell'array delle sotto stringhe
 								length_response = len(response) # ottengo la lunghezza della stringa della risposta
 								# self.modope_to_execute = "OK"
-					callCallback(self.callback_weighing)
+					# Se pesatura automatica fallita (NO nel PID), chiama fallback se disponibile
+					if "NO" in split_response[4] and self.weight.is_automatic and self.callback_weighing_fallback:
+						callCallback(self.callback_weighing_fallback)
+					else:
+						callCallback(self.callback_weighing)
 					self.weight.weight_executed.net_weight = ""
 					self.weight.weight_executed.gross_weight = ""
 					self.weight.weight_executed.tare.value = ""
@@ -255,6 +260,7 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.log = None
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 					self.weight.data_assigned = None
+					self.weight.is_automatic = False
 				######### Se in esecuzione peso in tempo reale ######################################################################
 				elif self.modope == "REALTIME" or self.continuous_transmission:
 					if response in skip_response_messages:
@@ -377,13 +383,18 @@ class EgtAf03(Terminal):
 						self.weight.weight_executed.executed = False if "NO" in split_response[4] else True
 						self.weight.weight_executed.log = response
 						self.weight.weight_executed.serial_number = self.diagnostic.serial_number
+						self.weight.is_automatic = self.weight.data_assigned is not None
 						self.diagnostic.status = 200
 						if "NO" not in split_response[4]:
 							self.take_of_weight_before_weighing = True if self.need_take_of_weight_before_weighing else False
 				# Se formato stringa pesata pid non corretto, manda a video errore e setta oggetto a None
 					else:
 						self.diagnostic.status = 201
-					callCallback(self.callback_weighing) # chiamo callback
+					# Se pesatura automatica fallita (NO nel PID), chiama fallback se disponibile
+					if "NO" in self.weight.weight_executed.pid and self.weight.is_automatic and self.callback_weighing_fallback:
+						callCallback(self.callback_weighing_fallback)
+					else:
+						callCallback(self.callback_weighing)
 					self.weight.weight_executed.net_weight = ""
 					self.weight.weight_executed.gross_weight = ""
 					self.weight.weight_executed.tare.value = ""
@@ -396,6 +407,7 @@ class EgtAf03(Terminal):
 					self.weight.weight_executed.log = None
 					self.weight.weight_executed.serial_number = self.diagnostic.serial_number
 					self.weight.data_assigned = None
+					self.weight.is_automatic = False
 				######### Se in esecuzione tara, preset tara o zero #################################################################
 				elif self.modope in ["TARE", "PRESETTARE", "ZERO"]:
 					if self.modope == "TARE":

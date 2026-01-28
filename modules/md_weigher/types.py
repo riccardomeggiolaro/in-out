@@ -43,6 +43,7 @@ class WeightExecuted(BaseModel):
 class Weight(BaseModel):
 	weight_executed: WeightExecuted
 	data_assigned: Optional[Any] = None
+	is_automatic: bool = False
 
 class WeightTerminal(BaseModel):
 	type: str = ""

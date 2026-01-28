@@ -145,9 +145,10 @@ class ConfigWeigher(CommandWeigherRouter):
         response = md_weigher.module_weigher.addInstanceWeigher(
             instance_name=instance.instance_name,
             setup=setup,
-            cb_realtime=self.Callback_Realtime, 
+            cb_realtime=self.Callback_Realtime,
             cb_diagnostic=self.Callback_Diagnostic,
             cb_weighing=self.Callback_Weighing,
+            cb_weighing_fallback=self.Callback_WeighingFallback,
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_action_in_execution=self.Callback_ActionInExecution,
             cb_rele=self.Callback_Rele,
@@ -200,11 +201,12 @@ class ConfigWeigher(CommandWeigherRouter):
     async def SetInstanceWeigher(self, setup: ChangeSetupWeigherDTO = {}, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         response = md_weigher.module_weigher.setInstanceWeigher(
             instance_name=instance.instance_name,
-            weigher_name=instance.weigher_name, 
+            weigher_name=instance.weigher_name,
             setup=setup,
-            cb_realtime=self.Callback_Realtime, 
+            cb_realtime=self.Callback_Realtime,
             cb_diagnostic=self.Callback_Diagnostic,
             cb_weighing=self.Callback_Weighing,
+            cb_weighing_fallback=self.Callback_WeighingFallback,
             cb_tare_ptare_zero=self.Callback_TarePTareZero,
             cb_action_in_execution=self.Callback_ActionInExecution,
             cb_rele=self.Callback_Rele,

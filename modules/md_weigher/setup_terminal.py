@@ -137,7 +137,8 @@ class __SetupWeigher(__SetupWeigherConnection):
 				"log": "",
 				"serial_number": ""
 			},
-			"data_assigned": None
+			"data_assigned": None,
+			"is_automatic": False
 		})
 		self.weight_terminal: WeightTerminal = WeightTerminal(**{
 			"type": "",
@@ -172,6 +173,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.callback_realtime: str = ""
 		self.callback_diagnostic: str = ""
 		self.callback_weighing: str = ""
+		self.callback_weighing_fallback: str = ""
 		self.callback_weighing_terminal: str = ""
 		self.callback_tare_ptare_zero: str = ""
 		self.callback_data_in_execution: str = ""
@@ -244,9 +246,10 @@ class __SetupWeigher(__SetupWeigherConnection):
 
 	def setAction(self,
 		weigher_name: str,
-		cb_realtime: Callable[[dict], any] = None, 
-		cb_diagnostic: Callable[[dict], any] = None, 
+		cb_realtime: Callable[[dict], any] = None,
+		cb_diagnostic: Callable[[dict], any] = None,
 		cb_weighing: Callable[[dict], any] = None,
+		cb_weighing_fallback: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
   		cb_data_in_execution: Callable[[dict], any] = None,
@@ -262,6 +265,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		check_cb_weighing = checkCallbackFormat(cb_weighing) # controllo se la funzione cb_weighing è richiamabile
 		if check_cb_weighing: # se è richiamabile assegna alla globale callback_weighing la funzione passata come parametro
 			self.callback_weighing = lambda: cb_weighing(self.self_config.name, weigher_name, self.weight)
+		check_cb_weighing_fallback = checkCallbackFormat(cb_weighing_fallback) # controllo se la funzione cb_weighing_fallback è richiamabile
+		if check_cb_weighing_fallback: # se è richiamabile assegna alla globale callback_weighing_fallback la funzione passata come parametro
+			self.callback_weighing_fallback = lambda: cb_weighing_fallback(self.self_config.name, weigher_name, self.weight)
 		check_cb_weighing_terminal = checkCallbackFormat(cb_weighing_terminal) # controllo se la funzione cb_weighing_terminal è richiamabile
 		if check_cb_weighing_terminal: # se è richiamabile assegna alla globale callback_weighing_terminal la funzione passata come parametro
 			self.callback_weighing_terminal = lambda: cb_weighing_terminal(self.self_config.name, weigher_name, self.weight_terminal)

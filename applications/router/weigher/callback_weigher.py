@@ -374,3 +374,24 @@ class CallbackWeigher(Functions, WebSocket):
 				loop.run_until_complete(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 		except RuntimeError:
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+
+	# Callback chiamata quando una pesatura automatica fallisce (NO nel PID)
+	def Callback_WeighingFallback(self, instance_name: str, weigher_name: str, last_pesata: Weight):
+		try:
+			access = get_access_by_id(last_pesata.data_assigned.accessId) if last_pesata.data_assigned and last_pesata.data_assigned.accessId else None
+			# Se l'accesso è hidden (creato automaticamente per la pesatura), eliminalo
+			if access and access.hidden is True:
+				delete_data("access", last_pesata.data_assigned.accessId)
+			# Se l'accesso non è hidden, rimuovi i dati in esecuzione e l'id selezionato
+			if access and len(access.in_out) == 0 and access.hidden is False:
+				self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
+			# Notifica gli utenti collegati del fallimento della pesatura automatica
+			error_message = f"Pesatura automatica fallita: PID contenente 'NO' ricevuto dal terminale"
+			result = {
+				"error_message": error_message,
+				"is_automatic": True,
+				"weight_executed": last_pesata.weight_executed.dict() if last_pesata.weight_executed else None
+			}
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
+		except Exception as e:
+			lb_log.error(f"Callback_WeighingFallback error: {e}")
