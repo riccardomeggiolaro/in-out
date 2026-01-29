@@ -13,6 +13,7 @@ class DataAssignedDTO(BaseModel):
     accessId: int
     userId: int
     mode: str = "MANUAL" # MANUAL or AUTOMATIC
+    token: Optional[str] = None
     identify_code: Optional[str] = None
 
 class DataInExecution(BaseModel):

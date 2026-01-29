@@ -94,6 +94,9 @@ class CallbackWeigher(Functions, WebSocket):
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
+		lb_log.error("---------------")
+		lb_log.error(last_pesata.data_assigned.identify_code)
+		lb_log.error("---------------")
 		access = get_access_by_id(last_pesata.data_assigned.accessId)
 		user = get_data_by_id("user", last_pesata.data_assigned.userId)
 		# lb_log.warning(last_pesata.data_assigned.userId)
@@ -240,15 +243,15 @@ class CallbackWeigher(Functions, WebSocket):
 					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
-					lb_log.warning(r)
-		elif not last_pesata.weight_executed.executed and last_pesata.data_assigned.accessId and access.hidden is True:
-			# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
-			delete_data("access", last_pesata.data_assigned.accessId)
-		# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
-		if not last_pesata.weight_executed.executed and len(access.in_out) == 0 and access.hidden is False:
-			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
-		if not last_pesata.weight_executed.executed and last_pesata.data_assigned.mode == "AUTOMATIC":
-			pass
+		elif not last_pesata.weight_executed.executed:
+			if last_pesata.data_assigned.accessId and access.hidden is True:
+				# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
+				delete_data("access", last_pesata.data_assigned.accessId)
+			# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
+			elif len(access.in_out) == 0 and access.hidden is False:
+				self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
+			elif last_pesata.data_assigned.mode == "AUTOMATIC":
+				self.Fallback_Weighing(instance_name=instance_name, weigher_name=weigher_name, data_assigned=last_pesata.data_assigned)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		weight = last_pesata.dict()
 		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
@@ -257,19 +260,22 @@ class CallbackWeigher(Functions, WebSocket):
 				weight = {"access": {}}
 				asyncio.run(weighers_data[instance][weigher]["sockets"].manager_realtime.broadcast(weight))
 
-	async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None):
-		if not request:
-			user = get_data_by_attribute("user", "username", "terminal")
-			user["date_created"] = user["date_created"].isoformat()
-			token = create_access_token(user)      
-			request = Request({
-				"type": "http",
-				"headers": [],
-				"client": ("terminal", 0)
-			})
+	def Fallback_Weighing(self, instance_name: str, weigher_name: str, data_assigned: DataAssignedDTO):
+		# asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
+		# asyncio.run(self.WeighingByIdentify(request=None, identify_dto=IdentifyDTO(identify=last_pesata.data_assigned.identify_code), instance=InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)))
+		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": "Pesatura automatica non risucita, ritento..."}))
+		asyncio.run(self.WeighingByIdentify(request=None, identify_dto=IdentifyDTO(identify=data_assigned.identify_code), instance=InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name), token=data_assigned.token, notify_identify_code=False))
+
+	async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None, notify_identify_code: bool = True):
 		response = get_user(token=token)
 		if hasattr(response, "status_code"):
 			return response
+		if not request:
+			request = Request({
+				"type": "http",
+				"headers": [],
+				"client": (response.username, response.level)
+			})
 		request.state.user = response
 		mode = lb_config.g_config["app_api"]["mode"]
 		error_message = None
@@ -288,7 +294,8 @@ class CallbackWeigher(Functions, WebSocket):
 		if len(identify_dto.identify) < 5:
 			error_message = "L'identificativo deve essere di almeno 5 caratteri"
 		else:
-			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
+			if notify_identify_code:
+				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
 			existing_proc = next(
 				(p for p in self.automatic_weighing_process if p["instance_name"] == instance.instance_name and p["weigher_name"] == instance.weigher_name),
 				None
@@ -371,8 +378,8 @@ class CallbackWeigher(Functions, WebSocket):
 												break
 											elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
 												if realtime.status == "ST":
-													if stable == 5:
-														data_assigned = DataAssignedDTO(**{"accessId": access["id"], "userId": request.state.user.id, "mode": "AUTOMATIC", "identify": identify_dto.identify})
+													if stable == 3:
+														data_assigned = DataAssignedDTO(**{"accessId": access["id"], "userId": request.state.user.id, "mode": "AUTOMATIC", "token": token, "identify_code": identify_dto.identify})
 														status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 															instance_name=instance.instance_name, 
 															weigher_name=instance.weigher_name, 
@@ -460,7 +467,8 @@ class CallbackWeigher(Functions, WebSocket):
 			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": error_message})
 		elif success_message:
 			success_message = cam_message + f" - {success_message}"
-			await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": success_message})
+			if notify_identify_code:
+				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": success_message})
 		return {
 			"message": error_message or success_message,
 			"access_id": access["id"] if access else None,
@@ -470,9 +478,12 @@ class CallbackWeigher(Functions, WebSocket):
 	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
 		instance = InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)
 		identify_dto = IdentifyDTO(identify=identify)
+		user = get_data_by_attribute("user", "username", "terminal")
+		user["date_created"] = user["date_created"].isoformat()
+		token = create_access_token(user)      
 
 		def run_in_thread():
-			asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto))
+			asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto, token=token))
 
 		thread = threading.Thread(target=run_in_thread)
 		thread.start()
