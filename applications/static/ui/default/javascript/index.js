@@ -644,16 +644,16 @@ async function handleStampa() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.command_details.command_executed == true) {
+    if (r && r.command_details && r.command_details.command_executed == true) {
         showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
         if (return_pdf_copy_after_weighing) access_id = r.access_id;
     } else {
-        showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    }            
+    }
 }
 
 async function inWeighing() {
@@ -677,16 +677,16 @@ async function inWeighing() {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.command_details.command_executed == true) {
+    if (r && r.command_details && r.command_details.command_executed == true) {
         showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
         if (return_pdf_copy_after_weighing) access_id = r.access_id;
     } else {
-        showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    }                
+    }
 }
 
 async function handlePesata() {
@@ -716,16 +716,16 @@ async function outWeighing () {
         return res.json();
     })
     .catch(error => console.error('Errore nella fetch:', error));
-    if (r.command_details.command_executed == true) {
+    if (r && r.command_details && r.command_details.command_executed == true) {
         showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
         if (return_pdf_copy_after_weighing) access_id = r.access_id;
     } else {
-        showSnackbar("snackbar", r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
+        showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
         buttons.forEach(button => {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
-    }                
+    }
 }
 
 async function handlePesata2() {
