@@ -871,7 +871,11 @@ function processRealtimeObject(obj) {
         }                    
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight != "") {
-            closePopup();
+            // Non chiudere il popup se è il confirmPopup del semi-automatico (need_to_confirm)
+            // perché la pesata ricevuta potrebbe essere di un'altra operazione (es. No PID)
+            if (!(currentPopup === "confirmPopup" && confirmWeighing === confirmSemiAutomatic)) {
+                closePopup();
+            }
             let message = `Pesata eseguita!`;
             if (obj.data_assigned.userId) {
                 obj.data_assigned.userId = JSON.parse(obj.data_assigned.userId);
@@ -880,7 +884,9 @@ function processRealtimeObject(obj) {
             if (obj.weight_executed.pid != "") {
                 message += ` Pid: ${obj.weight_executed.pid}`;
                 obj.data_assigned.accessId = JSON.parse(obj.data_assigned.accessId);
-                if (obj.data_assigned.accessId.id === access_id) {
+                if (obj.data_assigned.accessId.id === access_id &&
+                    obj.data_assigned.accessId.in_out &&
+                    obj.data_assigned.accessId.in_out.length > 0) {
                     const id_in_out = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["id"]
                     const typeOfWeight = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["idWeight2"] === null ? "in" : "out";
                     const params = getParamsFromQueryString();
