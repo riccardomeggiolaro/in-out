@@ -944,7 +944,8 @@ function processRealtimeObject(obj) {
         const numeric = isNumeric(data_weight_realtime.gross_weight);
         const gross_weight = Number(data_weight_realtime.gross_weight);
         const tare_weight = Number(data_weight_realtime.tare);
-        if (gross_weight < minWeightValue && currentPopup === "confirmPopup") closePopup();
+        // Chiudi il popup solo se non è il confirmPopup del semi-automatico (need_to_confirm)
+        if (gross_weight < minWeightValue && currentPopup === "confirmPopup" && confirmWeighing !== confirmSemiAutomatic) closePopup();
         // if (numeric && minWeightValue <= gross_weight && gross_weight <= maxWeightValue && data_weight_realtime.status === "ST") {
         //     if (tare_weight == 0 && selectedIdWeight === null) {
         //         tareButton.disabled = false;
