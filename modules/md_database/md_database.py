@@ -100,6 +100,7 @@ class Weighing(Base):
     weigher_serial_number = Column(String, nullable=True)
     pid = Column(String, index=True, unique=True, nullable=True)
     is_preset_tare = Column(Boolean, default=False, nullable=True)
+    is_preset_weight = Column(Boolean, default=False, nullable=True)
     tare = Column(Integer, nullable=True)
     weight = Column(Integer, nullable=True)
     log = Column(String, nullable=True)

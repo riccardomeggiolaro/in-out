@@ -24,7 +24,7 @@
         "port": 80,
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
-        "return_pdf_copy_after_weighing": false,
+        "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -83,9 +83,9 @@
             }
         },
         "use_badge": false,
-        "use_preset_weight": false,
+        "use_preset_weight": true,
         "use_recordings": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_white_list": false,
         "weighers": {
             "0": {
@@ -149,7 +149,7 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 1
+                            "1": 0
                         },
                         "run": true,
                         "take_of_weight_before_weighing": false,

@@ -249,7 +249,9 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 
 	async def Weight2(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
-		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		pesa_real_time = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		net_weight = pesa_real_time.net_weight
+		tare = pesa_real_time.tare
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
 		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
@@ -259,6 +261,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = "Scaricare la pesa dopo l'avvio del programma"
 		elif take_of_weight_before_weighing is True:
 			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
+		elif net_weight != "" and float(net_weight) < 0 and lb_config.g_config["app_api"]["use_preset_weight"] is False:
+			error_message = "Il peso netto non può essere negativo."
 		else:
 			if idAccess:
 				access = get_access_by_id(idAccess)

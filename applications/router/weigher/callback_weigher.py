@@ -110,6 +110,10 @@ class CallbackWeigher(Functions, WebSocket):
 			net_weight = float(str_net_weight) if "," in str_net_weight or "." in str_net_weight else int(str_net_weight)
 			gross_weight = float(str_gross_weight) if "," in str_gross_weight or "." in str_gross_weight else int(str_gross_weight)
 			is_preset_tare = last_pesata.weight_executed.tare.is_preset_tare
+			is_preset_weight = lb_config.g_config["app_api"]["use_preset_weight"] and net_weight < 0
+			if is_preset_weight:
+				gross_weight = abs(gross_weight)
+				net_weight = abs(net_weight)
 			weighing = {
 				"date": date,
 				"weigher": weigher_name,
@@ -117,6 +121,7 @@ class CallbackWeigher(Functions, WebSocket):
 				"pid": last_pesata.weight_executed.pid,
 				"tare": tare,
 				"is_preset_tare": is_preset_tare,
+				"is_preset_weight": is_preset_weight,
 				"weight": gross_weight,
 				"log": last_pesata.weight_executed.log,
 				"idUser": last_pesata.data_assigned.userId
