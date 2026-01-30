@@ -21,6 +21,7 @@
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
         "return_pdf_copy_after_weighing": false,
+        "use_p_peso_negative_tare": false,
         "rfid": {
             "connection": {
                 "baudrate": 9600,

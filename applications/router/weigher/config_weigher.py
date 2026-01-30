@@ -33,6 +33,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/configuration/use-badge/{use_badge}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/use-recordings/{use_recordings}', self.SetUseRecordings, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/configuration/use-p-peso-negative-tare/{use_p_peso_negative_tare}', self.SetUsePPesoNegativeTare, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-img', self.SavePathImg, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -85,6 +86,11 @@ class ConfigWeigher(CommandWeigherRouter):
 		lb_config.g_config["app_api"]["return_pdf_copy_after_weighing"] = return_pdf_copy_after_weighing
 		lb_config.saveconfig()
 		return { "return_pdf_copy_after_weighing": return_pdf_copy_after_weighing }
+
+	async def SetUsePPesoNegativeTare(self, use_p_peso_negative_tare: bool):
+		lb_config.g_config["app_api"]["use_p_peso_negative_tare"] = use_p_peso_negative_tare
+		lb_config.saveconfig()
+		return { "use_p_peso_negative_tare": use_p_peso_negative_tare }
 
 	async def SavePathPdf(self, body: PathDTO):
 		path = body.path

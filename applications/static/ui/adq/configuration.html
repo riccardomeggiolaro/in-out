@@ -574,6 +574,10 @@
                     <input type="checkbox" id="report-copy" onclick="setReturnCopy(this.checked)">
                     <br>
                     <br>
+                    <label for="use-p-peso-negative-tare">Usa P.Peso quando tara negativa: </label>
+                    <input type="checkbox" id="use-p-peso-negative-tare" onclick="setUsePPesoNegativeTare(this.checked)">
+                    <br>
+                    <br>
                     <label for="entry-report">Report di stampa per <b>l'entrata</b>: </label>
                     <button onclick="openTemplateEditor('entrata')">Apri report designer</button>
                     <br>
@@ -1196,6 +1200,7 @@
         const useBadge = document.querySelector("#badge");
         const useRecordings = document.querySelector("#recordings");
         const reportCopy = document.querySelector("#report-copy");
+        const usePPesoNegativeTare = document.querySelector("#use-p-peso-negative-tare");
 
         // Sync folder modal elements
         const syncFolderModal = document.querySelector("#sync-folder-modal");
@@ -1678,6 +1683,8 @@
                 if (res.use_recordings) useRecordings.checked = true;
 
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
+
+                if (res.use_p_peso_negative_tare) usePPesoNegativeTare.checked = true;
 
                 // Load sync folder configuration
                 if (res.sync_folder.remote_folder) {
@@ -3420,6 +3427,16 @@
 
         function setReturnCopy(status) {
             fetch(`/api/config-weigher/configuration/return-pdf-copy-after-weighing/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setUsePPesoNegativeTare(status) {
+            fetch(`/api/config-weigher/configuration/use-p-peso-negative-tare/${status}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
