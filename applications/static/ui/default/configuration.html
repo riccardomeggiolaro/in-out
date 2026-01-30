@@ -546,7 +546,7 @@
                         <label for="radio-2">Semiautomatico</label>
                     </div>
                     <br>
-                    <label for="reservetion">Usa <b>prenotazioni</b>: </label>
+                    <label for="reservation">Usa <b>prenotazioni</b>: </label>
                     <input type="checkbox" id="reservation" onclick="setUseReservation(this.checked)">
                     <br>
                     <br>
@@ -560,7 +560,7 @@
                     <br>
                     <h3>REGISTRATORE</h3>
                     <br>
-                    <label for="reservetion">Registra <b>pesate</b> effettuate dagli <b>indicatori</b>: </label>
+                    <label for="recordings">Registra <b>pesate</b> effettuate dagli <b>indicatori</b>: </label>
                     <input type="checkbox" id="recordings" onclick="setUseRecordings(this.checked)">
                     <br>
                     <br>
@@ -572,6 +572,10 @@
                     <br>
                     <label for="report-copy">Ritorna copia del report a chi effettua la pesata: </label>
                     <input type="checkbox" id="report-copy" onclick="setReturnCopy(this.checked)">
+                    <br>
+                    <br>
+                    <label for="preset-weight">Usa peso preimpostato se netto negativo (P.Peso): </label>
+                    <input type="checkbox" id="preset-weight" onclick="setUsePresetWeight(this.checked)">
                     <br>
                     <br>
                     <label for="entry-report">Report di stampa per <b>l'entrata</b>: </label>
@@ -1196,6 +1200,7 @@
         const useBadge = document.querySelector("#badge");
         const useRecordings = document.querySelector("#recordings");
         const reportCopy = document.querySelector("#report-copy");
+        const presetWeight = document.querySelector("#preset-weight");
 
         // Sync folder modal elements
         const syncFolderModal = document.querySelector("#sync-folder-modal");
@@ -1678,6 +1683,8 @@
                 if (res.use_recordings) useRecordings.checked = true;
 
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
+
+                if (res.use_preset_weight) presetWeight.checked = true;
 
                 // Load sync folder configuration
                 if (res.sync_folder.remote_folder) {
@@ -3420,6 +3427,16 @@
 
         function setReturnCopy(status) {
             fetch(`/api/config-weigher/configuration/return-pdf-copy-after-weighing/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setUsePresetWeight(status) {
+            fetch(`/api/config-weigher/configuration/use-preset-weight/${status}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'

@@ -2,14 +2,18 @@
     "app_api": {
         "mode": "AUTOMATIC",
         "panel": {
-            "config": {},
+            "config": {
+                "encoding": "utf-8",
+                "line_ending": "\\r\\n",
+                "wait_response": false
+            },
             "connection": {
-                "ip": "0.0.0.0",
-                "port": 0,
+                "ip": "100.100.100.100",
+                "port": 5000,
                 "timeout": 5.0
             },
-            "enabled": false,
-            "type": "disabled"
+            "enabled": true,
+            "type": "tcp_raw"
         },
         "path_content": "static/content",
         "path_csv": "/var/opt/in-out/csv",
@@ -79,8 +83,9 @@
             }
         },
         "use_badge": false,
-        "use_recordings": true,
-        "use_reservation": true,
+        "use_preset_weight": false,
+        "use_recordings": false,
+        "use_reservation": false,
         "use_white_list": false,
         "weighers": {
             "0": {

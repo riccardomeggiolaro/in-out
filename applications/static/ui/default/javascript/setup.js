@@ -300,6 +300,21 @@ async function loadSetupWeighers() {
             })
             .then(res => res.json())
         }
+        const labelUseDeclarativeWeighing = document.createElement('label');
+        const useDeclarativeWeighing = document.createElement('input');
+        labelUseDeclarativeWeighing.textContent = "Usa peso preimpostato con netto negativo (P.Peso): ";
+        useDeclarativeWeighing.type = 'checkbox';
+        useDeclarativeWeighing.checked = data.use_declarative_weighing ? true : false;
+        useDeclarativeWeighing.onchange = (e) => {
+            const checked = e.target.checked;
+            fetch(`/api/config-weigher/configuration/use-declarative-weighing/${checked}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+        }
         const labelReportInt = document.createElement('label');
         const buttonReportDesignerTemplateIn = document.createElement('button');
         labelReportInt.innerHTML = "Report di stampa per l'<b><u>entrata</u></b>: ";
@@ -602,6 +617,10 @@ async function loadSetupWeighers() {
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(labelReturnPdfCopyAfterWeighing);
         divReport.appendChild(returnPdfCopyAfterWeighing);
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(labelUseDeclarativeWeighing);
+        divReport.appendChild(useDeclarativeWeighing);
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(labelReportInt);
