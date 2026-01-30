@@ -254,6 +254,7 @@ class CallbackWeigher(Functions, WebSocket):
 				self.Fallback_Weighing(instance_name=instance_name, weigher_name=weigher_name, data_assigned=last_pesata.data_assigned)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		weight = last_pesata.dict()
+		lb_log.error(last_pesata)
 		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
 		for instance in weighers_data:
 			for weigher in weighers_data[instance]:
