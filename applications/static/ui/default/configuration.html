@@ -3464,12 +3464,16 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(res => res.json())
-                .then(res => {
-                    showSnackbar("snackbar", res.message, 'rgb(208, 255, 208)', 'black');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok) {
+                        showSnackbar("snackbar", data.message, 'rgb(208, 255, 208)', 'black');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
+                    } else {
+                        showSnackbar("snackbar", data.detail || "Errore durante il riavvio", 'rgb(255, 208, 208)', 'black');
+                    }
                 })
                 .catch(err => {
                     showSnackbar("snackbar", "Errore durante il riavvio", 'rgb(255, 208, 208)', 'black');
