@@ -677,8 +677,14 @@
                     const elapsedCell = cells[3]; // terzo td = tempo trascorso
                     const buttonsCell = cells[11];
 
-                    if (statusCell.dataset.value === "Attesa") {
-                        const startDate = new Date(datetimeCell.dataset.value);
+                    // Non mostrare il timer se lo stato è "Chiamato" o "Chiusa"
+                    const statusDisplay = statusCell.textContent.trim();
+                    const shouldShowTimer = statusDisplay !== "Chiamato" && statusDisplay !== "Chiusa";
+
+                    if (shouldShowTimer) {
+                        // Usa la data dell'ultima pesata se esiste, altrimenti la data di accettazione
+                        const lastWeighingDate = row.dataset.lastWeighingDate;
+                        const startDate = new Date(lastWeighingDate || datetimeCell.dataset.value);
                         const now = new Date();
                         const diffMs = now - startDate;
 
