@@ -347,31 +347,41 @@ class GenericRouter:
         raise HTTPException(status_code=404, detail="Report not found")
 
     async def restartSoftware(self):
-        """Riavvia il software tramite systemd. Disponibile solo su Linux con servizio attivo."""
-        # Controlla se siamo su Windows
-        if platform.system() == "Windows":
-            raise HTTPException(status_code=400, detail="Funzione non abilitata su Windows")
-
-        # Siamo su Linux - controlla se esiste un demone systemd attivo
+        """Riavvia il software tramite servizio di sistema. Disponibile solo con servizio attivo."""
         service_name = "baron"
+        is_windows = platform.system() == "Windows"
 
-        def is_systemd_service_active():
+        def is_service_active():
             try:
-                result = subprocess.run(
-                    ["systemctl", "is-active", service_name],
-                    capture_output=True,
-                    text=True
-                )
-                return result.stdout.strip() == "active"
+                if is_windows:
+                    # Controlla servizio Windows
+                    result = subprocess.run(
+                        ["sc", "query", service_name],
+                        capture_output=True,
+                        text=True
+                    )
+                    return "RUNNING" in result.stdout
+                else:
+                    # Controlla servizio systemd su Linux
+                    result = subprocess.run(
+                        ["systemctl", "is-active", service_name],
+                        capture_output=True,
+                        text=True
+                    )
+                    return result.stdout.strip() == "active"
             except Exception:
                 return False
 
-        if not is_systemd_service_active():
+        if not is_service_active():
             raise HTTPException(status_code=400, detail="Funzione non abilitata (servizio non attivo)")
 
         async def restart_after_response():
             await asyncio.sleep(1)  # Attendi che la risposta sia inviata
-            subprocess.run(["systemctl", "restart", service_name])
+            if is_windows:
+                subprocess.run(["sc", "stop", service_name], capture_output=True)
+                subprocess.run(["sc", "start", service_name], capture_output=True)
+            else:
+                subprocess.run(["systemctl", "restart", service_name])
 
         asyncio.create_task(restart_after_response())
         return {"message": f"Riavvio del servizio {service_name} in corso..."}
