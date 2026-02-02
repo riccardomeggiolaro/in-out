@@ -22,6 +22,8 @@ import asyncio
 import aiofiles
 import time
 import sys
+import platform
+import subprocess
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
 
@@ -345,12 +347,41 @@ class GenericRouter:
         raise HTTPException(status_code=404, detail="Report not found")
 
     async def restartSoftware(self):
-        """Riavvia il software. Restituisce una risposta e poi riavvia il processo."""
+        """Riavvia il software tramite servizio di sistema. Disponibile solo con servizio attivo."""
+        service_name = "baron"
+        is_windows = platform.system() == "Windows"
+
+        def is_service_active():
+            try:
+                if is_windows:
+                    # Controlla servizio Windows
+                    result = subprocess.run(
+                        ["sc", "query", service_name],
+                        capture_output=True,
+                        text=True
+                    )
+                    return "RUNNING" in result.stdout
+                else:
+                    # Controlla servizio systemd su Linux
+                    result = subprocess.run(
+                        ["systemctl", "is-active", service_name],
+                        capture_output=True,
+                        text=True
+                    )
+                    return result.stdout.strip() == "active"
+            except Exception:
+                return False
+
+        if not is_service_active():
+            raise HTTPException(status_code=400, detail="Funzione non abilitata (servizio non attivo)")
+
         async def restart_after_response():
             await asyncio.sleep(1)  # Attendi che la risposta sia inviata
-            lb_config.g_enabled = False  # Segnala lo shutdown
-            await asyncio.sleep(0.5)  # Attendi chiusura thread
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            if is_windows:
+                subprocess.run(["sc", "stop", service_name], capture_output=True)
+                subprocess.run(["sc", "start", service_name], capture_output=True)
+            else:
+                subprocess.run(["systemctl", "restart", service_name])
 
         asyncio.create_task(restart_after_response())
-        return {"message": "Il software si sta riavviando..."}
+        return {"message": f"Riavvio del servizio {service_name} in corso..."}
