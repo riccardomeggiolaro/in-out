@@ -349,7 +349,7 @@ class GenericRouter:
         """Riavvia il software tramite servizio di sistema. Disponibile solo con servizio attivo."""
         is_windows = lb_system.is_windows()
         is_linux = lb_system.is_linux()
-        service_name = "baron" if is_windows else "in-out"
+        service_name = "in-out"
 
         def is_service_active():
             try:
@@ -381,7 +381,7 @@ class GenericRouter:
             if is_windows:
                 subprocess.run(["sc", "stop", service_name], capture_output=True)
                 subprocess.run(["sc", "start", service_name], capture_output=True)
-            else:
+            elif is_linux:
                 subprocess.run(["systemctl", "restart", service_name])
 
         asyncio.create_task(restart_after_response())
