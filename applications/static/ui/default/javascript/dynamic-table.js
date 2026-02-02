@@ -408,6 +408,14 @@ function createRow(table, columns, item, idInout) {
     row.dataset.id = item.id;
     if (idInout) row.dataset.idInOut = idInout;
     if (item.type) row.dataset.type = item.type;
+    // Memorizza la data dell'ultima pesata sulla riga (se esiste)
+    if (item.in_out && item.in_out.length > 0) {
+        const lastInOut = item.in_out[item.in_out.length - 1];
+        const lastWeighingDate = lastInOut.weight2 ? lastInOut.weight2.date : (lastInOut.weight1 ? lastInOut.weight1.date : null);
+        if (lastWeighingDate) {
+            row.dataset.lastWeighingDate = lastWeighingDate;
+        }
+    }
     // Create cells for each column
     for (let i = 0; i < document.querySelectorAll("thead th").length - 1; i++) {
         row.insertCell();
@@ -457,10 +465,14 @@ function createRow(table, columns, item, idInout) {
         actionsCell.appendChild(callButton);
     }
     let pdfButton;
-    if (itemName === "access" && "status" in item && item.status === "Attesa" && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) {
+    // Non avviare il timer se la targa è nel buffer (stato "Chiamato") o se lo stato è "Chiusa"
+    const isInBuffer = item.vehicle && item.vehicle.plate && buffer.includes(item.vehicle.plate);
+    if (itemName === "access" && "status" in item && item.status !== "Chiusa" && !isInBuffer && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) {
         const th = document.querySelector('th[name="waiting"]');
         const index = Array.from(th.parentNode.children).indexOf(th);
-        startTimer(row, index, item.date_created);
+        // Usa la data dell'ultima pesata se esiste, altrimenti la data di accettazione
+        const lastWeighingDate = row.dataset.lastWeighingDate;
+        startTimer(row, index, lastWeighingDate || item.date_created);
     } else if (itemName === "access" && idInout) {
         if (!item.weight2 && report.in || item.weight2 && report.out) {
             pdfButton = document.createElement("button");
