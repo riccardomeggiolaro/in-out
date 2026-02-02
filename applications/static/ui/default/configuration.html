@@ -588,6 +588,16 @@
                     <br>
                 </div>
                 <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>MANUTENZIONE</h3>
+                    <br>
+                    <label>Riavvia il software: </label>
+                    <button onclick="restartSoftware()" style="background-color: #ff9800; color: white;">Riavvia Software</button>
+                    <br>
+                    <br>
+                </div>
+                <br>
             </div>
             <div id="instances" class="tab">
                 <div id="instance-sub-menu" class="instance-sub-menu"></div>
@@ -3443,6 +3453,28 @@
                 }
             })
             .then(res => res.json());
+        }
+
+        function restartSoftware() {
+            if (confirm('Sei sicuro di voler riavviare il software?')) {
+                showSnackbar("snackbar", "Riavvio in corso...", 'rgb(255, 255, 208)', 'black');
+                fetch('/api/generic/restart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    showSnackbar("snackbar", res.message, 'rgb(208, 255, 208)', 'black');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                })
+                .catch(err => {
+                    showSnackbar("snackbar", "Errore durante il riavvio", 'rgb(255, 208, 208)', 'black');
+                });
+            }
         }
 
         function openTemplateEditor(type) {
