@@ -1126,7 +1126,11 @@ function connectWebSocket() {
                             tr.classList.remove('updated');
                         }, { once: true }); // Ascolta solo una volta
                     }
-                    showSnackbar("snackbar", capitalizeFirstLetter(`${specific} chiamat${lastChar}`), 'rgb(255, 240, 208)', 'black');                    
+                    if (data.data.panel_error) {
+                        showSnackbar("snackbar", `Errore pannello: ${data.data.panel_error}`, 'rgb(255, 208, 208)', 'black');
+                    } else {
+                        showSnackbar("snackbar", capitalizeFirstLetter(`${specific} chiamat${lastChar}`), 'rgb(255, 240, 208)', 'black');
+                    }
                 } else if (data.action === "cancel_call") {
                     await updateTable();
                     const obj = getTableColumns();
@@ -1138,7 +1142,11 @@ function connectWebSocket() {
                             tr.classList.remove('updated');
                         }, { once: true }); // Ascolta solo una volta
                     }
-                    showSnackbar("snackbar", capitalizeFirstLetter(`Chiamata del ${specific} annullat${lastChar}`), 'rgb(255, 240, 208)', 'black'); 
+                    if (data.data.panel_error) {
+                        showSnackbar("snackbar", `Errore pannello: ${data.data.panel_error}`, 'rgb(255, 208, 208)', 'black');
+                    } else {
+                        showSnackbar("snackbar", capitalizeFirstLetter(`Chiamata del ${specific} annullat${lastChar}`), 'rgb(255, 240, 208)', 'black');
+                    } 
                 } else if (data.action === "lock") {
                     if (data.success === true) {
                         if (data.type === "UPDATE") {
