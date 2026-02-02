@@ -22,6 +22,8 @@ import asyncio
 import aiofiles
 import time
 import sys
+import platform
+import subprocess
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
 
@@ -346,11 +348,40 @@ class GenericRouter:
 
     async def restartSoftware(self):
         """Riavvia il software. Restituisce una risposta e poi riavvia il processo."""
+        # Controlla se siamo su Windows
+        if platform.system() == "Windows":
+            raise HTTPException(status_code=400, detail="Funzione non abilitata su Windows")
+
+        # Siamo su Linux - controlla se esiste un demone systemd attivo
+        service_name = "baron"
+
+        def is_systemd_service_active():
+            try:
+                result = subprocess.run(
+                    ["systemctl", "is-active", service_name],
+                    capture_output=True,
+                    text=True
+                )
+                return result.stdout.strip() == "active"
+            except Exception:
+                return False
+
+        use_systemd = is_systemd_service_active()
+
         async def restart_after_response():
             await asyncio.sleep(1)  # Attendi che la risposta sia inviata
-            lb_config.g_enabled = False  # Segnala lo shutdown
-            await asyncio.sleep(0.5)  # Attendi chiusura thread
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            if use_systemd:
+                # Riavvia tramite systemd
+                subprocess.run(["systemctl", "restart", service_name])
+            else:
+                # Riavvia direttamente lo script
+                lb_config.g_enabled = False
+                await asyncio.sleep(0.5)
+                os.execv(sys.executable, [sys.executable] + sys.argv)
 
         asyncio.create_task(restart_after_response())
-        return {"message": "Il software si sta riavviando..."}
+
+        if use_systemd:
+            return {"message": f"Riavvio del servizio {service_name} in corso..."}
+        else:
+            return {"message": "Il software si sta riavviando..."}
