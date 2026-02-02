@@ -21,6 +21,7 @@ import zipfile
 import asyncio
 import aiofiles
 import time
+import sys
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
 
@@ -88,6 +89,7 @@ class GenericRouter:
         self.router.add_api_route('/list/serial-ports', self.getSerialPorts, dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/list/default-reports', self.listDefualtReports, dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/restart', self.restartSoftware, methods=['POST'], dependencies=[Depends(is_super_admin)])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -341,3 +343,14 @@ class GenericRouter:
                     headers={"Content-Disposition": f"attachment; filename={name_report_out}"}
                 )
         raise HTTPException(status_code=404, detail="Report not found")
+
+    async def restartSoftware(self):
+        """Riavvia il software. Restituisce una risposta e poi riavvia il processo."""
+        async def restart_after_response():
+            await asyncio.sleep(1)  # Attendi che la risposta sia inviata
+            lb_config.g_enabled = False  # Segnala lo shutdown
+            await asyncio.sleep(0.5)  # Attendi chiusura thread
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+
+        asyncio.create_task(restart_after_response())
+        return {"message": "Il software si sta riavviando..."}
