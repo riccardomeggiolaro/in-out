@@ -21,9 +21,17 @@ class PanelSirenRouter(WebSocket):
     Provides flexible adapter-based communication for various panel and siren devices.
     """
 
+    @property
+    def buffer(self):
+        """Get buffer from config."""
+        return lb_config.g_config.get("panel_buffer", "")
+
+    @buffer.setter
+    def buffer(self, value):
+        """Set buffer in config."""
+        lb_config.g_config["panel_buffer"] = value
+
     def __init__(self):
-        # Load buffer from config if exists
-        self.buffer = lb_config.g_config.get("panel_buffer", "")
         self.panel_siren_router = APIRouter()
 
         # Panel adapter (initialized lazily)
