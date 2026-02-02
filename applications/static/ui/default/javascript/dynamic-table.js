@@ -417,9 +417,9 @@ function createRow(table, columns, item, idInout) {
         Object.entries(obj).forEach(([key, value]) => {
             const fullKey = prefix ? `${prefix}.${key}` : key;
             if (fullKey in columns) {
-                // Se la colonna è "status" e la targa è nel buffer, mostra "Chiamato"
+                // Se la colonna è "status" e la targa è nel buffer e ha almeno un in_out, mostra "Chiamato"
                 let displayValue = value;
-                if (fullKey === "status" && item.vehicle && item.vehicle.plate && buffer.includes(item.vehicle.plate)) {
+                if (fullKey === "status" && item.vehicle && item.vehicle.plate && buffer.includes(item.vehicle.plate) && item.in_out && item.in_out.length > 0) {
                     displayValue = "Chiamato";
                 }
                 row.cells[columns[fullKey]].textContent = isValidDate(displayValue) && typeof (displayValue) !== "number" ? new Date(displayValue).toLocaleString('it-IT', options) : displayValue;
