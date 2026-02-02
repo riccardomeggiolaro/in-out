@@ -235,27 +235,22 @@ class PanelSirenRouter(WebSocket):
         Returns:
             Empty buffer confirmation
         """
-        old_buf = self.buffer
+        # Clear buffer
+        self.buffer = ""
+
+        # Save buffer to config
+        self._save_buffer_to_config()
+
+        # Broadcast buffer update
+        await self.broadcastMessageAnagrafic("access", {"buffer": ""})
+
+        # Tenta di inviare al pannello
         try:
-            # Clear buffer
-            self.buffer = ""
-
-            # Save buffer to config
-            self._save_buffer_to_config()
-
-            # Send empty message to panel
             adapter = self._get_panel_adapter()
             await adapter.send_message("")
-
-            # Broadcast buffer update
-            await self.broadcastMessageAnagrafic("access", {"buffer": ""})
-
             return {"buffer": "", "success": True}
         except Exception as e:
-            self.buffer = old_buf
-            status_code = getattr(e, "status_code", 500)
-            detail = getattr(e, "detail", str(e))
-            raise HTTPException(status_code=status_code, detail=detail)
+            return {"buffer": "", "success": True, "panel_error": str(e)}
 
     async def sendMessageSiren(self):
         """
