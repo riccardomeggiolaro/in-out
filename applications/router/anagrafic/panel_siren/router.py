@@ -185,23 +185,18 @@ class PanelSirenRouter(WebSocket):
 
         Returns:
             Current buffer content
-
-        Raises:
-            HTTPException: If sending message fails
         """
-        old_buf = self.buffer
+        buf = self.editBuffer(text)
+        # Broadcast sempre, indipendentemente dal successo dell'invio al pannello
+        if broadcastMessageBuffer:
+            await self.broadcastMessageAnagrafic("access", {"buffer": buf})
+        # Tenta di inviare al pannello, ma non blocca se fallisce
         try:
-            buf = self.editBuffer(text)
             adapter = self._get_panel_adapter()
             await adapter.send_message(buf)
-            if broadcastMessageBuffer:
-                await self.broadcastMessageAnagrafic("access", {"buffer": buf})
-            return {"buffer": buf, "success": True}
         except Exception as e:
-            self.buffer = old_buf
-            status_code = getattr(e, "status_code", 500)
-            detail = getattr(e, "detail", str(e))
-            raise HTTPException(status_code=status_code, detail=detail)
+            pass
+        return {"buffer": buf, "success": True}
 
     async def deleteMessagePanel(self, text: str):
         """
@@ -212,21 +207,17 @@ class PanelSirenRouter(WebSocket):
 
         Returns:
             Current buffer content
-
-        Raises:
-            HTTPException: If removing message fails
         """
-        old_buf = self.buffer
+        buf = self.undoBuffer(text)
+        # Broadcast sempre
+        await self.broadcastMessageAnagrafic("access", {"buffer": buf})
+        # Tenta di inviare al pannello, ma non blocca se fallisce
         try:
-            buf = self.undoBuffer(text)
             adapter = self._get_panel_adapter()
             await adapter.send_message(buf)
-            return {"buffer": buf, "success": True}
         except Exception as e:
-            self.buffer = old_buf
-            status_code = getattr(e, "status_code", 500)
-            detail = getattr(e, "detail", str(e))
-            raise HTTPException(status_code=status_code, detail=detail)
+            pass
+        return {"buffer": buf, "success": True}
 
     async def getBufferPanel(self):
         """
