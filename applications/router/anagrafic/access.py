@@ -853,7 +853,7 @@ class AccessRouter(PanelSirenRouter):
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è già stata chiusa")
             elif data["vehicle"]["plate"] in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' è già presente nel buffer")
-            edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"], False)
+            edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"], True)
             try:
                 await self.sendMessageSiren()
             except Exception as e:
