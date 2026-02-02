@@ -1,10 +1,11 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, func, Date, Time
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, func, Date, Time, text, inspect
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, object_session
 from sqlalchemy.ext.hybrid import hybrid_property
 from enum import Enum as PyEnum
 from datetime import datetime
 import libs.lb_config as lb_config
 from libs.lb_utils import hash_password, base_path
+import libs.lb_log as lb_log
 
 # Database connection
 Base = declarative_base()
@@ -12,7 +13,6 @@ path_database = lb_config.g_config['app_api']['path_database']
 if not path_database.startswith('/'):
     base_dir = f"{base_path}/{path_database}"
 path_database = f"sqlite:///{path_database}"
-import libs.lb_log as lb_log
 lb_log.warning(path_database)
 engine = create_engine(path_database)
 SessionLocal = sessionmaker(bind=engine)
@@ -292,7 +292,109 @@ upload_file_datas_required_columns = {
 
 instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal]
 
-# Create tables
+
+def sync_database_columns():
+    """
+    Sincronizza le colonne del database con i modelli SQLAlchemy.
+    - Aggiunge colonne mancanti (definite nel modello ma non nel database)
+    """
+    inspector = inspect(engine)
+    existing_tables = inspector.get_table_names()
+
+    for table_name, model in table_models.items():
+        # Gestisci il nome della tabella (potrebbe avere caratteri speciali come 'weighing-terminal')
+        actual_table_name = model.__tablename__
+
+        if actual_table_name not in existing_tables:
+            lb_log.info(f"Tabella '{actual_table_name}' non esiste, verrà creata automaticamente")
+            continue
+
+        # Ottieni le colonne esistenti nel database
+        db_columns = {col['name'] for col in inspector.get_columns(actual_table_name)}
+
+        # Ottieni le colonne definite nel modello
+        model_columns = {col.name for col in model.__table__.columns}
+
+        # Colonne da aggiungere (nel modello ma non nel database)
+        columns_to_add = model_columns - db_columns
+
+        # Aggiungi colonne mancanti
+        if columns_to_add:
+            lb_log.info(f"Tabella '{actual_table_name}': aggiungendo colonne {columns_to_add}")
+            with engine.connect() as conn:
+                for col_name in columns_to_add:
+                    column = model.__table__.columns[col_name]
+                    col_type = _get_sqlite_type(column)
+                    nullable = "NULL" if column.nullable else "NOT NULL"
+                    default = _get_column_default(column)
+
+                    # SQLite non supporta NOT NULL senza DEFAULT per colonne aggiunte
+                    if not column.nullable and default == "":
+                        default = _get_type_default(column)
+
+                    sql = f'ALTER TABLE "{actual_table_name}" ADD COLUMN "{col_name}" {col_type} {nullable} {default}'
+                    try:
+                        conn.execute(text(sql))
+                        conn.commit()
+                        lb_log.info(f"  - Aggiunta colonna '{col_name}' ({col_type})")
+                    except Exception as e:
+                        lb_log.error(f"  - Errore aggiungendo colonna '{col_name}': {e}")
+
+
+def _get_sqlite_type(column):
+    """Converte il tipo SQLAlchemy in tipo SQLite"""
+    type_name = type(column.type).__name__.upper()
+
+    if type_name in ('INTEGER', 'INT', 'SMALLINT', 'BIGINT'):
+        return 'INTEGER'
+    elif type_name in ('STRING', 'VARCHAR', 'TEXT', 'CHAR'):
+        return 'TEXT'
+    elif type_name in ('BOOLEAN', 'BOOL'):
+        return 'INTEGER'  # SQLite usa INTEGER per boolean
+    elif type_name in ('DATETIME', 'DATE', 'TIME', 'TIMESTAMP'):
+        return 'TEXT'  # SQLite memorizza date come TEXT
+    elif type_name in ('FLOAT', 'REAL', 'DOUBLE'):
+        return 'REAL'
+    elif type_name == 'ENUM':
+        return 'TEXT'
+    else:
+        return 'TEXT'
+
+
+def _get_column_default(column):
+    """Ottiene il valore DEFAULT per una colonna"""
+    if column.default is not None:
+        if hasattr(column.default, 'arg'):
+            default_val = column.default.arg
+            if callable(default_val):
+                return ""  # Non possiamo usare callable come default SQL
+            elif isinstance(default_val, bool):
+                return f"DEFAULT {1 if default_val else 0}"
+            elif isinstance(default_val, (int, float)):
+                return f"DEFAULT {default_val}"
+            elif isinstance(default_val, str):
+                return f"DEFAULT '{default_val}'"
+    if column.server_default is not None:
+        return ""  # Server default viene gestito automaticamente
+    return ""
+
+
+def _get_type_default(column):
+    """Ottiene un valore default basato sul tipo per colonne NOT NULL"""
+    type_name = type(column.type).__name__.upper()
+
+    if type_name in ('INTEGER', 'INT', 'SMALLINT', 'BIGINT', 'BOOLEAN', 'BOOL'):
+        return "DEFAULT 0"
+    elif type_name in ('FLOAT', 'REAL', 'DOUBLE'):
+        return "DEFAULT 0.0"
+    else:
+        return "DEFAULT ''"
+
+
+# Sincronizza le colonne del database prima di creare nuove tabelle
+sync_database_columns()
+
+# Create tables (crea tabelle mancanti)
 Base.metadata.create_all(engine)
 
 # Create default users
