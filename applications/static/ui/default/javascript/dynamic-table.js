@@ -467,7 +467,7 @@ function createRow(table, columns, item, idInout) {
     let pdfButton;
     // Non avviare il timer se la targa è nel buffer (stato "Chiamato") o se lo stato è "Chiusa"
     const isInBuffer = item.vehicle && item.vehicle.plate && buffer.includes(item.vehicle.plate);
-    if (itemName === "access" && "status" in item && item.status !== "Chiusa" && !isInBuffer && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) {
+    if (itemName === "access" && "status" in item && item.status !== "Chiusa" && !isInBuffer && item.type === "Prenotazione") {
         const th = document.querySelector('th[name="waiting"]');
         const index = Array.from(th.parentNode.children).indexOf(th);
         // Usa la data dell'ultima pesata se esiste, altrimenti la data di accettazione
