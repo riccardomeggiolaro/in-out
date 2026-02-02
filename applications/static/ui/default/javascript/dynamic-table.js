@@ -860,7 +860,7 @@ function editRow(item) {
                 }
             }
         }
-        if ("is_latest_for_vehicle" in item && item["is_latest_for_vehicle"] === false || "permanent" in item && item["permanent"] === true) {
+        if ("is_latest_for_vehicle" in item && item["is_latest_for_vehicle"] === false || "permanent" in item && item["permanent"] === true || item.type === "Manuale") {
             document.querySelectorAll('#edit [name="number_in_out"]').forEach(element => element.style.display = "none");
             document.querySelectorAll('#edit [name="permanent"]').forEach(element => element.style.display = "none");
         } else {

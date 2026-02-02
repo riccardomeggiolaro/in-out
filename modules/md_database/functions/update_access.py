@@ -1,4 +1,4 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, Weighing, Operator, TypeSubjectEnum
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, Weighing, Operator, TypeSubjectEnum, TypeAccess
 from modules.md_database.interfaces.access import SetAccessDTO
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
@@ -27,6 +27,9 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
 
             if access.number_in_out is None and data.number_in_out is not None and data.number_in_out != -1:
                 raise ValueError(f"Non puoi modificare il numero di operazioni da illimitato a un numero specifico")
+
+            if access.type == TypeAccess.MANUALLY and data.number_in_out is not None and data.number_in_out != access.number_in_out:
+                raise ValueError("Non puoi modificare il numero di operazioni per gli accessi manuali")
 
             current_model = Subject
             if data.subject.id in [None, -1]:
