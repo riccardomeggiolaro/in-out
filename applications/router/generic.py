@@ -347,7 +347,7 @@ class GenericRouter:
         raise HTTPException(status_code=404, detail="Report not found")
 
     async def restartSoftware(self):
-        """Riavvia il software. Restituisce una risposta e poi riavvia il processo."""
+        """Riavvia il software tramite systemd. Disponibile solo su Linux con servizio attivo."""
         # Controlla se siamo su Windows
         if platform.system() == "Windows":
             raise HTTPException(status_code=400, detail="Funzione non abilitata su Windows")
@@ -366,22 +366,12 @@ class GenericRouter:
             except Exception:
                 return False
 
-        use_systemd = is_systemd_service_active()
+        if not is_systemd_service_active():
+            raise HTTPException(status_code=400, detail="Funzione non abilitata (servizio non attivo)")
 
         async def restart_after_response():
             await asyncio.sleep(1)  # Attendi che la risposta sia inviata
-            if use_systemd:
-                # Riavvia tramite systemd
-                subprocess.run(["systemctl", "restart", service_name])
-            else:
-                # Riavvia direttamente lo script
-                lb_config.g_enabled = False
-                await asyncio.sleep(0.5)
-                os.execv(sys.executable, [sys.executable] + sys.argv)
+            subprocess.run(["systemctl", "restart", service_name])
 
         asyncio.create_task(restart_after_response())
-
-        if use_systemd:
-            return {"message": f"Riavvio del servizio {service_name} in corso..."}
-        else:
-            return {"message": "Il software si sta riavviando..."}
+        return {"message": f"Riavvio del servizio {service_name} in corso..."}
