@@ -22,7 +22,6 @@ import asyncio
 import aiofiles
 import time
 import sys
-import platform
 import subprocess
 from io import BytesIO
 from fastapi import UploadFile, HTTPException
@@ -348,8 +347,9 @@ class GenericRouter:
 
     async def restartSoftware(self):
         """Riavvia il software tramite servizio di sistema. Disponibile solo con servizio attivo."""
-        service_name = "baron"
-        is_windows = platform.system() == "Windows"
+        is_windows = lb_system.is_windows()
+        is_linux = lb_system.is_linux()
+        service_name = "baron" if is_windows else "in-out"
 
         def is_service_active():
             try:
@@ -361,7 +361,7 @@ class GenericRouter:
                         text=True
                     )
                     return "RUNNING" in result.stdout
-                else:
+                elif is_linux:
                     # Controlla servizio systemd su Linux
                     result = subprocess.run(
                         ["systemctl", "is-active", service_name],
@@ -369,6 +369,7 @@ class GenericRouter:
                         text=True
                     )
                     return result.stdout.strip() == "active"
+                return False
             except Exception:
                 return False
 
