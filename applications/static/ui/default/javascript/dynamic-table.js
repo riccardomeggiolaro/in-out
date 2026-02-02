@@ -437,7 +437,7 @@ function createRow(table, columns, item, idInout) {
     const actionsCell = document.createElement("td");
     actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra        
     let callButton;
-    if (item.vehicle && item.vehicle.plate && item.status && item.status !== "Chiusa" && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) {
+    if (item.vehicle && item.vehicle.plate && item.status && item.status !== "Chiusa" && item.type === "Prenotazione") {
         // Pulsante chiamata
         callButton = document.createElement("button");
         const textContent = !buffer.includes(item["vehicle"]["plate"]) ? "📢" : "🚫📢";
