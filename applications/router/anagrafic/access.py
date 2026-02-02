@@ -859,7 +859,10 @@ class AccessRouter(PanelSirenRouter):
             except Exception as e:
                 pass
             access = Access(**data).json()
-            await self.broadcastCallAnagrafic("access", {"access": access})
+            broadcast_data = {"access": access}
+            if "panel_error" in edit_buffer:
+                broadcast_data["panel_error"] = edit_buffer["panel_error"]
+            await self.broadcastCallAnagrafic("access", broadcast_data)
             return edit_buffer
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -880,7 +883,10 @@ class AccessRouter(PanelSirenRouter):
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' non è presente nel buffer")
             undo_buffer = await self.deleteMessagePanel(data["vehicle"]["plate"])
             access = Access(**data).json()
-            await self.broadcastCallAnagrafic("access", {"access": access})
+            broadcast_data = {"access": access}
+            if "panel_error" in undo_buffer:
+                broadcast_data["panel_error"] = undo_buffer["panel_error"]
+            await self.broadcastCallAnagrafic("access", broadcast_data)
             return undo_buffer
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

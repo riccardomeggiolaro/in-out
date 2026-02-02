@@ -190,13 +190,13 @@ class PanelSirenRouter(WebSocket):
         # Broadcast sempre, indipendentemente dal successo dell'invio al pannello
         if broadcastMessageBuffer:
             await self.broadcastMessageAnagrafic("access", {"buffer": buf})
-        # Tenta di inviare al pannello, ma non blocca se fallisce
+        # Tenta di inviare al pannello
         try:
             adapter = self._get_panel_adapter()
             await adapter.send_message(buf)
+            return {"buffer": buf, "success": True}
         except Exception as e:
-            pass
-        return {"buffer": buf, "success": True}
+            return {"buffer": buf, "success": True, "panel_error": str(e)}
 
     async def deleteMessagePanel(self, text: str):
         """
@@ -211,13 +211,13 @@ class PanelSirenRouter(WebSocket):
         buf = self.undoBuffer(text)
         # Broadcast sempre
         await self.broadcastMessageAnagrafic("access", {"buffer": buf})
-        # Tenta di inviare al pannello, ma non blocca se fallisce
+        # Tenta di inviare al pannello
         try:
             adapter = self._get_panel_adapter()
             await adapter.send_message(buf)
+            return {"buffer": buf, "success": True}
         except Exception as e:
-            pass
-        return {"buffer": buf, "success": True}
+            return {"buffer": buf, "success": True, "panel_error": str(e)}
 
     async def getBufferPanel(self):
         """
