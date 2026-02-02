@@ -791,14 +791,13 @@
                     const elapsedCell = cells[columns['waiting']]; // Usa il mapping dinamico!
                     const numberInOutCell = cells[columns['number_in_out']];
 
-                    // Only show timer for Reservation type with defined number_in_out
+                    // Only show timer for Reservation type (including permanent access with null number_in_out)
                     const rowType = row.dataset.type;
-                    const numberInOutValue = numberInOutCell ? numberInOutCell.textContent : '';
-                    const isReservationWithNumberInOut = rowType === "Prenotazione" && numberInOutValue.includes("/");
+                    const isReservation = rowType === "Prenotazione";
 
                     // Non mostrare il timer se lo stato è "Chiamato" o "Chiusa"
                     const statusDisplay = statusCell.textContent.trim();
-                    const shouldShowTimer = statusDisplay !== "Chiamato" && statusDisplay !== "Chiusa" && isReservationWithNumberInOut;
+                    const shouldShowTimer = statusDisplay !== "Chiamato" && statusDisplay !== "Chiusa" && isReservation;
 
                     if (shouldShowTimer) {
                         // Usa la data dell'ultima pesata se esiste, altrimenti la data di accettazione
