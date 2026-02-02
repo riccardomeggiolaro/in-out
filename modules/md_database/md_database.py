@@ -128,7 +128,6 @@ class TypeSubjectEnum(PyEnum):
 
 class AccessStatus(PyEnum):
     WAITING = "Attesa"
-    CALLED = "Chiamato"
     ENTERED = "Entrato"
     CLOSED = "Chiusa"
 

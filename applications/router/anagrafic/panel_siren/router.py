@@ -12,9 +12,6 @@ from applications.router.anagrafic.panel_siren.dtos import (
     Siren,
 )
 from applications.router.anagrafic.web_sockets import WebSocket
-from modules.md_database.md_database import AccessStatus
-from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
-from modules.md_database.functions.update_data import update_data
 import asyncio
 
 class PanelSirenRouter(WebSocket):
@@ -125,9 +122,6 @@ class PanelSirenRouter(WebSocket):
         in the buffer. The buffer works as a scrolling display that keeps only
         the last N words.
 
-        When plates are removed from the buffer due to reaching max limit,
-        their corresponding accesses are reset from CALLED to WAITING status.
-
         Args:
             text: Text to add to buffer
 
@@ -139,27 +133,16 @@ class PanelSirenRouter(WebSocket):
         if not n or n <= 0:
             n = 1  # Default to 1 if not configured
 
-        removed_plates = []  # Track removed plates
-
         # Keep only last (N-1) words to make room for the new text
         if len(words) < n:
             # We have fewer than N words, keep all of them
             new_buffer = self.buffer
         elif n > 1:
             # We have N or more words, keep only the last (N-1)
-            # The removed plates are the ones that won't be kept
-            removed_plates = words[:-(n-1)]
             new_buffer = ' '.join(words[-(n-1):])
         else:
             # N=1 means only 1 word total, so clear buffer before adding new word
-            removed_plates = words  # All current words will be removed
             new_buffer = ''
-
-        # For each removed plate, reset its access status from CALLED to WAITING
-        for plate in removed_plates:
-            access_data = get_access_by_plate_if_uncomplete(plate)
-            if access_data and access_data["status"] == AccessStatus.CALLED:
-                update_data("access", access_data["id"], {"status": AccessStatus.WAITING})
 
         # Add new text (with space separator if buffer is not empty)
         self.buffer = new_buffer + " " + text if new_buffer else text
@@ -248,25 +231,13 @@ class PanelSirenRouter(WebSocket):
 
     async def clearBufferPanel(self):
         """
-        Clear panel buffer and reset CALLED accesses to WAITING.
+        Clear panel buffer.
 
         Returns:
             Empty buffer confirmation
         """
         old_buf = self.buffer
         try:
-            # Get all plates from buffer (words in buffer)
-            plates = self.buffer.split() if self.buffer else []
-
-            # For each plate, find corresponding access with CALLED status and reset to WAITING
-            for plate in plates:
-                # Search for access with this plate and CALLED status
-                access_data = get_access_by_plate_if_uncomplete(plate)
-
-                # If found, reset status to WAITING
-                if access_data and access_data["status"] == AccessStatus.CALLED:
-                    update_data("access", access_data["id"], {"status": AccessStatus.WAITING})
-
             # Clear buffer
             self.buffer = ""
 

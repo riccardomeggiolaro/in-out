@@ -849,8 +849,8 @@ class AccessRouter(PanelSirenRouter):
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to delete its last weighing")
             data = get_data_by_id("access", id)
-            if data["status"] not in [AccessStatus.WAITING, AccessStatus.CALLED]:
-                raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' ha già effettuato una pesata")
+            if data["status"] == AccessStatus.CLOSED:
+                raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è già stata chiusa")
             elif data["vehicle"]["plate"] in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' è già presente nel buffer")
             edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"], False)
@@ -858,7 +858,6 @@ class AccessRouter(PanelSirenRouter):
                 await self.sendMessageSiren()
             except Exception as e:
                 pass
-            data = update_data("access", id, {"status": AccessStatus.CALLED})
             access = Access(**data).json()
             await self.broadcastCallAnagrafic("access", {"access": access})
             return edit_buffer
@@ -877,12 +876,9 @@ class AccessRouter(PanelSirenRouter):
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to delete its last weighing")
             data = get_data_by_id("access", id)
-            if data["status"] != AccessStatus.CALLED:
-                raise HTTPException(status_code=400, detail="Il mezzo non è ancora stato chiamato")
-            elif data["vehicle"]["plate"] not in self.buffer:
+            if data["vehicle"]["plate"] not in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' non è presente nel buffer")
             undo_buffer = await self.deleteMessagePanel(data["vehicle"]["plate"])
-            data = update_data("access", id, {"status": AccessStatus.WAITING})
             access = Access(**data).json()
             await self.broadcastCallAnagrafic("access", {"access": access})
             return undo_buffer
