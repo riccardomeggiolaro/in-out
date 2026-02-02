@@ -1240,7 +1240,12 @@
             try {
                 const response = await fetch('/api/anagrafic/buffer/panel', { method: 'DELETE' });
                 if (response.ok) {
-                    showSnackbar("snackbar", "Buffer pannello pulito", 'rgb(208, 255, 208)', 'black');
+                    const data = await response.json();
+                    if (data.panel_error) {
+                        showSnackbar("snackbar", `Errore pannello: ${data.panel_error}`, 'rgb(255, 208, 208)', 'black');
+                    } else {
+                        showSnackbar("snackbar", "Buffer pannello pulito", 'rgb(208, 255, 208)', 'black');
+                    }
                 } else {
                     showSnackbar("snackbar", "Errore nella pulizia del buffer", 'rgb(255, 208, 208)', 'black');
                 }
