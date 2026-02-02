@@ -394,7 +394,12 @@ function createRow(table, columns, item, idInout) {
         Object.entries(obj).forEach(([key, value]) => {
             const fullKey = prefix ? `${prefix}.${key}` : key;
             if (fullKey in columns) {
-                row.cells[columns[fullKey]].textContent = isValidDate(value) && typeof (value) !== "number" ? new Date(value).toLocaleString('it-IT', options) : value;
+                // Se la colonna è "status" e la targa è nel buffer, mostra "Chiamato"
+                let displayValue = value;
+                if (fullKey === "status" && item.vehicle && item.vehicle.plate && buffer.includes(item.vehicle.plate)) {
+                    displayValue = "Chiamato";
+                }
+                row.cells[columns[fullKey]].textContent = isValidDate(displayValue) && typeof (displayValue) !== "number" ? new Date(displayValue).toLocaleString('it-IT', options) : displayValue;
                 row.cells[columns[fullKey]].dataset.value = value;
             }
             // Gestione ricorsiva per gli oggetti annidati
@@ -407,9 +412,9 @@ function createRow(table, columns, item, idInout) {
     populateNestedValues(item);
     // Crea la cella per i pulsanti di azione
     const actionsCell = document.createElement("td");
-    actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra        
+    actionsCell.style.textAlign = "right"; // Allinea i pulsanti a destra
     let callButton;
-    if (item.vehicle && item.vehicle.plate && item.status && item.status === "Attesa" || item.status === "Chiamato") {
+    if (item.vehicle && item.vehicle.plate && item.status && item.status !== "Chiusa") {
         // Pulsante chiamata
         callButton = document.createElement("button");
         const textContent = !buffer.includes(item["vehicle"]["plate"]) ? "📢" : "🚫📢";
