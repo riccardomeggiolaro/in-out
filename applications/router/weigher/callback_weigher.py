@@ -26,6 +26,7 @@ from libs.lb_capture_camera import capture_camera_image
 from applications.router.weigher.functions import Functions
 from libs.lb_folders import structure_folder_rule, save_bytes_to_file
 from applications.router.anagrafic.web_sockets import WebSocket
+from applications.router.anagrafic.panel_siren.adapters import AdapterFactory
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.utils.utils_report import get_data_variables, generate_html_report, generate_csv_report, save_file_dir
 from libs.lb_printer import printer
@@ -192,6 +193,27 @@ class CallbackWeigher(Functions, WebSocket):
 			asyncio.run(self.broadcastUpdateAnagrafic("access", {"weighing": access_data_json}))
 			last_pesata.data_assigned.accessId = access_data_json
 			last_pesata.data_assigned.userId = user_data_json
+			############################
+			# RIMUOVE LA TARGA DAL BUFFER DEL PANNELLO SE PRESENTE
+			plate = access.vehicle.plate if access.vehicle else None
+			if plate:
+				panel_buffer = lb_config.g_config.get("panel_buffer", "")
+				if plate in panel_buffer:
+					panel_buffer = panel_buffer.replace(plate, "", 1).strip()
+					# Rimuove spazi multipli
+					panel_buffer = " ".join(panel_buffer.split())
+					lb_config.g_config["panel_buffer"] = panel_buffer
+					lb_config.saveconfig()
+					# Invia il buffer aggiornato al pannello
+					try:
+						panel_config = lb_config.g_config["app_api"].get("panel", {})
+						if panel_config:
+							adapter = AdapterFactory.create_from_config(panel_config, validate=True)
+							asyncio.run(adapter.send_message(panel_buffer))
+					except Exception as e:
+						pass
+					# Broadcast del buffer aggiornato ai client
+					asyncio.run(self.broadcastMessageAnagrafic("access", {"buffer": panel_buffer}))
 			############################
 			# RIMUOVE TUTTI I DATA IN ESECUZIONE E L'ID SELEZIONATO SULLA DASHBAORD
 			self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
