@@ -390,6 +390,31 @@ def _get_type_default(column):
         return "DEFAULT ''"
 
 
+def migrate_called_status_to_waiting():
+    """
+    Migrazione per convertire lo stato 'CALLED' (deprecato) in 'WAITING'.
+    Necessario per database creati con versioni precedenti del software
+    dove AccessStatus includeva il valore CALLED.
+    """
+    try:
+        with engine.connect() as conn:
+            # Verifica se la tabella access esiste
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='access'"))
+            if result.fetchone() is None:
+                return  # La tabella non esiste ancora, niente da migrare
+
+            # Aggiorna tutti i record con status 'CALLED' a 'WAITING'
+            result = conn.execute(text("UPDATE access SET status = 'WAITING' WHERE status = 'CALLED'"))
+            conn.commit()
+
+            if result.rowcount > 0:
+                lb_log.info(f"Migrazione: {result.rowcount} accessi con stato 'CALLED' convertiti in 'WAITING'")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione dello stato CALLED: {e}")
+
+# Esegui migrazione per stati deprecati
+migrate_called_status_to_waiting()
+
 # Sincronizza le colonne del database prima di creare nuove tabelle
 sync_database_columns()
 
