@@ -15,6 +15,7 @@ from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
 from modules.md_weigher.terminals.egtaf03 import EgtAf03
+from modules.md_weigher.terminals.egtaf03_badge import EgtAf03Badge
 from libs.lb_utils import createThread, startThread
 from modules.md_weigher.types import Configuration, ConfigurationWithoutControls
 from fastapi import HTTPException
@@ -25,6 +26,7 @@ name_module = "md_weigher"
 
 terminalsClasses["dgt1"] = Dgt1
 terminalsClasses["egt-af03"] = EgtAf03
+terminalsClasses["egt-af03-badge"] = EgtAf03Badge
 
 def init():
 	global module_weigher
