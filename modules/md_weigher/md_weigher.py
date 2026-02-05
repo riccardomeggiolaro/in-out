@@ -14,8 +14,8 @@ from libs.lb_system import SerialPort, Tcp
 from modules.md_weigher.globals import terminalsClasses
 from libs.lb_system import ConfigConnection
 from modules.md_weigher.terminals.dgt1 import Dgt1
-from modules.md_weigher.terminals.egtaf03 import EgtAf03
-from modules.md_weigher.terminals.egtaf03_badge import EgtAf03Badge
+from modules.md_weigher.terminals.egtaf03_rext import EgtAf03Rext
+from modules.md_weigher.terminals.egtaf03_read import EgtAf03Read
 from libs.lb_utils import createThread, startThread
 from modules.md_weigher.types import Configuration, ConfigurationWithoutControls
 from fastapi import HTTPException
@@ -25,8 +25,8 @@ from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetu
 name_module = "md_weigher"
 
 terminalsClasses["dgt1"] = Dgt1
-terminalsClasses["egt-af03"] = EgtAf03
-terminalsClasses["egt-af03-badge"] = EgtAf03Badge
+terminalsClasses["egt-af03-read"] = EgtAf03Read
+terminalsClasses["egt-af03-rext"] = EgtAf03Rext
 
 def init():
 	global module_weigher

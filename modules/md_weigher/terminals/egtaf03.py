@@ -7,9 +7,10 @@ from modules.md_weigher.globals import skip_response_messages
 
 class EgtAf03(Terminal):
 	def __init__(self, self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, continuous_transmission, node, terminal, run):
+		self.realtime_action = None
 		# Chiama il costruttore della classe base
 		super().__init__(self_config, max_weight, min_weight, division, maintaine_session_realtime_after_command, diagnostic_has_priority_than_realtime, always_execute_realtime_in_undeground, need_take_of_weight_before_weighing, need_take_of_weight_on_startup, continuous_transmission, node, terminal, run)
-    
+
 	def command(self):
 		self.modope = self.modope_to_execute # modope assume il valore di modope_to_execute, che nel frattempo può aver cambiato valore tramite le funzioni richiambili dall'esterno
 		# in base al valore del modope scrive un comando specifico nella conn
@@ -17,13 +18,12 @@ class EgtAf03(Terminal):
 			if self.valore_alterno == 1: # se valore alterno uguale a 1 manda MVOL per ottnere determinati dati riguardanti la diagnostica
 				self.write("MVOL")
 			elif self.valore_alterno == 2: # altrimenti se valore alterno uguale a 2 manda RAZF per ottnere altri determinati dati riguardanti la diagnostica
-				self.write("RAZF")		
+				self.write("RAZF")
 				self.valore_alterno = 0 # imposto valore uguale a 0
 			self.valore_alterno = self.valore_alterno + 1 # incremento di 1 il valore alterno
 		elif self.modope == "REALTIME":
 			if self.continuous_transmission is False:
-				self.write("REXT")
-				# self.write("READ")
+				self.write(self.realtime_action)
 		elif self.modope == "OK":
 			self.write("DINT2710")
 		elif self.modope == "WEIGHING":
@@ -93,7 +93,7 @@ class EgtAf03(Terminal):
 				lb_log.info("INITIALIZATION")
 				lb_log.info("INFOSTART: " + "Accensione con successo")
 				lb_log.info("NODE: " + str(self.node or ""))
-				lb_log.info("FIRMWARE: " + self.diagnostic.firmware) 
+				lb_log.info("FIRMWARE: " + self.diagnostic.firmware)
 				lb_log.info("MODELNAME: " + self.diagnostic.model_name)
 				lb_log.info("SERIALNUMBER: " + self.diagnostic.serial_number)
 				lb_log.info("CONTINUOUS TRANSMISSION: " + "SI" if self.continuous_transmission else "NO")
@@ -214,7 +214,7 @@ class EgtAf03(Terminal):
 					self.weight_terminal.pid2 = ""
 					self.weight_terminal.net_weight = ""
 				######### Se arriva pesata dal pid ###########################################################################
-				elif length_split_response == 5 and (length_response == 48 or length_response == 38):
+				elif length_split_response == 5 and (length_response == 48 or length_response == 38) and split_response[0] in ["PIDST", "PIDUS"]:
 					gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
 					t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
 					nw = str(int(gw) - int(t))
@@ -402,7 +402,7 @@ class EgtAf03(Terminal):
 						# self.pesa_real_time.status = "T"
 						pass
 					if self.modope == "PRESETTARE":
-						# self.pesa_real_time.status = "PT"						
+						# self.pesa_real_time.status = "PT"
 						pass
 					elif self.modope == "ZERO":
 						# self.pesa_real_time.status = "Z"

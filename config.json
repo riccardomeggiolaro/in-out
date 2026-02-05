@@ -3,17 +3,17 @@
         "mode": "AUTOMATIC",
         "panel": {
             "config": {
-                "encoding": "utf-8",
-                "line_ending": "\\r\\n",
-                "wait_response": false
+                "duration": 90,
+                "max_string_content": 3,
+                "panel_id": 16
             },
             "connection": {
-                "ip": "100.100.100.100",
-                "port": 5000,
+                "ip": "0.0.0.0",
+                "port": 5200,
                 "timeout": 5.0
             },
             "enabled": true,
-            "type": "tcp_raw"
+            "type": "tcp_custom"
         },
         "path_content": "static/content",
         "path_csv": "/var/opt/in-out/csv",
@@ -149,12 +149,12 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 0
+                            "1": 1
                         },
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
-                        "terminal": "egt-af03"
+                        "terminal": "egt-af03-rext"
                     }
                 },
                 "time_between_actions": 0.4

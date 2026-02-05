@@ -95,9 +95,6 @@ class CallbackWeigher(Functions, WebSocket):
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
-		lb_log.error("---------------")
-		lb_log.error(last_pesata.data_assigned.identify_code)
-		lb_log.error("---------------")
 		access = get_access_by_id(last_pesata.data_assigned.accessId)
 		user = get_data_by_id("user", last_pesata.data_assigned.userId)
 		# lb_log.warning(last_pesata.data_assigned.userId)
