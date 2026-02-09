@@ -1,6 +1,6 @@
 {
     "app_api": {
-        "mode": "AUTOMATIC",
+        "mode": "SEMIAUTOMATIC",
         "panel": {
             "config": {
                 "duration": 90,
