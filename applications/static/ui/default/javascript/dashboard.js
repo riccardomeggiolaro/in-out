@@ -253,7 +253,8 @@ async function getData(path) {
         document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
-        selectedIdWeight = res["id_selected"]["id"];
+        selectedIdWeight = res["id_selected"];
+        console.log(selectedIdWeight)
         
         // NUOVO: Controlla need_to_confirm
         if (res.id_selected.need_to_confirm === true) {
@@ -279,7 +280,7 @@ async function populateListIn() {
         listIn.innerHTML = '';
         data.data.forEach(item => {
             const li = document.createElement('li');
-            if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
+            if (item.selected == true && selectedIdWeight !== null && selectedIdWeight["id"] !== item.id) li.style.background = 'lightgrey';
             let content = item.id;
             if (item.in_out.length > 0) {
                 if (item.in_out[0].idWeight1) content = item.in_out[0].weight1.pid;
@@ -302,7 +303,7 @@ async function populateListIn() {
             }
             li.innerHTML = content;
             li.setAttribute('data-id', item.id);
-            if (item.id == selectedIdWeight) li.classList.add('selected');
+            if (selectedIdWeight !== null && selectedIdWeight["id"] == item.id) li.classList.add('selected');
             li.addEventListener('click', async () => {
                 let obj =  {
                     data_in_execution: {                                    
@@ -311,7 +312,7 @@ async function populateListIn() {
                         id: item.id
                     }
                 }
-                if (item.id == selectedIdWeight) obj.id_selected.id = -1;
+                if (selectedIdWeight !== null && selectedIdWeight["id"] == item.id) obj.id_selected.id = -1;
                 await fetch(`/api/data${currentWeigherPath}`, {
                     method: 'PATCH',
                     headers: {
@@ -448,7 +449,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
 
     let url = `/api/anagrafic/${name_list}/list?`;
 
-    if (anagrafic_to_set === 'vehicle' && selectedIdWeight === null) url += `permanentAssociatedFirstToWeighing1=true&`;
+    if (anagrafic_to_set === 'vehicle' && selectedIdWeight !== null && selectedIdWeight["id"] === null) url += `permanentAssociatedFirstToWeighing1=true&`;
 
     if (inputValue) url += `${filter}=${inputValue}%`;
 
@@ -493,7 +494,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
             if (text) {
                 if (
                     anagrafic_to_set === 'vehicle' && 
-                    selectedIdWeight === null && 
+                    selectedIdWeight !== null && selectedIdWeight["id"] === null && 
                     "accesses" in suggestion && 
                     suggestion.accesses.length > 0 && 
                     suggestion.accesses[suggestion.accesses.length - 1].number_in_out === null &&
@@ -1017,12 +1018,12 @@ function processRealtimeObject(obj) {
             });
         }
 
-        if (obj.id_selected.id != selectedIdWeight) {
-            if (selectedIdWeight !== null) {
+        if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
+            if (selectedIdWeight["id"] !== null) {
                 const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
                 if (previouslySelected) previouslySelected.classList.remove('selected');
             }
-            selectedIdWeight = obj.id_selected.id;
+            selectedIdWeight = obj.id_selected;
 
             // NUOVO: Controlla need_to_confirm dopo aver aggiornato selectedIdWeight
             if (obj.id_selected.need_to_confirm === true) {
@@ -1031,8 +1032,8 @@ function processRealtimeObject(obj) {
                 closePopup("confirmPopup");
             }
 
-            if (selectedIdWeight !== null) {
-                const newlySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
+            if (selectedIdWeight["id"] !== null) {
+                const newlySelected = document.querySelector(`li[data-id="${["selectedIdWeight['id']"]}"]`);
                 if (newlySelected) newlySelected.classList.add('selected');
             }
             const selected = document.querySelector('.list-in li.selected');
@@ -1240,7 +1241,7 @@ async function outWeighing(close=true) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            id_selected: selectedIdWeight
+            id_selected: selectedIdWeight["id"]
         })
     })
     .then(res => {
@@ -1268,7 +1269,8 @@ async function handlePesata2() {
 }
 
 async function confirmSemiAutomatic() {
-    if (/[0-9]/.test(String(data_weight_realtime.potential_net_weight)) || /[1-9]/.test(String(data_weight_realtime.tare.replace("PT", "")))) outWeighing(false);
+    const weight1 =  selectedIdWeight !== null && selectedIdWeight["weight1"] !== null;
+    if (/[0-9]/.test(String(data_weight_realtime.potential_net_weight)) || /[1-9]/.test(String(data_weight_realtime.tare.replace("PT", ""))) || weight1) outWeighing(false);
     else inWeighing(false);
 }
 
