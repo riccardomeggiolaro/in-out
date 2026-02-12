@@ -1927,6 +1927,7 @@
                         });
                     }
 
+                    allReles.sort((a, b) => (a.order || 0) - (b.order || 0));
                     if (allReles.length > 0) {
                         relesHtml = '<div class="cams-reles-section"><h5>RELÈ</h5>';
                         allReles.forEach(rele => {
@@ -2276,26 +2277,27 @@
                     });
                 }
 
-                // Popola relè esistenti - weighing
+                // Popola relè esistenti ordinati per campo order
+                const allRelesEdit = [];
                 if (node.events?.weighing?.set_rele && Array.isArray(node.events.weighing.set_rele)) {
                     node.events.weighing.set_rele.forEach(rele => {
-                        addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'weighing');
+                        allRelesEdit.push({ ...rele, event: 'weighing' });
                     });
                 }
-                
-                // Popola relè esistenti - over_min
                 if (node.events?.realtime?.over_min?.set_rele && Array.isArray(node.events.realtime.over_min.set_rele)) {
                     node.events.realtime.over_min.set_rele.forEach(rele => {
-                        addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'over_min');
+                        allRelesEdit.push({ ...rele, event: 'over_min' });
                     });
                 }
-                
-                // Popola relè esistenti - under_min
                 if (node.events?.realtime?.under_min?.set_rele && Array.isArray(node.events.realtime.under_min.set_rele)) {
                     node.events.realtime.under_min.set_rele.forEach(rele => {
-                        addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, 'under_min');
+                        allRelesEdit.push({ ...rele, event: 'under_min' });
                     });
                 }
+                allRelesEdit.sort((a, b) => (a.order || 0) - (b.order || 0));
+                allRelesEdit.forEach(rele => {
+                    addRele(instanceId, nodeId, rele.rele || '', rele.set !== undefined ? rele.set : 1, rele.event);
+                });
 
                 // Mostra il modal dopo aver popolato i dati
                 modal.style.display = 'block';
@@ -2356,12 +2358,14 @@
             });
 
             // Raccogli relè
+            let releOrderEdit = 0;
             form.querySelectorAll('.rele').forEach(rele => {
                 const number = rele.querySelector('.rele-number').value;
                 const status = parseInt(rele.querySelector('.rele-status').value);
                 const event = rele.querySelector('.rele-event').value;
                 if (number) {
-                    data[event].push({ rele: number, set: status });
+                    data[event].push({ rele: number, set: status, order: releOrderEdit });
+                    releOrderEdit++;
                 }
             });
 
@@ -2505,12 +2509,14 @@
             });
 
             // Raccogli relè
+            let releOrder = 0;
             form.querySelectorAll('.rele').forEach(rele => {
                 const number = rele.querySelector('.rele-number').value;
                 const status = parseInt(rele.querySelector('.rele-status').value);
                 const event = rele.querySelector('.rele-event').value;
                 if (number) {
-                    data[event].push({ rele: number, set: status });
+                    data[event].push({ rele: number, set: status, order: releOrder });
+                    releOrder++;
                 }
             });
 

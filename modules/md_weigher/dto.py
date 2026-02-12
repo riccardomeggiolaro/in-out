@@ -13,6 +13,7 @@ class CamDTO(BaseModel):
 class ReleDTO(BaseModel):
     rele: str
     set: Literal[0, 1]
+    order: Optional[int] = 0
 
 class ChangeSetupWeigherDTO(CustomBaseModel):
 	name: Optional[str] = "undefined"
