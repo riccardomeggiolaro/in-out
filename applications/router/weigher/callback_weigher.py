@@ -527,6 +527,13 @@ class CallbackWeigher(Functions, WebSocket):
 					"pid1": weight_terminal.pid1
 				})
 				id = weighing_terminal["id"] if weighing_terminal else None
+				if not id:
+					weighing_terminal = get_data_by_attributes("weighing-terminal", {
+						"id_terminal": weight_terminal.id,
+						"plate": weight_terminal.plate,
+						"datetime1": datetime.strptime(f"{weight_terminal.date1} {weight_terminal.time1}", f"%d/%m/%{y1} %H:%M") if weight_terminal.date1 and weight_terminal.time1 else None
+					})
+					id = weighing_terminal["id"] if weighing_terminal else None
 			if not id:
 				data = add_data("weighing-terminal", {
 					"id_terminal": weight_terminal.id or None,

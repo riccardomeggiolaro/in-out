@@ -2,18 +2,14 @@
     "app_api": {
         "mode": "SEMIAUTOMATIC",
         "panel": {
-            "config": {
-                "duration": 90,
-                "max_string_content": 3,
-                "panel_id": 16
-            },
+            "config": {},
             "connection": {
                 "ip": "0.0.0.0",
-                "port": 5200,
+                "port": 0,
                 "timeout": 5.0
             },
-            "enabled": true,
-            "type": "tcp_custom"
+            "enabled": false,
+            "type": "disabled"
         },
         "path_content": "static/content",
         "path_csv": "/var/opt/in-out/csv",
@@ -95,26 +91,28 @@
                     "timeout": 3.0
                 },
                 "nodes": {
-                    "3590-EGT": {
+                    "P1": {
                         "always_execute_realtime_in_undeground": true,
                         "continuous_transmission": false,
                         "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
+                        "division": 20,
                         "events": {
                             "realtime": {
                                 "over_min": {
                                     "set_rele": [
                                         {
+                                            "order": 1,
                                             "rele": "1",
-                                            "set": 0
+                                            "set": 1
                                         }
                                     ]
                                 },
                                 "under_min": {
                                     "set_rele": [
                                         {
+                                            "order": 0,
                                             "rele": "1",
-                                            "set": 1
+                                            "set": 0
                                         }
                                     ]
                                 }
@@ -127,12 +125,13 @@
                                 },
                                 "report": {
                                     "in": false,
-                                    "out": true
+                                    "out": false
                                 },
                                 "set_rele": [
                                     {
+                                        "order": 2,
                                         "rele": "1",
-                                        "set": 1
+                                        "set": 0
                                     }
                                 ]
                             }
@@ -140,10 +139,10 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_theshold": null,
                         "max_weight": 60000,
-                        "min_weight": 400,
-                        "name": "3590-EGT",
+                        "min_weight": 200,
+                        "name": "P1",
                         "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": false,
+                        "need_take_of_weight_on_startup": true,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
@@ -153,7 +152,7 @@
                         },
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
+                        "take_of_weight_on_startup": true,
                         "terminal": "egt-af03-rext"
                     }
                 },
