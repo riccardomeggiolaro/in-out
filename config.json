@@ -80,7 +80,7 @@
         },
         "use_badge": false,
         "use_preset_weight": true,
-        "use_recordings": false,
+        "use_recordings": true,
         "use_reservation": true,
         "use_white_list": false,
         "weighers": {
