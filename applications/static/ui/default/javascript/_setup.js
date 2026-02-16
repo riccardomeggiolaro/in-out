@@ -1,5 +1,6 @@
 let list_serial_ports = [];
 let list_printer_names = [];
+let list_terminal_types = [];
 const editButtonContent = "✏️";
 const deleteButtonContent = "🗑️";
 
@@ -16,6 +17,11 @@ async function getSerialPortsList() {
 async function getPrintersList() {
     const data = await fetchData('/api/printer/list');
     list_printer_names = data;
+}
+
+async function getTerminalTypes() {
+    const data = await fetchData('/api/config-weigher/terminals');
+    list_terminal_types = data;
 }
 
 function createModal(title, content, onSave, onCancel) {
@@ -226,8 +232,7 @@ function generateWeigherFormHTML(data) {
             <div style="flex: 1;">
                 <label for="terminal">Terminale:</label>
                 <select name="terminal" required>
-                    <option value="dgt1" ${(data.terminal || 'dgt1') === "dgt1" ? 'selected' : ''}>dgt1</option>
-                    <option value="egt-af03" ${(data.terminal || 'dgt1') === "egt-af03" ? 'selected' : ''}>egt-af03</option>
+                    ${list_terminal_types.map(t => `<option value="${t}" ${(data.terminal || list_terminal_types[0]) === t ? 'selected' : ''}>${t}</option>`).join('')}
                 </select>
             </div>
             <div style="flex: 1;">
@@ -402,7 +407,8 @@ async function loadSetupWeighers() {
     
     await Promise.all([
         getSerialPortsList(),
-        getPrintersList()
+        getPrintersList(),
+        getTerminalTypes()
     ]);
     
     const instances = await fetchData('/api/config-weigher/all/instance');

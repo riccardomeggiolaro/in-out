@@ -1241,6 +1241,7 @@
         let nodeToDelete = { instanceId: null, nodeId: null };
         let printersList = [];
         let availableSerialPorts = [];
+        let terminalTypes = [];
 
         // Funzione per caricare le porte seriali disponibili
         async function loadSerialPorts() {
@@ -1391,6 +1392,16 @@
             } catch (error) {
                 console.error('Errore nel caricamento stampanti:', error);
                 printersList = [];
+            }
+        }
+
+        async function loadTerminalTypes() {
+            try {
+                const response = await fetch('/api/config-weigher/terminals');
+                terminalTypes = await response.json();
+            } catch (error) {
+                console.error('Errore nel caricamento tipi terminale:', error);
+                terminalTypes = [];
             }
         }
 
@@ -1666,6 +1677,7 @@
 
             await loadPrinters();
             await loadSerialPorts();
+            await loadTerminalTypes();
 
             // Load panel and siren configurations
             await loadPanelConfig();
@@ -2030,9 +2042,7 @@
                             <div class="form-group">
                                 <label><b>Indicatore:</b> *</label>
                                 <select name="terminal" required>
-                                    <option value="dgt1">dgt1</option>
-                                    <option value="egt-af03-read">egt-af03-read</option>
-                                    <option value="egt-af03-rext">egt-af03-rext</option>
+                                    ${terminalTypes.map(t => `<option value="${t}">${t}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="form-group">
@@ -2195,9 +2205,7 @@
                             <div class="form-group">
                                 <label><b>Indicatore:</b> *</label>
                                 <select name="terminal" required>
-                                    <option value="dgt1" ${node.terminal === 'dgt1' ? 'selected' : ''}>dgt1</option>
-                                    <option value="egt-af03-read" ${node.terminal === 'egt-af03-read' ? 'selected' : ''}>egt-af03-read</option>
-                                    <option value="egt-af03-rext" ${node.terminal === 'egt-af03-rext' ? 'selected' : ''}>egt-af03-rext</option>
+                                    ${terminalTypes.map(t => `<option value="${t}" ${node.terminal === t ? 'selected' : ''}>${t}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="form-group">
