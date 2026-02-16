@@ -514,6 +514,24 @@
 └─────────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
+│  /api/config-weigher                 [Configurazione Bilance]                       │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│  GET    /configuration       🔒 AUTH     → Configurazione completa                  │
+│  PATCH  /configuration/mode  🔒 S.ADMIN  → Imposta modalità operativa               │
+│  PATCH  /configuration/...   🔒 S.ADMIN  → Imposta flag (reservation/badge/ecc.)    │
+│  PATCH  /configuration/path-*🔒 S.ADMIN  → Imposta percorsi (pdf/csv/img)           │
+│  GET    /terminals           🔒 AUTH     → Lista tipi terminale disponibili          │
+│  GET    /all/instance        🔒 AUTH     → Lista tutte le istanze bilance            │
+│  GET    /instance/node       🔒 AUTH     → Dettaglio nodo bilancia                   │
+│  POST   /instance/node       🔒 S.ADMIN  → Aggiungi nodo bilancia                   │
+│  PATCH  /instance/node       🔒 S.ADMIN  → Modifica nodo bilancia                   │
+│  DELETE /instance/node       🔒 S.ADMIN  → Elimina nodo bilancia                    │
+│  POST   /instance/connection 🔒 AUTH     → Aggiungi connessione istanza              │
+│  PATCH  /instance/connection 🔒 AUTH     → Modifica connessione istanza              │
+│  DELETE /instance/connection 🔒 AUTH     → Elimina connessione istanza               │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
 │  /api/command-weigher               [Controllo Bilance]                             │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │  WS     /realtime           🔒 AUTH     → Stream peso tempo reale                   │
@@ -635,8 +653,9 @@ Legenda:  🔓 PUBLIC = Nessuna autenticazione richiesta
 ├── modules/                         # Moduli core business logic
 │   ├── md_weigher/                 # Interfaccia bilance
 │   │   ├── __init__.py
-│   │   ├── types/                  # Tipi bilance (EGT, DGT1)
-│   │   └── globals.py              # Variabili globali
+│   │   ├── terminals/              # Protocolli bilance (dgt1, egt-af03)
+│   │   ├── types.py                # Tipi dati (Realtime, Weight, ecc.)
+│   │   └── globals.py              # Registry terminali (terminalsClasses)
 │   │
 │   ├── md_database/                # Database ORM
 │   │   ├── __init__.py
@@ -712,7 +731,7 @@ config.json
     │       ├── connection: {ip, port} | {serial_port, baudrate}
     │       └── nodes:
     │           └── "3590-EGT":               # Nome nodo
-    │               ├── terminal: "egt-af03" | "dgt1"
+    │               ├── terminal: "egt-af03" | "dgt1"  # Dinamico via GET /terminals
     │               ├── max_weight: 60000
     │               ├── min_weight: 400
     │               └── events: {...}         # Callback configurabili
