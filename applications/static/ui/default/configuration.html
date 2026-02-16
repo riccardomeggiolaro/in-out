@@ -558,12 +558,6 @@
                 <br>
                 <div class="borders aliceblue">
                     <br>
-                    <h3>REGISTRATORE</h3>
-                    <br>
-                    <label for="recordings">Registra <b>pesate</b> effettuate dagli <b>indicatori</b>: </label>
-                    <input type="checkbox" id="recordings" onclick="setUseRecordings(this.checked)">
-                    <br>
-                    <br>
                 </div>
                 <br>
                 <div class="borders aliceblue">
@@ -1208,7 +1202,7 @@
         const radio2 = document.querySelector("#radio-2");
         const useReservation = document.querySelector("#reservation");
         const useBadge = document.querySelector("#badge");
-        const useRecordings = document.querySelector("#recordings");
+
         const reportCopy = document.querySelector("#report-copy");
         const presetWeight = document.querySelector("#preset-weight");
 
@@ -1701,8 +1695,6 @@
                 if (res.use_reservation) useReservation.checked = true;
 
                 if (res.use_badge) useBadge.checked = true;
-
-                if (res.use_recordings) useRecordings.checked = true;
 
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
 
@@ -3417,28 +3409,6 @@
                 }
             })
             .then(res => res.json());
-        }
-
-        function setUseRecordings(status) {
-            fetch(`/api/config-weigher/configuration/use-recordings/${status}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(res => {
-                // Rimuovi il vecchio script navbar.js
-                const oldScript = document.querySelector('script[src*="navbar.js"]');
-                if (oldScript) {
-                    oldScript.remove();
-                }
-                
-                // Crea e inserisci il nuovo script
-                const newScript = document.createElement('script');
-                newScript.src = '/static/javascript/navbar.js?t=' + Date.now();
-                document.body.appendChild(newScript);
-            });
         }
 
         function setUseBadge(status) {

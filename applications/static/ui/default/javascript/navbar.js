@@ -38,12 +38,6 @@ fetch('navbar.html')
 
         document.querySelector("#ver").textContent = `v${configRes.ver}`;
 
-        // Gestisci i risultati della configurazione
-        if (!configRes.use_recordings) {
-            const pageOfRecordings = document.querySelectorAll(".page-of-recordings");
-            pageOfRecordings.forEach(recordings => recordings.style.display = "none");            
-        }
-        
         // Colora il link attivo
         const currentPath = window.location.pathname;
         document.querySelectorAll('.side-menu-navbar li').forEach(li => {

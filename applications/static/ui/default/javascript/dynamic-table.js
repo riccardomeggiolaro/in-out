@@ -538,7 +538,7 @@ function createRow(table, columns, item, idInout) {
     bookingAccess.textContent = "📅";
     const manualAccess = document.createElement("span");
     manualAccess.textContent = "✍️";
-    if (!["pid", "weighing-terminal"].includes(itemName)) {
+    if (!["pid"].includes(itemName)) {
         if (itemName === "access" && item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
         if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
@@ -547,8 +547,6 @@ function createRow(table, columns, item, idInout) {
         if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
         if (itemName === "access" && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) actionsCell.appendChild(bookingAccess);
         if (itemName === "access" && item.type === "Manuale") actionsCell.appendChild(manualAccess);
-    } else if (itemName == "weighing-terminal") {
-        actionsCell.appendChild(deleteButton);
     }
     row.appendChild(actionsCell);
     // Mostra i pulsanti solo all'hover della riga

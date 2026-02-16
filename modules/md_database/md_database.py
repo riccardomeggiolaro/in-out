@@ -136,33 +136,6 @@ class TypeAccess(PyEnum):
     MANUALLY = "Manuale"
     TEST = "Test"
 
-class WeighingTerminal(Base):
-    __tablename__ = 'weighing-terminal'
-    id = Column(Integer, primary_key=True, index=True)
-    id_terminal = Column(String, nullable=True, index=True)
-    bil = Column(String, nullable=True)
-    badge = Column(String, nullable=True, index=True)
-    plate = Column(String, nullable=True, index=True)
-    customer = Column(String, nullable=True, index=True)
-    supplier = Column(String, nullable=True, index=True)
-    material = Column(String, nullable=True, index=True)
-    notes1 = Column(String, nullable=True)
-    notes2 = Column(String, nullable=True)
-    datetime1 = Column(DateTime, nullable=True, index=True)
-    date1 = Column(String, nullable=True)
-    time1 = Column(String, nullable=True)
-    datetime2 = Column(DateTime, nullable=True, index=True)
-    date2 = Column(String, nullable=True)
-    time2 = Column(String, nullable=True)
-    prog1 = Column(String, nullable=True, index=True)
-    prog2 = Column(String, nullable=True, index=True)
-    weight1 = Column(Integer, nullable=True)
-    pid1 = Column(String, nullable=True, index=True)
-    weight2 = Column(Integer, nullable=True)
-    pid2 = Column(String, nullable=True, index=True)
-    net_weight = Column(Integer, nullable=True)
-    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
-
 # Model for Access table
 class Access(Base):
     __tablename__ = 'access'
@@ -274,7 +247,6 @@ table_models = {
     'access': Access,
     'lock_record': LockRecord,
     'weighing_picture': WeighingPicture,
-    'weighing-terminal': WeighingTerminal,
     'in_out': InOut  # ADDED: missing from original
 }
 
@@ -285,11 +257,10 @@ upload_file_datas_required_columns = {
     "vehicle": {"plate": str, "description": str, "tare": int},
     "material": {"description": str},
     "operator": {"description": str},
-    "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str},
-    "weighing-terminal": {"type": str, "id": str, "bil": str, "datetime1": str, "date1": str, "time1": str, "datetime2": str, "date2": str, "time2": str, "prog1": str, "prog2": str, "badge": str, "plate": str, "customer": str, "supplier": str, "material": str, "notes1": str, "notes2": str, "weight1": int, "pid1": str, "weight2": int, "pid2": str, "net_weight": int}
+    "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str}
 }
 
-instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal]
+instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut]
 
 
 def sync_database_columns():
@@ -301,7 +272,7 @@ def sync_database_columns():
     existing_tables = inspector.get_table_names()
 
     for table_name, model in table_models.items():
-        # Gestisci il nome della tabella (potrebbe avere caratteri speciali come 'weighing-terminal')
+        # Gestisci il nome della tabella
         actual_table_name = model.__tablename__
 
         if actual_table_name not in existing_tables:
