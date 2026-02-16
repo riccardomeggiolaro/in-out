@@ -8,7 +8,7 @@ from modules.md_database.functions.get_access_by_identify_if_uncomplete import g
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
-from modules.md_weigher.types import Realtime, Diagnostic, Weight, WeightTerminal
+from modules.md_weigher.types import Realtime, Diagnostic, Weight
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
 from modules.md_database.md_database import AccessStatus, TypeAccess, TypeSubjectEnum
@@ -514,91 +514,6 @@ class CallbackWeigher(Functions, WebSocket):
 
 		thread = threading.Thread(target=run_in_thread)
 		thread.start()
-
-	def Callback_WeighingTerminal(self, instance_name: str, weigher_name: str, weight_terminal: WeightTerminal):
-		if lb_config.g_config["app_api"]["use_recordings"]:
-			id = None
-			weighing_terminal = None
-			y1 = "Y" if weight_terminal.date1 and len(weight_terminal.date1.split("/")[-1]) == 4 else "y"
-			y2 = "Y" if weight_terminal.date2 and len(weight_terminal.date2.split("/")[-1]) == 4 else "y"
-			if weight_terminal.type == "2":
-				weighing_terminal = get_data_by_attributes("weighing-terminal", {
-					"id_terminal": weight_terminal.id,
-					"pid1": weight_terminal.pid1
-				})
-				id = weighing_terminal["id"] if weighing_terminal else None
-				if not id:
-					weighing_terminal = get_data_by_attributes("weighing-terminal", {
-						"id_terminal": weight_terminal.id,
-						"pid2": None,
-						"plate": weight_terminal.plate or None,
-						"datetime1": datetime.strptime(f"{weight_terminal.date1} {weight_terminal.time1}", f"%d/%m/%{y1} %H:%M") if weight_terminal.date1 and weight_terminal.time1 else None
-					})
-					id = weighing_terminal["id"] if weighing_terminal else None
-			if not id:
-				data = add_data("weighing-terminal", {
-					"id_terminal": weight_terminal.id or None,
-					"bil": weight_terminal.bil or None,
-					"badge": weight_terminal.badge or None,
-					"plate": weight_terminal.plate or None,
-					"customer": weight_terminal.customer or None,
-					"supplier": weight_terminal.supplier or None,
-					"material": weight_terminal.material or None,
-					"notes1": weight_terminal.notes1 or None,
-					"notes2": weight_terminal.notes2 or None,
-					"datetime1": datetime.strptime(f"{weight_terminal.date1} {weight_terminal.time1}", f"%d/%m/%{y1} %H:%M") if weight_terminal.date1 and weight_terminal.time1 else None,
-					"date1": datetime.strptime(weight_terminal.date1, f"%d/%m/%{y1}").date() if weight_terminal.date1 else None,
-					"time1": datetime.strptime(weight_terminal.time1, "%H:%M").time().strftime("%H:%M") if weight_terminal.time1 else None,
-					"datetime2": datetime.strptime(f"{weight_terminal.date2} {weight_terminal.time2}", f"%d/%m/%{y2} %H:%M") if weight_terminal.date2 and weight_terminal.time2 else None,
-					"date2": datetime.strptime(weight_terminal.date2, f"%d/%m/%{y2}").date() if weight_terminal.date2 else None,
-					"time2": datetime.strptime(weight_terminal.time2, "%H:%M").time().strftime("%H:%M") if weight_terminal.time2 else None,
-					"prog1": weight_terminal.prog1 or None,
-					"prog2": weight_terminal.prog2 or None,
-					"pid1": weight_terminal.pid1 or None,
-					"pid2": weight_terminal.pid2 or None,
-					"weight1": float(weight_terminal.weight1) if weight_terminal.weight1 and ("," in weight_terminal.weight1 or "." in weight_terminal.weight1) else int(weight_terminal.weight1) if weight_terminal.weight1 else None,
-					"weight2": float(weight_terminal.weight2) if weight_terminal.weight2 and ("," in weight_terminal.weight2 or "." in weight_terminal.weight2) else int(weight_terminal.weight2) if weight_terminal.weight2 else None,
-					"net_weight": float(weight_terminal.net_weight) if weight_terminal.net_weight and ("," in weight_terminal.net_weight or "." in weight_terminal.net_weight) else int(weight_terminal.net_weight) if weight_terminal.net_weight else None,
-				})
-				del data["datetime1"]
-				del data["datetime2"]
-				del data["date_created"]
-				asyncio.run(self.broadcastAddAnagrafic("weighing-terminal", {"weighing-terminal": data}))
-			else:
-				update_weighing_data = {
-					"type": weight_terminal.type,
-					"notes2": weight_terminal.notes2 or None,
-					"datetime2": datetime.strptime(f"{weight_terminal.date2} {weight_terminal.time2}", f"%d/%m/%{y2} %H:%M") if weight_terminal.date2 and weight_terminal.time2 else None,
-					"date2": datetime.strptime(weight_terminal.date2, f"%d/%m/%{y2}").date() if weight_terminal.date2 else None,
-					"time2": datetime.strptime(weight_terminal.time2, "%H:%M").time().strftime("%H:%M") if weight_terminal.time2 else None,
-					"prog2": weight_terminal.prog2 or None,
-					"pid2": weight_terminal.pid2 or None,
-					"weight2": float(weight_terminal.weight2) if weight_terminal.weight2 and ("," in weight_terminal.weight2 or "." in weight_terminal.weight2) else int(weight_terminal.weight2) if weight_terminal.weight2 else None,
-					"net_weight": float(weight_terminal.net_weight) if weight_terminal.net_weight and ("," in weight_terminal.net_weight or "." in weight_terminal.net_weight) else int(weight_terminal.net_weight) if weight_terminal.net_weight else None,
-				}
-				if weight_terminal.badge and weight_terminal.badge != weighing_terminal["badge"]:
-					update_weighing_data["badge"] = weight_terminal.badge
-				if weight_terminal.plate and weight_terminal.plate != weighing_terminal["plate"]:
-					update_weighing_data["plate"] = weight_terminal.plate
-				if weight_terminal.customer and weight_terminal.customer != weighing_terminal["customer"]:
-					update_weighing_data["customer"] = weight_terminal.customer
-				if weight_terminal.supplier and weight_terminal.supplier != weighing_terminal["supplier"]:
-					update_weighing_data["supplier"] = weight_terminal.supplier
-				if weight_terminal.material and weight_terminal.material != weighing_terminal["material"]:
-					update_weighing_data["material"] = weight_terminal.material
-				if weight_terminal.notes1 and weight_terminal.notes1 != weighing_terminal["notes1"]:
-					update_weighing_data["notes1"] = weight_terminal.notes1
-				if weight_terminal.notes2 and weight_terminal.notes2 != weighing_terminal["notes2"]:
-					update_weighing_data["notes2"] = weight_terminal.notes2
-				data = update_data("weighing-terminal", id, update_weighing_data)
-				del data["datetime1"]
-				del data["datetime2"]
-				del data["date_created"]
-				asyncio.run(self.broadcastUpdateAnagrafic("weighing-terminal", {"weighing-terminal": data}))
-			message = {
-				"message": f"Pesata eseguita da terminale! Pid: {weight_terminal.pid2 or weight_terminal.pid1}"
-			}
-			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(message))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):
 		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"command_executed": ok_value}))
