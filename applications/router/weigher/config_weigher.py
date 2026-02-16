@@ -7,6 +7,7 @@ from applications.utils.utils_weigher import InstanceNameDTO, InstanceNameWeighe
 from applications.utils.utils import validate_time
 import modules.md_weigher.md_weigher as md_weigher
 from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetupWeigherDTO
+from modules.md_weigher.globals import terminalsClasses
 from typing import Union
 from libs.lb_system import SerialPort, Tcp
 from applications.router.weigher.types import Data
@@ -46,6 +47,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/instance/connection', self.AddInstanceConnection, methods=['POST'])
 		self.router_config_weigher.add_api_route('/instance/connection/{instance_name}', self.SetInstanceConnection, methods=['PATCH'])
 		self.router_config_weigher.add_api_route('/instance/connection/{instance_name}', self.DeleteInstanceConnection, methods=['DELETE'])
+		self.router_config_weigher.add_api_route('/terminals', self.GetTerminals, methods=['GET'])
 		self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 
 	async def GetAllConfiguration(self):
@@ -56,6 +58,9 @@ class ConfigWeigher(CommandWeigherRouter):
 			**app_api
 		}
 		return configuration
+
+	async def GetTerminals(self):
+		return list(terminalsClasses.keys())
 
 	async def SetMode(self, mode: str):
 		lb_config.g_config["app_api"]["mode"] = mode

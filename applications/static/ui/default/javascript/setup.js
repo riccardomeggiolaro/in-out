@@ -2,6 +2,8 @@ let list_serial_ports = []
 
 let list_printer_names = []
 
+let list_terminal_types = []
+
 let template_report_in = new DataTransfer();
 
 let template_report_out = new DataTransfer();
@@ -31,6 +33,14 @@ async function getPrintersList() {
     .then(res => res.json())
     .then(data => {
         list_printer_names = data;
+    });
+}
+
+async function getTerminalTypes() {
+    await fetch('/api/config-weigher/terminals')
+    .then(res => res.json())
+    .then(data => {
+        list_terminal_types = data;
     });
 }
 
@@ -142,6 +152,8 @@ async function loadSetupWeighers() {
     await getSerialPortsList();
 
     await getPrintersList();
+
+    await getTerminalTypes();
 
     await getReportIn();
 
@@ -1279,6 +1291,11 @@ async function loadSetupWeighers() {
                     printerOptions += `<option value="${printer.nome}">${printer.nome}</option>`;
                 }
 
+                let addTerminalOptions = '';
+                for (const terminal of list_terminal_types) {
+                    addTerminalOptions += `<option value="${terminal}">${terminal}</option>`;
+                }
+
                 addWeigherForm.innerHTML = `
                     <div style="display: flex; gap: 16px;">
                         <div class="form-group" style="flex: 1;">
@@ -1288,8 +1305,7 @@ async function loadSetupWeighers() {
                         <div class="form-group" style="flex: 1;">
                             <label for="terminal">Terminale:</label>
                             <select name="terminal" id="terminal" required>
-                                <option value="dgt1" selected>dgt1</option>
-                                <option value="egt-af03">egt-af03</option>
+                                ${addTerminalOptions}
                             </select>
                         </div>
                         <div class="form-group" style="flex: 1;">
@@ -1562,6 +1578,12 @@ async function loadSetupWeighers() {
                         printerOptions += `<option value="${printer.nome}" ${data.printer_name === printer.nome ? 'selected' : ''}>${printer.nome}</option>`;
                     }
 
+                    // Genera le option per i terminali
+                    let editTerminalOptions = '';
+                    for (const terminal of list_terminal_types) {
+                        editTerminalOptions += `<option value="${terminal}" ${data.terminal === terminal ? 'selected' : ''}>${terminal}</option>`;
+                    }
+
                     editMode.querySelector('.content').innerHTML = `
                         <div style="display: flex; gap: 16px;">
                             <div class="form-group" style="flex: 1;">
@@ -1571,8 +1593,7 @@ async function loadSetupWeighers() {
                             <div class="form-group" style="flex: 1;">
                                 <label for="terminal">Terminale:</label><br>
                                 <select name="terminal" id="terminal" required>
-                                    <option value="dgt1" ${data.terminal === "dgt1" ? 'selected' : ''}>dgt1</option>
-                                    <option value="egt-af03" ${data.terminal === "egt-af03" ? 'selected' : ''}>egt-af03</option>
+                                    ${editTerminalOptions}
                                 </select>
                             </div>
                             <div class="form-group" style="flex: 1;">
