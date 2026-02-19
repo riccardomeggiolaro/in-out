@@ -120,8 +120,8 @@
                             "weighing": {
                                 "cams": [],
                                 "csv": {
-                                    "in": false,
-                                    "out": false
+                                    "in": true,
+                                    "out": true
                                 },
                                 "report": {
                                     "in": false,
@@ -166,5 +166,5 @@
     "name": "in-out",
     "panel_buffer": "",
     "secret_key": "$2b$12$PAHE4kh6lnXo3w9SF9tj7O",
-    "ver": "3.0.1"
+    "ver": "3.0.2"
 }
