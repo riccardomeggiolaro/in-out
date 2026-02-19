@@ -3241,7 +3241,7 @@
             })
             .then(data => {
                 // Aggiungi la nuova istanza ai dati
-                const newInstanceId = data.instance_id || Object.keys(weighersData).length + 1;
+                const newInstanceId = Object.keys(data)[0];
                 const newInstance = {
                     connection: connectionType === 'tcp' ? {
                         ip: connection.ip,
