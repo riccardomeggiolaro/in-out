@@ -18,6 +18,7 @@ from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
 from applications.middleware.auth import AuthMiddleware
+from applications.middleware.no_cache import NoCacheMiddleware
 import applications.utils.utils as utils
 from libs.lb_utils import base_path
 # ==============================================================
@@ -84,6 +85,9 @@ def init():
 
 	# Aggiungi il middleware al tuo FastAPI
 	app.add_middleware(AuthMiddleware)
+
+	# Middleware per disabilitare la cache del browser su HTML, CSS e JS
+	app.add_middleware(NoCacheMiddleware)
 
 	generic_router = GenericRouter()
 	weigher_router = WeigherRouter()
