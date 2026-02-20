@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, func, Date, Time, text, inspect
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, ForeignKey, Enum, func, Date, Time, text, inspect, UniqueConstraint
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, object_session
 from sqlalchemy.ext.hybrid import hybrid_property
 from enum import Enum as PyEnum
@@ -94,11 +94,14 @@ class Operator(Base):
 # Model for Weighing table
 class Weighing(Base):
     __tablename__ = 'weighing'
+    __table_args__ = (
+        UniqueConstraint('pid', 'weigher_serial_number', name='uq_weighing_pid_serial'),
+    )
     id = Column(Integer, primary_key=True, index=True)
     date = Column(DateTime, server_default=func.now(), default=datetime.now)
     weigher = Column(String, nullable=True)
     weigher_serial_number = Column(String, nullable=True)
-    pid = Column(String, index=True, unique=True, nullable=True)
+    pid = Column(String, index=True, nullable=True)
     is_preset_tare = Column(Boolean, default=False, nullable=True)
     is_preset_weight = Column(Boolean, default=False, nullable=True)
     tare = Column(Integer, nullable=True)
