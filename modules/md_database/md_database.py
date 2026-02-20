@@ -429,8 +429,70 @@ def migrate_called_status():
     except Exception as e:
         lb_log.error(f"Errore durante la migrazione dello stato CALLED: {e}")
 
+def migrate_weighing_pid_constraint():
+    """
+    Migrazione per sostituire il vincolo UNIQUE su weighing.pid
+    con un vincolo composito UNIQUE su (pid, weigher_serial_number).
+    Necessario perché terminali diversi possono generare lo stesso pid.
+    SQLite non supporta ALTER TABLE DROP CONSTRAINT, quindi si ricrea la tabella.
+    """
+    try:
+        with engine.connect() as conn:
+            # Verifica se la tabella weighing esiste
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='weighing'"))
+            if result.fetchone() is None:
+                return  # La tabella non esiste ancora, niente da migrare
+
+            # Controlla se esiste un indice unique solo su pid (vecchio vincolo)
+            indexes = conn.execute(text("PRAGMA index_list('weighing')")).fetchall()
+            has_old_unique_pid = False
+            for idx in indexes:
+                idx_name = idx[1]
+                is_unique = idx[2]
+                if is_unique:
+                    cols = conn.execute(text(f"PRAGMA index_info('{idx_name}')")).fetchall()
+                    col_names = [col[2] for col in cols]
+                    if col_names == ['pid']:
+                        has_old_unique_pid = True
+                        break
+
+            if not has_old_unique_pid:
+                return  # Già migrato o vincolo non presente
+
+            lb_log.info("Migrazione vincolo weighing.pid: da UNIQUE(pid) a UNIQUE(pid, weigher_serial_number)")
+
+            # Ricrea la tabella con il nuovo vincolo
+            conn.execute(text("""
+                CREATE TABLE weighing_new (
+                    id INTEGER PRIMARY KEY,
+                    date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    weigher TEXT,
+                    weigher_serial_number TEXT,
+                    pid TEXT,
+                    is_preset_tare INTEGER,
+                    is_preset_weight INTEGER,
+                    tare INTEGER,
+                    weight INTEGER,
+                    log TEXT,
+                    idUser INTEGER REFERENCES user(id),
+                    idOperator INTEGER REFERENCES operator(id),
+                    UNIQUE(pid, weigher_serial_number)
+                )
+            """))
+            conn.execute(text("INSERT INTO weighing_new SELECT * FROM weighing"))
+            conn.execute(text("DROP TABLE weighing"))
+            conn.execute(text("ALTER TABLE weighing_new RENAME TO weighing"))
+            conn.execute(text("CREATE INDEX ix_weighing_pid ON weighing(pid)"))
+            conn.commit()
+            lb_log.info("Migrazione vincolo weighing.pid completata con successo")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione del vincolo weighing.pid: {e}")
+
 # Esegui migrazione per stati deprecati
 migrate_called_status()
+
+# Esegui migrazione vincolo pid weighing
+migrate_weighing_pid_constraint()
 
 # Sincronizza le colonne del database prima di creare nuove tabelle
 sync_database_columns()
