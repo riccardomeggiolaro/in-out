@@ -18,6 +18,7 @@
         "path_pdf": "/var/opt/in-out/pdf",
         "path_ui": "static/ui/default",
         "port": 80,
+        "report_generic": "weight_generic.json",
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
         "return_pdf_copy_after_weighing": true,
@@ -124,6 +125,7 @@
                                     "out": true
                                 },
                                 "report": {
+                                    "generic": false,
                                     "in": false,
                                     "out": false
                                 },

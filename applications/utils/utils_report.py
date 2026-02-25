@@ -63,6 +63,57 @@ def get_data_variables(in_out):
     name_file += ".pdf"
     return name_file, variables, report
 
+def get_data_variables_generic(in_out):
+    report_generic = lb_config.g_config["app_api"]["report_generic"]
+    report = report_generic
+    name_file = ""
+    variables = ReportVariables(**{})
+    variables.typeSubject = in_out.access.typeSubject.value
+    variables.subject = in_out.access.subject if in_out.access.subject else SubjectDataDTO(**{})
+    variables.vector = in_out.access.vector if in_out.access.vector else VectorDataDTO(**{})
+    variables.driver = in_out.access.driver if in_out.access.driver else DriverDataDTO(**{})
+    variables.vehicle = in_out.access.vehicle if in_out.access.vehicle else VehicleDataDTO(**{})
+    variables.material = in_out.material if in_out.material else MaterialDataDTO(**{})
+    variables.operator = in_out.weight1.operator if in_out.weight1 and in_out.weight1.operator else in_out.weight2.operator if in_out.weight2 and in_out.weight2.operator else OperatorDataDTO(**{})
+    variables.note = in_out.access.note
+    variables.document_reference = in_out.access.document_reference
+    if in_out.idWeight2:
+        # Caso con tara: i dati di pesata sono in weight2
+        pid = in_out.weight2.pid if in_out.weight2.pid else in_out.weight2.id
+        name_file = f"{in_out.weight2.weigher}_{pid}"
+        if in_out.weight2.tare > 0:
+            variables.weight1.weight = in_out.weight2.tare
+            variables.weight1.type = "PT" if in_out.weight2.is_preset_tare else "Tara"
+            if in_out.weight2.is_preset_weight:
+                variables.weight1.type = "P.Peso"
+        variables.weight2.date = in_out.weight2.date.strftime("%d/%m/%Y %H:%M")
+        variables.weight2.pid = in_out.weight2.pid
+        variables.weight2.weight = in_out.weight2.weight
+        if "weighing_pictures" in in_out.weight2.__dict__:
+            for w in in_out.weight2.weighing_pictures:
+                path = lb_config.g_config["app_api"]["path_img"] + w.path_name
+                if os.path.exists(path):
+                    img = image_to_base64_data_uri(path)
+                    if img:
+                        variables.weight2.weighing_pictures.append(WeighingPicture(**{"path_name": img}))
+        variables.net_weight = in_out.net_weight
+    elif in_out.idWeight1:
+        # Caso senza tara: i dati di pesata sono in weight1, mostra solo PESO
+        pid = in_out.weight1.pid if in_out.weight1.pid else in_out.weight1.id
+        name_file = f"{in_out.weight1.weigher}_{pid}"
+        variables.weight2.date = in_out.weight1.date.strftime("%d/%m/%Y %H:%M")
+        variables.weight2.pid = in_out.weight1.pid
+        variables.weight2.weight = in_out.weight1.weight
+        if "weighing_pictures" in in_out.weight1.__dict__:
+            for w in in_out.weight1.weighing_pictures:
+                path = lb_config.g_config["app_api"]["path_img"] + w.path_name
+                if os.path.exists(path):
+                    img = image_to_base64_data_uri(path)
+                    if img:
+                        variables.weight2.weighing_pictures.append(WeighingPicture(**{"path_name": img}))
+    name_file += ".pdf"
+    return name_file, variables, report
+
 def delete_none_value(data):
     """Recursively removes keys with None values in dictionaries and lists."""
     if isinstance(data, dict):

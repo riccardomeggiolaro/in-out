@@ -28,7 +28,7 @@ from libs.lb_folders import structure_folder_rule, save_bytes_to_file
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.adapters import AdapterFactory
 from applications.router.weigher.manager_weighers_data import weighers_data
-from applications.utils.utils_report import get_data_variables, generate_html_report, generate_csv_report, save_file_dir
+from applications.utils.utils_report import get_data_variables, get_data_variables_generic, generate_html_report, generate_csv_report, save_file_dir
 from libs.lb_printer import printer
 import applications.utils.utils as utils
 import threading
@@ -222,11 +222,18 @@ class CallbackWeigher(Functions, WebSocket):
 			reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]  / "report"
 			report_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
 			report_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
-			generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
+			report_generic = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"].get("generic", False)
+			if is_test:
+				generate_report = report_generic
+			else:
+				generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
 			path_pdf = lb_config.g_config['app_api']['path_pdf']
 			if not path_pdf.startswith("/"):
 				path_pdf = f"{base_path}/{path_pdf}"
-			name_file, variables, report = get_data_variables(last_in_out)
+			if is_test:
+				name_file, variables, report = get_data_variables_generic(last_in_out)
+			else:
+				name_file, variables, report = get_data_variables(last_in_out)
 			remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
 			if generate_report and report:
