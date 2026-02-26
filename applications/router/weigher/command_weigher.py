@@ -175,8 +175,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		if weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
-		elif tare != "0":
-			error_message = "Eliminare la tara per effettuare la pesata generica."
 		elif weight is not None:
 			# PESO FINTO: accetta un peso finto e non esegue il PID
 				# RECUPERA LA TARA CORRENTE DAL REALTIME (se disponibile)
@@ -266,6 +264,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 						save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv)
 				status_modope = 200
 				command_executed = True
+		elif tare != "0":
+			error_message = "Eliminare la tara per effettuare la pesata generica."
 		else:
 			# MODALITA' NORMALE: esegue il PID sulla pesa fisica
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
