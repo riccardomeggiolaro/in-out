@@ -240,13 +240,11 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
 				number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
 				reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
-				report_in = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["in"]
-				report_out = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["out"]
-				generate_report = True  # In test mode, stampa sempre indipendentemente dalla configurazione
+				generate_report = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"].get("print", True)
 				path_pdf = lb_config.g_config['app_api']['path_pdf']
 				if not path_pdf.startswith("/"):
 					path_pdf = f"{base_path}/{path_pdf}"
-				name_file, variables, report = get_data_variables(last_in_out)
+				name_file, variables, report = get_data_variables(last_in_out, is_print=True)
 				# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
 				if generate_report and report:
 					html = generate_html_report(reports_dir, report, v=variables.dict())

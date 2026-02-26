@@ -192,6 +192,33 @@ def init():
 			print(f"Errore nel caricamento report-designer: {e}")
 			return HTMLResponse(content=f"Errore: {str(e)}", status_code=500)
 
+	@app.get('/report-designer/stampa', response_class=HTMLResponse)
+	async def report_designer_stampa(request: Request):
+		"""Endpoint dedicato per il report designer della pesatura generica (stampa)."""
+		try:
+			nome_variabile = ""
+			type = "STAMPA"
+			type_default_report = "PRINT"
+			file_path = path_ui / "report-designer.html"
+
+			if not file_path.is_file():
+				return HTMLResponse(content="File report-designer.html non trovato", status_code=404)
+
+			with open(file_path, 'r', encoding='utf-8') as f:
+				html_content = f.read()
+
+			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
+			html_content = html_content.replace('{{ type }}', type)
+			html_content = html_content.replace('{{ type_default_report }}', type_default_report)
+			html_content = html_content.replace('{{ default_report_template }}', '/static/content/report/weight_print.json')
+			html_content = html_content.replace('{{ report }}', 'report_print')
+
+			return HTMLResponse(content=html_content)
+
+		except Exception as e:
+			print(f"Errore nel caricamento report-designer: {e}")
+			return HTMLResponse(content=f"Errore: {str(e)}", status_code=500)
+
 	@app.get('/{filename:path}', response_class=HTMLResponse)
 	async def Static(request: Request, filename: str):
 		"""Gestisce le richieste di file statici (HTML, CSS, JS)."""
