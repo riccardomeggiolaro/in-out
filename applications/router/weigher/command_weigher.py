@@ -177,20 +177,10 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
 		elif weight is not None:
 			# PESO FINTO: accetta un peso finto e non esegue il PID
-				# RECUPERA LA TARA CORRENTE DAL REALTIME (se disponibile)
 				tare = 0
 				is_preset_tare = False
-				try:
-					realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-					if realtime.tare:
-						tare_str = realtime.tare.replace("PT", "").replace(" ", "")
-						if "PT" in realtime.tare:
-							is_preset_tare = True
-						tare = float(tare_str) if "." in tare_str or "," in tare_str else int(tare_str)
-				except Exception:
-					tare = 0
 				gross_weight = weight
-				net_weight = gross_weight - tare if tare > 0 else None
+				net_weight = None
 				# CREA L'ACCESSO DI TIPO TEST
 				access = await self.addAccess(request=None, body=AddAccessDTO(**{
 					**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"],
