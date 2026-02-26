@@ -267,7 +267,7 @@ class ConfigWeigher(CommandWeigherRouter):
 				"report": {
 					"in": setup.report_on_in if setup.report_on_in is not None else False,
 					"out": setup.report_on_out if setup.report_on_out is not None else False,
-					"print": setup.report_on_print if setup.report_on_print is not None else True
+					"generic": setup.report_on_generic if setup.report_on_generic is not None else True
 				},
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,
@@ -339,7 +339,7 @@ class ConfigWeigher(CommandWeigherRouter):
 				"report": {
 					"in": setup.report_on_in if setup.report_on_in is not None else False,
 					"out": setup.report_on_out if setup.report_on_out is not None else False,
-					"print": setup.report_on_print if setup.report_on_print is not None else True
+					"generic": setup.report_on_generic if setup.report_on_generic is not None else True
 				},
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,

@@ -145,7 +145,7 @@ class GenericRouter:
         return dict(files_tree)
 
     async def saveReportTemplate(self, report: str, file: UploadFile):
-        if report not in ["report_in", "report_out", "report_print"]:
+        if report not in ["report_in", "report_out", "report_generic"]:
             raise HTTPException(status_code=400, detail="Tipo di report non valido")
         
         path = Path(__file__).cwd() / "applications" / lb_config.g_config["app_api"]["path_content"] / "report"

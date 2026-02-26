@@ -34,7 +34,7 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	number_of_prints: Optional[int] = 1
 	report_on_in: Optional[bool] = None
 	report_on_out: Optional[bool] = None
-	report_on_print: Optional[bool] = None
+	report_on_generic: Optional[bool] = None
 	csv_on_in: Optional[bool] = None
 	csv_on_out: Optional[bool] = None
 	cams: list[CamDTO] = []
@@ -88,7 +88,7 @@ class SetupWeigherDTO(BaseModel):
 	number_of_prints: Optional[int] = 1
 	report_on_in: Optional[bool] = True
 	report_on_out: Optional[bool] = True
-	report_on_print: Optional[bool] = True
+	report_on_generic: Optional[bool] = True
 	csv_on_in: Optional[bool] = True
 	csv_on_out: Optional[bool] = True
 	cams: list[CamDTO] = []

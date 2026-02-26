@@ -210,8 +210,8 @@ def init():
 			html_content = html_content.replace('{{ nome_variabile }}', nome_variabile)
 			html_content = html_content.replace('{{ type }}', type)
 			html_content = html_content.replace('{{ type_default_report }}', type_default_report)
-			html_content = html_content.replace('{{ default_report_template }}', '/static/content/report/weight_print.json')
-			html_content = html_content.replace('{{ report }}', 'report_print')
+			html_content = html_content.replace('{{ default_report_template }}', '/static/content/report/weight_generic.json')
+			html_content = html_content.replace('{{ report }}', 'report_generic')
 
 			return HTMLResponse(content=html_content)
 
