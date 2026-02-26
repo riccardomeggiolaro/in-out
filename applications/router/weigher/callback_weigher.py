@@ -221,7 +221,7 @@ class CallbackWeigher(Functions, WebSocket):
 			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
 			reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]  / "report"
 			if is_test:
-				generate_report = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"].get("print", True)
+				generate_report = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"].get("generic", True)
 			else:
 				report_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
 				report_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
@@ -229,7 +229,7 @@ class CallbackWeigher(Functions, WebSocket):
 			path_pdf = lb_config.g_config['app_api']['path_pdf']
 			if not path_pdf.startswith("/"):
 				path_pdf = f"{base_path}/{path_pdf}"
-			name_file, variables, report = get_data_variables(last_in_out, is_print=is_test)
+			name_file, variables, report = get_data_variables(last_in_out, is_generic=is_test)
 			remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
 			if generate_report and report:

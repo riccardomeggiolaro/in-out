@@ -11,12 +11,12 @@ from modules.md_database.interfaces.operator import OperatorDataDTO
 import json
 from applications.utils.utils import image_to_base64_data_uri
 
-def get_data_variables(in_out, is_print=False):
+def get_data_variables(in_out, is_generic=False):
     report_in = lb_config.g_config["app_api"]["report_in"]
     report_out = lb_config.g_config["app_api"]["report_out"]
-    report_print = lb_config.g_config["app_api"].get("report_print")
-    if is_print and report_print:
-        report = report_print
+    report_generic = lb_config.g_config["app_api"].get("report_generic")
+    if is_generic and report_generic:
+        report = report_generic
     else:
         report = report_out if in_out.idWeight2 else report_in
     name_file = ""
