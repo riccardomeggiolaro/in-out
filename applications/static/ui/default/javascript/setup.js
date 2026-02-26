@@ -1341,7 +1341,7 @@ async function loadSetupWeighers() {
                             <input type="checkbox" name="report_on_out">
                         </div>
                         <div class="form-group" style="flex: 1; text-align: center;">
-                            <label>Genera report alla stampa</label><br>
+                            <label>Genera report alla generica</label><br>
                             <input type="checkbox" name="report_on_print" checked>
                         </div>
                         <div class="form-group" style="flex: 2;">
@@ -1633,7 +1633,7 @@ async function loadSetupWeighers() {
                                 <input type="checkbox" name="report_on_out" ${data.events?.weighing?.report?.out ? 'checked' : ''}>
                             </div>
                             <div class="form-group" style="flex: 1; text-align: center;">
-                                <label>Genera report alla stampa</label><br>
+                                <label>Genera report alla generica</label><br>
                                 <input type="checkbox" name="report_on_print" ${data.events?.weighing?.report?.print ? 'checked' : ''}>
                             </div>
                             <div class="form-group" style="flex: 2;">

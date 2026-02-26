@@ -192,12 +192,12 @@ def init():
 			print(f"Errore nel caricamento report-designer: {e}")
 			return HTMLResponse(content=f"Errore: {str(e)}", status_code=500)
 
-	@app.get('/report-designer/stampa', response_class=HTMLResponse)
-	async def report_designer_stampa(request: Request):
-		"""Endpoint dedicato per il report designer della pesatura generica (stampa)."""
+	@app.get('/report-designer/generica', response_class=HTMLResponse)
+	async def report_designer_generica(request: Request):
+		"""Endpoint dedicato per il report designer della pesatura generica."""
 		try:
 			nome_variabile = ""
-			type = "STAMPA"
+			type = "GENERICA"
 			type_default_report = "PRINT"
 			file_path = path_ui / "report-designer.html"
 
