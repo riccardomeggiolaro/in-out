@@ -35,6 +35,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/configuration/use-recordings/{use_recordings}', self.SetUseRecordings, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/return-pdf-copy-after-weighing/{return_pdf_copy_after_weighing}', self.SetReturnCopyPdfWeighing, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/use-preset-weight/{use_preset_weight}', self.SetUsePresetWeight, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/configuration/test-mode/{test_mode}', self.SetTestMode, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-img', self.SavePathImg, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -96,6 +97,11 @@ class ConfigWeigher(CommandWeigherRouter):
 		lb_config.g_config["app_api"]["use_preset_weight"] = use_preset_weight
 		lb_config.saveconfig()
 		return { "use_preset_weight": use_preset_weight }
+
+	async def SetTestMode(self, test_mode: bool):
+		lb_config.g_config["app_api"]["test_mode"] = test_mode
+		lb_config.saveconfig()
+		return { "test_mode": test_mode }
 
 	async def SavePathPdf(self, body: PathDTO):
 		path = body.path

@@ -62,6 +62,7 @@ let url = new URL(window.location.href);
 let currentWeigherPath = null;
 
 let return_pdf_copy_after_weighing = false;
+let test_mode = false;
 
 let instances = {};
 
@@ -109,6 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     .then(res => {
         currentWeigherPath = localStorage.getItem('currentWeigherPath');
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
+        test_mode = res["test_mode"] || false;
         let selected = false;
         for (let instance in res["weighers"]) {
             for (let weigher in res["weighers"][instance]["nodes"]) {
@@ -1167,11 +1169,34 @@ async function handlePTara() {
 }
 
 async function handleStampa() {
+    if (test_mode) {
+        document.getElementById('testWeightInput').value = '';
+        openPopup('testWeightPopup', 'testWeightInput');
+        return;
+    }
+    await executeStampa();
+}
+
+async function confirmTestWeight() {
+    const weightValue = document.getElementById('testWeightInput').value;
+    if (!weightValue || Number(weightValue) <= 0) {
+        showSnackbar("snackbar", "Inserire un peso valido", 'rgb(255, 208, 208)', 'black');
+        return;
+    }
+    closePopup();
+    await executeStampa(Number(weightValue));
+}
+
+async function executeStampa(weight = null) {
     buttons.forEach(button => {
         button.disabled = true;
         button.classList.add("disabled-button"); // Aggi
     });
-    const r = await fetch(`${pathname}/api/command-weigher/print${currentWeigherPath}`)
+    let url = `${pathname}/api/command-weigher/print${currentWeigherPath}`;
+    if (weight !== null) {
+        url += `&weight=${weight}`;
+    }
+    const r = await fetch(url)
     .then(res => {
         return res.json();
     })
