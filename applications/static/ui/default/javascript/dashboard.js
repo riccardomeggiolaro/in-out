@@ -217,7 +217,7 @@ async function getInstanceWeigher(path) {
         division.textContent = obj.division;
         divisionValue = obj.division;
         maxThesholdValue = obj.max_theshold;
-        if (obj.printer_name === null || !obj.events.weighing.report.in && !obj.events.weighing.report.out) reprint.style.display = 'none';
+        if (obj.printer_name === null || !obj.events.weighing.report.in && !obj.events.weighing.report.out && !obj.events.weighing.report.generic) reprint.style.display = 'none';
         else reprint.style.display = 'block';
     })
     .catch(error => console.error('Errore nella fetch:', error));
