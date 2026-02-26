@@ -172,6 +172,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		test_mode = lb_config.g_config["app_api"].get("test_mode", False)
 		status_modope, command_executed, error_message = 500, False, ""
 		access_id = None
+		in_out_id = None
 		if weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
 		elif test_mode:
@@ -225,6 +226,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
 					"net_weight": net_weight if tare > 0 else None
 				})
+				in_out_id = in_out["id"]
 				# CHIUDI L'ACCESSO
 				update_data("access", access.id, {
 					"status": AccessStatus.CLOSED,
@@ -240,7 +242,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
 				report_in = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["in"]
 				report_out = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["out"]
-				generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
+				generate_report = True  # In test mode, stampa sempre indipendentemente dalla configurazione
 				path_pdf = lb_config.g_config['app_api']['path_pdf']
 				if not path_pdf.startswith("/"):
 					path_pdf = f"{base_path}/{path_pdf}"
@@ -292,7 +294,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				"command_executed": command_executed,
 				"error_message": error_message
 			},
-			"access_id": access_id
+			"access_id": access_id,
+			"in_out_id": in_out_id
 		}
 
 	async def Weight1(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
