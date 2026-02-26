@@ -176,7 +176,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		if weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
 		elif tare != "0":
-			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
+			error_message = "Eliminare la tara per effettuare la pesata generica."
 		elif weight is not None:
 			# PESO FINTO: accetta un peso finto e non esegue il PID
 				# RECUPERA LA TARA CORRENTE DAL REALTIME (se disponibile)
