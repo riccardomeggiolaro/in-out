@@ -20,6 +20,7 @@
         "port": 80,
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
+        "report_print": "weight_print.json",
         "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
@@ -126,7 +127,8 @@
                                 },
                                 "report": {
                                     "in": false,
-                                    "out": false
+                                    "out": false,
+                                    "print": true
                                 },
                                 "set_rele": [
                                     {

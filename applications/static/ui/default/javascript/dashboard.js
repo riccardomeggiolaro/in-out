@@ -894,7 +894,8 @@ function processRealtimeObject(obj) {
                     obj.data_assigned.accessId.in_out &&
                     obj.data_assigned.accessId.in_out.length > 0) {
                     const id_in_out = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["id"]
-                    const typeOfWeight = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["idWeight2"] === null ? "in" : "out";
+                    const isTestAccess = obj.data_assigned.accessId.type === "Test";
+                    const typeOfWeight = isTestAccess ? "print" : (obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length-1]["idWeight2"] === null ? "in" : "out");
                     const params = getParamsFromQueryString();
                     const inOutPdf = instances[params.instance_name]["nodes"][params.weigher_name]["events"]["weighing"]["report"][typeOfWeight];
                     if (inOutPdf) {

@@ -2068,6 +2068,9 @@
                                 <label><input type="checkbox" name="report_on_out"> Genera report all'uscita</label>
                             </div>
                             <div class="form-group">
+                                <label><input type="checkbox" name="report_on_print"> Genera report alla stampa</label>
+                            </div>
+                            <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in"> Genera CSV all'entrata</label>
                             </div>
                             <div class="form-group">
@@ -2231,6 +2234,9 @@
                                 <label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report all'uscita</label>
                             </div>
                             <div class="form-group">
+                                <label><input type="checkbox" name="report_on_print" ${node.events?.weighing?.report?.print ? 'checked' : ''}> Genera report alla stampa</label>
+                            </div>
+                            <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV all'entrata</label>
                             </div>
                             <div class="form-group">
@@ -2353,6 +2359,7 @@
             data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
             data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
             data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.report_on_print = form.querySelector('[name="report_on_print"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
 
@@ -2504,6 +2511,7 @@
             data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
             data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
             data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.report_on_print = form.querySelector('[name="report_on_print"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
 
