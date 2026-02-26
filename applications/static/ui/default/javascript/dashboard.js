@@ -1172,8 +1172,8 @@ async function handlePTara() {
     if (r.detail || (r.command_details && r.command_details.command_executed === false)) showSnackbar("snackbar", r.detail || r.command_details.error_message, 'rgb(255, 208, 208)', 'black');
 }
 
-async function handleStampa() {
-    if (test_mode) {
+async function handleStampa(event) {
+    if (test_mode && event && event.getModifierState && event.getModifierState('CapsLock')) {
         document.getElementById('testWeightInput').value = '';
         openPopup('testWeightPopup', 'testWeightInput');
         return;
