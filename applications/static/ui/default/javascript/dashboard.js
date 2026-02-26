@@ -92,19 +92,6 @@ const presetTareButton = document.getElementById('pTareButton');
 const inButton = document.getElementById('inButton')
 const printButton = document.getElementById('printButton');
 const outButton = document.getElementById('outButton');
-const capsLockBar = document.getElementById('capsLockBar');
-
-// Rileva stato Caps Lock su keydown/keyup
-document.addEventListener('keydown', (e) => {
-    if (test_mode) {
-        capsLockBar.style.display = e.getModifierState('CapsLock') ? 'block' : 'none';
-    }
-});
-document.addEventListener('keyup', (e) => {
-    if (test_mode) {
-        capsLockBar.style.display = e.getModifierState('CapsLock') ? 'block' : 'none';
-    }
-});
 const firmware = document.getElementById('firmware');
 const modelName = document.getElementById('modelName');
 const serialNumber = document.getElementById('serialNumber');
