@@ -572,7 +572,7 @@ function updateOnlineStatus() {
     }
 }
 
-myNumberInput.onkeydown = function(event) {
+function numericOnlyKeydown(event) {
     // Controlla se il tasto premuto è una freccia, Backspace, o altre combinazioni speciali
     const validKeys = [
         'Backspace', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Control', 'Meta', 'Tab'
@@ -592,7 +592,10 @@ myNumberInput.onkeydown = function(event) {
     if (isNaN(event.key) && !validKeys.includes(event.key)) {
         event.preventDefault(); // Blocca il tasto
     }
-};
+}
+
+myNumberInput.onkeydown = numericOnlyKeydown;
+document.getElementById('testWeightInput').onkeydown = numericOnlyKeydown;
 
 // script.js
 function showSnackbarDashboard(message) {
