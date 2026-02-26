@@ -59,6 +59,7 @@
                 "images"
             ]
         },
+        "test_mode": true,
         "use_anagrafic": {
             "document_reference": true,
             "driver": true,
@@ -78,7 +79,6 @@
                 "pid": true
             }
         },
-        "test_mode": false,
         "use_badge": false,
         "use_preset_weight": true,
         "use_recordings": true,
@@ -142,18 +142,18 @@
                         "max_weight": 60000,
                         "min_weight": 200,
                         "name": "P1",
-                        "need_take_of_weight_before_weighing": true,
-                        "need_take_of_weight_on_startup": true,
+                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 1
+                            "1": 0
                         },
                         "run": true,
                         "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": true,
+                        "take_of_weight_on_startup": false,
                         "terminal": "egt-af03-rext"
                     }
                 },
