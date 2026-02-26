@@ -1191,12 +1191,15 @@ async function confirmTestWeight() {
 }
 
 async function executeStampa(weight = null) {
-    buttons.forEach(button => {
-        button.disabled = true;
-        button.classList.add("disabled-button"); // Aggi
-    });
+    const isTestMode = weight !== null;
+    if (!isTestMode) {
+        buttons.forEach(button => {
+            button.disabled = true;
+            button.classList.add("disabled-button");
+        });
+    }
     let url = `${pathname}/api/command-weigher/print${currentWeigherPath}`;
-    if (weight !== null) {
+    if (isTestMode) {
         url += `&weight=${weight}`;
     }
     const r = await fetch(url)
@@ -1205,14 +1208,20 @@ async function executeStampa(weight = null) {
     })
     .catch(error => console.error('Errore nella fetch:', error));
     if (r && r.command_details && r.command_details.command_executed == true) {
-        showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
-        if (return_pdf_copy_after_weighing) access_id = r.access_id;
+        if (isTestMode) {
+            showSnackbar("snackbar", "Pesata test eseguita!", 'rgb(208, 255, 208)', 'black');
+        } else {
+            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            if (return_pdf_copy_after_weighing) access_id = r.access_id;
+        }
     } else {
         showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
-        buttons.forEach(button => {
-            button.disabled = false;
-            button.classList.remove("disabled-button"); // Aggi
-        });
+        if (!isTestMode) {
+            buttons.forEach(button => {
+                button.disabled = false;
+                button.classList.remove("disabled-button");
+            });
+        }
     }
 }
 
