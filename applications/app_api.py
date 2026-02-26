@@ -198,7 +198,7 @@ def init():
 		try:
 			nome_variabile = ""
 			type = "GENERICA"
-			type_default_report = "PRINT"
+			type_default_report = "GENERIC"
 			file_path = path_ui / "report-designer.html"
 
 			if not file_path.is_file():
