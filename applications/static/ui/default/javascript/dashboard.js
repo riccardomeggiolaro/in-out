@@ -1210,6 +1210,26 @@ async function executeStampa(weight = null) {
     if (r && r.command_details && r.command_details.command_executed == true) {
         if (isTestMode) {
             showSnackbar("snackbar", "Pesata test eseguita!", 'rgb(208, 255, 208)', 'black');
+            if (return_pdf_copy_after_weighing && r.in_out_id) {
+                fetch(`/api/anagrafic/access/in-out/pdf/${r.in_out_id}`)
+                .then(res => {
+                    const disposition = res.headers.get('Content-Disposition');
+                    let filename = 'export.pdf';
+                    if (disposition && disposition.indexOf('filename=') !== -1) {
+                        filename = disposition.split('filename=')[1].replace(/["']/g, '').trim();
+                    }
+                    return res.blob().then(blob => ({ blob, filename }));
+                })
+                .then(({ blob, filename }) => {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = window.URL.createObjectURL(blob);
+                    downloadLink.download = filename;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                });
+            }
+            populateListIn();
         } else {
             showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
