@@ -260,7 +260,8 @@ class ConfigWeigher(CommandWeigherRouter):
 			"weighing": {
 				"report": {
 					"in": setup.report_on_in if setup.report_on_in is not None else False,
-					"out": setup.report_on_out if setup.report_on_out is not None else False
+					"out": setup.report_on_out if setup.report_on_out is not None else False,
+					"generic": setup.report_on_generic if setup.report_on_generic is not None else False
 				},
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,
@@ -316,6 +317,8 @@ class ConfigWeigher(CommandWeigherRouter):
 			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"] = setup.report_on_in
 		if setup.report_on_out is not None:
 			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"] = setup.report_on_out
+		if setup.report_on_generic is not None:
+			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["generic"] = setup.report_on_generic
 		if setup.max_theshold != -1:
 			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"] = setup.max_theshold
 		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"] = setup.printer_name
@@ -331,7 +334,8 @@ class ConfigWeigher(CommandWeigherRouter):
 			"weighing": {
 				"report": {
 					"in": setup.report_on_in if setup.report_on_in is not None else False,
-					"out": setup.report_on_out if setup.report_on_out is not None else False
+					"out": setup.report_on_out if setup.report_on_out is not None else False,
+					"generic": setup.report_on_generic if setup.report_on_generic is not None else False
 				},
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,

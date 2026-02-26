@@ -586,6 +586,10 @@
                     <button onclick="openTemplateEditor('uscita')">Apri report designer</button>
                     <br>
                     <br>
+                    <label for="generic-report">Report di stampa per la <b>pesatura generica</b>: </label>
+                    <button onclick="openTemplateEditor('generica')">Apri report designer</button>
+                    <br>
+                    <br>
                 </div>
                 <br>
                 <div class="borders aliceblue">
@@ -1983,6 +1987,7 @@
                             <p><b>Numero di stampe</b>: ${node.number_of_prints}</p>
                             <p><b>Report in entrata</b>: ${node.events?.weighing?.report?.in ? 'Sì' : 'No'}</p>
                             <p><b>Report in uscita</b>: ${node.events?.weighing?.report?.out ? 'Sì' : 'No'}</p>
+                            <p><b>Report pesatura generica</b>: ${node.events?.weighing?.report?.generic ? 'Sì' : 'No'}</p>
                             <p><b>CSV in entrata</b>: ${node.events?.weighing?.csv?.in ? 'Sì' : 'No'}</p>
                             <p><b>CSV in uscita</b>: ${node.events?.weighing?.csv?.out ? 'Sì' : 'No'}</p>
                             <p><b>Scaricare pesa dopo pesata</b>: ${node.need_take_of_weight_before_weighing ? 'Sì' : 'No'}</p>
@@ -2083,6 +2088,9 @@
                             </div>
                             <div class="form-group">
                                 <label><input type="checkbox" name="report_on_out"> Genera report all'uscita</label>
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" name="report_on_generic"> Genera report pesatura generica</label>
                             </div>
                             <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in"> Genera CSV all'entrata</label>
@@ -2248,6 +2256,9 @@
                                 <label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report all'uscita</label>
                             </div>
                             <div class="form-group">
+                                <label><input type="checkbox" name="report_on_generic" ${node.events?.weighing?.report?.generic ? 'checked' : ''}> Genera report pesatura generica</label>
+                            </div>
+                            <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV all'entrata</label>
                             </div>
                             <div class="form-group">
@@ -2370,6 +2381,7 @@
             data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
             data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
             data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.report_on_generic = form.querySelector('[name="report_on_generic"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
 
@@ -2521,6 +2533,7 @@
             data.continuous_transmission = form.querySelector('[name="continuous_transmission"]').checked;
             data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
             data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
+            data.report_on_generic = form.querySelector('[name="report_on_generic"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
 
