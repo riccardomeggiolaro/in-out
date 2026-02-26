@@ -78,6 +78,7 @@
                 "pid": true
             }
         },
+        "test_mode": false,
         "use_badge": false,
         "use_preset_weight": true,
         "use_recordings": true,

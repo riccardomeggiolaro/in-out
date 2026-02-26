@@ -15,6 +15,7 @@ from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO
 from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
 from modules.md_database.functions.add_data import add_data
+from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.get_in_out_by_id import get_in_out_by_id
 from applications.middleware.auth import get_user
 import threading
@@ -22,9 +23,10 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.weigher.types import DataAssignedDTO
 import datetime as dt
 import applications.utils.utils as utils
-from applications.utils.utils_report import get_data_variables, generate_html_report, save_file_dir
+from applications.utils.utils_report import get_data_variables, generate_html_report, generate_csv_report, save_file_dir
 from libs.lb_printer import printer
 from applications.router.weigher.types import Data
+from libs.lb_utils import base_path
 
 class CommandWeigherRouter(DataRouter, AccessRouter):
 	def __init__(self):
@@ -166,23 +168,118 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"in_out": in_out
 		}
 
-	async def Generic(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+	async def Generic(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), weight: Optional[int] = None):
+		test_mode = lb_config.g_config["app_api"].get("test_mode", False)
 		status_modope, command_executed, error_message = 500, False, ""
 		access_id = None
 		if weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
+		elif test_mode:
+			# MODALITA' TEST: accetta un peso finto e non esegue il PID
+			if weight is None:
+				error_message = "In modalità test è necessario specificare il parametro 'weight' (peso finto)."
+			else:
+				# RECUPERA LA TARA CORRENTE DAL REALTIME (se disponibile)
+				tare = 0
+				is_preset_tare = False
+				try:
+					realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+					if realtime.tare:
+						tare_str = realtime.tare.replace("PT", "").replace(" ", "")
+						if "PT" in realtime.tare:
+							is_preset_tare = True
+						tare = float(tare_str) if "." in tare_str or "," in tare_str else int(tare_str)
+				except Exception:
+					tare = 0
+				gross_weight = weight
+				net_weight = gross_weight - tare if tare > 0 else None
+				# CREA L'ACCESSO DI TIPO TEST
+				access = await self.addAccess(request=None, body=AddAccessDTO(**{
+					**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"],
+					"number_in_out": 1,
+					"type": "TEST",
+					"hidden": True
+				}))
+				access_id = access.id
+				# RECUPERA IL MATERIALE DAI DATI IN ESECUZIONE
+				id_material = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["id"]
+				description_material = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["description"]
+				# SALVA LA PESATA SENZA PID
+				weighing_stored_db = add_data("weighing", {
+					"date": dt.datetime.now(),
+					"weigher": instance.weigher_name,
+					"weigher_serial_number": None,
+					"pid": None,
+					"tare": tare,
+					"is_preset_tare": is_preset_tare,
+					"weight": gross_weight,
+					"log": None,
+					"idUser": request.state.user.id,
+					"idOperator": None,
+				})
+				# CREA IL RECORD IN-OUT: primo peso se tara=0, secondo peso se tara>0
+				in_out = add_data("in_out", {
+					"idAccess": access.id,
+					"idMaterial": id_material,
+					"idWeight1": weighing_stored_db["id"] if tare == 0 else None,
+					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
+					"net_weight": net_weight if tare > 0 else None
+				})
+				# CHIUDI L'ACCESSO
+				update_data("access", access.id, {
+					"status": AccessStatus.CLOSED,
+					"hidden": False
+				})
+				# RECUPERA L'IN-OUT CON TUTTE LE RELAZIONI PER LA STAMPA
+				last_in_out = get_in_out_by_id(in_out["id"])
+				# RIMUOVE I DATI IN ESECUZIONE E L'ID SELEZIONATO
+				self.deleteData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				# STAMPA DEL REPORT
+				printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
+				number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
+				reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
+				report_in = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["in"]
+				report_out = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["out"]
+				generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
+				path_pdf = lb_config.g_config['app_api']['path_pdf']
+				if not path_pdf.startswith("/"):
+					path_pdf = f"{base_path}/{path_pdf}"
+				name_file, variables, report = get_data_variables(last_in_out)
+				# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
+				if generate_report and report:
+					html = generate_html_report(reports_dir, report, v=variables.dict())
+					pdf = printer.generate_pdf_from_html(html_content=html)
+					if pdf:
+						job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
+						# SALVA COPIA PDF
+						if path_pdf:
+							save_file_dir(path_pdf, name_file, pdf)
+				# GENERA CSV
+				csv_in = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["csv"]["in"]
+				csv_out = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["csv"]["out"]
+				generate_csv = csv_out if tare > 0 or last_in_out.idWeight2 else csv_in
+				path_csv = lb_config.g_config['app_api']['path_csv']
+				if not path_csv.startswith("/"):
+					path_csv = f"{base_path}/{path_csv}"
+				if generate_csv and path_csv:
+					csv = generate_csv_report(variables)
+					if csv:
+						save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv)
+				status_modope = 200
+				command_executed = True
 		else:
+			# MODALITA' NORMALE: esegue il PID sulla pesa fisica
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-				**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
+				**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"],
 				"number_in_out": 1,
 				"type": "TEST",
 				"hidden": True
 			}))
 			data_assigned = DataAssignedDTO(**{"accessId": access.id, "userId": request.state.user.id})
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
-				instance_name=instance.instance_name, 
-				weigher_name=instance.weigher_name, 
-				modope="WEIGHING", 
+				instance_name=instance.instance_name,
+				weigher_name=instance.weigher_name,
+				modope="WEIGHING",
 			  	data_assigned=data_assigned
 			)
 			access_id = access.id
