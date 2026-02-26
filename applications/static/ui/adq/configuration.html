@@ -583,7 +583,7 @@
                     <br>
                     <br>
                     <label for="print-report">Report di stampa per la <b>pesatura generica</b>: </label>
-                    <button onclick="openTemplateEditor('stampa')">Apri report designer</button>
+                    <button onclick="openTemplateEditor('generica')">Apri report designer</button>
                     <br>
                     <br>
                 </div>
@@ -2072,7 +2072,7 @@
                                 <label><input type="checkbox" name="report_on_out"> Genera report all'uscita</label>
                             </div>
                             <div class="form-group">
-                                <label><input type="checkbox" name="report_on_print"> Genera report alla stampa</label>
+                                <label><input type="checkbox" name="report_on_print"> Genera report alla generica</label>
                             </div>
                             <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in"> Genera CSV all'entrata</label>
@@ -2238,7 +2238,7 @@
                                 <label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report all'uscita</label>
                             </div>
                             <div class="form-group">
-                                <label><input type="checkbox" name="report_on_print" ${node.events?.weighing?.report?.print ? 'checked' : ''}> Genera report alla stampa</label>
+                                <label><input type="checkbox" name="report_on_print" ${node.events?.weighing?.report?.print ? 'checked' : ''}> Genera report alla generica</label>
                             </div>
                             <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV all'entrata</label>
