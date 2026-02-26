@@ -18,9 +18,9 @@
         "path_pdf": "/var/opt/in-out/pdf",
         "path_ui": "static/ui/default",
         "port": 80,
+        "report_generic": "weight_generic.json",
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
-        "report_generic": "weight_generic.json",
         "return_pdf_copy_after_weighing": true,
         "rfid": {
             "connection": {
@@ -60,7 +60,7 @@
                 "images"
             ]
         },
-        "test_mode": true,
+        "test_mode": false,
         "use_anagrafic": {
             "document_reference": true,
             "driver": true,
@@ -126,9 +126,9 @@
                                     "out": true
                                 },
                                 "report": {
-                                    "in": false,
-                                    "out": false,
-                                    "generic": true
+                                    "generic": true,
+                                    "in": true,
+                                    "out": true
                                 },
                                 "set_rele": [
                                     {

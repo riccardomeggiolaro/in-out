@@ -304,10 +304,10 @@ class EgtAf03(Terminal):
 							self.take_of_weight_on_startup = False
 							self.take_of_weight_before_weighing = False
 					elif length_split_response == 5 and length_response == 48:
-						nw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
+						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
 						t = (re.sub('[KkGg\x00\n]', '', split_response[3])).lstrip()
 						tare_without_pt = (re.sub('[PT]', '', t).lstrip())
-						gw = str(sum_number(nw, tare_without_pt))
+						nw = str(int(gw) - int(tare_without_pt))
 						unite_measure = split_response[2][-2:]
 						self.pesa_real_time.status = split_response[0]
 						self.pesa_real_time.type = "GS" if t == "0" else "NT"
