@@ -3411,7 +3411,19 @@
                     'Content-Type': 'application/json'
                 }
             })
-            .then(res => res.json());
+            .then(res => res.json())
+            .then(res => {
+                // Rimuovi il vecchio script navbar.js
+                const oldScript = document.querySelector('script[src*="navbar.js"]');
+                if (oldScript) {
+                    oldScript.remove();
+                }
+
+                // Crea e inserisci il nuovo script
+                const newScript = document.createElement('script');
+                newScript.src = '/static/javascript/navbar.js?t=' + Date.now();
+                document.body.appendChild(newScript);
+            });
         }
 
         function setUseRecordings(status) {
