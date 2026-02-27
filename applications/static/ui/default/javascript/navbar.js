@@ -41,7 +41,11 @@ fetch('navbar.html')
         // Gestisci i risultati della configurazione
         if (!configRes.use_recordings) {
             const pageOfRecordings = document.querySelectorAll(".page-of-recordings");
-            pageOfRecordings.forEach(recordings => recordings.style.display = "none");            
+            pageOfRecordings.forEach(recordings => recordings.style.display = "none");
+        }
+        if (!configRes.use_reservation) {
+            const pageOfReservation = document.querySelectorAll(".page-of-reservation");
+            pageOfReservation.forEach(reservation => reservation.style.display = "none");
         }
         
         // Colora il link attivo
