@@ -200,11 +200,38 @@ class WeighingTerminalRouter(WebSocket):
                 
                 weighing_terminal_list.append(row)
 
+            # Calcola totali per materiale
+            material_totals = {}
+            if load_material:
+                for weighing in data:
+                    material_name = weighing.material if weighing.material else "Non specificato"
+                    net = weighing.net_weight if weighing.net_weight is not None else 0
+                    if material_name in material_totals:
+                        material_totals[material_name] += net
+                    else:
+                        material_totals[material_name] = net
+
             # Crea DataFrame e esporta
             df = pd.DataFrame(weighing_terminal_list)
             output = BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df.to_excel(writer, sheet_name="Pesate", index=False)
+
+                if load_material and material_totals:
+                    workbook = writer.book
+                    worksheet = writer.sheets["Pesate"]
+                    bold_format = workbook.add_format({'bold': True})
+
+                    start_row = len(weighing_terminal_list) + 2
+                    worksheet.write(start_row, 0, "Totali per materiale", bold_format)
+                    start_row += 1
+                    worksheet.write(start_row, 0, "Materiale", bold_format)
+                    worksheet.write(start_row, 1, "Netto (kg)", bold_format)
+                    start_row += 1
+                    for material_name, total_kg in sorted(material_totals.items(), key=lambda x: (x[0] == "Non specificato", x[0])):
+                        worksheet.write(start_row, 0, material_name)
+                        worksheet.write(start_row, 1, total_kg)
+                        start_row += 1
 
             output.seek(0)
             return StreamingResponse(
@@ -410,6 +437,40 @@ class WeighingTerminalRouter(WebSocket):
             t.setStyle(table_style)
             story.append(t)
 
+            # Aggiungi totali per materiale
+            if load_material:
+                material_totals = {}
+                for weighing in data:
+                    material_name = weighing.material if weighing.material else "Non specificato"
+                    net = weighing.net_weight if weighing.net_weight is not None else 0
+                    if material_name in material_totals:
+                        material_totals[material_name] += net
+                    else:
+                        material_totals[material_name] = net
+
+                if material_totals:
+                    story.append(Spacer(1, 0.3*inch))
+                    story.append(Paragraph("Totali per materiale", styles['Heading3']))
+                    story.append(Spacer(1, 0.1*inch))
+
+                    totals_data = [['Materiale', 'Netto (kg)']]
+                    for material_name, total_kg in sorted(material_totals.items(), key=lambda x: (x[0] == "Non specificato", x[0])):
+                        totals_data.append([material_name, str(total_kg)])
+
+                    totals_table = Table(totals_data, colWidths=[200, 100])
+                    totals_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), header_color),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                        ('TOPPADDING', (0, 0), (-1, -1), 4),
+                        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ]))
+                    story.append(totals_table)
+
             # Build PDF
             doc.build(story)
             buffer.seek(0)
@@ -419,7 +480,7 @@ class WeighingTerminalRouter(WebSocket):
                 media_type="application/pdf",
                 headers={"Content-Disposition": "attachment; filename=pesate.pdf"}
             )
-            
+
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
