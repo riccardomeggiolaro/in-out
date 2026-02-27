@@ -16,6 +16,7 @@ def get_list_accesses(
     permanent=None,
     get_is_last_for_vehicle=False,
     permanentIfWeight1=False,
+    exclude_manually_access=False,
     load_subject=True,
     load_vector=True,
     load_driver=True,
@@ -132,6 +133,9 @@ def get_list_accesses(
 
         if exclude_test_access:
             query = query.filter(Access.type != TypeAccess.TEST.name)
+
+        if exclude_manually_access:
+            query = query.filter(Access.type != TypeAccess.MANUALLY.name)
 
         if permanent is not None:
             if permanent is True:

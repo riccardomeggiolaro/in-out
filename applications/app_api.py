@@ -122,11 +122,11 @@ def init():
  
 	@app.get("/access", response_class=HTMLResponse)
 	async def Access(request: Request):
-		use_reservation = lb_config.g_config["app_api"]["use_reservation"]
-		file_name = "access.html"
-		if use_reservation:
-			file_name = "reservation.html"
-		return templates.TemplateResponse(file_name, {"request": request})
+		return templates.TemplateResponse("access.html", {"request": request})
+
+	@app.get("/reservation", response_class=HTMLResponse)
+	async def Reservation(request: Request):
+		return templates.TemplateResponse("reservation.html", {"request": request})
  
 	@app.get('/report-designer/entrata', response_class=HTMLResponse)
 	async def report_designer(request: Request):
