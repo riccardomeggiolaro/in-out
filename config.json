@@ -60,7 +60,7 @@
                 "images"
             ]
         },
-        "test_mode": false,
+        "test_mode": true,
         "use_anagrafic": {
             "document_reference": true,
             "driver": true,
