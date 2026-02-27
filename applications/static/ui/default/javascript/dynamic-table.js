@@ -783,9 +783,10 @@ function closeRow(item) {
     }
     confirm_exec_funct = funct;
     document.querySelector('#confirm-title').textContent = "Attenzione!";
-    document.querySelector('#confirm-content').innerHTML = `
-        Sei sicuro di voler chiudere questo accesso?
-    `;
+    const closeMessage = window.location.pathname === '/reservation'
+        ? 'Sei sicuro di voler chiudere questa prenotazione?'
+        : 'Sei sicuro di voler chiudere questo accesso?';
+    document.querySelector('#confirm-content').innerHTML = closeMessage;
     openPopup('confirm-popup');
 }
 
