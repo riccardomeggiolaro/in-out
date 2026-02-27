@@ -527,7 +527,7 @@ class AccessRouter(PanelSirenRouter):
 
             # Add title with smaller spacing
             styles = getSampleStyleSheet()
-            title = Paragraph("Accessi", styles['Heading2'])
+            title = Paragraph("Pesate", styles['Heading2'])
             story.append(title)
             story.append(Spacer(1, 0.2*inch))
 
