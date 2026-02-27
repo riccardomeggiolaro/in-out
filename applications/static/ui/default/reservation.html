@@ -4,7 +4,7 @@
         <link rel="icon" href="/static/content/baronpesi_favicon.png">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Accessi</title>
+        <title>Prenotazioni</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -50,7 +50,7 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Accessi</h2>
+            <h2>Prenotazioni</h2>
             <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button onclick="exportTable('xlsx')"><img src="/static/content/xlsx.png" alt="" style="width: 30px;"></button>
                 <button onclick="exportTable('pdf')"><img src="/static/content/pdf.png" alt="" style="width: 25px;"></button>
@@ -145,7 +145,7 @@
     <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'edit-inout-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Prenota accesso:</h3>
+        <h3>Crea prenotazione:</h3>
         <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
             <div class="badge">
                 <div class="item-25">
@@ -342,7 +342,7 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica accesso:</h3>
+        <h3>Modifica prenotazione:</h3>
         <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
             <div class="badge">
                 <div class="item-25">
@@ -651,10 +651,6 @@
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 1.1rem;">⭐</span>
                 <span style="color: #555;">Permanenti</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 1.1rem;">✍️</span>
-                <span style="color: #555;">Manuali</span>
             </div>
         </div>
     </div>
