@@ -1148,6 +1148,12 @@ function connectWebSocket() {
                     }
                 } else if (data.action === "unlock") {
                     if (data.success === true) removeWebSocketRequest(data.idRequest);
+                } else if (data.action === "config_change") {
+                    if ("use_reservation" in data.data) {
+                        config.use_reservation = data.data.use_reservation;
+                        const pageOfReservation = document.querySelectorAll(".page-of-reservation");
+                        pageOfReservation.forEach(el => el.style.display = data.data.use_reservation ? "" : "none");
+                    }
                 }
             } else {
                 showSnackbar("snackbar", data.error, 'rgb(255, 208, 208)', 'black');

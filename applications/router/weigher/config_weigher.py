@@ -17,6 +17,7 @@ from modules.md_database.functions.get_data_by_attribute import get_data_by_attr
 from applications.utils.utils_auth import create_access_token
 import socket
 from applications.router.weigher.manager_weighers_data import weighers_data
+from applications.router.anagrafic.manager_anagrafics import manager_anagrafics
 from modules.md_sync_folder.dto import SyncFolderDTO
 import random
 import string
@@ -71,6 +72,7 @@ class ConfigWeigher(CommandWeigherRouter):
 	async def SetUseReservation(self, use_reservation: bool):
 		lb_config.g_config["app_api"]["use_reservation"] = use_reservation
 		lb_config.saveconfig()
+		await manager_anagrafics["access"].broadcast({"action": "config_change", "data": {"use_reservation": use_reservation}})
 		return { "use_reservation": use_reservation }
 
 	async def SetUseWhiteList(self, use_white_list: bool):
