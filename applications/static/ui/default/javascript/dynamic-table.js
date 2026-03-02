@@ -1053,7 +1053,11 @@ function connectWebSocket() {
                             if (isExpandedRow() && data.data["weighing"].id == currentId) {
                                 toggleExpandRow(currentRow);
                                 const liFirstChildP = currentRow.nextElementSibling?.querySelector('li:first-child p');
-                                if (liFirstChildP) liFirstChildP.classList.toggle('soft-added');
+                                if (liFirstChildP) {
+                                    liFirstChildP.classList.toggle('soft-added');
+                                } else {
+                                    if (tr) tr.classList.toggle('soft-added');
+                                }
                             } else {
                                 if (tr) tr.classList.toggle('soft-added');
                                 if (isExpandedRow()) {
@@ -1104,7 +1108,18 @@ function connectWebSocket() {
                                         })
                                     }, { once: true });
                                 } else {
-                                    await updateTable();
+                                    tr.classList.toggle('soft-deleted');
+                                    tr.addEventListener('animationend', async () => {
+                                        await updateTable()
+                                        .then(_ => {
+                                            currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
+                                            if (isExpandedRow())  {
+                                                try {
+                                                    toggleExpandRow(currentRow);
+                                                } catch {}
+                                            }
+                                        })
+                                    }, { once: true });
                                 }
                             } else {
                                 tr.classList.toggle('soft-deleted');
