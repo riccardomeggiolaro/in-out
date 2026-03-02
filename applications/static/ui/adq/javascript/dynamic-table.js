@@ -1013,7 +1013,8 @@ function connectWebSocket() {
                         if (firstKey === "weighing") {
                             if (isExpandedRow() && data.data["weighing"].id == currentId) {
                                 toggleExpandRow(currentRow);
-                                currentRow.nextElementSibling.querySelector('li:first-child p').classList.toggle('soft-added');
+                                const liFirstChildP = currentRow.nextElementSibling?.querySelector('li:first-child p');
+                                if (liFirstChildP) liFirstChildP.classList.toggle('soft-added');
                             } else {
                                 if (tr) tr.classList.toggle('soft-added');
                                 if (isExpandedRow()) {
@@ -1049,16 +1050,21 @@ function connectWebSocket() {
                     if (tr) {
                         if (firstKey === "weighing") {
                             if (isExpandedRow() && data.data["weighing"].id == currentId) {
-                                currentRowExtended.querySelector('li:first-child p').classList.toggle('deleted');
-                                currentRowExtended.querySelector('li:first-child p').addEventListener('animationend', async () => {
-                                    await updateTable()
-                                    .then(_ => {
-                                        currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
-                                        if (isExpandedRow())  {
-                                            toggleExpandRow(currentRow);
-                                        }
-                                    })
-                                }, { once: true });
+                                const liFirstChildP = currentRowExtended.querySelector('li:first-child p');
+                                if (liFirstChildP) {
+                                    liFirstChildP.classList.toggle('deleted');
+                                    liFirstChildP.addEventListener('animationend', async () => {
+                                        await updateTable()
+                                        .then(_ => {
+                                            currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
+                                            if (isExpandedRow())  {
+                                                toggleExpandRow(currentRow);
+                                            }
+                                        })
+                                    }, { once: true });
+                                } else {
+                                    await updateTable();
+                                }
                             } else {
                                 tr.classList.toggle('soft-deleted');
                                 tr.addEventListener('animationend', async () => {
