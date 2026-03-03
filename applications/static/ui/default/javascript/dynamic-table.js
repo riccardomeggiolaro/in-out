@@ -1109,8 +1109,8 @@ function connectWebSocket() {
                                     }, { once: true });
                                 } else {
                                     // Pagina access: dissolvenza se unica pesata, flash rosso altrimenti
-                                    const allRowsForAccess = obj.table.querySelectorAll(`[data-id="${data.data[firstKey].id}"]`);
-                                    const accessDeleteAnimClass = allRowsForAccess.length <= 1 ? 'deleted' : 'soft-deleted';
+                                    const accessData = data.data[firstKey];
+                                    const accessDeleteAnimClass = (accessData.in_out && accessData.in_out.length > 0) ? 'soft-deleted' : 'deleted';
                                     tr.classList.toggle(accessDeleteAnimClass);
                                     tr.addEventListener('animationend', async () => {
                                         await updateTable()
