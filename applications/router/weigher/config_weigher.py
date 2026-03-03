@@ -273,11 +273,13 @@ class ConfigWeigher(CommandWeigherRouter):
 				"report": {
 					"in": setup.report_on_in if setup.report_on_in is not None else False,
 					"out": setup.report_on_out if setup.report_on_out is not None else False,
+					"tare": setup.report_on_tare if setup.report_on_tare is not None else False,
 					"generic": setup.report_on_generic if setup.report_on_generic is not None else True
 				},
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,
-					"out": setup.csv_on_out if setup.csv_on_out is not None else False
+					"out": setup.csv_on_out if setup.csv_on_out is not None else False,
+					"tare": setup.csv_on_tare if setup.csv_on_tare is not None else False
 				},
 				"set_rele": [rele.dict() for rele in setup.weighing],
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
@@ -329,6 +331,8 @@ class ConfigWeigher(CommandWeigherRouter):
 			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"] = setup.report_on_in
 		if setup.report_on_out is not None:
 			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"] = setup.report_on_out
+		if setup.report_on_tare is not None:
+			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["tare"] = setup.report_on_tare
 		if setup.max_theshold != -1:
 			lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["max_theshold"] = setup.max_theshold
 		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["printer_name"] = setup.printer_name
@@ -345,11 +349,13 @@ class ConfigWeigher(CommandWeigherRouter):
 				"report": {
 					"in": setup.report_on_in if setup.report_on_in is not None else False,
 					"out": setup.report_on_out if setup.report_on_out is not None else False,
+					"tare": setup.report_on_tare if setup.report_on_tare is not None else False,
 					"generic": setup.report_on_generic if setup.report_on_generic is not None else True
 				},
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,
-					"out": setup.csv_on_out if setup.csv_on_out is not None else False
+					"out": setup.csv_on_out if setup.csv_on_out is not None else False,
+					"tare": setup.csv_on_tare if setup.csv_on_tare is not None else False
 				},
 				"set_rele": [rele.dict() for rele in setup.weighing],
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]

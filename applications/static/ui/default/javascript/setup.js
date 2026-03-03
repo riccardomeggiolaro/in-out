@@ -337,6 +337,11 @@ async function loadSetupWeighers() {
         labelReportOut.innerHTML = "Report di stampa per l'<b><u>uscita</u></b>: ";
         buttonReportDesignerTemplateOut.textContent = "Apri report designer";
         buttonReportDesignerTemplateOut.onclick = () => window.open('/report-designer/uscita', '_blank');
+        const labelReportGeneric = document.createElement('label');
+        const buttonReportDesignerTemplateGeneric = document.createElement('button');
+        labelReportGeneric.innerHTML = "Report di stampa per la <b><u>generica</u></b>: ";
+        buttonReportDesignerTemplateGeneric.textContent = "Apri report designer";
+        buttonReportDesignerTemplateGeneric.onclick = () => window.open('/report-designer/generica', '_blank');
         const labelReportTare = document.createElement('label');
         const buttonReportDesignerTemplateTare = document.createElement('button');
         labelReportTare.innerHTML = "Report di stampa per la <b><u>tara</u></b>: ";
@@ -646,6 +651,10 @@ async function loadSetupWeighers() {
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(labelReportOut);
         divReport.appendChild(buttonReportDesignerTemplateOut);
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(labelReportGeneric);
+        divReport.appendChild(buttonReportDesignerTemplateGeneric);
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(labelReportTare);
@@ -1350,6 +1359,10 @@ async function loadSetupWeighers() {
                             <input type="checkbox" name="report_on_out">
                         </div>
                         <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Genera report alla tara</label><br>
+                            <input type="checkbox" name="report_on_tare">
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
                             <label>Genera report alla generica</label><br>
                             <input type="checkbox" name="report_on_generic" checked>
                         </div>
@@ -1372,6 +1385,10 @@ async function loadSetupWeighers() {
                         <div class="form-group" style="flex: 1; text-align: center;">
                             <label>Genera CSV all'uscita</label><br>
                             <input type="checkbox" name="csv_on_out">
+                        </div>
+                        <div class="form-group" style="flex: 1; text-align: center;">
+                            <label>Genera CSV alla tara</label><br>
+                            <input type="checkbox" name="csv_on_tare">
                         </div>
                     </div>
                     <div class="form-group">
@@ -1642,6 +1659,10 @@ async function loadSetupWeighers() {
                                 <input type="checkbox" name="report_on_out" ${data.events?.weighing?.report?.out ? 'checked' : ''}>
                             </div>
                             <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Genera report alla tara</label><br>
+                                <input type="checkbox" name="report_on_tare" ${data.events?.weighing?.report?.tare ? 'checked' : ''}>
+                            </div>
+                            <div class="form-group" style="flex: 1; text-align: center;">
                                 <label>Genera report alla generica</label><br>
                                 <input type="checkbox" name="report_on_generic" ${data.events?.weighing?.report?.generic ? 'checked' : ''}>
                             </div>
@@ -1664,6 +1685,10 @@ async function loadSetupWeighers() {
                             <div class="form-group" style="flex: 1; text-align: center;">
                                 <label>Genera CSV all'uscita</label><br>
                                 <input type="checkbox" name="csv_on_out" ${data.events?.weighing?.csv?.out ? 'checked' : ''}>
+                            </div>
+                            <div class="form-group" style="flex: 1; text-align: center;">
+                                <label>Genera CSV alla tara</label><br>
+                                <input type="checkbox" name="csv_on_tare" ${data.events?.weighing?.csv?.tare ? 'checked' : ''}>
                             </div>
                         </div>
                         <div class="form-group">
