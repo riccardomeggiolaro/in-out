@@ -395,8 +395,9 @@ class AccessRouter(PanelSirenRouter):
                 in_out_list.append(row)
 
             # Calcola totali per materiale
+            show_export_totals = lb_config.g_config["app_api"].get("show_export_totals", True)
             material_totals = {}
-            if load_material:
+            if load_material and show_export_totals:
                 for inout in data:
                     material_name = inout.material.description if inout.material and inout.material.description else "Non specificato"
                     net = inout.net_weight if inout.net_weight is not None else 0
@@ -411,7 +412,7 @@ class AccessRouter(PanelSirenRouter):
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df.to_excel(writer, sheet_name="Accessi", index=False)
 
-                if load_material and material_totals:
+                if load_material and show_export_totals and material_totals:
                     workbook = writer.book
                     worksheet = writer.sheets["Accessi"]
                     bold_format = workbook.add_format({'bold': True})
@@ -680,7 +681,8 @@ class AccessRouter(PanelSirenRouter):
             story.append(t)
 
             # Aggiungi totali per materiale
-            if load_material:
+            show_export_totals = lb_config.g_config["app_api"].get("show_export_totals", True)
+            if load_material and show_export_totals:
                 material_totals = {}
                 for inout in data:
                     material_name = inout.material.description if inout.material and inout.material.description else "Non specificato"

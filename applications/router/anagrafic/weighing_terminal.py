@@ -201,8 +201,9 @@ class WeighingTerminalRouter(WebSocket):
                 weighing_terminal_list.append(row)
 
             # Calcola totali per materiale
+            show_export_totals = lb_config.g_config["app_api"].get("show_export_totals", True)
             material_totals = {}
-            if load_material:
+            if load_material and show_export_totals:
                 for weighing in data:
                     material_name = weighing.material if weighing.material else "Non specificato"
                     net = weighing.net_weight if weighing.net_weight is not None else 0
@@ -217,7 +218,7 @@ class WeighingTerminalRouter(WebSocket):
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df.to_excel(writer, sheet_name="Pesate", index=False)
 
-                if load_material and material_totals:
+                if load_material and show_export_totals and material_totals:
                     workbook = writer.book
                     worksheet = writer.sheets["Pesate"]
                     bold_format = workbook.add_format({'bold': True})
@@ -438,7 +439,8 @@ class WeighingTerminalRouter(WebSocket):
             story.append(t)
 
             # Aggiungi totali per materiale
-            if load_material:
+            show_export_totals = lb_config.g_config["app_api"].get("show_export_totals", True)
+            if load_material and show_export_totals:
                 material_totals = {}
                 for weighing in data:
                     material_name = weighing.material if weighing.material else "Non specificato"

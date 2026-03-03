@@ -582,6 +582,10 @@
                     <input type="checkbox" id="test-mode" onclick="setTestMode(this.checked)">
                     <br>
                     <br>
+                    <label for="export-totals">Mostra <b>totali</b> nell'esportazione della lista: </label>
+                    <input type="checkbox" id="export-totals" onclick="setShowExportTotals(this.checked)">
+                    <br>
+                    <br>
                     <label for="entry-report">Report di stampa per <b>l'entrata</b>: </label>
                     <button onclick="openTemplateEditor('entrata')">Apri report designer</button>
                     <br>
@@ -1220,6 +1224,7 @@
         const reportCopy = document.querySelector("#report-copy");
         const presetWeight = document.querySelector("#preset-weight");
         const testModeCheckbox = document.querySelector("#test-mode");
+        const showExportTotals = document.querySelector("#export-totals");
 
         // Sync folder modal elements
         const syncFolderModal = document.querySelector("#sync-folder-modal");
@@ -1718,6 +1723,8 @@
                 if (res.use_preset_weight) presetWeight.checked = true;
 
                 if (res.test_mode) testModeCheckbox.checked = true;
+
+                if (res.show_export_totals) showExportTotals.checked = true;
 
                 // Load sync folder configuration
                 if (res.sync_folder.remote_folder) {
@@ -3504,6 +3511,16 @@
 
         function setTestMode(status) {
             fetch(`/api/config-weigher/configuration/test-mode/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setShowExportTotals(status) {
+            fetch(`/api/config-weigher/configuration/show-export-totals/${status}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
