@@ -1092,6 +1092,9 @@ function connectWebSocket() {
                     let currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
                     if (tr) {
                         if (firstKey === "weighing") {
+                            // Conta le righe con lo stesso access ID per determinare l'animazione
+                            const allRowsForAccess = obj.table.querySelectorAll(`[data-id="${data.data[firstKey].id}"]`);
+                            const deleteAnimClass = allRowsForAccess.length <= 1 ? 'deleted' : 'soft-deleted';
                             if (isExpandedRow() && data.data["weighing"].id == currentId && config["use_reservation"] === true) {
                                 const liFirstChildP = currentRowExtended.querySelector('li:first-child p');
                                 if (liFirstChildP && !liFirstChildP.querySelector('.imgs')) {
@@ -1108,7 +1111,7 @@ function connectWebSocket() {
                                         })
                                     }, { once: true });
                                 } else {
-                                    tr.classList.toggle('soft-deleted');
+                                    tr.classList.toggle(deleteAnimClass);
                                     tr.addEventListener('animationend', async () => {
                                         await updateTable()
                                         .then(_ => {
@@ -1122,7 +1125,7 @@ function connectWebSocket() {
                                     }, { once: true });
                                 }
                             } else {
-                                tr.classList.toggle('soft-deleted');
+                                tr.classList.toggle(deleteAnimClass);
                                 tr.addEventListener('animationend', async () => {
                                     await updateTable()
                                     .then(_ => {
