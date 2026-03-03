@@ -1094,7 +1094,7 @@ function connectWebSocket() {
                         if (firstKey === "weighing") {
                             if (isExpandedRow() && data.data["weighing"].id == currentId && config["use_reservation"] === true) {
                                 const liFirstChildP = currentRowExtended.querySelector('li:first-child p');
-                                if (liFirstChildP) {
+                                if (liFirstChildP && !liFirstChildP.querySelector('.imgs')) {
                                     liFirstChildP.classList.toggle('deleted');
                                     liFirstChildP.addEventListener('animationend', async () => {
                                         await updateTable()
