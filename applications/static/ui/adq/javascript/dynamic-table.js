@@ -1044,7 +1044,14 @@ function connectWebSocket() {
                         if (isExpandedRow()) {
                             toggleExpandRow(currentRow);
                         }
-                        tr.classList.toggle('updated');
+                        if (firstKey === "weighing") {
+                            const inOutArr = data.data[firstKey].in_out || [];
+                            const lastInOut = inOutArr[inOutArr.length - 1];
+                            const hasBothWeights = lastInOut && lastInOut.idWeight1 && lastInOut.idWeight2;
+                            tr.classList.toggle(hasBothWeights ? 'soft-deleted' : 'updated');
+                        } else {
+                            tr.classList.toggle('updated');
+                        }
                     }
                     showSnackbar("snackbar", capitalizeFirstLetter(`${specific} modificat${lastChar}`), 'rgb(255, 240, 208)', 'black');
                 } else if (data.action === "delete") {
