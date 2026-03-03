@@ -1053,8 +1053,6 @@ function connectWebSocket() {
                     let currentRow = obj.table.querySelector(`[data-id="${currentId}"]`);
                     if (tr) {
                         if (firstKey === "weighing") {
-                            const allRowsForAccess = obj.table.querySelectorAll(`[data-id="${data.data[firstKey].id}"]`);
-                            const deleteAnimClass = allRowsForAccess.length <= 1 ? 'deleted' : 'soft-deleted';
                             if (isExpandedRow() && data.data["weighing"].id == currentId) {
                                 const liFirstChildP = currentRowExtended.querySelector('li:first-child p');
                                 if (liFirstChildP && !liFirstChildP.querySelector('.imgs')) {
@@ -1069,7 +1067,9 @@ function connectWebSocket() {
                                         })
                                     }, { once: true });
                                 } else {
-                                    tr.classList.toggle(deleteAnimClass);
+                                    const allRowsForAccess = obj.table.querySelectorAll(`[data-id="${data.data[firstKey].id}"]`);
+                                    const accessDeleteAnimClass = allRowsForAccess.length <= 1 ? 'deleted' : 'soft-deleted';
+                                    tr.classList.toggle(accessDeleteAnimClass);
                                     tr.addEventListener('animationend', async () => {
                                         await updateTable()
                                         .then(_ => {
@@ -1081,7 +1081,7 @@ function connectWebSocket() {
                                     }, { once: true });
                                 }
                             } else {
-                                tr.classList.toggle(deleteAnimClass);
+                                tr.classList.toggle('soft-deleted');
                                 tr.addEventListener('animationend', async () => {
                                     await updateTable()
                                     .then(_ => {
