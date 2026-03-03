@@ -14,9 +14,12 @@ from applications.utils.utils import image_to_base64_data_uri
 def get_data_variables(in_out, is_generic=False):
     report_in = lb_config.g_config["app_api"]["report_in"]
     report_out = lb_config.g_config["app_api"]["report_out"]
+    report_tare = lb_config.g_config["app_api"].get("report_tare")
     report_generic = lb_config.g_config["app_api"].get("report_generic")
     if is_generic and report_generic:
         report = report_generic
+    elif in_out.idWeight2 and in_out.weight2.tare > 0 and report_tare:
+        report = report_tare
     else:
         report = report_out if in_out.idWeight2 else report_in
     name_file = ""

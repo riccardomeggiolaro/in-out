@@ -225,7 +225,13 @@ class CallbackWeigher(Functions, WebSocket):
 			else:
 				report_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
 				report_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
-				generate_report = report_out if tare > 0 or last_in_out.idWeight2 else report_in
+				report_tare = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"].get("tare", report_out)
+				if tare > 0:
+					generate_report = report_tare
+				elif last_in_out.idWeight2:
+					generate_report = report_out
+				else:
+					generate_report = report_in
 			path_pdf = lb_config.g_config['app_api']['path_pdf']
 			if not path_pdf.startswith("/"):
 				path_pdf = f"{base_path}/{path_pdf}"
@@ -242,7 +248,13 @@ class CallbackWeigher(Functions, WebSocket):
 						save_file_dir(path_pdf, name_file, pdf)
 			csv_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["in"]
 			csv_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["out"]
-			generate_csv = csv_out if tare > 0 or last_in_out.idWeight2 else csv_in
+			csv_tare = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"].get("tare", csv_out)
+			if tare > 0:
+				generate_csv = csv_tare
+			elif last_in_out.idWeight2:
+				generate_csv = csv_out
+			else:
+				generate_csv = csv_in
 			path_csv = lb_config.g_config['app_api']['path_csv']
 			if not path_csv.startswith("/"):
 				path_csv = f"{base_path}/{path_csv}"

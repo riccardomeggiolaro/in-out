@@ -21,6 +21,7 @@
         "report_generic": "weight_generic.json",
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
+        "report_tare": "weight_tare.json",
         "return_pdf_copy_after_weighing": true,
         "show_export_totals": true,
         "rfid": {
@@ -124,12 +125,14 @@
                                 "cams": [],
                                 "csv": {
                                     "in": true,
-                                    "out": true
+                                    "out": true,
+                                    "tare": true
                                 },
                                 "report": {
                                     "generic": true,
                                     "in": true,
-                                    "out": true
+                                    "out": true,
+                                    "tare": true
                                 },
                                 "set_rele": [
                                     {
