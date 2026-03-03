@@ -1135,7 +1135,11 @@ function connectWebSocket() {
                                     }, { once: true });
                                 }
                             } else {
-                                tr.classList.toggle('soft-deleted');
+                                const inOutId = tr.dataset.idInOut ? parseInt(tr.dataset.idInOut) : null;
+                                const newInOuts = data.data[firstKey].in_out || [];
+                                const inOutStillExists = inOutId ? newInOuts.some(io => io.id === inOutId) : true;
+                                const accessDeleteAnimClass = inOutStillExists ? 'soft-deleted' : 'deleted';
+                                tr.classList.toggle(accessDeleteAnimClass);
                                 tr.addEventListener('animationend', async () => {
                                     await updateTable()
                                     .then(_ => {
