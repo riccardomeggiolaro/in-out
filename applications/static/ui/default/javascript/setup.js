@@ -337,6 +337,11 @@ async function loadSetupWeighers() {
         labelReportOut.innerHTML = "Report di stampa per l'<b><u>uscita</u></b>: ";
         buttonReportDesignerTemplateOut.textContent = "Apri report designer";
         buttonReportDesignerTemplateOut.onclick = () => window.open('/report-designer/uscita', '_blank');
+        const labelReportTare = document.createElement('label');
+        const buttonReportDesignerTemplateTare = document.createElement('button');
+        labelReportTare.innerHTML = "Report di stampa per la <b><u>tara</u></b>: ";
+        buttonReportDesignerTemplateTare.textContent = "Apri report designer";
+        buttonReportDesignerTemplateTare.onclick = () => window.open('/report-designer/tara', '_blank');
         const br = document.createElement('br');
         const labelSavePdfPath = document.createElement('label');
         const savePdfPath = document.createElement('input');
@@ -641,6 +646,10 @@ async function loadSetupWeighers() {
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(labelReportOut);
         divReport.appendChild(buttonReportDesignerTemplateOut);
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(br.cloneNode(true));
+        divReport.appendChild(labelReportTare);
+        divReport.appendChild(buttonReportDesignerTemplateTare);
         divReport.appendChild(br.cloneNode(true));
         divReport.appendChild(br.cloneNode(true));
         settings.appendChild(divReport);
