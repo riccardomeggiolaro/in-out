@@ -868,6 +868,23 @@ function editRow(item) {
             document.querySelectorAll('#edit [name="number_in_out"]').forEach(element => element.style.display = "block");
             document.querySelectorAll('#edit [name="permanent"]').forEach(element => element.style.display = "none");
         }
+        // Restrict editing for booked accesses: only material fields are editable
+        const bookingInfo = document.getElementById('edit-booking-info');
+        if (bookingInfo) {
+            if (item.type === "Prenotazione") {
+                bookingInfo.style.display = 'block';
+                // Disable all inputs in the edit form except material-related ones
+                editPopup.querySelectorAll('#edit input, #edit select, #edit textarea').forEach(input => {
+                    const id = input.id || '';
+                    const name = input.name || '';
+                    if (!id.startsWith('material.') && !name.startsWith('material.')) {
+                        input.disabled = true;
+                    }
+                });
+            } else {
+                bookingInfo.style.display = 'none';
+            }
+        }
         triggerEventsForAll('.id');
     }
     if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : item.weighings.length > 0)) {
@@ -980,6 +997,9 @@ function closePopups(idPopups, deselectCurrentId = true) {
         if (saveBtn) {
             saveBtn.disabled = true;
         }
+        // Hide booking info banner
+        const bookingInfo = popup.querySelector('#edit-booking-info');
+        if (bookingInfo) bookingInfo.style.display = 'none';
         // Resetta i campi input
         const inputs = popup.querySelectorAll('input');
         inputs.forEach(input => {
