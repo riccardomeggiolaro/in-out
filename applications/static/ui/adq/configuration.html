@@ -284,7 +284,85 @@
         }
 
         .node-content-detail p {
-            margin: 5px 0;
+            margin: 3px 0;
+        }
+
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .event-box {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .event-box b {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .event-box p {
+            margin: 1px 0 !important;
+        }
+
+        .event-grid-form {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .event-box-form {
+            border: 1px solid #ccc;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .event-box-form label b {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .event-box-form > div {
+            margin-bottom: 4px;
+        }
+
+        .event-box-form select,
+        .event-box-form input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .event-box-form .inline-field {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .event-box-form .inline-field label {
+            white-space: nowrap;
+            min-width: 55px;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 900px) {
+            .event-grid,
+            .event-grid-form {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .event-grid,
+            .event-grid-form {
+                grid-template-columns: 1fr;
+            }
         }
 
         .node-actions {
@@ -1970,32 +2048,28 @@
                             <p><b>Divisione</b>: ${node.division}</p>
                             <p><b>Soglia massima</b>: ${node.max_theshold || 'N/A'}</p>
                             <p><b>Attivo</b>: ${node.run ? 'Sì' : 'No'}</p>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin: 10px 0;">
-                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
-                                    <p><b>Entrata</b></p>
-                                    <p>Report: ${node.events?.weighing?.report?.in ? 'Sì' : 'No'}</p>
-                                    <p>CSV: ${node.events?.weighing?.csv?.in ? 'Sì' : 'No'}</p>
+                            <div class="event-grid">
+                                <div class="event-box">
+                                    <b>Entrata</b>
+                                    <p>Report: ${node.events?.weighing?.report?.in ? 'Sì' : 'No'} | CSV: ${node.events?.weighing?.csv?.in ? 'Sì' : 'No'}</p>
                                     <p>Stampante: ${node.events?.weighing?.printer?.in || 'Predefinita'}</p>
                                     <p>Copie: ${node.events?.weighing?.prints?.in || 1}</p>
                                 </div>
-                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
-                                    <p><b>Uscita</b></p>
-                                    <p>Report: ${node.events?.weighing?.report?.out ? 'Sì' : 'No'}</p>
-                                    <p>CSV: ${node.events?.weighing?.csv?.out ? 'Sì' : 'No'}</p>
+                                <div class="event-box">
+                                    <b>Uscita</b>
+                                    <p>Report: ${node.events?.weighing?.report?.out ? 'Sì' : 'No'} | CSV: ${node.events?.weighing?.csv?.out ? 'Sì' : 'No'}</p>
                                     <p>Stampante: ${node.events?.weighing?.printer?.out || 'Predefinita'}</p>
                                     <p>Copie: ${node.events?.weighing?.prints?.out || 1}</p>
                                 </div>
-                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
-                                    <p><b>Generica</b></p>
-                                    <p>Report: ${node.events?.weighing?.report?.generic ? 'Sì' : 'No'}</p>
-                                    <p>CSV: ${node.events?.weighing?.csv?.generic ? 'Sì' : 'No'}</p>
+                                <div class="event-box">
+                                    <b>Generica</b>
+                                    <p>Report: ${node.events?.weighing?.report?.generic ? 'Sì' : 'No'} | CSV: ${node.events?.weighing?.csv?.generic ? 'Sì' : 'No'}</p>
                                     <p>Stampante: ${node.events?.weighing?.printer?.generic || 'Predefinita'}</p>
                                     <p>Copie: ${node.events?.weighing?.prints?.generic || 1}</p>
                                 </div>
-                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
-                                    <p><b>Tara</b></p>
-                                    <p>Report: ${node.events?.weighing?.report?.tare ? 'Sì' : 'No'}</p>
-                                    <p>CSV: ${node.events?.weighing?.csv?.tare ? 'Sì' : 'No'}</p>
+                                <div class="event-box">
+                                    <b>Tara</b>
+                                    <p>Report: ${node.events?.weighing?.report?.tare ? 'Sì' : 'No'} | CSV: ${node.events?.weighing?.csv?.tare ? 'Sì' : 'No'}</p>
                                     <p>Stampante: ${node.events?.weighing?.printer?.tare || 'Predefinita'}</p>
                                     <p>Copie: ${node.events?.weighing?.prints?.tare || 1}</p>
                                 </div>
@@ -2082,58 +2156,30 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                        <div class="event-grid-form">
+                            <div class="event-box-form">
                                 <label><b>Entrata</b></label>
-                                <div><label><input type="checkbox" name="report_on_in"> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_in"> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_in"><option value="">-- Predefinita --</option>${printerOptions}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_in" min="1" max="5" value="1">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_in"> Report</label> <label><input type="checkbox" name="csv_on_in"> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_in"><option value="">-- Predefinita --</option>${printerOptions}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_in" min="1" max="5" value="1"></div>
                             </div>
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                            <div class="event-box-form">
                                 <label><b>Uscita</b></label>
-                                <div><label><input type="checkbox" name="report_on_out"> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_out"> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_out"><option value="">-- Predefinita --</option>${printerOptions}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_out" min="1" max="5" value="1">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_out"> Report</label> <label><input type="checkbox" name="csv_on_out"> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_out"><option value="">-- Predefinita --</option>${printerOptions}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_out" min="1" max="5" value="1"></div>
                             </div>
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                            <div class="event-box-form">
                                 <label><b>Generica</b></label>
-                                <div><label><input type="checkbox" name="report_on_generic"> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_generic"> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_generic"><option value="">-- Predefinita --</option>${printerOptions}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_generic" min="1" max="5" value="1">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_generic"> Report</label> <label><input type="checkbox" name="csv_on_generic"> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_generic"><option value="">-- Predefinita --</option>${printerOptions}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_generic" min="1" max="5" value="1"></div>
                             </div>
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                            <div class="event-box-form">
                                 <label><b>Tara</b></label>
-                                <div><label><input type="checkbox" name="report_on_tare"> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_tare"> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_tare"><option value="">-- Predefinita --</option>${printerOptions}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_tare" min="1" max="5" value="1">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_tare"> Report</label> <label><input type="checkbox" name="csv_on_tare"> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_tare"><option value="">-- Predefinita --</option>${printerOptions}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_tare" min="1" max="5" value="1"></div>
                             </div>
                         </div>
 
@@ -2275,58 +2321,30 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                        <div class="event-grid-form">
+                            <div class="event-box-form">
                                 <label><b>Entrata</b></label>
-                                <div><label><input type="checkbox" name="report_on_in" ${node.events?.weighing?.report?.in ? 'checked' : ''}> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_in"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.in ? 'value="' + node.events.weighing.printer.in + '"' : '###NOMATCH###', node.events?.weighing?.printer?.in ? 'value="' + node.events.weighing.printer.in + '" selected' : '###NOMATCH###')}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_in" min="1" max="5" value="${node.events?.weighing?.prints?.in || 1}">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_in" ${node.events?.weighing?.report?.in ? 'checked' : ''}> Report</label> <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_in"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.in ? 'value="' + node.events.weighing.printer.in + '"' : '###NOMATCH###', node.events?.weighing?.printer?.in ? 'value="' + node.events.weighing.printer.in + '" selected' : '###NOMATCH###')}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_in" min="1" max="5" value="${node.events?.weighing?.prints?.in || 1}"></div>
                             </div>
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                            <div class="event-box-form">
                                 <label><b>Uscita</b></label>
-                                <div><label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_out" ${node.events?.weighing?.csv?.out ? 'checked' : ''}> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_out"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.out ? 'value="' + node.events.weighing.printer.out + '"' : '###NOMATCH###', node.events?.weighing?.printer?.out ? 'value="' + node.events.weighing.printer.out + '" selected' : '###NOMATCH###')}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_out" min="1" max="5" value="${node.events?.weighing?.prints?.out || 1}">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Report</label> <label><input type="checkbox" name="csv_on_out" ${node.events?.weighing?.csv?.out ? 'checked' : ''}> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_out"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.out ? 'value="' + node.events.weighing.printer.out + '"' : '###NOMATCH###', node.events?.weighing?.printer?.out ? 'value="' + node.events.weighing.printer.out + '" selected' : '###NOMATCH###')}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_out" min="1" max="5" value="${node.events?.weighing?.prints?.out || 1}"></div>
                             </div>
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                            <div class="event-box-form">
                                 <label><b>Generica</b></label>
-                                <div><label><input type="checkbox" name="report_on_generic" ${node.events?.weighing?.report?.generic ? 'checked' : ''}> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_generic" ${node.events?.weighing?.csv?.generic ? 'checked' : ''}> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_generic"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.generic ? 'value="' + node.events.weighing.printer.generic + '"' : '###NOMATCH###', node.events?.weighing?.printer?.generic ? 'value="' + node.events.weighing.printer.generic + '" selected' : '###NOMATCH###')}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_generic" min="1" max="5" value="${node.events?.weighing?.prints?.generic || 1}">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_generic" ${node.events?.weighing?.report?.generic ? 'checked' : ''}> Report</label> <label><input type="checkbox" name="csv_on_generic" ${node.events?.weighing?.csv?.generic ? 'checked' : ''}> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_generic"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.generic ? 'value="' + node.events.weighing.printer.generic + '"' : '###NOMATCH###', node.events?.weighing?.printer?.generic ? 'value="' + node.events.weighing.printer.generic + '" selected' : '###NOMATCH###')}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_generic" min="1" max="5" value="${node.events?.weighing?.prints?.generic || 1}"></div>
                             </div>
-                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                            <div class="event-box-form">
                                 <label><b>Tara</b></label>
-                                <div><label><input type="checkbox" name="report_on_tare" ${node.events?.weighing?.report?.tare ? 'checked' : ''}> Genera report</label></div>
-                                <div><label><input type="checkbox" name="csv_on_tare" ${node.events?.weighing?.csv?.tare ? 'checked' : ''}> Genera CSV</label></div>
-                                <div>
-                                    <label>Stampante:</label>
-                                    <select name="printer_name_tare"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.tare ? 'value="' + node.events.weighing.printer.tare + '"' : '###NOMATCH###', node.events?.weighing?.printer?.tare ? 'value="' + node.events.weighing.printer.tare + '" selected' : '###NOMATCH###')}</select>
-                                </div>
-                                <div>
-                                    <label>N. copie:</label>
-                                    <input type="number" name="number_of_prints_tare" min="1" max="5" value="${node.events?.weighing?.prints?.tare || 1}">
-                                </div>
+                                <div><label><input type="checkbox" name="report_on_tare" ${node.events?.weighing?.report?.tare ? 'checked' : ''}> Report</label> <label><input type="checkbox" name="csv_on_tare" ${node.events?.weighing?.csv?.tare ? 'checked' : ''}> CSV</label></div>
+                                <div class="inline-field"><label>Stamp.:</label><select name="printer_name_tare"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.tare ? 'value="' + node.events.weighing.printer.tare + '"' : '###NOMATCH###', node.events?.weighing?.printer?.tare ? 'value="' + node.events.weighing.printer.tare + '" selected' : '###NOMATCH###')}</select></div>
+                                <div class="inline-field"><label>Copie:</label><input type="number" name="number_of_prints_tare" min="1" max="5" value="${node.events?.weighing?.prints?.tare || 1}"></div>
                             </div>
                         </div>
 
