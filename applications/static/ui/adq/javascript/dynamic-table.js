@@ -1343,3 +1343,28 @@ function init() {
     .then(() => configuration())
     .then(() => connectWebSocket());
 }
+
+// Position fixed suggestions dropdowns to avoid popup overflow clipping
+function positionSuggestionsDropdown(suggestionsEl) {
+    if (suggestionsEl.style.display === 'block') {
+        const parent = suggestionsEl.parentElement;
+        const rect = parent.getBoundingClientRect();
+        suggestionsEl.style.top = rect.bottom + 'px';
+        suggestionsEl.style.left = rect.left + 'px';
+        suggestionsEl.style.width = rect.width + 'px';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.suggestions').forEach(suggestionsEl => {
+        const observer = new MutationObserver(() => positionSuggestionsDropdown(suggestionsEl));
+        observer.observe(suggestionsEl, { attributes: true, attributeFilter: ['style'] });
+    });
+    document.querySelectorAll('.popup').forEach(popup => {
+        popup.addEventListener('scroll', () => {
+            popup.querySelectorAll('.suggestions').forEach(suggestionsEl => {
+                positionSuggestionsDropdown(suggestionsEl);
+            });
+        });
+    });
+});
