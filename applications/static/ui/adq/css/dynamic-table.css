@@ -186,12 +186,11 @@ form {
 }
 
 .suggestions {
-    position: absolute;
+    position: fixed;
     z-index: 10000;
     background: white;
     border: 1px solid #ccc;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-    width: 100%;
     overflow: auto;
     display: none;
     max-height: 180px;
