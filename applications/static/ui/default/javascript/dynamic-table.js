@@ -872,22 +872,33 @@ function editRow(item) {
             document.querySelectorAll('#edit [name="permanent"]').forEach(element => element.style.display = "none");
         }
         // Restrict editing for booked accesses: only material fields are editable
-        console.log('editRow item.type:', item.type, 'item:', item);
         const isBookedAccess = item.type === "Prenotazione" || item.type === "RESERVATION";
         const bookingInfo = document.getElementById('edit-booking-info');
         if (bookingInfo) {
+            const editForm = editPopup.querySelector('#edit');
             if (isBookedAccess) {
                 bookingInfo.style.display = 'block';
-                // Disable all inputs in the edit form except material-related ones
-                editPopup.querySelectorAll('#edit input, #edit select, #edit textarea').forEach(input => {
-                    const id = input.id || '';
-                    const name = input.name || '';
-                    if (!id.startsWith('material.') && !name.startsWith('material.')) {
-                        input.disabled = true;
-                    }
-                });
+                // Hide all form sections except those containing material inputs
+                if (editForm) {
+                    Array.from(editForm.children).forEach(child => {
+                        if (child.tagName === 'HR' || child.tagName === 'H4' || child.tagName === 'DIV') {
+                            const hasMaterial = child.querySelector && child.querySelector('[id^="material."], [name^="material."]');
+                            const isMaterialHeader = child.tagName === 'H4' && child.textContent.trim() === 'Materiale';
+                            if (!hasMaterial && !isMaterialHeader) {
+                                child.style.display = 'none';
+                            }
+                        }
+                    });
+                }
             } else {
                 bookingInfo.style.display = 'none';
+                if (editForm) {
+                    Array.from(editForm.children).forEach(child => {
+                        if (child.tagName === 'HR' || child.tagName === 'H4' || child.tagName === 'DIV') {
+                            child.style.display = '';
+                        }
+                    });
+                }
             }
         }
         triggerEventsForAll('.id');
@@ -1002,9 +1013,17 @@ function closePopups(idPopups, deselectCurrentId = true) {
         if (saveBtn) {
             saveBtn.disabled = true;
         }
-        // Hide booking info banner
+        // Hide booking info banner and restore hidden form sections
         const bookingInfo = popup.querySelector('#edit-booking-info');
         if (bookingInfo) bookingInfo.style.display = 'none';
+        const editForm = popup.querySelector('#edit');
+        if (editForm) {
+            Array.from(editForm.children).forEach(child => {
+                if (child.tagName === 'HR' || child.tagName === 'H4' || child.tagName === 'DIV') {
+                    child.style.display = '';
+                }
+            });
+        }
         // Resetta i campi input
         const inputs = popup.querySelectorAll('input');
         inputs.forEach(input => {
