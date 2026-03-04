@@ -546,6 +546,10 @@
                         <label for="radio-2">Semiautomatico</label>
                     </div>
                     <br>
+                    <label for="test-mode">Modalità <b>test</b>: </label>
+                    <input type="checkbox" id="test-mode" onclick="setTestMode(this.checked)">
+                    <br>
+                    <br>
                     <label for="reservation">Usa <b>prenotazioni</b>: </label>
                     <input type="checkbox" id="reservation" onclick="setUseReservation(this.checked)">
                     <br>
@@ -570,10 +574,6 @@
                     <br>
                     <label for="preset-weight">Usa peso preimpostato con netto negativo (P.Peso): </label>
                     <input type="checkbox" id="preset-weight" onclick="setUsePresetWeight(this.checked)">
-                    <br>
-                    <br>
-                    <label for="test-mode">Modalità <b>test</b>: </label>
-                    <input type="checkbox" id="test-mode" onclick="setTestMode(this.checked)">
                     <br>
                     <br>
                     <label for="entry-report">Report di stampa per <b>l'entrata</b>: </label>
