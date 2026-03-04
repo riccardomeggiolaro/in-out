@@ -2001,12 +2001,36 @@
                             <p><b>Divisione</b>: ${node.division}</p>
                             <p><b>Soglia massima</b>: ${node.max_theshold || 'N/A'}</p>
                             <p><b>Attivo</b>: ${node.run ? 'Sì' : 'No'}</p>
-                            <p><b>Stampante</b>: ${node.printer_name || 'Nessuna'}</p>
-                            <p><b>Numero di stampe</b>: ${node.number_of_prints}</p>
-                            <p><b>Report in entrata</b>: ${node.events?.weighing?.report?.in ? 'Sì' : 'No'}</p>
-                            <p><b>Report in uscita</b>: ${node.events?.weighing?.report?.out ? 'Sì' : 'No'}</p>
-                            <p><b>CSV in entrata</b>: ${node.events?.weighing?.csv?.in ? 'Sì' : 'No'}</p>
-                            <p><b>CSV in uscita</b>: ${node.events?.weighing?.csv?.out ? 'Sì' : 'No'}</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin: 10px 0;">
+                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
+                                    <p><b>Entrata</b></p>
+                                    <p>Report: ${node.events?.weighing?.report?.in ? 'Sì' : 'No'}</p>
+                                    <p>CSV: ${node.events?.weighing?.csv?.in ? 'Sì' : 'No'}</p>
+                                    <p>Stampante: ${node.events?.weighing?.printer?.in || 'Predefinita'}</p>
+                                    <p>Copie: ${node.events?.weighing?.prints?.in || 1}</p>
+                                </div>
+                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
+                                    <p><b>Uscita</b></p>
+                                    <p>Report: ${node.events?.weighing?.report?.out ? 'Sì' : 'No'}</p>
+                                    <p>CSV: ${node.events?.weighing?.csv?.out ? 'Sì' : 'No'}</p>
+                                    <p>Stampante: ${node.events?.weighing?.printer?.out || 'Predefinita'}</p>
+                                    <p>Copie: ${node.events?.weighing?.prints?.out || 1}</p>
+                                </div>
+                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
+                                    <p><b>Generica</b></p>
+                                    <p>Report: ${node.events?.weighing?.report?.generic ? 'Sì' : 'No'}</p>
+                                    <p>CSV: ${node.events?.weighing?.csv?.generic ? 'Sì' : 'No'}</p>
+                                    <p>Stampante: ${node.events?.weighing?.printer?.generic || 'Predefinita'}</p>
+                                    <p>Copie: ${node.events?.weighing?.prints?.generic || 1}</p>
+                                </div>
+                                <div style="border: 1px solid #ccc; padding: 8px; border-radius: 5px;">
+                                    <p><b>Tara</b></p>
+                                    <p>Report: ${node.events?.weighing?.report?.tare ? 'Sì' : 'No'}</p>
+                                    <p>CSV: ${node.events?.weighing?.csv?.tare ? 'Sì' : 'No'}</p>
+                                    <p>Stampante: ${node.events?.weighing?.printer?.tare || 'Predefinita'}</p>
+                                    <p>Copie: ${node.events?.weighing?.prints?.tare || 1}</p>
+                                </div>
+                            </div>
                             <p><b>Scaricare pesa dopo pesata</b>: ${node.need_take_of_weight_before_weighing ? 'Sì' : 'No'}</p>
                             <p><b>Scaricare pesa all'avvio</b>: ${node.need_take_of_weight_on_startup ? 'Sì' : 'No'}</p>
                             <p><b>Trasmissione continua</b>: ${node.continuous_transmission ? 'Sì' : 'No'}</p>
