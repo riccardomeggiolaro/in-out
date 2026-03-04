@@ -869,9 +869,10 @@ function editRow(item) {
             document.querySelectorAll('#edit [name="permanent"]').forEach(element => element.style.display = "none");
         }
         // Restrict editing for booked accesses: only material fields are editable
+        const isBookedAccess = item.type === "Prenotazione" || item.type === "RESERVATION";
         const bookingInfo = document.getElementById('edit-booking-info');
         if (bookingInfo) {
-            if (item.type === "Prenotazione") {
+            if (isBookedAccess) {
                 bookingInfo.style.display = 'block';
                 // Disable all inputs in the edit form except material-related ones
                 editPopup.querySelectorAll('#edit input, #edit select, #edit textarea').forEach(input => {
