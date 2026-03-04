@@ -63,7 +63,7 @@
         <table>
             <thead id="filters">
                 <tr>
-                    <td colspan="13" class="permanentFilter">
+                    <td colspan="14" class="permanentFilter">
                         <select id="filter.access.status" name="access.status" onchange="updateTable()">
                             <option value="">Tutte</option>
                             <option value="ENTERED">Aperte</option>
@@ -72,6 +72,10 @@
                     </td>
                 </tr>
                 <tr>
+                    <th name="access.badge" class="badge">
+                        <input id="filter.access.badge" class="badge" name="access.badge" type="text" placeholder="Badge" autocomplete="off"
+                            oninput="if (this.value) this.value = this.value.toUpperCase(); updateTable()">
+                    </th>
                     <th name="access.vehicle.plate">
                         <input id="filter.access.vehicle.plate" name="access.vehicle.plate" type="text" placeholder="Targa" oninput="updateTable()">
                     </th>
@@ -117,7 +121,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="13" style="text-align: center;">
+                    <td colspan="14" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
