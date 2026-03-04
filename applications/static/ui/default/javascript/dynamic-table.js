@@ -545,8 +545,8 @@ function createRow(table, columns, item, idInout) {
         const isLatestForVehicle = item.is_latest_for_vehicle ?? (item.access && item.access.is_latest_for_vehicle);
         if (idInout && isReservation && item.is_last && isLatestForVehicle) actionsCell.appendChild(deleteButton);
         else if (idInout && !isReservation && item.is_last && (isLatestForVehicle || isLatestForVehicle === null || isLatestForVehicle === undefined)) actionsCell.appendChild(deleteButton);
-        else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0) actionsCell.appendChild(deleteButton);
-        else if (!idInout && !item.in_out && !item.weighings) actionsCell.appendChild(deleteButton);
+        else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0 || item.accesses && item.accesses.length === 0) actionsCell.appendChild(deleteButton);
+        else if (!idInout && !item.in_out && !item.weighings && !item.accesses) actionsCell.appendChild(deleteButton);
         if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
         if (itemName === "access" && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) actionsCell.appendChild(bookingAccess);
         if (itemName === "access" && item.type === "Manuale") actionsCell.appendChild(manualAccess);
