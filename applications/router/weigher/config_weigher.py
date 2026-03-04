@@ -279,7 +279,20 @@ class ConfigWeigher(CommandWeigherRouter):
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,
 					"out": setup.csv_on_out if setup.csv_on_out is not None else False,
-					"tare": setup.csv_on_tare if setup.csv_on_tare is not None else False
+					"tare": setup.csv_on_tare if setup.csv_on_tare is not None else False,
+					"generic": setup.csv_on_generic if setup.csv_on_generic is not None else False
+				},
+				"printer": {
+					"in": setup.printer_name_in,
+					"out": setup.printer_name_out,
+					"tare": setup.printer_name_tare,
+					"generic": setup.printer_name_generic
+				},
+				"prints": {
+					"in": setup.number_of_prints_in if setup.number_of_prints_in is not None else 1,
+					"out": setup.number_of_prints_out if setup.number_of_prints_out is not None else 1,
+					"tare": setup.number_of_prints_tare if setup.number_of_prints_tare is not None else 1,
+					"generic": setup.number_of_prints_generic if setup.number_of_prints_generic is not None else 1
 				},
 				"set_rele": [rele.dict() for rele in setup.weighing],
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
@@ -355,7 +368,20 @@ class ConfigWeigher(CommandWeigherRouter):
 				"csv": {
 					"in": setup.csv_on_in if setup.csv_on_in is not None else False,
 					"out": setup.csv_on_out if setup.csv_on_out is not None else False,
-					"tare": setup.csv_on_tare if setup.csv_on_tare is not None else False
+					"tare": setup.csv_on_tare if setup.csv_on_tare is not None else False,
+					"generic": setup.csv_on_generic if setup.csv_on_generic is not None else False
+				},
+				"printer": {
+					"in": setup.printer_name_in,
+					"out": setup.printer_name_out,
+					"tare": setup.printer_name_tare,
+					"generic": setup.printer_name_generic
+				},
+				"prints": {
+					"in": setup.number_of_prints_in if setup.number_of_prints_in is not None else 1,
+					"out": setup.number_of_prints_out if setup.number_of_prints_out is not None else 1,
+					"tare": setup.number_of_prints_tare if setup.number_of_prints_tare is not None else 1,
+					"generic": setup.number_of_prints_generic if setup.number_of_prints_generic is not None else 1
 				},
 				"set_rele": [rele.dict() for rele in setup.weighing],
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]

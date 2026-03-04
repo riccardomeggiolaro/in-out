@@ -201,12 +201,22 @@ class AccessRouter(PanelSirenRouter):
     async def printLastInOut(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
         path_pdf = lb_config.g_config["app_api"]["path_pdf"]
         report_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
-        printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
-        number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
+        node_config = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]
+        weighing_config = node_config["events"]["weighing"]
+        fallback_printer = node_config["printer_name"]
+        fallback_prints = node_config["number_of_prints"]
         in_out = get_last_in_out_by_weigher(weigher_name=instance.weigher_name)
         if not in_out:
             raise HTTPException(status_code=404, detail="Pesata non esistente")
         is_generic = in_out.access.type == TypeAccess.TEST if in_out.access else False
+        if is_generic:
+            event_type = "generic"
+        elif in_out.idWeight2:
+            event_type = "out"
+        else:
+            event_type = "in"
+        printer_name = weighing_config.get("printer", {}).get(event_type) or fallback_printer
+        number_of_prints = weighing_config.get("prints", {}).get(event_type) or fallback_prints
         name_file, variables, report = get_data_variables(in_out, is_generic=is_generic)
         file = find_file_in_directory(path_pdf, name_file)
         if not file:

@@ -146,19 +146,27 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		await self.setAccess(request=None, id=access.id, body=SetAccessDTO(**{"material": body.material.dict(), "operator2": body.operator.dict()}), idInOut=in_out["id"])
 		last_in_out = get_in_out_by_id(in_out["id"])
 		# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
-		printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
-		number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
+		node_config = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]
+		weighing_config = node_config["events"]["weighing"]
+		fallback_printer = node_config["printer_name"]
+		fallback_prints = node_config["number_of_prints"]
 		reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]  / "report"
-		print_in = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["in"]
-		print_out = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"]["out"]
-		print = print_out if tare > 0 or last_in_out.idWeight2 else print_in
+		if tare > 0:
+			event_type = "tare"
+		elif last_in_out.idWeight2:
+			event_type = "out"
+		else:
+			event_type = "in"
+		generate_report = weighing_config["report"].get(event_type, False)
+		printer_name = weighing_config.get("printer", {}).get(event_type) or fallback_printer
+		number_of_prints = weighing_config.get("prints", {}).get(event_type) or fallback_prints
 		path_pdf = lb_config.g_config["app_api"]["path_pdf"]
 		name_file, variables, report = get_data_variables(last_in_out)
 		# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
 		if report:
 			html = generate_html_report(reports_dir, report, v=variables.dict())
 			pdf = printer.generate_pdf_from_html(html_content=html)
-			if print:
+			if generate_report:
 				job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
 			# SALVA COPIA PDF
 			if path_pdf and pdf:
@@ -224,10 +232,14 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				# RIMUOVE I DATI IN ESECUZIONE E L'ID SELEZIONATO
 				self.deleteData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				# STAMPA DEL REPORT
-				printer_name = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["printer_name"]
-				number_of_prints = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["number_of_prints"]
+				node_config = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]
+				weighing_config = node_config["events"]["weighing"]
+				fallback_printer = node_config["printer_name"]
+				fallback_prints = node_config["number_of_prints"]
 				reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
-				generate_report = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["report"].get("generic", True)
+				generate_report = weighing_config["report"].get("generic", True)
+				printer_name = weighing_config.get("printer", {}).get("generic") or fallback_printer
+				number_of_prints = weighing_config.get("prints", {}).get("generic") or fallback_prints
 				path_pdf = lb_config.g_config['app_api']['path_pdf']
 				if not path_pdf.startswith("/"):
 					path_pdf = f"{base_path}/{path_pdf}"
@@ -242,9 +254,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 						if path_pdf:
 							save_file_dir(path_pdf, name_file, pdf)
 				# GENERA CSV
-				csv_in = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["csv"]["in"]
-				csv_out = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["csv"]["out"]
-				generate_csv = csv_out if tare > 0 or last_in_out.idWeight2 else csv_in
+				generate_csv = weighing_config.get("csv", {}).get("generic", False)
 				path_csv = lb_config.g_config['app_api']['path_csv']
 				if not path_csv.startswith("/"):
 					path_csv = f"{base_path}/{path_csv}"

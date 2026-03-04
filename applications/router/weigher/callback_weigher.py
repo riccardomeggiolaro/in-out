@@ -217,21 +217,26 @@ class CallbackWeigher(Functions, WebSocket):
 			threading.Thread(target=self.Callback_DataInExecution, args=(instance_name, weigher_name)).start()
 			############################
 			# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
-			printer_name = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["printer_name"]
-			number_of_prints = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["number_of_prints"]
+			node_config = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]
+			fallback_printer = node_config["printer_name"]
+			fallback_prints = node_config["number_of_prints"]
+			weighing_config = node_config["events"]["weighing"]
 			reports_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"]  / "report"
 			if is_test:
-				generate_report = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"].get("generic", True)
+				event_type = "generic"
+				generate_report = weighing_config["report"].get("generic", True)
 			else:
-				report_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["in"]
-				report_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"]["out"]
-				report_tare = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["report"].get("tare", report_out)
 				if tare > 0:
-					generate_report = report_tare
+					event_type = "tare"
+					generate_report = weighing_config["report"].get("tare", weighing_config["report"].get("out", False))
 				elif last_in_out.idWeight2:
-					generate_report = report_out
+					event_type = "out"
+					generate_report = weighing_config["report"]["out"]
 				else:
-					generate_report = report_in
+					event_type = "in"
+					generate_report = weighing_config["report"]["in"]
+			printer_name = weighing_config.get("printer", {}).get(event_type) or fallback_printer
+			number_of_prints = weighing_config.get("prints", {}).get(event_type) or fallback_prints
 			path_pdf = lb_config.g_config['app_api']['path_pdf']
 			if not path_pdf.startswith("/"):
 				path_pdf = f"{base_path}/{path_pdf}"
@@ -246,15 +251,18 @@ class CallbackWeigher(Functions, WebSocket):
 					# SALVA COPIA PDF
 					if path_pdf and remote_folder:
 						save_file_dir(path_pdf, name_file, pdf)
-			csv_in = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["in"]
-			csv_out = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"]["out"]
-			csv_tare = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["csv"].get("tare", csv_out)
-			if tare > 0:
-				generate_csv = csv_tare
-			elif last_in_out.idWeight2:
-				generate_csv = csv_out
+			if is_test:
+				generate_csv = weighing_config.get("csv", {}).get("generic", False)
 			else:
-				generate_csv = csv_in
+				csv_in = weighing_config["csv"]["in"]
+				csv_out = weighing_config["csv"]["out"]
+				csv_tare = weighing_config["csv"].get("tare", csv_out)
+				if tare > 0:
+					generate_csv = csv_tare
+				elif last_in_out.idWeight2:
+					generate_csv = csv_out
+				else:
+					generate_csv = csv_in
 			path_csv = lb_config.g_config['app_api']['path_csv']
 			if not path_csv.startswith("/"):
 				path_csv = f"{base_path}/{path_csv}"
