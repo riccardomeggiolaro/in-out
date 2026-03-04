@@ -2056,36 +2056,60 @@
                                 <label><b>Soglia massima:</b></label>
                                 <input type="number" name="max_theshold" min="1">
                             </div>
-                            <div class="form-group">
-                                <label><b>Stampante:</b></label>
-                                <select name="printer_name">
-                                    ${printerOptions}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label><b>Numero di stampe:</b> *</label>
-                                <input type="number" name="number_of_prints" min="1" max="5" value="1" required>
-                            </div>
                         </div>
-                        
+
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_in"> Genera report all'entrata</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Entrata</b></label>
+                                <div><label><input type="checkbox" name="report_on_in"> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_in"> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_in"><option value="">-- Predefinita --</option>${printerOptions}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_in" min="1" max="5" value="1">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_out"> Genera report all'uscita</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Uscita</b></label>
+                                <div><label><input type="checkbox" name="report_on_out"> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_out"> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_out"><option value="">-- Predefinita --</option>${printerOptions}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_out" min="1" max="5" value="1">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_generic"> Genera report alla generica</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Generica</b></label>
+                                <div><label><input type="checkbox" name="report_on_generic"> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_generic"> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_generic"><option value="">-- Predefinita --</option>${printerOptions}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_generic" min="1" max="5" value="1">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_tare"> Genera report alla tara</label>
-                            </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="csv_on_in"> Genera CSV all'entrata</label>
-                            </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="csv_on_out"> Genera CSV all'uscita</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Tara</b></label>
+                                <div><label><input type="checkbox" name="report_on_tare"> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_tare"> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_tare"><option value="">-- Predefinita --</option>${printerOptions}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_tare" min="1" max="5" value="1">
+                                </div>
                             </div>
                         </div>
 
@@ -2225,36 +2249,60 @@
                                 <label><b>Soglia massima:</b></label>
                                 <input type="number" name="max_theshold" min="1" value="${node.max_theshold || ''}">
                             </div>
-                            <div class="form-group">
-                                <label><b>Stampante:</b></label>
-                                <select name="printer_name">
-                                    ${printerOptions}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label><b>Numero di stampe:</b> *</label>
-                                <input type="number" name="number_of_prints" min="1" max="5" value="${node.number_of_prints}" required>
-                            </div>
                         </div>
-                        
+
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_in" ${node.events?.weighing?.report?.in ? 'checked' : ''}> Genera report all'entrata</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Entrata</b></label>
+                                <div><label><input type="checkbox" name="report_on_in" ${node.events?.weighing?.report?.in ? 'checked' : ''}> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_in"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.in ? 'value="' + node.events.weighing.printer.in + '"' : '###NOMATCH###', node.events?.weighing?.printer?.in ? 'value="' + node.events.weighing.printer.in + '" selected' : '###NOMATCH###')}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_in" min="1" max="5" value="${node.events?.weighing?.prints?.in || 1}">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report all'uscita</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Uscita</b></label>
+                                <div><label><input type="checkbox" name="report_on_out" ${node.events?.weighing?.report?.out ? 'checked' : ''}> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_out" ${node.events?.weighing?.csv?.out ? 'checked' : ''}> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_out"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.out ? 'value="' + node.events.weighing.printer.out + '"' : '###NOMATCH###', node.events?.weighing?.printer?.out ? 'value="' + node.events.weighing.printer.out + '" selected' : '###NOMATCH###')}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_out" min="1" max="5" value="${node.events?.weighing?.prints?.out || 1}">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_generic" ${node.events?.weighing?.report?.generic ? 'checked' : ''}> Genera report alla generica</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Generica</b></label>
+                                <div><label><input type="checkbox" name="report_on_generic" ${node.events?.weighing?.report?.generic ? 'checked' : ''}> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_generic" ${node.events?.weighing?.csv?.generic ? 'checked' : ''}> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_generic"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.generic ? 'value="' + node.events.weighing.printer.generic + '"' : '###NOMATCH###', node.events?.weighing?.printer?.generic ? 'value="' + node.events.weighing.printer.generic + '" selected' : '###NOMATCH###')}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_generic" min="1" max="5" value="${node.events?.weighing?.prints?.generic || 1}">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="report_on_tare" ${node.events?.weighing?.report?.tare ? 'checked' : ''}> Genera report alla tara</label>
-                            </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV all'entrata</label>
-                            </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" name="csv_on_out" ${node.events?.weighing?.csv?.out ? 'checked' : ''}> Genera CSV all'uscita</label>
+                            <div class="form-group" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+                                <label><b>Tara</b></label>
+                                <div><label><input type="checkbox" name="report_on_tare" ${node.events?.weighing?.report?.tare ? 'checked' : ''}> Genera report</label></div>
+                                <div><label><input type="checkbox" name="csv_on_tare" ${node.events?.weighing?.csv?.tare ? 'checked' : ''}> Genera CSV</label></div>
+                                <div>
+                                    <label>Stampante:</label>
+                                    <select name="printer_name_tare"><option value="">-- Predefinita --</option>${printerOptions.replace(node.events?.weighing?.printer?.tare ? 'value="' + node.events.weighing.printer.tare + '"' : '###NOMATCH###', node.events?.weighing?.printer?.tare ? 'value="' + node.events.weighing.printer.tare + '" selected' : '###NOMATCH###')}</select>
+                                </div>
+                                <div>
+                                    <label>N. copie:</label>
+                                    <input type="number" name="number_of_prints_tare" min="1" max="5" value="${node.events?.weighing?.prints?.tare || 1}">
+                                </div>
                             </div>
                         </div>
 
@@ -2358,11 +2406,10 @@
 
             // Campi semplici
             for (let [key, value] of formData.entries()) {
-                if (key === 'name' || key === 'terminal' || key === 'node' || key === 'printer_name') {
+                if (key === 'name' || key === 'terminal' || key === 'node') {
                     data[key] = value || null;
-                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || 
-                           key === 'max_theshold' || key === 'number_of_prints') {
-                    data[key] = value ? parseInt(value) : (key === 'number_of_prints' ? 1 : null);
+                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || key === 'max_theshold') {
+                    data[key] = value ? parseInt(value) : null;
                 }
             }
 
@@ -2377,6 +2424,16 @@
             data.report_on_tare = form.querySelector('[name="report_on_tare"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
+            data.csv_on_generic = form.querySelector('[name="csv_on_generic"]').checked;
+            data.csv_on_tare = form.querySelector('[name="csv_on_tare"]').checked;
+            data.printer_name_in = form.querySelector('[name="printer_name_in"]').value || null;
+            data.printer_name_out = form.querySelector('[name="printer_name_out"]').value || null;
+            data.printer_name_generic = form.querySelector('[name="printer_name_generic"]').value || null;
+            data.printer_name_tare = form.querySelector('[name="printer_name_tare"]').value || null;
+            data.number_of_prints_in = parseInt(form.querySelector('[name="number_of_prints_in"]').value) || 1;
+            data.number_of_prints_out = parseInt(form.querySelector('[name="number_of_prints_out"]').value) || 1;
+            data.number_of_prints_generic = parseInt(form.querySelector('[name="number_of_prints_generic"]').value) || 1;
+            data.number_of_prints_tare = parseInt(form.querySelector('[name="number_of_prints_tare"]').value) || 1;
 
             // Raccogli telecamere
             form.querySelectorAll('.cam').forEach(cam => {
@@ -2511,11 +2568,10 @@
 
             // Campi semplici
             for (let [key, value] of formData.entries()) {
-                if (key === 'name' || key === 'terminal' || key === 'node' || key === 'printer_name') {
+                if (key === 'name' || key === 'terminal' || key === 'node') {
                     data[key] = value || null;
-                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || 
-                           key === 'max_theshold' || key === 'number_of_prints') {
-                    data[key] = value ? parseInt(value) : (key === 'number_of_prints' ? 1 : null);
+                } else if (key === 'max_weight' || key === 'min_weight' || key === 'division' || key === 'max_theshold') {
+                    data[key] = value ? parseInt(value) : null;
                 }
             }
 
@@ -2530,6 +2586,16 @@
             data.report_on_tare = form.querySelector('[name="report_on_tare"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
+            data.csv_on_generic = form.querySelector('[name="csv_on_generic"]').checked;
+            data.csv_on_tare = form.querySelector('[name="csv_on_tare"]').checked;
+            data.printer_name_in = form.querySelector('[name="printer_name_in"]').value || null;
+            data.printer_name_out = form.querySelector('[name="printer_name_out"]').value || null;
+            data.printer_name_generic = form.querySelector('[name="printer_name_generic"]').value || null;
+            data.printer_name_tare = form.querySelector('[name="printer_name_tare"]').value || null;
+            data.number_of_prints_in = parseInt(form.querySelector('[name="number_of_prints_in"]').value) || 1;
+            data.number_of_prints_out = parseInt(form.querySelector('[name="number_of_prints_out"]').value) || 1;
+            data.number_of_prints_generic = parseInt(form.querySelector('[name="number_of_prints_generic"]').value) || 1;
+            data.number_of_prints_tare = parseInt(form.querySelector('[name="number_of_prints_tare"]').value) || 1;
 
             // Raccogli telecamere
             form.querySelectorAll('.cam').forEach(cam => {
