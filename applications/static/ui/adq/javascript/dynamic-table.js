@@ -504,7 +504,8 @@ function createRow(table, columns, item, idInout) {
     if (itemName !== "pid") {
         if (itemName === "access" && item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
-        if (idInout && item.is_last) actionsCell.appendChild(deleteButton);
+        const isLatestForVehicle = item.is_latest_for_vehicle ?? (item.access && item.access.is_latest_for_vehicle);
+        if (idInout && item.is_last && isLatestForVehicle) actionsCell.appendChild(deleteButton);
         else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out && !item.weighings) actionsCell.appendChild(deleteButton);
         if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
@@ -830,6 +831,7 @@ function editRow(item) {
             document.querySelectorAll('#edit [name="permanent"]').forEach(element => element.style.display = "none");
         }
         // Restrict editing for booked accesses: only material fields are editable
+        console.log('editRow item.type:', item.type, 'item:', item);
         const isBookedAccess = item.type === "Prenotazione" || item.type === "RESERVATION";
         const bookingInfo = document.getElementById('edit-booking-info');
         if (bookingInfo) {
