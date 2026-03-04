@@ -507,7 +507,7 @@ function createRow(table, columns, item, idInout) {
         const isReservation = item.type === "Prenotazione" || item.type === "RESERVATION" || (item.access && (item.access.type === "Prenotazione" || item.access.type === "RESERVATION"));
         const isLatestForVehicle = item.is_latest_for_vehicle ?? (item.access && item.access.is_latest_for_vehicle);
         if (idInout && isReservation && item.is_last && isLatestForVehicle) actionsCell.appendChild(deleteButton);
-        else if (idInout && !isReservation && item.is_last) actionsCell.appendChild(deleteButton);
+        else if (idInout && !isReservation && !isLatestForVehicle) actionsCell.appendChild(deleteButton);
         else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out && !item.weighings) actionsCell.appendChild(deleteButton);
         if (itemName === "access" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
