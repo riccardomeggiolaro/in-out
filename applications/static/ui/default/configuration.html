@@ -2110,6 +2110,9 @@
                                 <label><input type="checkbox" name="report_on_generic"> Genera report alla generica</label>
                             </div>
                             <div class="form-group">
+                                <label><input type="checkbox" name="report_on_tare"> Genera report alla tara</label>
+                            </div>
+                            <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in"> Genera CSV all'entrata</label>
                             </div>
                             <div class="form-group">
@@ -2276,6 +2279,9 @@
                                 <label><input type="checkbox" name="report_on_generic" ${node.events?.weighing?.report?.generic ? 'checked' : ''}> Genera report alla generica</label>
                             </div>
                             <div class="form-group">
+                                <label><input type="checkbox" name="report_on_tare" ${node.events?.weighing?.report?.tare ? 'checked' : ''}> Genera report alla tara</label>
+                            </div>
+                            <div class="form-group">
                                 <label><input type="checkbox" name="csv_on_in" ${node.events?.weighing?.csv?.in ? 'checked' : ''}> Genera CSV all'entrata</label>
                             </div>
                             <div class="form-group">
@@ -2399,6 +2405,7 @@
             data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
             data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
             data.report_on_generic = form.querySelector('[name="report_on_generic"]').checked;
+            data.report_on_tare = form.querySelector('[name="report_on_tare"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
 
@@ -2551,6 +2558,7 @@
             data.report_on_in = form.querySelector('[name="report_on_in"]').checked;
             data.report_on_out = form.querySelector('[name="report_on_out"]').checked;
             data.report_on_generic = form.querySelector('[name="report_on_generic"]').checked;
+            data.report_on_tare = form.querySelector('[name="report_on_tare"]').checked;
             data.csv_on_in = form.querySelector('[name="csv_on_in"]').checked;
             data.csv_on_out = form.querySelector('[name="csv_on_out"]').checked;
 
