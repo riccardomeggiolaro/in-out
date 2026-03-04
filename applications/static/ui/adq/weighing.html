@@ -125,6 +125,9 @@
 
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica non conformità:</h3>
+        <div id="edit-booking-info" style="display: none; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 10px; margin-bottom: 10px; color: #856404;">
+            <strong>Accesso prenotato:</strong> è possibile modificare solo il materiale. Per modificare gli altri dati, vai alla pagina <strong>Prenotazioni</strong>.
+        </div>
         <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
             <h4>Descrizione</h4>
 
