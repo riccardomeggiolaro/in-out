@@ -912,7 +912,7 @@ function editRow(item) {
         }
         const badgeInput = editPopup.querySelector('#badge');
         if (badgeInput) {
-            const isClosed = item.status === "Chiuso" || item.status === "CLOSED";
+            const isClosed = item.status === "Chiusa" || item.status === "CLOSED";
             const badgeContainer = badgeInput.closest('div.badge');
             const badgeHr = editPopup.querySelector('hr.badge');
             if (!useBadge) {
