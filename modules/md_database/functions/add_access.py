@@ -100,14 +100,14 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
 
             badge = data.badge
             if badge is not None:
-                # Controllo per duplicati badge (escludendo la prenotazione corrente)
                 if badge != "":
                     existing_badge = session.query(Access).filter(
-                        Access.badge == badge
+                        Access.badge == badge,
+                        Access.status != AccessStatus.CLOSED
                     ).first()
-                    
+
                     if existing_badge:
-                        raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso")
+                        raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso ancora aperto")
                     existing = get_access_by_identify_if_uncomplete(identify=badge)
                     if existing:
                         raise ValueError(f"Il badge '{badge}' è già assegnato come TARGA ad un altro accesso ancora aperto")

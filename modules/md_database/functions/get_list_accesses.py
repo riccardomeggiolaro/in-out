@@ -221,6 +221,7 @@ def get_list_accesses(
         if get_is_last_for_vehicle:
             for res in accesses:
                 res.__dict__['is_latest_for_vehicle'] = res.is_latest_for_vehicle
+                res.__dict__['is_latest_for_badge'] = res.is_latest_for_badge
                 for index, in_out in enumerate(res.in_out):
                     res.__dict__['in_out'][index].__dict__['is_last'] = in_out.is_last
         return accesses, total_rows

@@ -182,8 +182,6 @@ class CallbackWeigher(Functions, WebSocket):
 				"status": AccessStatus.CLOSED if is_to_close else AccessStatus.ENTERED,
 				"hidden": False
 			}
-			if is_to_close:
-				changed["badge"] = ""
 			updated_access = update_data("access", last_pesata.data_assigned.accessId, changed)
 			access_data_json = Access(**updated_access).json()
 			user_data_json = User(**user).json()

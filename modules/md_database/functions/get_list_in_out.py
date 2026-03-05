@@ -206,6 +206,7 @@ def get_list_in_out(
                 inout.__dict__['is_last'] = inout.is_last
                 if inout.access:
                     inout.access.__dict__['is_latest_for_vehicle'] = inout.access.is_latest_for_vehicle
+                    inout.access.__dict__['is_latest_for_badge'] = inout.access.is_latest_for_badge
 
         return results, total_rows
 
