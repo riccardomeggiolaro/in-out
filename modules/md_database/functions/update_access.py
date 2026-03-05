@@ -249,15 +249,15 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
 
             badge = data.badge
             if badge is not None:
-                # Controllo per duplicati badge (escludendo la prenotazione corrente)
                 if badge != "":
                     existing_badge = session.query(Access).filter(
                         Access.badge == badge,
-                        Access.id != id  # Escludi la prenotazione corrente
+                        Access.id != id,
+                        Access.status != AccessStatus.CLOSED
                     ).first()
-                    
+
                     if existing_badge:
-                        raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso")
+                        raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso ancora aperto")
                     else:
                         existing_badge = get_access_by_identify_if_uncomplete(identify=badge)
                         if existing_badge and existing_badge["id"] != id:

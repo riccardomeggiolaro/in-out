@@ -1,10 +1,10 @@
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import selectinload
 from modules.md_database.md_database import SessionLocal, InOut, Weighing, Access, Vehicle
 
 def delete_last_weighing_of_access(access_id):
     """
-    Rimuove il riferimento all'ultima pesata solo dall'InOut più recente associato 
+    Rimuove il riferimento all'ultima pesata solo dall'InOut più recente associato
     alla prenotazione specificata.
     """
     with SessionLocal() as session:
@@ -24,6 +24,13 @@ def delete_last_weighing_of_access(access_id):
 
             if latest_inout.access.vehicle and latest_inout.access.vehicle.accesses[-1].id != access_id:
                 raise ValueError(f"E' possibile cancellare l'ultima pesata fatta solo dell'ultimo accesso con la targa '{latest_inout.access.vehicle.plate}'")
+
+            if latest_inout.access.badge:
+                max_id_for_badge = session.query(func.max(Access.id)).filter(
+                    Access.badge == latest_inout.access.badge
+                ).scalar()
+                if max_id_for_badge != access_id:
+                    raise ValueError(f"E' possibile cancellare l'ultima pesata fatta solo dell'ultimo accesso con il badge '{latest_inout.access.badge}'")
 
             if not latest_inout:
                 raise ValueError(f"No InOut records found for access {access_id}")

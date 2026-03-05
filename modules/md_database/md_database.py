@@ -182,7 +182,7 @@ class Access(Base):
     status = Column(Enum(AccessStatus), default=AccessStatus.WAITING)
     document_reference = Column(String, nullable=True)
     type = Column(Enum(TypeAccess), default=TypeAccess.MANUALLY)
-    badge = Column(String(collation='NOCASE'), index=True, unique=True, nullable=True)
+    badge = Column(String(collation='NOCASE'), index=True, nullable=True)
     hidden = Column(Boolean, default=False)
 
     # Relationships
@@ -192,24 +192,43 @@ class Access(Base):
     vehicle = relationship("Vehicle", back_populates="accesses")
     in_out = relationship("InOut", back_populates="access", cascade="all, delete")
 
-    @hybrid_property  
+    @hybrid_property
     def is_latest_for_vehicle(self):
         if not self.idVehicle:
             return None
-        
+
         session = object_session(self)
         if not session:
             return False
-            
+
         max_id = session.query(func.max(Access.id)).filter(
             Access.idVehicle == self.idVehicle
         ).scalar()
-        
+
         return self.id == max_id
 
     @is_latest_for_vehicle.expression
     def is_latest_for_vehicle(cls):
         return cls.id == func.max(cls.id).over(partition_by=cls.idVehicle)
+
+    @hybrid_property
+    def is_latest_for_badge(self):
+        if not self.badge:
+            return None
+
+        session = object_session(self)
+        if not session:
+            return False
+
+        max_id = session.query(func.max(Access.id)).filter(
+            Access.badge == self.badge
+        ).scalar()
+
+        return self.id == max_id
+
+    @is_latest_for_badge.expression
+    def is_latest_for_badge(cls):
+        return cls.id == func.max(cls.id).over(partition_by=cls.badge)
 
 class InOut(Base):
     __tablename__ = 'in_out'
@@ -488,11 +507,51 @@ def migrate_weighing_pid_constraint():
     except Exception as e:
         lb_log.error(f"Errore durante la migrazione del vincolo weighing.pid: {e}")
 
+def migrate_badge_unique_constraint():
+    """
+    Migrazione per rimuovere il vincolo UNIQUE sulla colonna badge della tabella access.
+    Il badge ora può essere presente su più accessi (come le targhe),
+    e viene usato is_latest_for_badge per identificare l'ultimo accesso con quel badge.
+    """
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='access'"))
+            if result.fetchone() is None:
+                return
+
+            indexes = conn.execute(text("PRAGMA index_list('access')")).fetchall()
+            has_unique_badge = False
+            for idx in indexes:
+                idx_name = idx[1]
+                is_unique = idx[2]
+                if is_unique:
+                    cols = conn.execute(text(f"PRAGMA index_info('{idx_name}')")).fetchall()
+                    col_names = [col[2] for col in cols]
+                    if col_names == ['badge']:
+                        has_unique_badge = True
+                        break
+
+            if not has_unique_badge:
+                return
+
+            lb_log.info("Migrazione vincolo access.badge: rimozione UNIQUE constraint")
+
+            # Rimuovi l'indice unique e ricrealo come non-unique
+            conn.execute(text(f"DROP INDEX IF EXISTS \"{idx_name}\""))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_access_badge ON access(badge)"))
+            conn.commit()
+            lb_log.info("Migrazione vincolo access.badge completata con successo")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione del vincolo access.badge: {e}")
+
 # Esegui migrazione per stati deprecati
 migrate_called_status()
 
 # Esegui migrazione vincolo pid weighing
 migrate_weighing_pid_constraint()
+
+# Esegui migrazione vincolo badge access
+migrate_badge_unique_constraint()
 
 # Sincronizza le colonne del database prima di creare nuove tabelle
 sync_database_columns()

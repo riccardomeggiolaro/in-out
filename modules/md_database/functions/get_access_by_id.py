@@ -41,6 +41,7 @@ def get_access_by_id(access_id: int) -> Dict[str, Union[bool, str, dict]]:
 
         if access:
             access.__dict__['is_latest_for_vehicle'] = access.is_latest_for_vehicle
+            access.__dict__['is_latest_for_badge'] = access.is_latest_for_badge
         
         return access
         
