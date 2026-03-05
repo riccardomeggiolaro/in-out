@@ -635,7 +635,7 @@ function getFormData(form, set_minus_one) {
     const formData = {};
     const elements = form.elements;
     for (let element of elements) {
-        if (element.name) {
+        if (element.name && !element.disabled) {
             const keys = element.name.split('.'); // Suddivide l'ID in base al punto
             let currentObj = formData; // Inizializziamo l'oggetto principale
             // Scorriamo i segmenti dell'ID e creiamo la struttura ad albero
@@ -913,7 +913,7 @@ function editRow(item) {
             const shouldHide = !useBadge || isClosed;
             if (badgeContainer) badgeContainer.style.display = shouldHide ? 'none' : '';
             if (badgeHr) badgeHr.style.display = shouldHide ? 'none' : '';
-            badgeInput.disabled = false;
+            badgeInput.disabled = shouldHide;
         }
         triggerEventsForAll('.id');
     }
