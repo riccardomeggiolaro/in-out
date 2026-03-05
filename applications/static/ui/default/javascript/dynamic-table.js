@@ -913,11 +913,19 @@ function editRow(item) {
         const badgeInput = editPopup.querySelector('#badge');
         if (badgeInput) {
             const isClosed = item.status === "Chiuso" || item.status === "CLOSED";
-            const shouldHideBadge = !useBadge || isClosed;
             const badgeContainer = badgeInput.closest('div.badge');
-            if (badgeContainer) badgeContainer.style.display = shouldHideBadge ? 'none' : '';
             const badgeHr = editPopup.querySelector('hr.badge');
-            if (badgeHr) badgeHr.style.display = shouldHideBadge ? 'none' : '';
+            if (!useBadge) {
+                if (badgeContainer) badgeContainer.style.display = 'none';
+                if (badgeHr) badgeHr.style.display = 'none';
+            } else {
+                if (badgeContainer) badgeContainer.style.display = '';
+                if (badgeHr) badgeHr.style.display = '';
+                badgeInput.disabled = isClosed;
+                if (isClosed && badgeInput.value) {
+                    badgeInput.value = "••••••••";
+                }
+            }
         }
         triggerEventsForAll('.id');
     }
