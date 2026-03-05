@@ -9,7 +9,7 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-OUTPUT = "/home/user/in-out/PRESENTAZIONE_CLIENTE_SINTETICA.pdf"
+OUTPUT = "/home/user/in-out/documentations/PRESENTAZIONE_CLIENTE_SINTETICA.pdf"
 
 BLUE = HexColor("#1a3c6e")
 GRAY = HexColor("#444444")
