@@ -249,6 +249,8 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
 
             badge = data.badge
             if badge is not None:
+                if access.status == AccessStatus.CLOSED:
+                    raise ValueError("Non è possibile modificare il badge di un accesso chiuso")
                 if badge != "":
                     existing_badge = session.query(Access).filter(
                         Access.badge == badge,
@@ -262,7 +264,7 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                         existing_badge = get_access_by_identify_if_uncomplete(identify=badge)
                         if existing_badge and existing_badge["id"] != id:
                             raise ValueError(f"Il badge '{badge}' è già assegnato come TARGA ad un altro accesso ancora aperto")
-                
+
                 access.badge = badge if badge != "" else None
 
             session.commit()
