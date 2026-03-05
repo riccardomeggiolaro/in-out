@@ -903,6 +903,11 @@ function editRow(item) {
                 }
             }
         }
+        const badgeInput = editPopup.querySelector('#badge');
+        if (badgeInput) {
+            const isClosed = item.status === "Chiuso" || item.status === "CLOSED";
+            badgeInput.disabled = isClosed;
+        }
         triggerEventsForAll('.id');
     }
     if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : item.weighings.length > 0)) {
