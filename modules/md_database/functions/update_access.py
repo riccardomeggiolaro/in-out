@@ -249,6 +249,10 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
 
             badge = data.badge
             if badge is not None:
+                current_badge = access.badge if access.badge is not None else ""
+                if badge == current_badge:
+                    badge = None
+            if badge is not None:
                 if access.status == AccessStatus.CLOSED:
                     raise ValueError("Non è possibile modificare il badge di un accesso chiuso")
                 if badge != "":
