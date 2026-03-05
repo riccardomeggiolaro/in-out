@@ -883,9 +883,6 @@ function editRow(item) {
                 if (badgeContainer) badgeContainer.style.display = '';
                 if (badgeHr) badgeHr.style.display = '';
                 badgeInput.disabled = isClosed;
-                if (isClosed && badgeInput.value) {
-                    badgeInput.value = "••••••••";
-                }
             }
         }
         triggerEventsForAll('.id');
