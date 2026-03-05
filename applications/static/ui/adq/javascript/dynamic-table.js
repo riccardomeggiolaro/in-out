@@ -872,9 +872,15 @@ function editRow(item) {
         const badgeInput = editPopup.querySelector('#badge');
         if (badgeInput) {
             const isClosed = item.status === "Chiuso" || item.status === "CLOSED";
-            badgeInput.disabled = isClosed;
-            if (isClosed && badgeInput.value) {
-                badgeInput.value = "••••••••";
+            const badgeContainer = badgeInput.closest('div.badge');
+            if (isClosed) {
+                if (badgeContainer) badgeContainer.style.display = 'none';
+                const badgeHr = editPopup.querySelector('hr.badge');
+                if (badgeHr) badgeHr.style.display = 'none';
+            } else {
+                if (badgeContainer) badgeContainer.style.display = '';
+                const badgeHr = editPopup.querySelector('hr.badge');
+                if (badgeHr) badgeHr.style.display = '';
             }
         }
         triggerEventsForAll('.id');
