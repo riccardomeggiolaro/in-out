@@ -871,14 +871,10 @@ function editRow(item) {
             const isClosed = item.status === "Chiusa" || item.status === "CLOSED";
             const badgeContainer = badgeInput.closest('div.badge');
             const badgeHr = editPopup.querySelector('hr.badge');
-            if (!useBadge) {
-                if (badgeContainer) badgeContainer.style.display = 'none';
-                if (badgeHr) badgeHr.style.display = 'none';
-            } else {
-                if (badgeContainer) badgeContainer.style.display = '';
-                if (badgeHr) badgeHr.style.display = '';
-                badgeInput.disabled = isClosed;
-            }
+            const shouldHide = !useBadge || isClosed;
+            if (badgeContainer) badgeContainer.style.display = shouldHide ? 'none' : '';
+            if (badgeHr) badgeHr.style.display = shouldHide ? 'none' : '';
+            badgeInput.disabled = false;
         }
         triggerEventsForAll('.id');
     }
