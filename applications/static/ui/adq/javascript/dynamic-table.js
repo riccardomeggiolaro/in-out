@@ -7,6 +7,7 @@ let itemName = null;
 let nextElementSibling = null;
 let lastChar = 'o';
 let canAlwaysDelete = false;
+let useBadge = true;
 let listUrlPath = null;
 let exportUrlPath = null;
 let addUrlPath = null;
@@ -76,6 +77,7 @@ async function configuration() {
                 });
                 if (Object.keys(config.panel).length === 0) document.querySelectorAll(".li-panel-mode").forEach(li => li.style.display = "none");
                 if (!res.use_badge) {
+                    useBadge = false;
                     document.querySelectorAll(".badge").forEach(input => {
                         if (input.previousElementSibling && input.previousElementSibling.tagName === 'LABEL') {
                             input.previousElementSibling.style.display = 'none';
@@ -872,16 +874,11 @@ function editRow(item) {
         const badgeInput = editPopup.querySelector('#badge');
         if (badgeInput) {
             const isClosed = item.status === "Chiuso" || item.status === "CLOSED";
+            const shouldHideBadge = !useBadge || isClosed;
             const badgeContainer = badgeInput.closest('div.badge');
-            if (isClosed) {
-                if (badgeContainer) badgeContainer.style.display = 'none';
-                const badgeHr = editPopup.querySelector('hr.badge');
-                if (badgeHr) badgeHr.style.display = 'none';
-            } else {
-                if (badgeContainer) badgeContainer.style.display = '';
-                const badgeHr = editPopup.querySelector('hr.badge');
-                if (badgeHr) badgeHr.style.display = '';
-            }
+            if (badgeContainer) badgeContainer.style.display = shouldHideBadge ? 'none' : '';
+            const badgeHr = editPopup.querySelector('hr.badge');
+            if (badgeHr) badgeHr.style.display = shouldHideBadge ? 'none' : '';
         }
         triggerEventsForAll('.id');
     }
