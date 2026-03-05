@@ -401,6 +401,11 @@ function createRow(table, columns, item, idInout) {
                 if (fullKey === "status" && item.vehicle && item.vehicle.plate && buffer.includes(item.vehicle.plate)) {
                     displayValue = "Chiamato";
                 }
+                // Oscura il badge per le prenotazioni chiuse
+                const isClosed = item.status === "Chiusa" || item.status === "CLOSED";
+                if (fullKey === "badge" && isClosed && value) {
+                    displayValue = "••••••••";
+                }
                 row.cells[columns[fullKey]].textContent = isValidDate(displayValue) && typeof (displayValue) !== "number" ? new Date(displayValue).toLocaleString('it-IT', options) : displayValue;
                 row.cells[columns[fullKey]].dataset.value = value;
             }
@@ -868,6 +873,9 @@ function editRow(item) {
         if (badgeInput) {
             const isClosed = item.status === "Chiuso" || item.status === "CLOSED";
             badgeInput.disabled = isClosed;
+            if (isClosed && badgeInput.value) {
+                badgeInput.value = "••••••••";
+            }
         }
         triggerEventsForAll('.id');
     }
