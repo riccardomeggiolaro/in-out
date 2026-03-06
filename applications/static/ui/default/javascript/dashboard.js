@@ -299,6 +299,8 @@ async function populateListIn() {
             }
             if (item.in_out.length > 0 && item.in_out[0].material && item.in_out[0].material.description) {
                 additionalInfo.push(item.in_out[0].material.description);
+            } else if (item.material && item.material.description) {
+                additionalInfo.push(item.material.description);
             }
             if (additionalInfo.length > 0) {
                 content += `<br><small style="font-size: 0.85em;">${additionalInfo.join(' - ')}</small>`;
