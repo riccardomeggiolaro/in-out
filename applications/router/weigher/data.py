@@ -67,6 +67,9 @@ class DataRouter(CallbackWeigher):
 				if access.in_out[-1].idMaterial:
 					id_material = access.in_out[-1].material.id
 					description_material = access.in_out[-1].material.description
+			if id_material is None and access.idMaterial:
+				id_material = access.material.id
+				description_material = access.material.description
 		if tare != "0" and data_dto.id_selected.id not in [-1, None] and weight1:
 			raise HTTPException(status_code=400, detail="E' necessario rimuovere la tara per selezionare il mezzo perchè ha già effettuato l'entrata.")
 		id_selected = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]
