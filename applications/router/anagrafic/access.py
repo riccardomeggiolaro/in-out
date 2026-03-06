@@ -644,14 +644,14 @@ class AccessRouter(PanelSirenRouter):
                 if load_vector:
                     row.append(str(inout.access.vector.social_reason if inout.access.vector else '')[:18])
                 
-                if load_note:
-                    row.append(str(inout.access.note or '')[:18])
-                
-                if load_document_reference:
-                    row.append(str(inout.access.document_reference or '')[:12])
-                
                 if load_material:
                     row.append(str(inout.material.description if inout.material else '')[:12])
+
+                if load_note:
+                    row.append(str(inout.access.note or '')[:18])
+
+                if load_document_reference:
+                    row.append(str(inout.access.document_reference or '')[:12])
 
                 if load_operator:
                     if inout.weight2 and inout.weight2.operator:
