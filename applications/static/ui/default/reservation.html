@@ -148,17 +148,6 @@
     <div id="add-popup" class="modal-content popup">
         <h3>Crea prenotazione:</h3>
         <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
-            <div class="badge">
-                <div class="item-25">
-                    <div class="item">
-                        <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password" 
-                            oninput="if (this.value) this.value = this.value.toUpperCase();">
-                    </div>
-                </div>
-            </div>
-
-            <hr class="badge">
-
             <div class="item">
                 <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
                     oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
@@ -167,6 +156,17 @@
             </div>
 
             <hr>
+
+            <div class="badge">
+                <div class="item-25">
+                    <div class="item">
+                        <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
+                            oninput="if (this.value) this.value = this.value.toUpperCase();">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="badge">
 
             <h4>Veicolo</h4>
 
@@ -364,6 +364,15 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica prenotazione:</h3>
         <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+            <div class="item">
+                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
+                    oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
+                <label for="permanent" name="permanent">Permanente: </label>
+                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#edit')">
+            </div>
+
+            <hr name="permanent">
+
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
@@ -375,15 +384,6 @@
 
             <hr class="badge">
 
-            <div class="item">
-                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
-                    oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                <label for="permanent" name="permanent">Permanente: </label>
-                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#edit')">
-            </div>
-
-            <hr name="permanent">
-            
             <h4>Veicolo</h4>
 
             <div>
