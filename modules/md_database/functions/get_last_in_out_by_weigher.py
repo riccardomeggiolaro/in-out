@@ -28,7 +28,8 @@ def get_last_in_out_by_weigher(weigher_name=None):
                             selectinload(Access.vehicle),
                             selectinload(Access.driver),
                             selectinload(Access.subject),
-                            selectinload(Access.vector)
+                            selectinload(Access.vector),
+                            selectinload(Access.material)
                         ),
                         selectinload(InOut.material),
                         selectinload(InOut.weight1).options(

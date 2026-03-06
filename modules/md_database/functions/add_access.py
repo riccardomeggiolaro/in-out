@@ -1,4 +1,4 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Access, AccessStatus, TypeSubjectEnum, TypeAccess
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, TypeSubjectEnum, TypeAccess
 from modules.md_database.interfaces.access import AddAccessDTO
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
@@ -86,6 +86,20 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
                     session.add(vehicle)
                     session.flush()
                     add_access["idVehicle"] = vehicle.id
+
+            current_model = Material
+            if not data.material.id:
+                add_material = {
+                    "description": data.material.description if data.material.description != "" else None
+                }
+                if has_non_none_value(add_material):
+                    data_to_check = data.material.dict()
+                    material = current_model(**add_material)
+                    session.add(material)
+                    session.flush()
+                    add_access["idMaterial"] = material.id
+            else:
+                add_access["idMaterial"] = data.material.id
 
             existing = get_access_by_vehicle_id_if_uncomplete(add_access["idVehicle"])
 

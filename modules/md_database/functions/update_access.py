@@ -120,6 +120,24 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                     if existing and existing["id"] != access.id and existing["idVehicle"]:
                         raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
 
+            # Gestione material globale sull'accesso
+            current_model = Material
+            if not idInOut and data.material.id in [None, -1]:
+                add_material = {
+                    "description": data.material.description if data.material.description != "" else None
+                }
+                if has_non_none_value(add_material):
+                    data_to_check = data.material.dict()
+                    material = current_model(**add_material)
+                    session.add(material)
+                    session.flush()
+                    access.idMaterial = material.id
+                elif data.material.id == -1:
+                    access.idMaterial = None
+            elif not idInOut and data.material.id:
+                access.idMaterial = data.material.id
+
+            # Gestione material per InOut specifico
             current_model = Material
             material = None
             if idInOut and data.material.id in [None, -1]:
