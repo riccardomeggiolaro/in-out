@@ -367,14 +367,14 @@ class AccessRouter(PanelSirenRouter):
                 if load_vector:
                     row["Vettore"] = inout.access.vector.social_reason if inout.access.vector else None
                 
-                if load_note:
-                    row["Note"] = inout.access.note
-                
-                if load_document_reference:
-                    row["Referenza documento"] = inout.access.document_reference
-                
                 if load_material:
                     row["Materiale"] = inout.material.description if inout.material else None
+
+                if load_note:
+                    row["Note"] = inout.access.note
+
+                if load_document_reference:
+                    row["Referenza documento"] = inout.access.document_reference
 
                 if load_operator:
                     if inout.weight2 and inout.weight2.operator:
@@ -564,16 +564,16 @@ class AccessRouter(PanelSirenRouter):
                 headers.append('Vettore')
                 col_widths.append(55)
             
+            if load_material:
+                headers.append('Materiale')
+                col_widths.append(46)
+
             if load_note:
                 headers.append('Note')
                 col_widths.append(55)
-            
+
             if load_document_reference:
                 headers.append('Ref.Doc')
-                col_widths.append(46)
-            
-            if load_material:
-                headers.append('Materiale')
                 col_widths.append(46)
             
             if load_operator:
