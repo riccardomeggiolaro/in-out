@@ -69,7 +69,7 @@
         <table>
             <thead id="filters">
                 <tr>
-                    <td colspan="13" name="permanent" class="permanentFilter">
+                    <td colspan="14" name="permanent" class="permanentFilter">
                     </td>
                 </tr>
                 <tr>
@@ -85,6 +85,9 @@
                     </th>
                     <th name="vector.social_reason">
                         <input id="filter.vector.social_reason" name="vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
+                    </th>
+                    <th name="material.description">
+                        <input id="filter.material.description" name="material.description" type="text" placeholder="Materiale" oninput="updateTable()">
                     </th>
                     <th name="driver.social_reason">
                         <input id="filter.driver.social_reason" name="driver.social_reason" type="text" placeholder="Autista" oninput="updateTable()">
@@ -122,7 +125,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="13" style="text-align: center;">
+                    <td colspan="14" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -292,6 +295,25 @@
 
             <hr>
 
+            <h4>Materiale</h4>
+
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        "
+                        onfocus="if (!document.querySelector('#add-popup #material\\.id').value) {
+                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        }"
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+
+            <hr>
+
             <h4>Autista</h4>
 
             <div>
@@ -315,26 +337,9 @@
                         onblur="closeSuggestions('#add-popup', '#register #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
                     <div id="suggestions.driver.social_reason" class="suggestions"></div>
                 </div>
-    
+
                 <div class="item-25">
                     <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
-                </div>
-            </div>
-
-            <h4>Materiale</h4>
-
-            <div>
-                <div class="item">
-                    <input id="material.id" name="material.id" type="number" class="suggestionId">
-                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
-                        "
-                        onfocus="if (!document.querySelector('#add-popup #material\\.id').value) {
-                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
-                        }"
-                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value)">
-                    <div id="suggestions.material.description" class="suggestions"></div>
                 </div>
             </div>
 
@@ -522,6 +527,25 @@
 
             <hr>
 
+            <h4>Materiale</h4>
+
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        "
+                        onfocus="if (!document.querySelector('#edit-popup #material\\.id').value) {
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        }"
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+
+            <hr>
+
             <h4>Autista</h4>
 
             <div>
@@ -530,7 +554,7 @@
                         oninput="
                             if (this.value != '') {
                                 document.querySelector('#edit-popup #driver\\.telephone').disabled = true;
-                            }                           
+                            }
                         ">
                     <input placeholder="Nome Cognome" id="driver.social_reason" name="driver.social_reason" type="text" autocomplete="new-password"
                         oninput="
@@ -550,27 +574,10 @@
                         onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.driver\\.social_reason', 'social_reason', 'driver', this.value)">
                     <div id="suggestions.driver.social_reason" class="suggestions"></div>
                 </div>
-    
+
                 <div class="item-25">
                     <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" autocomplete="new-password"
                         oninput="this.value = this.value.replace(/\D/g, '');">
-                </div>
-            </div>
-
-            <h4>Materiale</h4>
-
-            <div>
-                <div class="item">
-                    <input id="material.id" name="material.id" type="number" class="suggestionId">
-                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
-                        "
-                        onfocus="if (!document.querySelector('#edit-popup #material\\.id').value) {
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
-                        }"
-                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
-                    <div id="suggestions.material.description" class="suggestions"></div>
                 </div>
             </div>
 
