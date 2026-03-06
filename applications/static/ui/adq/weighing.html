@@ -429,9 +429,17 @@
             currentSuggestions.style.display = 'none';
             const options = currentSuggestions.querySelectorAll('p');
             let continues = false;
-            if (options.length === 1) {
-                const item = JSON.parse(options[0].dataset.item);
-                if (item[key].toLowerCase() == value.toLowerCase()) {
+            let matchedOption = null;
+            for (const opt of options) {
+                const optItem = JSON.parse(opt.dataset.item);
+                if (optItem[key].toLowerCase() === value.toLowerCase()) {
+                    matchedOption = opt;
+                    break;
+                }
+            }
+            if (matchedOption) {
+                const item = JSON.parse(matchedOption.dataset.item);
+                {
                     let callback_select_anagrafic;
                     if (anagrafic === 'subject' && document.querySelector(`${popup} #subject\\.id`).value != item.id) {
                         callback_select_anagrafic = () => {

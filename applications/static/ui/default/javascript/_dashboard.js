@@ -307,8 +307,17 @@ function scrollToSelectedItem() {
 function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
     let requestBody;
     const suggestionsList = document.getElementById(showList);
-    if (suggestionsList && suggestionsList.children.length === 1 && suggestionsList.children[0].textContent.replace("⭐", "") === value) {
-        id = suggestionsList.children[0].dataset.id;
+    let matchedElement = null;
+    if (suggestionsList) {
+        for (const child of suggestionsList.children) {
+            if (child.textContent.replace("⭐", "") === value) {
+                matchedElement = child;
+                break;
+            }
+        }
+    }
+    if (matchedElement) {
+        id = matchedElement.dataset.id;
         requestBody = JSON.stringify({
             data_in_execution: {
                 [anagrafic]: {
