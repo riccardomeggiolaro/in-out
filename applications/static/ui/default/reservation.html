@@ -89,17 +89,17 @@
                     <th name="material.description">
                         <input id="filter.material.description" name="material.description" type="text" placeholder="Materiale" oninput="updateTable()">
                     </th>
-                    <th name="driver.social_reason">
-                        <input id="filter.driver.social_reason" name="driver.social_reason" type="text" placeholder="Autista" oninput="updateTable()">
-                    </th>
-                    <th name="driver.telephone">
-                        <input id="filter.driver.telephone" name="driver.telephone" type="text" placeholder="Tel. Autista" oninput="updateTable()">
-                    </th>
                     <th name="note">
                         <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
                     <th name="document_reference">
                         <input id="filter.document_reference" name="document_reference" type="text" placeholder="Rif. Doc." oninput="updateTable()">
+                    </th>
+                    <th name="driver.social_reason">
+                        <input id="filter.driver.social_reason" name="driver.social_reason" type="text" placeholder="Autista" oninput="updateTable()">
+                    </th>
+                    <th name="driver.telephone">
+                        <input id="filter.driver.telephone" name="driver.telephone" type="text" placeholder="Tel. Autista" oninput="updateTable()">
                     </th>
                     <th name="number_in_out">N. Operazioni</th>
                     <th name="status">
@@ -314,6 +314,18 @@
 
             <hr>
 
+            <div>
+                <div class="item-25">
+                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
+                </div>
+
+                <div class="item-25">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
             <h4>Autista</h4>
 
             <div>
@@ -340,18 +352,6 @@
 
                 <div class="item-25">
                     <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" oninput="this.value = this.value.replace(/\D/g, '');" autocomplete="new-password">
-                </div>
-            </div>
-
-            <hr>
-
-            <div>
-                <div class="item-25">
-                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
-                </div>
-
-                <div class="item-25">
-                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
                 </div>
             </div>
         </form>
@@ -546,6 +546,18 @@
 
             <hr>
 
+            <div>
+                <div class="item-25">
+                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
+                </div>
+
+                <div class="item-25">
+                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
+                </div>
+            </div>
+
+            <hr>
+
             <h4>Autista</h4>
 
             <div>
@@ -578,18 +590,6 @@
                 <div class="item-25">
                     <input placeholder="Telefono" id="driver.telephone" name="driver.telephone" type="text" pattern="\d*" autocomplete="new-password"
                         oninput="this.value = this.value.replace(/\D/g, '');">
-                </div>
-            </div>
-
-            <hr>
-
-            <div>
-                <div class="item-25">
-                    <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
-                </div>
-
-                <div class="item-25">
-                    <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
                 </div>
             </div>
         </form>
