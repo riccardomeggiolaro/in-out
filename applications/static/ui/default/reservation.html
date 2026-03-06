@@ -321,19 +321,36 @@
                 </div>
             </div>
 
+            <h4>Materiale</h4>
+
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        "
+                        onfocus="if (!document.querySelector('#add-popup #material\\.id').value) {
+                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        }"
+                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+
             <hr>
 
             <div>
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
                 </div>
-    
+
                 <div class="item-25">
                     <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
                 </div>
             </div>
         </form>
-        <div class="container-buttons right">                
+        <div class="container-buttons right">
             <button class="cancel-btn" onclick="closePopups(['add-popup'])">Indietro</button>
             <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
         </div>
@@ -540,19 +557,36 @@
                 </div>
             </div>
 
+            <h4>Materiale</h4>
+
+            <div>
+                <div class="item">
+                    <input id="material.id" name="material.id" type="number" class="suggestionId">
+                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
+                        oninput="
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        "
+                        onfocus="if (!document.querySelector('#edit-popup #material\\.id').value) {
+                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
+                        }"
+                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
+                    <div id="suggestions.material.description" class="suggestions"></div>
+                </div>
+            </div>
+
             <hr>
 
             <div>
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
                 </div>
-    
+
                 <div class="item-25">
                     <input placeholder="Referenza documento" id="document_reference" name="document_reference" type="text" maxlength="30" autocomplete="new-password">
                 </div>
             </div>
         </form>
-        <div class="container-buttons right">                
+        <div class="container-buttons right">
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Indietro</button>
             <button id="save-btn" class="save-btn" disabled>Avanti</button><br>
         </div>
