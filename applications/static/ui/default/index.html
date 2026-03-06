@@ -751,11 +751,17 @@
             
             const options = list.querySelectorAll('li');
             
-            if (options.length === 1) {
-                const itemId = options[0].dataset.id;
-                const itemText = options[0].textContent.trim();
-                
-                if (itemText.toLowerCase() === value.toLowerCase()) {
+            let matchedOption = null;
+            for (const opt of options) {
+                if (opt.textContent.trim().toLowerCase() === value.toLowerCase()) {
+                    matchedOption = opt;
+                    break;
+                }
+            }
+            if (matchedOption) {
+                const itemId = matchedOption.dataset.id;
+                const itemText = matchedOption.textContent.trim();
+                {
                     const isAlreadySelected = type === 'material' ? materialId.value == itemId : operatorId.value == itemId;
                     
                     if (!isAlreadySelected) {
