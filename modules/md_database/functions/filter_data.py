@@ -35,7 +35,7 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
         # Carica tutte le relazioni dirette della tabella principale
         for rel_name, rel_obj in model.__mapper__.relationships.items():
             # Carica la relazione diretta e tutte le relazioni annidate
-            query = query.options(selectinload(getattr(model, rel_name)).selectinload('*'))
+            query = query.options(selectinload(getattr(model, rel_name)))
         
         # Aggiungi i filtri, se specificati
         if filters:
