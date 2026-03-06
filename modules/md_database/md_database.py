@@ -82,6 +82,7 @@ class Material(Base):
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     in_out = relationship("InOut", back_populates="material", cascade="all, delete")
+    accesses = relationship("Access", back_populates="material")
 
 class Operator(Base):
     __tablename__ = 'operator'
@@ -175,6 +176,7 @@ class Access(Base):
     idVector = Column(Integer, ForeignKey('vector.id'))
     idDriver = Column(Integer, ForeignKey('driver.id'))
     idVehicle = Column(Integer, ForeignKey('vehicle.id'))
+    idMaterial = Column(Integer, ForeignKey('material.id'), nullable=True)
     number_in_out = Column(Integer, nullable=True)
     note = Column(String, nullable=True)
     selected = Column(Boolean, index=True, default=False)
@@ -190,6 +192,7 @@ class Access(Base):
     vector = relationship("Vector", back_populates="accesses")
     driver = relationship("Driver", back_populates="accesses")
     vehicle = relationship("Vehicle", back_populates="accesses")
+    material = relationship("Material", back_populates="accesses")
     in_out = relationship("InOut", back_populates="access", cascade="all, delete")
 
     @hybrid_property

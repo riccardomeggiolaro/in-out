@@ -25,6 +25,7 @@ def get_access_by_id(access_id: int) -> Dict[str, Union[bool, str, dict]]:
                 selectinload(Access.vector),
                 selectinload(Access.driver),
                 selectinload(Access.vehicle),
+                selectinload(Access.material),
                 selectinload(Access.in_out).selectinload(InOut.weight1).options(
                     selectinload(Weighing.user),
                     selectinload(Weighing.operator)

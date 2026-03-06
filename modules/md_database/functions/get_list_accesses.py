@@ -53,6 +53,8 @@ def get_list_accesses(
             access_options.append(selectinload(Access.driver))
         if load_vehicle:
             access_options.append(selectinload(Access.vehicle))
+        if load_material:
+            access_options.append(selectinload(Access.material))
         if not load_note:
             access_options.append(defer(Access.note))
         if not load_document_reference:

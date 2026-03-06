@@ -40,6 +40,7 @@ def get_access_by_plate_if_uncomplete(plate: str):
             selectinload(Access.vector),
             selectinload(Access.driver),
             selectinload(Access.vehicle),
+            selectinload(Access.material),
             selectinload(Access.in_out).selectinload(InOut.weight1),
             selectinload(Access.in_out).selectinload(InOut.weight2),
             selectinload(Access.in_out).selectinload(InOut.material)

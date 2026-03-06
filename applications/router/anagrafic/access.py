@@ -749,6 +749,7 @@ class AccessRouter(PanelSirenRouter):
             body.vector.id = body.vector.id if body.vector.id not in [None, -1] else None
             body.driver.id = body.driver.id if body.driver.id not in [None, -1] else None
             body.vehicle.id = body.vehicle.id if body.vehicle.id not in [None, -1] else None
+            body.material.id = body.material.id if body.material.id not in [None, -1] else None
 
             data = add_access(body, status)
 
@@ -764,6 +765,9 @@ class AccessRouter(PanelSirenRouter):
                 await self.broadcastAddAnagrafic("driver", {"driver": access.driver.json()})
             if not body.vehicle.id and access.idVehicle:
                 await self.broadcastAddAnagrafic("vehicle", {"vehicle": access.vehicle.json()})
+            if not body.material.id and access.idMaterial:
+                material = Material(**access.material.__dict__)
+                await self.broadcastAddAnagrafic("material", {"material": material.json()})
 
             await broadcastMessageWebSocket({"access": {}})
 
@@ -796,6 +800,9 @@ class AccessRouter(PanelSirenRouter):
                 await self.broadcastAddAnagrafic("driver", {"driver": access.driver.json()})
             if body.vehicle.id in [None, -1] and access.idVehicle:
                 await self.broadcastAddAnagrafic("vehicle", {"vehicle": access.vehicle.json()})
+            if not idInOut and body.material.id in [None, -1] and access.idMaterial:
+                material = Material(**access.material.__dict__)
+                await self.broadcastAddAnagrafic("material", {"material": material.json()})
             if in_out and body.material.id in [None, -1] and in_out.idMaterial:
                 material = Material(**in_out.material.__dict__)
                 await self.broadcastAddAnagrafic("material", {"material": material.json()})

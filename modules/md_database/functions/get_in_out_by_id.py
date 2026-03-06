@@ -13,7 +13,8 @@ def get_in_out_by_id(id):
                         selectinload(Access.vehicle),
                         selectinload(Access.driver),
                         selectinload(Access.subject),
-                        selectinload(Access.vector)
+                        selectinload(Access.vector),
+                        selectinload(Access.material)
                     ),
                     selectinload(InOut.weight1).options(
                         selectinload(Weighing.weighing_pictures),

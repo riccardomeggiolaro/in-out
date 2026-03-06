@@ -4,7 +4,7 @@ from modules.md_database.interfaces.subject import Subject, SubjectDataDTO
 from modules.md_database.interfaces.vector import Vector, VectorDataDTO
 from modules.md_database.interfaces.driver import Driver, DriverDataDTO
 from modules.md_database.interfaces.vehicle import Vehicle, VehicleDataDTO
-from modules.md_database.interfaces.material import MaterialDataDTO
+from modules.md_database.interfaces.material import Material as MaterialInterface, MaterialDataDTO
 from modules.md_database.interfaces.operator import OperatorDTO
 from modules.md_database.interfaces.in_out import InOut
 from datetime import datetime
@@ -17,6 +17,7 @@ class Access(BaseModel):
     idVector: Optional[int] = None
     idDriver: Optional[int] = None
     idVehicle: Optional[int] = None
+    idMaterial: Optional[int] = None
     number_in_out: Optional[int] = None
     note: Optional[str] = None
     status: Optional[str] = None
@@ -30,6 +31,7 @@ class Access(BaseModel):
     vector: Optional[Vector] = None
     driver: Optional[Driver] = None
     vehicle: Optional[Vehicle] = None
+    material: Optional[MaterialInterface] = None
     in_out: List[InOut] = []
 
 class AddAccessDTO(BaseModel):
@@ -38,6 +40,7 @@ class AddAccessDTO(BaseModel):
     vector: VectorDataDTO = VectorDataDTO(**{})
     driver: DriverDataDTO = DriverDataDTO(**{})
     vehicle: VehicleDataDTO = VehicleDataDTO(**{})
+    material: MaterialDataDTO = MaterialDataDTO(**{})
     number_in_out: Optional[int] = None
     note: Optional[str] = None
     document_reference: Optional[str] = None
