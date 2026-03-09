@@ -82,6 +82,7 @@
                 "pid": true
             }
         },
+        "delete_pending_accesses_at_midnight": false,
         "use_badge": false,
         "use_preset_weight": true,
         "use_recordings": false,

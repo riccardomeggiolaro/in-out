@@ -297,6 +297,20 @@ async function loadSetupWeighers() {
                 }
             })
         }       
+        const labelDeletePendingAccessesAtMidnight = document.createElement('label');
+        const deletePendingAccessesAtMidnight = document.createElement('input');
+        labelDeletePendingAccessesAtMidnight.innerHTML = "Cancella accessi pendenti (non prenotati) a <b><u>mezzanotte</u></b>: ";
+        deletePendingAccessesAtMidnight.type = 'checkbox';
+        deletePendingAccessesAtMidnight.checked = data.delete_pending_accesses_at_midnight ? true : false;
+        deletePendingAccessesAtMidnight.onchange = (e) => {
+            const checked = e.target.checked;
+            fetch(`/api/config-weigher/configuration/delete-pending-accesses-at-midnight/${checked}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+        }
         const labelReturnPdfCopyAfterWeighing = document.createElement('label');
         const returnPdfCopyAfterWeighing = document.createElement('input');
         labelReturnPdfCopyAfterWeighing.textContent = "Ritorna copia del report a chi effettua la pesata: ";
@@ -623,6 +637,10 @@ async function loadSetupWeighers() {
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(labelBadge);
         divAccess.appendChild(badge);
+        divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(br.cloneNode(true));
+        divAccess.appendChild(labelDeletePendingAccessesAtMidnight);
+        divAccess.appendChild(deletePendingAccessesAtMidnight);
         divAccess.appendChild(br.cloneNode(true));
         divAccess.appendChild(br.cloneNode(true));
         settings.appendChild(divAccess);

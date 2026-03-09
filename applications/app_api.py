@@ -6,6 +6,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import psutil
+import threading
+from datetime import datetime, timedelta
 from applications.router.generic import GenericRouter
 from applications.router.weigher.router import WeigherRouter
 from applications.router.anagrafic.router import AnagraficRouter
@@ -21,9 +23,53 @@ from applications.middleware.auth import AuthMiddleware
 from applications.middleware.no_cache import NoCacheMiddleware
 import applications.utils.utils as utils
 from libs.lb_utils import base_path
+from modules.md_database.functions.delete_pending_non_reservation_accesses import delete_pending_non_reservation_accesses
+from applications.router.anagrafic.manager_anagrafics import manager_anagrafics
+import asyncio
 # ==============================================================
 
 name_app = "app_api"
+
+# ==============================================================
+
+# ==== MIDNIGHT CLEANUP ========================================
+# Thread che esegue la pulizia degli accessi pendenti non prenotati a mezzanotte
+
+_midnight_cleanup_stop_event = threading.Event()
+
+def _midnight_cleanup_loop():
+	"""Loop che attende la mezzanotte ed esegue la pulizia degli accessi pendenti non prenotati."""
+	while not _midnight_cleanup_stop_event.is_set():
+		now = datetime.now()
+		# Calcola i secondi fino alla prossima mezzanotte
+		next_midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+		seconds_until_midnight = (next_midnight - now).total_seconds()
+
+		lb_log.info(f"Pulizia mezzanotte programmata tra {int(seconds_until_midnight)} secondi")
+
+		# Attendi fino a mezzanotte o fino a quando il thread viene fermato
+		if _midnight_cleanup_stop_event.wait(timeout=seconds_until_midnight):
+			break  # Lo stop event è stato settato, esci dal loop
+
+		# Controlla se la funzionalità è abilitata nella configurazione
+		if not lb_config.g_config.get("app_api", {}).get("delete_pending_accesses_at_midnight", False):
+			continue
+
+		try:
+			deleted_ids = delete_pending_non_reservation_accesses()
+			if deleted_ids:
+				# Notifica i client WebSocket della cancellazione
+				try:
+					loop = asyncio.new_event_loop()
+					asyncio.set_event_loop(loop)
+					loop.run_until_complete(
+						manager_anagrafics["access"].broadcast({"action": "delete", "data": None})
+					)
+					loop.close()
+				except Exception as e:
+					lb_log.error(f"Errore durante la notifica WebSocket della pulizia mezzanotte: {e}")
+		except Exception as e:
+			lb_log.error(f"Errore durante la pulizia mezzanotte: {e}")
 
 # ==============================================================
 
@@ -45,8 +91,9 @@ def start():
 # ==============================================================
 
 def stop():
-	# global ssh_client
-	
+	# Ferma il thread di pulizia mezzanotte
+	_midnight_cleanup_stop_event.set()
+
 	try:
 		port = lb_config.g_config["app_api"]["port"]
 		connection = [conn for conn in psutil.net_connections() if conn.laddr.port == port] 
@@ -97,6 +144,12 @@ def init():
 	tunnel_connections_router = TunnelConnectionsRouter()
 	open_to_customer = OpenToCustomerRouter()
 	sync_folder_router = SyncFolderRouter()
+
+	# Avvia il thread di pulizia mezzanotte per eliminare accessi pendenti non prenotati
+	_midnight_cleanup_stop_event.clear()
+	midnight_thread = threading.Thread(target=_midnight_cleanup_loop, daemon=True, name="midnight-cleanup")
+	midnight_thread.start()
+	lb_log.info("Thread pulizia mezzanotte avviato")
 
 	app.include_router(weigher_router.router, prefix="/api")
 
