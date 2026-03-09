@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+    <title>Profilo</title>
+    <style>
+        html, body {
+            margin: 0;
+            height: 100vh;
+        }
+        * {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            box-sizing: border-box;
+        }
+        .profile-container {
+            max-width: 500px;
+            margin: 80px auto 20px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+        .profile-container h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+        .profile-info {
+            margin-bottom: 30px;
+        }
+        .profile-info .field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .profile-info .field:last-child {
+            border-bottom: none;
+        }
+        .profile-info .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .profile-info .value {
+            color: #333;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #1362b8;
+        }
+        .password-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .password-form label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        .password-form input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+        .password-form input:focus {
+            box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3);
+            outline: none;
+        }
+        .btn-save {
+            background-color: #1362b8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0px 4px 3px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s;
+            align-self: flex-end;
+            margin-top: 5px;
+        }
+        .btn-save:hover {
+            background-color: #0e4f96;
+        }
+        .btn-save:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .error-text {
+            color: red;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        @media (max-width: 1050px) {
+            .profile-container {
+                margin: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <div class="profile-container">
+        <h2>Profilo utente</h2>
+
+        <div class="profile-info">
+            <div class="section-title">Dati utente</div>
+            <div class="field">
+                <span class="label">Username</span>
+                <span class="value" id="profile-username">-</span>
+            </div>
+            <div class="field">
+                <span class="label">Descrizione</span>
+                <span class="value" id="profile-description">-</span>
+            </div>
+            <div class="field">
+                <span class="label">Livello</span>
+                <span class="value" id="profile-level">-</span>
+            </div>
+            <div class="field">
+                <span class="label">Data creazione</span>
+                <span class="value" id="profile-date">-</span>
+            </div>
+        </div>
+
+        <div class="section-title">Cambia password</div>
+        <form class="password-form" id="password-form" onsubmit="return false;">
+            <label for="new-password">Nuova password (min. 4 caratteri)</label>
+            <input type="password" id="new-password" name="new-password" autocomplete="new-password" minlength="4" required placeholder="Inserisci nuova password">
+
+            <label for="confirm-password">Conferma password</label>
+            <input type="password" id="confirm-password" name="confirm-password" autocomplete="new-password" minlength="4" required placeholder="Conferma nuova password">
+            <span class="error-text" id="password-mismatch">Le password non corrispondono</span>
+
+            <button type="submit" class="btn-save" id="btn-save" disabled>Salva password</button>
+        </form>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar" class="snackbar"></div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script type="module">
+        import { dataUser } from '/static/javascript/auth.js';
+
+        // Popola i dati utente
+        function populateProfile() {
+            document.getElementById('profile-username').textContent = dataUser.username || '-';
+            document.getElementById('profile-description').textContent = dataUser.description || '-';
+
+            let levelText = 'Super amministratore';
+            if (dataUser.level === 3) levelText = 'Amministratore';
+            else if (dataUser.level === 2) levelText = 'Utente';
+            else if (dataUser.level === 1) levelText = 'Utente solo lettura';
+            document.getElementById('profile-level').textContent = levelText;
+
+            if (dataUser.exp) {
+                const date = new Date(dataUser.date_created || dataUser.exp * 1000);
+                if (dataUser.date_created) {
+                    document.getElementById('profile-date').textContent = new Date(dataUser.date_created).toLocaleDateString('it-IT', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            }
+        }
+
+        populateProfile();
+
+        // Gestione form password
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const btnSave = document.getElementById('btn-save');
+        const mismatchError = document.getElementById('password-mismatch');
+        const form = document.getElementById('password-form');
+
+        function validateForm() {
+            const newPass = newPasswordInput.value;
+            const confirmPass = confirmPasswordInput.value;
+            const isValid = newPass.length >= 4 && confirmPass.length >= 4 && newPass === confirmPass;
+
+            if (confirmPass.length > 0 && newPass !== confirmPass) {
+                mismatchError.style.display = 'block';
+            } else {
+                mismatchError.style.display = 'none';
+            }
+
+            btnSave.disabled = !isValid;
+        }
+
+        newPasswordInput.addEventListener('input', validateForm);
+        confirmPasswordInput.addEventListener('input', validateForm);
+
+        form.addEventListener('submit', function() {
+            changePassword();
+        });
+
+        function changePassword() {
+            const newPassword = newPasswordInput.value;
+
+            btnSave.disabled = true;
+
+            fetch('/api/auth/me', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: newPassword })
+            })
+            .then(res => res.json().then(data => ({ data, status: res.status })))
+            .then(res => {
+                if (res.status === 200) {
+                    showSnackbar('snackbar', 'Password aggiornata correttamente', 'rgb(208, 255, 208)', 'black');
+                    newPasswordInput.value = '';
+                    confirmPasswordInput.value = '';
+                    btnSave.disabled = true;
+                    mismatchError.style.display = 'none';
+                } else {
+                    const message = res.data.detail?.[0]?.msg?.replace("Value error, ", "") || res.data.detail || 'Errore durante il salvataggio';
+                    showSnackbar('snackbar', message, 'rgb(255, 208, 208)', 'black');
+                    btnSave.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error('Errore:', err);
+                showSnackbar('snackbar', 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
+                btnSave.disabled = false;
+            });
+        }
+
+        window.changePassword = changePassword;
+    </script>
+</body>
+</html>
