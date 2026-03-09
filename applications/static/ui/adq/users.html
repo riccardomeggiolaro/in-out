@@ -86,13 +86,6 @@
         tr:hover {
             background-color: whitesmoke;
         }
-        tr td .btn-edit {
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        tr:hover td .btn-edit {
-            opacity: 1;
-        }
         button {
             background-color: white;
             border: none;
@@ -220,8 +213,7 @@
         }
 
         td button {
-            padding: 0px 2px !important;
-            margin: 0;
+            padding: 0px 8px !important;
         }
 
         li {
@@ -439,21 +431,47 @@
                         if (user.level === 3) level = "Amministratore";
                         else if (user.level === 2) level = "Utente";
                         else if (user.level === 1) level = "Utente solo lettura";
-                        const buttons = `
-                            <button class="btn-edit" onclick="editRow(${user.id}, '${user.username}', '${user.description || ''}', ${user.level})">✏️</button>
-                            <button class="btn-edit" onclick="passwordRow(${user.id})">🔑</button>
-                            <button class="btn-edit" onclick="deleteRow(${user.id}, '${user.username}')">🗑️</button>
-                        `;
+                        const canEdit = user.level < dataUser.level;
                         tr.innerHTML = `
                             <tr data-id="${user.id}">
                                 <td>${user.username}</td>
                                 <td>${user.description}</td>
                                 <td>${level}</td>
-                                <td>
-                                    ${user.level < dataUser.level ? buttons : ''}
-                                </td>
+                                <td></td>
                             </tr>
                         `;
+                        if (canEdit) {
+                            const actionsCell = tr.querySelector('td:last-child');
+                            const editButton = document.createElement("button");
+                            editButton.style.visibility = 'hidden';
+                            editButton.textContent = "✏️";
+                            editButton.onclick = () => editRow(user.id, user.username, user.description || '', user.level);
+
+                            const passwordButton = document.createElement("button");
+                            passwordButton.style.visibility = 'hidden';
+                            passwordButton.textContent = "🔑";
+                            passwordButton.onclick = () => passwordRow(user.id);
+
+                            const deleteButton = document.createElement("button");
+                            deleteButton.style.visibility = 'hidden';
+                            deleteButton.textContent = "🗑️";
+                            deleteButton.onclick = () => deleteRow(user.id, user.username);
+
+                            actionsCell.appendChild(editButton);
+                            actionsCell.appendChild(passwordButton);
+                            actionsCell.appendChild(deleteButton);
+
+                            tr.addEventListener("mouseenter", () => {
+                                editButton.style.visibility = 'inherit';
+                                passwordButton.style.visibility = 'inherit';
+                                deleteButton.style.visibility = 'inherit';
+                            });
+                            tr.addEventListener("mouseleave", () => {
+                                editButton.style.visibility = 'hidden';
+                                passwordButton.style.visibility = 'hidden';
+                                deleteButton.style.visibility = 'hidden';
+                            });
+                        }
                         table.appendChild(tr);
                     }
                 })
