@@ -87,6 +87,13 @@
         tr:hover {
             background-color: whitesmoke;
         }
+        tr td .btn-edit {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        tr:hover td .btn-edit {
+            opacity: 1;
+        }
         button {
             background-color: white;
             border: none;
@@ -249,7 +256,7 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'password-popup', 'delete-popup', 'confirm-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
         <h3>Nuovo utente:</h3>
@@ -284,12 +291,22 @@
                 <option value=2>Utente</option>
                 <option value=1>Utente solo lettura</option>
             </select>
-            Password: (Min 4 caratteri, lascia vuoto per non modificare)<br>
-            <input type="password" id="edit-password" name="password" autocomplete="off" minlength="4">
         </form>
         <div class="container-buttons right">
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
             <button id="save-btn" class="save-btn" onclick="editUser()">Salva</button><br>
+        </div>
+    </div>
+
+    <div id="password-popup" class="modal-content popup">
+        <h3>Modifica password:</h3>
+        <form id="password-form" class="content" oninput="document.querySelector('#password-popup .save-btn').disabled = !this.checkValidity()">
+            Password: (Min 4 caratteri)<br>
+            <input type="password" id="password-input" name="password" autocomplete="off" minlength="4" required>
+        </form>
+        <div class="container-buttons right">
+            <button class="cancel-btn" onclick="closePopups(['password-popup'])">Annulla</button>
+            <button id="save-btn" class="save-btn" onclick="changePassword()" disabled>Salva</button><br>
         </div>
     </div>   
 
@@ -423,7 +440,8 @@
                         else if (user.level === 2) level = "Utente";
                         else if (user.level === 1) level = "Utente solo lettura";
                         const buttons = `
-                            <button onclick="editRow(${user.id}, '${user.username}', '${user.description || ''}', ${user.level})">✏️</button>
+                            <button class="btn-edit" onclick="editRow(${user.id}, '${user.username}', '${user.description || ''}', ${user.level})">✏️</button>
+                            <button onclick="passwordRow(${user.id})">🔑</button>
                             <button onclick="deleteRow(${user.id}, '${user.username}')">🗑️</button>
                         `;
                         tr.innerHTML = `
@@ -474,10 +492,8 @@
 
         function editUser() {
             const formData = {};
-            // Raccogli i dati dal form
             const form = document.getElementById("edit");
             form.querySelectorAll("input").forEach((input) => {
-                if (input.name === 'password' && !input.value) return;
                 formData[input.name] = input.value;
             });
             form.querySelectorAll("select").forEach((select) => {
@@ -495,11 +511,34 @@
             .then(res => {
                 if (res.status === 200) {
                     listUser();
-                    closePopups(['edit-popup']); // chiudi il popup/form
+                    closePopups(['edit-popup']);
                     showSnackbar("snackbar", 'Utente modificato correttamente', 'rgb(208, 255, 208)', 'black');
-                    document.querySelector("#edit-popup .save-btn").disabled = false;
                 } else {
-                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');
+                }
+            });
+        }
+
+        function passwordRow(id) {
+            currentId = id;
+            openPopup("password-popup");
+        }
+
+        function changePassword() {
+            const password = document.getElementById('password-input').value;
+
+            fetch(`/api/auth/user/${currentId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            })
+            .then(res => res.json().then(data => ({ data, status: res.status })))
+            .then(res => {
+                if (res.status === 200) {
+                    closePopups(['password-popup']);
+                    showSnackbar("snackbar", 'Password modificata correttamente', 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');
                 }
             });
         }
@@ -525,9 +564,11 @@
         window.closePopups = closePopups;
         window.addRow = addRow;
         window.editRow = editRow;
+        window.passwordRow = passwordRow;
         window.deleteRow = deleteRow;
         window.addUser = addUser;
         window.editUser = editUser;
+        window.changePassword = changePassword;
         window.deleteUser = deleteUser;
     </script>
 </body>
