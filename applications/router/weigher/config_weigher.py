@@ -29,6 +29,7 @@ class ConfigWeigher(CommandWeigherRouter):
 	
 		self.router_config_weigher.add_api_route('/configuration', self.GetAllConfiguration, methods=['GET'])
 		self.router_config_weigher.add_api_route('/configuration/mode/{mode}', self.SetMode, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/configuration/delete-pending-accesses-at-midnight/{delete_pending_accesses_at_midnight}', self.SetDeletePendingAccessesAtMidnight, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/use-reservation/{use_reservation}', self.SetUseReservation, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/use-white-list/{use_white_list}', self.SetUseWhiteList, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/use-badge/{use_badge}', self.SetUseTag, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -68,6 +69,11 @@ class ConfigWeigher(CommandWeigherRouter):
 		lb_config.g_config["app_api"]["mode"] = mode
 		lb_config.saveconfig()
 		return { "mode": mode }
+
+	async def SetDeletePendingAccessesAtMidnight(self, delete_pending_accesses_at_midnight: bool):
+		lb_config.g_config["app_api"]["delete_pending_accesses_at_midnight"] = delete_pending_accesses_at_midnight
+		lb_config.saveconfig()
+		return { "delete_pending_accesses_at_midnight": delete_pending_accesses_at_midnight }
 
 	async def SetUseReservation(self, use_reservation: bool):
 		lb_config.g_config["app_api"]["use_reservation"] = use_reservation

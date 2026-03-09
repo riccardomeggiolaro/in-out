@@ -51,6 +51,10 @@ def _midnight_cleanup_loop():
 		if _midnight_cleanup_stop_event.wait(timeout=seconds_until_midnight):
 			break  # Lo stop event è stato settato, esci dal loop
 
+		# Controlla se la funzionalità è abilitata nella configurazione
+		if not lb_config.g_config.get("app_api", {}).get("delete_pending_accesses_at_midnight", False):
+			continue
+
 		try:
 			deleted_ids = delete_pending_non_reservation_accesses()
 			if deleted_ids:
