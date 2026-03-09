@@ -61,19 +61,30 @@ class AuthRouter(APIRouter):
     def get_user_by_id(self, request: Request, id: int):
         return get_data_by_id("user", id)
     
-    def set_user_by_id(self, request: Request, id: int, set_password_dto: SetUserDTO):
+    def set_user_by_id(self, request: Request, id: int, set_dto: SetUserDTO):
         try:
             user = get_data_by_id("user", id)
             if user and user["level"] >= request.state.user.level:
-                return HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=(
-                        f"You cannot delete a user with a higher or equal access level than your own. "
-                        f"Your current access level is {request.state.user.level}, "
-                        f"but you're trying to delete a user with access level {user['level']}."
+                        f"Non puoi modificare un utente con un livello di accesso uguale o superiore al tuo. "
+                        f"Il tuo livello è {request.state.user.level}, "
+                        f"ma stai provando a modificare un utente con livello {user['level']}."
                     )
                 )
-            return update_data("user", id, set_password_dto.dict())
+            if set_dto.level is not None and set_dto.level >= request.state.user.level:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=(
+                        f"Non puoi assegnare un livello uguale o più alto del tuo. "
+                        f"Il tuo livello è {request.state.user.level}, "
+                        f"ma stai provando ad assegnare il livello {set_dto.level}."
+                    )
+                )
+            return update_data("user", id, set_dto.dict())
+        except HTTPException as e:
+            raise e
         except Exception as e:
             raise HTTPException(
                 status_code=404,

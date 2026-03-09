@@ -38,7 +38,9 @@ class LoginDTO(BaseModel):
 
 class SetUserDTO(BaseModel):
 	password: Optional[str] = None
-	
+	description: Optional[str] = None
+	level: Optional[int] = None
+
 	@validator('password', pre=True, always=True)
 	def check_password(cls, v):
 		if v is not None and len(v) < 4:
