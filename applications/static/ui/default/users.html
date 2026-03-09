@@ -274,14 +274,22 @@
     </div>   
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica password:</h3>
+        <h3>Modifica utente:</h3>
         <form id="edit" class="content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
-            Password: (Min 4 caratteri)<br>
-            <input type="password" id="password" name="password" autocomplete="off" minlength="4" required>
+            Descrizione:<br>
+            <input type="text" id="edit-description" name="description" autocomplete="off">
+            <label for="edit-level">Livello:</label>
+            <select id="edit-level" name="level">
+                <option value=3>Amministratore</option>
+                <option value=2>Utente</option>
+                <option value=1>Utente solo lettura</option>
+            </select>
+            Password: (Min 4 caratteri, lascia vuoto per non modificare)<br>
+            <input type="password" id="edit-password" name="password" autocomplete="off" minlength="4">
         </form>
-        <div class="container-buttons right">                
+        <div class="container-buttons right">
             <button class="cancel-btn" onclick="closePopups(['edit-popup'])">Annulla</button>
-            <button id="save-btn" class="save-btn" onclick="editUser()" disabled>Salva</button><br>
+            <button id="save-btn" class="save-btn" onclick="editUser()">Salva</button><br>
         </div>
     </div>   
 
@@ -343,8 +351,14 @@
             openPopup("add-popup");
         }
 
-        function editRow(id) {
+        function editRow(id, username, description, level) {
             currentId = id;
+            document.getElementById('edit-description').value = description || '';
+            const editLevel = document.getElementById('edit-level');
+            if (editLevel) {
+                editLevel.value = level;
+            }
+            document.querySelector('#edit-popup .save-btn').disabled = false;
             openPopup("edit-popup");
         }
 
@@ -409,7 +423,7 @@
                         else if (user.level === 2) level = "Utente";
                         else if (user.level === 1) level = "Utente solo lettura";
                         const buttons = `
-                            <button onclick="editRow(${user.id}, '${user.username}', '${user.description}', ${user.level})">🔑</button>
+                            <button onclick="editRow(${user.id}, '${user.username}', '${user.description || ''}', ${user.level})">✏️</button>
                             <button onclick="deleteRow(${user.id}, '${user.username}')">🗑️</button>
                         `;
                         tr.innerHTML = `
@@ -463,10 +477,13 @@
             // Raccogli i dati dal form
             const form = document.getElementById("edit");
             form.querySelectorAll("input").forEach((input) => {
+                if (input.name === 'password' && !input.value) return;
                 formData[input.name] = input.value;
             });
             form.querySelectorAll("select").forEach((select) => {
-                formData[select.name] = select.value;
+                if (select.style.display !== 'none') {
+                    formData[select.name] = select.value;
+                }
             })
 
             fetch(`/api/auth/user/${currentId}`, {
