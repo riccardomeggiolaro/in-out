@@ -978,8 +978,8 @@
 
         function updateWeighingMaterial(idAccess, idInOut, idMaterial, descriptionMaterial) {
             confirm_exec_funct = () => {
-                const id = document.querySelector("#material\\.id").value || -1;
-                const description = document.querySelector("#material\\.description").value || null;
+                const id = document.querySelector("#edit-inout-popup #material\\.id").value || -1;
+                const description = document.querySelector("#edit-inout-popup #material\\.description").value || null;
                 const body = JSON.stringify({
                     material: {
                         id,
