@@ -441,7 +441,7 @@
                         else if (user.level === 1) level = "Utente solo lettura";
                         const buttons = `
                             <button class="btn-edit" onclick="editRow(${user.id}, '${user.username}', '${user.description || ''}', ${user.level})">✏️</button>
-                            <button onclick="passwordRow(${user.id})">🔑</button>
+                            <button class="btn-edit" onclick="passwordRow(${user.id})">🔑</button>
                             <button onclick="deleteRow(${user.id}, '${user.username}')">🗑️</button>
                         `;
                         tr.innerHTML = `
