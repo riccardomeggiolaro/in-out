@@ -297,8 +297,9 @@ async function populateListIn() {
             if (item.subject && item.subject.social_reason) {
                 additionalInfo.push(item.subject.social_reason);
             }
-            if (item.in_out.length > 0 && item.in_out[0].material && item.in_out[0].material.description) {
-                additionalInfo.push(item.in_out[0].material.description);
+            const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
+            if (lastInOut && !lastInOut.net_weight && lastInOut.material && lastInOut.material.description) {
+                additionalInfo.push(lastInOut.material.description);
             } else if (item.material && item.material.description) {
                 additionalInfo.push(item.material.description);
             }
