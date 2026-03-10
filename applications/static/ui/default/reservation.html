@@ -535,6 +535,11 @@
                     <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
                         oninput="
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
+                            if (document.querySelector('#edit-popup #material\\.id').value != '') {
+                                deselectAnagrafic(document.querySelector('#edit-popup #material\\.id').value, 'material');
+                                document.querySelector('#edit-popup #material\\.id').value = '';
+                                document.querySelector('#edit-popup #material\\.description').disabled = false;
+                            }
                         "
                         onfocus="if (!document.querySelector('#edit-popup #material\\.id').value) {
                             populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
