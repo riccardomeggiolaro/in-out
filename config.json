@@ -1,5 +1,6 @@
 {
     "app_api": {
+        "delete_pending_accesses_at_midnight": false,
         "mode": "SEMIAUTOMATIC",
         "panel": {
             "config": {},
@@ -23,7 +24,6 @@
         "report_out": "weight_out.json",
         "report_tare": "weight_tare.json",
         "return_pdf_copy_after_weighing": true,
-        "show_export_totals": true,
         "rfid": {
             "connection": {
                 "baudrate": 9600,
@@ -34,6 +34,7 @@
             "module": "rfidserialrfid",
             "setup": {}
         },
+        "show_export_totals": true,
         "siren": {
             "config": {},
             "connection": {
@@ -82,7 +83,6 @@
                 "pid": true
             }
         },
-        "delete_pending_accesses_at_midnight": false,
         "use_badge": false,
         "use_preset_weight": true,
         "use_recordings": false,
