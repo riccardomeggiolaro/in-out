@@ -298,7 +298,7 @@ async function populateListIn() {
                 additionalInfo.push(item.subject.social_reason);
             }
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
-            if (lastInOut && !lastInOut.net_weight && lastInOut.material && lastInOut.material.description) {
+            if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
                 additionalInfo.push(lastInOut.material.description);
             } else if (item.material && item.material.description) {
                 additionalInfo.push(item.material.description);
