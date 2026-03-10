@@ -64,9 +64,10 @@ class DataRouter(CallbackWeigher):
 					weight1 = access.in_out[-1].weight1.weight
 				elif access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is not None and access.number_in_out is not None:
 					weight1 = access.in_out[-1].weight2.weight
-				if access.in_out[-1].idMaterial:
-					id_material = access.in_out[-1].material.id
-					description_material = access.in_out[-1].material.description
+				if access.in_out[-1].netWeight is None:
+					if access.in_out[-1].idMaterial:
+						id_material = access.in_out[-1].material.id
+						description_material = access.in_out[-1].material.description
 			if id_material is None and access.idMaterial:
 				id_material = access.material.id
 				description_material = access.material.description
