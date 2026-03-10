@@ -1,7 +1,7 @@
 {
     "app_api": {
         "delete_pending_accesses_at_midnight": false,
-        "mode": "SEMIAUTOMATIC",
+        "mode": "AUTOMATIC",
         "panel": {
             "config": {},
             "connection": {

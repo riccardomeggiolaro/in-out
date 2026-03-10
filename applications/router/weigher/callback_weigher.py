@@ -295,7 +295,7 @@ class CallbackWeigher(Functions, WebSocket):
 			# FUNZIONE UTILE PER ELIMINARE I DATI IN ESECUZIONE E L'ID SELEZIONATO DOPO UN PESATA AUTOMATICA NON RIUSCITA
 			elif len(access.in_out) == 0 and access.hidden is False:
 				self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
-			elif last_pesata.data_assigned.mode == "AUTOMATIC":
+			if last_pesata.data_assigned.mode == "AUTOMATIC":
 				self.Fallback_Weighing(instance_name=instance_name, weigher_name=weigher_name, data_assigned=last_pesata.data_assigned)
 		# AVVISA GLI UTENTI COLLEGATI ALLA DASHBOARD CHE HA FINITO DI EFFETTUARE IL PROCESSO DI PESATURA CON IL RELATIVO MESSAGIO
 		weight = last_pesata.dict()
