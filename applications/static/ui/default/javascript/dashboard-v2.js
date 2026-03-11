@@ -319,13 +319,9 @@ function renderPlatesList() {
         li.style.padding = '6px 8px';
         li.style.borderBottom = '1px solid #eee';
         li.innerHTML = `
-            <div style="font-size: 0.85em; color: #666;">${item.time}</div>
             <div>${item.plate}</div>
             <div style="font-weight: bold; font-size: 0.9em;">da ${item.source || 'N/A'}</div>
         `;
-        if (item.outcome) {
-            li.innerHTML += `<div style="font-size: 0.8em; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.outcome}</div>`;
-        }
         li.addEventListener('click', () => showOcrDetail(index));
         listPlates.appendChild(li);
     });
