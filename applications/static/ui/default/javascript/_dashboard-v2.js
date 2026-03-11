@@ -68,7 +68,7 @@ let access_id;
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
 const container = document.querySelector('.ins');
-const listIn = document.querySelector('.list-in');
+const listPlates = document.querySelector('.list-plates');
 const reprint = document.querySelector('#reprint');
 const selectedIdWeigher = document.querySelector('.list-weigher');
 const tareButton = document.getElementById('tareButton');
@@ -130,7 +130,7 @@ selectedIdWeigher.addEventListener('change', (event) => {
         getInstanceWeigher(currentWeigherPath)
         getData(currentWeigherPath)
         .then(() => localStorage.setItem('currentWeigherPath', currentWeigherPath))
-        .then(() => populateListIn());
+;
     }
 });
 
@@ -236,61 +236,28 @@ async function getData(path) {
     .catch(error => console.error('Errore nella fetch:', error));
 }
 
-async function populateListIn() {
-    const listIn = document.querySelector('.list-in');
+const MAX_PLATES = 10;
+let platesList = [];
 
-    await fetch('/api/anagrafic/access/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
-    .then(res => res.json())
-    .then(data => {
-        listIn.innerHTML = '';
-        data.data.forEach(item => {
-            const li = document.createElement('li');
-            if (item.selected == true && item.id !== selectedIdWeight) li.style.background = 'lightgrey';
-            let content = item.id;
-            if (item.in_out.length > 0) {
-                if (item.in_out[0].idWeight1) content = item.in_out[0].weight1.pid;
-                else if (item.in_out[0].idWeight2) content = item.in_out[0].weight2.pid;
-            }
-            if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
-            li.textContent = content;
-            li.setAttribute('data-id', item.id);
-            if (item.id == selectedIdWeight) li.classList.add('selected');
-            li.addEventListener('click', async () => {
-                let obj =  {
-                    data_in_execution: {                                    
-                    },
-                    id_selected: {
-                        id: item.id
-                    }
-                }
-                if (item.id == selectedIdWeight) obj.id_selected.id = -1;
-                await fetch(`/api/data${currentWeigherPath}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(obj)
-                })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-                    else numberInOutSelectedIdWeight = item.in_out.length;
-                });
-            })
-            listIn.appendChild(li);
-        })
-    })
-    .then(() => {
-        const selected = document.querySelector('.list-in li.selected');
-        if (selected) {
-            selected.scrollIntoView({
-                behavior: 'instant',
-                block: 'nearest',
-                inline: 'start'
-            });
-        }
-    })
-    .catch(error => console.error('Errore nella fetch:', error));
+function addPlateToList(plateMessage) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    platesList.unshift({ plate: plateMessage, time: timeStr });
+    if (platesList.length > MAX_PLATES) {
+        platesList = platesList.slice(0, MAX_PLATES);
+    }
+    renderPlatesList();
+}
+
+function renderPlatesList() {
+    const listPlates = document.querySelector('.list-plates');
+    if (!listPlates) return;
+    listPlates.innerHTML = '';
+    platesList.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.time} - ${item.plate}`;
+        listPlates.appendChild(li);
+    });
 }
 
 function scrollToSelectedItem() {
@@ -641,7 +608,6 @@ function attemptReconnect() {
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
     getInstanceWeigher(currentWeigherPath);
     getData(currentWeigherPath);
-    populateListIn(currentWeigherPath);
 }
 
 function closeWebSocket() {
@@ -708,7 +674,7 @@ function updateUIRealtime(e) {
                 }
             }
             showSnackbar("snackbar", message, 'rgb(208, 255, 208)', 'black');
-            populateListIn();
+            // plate list is updated via cam_message events
         } else { 
             showSnackbar("snackbar", "Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
@@ -814,16 +780,6 @@ function updateUIRealtime(e) {
                 const newlySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
                 if (newlySelected) newlySelected.classList.add('selected');
             }
-            const selected = document.querySelector('.list-in li.selected');
-            if (selected) {
-                selected.scrollIntoView({
-                    behavior: 'instant',
-                    block: 'nearest',
-                    inline: 'start'
-                });
-            }
-        } else {
-            populateListIn();
         }
         // if (obj.id_selected.id === null) {
         //     // Seleziona tutti i pulsanti e gli input
@@ -841,13 +797,14 @@ function updateUIRealtime(e) {
         //     });
         // }
     } else if (obj.access) {
-        populateListIn();
+        // access events ignored - plate list is updated via cam_message
     } else if (obj.message) {
         showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
         showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
     } else if (obj.cam_message) {
         showSnackbar("snackbar2", obj.cam_message, 'white', 'black');
+        addPlateToList(obj.cam_message);
     }
 }
 
