@@ -133,23 +133,14 @@ select {
     margin-bottom: 0px;
 }
 
-.center-column {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 300px;
-    width: 100%;
-    min-width: 0;
-}
-
 .display {
     background-color: #1362b8;
     width: 100%;
-    flex: 0 0 auto;
+    flex: 1 1 300px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-radius: 5px 5px 0 0;
-    min-height: 280px;
+    border-radius: 5px;
 }
 
 .access-list-wrapper {
@@ -159,18 +150,15 @@ select {
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-radius: 0 0 5px 5px;
+    border-radius: 0 0 15px 15px;
     min-height: 150px;
     overflow: hidden;
 }
 
 .access-table-container {
-    width: 99%;
-    max-width: 850px;
+    width: 100%;
     flex: 1;
     overflow-y: auto;
-    margin: 0 auto;
-    border-radius: 5px;
     background: white;
 }
 
@@ -693,7 +681,7 @@ button:active {
         max-width: 80px;
     }
 
-    .center-column.item {
+    .display.item {
         width: 100%;
     }
 
