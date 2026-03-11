@@ -344,6 +344,84 @@ function showOcrDetail(index) {
     setTimeout(() => popupContent.classList.add('show'), 10);
 }
 
+async function populateListIn() {
+    const tbody = document.getElementById('accessTableBody');
+    if (!tbody) return;
+
+    await fetch('/api/anagrafic/access/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
+    .then(res => res.json())
+    .then(data => {
+        tbody.innerHTML = '';
+        data.data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-id', item.id);
+
+            if (item.selected == true && selectedIdWeight !== null && selectedIdWeight["id"] !== item.id) {
+                tr.classList.add('other-selected');
+            }
+            if (selectedIdWeight !== null && selectedIdWeight["id"] == item.id) {
+                tr.classList.add('selected');
+            }
+
+            // Targa
+            let plate = '';
+            if (item.vehicle && item.vehicle.plate) plate = item.vehicle.plate;
+
+            // Soggetto
+            let subject = '';
+            if (item.subject && item.subject.social_reason) subject = item.subject.social_reason;
+
+            // Materiale
+            let material = '';
+            const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
+            if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
+                material = lastInOut.material.description;
+            } else if (item.material && item.material.description) {
+                material = item.material.description;
+            }
+
+            // Documento
+            let doc = item.document_reference || '';
+
+            // Data
+            let date = '';
+            if (item.date_created) {
+                const d = new Date(item.date_created);
+                date = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            }
+
+            tr.innerHTML = `<td title="${plate}">${plate}</td><td title="${subject}">${subject}</td><td title="${material}">${material}</td><td title="${doc}">${doc}</td><td>${date}</td>`;
+
+            tr.addEventListener('click', async () => {
+                let obj = {
+                    data_in_execution: {},
+                    id_selected: { id: item.id }
+                };
+                if (selectedIdWeight !== null && selectedIdWeight["id"] == item.id) obj.id_selected.id = -1;
+                await fetch(`/api/data${currentWeigherPath}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(obj)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+                    else numberInOutSelectedIdWeight = item.in_out.length;
+                });
+            });
+
+            tbody.appendChild(tr);
+        });
+    })
+    .then(() => {
+        const selected = tbody.querySelector('tr.selected');
+        if (selected) {
+            selected.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+        }
+    })
+    .catch(error => console.error('Errore nella fetch:', error));
+}
+
 function scrollToSelectedItem() {
     const selectedItem = document.querySelector('.selected');
     if (selectedItem) {
@@ -407,6 +485,7 @@ function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
         if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         else {
             closePopup();
+            populateListIn();
         }
     });
 }
@@ -491,6 +570,7 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                     if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                     else {
                         closePopup();
+                        populateListIn();
                     }
                 });
             };
@@ -712,6 +792,7 @@ function connectWebSocket(path, exe) {
         // Ricarica i dati dopo aver aperto la connessione
         getInstanceWeigher(currentWeigherPath);
         getData(currentWeigherPath)
+            .then(() => populateListIn())
             .then(() => {
                 // Abilita tutti gli elementi solo dopo aver caricato i dati
                 enableAllElements();
@@ -930,7 +1011,8 @@ function processRealtimeObject(obj) {
                 }
             }
             showSnackbar("snackbar", message, 'rgb(208, 255, 208)', 'black');
-        } else { 
+            populateListIn();
+        } else {
             showSnackbar("snackbar", "Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
         access_id = null;
@@ -1053,8 +1135,9 @@ function processRealtimeObject(obj) {
                 handleNeedToConfirm(obj.data_in_execution.vehicle.plate.replace("⭐", ""));
             }
         }
+        populateListIn();
     } else if (obj.access) {
-        // access events ignored - plate list updated via cam_message
+        populateListIn();
     } else if (obj.message) {
         showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
