@@ -142,7 +142,6 @@ select {
     justify-content: flex-start;
     border-radius: 5px;
     overflow: hidden;
-    padding: 8px 0;
 }
 
 .access-list-wrapper {
@@ -226,8 +225,8 @@ select {
     background-color: white;
     border-radius: 5px;
     position: relative;
-    font-size: 2.5rem;
-    width: 95%;
+    font-size: 3rem;
+    width: 99%;
     margin: 0px auto;
 }
 
@@ -328,7 +327,7 @@ select {
 }
 
 #netWeight {
-    margin: 0.8rem 0px 0px 0px;
+    margin: 1.5rem 0px 0px 0px;
 }
 
 .info {
@@ -375,9 +374,9 @@ button {
     cursor: pointer;
     transition: background-color 0.3s;
     flex: 1;
-    font-size: 1.3rem;
+    font-size: 1.6rem;
     box-shadow: 0 4px 30px rgba(202, 73, 73, 0.1);
-    height: 3rem;
+    height: 4rem;
 }
 
 button:active {
@@ -869,13 +868,13 @@ button:active {
 .in-out {
     gap: 5px;
     display: flex;
-    width: 95%;
+    width: 99%;
     flex-wrap: wrap;
 }
 
 .weight,
 .in-out {
-    max-width: 800px;
+    max-width: 850px;
 }
 
 .box {
@@ -906,7 +905,7 @@ button:active {
 
 .in-out,
 .list-weigher {
-    margin: 0.5rem auto 0px auto;
+    margin: 1rem auto 0px auto;
 }
 
 .weight,
