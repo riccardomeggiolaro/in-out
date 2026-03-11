@@ -496,7 +496,7 @@ button:active {
 /* Updated media queries */
 @media (max-width: 800px) {
     .display-wrapper,
-    .in-out {
+    .weight-row {
         max-width: 700px;
     }
 
@@ -753,7 +753,7 @@ button:active {
         height: auto;
     }
 
-    .in-out {
+    .weight-row {
         height: max-content;
         position: relative;
     }
@@ -865,16 +865,45 @@ button:active {
     color: #e0e0e0;
 }
 
-.in-out {
-    gap: 5px;
+.weight-row {
     display: flex;
+    align-items: stretch;
     width: 99%;
-    flex-wrap: wrap;
+    max-width: 850px;
+    margin: 0 auto;
+    gap: 8px;
 }
 
-.weight,
-.in-out {
-    max-width: 850px;
+.buttons-left,
+.buttons-right {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 0 0 auto;
+    min-width: 80px;
+}
+
+.buttons-left button,
+.buttons-right button {
+    flex: 1;
+    font-size: 1.1rem;
+    height: auto;
+    min-height: 2.5rem;
+}
+
+.weight-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.weight-center .weight {
+    width: 100%;
+}
+
+.weight-center .list-weigher {
+    margin: 0.5rem auto 0;
 }
 
 .box {
@@ -903,7 +932,7 @@ button:active {
     border-radius: 5px;
 }
 
-.in-out,
+.weight-row,
 .list-weigher {
     margin: 1rem auto 0px auto;
 }
@@ -915,13 +944,23 @@ button {
     transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
 }
 
-.in-out button {
-    flex: 1 1 calc(33.33% - 10px); /* Ogni bottone occupa un terzo della riga, meno il gap */
-}
-
 @media (max-width: 550px) {
-    .in-out button {
-        flex: 1 1 calc(50% - 10px); /* Quando lo schermo è più piccolo, i bottoni occupano metà riga */
+    .weight-row {
+        flex-wrap: wrap;
+    }
+    .buttons-left,
+    .buttons-right {
+        flex-direction: row;
+        flex: 1 1 100%;
+        min-width: auto;
+    }
+    .buttons-left button,
+    .buttons-right button {
+        flex: 1;
+    }
+    .weight-center {
+        flex: 1 1 100%;
+        order: -1;
     }
 }
 

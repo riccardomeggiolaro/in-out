@@ -84,36 +84,40 @@
                             <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
                         </div>
 
-                        <div class="weight">
-                            <h2 id="netWeight">------</h2>
-                            <div class="info-container" id="info-container">
-                                <div class="info-icon"><strong><em>i</em></strong></div>
-                                <div class="tooltip">
-                                    <h4>Dettagli terminale</h4>
-                                    <p>Firmware: <strong id="firmware"></strong></p>
-                                    <p>Model name: <strong id="modelName"></strong></p>
-                                    <p>Serial number: <strong id="serialNumber"></strong></p>
-                                    <p>Portata minima: <strong id="minWeight"></strong></p>
-                                    <p>Portata massima: <strong id="maxWeight"></strong></p>
-                                    <p>Divisione: <strong id="division"></strong></p>
-                                </div>
+                        <div class="weight-row">
+                            <div class="buttons-left">
+                                <button onclick="handleTara()" id="tareButton">Tara</button>
+                                <button onclick="handleZero()" id="zeroButton">Zero</button>
+                                <button onclick="openPopup('presetTare', 'myNumberInput')" id="pTareButton">P Tara</button>
                             </div>
-                            <p id="uniteMisure">--</p>
-                            <p id="tare">------</p>
-                            <p id="status">--</p>
-                            <p id="potential_net_weight"></p>
-                        </div>
-
-                        <select class="list-weigher">
-                        </select>
-
-                        <div class="in-out">
-                            <button onclick="handleTara()" id="tareButton">Tara</button>
-                            <button onclick="handleZero()" id="zeroButton">Zero</button>
-                            <button onclick="openPopup('presetTare', 'myNumberInput')" id="pTareButton">P Tara</button>
-                            <button onclick="handlePesata()" id="inButton">Peso 1</button>
-                            <button onclick="handleStampa(event)" id="printButton">Generico</button>
-                            <button onclick="handlePesata2()" id="outButton">Peso 2</button>
+                            <div class="weight-center">
+                                <div class="weight">
+                                    <h2 id="netWeight">------</h2>
+                                    <div class="info-container" id="info-container">
+                                        <div class="info-icon"><strong><em>i</em></strong></div>
+                                        <div class="tooltip">
+                                            <h4>Dettagli terminale</h4>
+                                            <p>Firmware: <strong id="firmware"></strong></p>
+                                            <p>Model name: <strong id="modelName"></strong></p>
+                                            <p>Serial number: <strong id="serialNumber"></strong></p>
+                                            <p>Portata minima: <strong id="minWeight"></strong></p>
+                                            <p>Portata massima: <strong id="maxWeight"></strong></p>
+                                            <p>Divisione: <strong id="division"></strong></p>
+                                        </div>
+                                    </div>
+                                    <p id="uniteMisure">--</p>
+                                    <p id="tare">------</p>
+                                    <p id="status">--</p>
+                                    <p id="potential_net_weight"></p>
+                                </div>
+                                <select class="list-weigher">
+                                </select>
+                            </div>
+                            <div class="buttons-right">
+                                <button onclick="handlePesata()" id="inButton">Peso 1</button>
+                                <button onclick="handlePesata2()" id="outButton">Peso 2</button>
+                                <button onclick="handleStampa(event)" id="printButton">Generico</button>
+                            </div>
                         </div>
 
                         <div class="access-list-wrapper">
