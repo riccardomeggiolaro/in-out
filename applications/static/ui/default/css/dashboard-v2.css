@@ -194,7 +194,6 @@ select {
 }
 
 .access-table td:first-child {
-    background-color: #e8f4ff;
     font-weight: 600;
     border-right: 2px solid aliceblue;
 }
