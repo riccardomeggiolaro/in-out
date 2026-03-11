@@ -78,45 +78,62 @@
                         <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" oninput="this.value = ''" >
                     </div>
                 </div>
-                <div class="display item">
-                    <!-- <div id="cams" class="cams">
-                    </div> -->
-
-                    <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
-                        <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="diagnostic()">⚡</button>
-                        <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
-                    </div>
-
-                    <div class="weight">
-                        <h2 id="netWeight">------</h2>
-                        <div class="info-container" id="info-container">
-                            <div class="info-icon"><strong><em>i</em></strong></div>
-                            <div class="tooltip">
-                                <h4>Dettagli terminale</h4>
-                                <p>Firmware: <strong id="firmware"></strong></p>
-                                <p>Model name: <strong id="modelName"></strong></p>
-                                <p>Serial number: <strong id="serialNumber"></strong></p>
-                                <p>Portata minima: <strong id="minWeight"></strong></p>
-                                <p>Portata massima: <strong id="maxWeight"></strong></p>
-                                <p>Divisione: <strong id="division"></strong></p>
-                            </div>
+                <div class="center-column item">
+                    <div class="display">
+                        <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
+                            <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="diagnostic()">⚡</button>
+                            <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
                         </div>
-                        <p id="uniteMisure">--</p>
-                        <p id="tare">------</p>
-                        <p id="status">--</p>
-                        <p id="potential_net_weight"></p>
+
+                        <div class="weight">
+                            <h2 id="netWeight">------</h2>
+                            <div class="info-container" id="info-container">
+                                <div class="info-icon"><strong><em>i</em></strong></div>
+                                <div class="tooltip">
+                                    <h4>Dettagli terminale</h4>
+                                    <p>Firmware: <strong id="firmware"></strong></p>
+                                    <p>Model name: <strong id="modelName"></strong></p>
+                                    <p>Serial number: <strong id="serialNumber"></strong></p>
+                                    <p>Portata minima: <strong id="minWeight"></strong></p>
+                                    <p>Portata massima: <strong id="maxWeight"></strong></p>
+                                    <p>Divisione: <strong id="division"></strong></p>
+                                </div>
+                            </div>
+                            <p id="uniteMisure">--</p>
+                            <p id="tare">------</p>
+                            <p id="status">--</p>
+                            <p id="potential_net_weight"></p>
+                        </div>
+
+                        <select class="list-weigher">
+                        </select>
+
+                        <div class="in-out">
+                            <button onclick="handleTara()" id="tareButton">Tara</button>
+                            <button onclick="handleZero()" id="zeroButton">Zero</button>
+                            <button onclick="openPopup('presetTare', 'myNumberInput')" id="pTareButton">P Tara</button>
+                            <button onclick="handlePesata()" id="inButton">Peso 1</button>
+                            <button onclick="handleStampa(event)" id="printButton">Generico</button>
+                            <button onclick="handlePesata2()" id="outButton">Peso 2</button>
+                        </div>
                     </div>
-
-                    <select class="list-weigher">
-                    </select>
-
-                    <div class="in-out">
-                        <button onclick="handleTara()" id="tareButton">Tara</button>
-                        <button onclick="handleZero()" id="zeroButton">Zero</button>
-                        <button onclick="openPopup('presetTare', 'myNumberInput')" id="pTareButton">P Tara</button>
-                        <button onclick="handlePesata()" id="inButton">Peso 1</button>
-                        <button onclick="handleStampa(event)" id="printButton">Generico</button>
-                        <button onclick="handlePesata2()" id="outButton">Peso 2</button>
+                    <div class="access-list-wrapper">
+                        <h3 style="color: white; margin: 8px 0 4px 0;">Accessi</h3>
+                        <div class="access-table-container">
+                            <table class="access-table">
+                                <thead>
+                                    <tr>
+                                        <th>Targa</th>
+                                        <th>Soggetto</th>
+                                        <th>Materiale</th>
+                                        <th>Documento</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accessTableBody">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 <div class="item ins">

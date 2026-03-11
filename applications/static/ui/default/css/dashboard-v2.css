@@ -133,14 +133,93 @@ select {
     margin-bottom: 0px;
 }
 
+.center-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 300px;
+    width: 100%;
+    min-width: 0;
+}
+
 .display {
     background-color: #1362b8;
     width: 100%;
-    flex: 1 1 300px;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    border-radius: 5px 5px 0 0;
+    min-height: 280px;
+}
+
+.access-list-wrapper {
+    background-color: #1362b8;
+    width: 100%;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 0 0 5px 5px;
+    min-height: 150px;
+    overflow: hidden;
+}
+
+.access-table-container {
+    width: 99%;
+    max-width: 850px;
+    flex: 1;
+    overflow-y: auto;
+    margin: 0 auto;
     border-radius: 5px;
+    background: white;
+}
+
+.access-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.access-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.access-table th {
+    background-color: #0d4d8f;
+    color: white;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.access-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.access-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.access-table tbody tr:hover {
+    background-color: #e8f0fe;
+}
+
+.access-table tbody tr.selected {
+    background-color: #1362b8;
+    color: white;
+}
+
+.access-table tbody tr.other-selected {
+    background-color: #d0d0d0;
 }
 
 .weight {
@@ -599,10 +678,22 @@ button:active {
     }
 
     .display {
-        min-height: 100vh;
+        min-height: auto;
     }
 
-    .display.item {
+    .access-list-wrapper {
+        min-height: 200px;
+    }
+
+    .access-table {
+        font-size: 0.75rem;
+    }
+
+    .access-table td {
+        max-width: 80px;
+    }
+
+    .center-column.item {
         width: 100%;
     }
 
