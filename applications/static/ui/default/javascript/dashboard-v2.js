@@ -83,7 +83,7 @@ let handleClickNeedToConfirm;
 const buttons = document.querySelectorAll("button");
 const myNumberInput = document.getElementById("myNumberInput");
 const container = document.querySelector('.ins');
-const listIn = document.querySelector('.list-in');
+const listIn = document.querySelector('.list-plates');
 const reprint = document.querySelector('#reprint');
 const selectedIdWeigher = document.querySelector('.list-weigher');
 const tareButton = document.getElementById('tareButton');
@@ -273,78 +273,28 @@ async function getData(path) {
     .catch(error => console.error('Errore nella fetch:', error));
 }
 
-async function populateListIn() {
-    const listIn = document.querySelector('.list-in');
+const MAX_PLATES = 10;
+let platesList = [];
 
-    await fetch('/api/anagrafic/access/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
-    .then(res => res.json())
-    .then(data => {
-        listIn.innerHTML = '';
-        data.data.forEach(item => {
-            const li = document.createElement('li');
-            if (item.selected == true && selectedIdWeight !== null && selectedIdWeight["id"] !== item.id) li.style.background = 'lightgrey';
-            let content = item.id;
-            if (item.in_out.length > 0) {
-                if (item.in_out[0].idWeight1) content = item.in_out[0].weight1.pid;
-                else if (item.in_out[0].idWeight2) content = item.in_out[0].weight2.pid;
-            }
-            if (item.vehicle && item.vehicle.plate) {
-                content = `${item.vehicle.plate}`;
-            }
+function addPlateToList(plateMessage) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    platesList.unshift({ plate: plateMessage, time: timeStr });
+    if (platesList.length > MAX_PLATES) {
+        platesList = platesList.slice(0, MAX_PLATES);
+    }
+    renderPlatesList();
+}
 
-            // Add subject and material information (always show if present)
-            let additionalInfo = [];
-            if (item.subject && item.subject.social_reason) {
-                additionalInfo.push(item.subject.social_reason);
-            }
-            const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
-            if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
-                additionalInfo.push(lastInOut.material.description);
-            } else if (item.material && item.material.description) {
-                additionalInfo.push(item.material.description);
-            }
-            if (additionalInfo.length > 0) {
-                content += `<br><small style="font-size: 0.85em;">${additionalInfo.join(' - ')}</small>`;
-            }
-            li.innerHTML = content;
-            li.setAttribute('data-id', item.id);
-            if (selectedIdWeight !== null && selectedIdWeight["id"] == item.id) li.classList.add('selected');
-            li.addEventListener('click', async () => {
-                let obj =  {
-                    data_in_execution: {                                    
-                    },
-                    id_selected: {
-                        id: item.id
-                    }
-                }
-                if (selectedIdWeight !== null && selectedIdWeight["id"] == item.id) obj.id_selected.id = -1;
-                await fetch(`/api/data${currentWeigherPath}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(obj)
-                })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-                    else numberInOutSelectedIdWeight = item.in_out.length;
-                });
-            })
-            listIn.appendChild(li);
-        })
-    })
-    .then(() => {
-        const selected = document.querySelector('.list-in li.selected');
-        if (selected) {
-            selected.scrollIntoView({
-                behavior: 'instant',
-                block: 'nearest',
-                inline: 'start'
-            });
-        }
-    })
-    .catch(error => console.error('Errore nella fetch:', error));
+function renderPlatesList() {
+    const listPlates = document.querySelector('.list-plates');
+    if (!listPlates) return;
+    listPlates.innerHTML = '';
+    platesList.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.time} - ${item.plate}`;
+        listPlates.appendChild(li);
+    });
 }
 
 function scrollToSelectedItem() {
@@ -410,7 +360,6 @@ function setDataInExecutionOnCLick(anagrafic, key, value, showList) {
         if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         else {
             closePopup();
-            populateListIn();
         }
     });
 }
@@ -495,7 +444,6 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                     if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                     else {
                         closePopup();
-                        populateListIn();
                     }
                 });
             };
@@ -717,7 +665,6 @@ function connectWebSocket(path, exe) {
         // Ricarica i dati dopo aver aperto la connessione
         getInstanceWeigher(currentWeigherPath);
         getData(currentWeigherPath)
-            .then(() => populateListIn())
             .then(() => {
                 // Abilita tutti gli elementi solo dopo aver caricato i dati
                 enableAllElements();
@@ -936,7 +883,6 @@ function processRealtimeObject(obj) {
                 }
             }
             showSnackbar("snackbar", message, 'rgb(208, 255, 208)', 'black');
-            populateListIn();
         } else { 
             showSnackbar("snackbar", "Pesata fallita", 'rgb(255, 208, 208)', 'black');
         }
@@ -1054,29 +1000,21 @@ function processRealtimeObject(obj) {
                 const newlySelected = document.querySelector(`li[data-id="${["selectedIdWeight['id']"]}"]`);
                 if (newlySelected) newlySelected.classList.add('selected');
             }
-            const selected = document.querySelector('.list-in li.selected');
-            if (selected) {
-                selected.scrollIntoView({
-                    behavior: 'instant',
-                    block: 'nearest',
-                    inline: 'start'
-                });
-            }
         } else {
             // NUOVO: Controlla need_to_confirm anche quando l'ID non cambia
             if (obj.id_selected.need_to_confirm === true) {
                 handleNeedToConfirm(obj.data_in_execution.vehicle.plate.replace("⭐", ""));
             }
         }
-        populateListIn();
     } else if (obj.access) {
-        populateListIn();
+        // access events ignored - plate list updated via cam_message
     } else if (obj.message) {
         showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
         showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
     } else if (obj.cam_message) {
         showSnackbar("snackbar2", obj.cam_message, 'white', 'black');
+        addPlateToList(obj.cam_message);
     }
 }
 
@@ -1242,7 +1180,6 @@ async function executeStampa(weight = null) {
                     document.body.removeChild(downloadLink);
                 });
             }
-            populateListIn();
         } else {
             showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
@@ -1494,7 +1431,7 @@ function checkInitialData() {
         }
 
         // Controlla se ci sono accessi nella lista ins e inizializza il contatore
-        const listIn = document.querySelector('.list-in');
+        const listIn = document.querySelector('.list-plates');
         if (listIn) {
             lastInsCount = listIn.children.length;
         }
@@ -1502,7 +1439,7 @@ function checkInitialData() {
 }
 
 function checkInsData() {
-    const listIn = document.querySelector('.list-in');
+    const listIn = document.querySelector('.list-plates');
     if (listIn && window.innerWidth <= 800) {
         const currentCount = listIn.children.length;
 
@@ -1535,7 +1472,7 @@ function checkDataChanges() {
 // Osserva i cambiamenti nella lista ins
 const insObserver = new MutationObserver(() => {
     if (window.innerWidth <= 800) {
-        const listIn = document.querySelector('.list-in');
+        const listIn = document.querySelector('.list-plates');
         if (listIn) {
             const currentCount = listIn.children.length;
 
@@ -1551,7 +1488,7 @@ const insObserver = new MutationObserver(() => {
 
 // Inizia ad osservare quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
-    const listIn = document.querySelector('.list-in');
+    const listIn = document.querySelector('.list-plates');
     if (listIn) {
         insObserver.observe(listIn, { childList: true, subtree: true });
     }
