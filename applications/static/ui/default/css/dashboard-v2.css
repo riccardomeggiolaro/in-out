@@ -897,6 +897,7 @@ button:active {
 
 .weight-center .weight {
     width: 100%;
+    flex: 1;
 }
 
 .weight-center .list-weigher {
