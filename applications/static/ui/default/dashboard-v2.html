@@ -115,6 +115,25 @@
                             <button onclick="handleStampa(event)" id="printButton">Generico</button>
                             <button onclick="handlePesata2()" id="outButton">Peso 2</button>
                         </div>
+
+                        <div class="access-list-wrapper">
+                            <h3 style="color: white; margin: 8px 0 4px 0;">Accessi</h3>
+                            <div class="access-table-container">
+                                <table class="access-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Targa</th>
+                                            <th>Soggetto</th>
+                                            <th>Materiale</th>
+                                            <th>Documento</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accessTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                 </div>
                 <div class="item ins">
                     <button class="close-tab-button" onclick="closeTab('ins')">✕</button>
@@ -122,24 +141,6 @@
                     <hr>
                     <ul class="list-plates">
                     </ul>
-                </div>
-            </div>
-            <div class="access-list-wrapper">
-                <h3 style="color: white; margin: 8px 0 4px 0;">Accessi</h3>
-                <div class="access-table-container">
-                    <table class="access-table">
-                        <thead>
-                            <tr>
-                                <th>Targa</th>
-                                <th>Soggetto</th>
-                                <th>Materiale</th>
-                                <th>Documento</th>
-                                <th>Data</th>
-                            </tr>
-                        </thead>
-                        <tbody id="accessTableBody">
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
