@@ -885,8 +885,7 @@ button:active {
 .buttons-right button {
     flex: 1;
     font-size: 1.1rem;
-    height: auto;
-    min-height: 2.5rem;
+    height: 0;
 }
 
 .weight-center {
