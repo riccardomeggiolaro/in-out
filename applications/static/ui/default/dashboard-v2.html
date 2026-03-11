@@ -121,11 +121,20 @@
                 </div>
                 <div class="item ins">
                     <button class="close-tab-button" onclick="closeTab('ins')">✕</button>
-                    <h2>Ultime targhe lette</h2>
+                    <h2>OCR</h2>
                     <hr>
                     <ul class="list-plates">
                     </ul>
                 </div>
+            </div>
+        </div>
+
+        <!-- Popup dettagli OCR -->
+        <div id="ocrDetailPopup" class="popup">
+            <div class="popup-content" style="max-width: 400px;">
+                <h3 style="margin-top: 0;">Dettagli lettura OCR</h3>
+                <div id="ocrDetailContent" style="text-align: left; line-height: 1.8;"></div>
+                <button onclick="closePopup()" style="margin-top: 15px; width: 100%;">Chiudi</button>
             </div>
         </div>
 
