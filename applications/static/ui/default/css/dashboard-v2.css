@@ -165,7 +165,7 @@ select {
 .access-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.85rem;
+    font-size: 1.05rem;
 }
 
 .access-table thead {
@@ -190,6 +190,19 @@ select {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px;
+    text-align: left;
+}
+
+.access-table td:first-child,
+.access-table th:first-child {
+    background-color: #e8f4ff;
+    font-weight: 600;
+    border-right: 2px solid aliceblue;
+}
+
+.access-table tbody tr.selected td:first-child {
+    background-color: #0d4d8f;
+    color: white;
 }
 
 .access-table tbody tr {
@@ -674,7 +687,7 @@ button:active {
     }
 
     .access-table {
-        font-size: 0.75rem;
+        font-size: 0.9rem;
     }
 
     .access-table td {
