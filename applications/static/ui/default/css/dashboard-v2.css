@@ -732,7 +732,7 @@ button:active {
 .list-item:hover {
     background-color: aliceblue;
 }
-.list-in {
+.list-plates {
     list-style: none; 
     padding: 0px; 
     margin: 0px; 
@@ -743,7 +743,7 @@ button:active {
     display: flex;
     flex-direction: column;
 }
-.list-in li {
+.list-plates li {
     background-color: white;
     padding: 5px;
     border-radius: 5px;
@@ -759,19 +759,19 @@ button:active {
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
-.list-in li:hover {
+.list-plates li:hover {
     background-color: aliceblue;
     cursor: pointer;
 }
-.list-in li small {
+.list-plates li small {
     color: #666;
 }
-.list-in li.selected {
+.list-plates li.selected {
     background-color: #1362b8;
     color: white;
     border: 2px solid #1362b8;
 }
-.list-in li.selected small {
+.list-plates li.selected small {
     color: #e0e0e0;
 }
 
