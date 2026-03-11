@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pannello V2</title>
+    <meta name="description" content="About this app" />
+    <link rel="stylesheet" href="/static/css/dashboard-v2.css">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+</head>
+<!-- Rest of your HTML remains unchanged -->
+</style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+
+    <!-- Overlay scuro per i tab mobili -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeAllTabs()"></div>
+
+    <!-- Linguette per aprire anagrafic e ins su schermi piccoli -->
+    <div class="mobile-tabs">
+        <button class="tab-button tab-left" id="tabAnagrafic" onclick="toggleTab('anagrafic')">
+            <span>📝</span>
+            <span class="notification-badge" id="badgeAnagrafic"></span>
+        </button>
+        <button class="tab-button tab-right" id="tabIns" onclick="toggleTab('ins')">
+            <span>📋</span>
+            <span class="notification-badge" id="badgeIns"></span>
+        </button>
+    </div>
+
+    <div class="box">
+        <div class="loading">
+            <img class="img-loading" src="/static/content/baronpesi_logo.png" alt="Logo Baron Pesi">
+        </div>
+        <div class="container">
+            <div class="display-wrapper">
+                <div class="item anagrafic">
+                    <button class="close-tab-button" onclick="closeTab('anagrafic')">✕</button>
+                    <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>VEICOLO</strong></p>
+                        <span class="containerPlateVehicle">
+                            <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')" oninput="this.value = ''" >
+                            <button onclick="deleteIdSelected()">X</button>
+                        </span>
+                    </div>
+
+                    <div>
+                        <p></p>
+                        <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)" style="font-weight: bold;">
+                            <option value="CUSTOMER">CLIENTE</option>
+                            <option value="SUPPLIER">FORNITORE</option>
+                        </select>
+                        <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')" oninput="this.value = ''" >
+                    </div>
+
+                    <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>VETTORE</strong></p>
+                        <input placeholder="Vettore" id="currentSocialReasonVector" type="text" name="social_reason" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')" oninput="this.value = ''" >
+                    </div>
+
+                    <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>MATERIALE</strong></p>
+                        <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')" oninput="this.value = ''" >
+                    </div>
+
+                    <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>NOTE</strong></p>
+                        <input placeholder="Note" id="currentNote" type="text" name="note" onclick="openPopup('notePopup', 'myNoteInput')" oninput="this.value = ''" >
+                    </div>
+
+                    <div>
+                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>DOCUMENTO</strong></p>
+                        <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" oninput="this.value = ''" >
+                    </div>
+                </div>
+                <div class="display item">
+                    <!-- <div id="cams" class="cams">
+                    </div> -->
+
+                    <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
+                        <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="diagnostic()">⚡</button>
+                        <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
+                    </div>
+
+                    <div class="weight">
+                        <h2 id="netWeight">------</h2>
+                        <div class="info-container" id="info-container">
+                            <div class="info-icon"><strong><em>i</em></strong></div>
+                            <div class="tooltip">
+                                <h4>Dettagli terminale</h4>
+                                <p>Firmware: <strong id="firmware"></strong></p>
+                                <p>Model name: <strong id="modelName"></strong></p>
+                                <p>Serial number: <strong id="serialNumber"></strong></p>
+                                <p>Portata minima: <strong id="minWeight"></strong></p>
+                                <p>Portata massima: <strong id="maxWeight"></strong></p>
+                                <p>Divisione: <strong id="division"></strong></p>
+                            </div>
+                        </div>
+                        <p id="uniteMisure">--</p>
+                        <p id="tare">------</p>
+                        <p id="status">--</p>
+                        <p id="potential_net_weight"></p>
+                    </div>
+
+                    <select class="list-weigher">
+                    </select>
+
+                    <div class="in-out">
+                        <button onclick="handleTara()" id="tareButton">Tara</button>
+                        <button onclick="handleZero()" id="zeroButton">Zero</button>
+                        <button onclick="openPopup('presetTare', 'myNumberInput')" id="pTareButton">P Tara</button>
+                        <button onclick="handlePesata()" id="inButton">Peso 1</button>
+                        <button onclick="handleStampa(event)" id="printButton">Generico</button>
+                        <button onclick="handlePesata2()" id="outButton">Peso 2</button>
+                    </div>
+                </div>
+                <div class="item ins">
+                    <button class="close-tab-button" onclick="closeTab('ins')">✕</button>
+                    <h2>Accessi</h3>
+                    <hr>
+                    <ul class="list-in">
+                    </ul>                    
+                </div>
+            </div>
+        </div>
+
+        <div id="snackbar-dashboard"></div>
+
+        <div id="presetTare" class="popup">
+            <div class="popup-content">
+                <h2>Preset Tara</h2>
+                <input type="number" placeholder="0" id="myNumberInput" autocomplete="off">
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="handlePTara()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="plateVehiclePopup" class="popup">
+            <div class="popup-content">
+                <h2>Targa:</h2>
+                <input type="text" id="plateVehicleInput" autocomplete="off" class="input" oninput="this.value = this.value.toUpperCase(); showSuggestions('vehicle', 'descriptionVehicleInput', 'plate', this.value, ['plate', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle');">
+                <ul id="suggestionsListPlateVehicle" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button id="plateSubmitButton" class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'plate', plateVehicleInput.value, 'suggestionsListPlateVehicle')">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- <div id="descriptionVehiclePopup" class="popup">
+            <div class="popup-content">
+                <h2>Descrizione:</h2>
+                <input type="text" id="descriptionVehicleInput" autocomplete="off" class="input" oninput="validatePlate(this); showSuggestions('vehicle', 'descriptionVehicleInput', 'description', this.value, ['plate', 'date_created'], 'descriptionVehiclePopup', 'suggestionsListDescriptionVehicle');">
+                <ul id="suggestionsListDescriptionVehicle" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vehicle', 'description', descriptionVehicleInput.value, 'suggestionsListDescriptionVehicle')">OK</button>
+                </div>
+            </div>
+        </div> -->
+
+        <div id="socialReasonSubjectPopup" class="popup">
+            <div class="popup-content">
+                <h2>Soggetto:</h2>
+                <input type="text" id="socialReasonSubjectInput" autocomplete="off" class="input" oninput="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', this.value, ['telephone', 'cfpiva', 'date_created'], 'subjectPopup', 'suggestionsListSocialReasonSubject');">
+                <ul id="suggestionsListSocialReasonSubject" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('subject', 'social_reason', socialReasonSubjectInput.value, 'suggestionsListSocialReasonSubject')">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="socialReasonVectorPopup" class="popup">
+            <div class="popup-content">
+                <h2>Vettore:</h2>
+                <input type="text" id="socialReasonVectorInput" autocomplete="off" class="input" oninput="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', this.value, ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector');">
+                <ul id="suggestionsListSocialReasonVector" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('vector', 'social_reason', socialReasonVectorInput.value, 'suggestionsListSocialReasonVector')">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="socialReasonDriverPopup" class="popup">
+            <div class="popup-content">
+                <h2>Autista:</h2>
+                <input type="text" id="socialReasonDriverInput" autocomplete="off" class="input" oninput="showSuggestions('driver', 'socialReasonDriverInput', 'social_reason', this.value, ['telephone', 'cfpiva', 'date_created'], 'socialReasonDriverPopup', 'suggestionsListSocialReasonDriver');">
+                <ul id="suggestionsListSocialReasonDriver" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('driver', 'social_reason', socialReasonDriverInput.value, 'suggestionsListSocialReasonDriver')">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="materialPopup" class="popup">
+            <div class="popup-content">
+                <h2>Materiale:</h2>
+                <input type="text" id="myDescriptionMaterialInput" autocomplete="off" class="input" oninput="showSuggestions('material', 'myDescriptionMaterialInput', 'description', this.value, ['date_created'], 'materialPopup', 'suggestionsListMaterial');">
+                <ul id="suggestionsListMaterial" class="suggestions-list"></ul>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('material', 'description', myDescriptionMaterialInput.value, 'suggestionsListMaterial')">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="notePopup" class="popup">
+            <div class="popup-content">
+                <h2>Note:</h2>
+                <input type="text" id="myNoteInput" autocomplete="off" class="input">
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('note', '', myNoteInput.value)">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="documentReferencePopup" class="popup">
+            <div class="popup-content">
+                <h2>Referenza documento:</h2>
+                <input type="text" id="myDocumentReferenceInput" autocomplete="off" class="input">
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="setDataInExecutionOnCLick('document_reference', '', myDocumentReferenceInput.value)">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="logPopup" class="popup">
+            <div class="popup-content">
+                <h2>Log</h2>
+                <div></div>
+                <div class="footer-buttons reconnection-footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="reconnectionPopup" class="popup">
+            <div class="popup-content">
+                <h2>Connessione al server pesa persa</h2>
+                <p>Riconnessione in corso...</p>
+            </div>
+        </div>
+
+        <div id="confirmPopup" class="popup">
+            <div class="popup-content">
+                <h3 id="over_max_theshold_description"></h3>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button id="reconnectionButton" class="p-tare-button" onclick="confirmWeighing()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="testWeightPopup" class="popup">
+            <div class="popup-content">
+                <h2>Peso</h2>
+                <input type="number" placeholder="0" id="testWeightInput" autocomplete="off">
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closePopup()">Annulla</button>
+                    <button class="p-tare-button" onclick="confirmTestWeight()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="diagnosticPopup" class="popup" onclick="closeDiagnostic()">
+            <div class="popup-content" onclick="event.stopPropagation();">
+                <div class="content"></div>
+                <div class="footer-buttons">
+                    <button class="close-button" onclick="closeDiagnostic()">Chiudi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="snackbar" class="snackbar"></div>
+
+    <div id="snackbar2" class="snackbar"></div>
+
+    <script type="module" src="/static/javascript/auth.js"></script>
+    <script type="module" src="/static/javascript/interceptor.js"></script>
+    <script src="/static/javascript/navbar.js"></script>
+    <script src="/static/javascript/snackbar.js"></script>
+    <script src="/static/javascript/dashboard-v2.js"></script>
+</body>
+</html>
