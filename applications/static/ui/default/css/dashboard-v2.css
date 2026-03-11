@@ -868,8 +868,7 @@ button:active {
 .weight-row {
     display: flex;
     align-items: stretch;
-    width: 99%;
-    max-width: 850px;
+    width: 100%;
     margin: 0 auto;
     gap: 8px;
 }
