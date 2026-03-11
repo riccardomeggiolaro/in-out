@@ -1,0 +1,964 @@
+html,
+body {
+    margin: 0px;
+}
+
+* {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* styles.css */
+#snackbar-dashboard {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 2px;
+    padding: 16px;
+    z-index: 1;
+    font-size: 17px;
+    transform: translateY(100%);
+    transition: visibility 0s linear 0.1s, opacity 0.1s linear, transform 0.1s ease-in-out;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+#snackbar-dashboard.show {
+    transform: translateY(0);
+}
+
+.box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+}
+
+.loading {
+    background-color: aliceblue;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;            
+    transition: display 0.3s;
+}
+
+.img-loading {
+    max-width: 100%;
+    max-width: 250px;
+    border-radius: 12px;
+}
+
+.loading p {
+    margin-top: 20px;
+    font-size: 1.5rem;
+}
+
+.container {
+    background-color: aliceblue;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.display-wrapper {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+}
+
+/* Side columns (25% each) */
+.anagrafic,
+.ins {
+    background-color: aliceblue;
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.anagrafic div,
+.ins ul {
+    margin: 5px;
+    max-width: 99%;
+}
+
+.anagrafic div input:disabled {
+    background-color: #f0f0f0;
+    color: #888;
+}
+
+input,
+.input, 
+select {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombra leggera sugli input */
+    transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+    width: 1000px;
+    max-width: -webkit-fill-available; /* Chrome, Safari */
+    max-width: -moz-available;  
+}
+
+input:focus, 
+select:focus {
+    box-shadow: 0 4px 8px rgba(83, 83, 255, 0.3); /* Ombra più intensa quando è in focus */
+    outline: none;
+}
+
+select {
+    background-color: white;
+}
+
+.anagrafic div h2 {
+    margin-top: 0px;
+    font-size: 1.2rem !important;
+}
+
+.anagrafic div * {
+    margin-bottom: 0px;
+}
+
+.display {
+    background-color: #1362b8;
+    width: 100%;
+    flex: 1 1 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 5px;
+}
+
+.weight {
+    background-color: white;
+    border-radius: 5px;
+    position: relative;
+    font-size: 3rem;
+    width: 99%;
+    margin: 0px auto;
+}
+
+#info-container {
+    position: absolute;
+    left: 3px;
+    bottom: 3px;
+    font-size: 1rem;
+    margin: 0;            
+}
+
+.info-container {
+    display: inline-flex;
+    position: relative;
+}
+
+.info-icon {
+    width: 24px;
+    height: 24px;
+    background-color: #3498db;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+}
+
+.tooltip {
+    display: none;
+    position: absolute;
+    top: 130%;
+    left: 0;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 30;
+}
+
+.tooltip::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 12px;  /* Cambiato da right a left */
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #333 transparent;
+}
+
+.info-container:hover .tooltip {
+    display: block;
+    opacity: 1;
+}
+
+.tooltip h4 {
+    margin: 0 0 8px 0; 
+    text-align: left;
+}
+
+.tooltip p {
+    margin: 0; 
+    text-align: left;
+}
+
+#uniteMisure {
+    position: absolute;
+    right: 3px;
+    bottom: 0;
+    font-size: 2rem;
+    margin: 0;
+}
+
+#tare {
+    bottom: 3px;
+    font-size: 2rem;
+    margin: 0;
+}
+
+#status {
+    position: absolute;
+    right: 3px;
+    top: 0;
+    font-size: 2rem;
+    margin: 0;
+}
+
+#potential_net_weight {
+    position: absolute;
+    left: 3px;
+    top: 0;
+    font-size: 2rem;
+    margin: 0;
+}
+
+#netWeight {
+    margin: 1.5rem 0px 0px 0px;
+}
+
+.info {
+    background-color: #1362b8;
+    height: 100%;
+    margin: 3px;
+    border-radius: 8px;
+    text-align: left;
+    padding: 3px;
+}
+
+.tara, .status {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    flex: 1;
+    margin: 3px;
+    height: fit-content;
+}
+
+.in-out .item {
+    flex: 0 0 auto;
+}
+
+.in,
+.out {
+    width: 19.4%;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0px 5px;
+}
+
+button {
+    background-color: white;
+    color: #1362b8;
+    border: none;
+    border-radius: 5px;
+    border-color: #1362b8;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    flex: 1;
+    font-size: 1.6rem;
+    box-shadow: 0 4px 30px rgba(202, 73, 73, 0.1);
+    height: 4rem;
+}
+
+button:active {
+    background-color: #00346b;
+}
+
+.disabled-button {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.img-container:hover {
+    cursor: pointer;
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background-color: white;
+    padding: 10px;
+    border: 1px solid #888;
+    width: min-content;
+    min-width: 350px;
+    max-width: 350px;
+    height: fit-content;
+    border-radius: 8px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.popup-content.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.popup-content h2 {
+    margin: 10px auto;
+}
+
+#myNumberInput,
+#testWeightInput {
+    width: 100%;
+    height: 60px;
+    font-size: 2.3rem;
+    margin-top: 30px;
+    text-align: center;
+}
+
+#myNumberInput:focus,
+#testWeightInput:focus,
+.input {
+    outline: none;
+}
+
+#myNumberInput::placeholder,
+#testWeightInput::placeholder,
+.input {
+    opacity: 1;
+}
+
+.input {
+    width: 100%;
+    height: 40px;
+    font-size: 1.8rem;
+}
+
+.footer-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;            
+    margin-top: 30px;
+}
+
+.footer-buttons button {
+    flex: 0 0 49%;
+}
+
+.reconnection-footer-buttons {
+    justify-content: flex-end;
+}
+
+.close-button {
+    background-color: transparent;
+    color: #1362b8;
+}
+
+.in,
+.out,
+.p-tare-button {
+    background-color: #1362b8;
+    color: white;
+}
+
+/* Nascondi completamente i pulsanti X di default (su desktop) */
+.close-tab-button {
+    display: none !important;
+}
+
+.mobile-tabs {
+    display: none;
+}
+
+/* Updated media queries */
+@media (max-width: 800px) {
+    .display-wrapper,
+    .in-out {
+        max-width: 700px;
+    }
+
+    .container {
+        justify-content: center;
+    }
+
+    /* Mostra le linguette su schermi piccoli */
+    .mobile-tabs {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 900;
+        pointer-events: none;
+    }
+
+    /* Stili per i bottoni delle linguette */
+    .tab-button {
+        position: fixed;
+        bottom: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #1362b8;
+        color: white;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        pointer-events: auto;
+        z-index: 901;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .tab-button:hover {
+        transform: scale(1.1);
+        background-color: #0d4d8f;
+    }
+
+    .tab-button:active {
+        transform: scale(0.95);
+    }
+
+    .tab-left {
+        left: 20px;
+    }
+
+    .tab-right {
+        right: 20px;
+    }
+
+    /* Badge di notifica */
+    .notification-badge {
+        display: none;
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #ff4444;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 1rem;
+        font-weight: bold;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .notification-badge.show {
+        display: flex;
+    }
+
+    .notification-badge::after {
+        content: "!";
+    }
+
+    /* Overlay scuro quando i tab sono aperti */
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 949;
+        display: none;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .mobile-overlay.show {
+        display: block;
+    }
+
+    /* Stile per anagrafic e ins su mobile */
+    .anagrafic, .ins {
+        width: 100%;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        z-index: 950;
+        display: flex;
+        flex-direction: column;
+        background-color: aliceblue;
+        transition: transform 0.3s ease-in-out;
+        overflow-y: auto;
+    }
+
+    .anagrafic {
+        left: 0;
+        transform: translateX(-100%);
+    }
+
+    .anagrafic.active {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        z-index: 1002;
+    }
+
+    .ins {
+        right: 0;
+        transform: translateX(100%);
+    }
+
+    .ins.active {
+        transform: translateX(0);
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+        z-index: 1002;
+    }
+
+    /* Pulsante chiusura per anagrafic e ins */
+    .close-tab-button {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background-color: #ff4444;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 951;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border: none;
+        padding: 0;
+    }
+
+    /* Mostra i pulsanti X solo quando i tab sono attivi su mobile */
+    .anagrafic.active .close-tab-button,
+    .ins.active .close-tab-button {
+        display: flex !important;
+    }
+
+    .weight {
+        font-size: 3rem;
+    }
+
+    #netWeight {
+        font-size: 4.5rem;
+    }
+
+    .display-wrapper {
+        height: auto;
+    }
+
+    .display-wrapper {
+        display: block;
+    }
+
+    .display {
+        min-height: 100vh;
+    }
+
+    .display.item {
+        width: 100%;
+    }
+
+    .tara, .status {
+        width: 100%;
+    }
+
+    .info {
+        flex-direction: row;
+    }
+    
+    .tara, .status {
+        flex: 1;
+    }
+    
+    .item {
+        flex: auto;
+    }
+
+    .item:nth-child(1) {
+        order: 2;
+        flex: 0 0 49%;
+    }
+    .item:nth-child(2) {
+        order: 1;
+        width: 100%;
+        flex: 1 1 100%;
+    }
+    .item:nth-child(3) {
+        order: 3;
+        flex: 0 0 49%;
+    }
+
+    .in,
+    .out,
+    button {
+        height: 60px;
+    }
+
+    .in,
+    .out {
+        margin-top: 16px;
+    }
+}
+
+@media (max-width: 315px) {
+    #netWeight {
+        font-size: 2rem;
+    }
+}
+
+@media (min-width: 800px) and (max-height: 490px) {
+    .container {
+        display: inline-flex;
+    }
+
+    .display-wrapper {
+        height: auto;
+    }
+
+    .in-out {
+        height: max-content;
+        position: relative;
+    }
+}
+
+.arrow {
+    margin-left: 8px;
+    font-size: 0.8em;
+}
+.dropdown {
+    position: relative;
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+    border-radius: 8px;
+}
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    border-radius: 8px;
+}
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+.suggestions-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 5px 0 0;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    height: 300px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+}
+.suggestions-list li {
+    padding: 8px;
+    cursor: pointer;
+}
+.suggestions-list li:hover {
+    background-color: #f0f0f0;
+}
+.highlight {
+    background-color: yellow; /* Colore di evidenziazione */
+}
+.selected {
+    background-color: #e0e0e0;
+    font-weight: bold;
+}
+.list-item {
+    cursor: pointer;
+    padding: 8px;
+    margin: 2px;
+    border-radius: 4px;
+}
+.list-item:hover {
+    background-color: aliceblue;
+}
+.list-in {
+    list-style: none; 
+    padding: 0px; 
+    margin: 0px; 
+    width: 99%;
+    height: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.list-in li {
+    background-color: white;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1.1rem;
+    max-width: 246.33px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+    width: 1000px;
+    max-width: -webkit-fill-available; /* Chrome, Safari */
+    max-width: -moz-available;
+    margin: 5px auto;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.list-in li:hover {
+    background-color: aliceblue;
+    cursor: pointer;
+}
+.list-in li small {
+    color: #666;
+}
+.list-in li.selected {
+    background-color: #1362b8;
+    color: white;
+    border: 2px solid #1362b8;
+}
+.list-in li.selected small {
+    color: #e0e0e0;
+}
+
+.in-out {
+    gap: 5px;
+    display: flex;
+    width: 99%;
+    flex-wrap: wrap;
+}
+
+.weight,
+.in-out {
+    max-width: 850px;
+}
+
+.box {
+    max-width: 1800px;
+    margin: 0px auto;
+}
+
+.box,
+.container {
+    border-radius: 15px;
+}
+
+.anagrafic {
+    border-radius:15px 0px 0px 15px;
+}
+
+.ins {
+    border-radius: 0px 15px 15px 0px;
+}
+
+.list-weigher {
+    width: min-content;
+    background: white;
+    border: 1px solid white;
+    font-size: 1.3rem;
+    border-radius: 5px;
+}
+
+.in-out,
+.list-weigher {
+    margin: 1rem auto 0px auto;
+}
+
+.weight,
+.list-weigher,
+button {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Ombra più evidente */
+    transition: box-shadow 0.3s ease; /* Transizione morbida per l'ombra */
+}
+
+.in-out button {
+    flex: 1 1 calc(33.33% - 10px); /* Ogni bottone occupa un terzo della riga, meno il gap */
+}
+
+@media (max-width: 550px) {
+    .in-out button {
+        flex: 1 1 calc(50% - 10px); /* Quando lo schermo è più piccolo, i bottoni occupano metà riga */
+    }
+}
+
+*:disabled {
+    opacity: 0.5;
+}
+
+input:disabled, 
+select:disabled, 
+textarea:disabled {
+    opacity: 1;
+    color: #000; /* O qualsiasi colore desideri */
+    background-color: #fff; /* O il colore di sfondo originale */
+    border: 1px solid #ccc; /* O lo stile del bordo originale */
+    pointer-events: none; /* Impedisce interazioni ma mantiene l'aspetto normale */
+}
+
+/* Rimuove il grigio di sfondo su Chrome/Safari */
+input:disabled {
+  -webkit-appearance: none;
+}
+
+hr {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.3s ease;
+    border-bottom: 1px solid #ccc;
+    background: transparent;
+    color: transparent;
+    margin-top: 0px;
+}
+
+.cams {
+    max-width: 850px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cam {
+    width: 99%;
+    max-width: 250px;
+    border-radius: 8px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.list-weigher {
+    visibility: hidden;
+}
+
+#diagnosticPopup .content iframe {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#diagnosticPopup .footer-buttons {
+    margin-top: 0px;
+}
+
+.permanent-associated {
+    display: flex;
+    justify-content: space-between;
+}
+
+.containerPlateVehicle {
+    display: flex;
+    flex-direction: row;
+}
+
+.containerPlateVehicle button {
+    height: auto;
+    display: none;
+    color: #000;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.containerPlateVehicle.permanent input {
+    max-width: 80%;
+}
+
+.containerPlateVehicle.permanent button {
+    display: block;    
+}
+
+#reconnectionPopup {
+    z-index: 1000;
+    align-items: initial;
+}
+
+#reconnectionPopup .popup-content {
+    margin-top: 80px;
+}
+
+#confirmPopup {
+    align-items: initial;
+}
+
+#confirmPopup .popup-content {
+    margin-top: 80px;
+}
+
+/* Desktop navbar adjustments */
+@media (min-width: 1051px) {
+    .box {
+        height: calc(100vh - 60px); /* Subtract navbar height */
+        max-height: calc(100vh - 60px); /* Prevent overflow */
+        padding-top: 0; /* Remove any existing padding-top */
+        overflow: hidden;
+    }
+    
+    .container {
+        max-height: 100%;
+        overflow-y: auto;
+    }
+}
+
+@media (min-width: 1051px) and (min-height: 610px) {
+    .container {
+        max-height: 100%;
+    }
+}
