@@ -276,12 +276,35 @@ async function getData(path) {
 const MAX_PLATES = 10;
 let platesList = [];
 
+function parseCamMessage(msg) {
+    // Format: "PLATE" ricevuto da HOST [- error | success message]
+    const plateMatch = msg.match(/^"([^"]+)"/);
+    const plate = plateMatch ? plateMatch[1] : msg;
+    const sourceMatch = msg.match(/ricevuto da ([^\s-]+)/);
+    const source = sourceMatch ? sourceMatch[1] : '';
+    // Outcome: everything after "ricevuto da HOST" (skip " - " or " ")
+    let outcome = '';
+    if (sourceMatch) {
+        const afterSource = msg.substring(msg.indexOf(sourceMatch[0]) + sourceMatch[0].length);
+        outcome = afterSource.replace(/^\s*-?\s*/, '').trim();
+    }
+    return { plate, source, outcome };
+}
+
 function addPlateToList(plateMessage) {
     const now = new Date();
     const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    platesList.unshift({ plate: plateMessage, time: timeStr });
-    if (platesList.length > MAX_PLATES) {
-        platesList = platesList.slice(0, MAX_PLATES);
+    const parsed = parseCamMessage(plateMessage);
+
+    // If the most recent entry has the same plate+source and no outcome yet, update it
+    if (platesList.length > 0 && platesList[0].plate === parsed.plate && platesList[0].source === parsed.source && !platesList[0].outcome && parsed.outcome) {
+        platesList[0].outcome = parsed.outcome;
+        platesList[0].rawMessage = plateMessage;
+    } else {
+        platesList.unshift({ plate: parsed.plate, source: parsed.source, outcome: parsed.outcome, time: timeStr, rawMessage: plateMessage });
+        if (platesList.length > MAX_PLATES) {
+            platesList = platesList.slice(0, MAX_PLATES);
+        }
     }
     renderPlatesList();
 }
@@ -290,11 +313,39 @@ function renderPlatesList() {
     const listPlates = document.querySelector('.list-plates');
     if (!listPlates) return;
     listPlates.innerHTML = '';
-    platesList.forEach(item => {
+    platesList.forEach((item, index) => {
         const li = document.createElement('li');
-        li.textContent = `${item.time} - ${item.plate}`;
+        li.style.cursor = 'pointer';
+        li.style.padding = '6px 8px';
+        li.style.borderBottom = '1px solid #eee';
+        li.innerHTML = `
+            <div style="font-size: 0.85em; color: #666;">${item.time}</div>
+            <div>${item.plate}</div>
+            <div style="font-weight: bold; font-size: 0.9em;">da ${item.source || 'N/A'}</div>
+        `;
+        if (item.outcome) {
+            li.innerHTML += `<div style="font-size: 0.8em; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.outcome}</div>`;
+        }
+        li.addEventListener('click', () => showOcrDetail(index));
         listPlates.appendChild(li);
     });
+}
+
+function showOcrDetail(index) {
+    const item = platesList[index];
+    if (!item) return;
+    const content = document.getElementById('ocrDetailContent');
+    content.innerHTML = `
+        <p><strong>Targa:</strong> ${item.plate}</p>
+        <p><strong>Ora:</strong> ${item.time}</p>
+        <p><strong>Sorgente:</strong> ${item.source || 'N/A'}</p>
+        <p><strong>Esito:</strong> ${item.outcome || 'In attesa...'}</p>
+    `;
+    currentPopup = 'ocrDetailPopup';
+    const popup = document.getElementById('ocrDetailPopup');
+    const popupContent = popup.querySelector('.popup-content');
+    popup.style.display = 'flex';
+    setTimeout(() => popupContent.classList.add('show'), 10);
 }
 
 function scrollToSelectedItem() {
