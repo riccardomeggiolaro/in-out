@@ -900,8 +900,34 @@ button:active {
     flex: 1;
 }
 
-.weight-center .list-weigher {
+.weigher-bar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 850px;
     margin: 0.5rem auto 0;
+    gap: 8px;
+}
+
+.weigher-bar .diagnostic-btn {
+    height: fit-content;
+    width: fit-content;
+    font-size: 1.3rem;
+    padding: 7px;
+    flex: none;
+}
+
+.weigher-bar .list-weigher {
+    flex: 1;
+    margin: 0;
+}
+
+.weigher-bar .reprint-btn {
+    height: fit-content;
+    width: fit-content;
+    font-size: 1.3rem;
+    padding: 7px;
+    flex: none;
 }
 
 .box {

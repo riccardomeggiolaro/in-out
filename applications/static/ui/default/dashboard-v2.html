@@ -79,11 +79,6 @@
                     </div>
                 </div>
                 <div class="display item">
-                        <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
-                            <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="diagnostic()">⚡</button>
-                            <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
-                        </div>
-
                         <div class="weight-row">
                             <div class="buttons-left">
                                 <button onclick="openPopup('presetTare', 'myNumberInput')" id="pTareButton">P Tara</button>
@@ -110,14 +105,19 @@
                                     <p id="status">--</p>
                                     <p id="potential_net_weight"></p>
                                 </div>
-                                <select class="list-weigher">
-                                </select>
                             </div>
                             <div class="buttons-right">
                                 <button onclick="handlePesata()" id="inButton">Peso 1</button>
                                 <button onclick="handlePesata2()" id="outButton">Peso 2</button>
                                 <button onclick="handleStampa(event)" id="printButton">Generico</button>
                             </div>
+                        </div>
+
+                        <div class="weigher-bar">
+                            <button class="diagnostic-btn" onclick="diagnostic()">⚡</button>
+                            <select class="list-weigher">
+                            </select>
+                            <button id="reprint" class="reprint-btn" style="display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
                         </div>
 
                         <div class="access-list-wrapper">
