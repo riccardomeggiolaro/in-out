@@ -78,8 +78,7 @@
                         <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" oninput="this.value = ''" >
                     </div>
                 </div>
-                <div class="center-column item">
-                    <div class="display">
+                <div class="display item">
                         <div style="display: flex; justify-content: space-between; width: 99%; max-width: 850px; margin-left: auto; margin-right: auto; margin-bottom: 1rem;">
                             <button style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none;" onclick="diagnostic()">⚡</button>
                             <button id="reprint" style="height: fit-content; width: fit-content; font-size: 1.3rem; padding: 7px; flex: none; display: none;" onclick="printLastInOut()">🖨️ Ristampa</button>
@@ -116,25 +115,6 @@
                             <button onclick="handleStampa(event)" id="printButton">Generico</button>
                             <button onclick="handlePesata2()" id="outButton">Peso 2</button>
                         </div>
-                    </div>
-                    <div class="access-list-wrapper">
-                        <h3 style="color: white; margin: 8px 0 4px 0;">Accessi</h3>
-                        <div class="access-table-container">
-                            <table class="access-table">
-                                <thead>
-                                    <tr>
-                                        <th>Targa</th>
-                                        <th>Soggetto</th>
-                                        <th>Materiale</th>
-                                        <th>Documento</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="accessTableBody">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
                 <div class="item ins">
                     <button class="close-tab-button" onclick="closeTab('ins')">✕</button>
@@ -142,6 +122,24 @@
                     <hr>
                     <ul class="list-plates">
                     </ul>
+                </div>
+            </div>
+            <div class="access-list-wrapper">
+                <h3 style="color: white; margin: 8px 0 4px 0;">Accessi</h3>
+                <div class="access-table-container">
+                    <table class="access-table">
+                        <thead>
+                            <tr>
+                                <th>Targa</th>
+                                <th>Soggetto</th>
+                                <th>Materiale</th>
+                                <th>Documento</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accessTableBody">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
