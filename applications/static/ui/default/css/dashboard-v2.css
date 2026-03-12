@@ -169,6 +169,7 @@ select {
     width: 100%;
     border-collapse: collapse;
     font-size: 1.05rem;
+    border-top: 3px solid white;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
