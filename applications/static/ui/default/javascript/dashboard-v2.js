@@ -382,7 +382,9 @@ async function populateListIn() {
 
             // PID
             let pid = '';
-            if (lastInOut && lastInOut.weight1 && lastInOut.weight1.pid) {
+            if (lastInOut && lastInOut.weight2 && lastInOut.weight2.pid && item.number_in_out !== null) {
+                pid = lastInOut.weight2.pid;
+            } else if (lastInOut && lastInOut.weight1 && lastInOut.weight1.pid) {
                 pid = lastInOut.weight1.pid;
             }
 
