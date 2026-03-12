@@ -138,21 +138,16 @@ body {
     padding: 4px 8px 12px;
     cursor: pointer;
     font-size: 1.1rem;
-    height: calc(1.3em * 2);
-    line-height: 1.3;
-    word-wrap: break-word;
+    line-height: 1.3em;
+    max-height: calc(1.3em * 2 + 4px + 12px);
     overflow: hidden;
+    display: -webkit-box;
+    display: -moz-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
     text-align: left;
-    position: relative;
-}
-
-.input-group-value.truncated::after {
-    content: '...';
-    position: absolute;
-    bottom: 12px;
-    right: 8px;
-    background: white;
-    padding-left: 4px;
+    word-break: break-all;
 }
 
 .value-tooltip {
