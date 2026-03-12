@@ -148,6 +148,7 @@ select {
     background-color: #1362b8;
     width: 100%;
     flex: 1 1 0;
+    margin-top: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -870,6 +871,7 @@ button:active {
     align-items: stretch;
     width: 100%;
     margin: 0 auto;
+    padding: 0 10px;
     gap: 8px;
 }
 
@@ -888,8 +890,16 @@ button:active {
     height: 0;
 }
 
+.buttons-left {
+    padding-right: 5px;
+}
+
+.buttons-right {
+    padding-left: 5px;
+}
+
 .weight-center {
-    flex: 3;
+    flex: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -915,7 +925,7 @@ button:active {
 }
 
 .weigher-bar .weigher-bar-center {
-    flex: 3;
+    flex: 2;
     display: flex;
     align-items: center;
     justify-content: space-between;
