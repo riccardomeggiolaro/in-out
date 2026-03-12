@@ -248,13 +248,13 @@ async function getData(path) {
         } else {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
-        document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
+        document.querySelector('#currentPlateVehicle').textContent = obj.vehicle.plate ? obj.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
-        document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
-        document.querySelector('#currentSocialReasonVector').value = obj.vector.social_reason ? obj.vector.social_reason : '';
-        document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
-        document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
-        document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
+        document.querySelector('#currentSocialReasonSubject').textContent = obj.subject.social_reason ? obj.subject.social_reason : '';
+        document.querySelector('#currentSocialReasonVector').textContent = obj.vector.social_reason ? obj.vector.social_reason : '';
+        document.querySelector('#currentDescriptionMaterial').textContent = obj.material.description ? obj.material.description : '';
+        document.querySelector('#currentNote').textContent = obj.note ? obj.note : '';
+        document.querySelector('#currentDocumentReference').textContent = obj.document_reference ? obj.document_reference : '';
         selectedIdWeight = res["id_selected"];
         console.log(selectedIdWeight)
         
@@ -1098,13 +1098,13 @@ function processRealtimeObject(obj) {
         } else {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
-        document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
+        document.querySelector('#currentPlateVehicle').textContent = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
         document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
-        document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
-        document.querySelector('#currentSocialReasonVector').value = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
-        document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
-        document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
-        document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
+        document.querySelector('#currentSocialReasonSubject').textContent = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
+        document.querySelector('#currentSocialReasonVector').textContent = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
+        document.querySelector('#currentDescriptionMaterial').textContent = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
+        document.querySelector('#currentNote').textContent = obj.data_in_execution.note ? obj.data_in_execution.note : '';
+        document.querySelector('#currentDocumentReference').textContent = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
 
         if (obj.type === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
@@ -1627,4 +1627,31 @@ document.addEventListener('DOMContentLoaded', () => {
     if (listIn) {
         insObserver.observe(listIn, { childList: true, subtree: true });
     }
+});
+
+// Tooltip for truncated input-group-value elements
+document.addEventListener('DOMContentLoaded', () => {
+    const tooltip = document.getElementById('valueTooltip');
+    document.querySelectorAll('.input-group-value').forEach(el => {
+        el.addEventListener('mouseenter', function(e) {
+            if (this.scrollHeight > this.clientHeight && this.textContent.trim()) {
+                tooltip.textContent = this.textContent;
+                tooltip.style.display = 'block';
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = (rect.right + 8) + 'px';
+                tooltip.style.top = rect.top + 'px';
+                // Keep tooltip within viewport
+                const tooltipRect = tooltip.getBoundingClientRect();
+                if (tooltipRect.right > window.innerWidth) {
+                    tooltip.style.left = (rect.left - tooltipRect.width - 8) + 'px';
+                }
+                if (tooltipRect.bottom > window.innerHeight) {
+                    tooltip.style.top = (window.innerHeight - tooltipRect.height - 8) + 'px';
+                }
+            }
+        });
+        el.addEventListener('mouseleave', function() {
+            tooltip.style.display = 'none';
+        });
+    });
 });
