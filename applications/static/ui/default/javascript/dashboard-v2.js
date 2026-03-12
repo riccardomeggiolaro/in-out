@@ -380,8 +380,13 @@ async function populateListIn() {
                 material = item.material.description;
             }
 
-            // Documento
-            let doc = item.document_reference || '';
+            // PID
+            let pid = '';
+            if (lastInOut && lastInOut.weight2 && lastInOut.weight2.pid && item.number_in_out !== null) {
+                pid = lastInOut.weight2.pid;
+            } else if (lastInOut && lastInOut.weight1 && lastInOut.weight1.pid) {
+                pid = lastInOut.weight1.pid;
+            }
 
             // Data
             let date = '';
@@ -390,7 +395,7 @@ async function populateListIn() {
                 date = d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
             }
 
-            tr.innerHTML = `<td title="${plate}">${plate}</td><td title="${subject}">${subject}</td><td title="${material}">${material}</td><td title="${doc}">${doc}</td><td>${date}</td>`;
+            tr.innerHTML = `<td title="${plate}">${plate}</td><td title="${subject}">${subject}</td><td title="${material}">${material}</td><td title="${pid}">${pid}</td><td>${date}</td>`;
 
             tr.addEventListener('click', async () => {
                 let obj = {

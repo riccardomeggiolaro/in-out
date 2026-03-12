@@ -41,11 +41,11 @@
             <div class="display-wrapper">
                 <div class="item anagrafic">
                     <button class="close-tab-button" onclick="closeTab('anagrafic')">✕</button>
-                    <div>
-                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>VEICOLO</strong></p>
+                    <div class="input-group" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')">
+                        <span class="input-group-label"><strong>VEICOLO</strong></span>
                         <span class="containerPlateVehicle">
-                            <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')" oninput="this.value = ''" >
-                            <button onclick="deleteIdSelected()">X</button>
+                            <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" oninput="this.value = ''" >
+                            <button onclick="event.stopPropagation(); deleteIdSelected()">X</button>
                         </span>
                     </div>
 
@@ -55,27 +55,30 @@
                             <option value="CUSTOMER">CLIENTE</option>
                             <option value="SUPPLIER">FORNITORE</option>
                         </select>
-                        <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')" oninput="this.value = ''" >
+                        <div class="input-group" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')">
+                            <span class="input-group-label"><strong>SOGGETTO</strong></span>
+                            <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" oninput="this.value = ''" >
+                        </div>
                     </div>
 
-                    <div>
-                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>VETTORE</strong></p>
-                        <input placeholder="Vettore" id="currentSocialReasonVector" type="text" name="social_reason" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')" oninput="this.value = ''" >
+                    <div class="input-group" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')">
+                        <span class="input-group-label"><strong>VETTORE</strong></span>
+                        <input placeholder="Vettore" id="currentSocialReasonVector" type="text" name="social_reason" oninput="this.value = ''" >
                     </div>
 
-                    <div>
-                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>MATERIALE</strong></p>
-                        <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')" oninput="this.value = ''" >
+                    <div class="input-group" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')">
+                        <span class="input-group-label"><strong>MATERIALE</strong></span>
+                        <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" oninput="this.value = ''" >
                     </div>
 
-                    <div>
-                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>NOTE</strong></p>
-                        <input placeholder="Note" id="currentNote" type="text" name="note" onclick="openPopup('notePopup', 'myNoteInput')" oninput="this.value = ''" >
+                    <div class="input-group" onclick="openPopup('notePopup', 'myNoteInput')">
+                        <span class="input-group-label"><strong>NOTE</strong></span>
+                        <input placeholder="Note" id="currentNote" type="text" name="note" oninput="this.value = ''" >
                     </div>
 
-                    <div>
-                        <p style="text-align: left; background-color: white; padding: 5px; border-radius: 5px; border: 1px solid #ccc;"><strong>DOCUMENTO</strong></p>
-                        <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')" oninput="this.value = ''" >
+                    <div class="input-group" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')">
+                        <span class="input-group-label"><strong>DOCUMENTO</strong></span>
+                        <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" oninput="this.value = ''" >
                     </div>
                 </div>
                 <div class="display item">
@@ -132,7 +135,7 @@
                                             <th>Targa</th>
                                             <th>Soggetto</th>
                                             <th>Materiale</th>
-                                            <th>Documento</th>
+                                            <th>PID</th>
                                             <th>Data</th>
                                         </tr>
                                     </thead>
