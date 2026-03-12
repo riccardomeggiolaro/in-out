@@ -44,7 +44,7 @@
                     <div class="input-group" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')">
                         <span class="input-group-label"><strong>VEICOLO</strong></span>
                         <span class="containerPlateVehicle">
-                            <input placeholder="Targa" id="currentPlateVehicle" type="text" name="plate" oninput="this.value = ''" >
+                            <input placeholder="" id="currentPlateVehicle" type="text" name="plate" oninput="this.value = ''" >
                             <button onclick="event.stopPropagation(); deleteIdSelected()">X</button>
                         </span>
                     </div>
@@ -54,27 +54,27 @@
                             <option value="CUSTOMER">CLIENTE</option>
                             <option value="SUPPLIER">FORNITORE</option>
                         </select>
-                        <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" oninput="this.value = ''" >
+                        <input placeholder="" id="currentSocialReasonSubject" type="text" name="social_reason" oninput="this.value = ''" >
                     </div>
 
                     <div class="input-group" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')">
                         <span class="input-group-label"><strong>VETTORE</strong></span>
-                        <input placeholder="Vettore" id="currentSocialReasonVector" type="text" name="social_reason" oninput="this.value = ''" >
+                        <input placeholder="" id="currentSocialReasonVector" type="text" name="social_reason" oninput="this.value = ''" >
                     </div>
 
                     <div class="input-group" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')">
                         <span class="input-group-label"><strong>MATERIALE</strong></span>
-                        <input placeholder="Materiale" id="currentDescriptionMaterial" type="text" name="description" oninput="this.value = ''" >
+                        <input placeholder="" id="currentDescriptionMaterial" type="text" name="description" oninput="this.value = ''" >
                     </div>
 
                     <div class="input-group" onclick="openPopup('notePopup', 'myNoteInput')">
                         <span class="input-group-label"><strong>NOTE</strong></span>
-                        <input placeholder="Note" id="currentNote" type="text" name="note" oninput="this.value = ''" >
+                        <input placeholder="" id="currentNote" type="text" name="note" oninput="this.value = ''" >
                     </div>
 
                     <div class="input-group" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')">
                         <span class="input-group-label"><strong>DOCUMENTO</strong></span>
-                        <input placeholder="Referenza documento" id="currentDocumentReference" type="text" name="document_reference" oninput="this.value = ''" >
+                        <input placeholder="" id="currentDocumentReference" type="text" name="document_reference" oninput="this.value = ''" >
                     </div>
                 </div>
                 <div class="display item">
