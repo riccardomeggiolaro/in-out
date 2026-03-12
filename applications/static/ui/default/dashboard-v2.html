@@ -49,16 +49,12 @@
                         </span>
                     </div>
 
-                    <div>
-                        <p></p>
-                        <select id="typeSubject" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)" style="font-weight: bold;">
+                    <div class="input-group" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')">
+                        <select id="typeSubject" onclick="event.stopPropagation()" onchange="setDataInExecutionOnCLick('typeSubject', '', typeSubject.value)" class="input-group-select">
                             <option value="CUSTOMER">CLIENTE</option>
                             <option value="SUPPLIER">FORNITORE</option>
                         </select>
-                        <div class="input-group" onclick="showSuggestions('subject', 'socialReasonSubjectInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonSubjectPopup', 'suggestionsListSocialReasonSubject'); openPopup('socialReasonSubjectPopup', 'socialReasonSubjectInput')">
-                            <span class="input-group-label"><strong>SOGGETTO</strong></span>
-                            <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" oninput="this.value = ''" >
-                        </div>
+                        <input placeholder="Soggetto" id="currentSocialReasonSubject" type="text" name="social_reason" oninput="this.value = ''" >
                     </div>
 
                     <div class="input-group" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')">
