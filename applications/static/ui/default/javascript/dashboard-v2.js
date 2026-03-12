@@ -255,7 +255,7 @@ async function getData(path) {
         document.querySelector('#currentDescriptionMaterial').textContent = obj.material.description ? obj.material.description : '';
         document.querySelector('#currentNote').textContent = obj.note ? obj.note : '';
         document.querySelector('#currentDocumentReference').textContent = obj.document_reference ? obj.document_reference : '';
-        updateAllTruncated();
+
         selectedIdWeight = res["id_selected"];
         console.log(selectedIdWeight)
 
@@ -1106,7 +1106,7 @@ function processRealtimeObject(obj) {
         document.querySelector('#currentDescriptionMaterial').textContent = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').textContent = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').textContent = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
-        updateAllTruncated();
+
 
         if (obj.type === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
@@ -1631,27 +1631,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Update truncated class on input-group-value elements
-function updateTruncated(el) {
-    if (el && el.classList.contains('input-group-value')) {
-        if (el.scrollHeight > el.clientHeight) {
-            el.classList.add('truncated');
-        } else {
-            el.classList.remove('truncated');
-        }
-    }
-}
-
-function updateAllTruncated() {
-    document.querySelectorAll('.input-group-value').forEach(updateTruncated);
-}
-
 // Tooltip for truncated input-group-value elements
 document.addEventListener('DOMContentLoaded', () => {
     const tooltip = document.getElementById('valueTooltip');
     document.querySelectorAll('.input-group-value').forEach(el => {
         el.addEventListener('mouseenter', function(e) {
-            if (this.classList.contains('truncated') && this.textContent.trim()) {
+            if (this.scrollHeight > this.clientHeight && this.textContent.trim()) {
                 tooltip.textContent = this.textContent;
                 tooltip.style.display = 'block';
                 const rect = this.getBoundingClientRect();
