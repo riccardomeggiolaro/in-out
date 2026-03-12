@@ -966,7 +966,7 @@ button:active {
 .buttons-left button,
 .buttons-right button {
     flex: 1;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     height: 0;
 }
 
