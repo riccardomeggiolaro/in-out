@@ -115,6 +115,7 @@ body {
 }
 
 .input-group-label {
+    text-align: left;
     padding: 4px 8px 0;
     font-size: 0.85rem;
     color: #555;
