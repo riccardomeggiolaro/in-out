@@ -255,9 +255,10 @@ async function getData(path) {
         document.querySelector('#currentDescriptionMaterial').textContent = obj.material.description ? obj.material.description : '';
         document.querySelector('#currentNote').textContent = obj.note ? obj.note : '';
         document.querySelector('#currentDocumentReference').textContent = obj.document_reference ? obj.document_reference : '';
+        updateAllTruncated();
         selectedIdWeight = res["id_selected"];
         console.log(selectedIdWeight)
-        
+
         // NUOVO: Controlla need_to_confirm
         if (res.id_selected.need_to_confirm === true) {
             handleNeedToConfirm(obj.vehicle.plate.replace("⭐", ""));
@@ -1105,6 +1106,7 @@ function processRealtimeObject(obj) {
         document.querySelector('#currentDescriptionMaterial').textContent = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').textContent = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').textContent = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
+        updateAllTruncated();
 
         if (obj.type === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
@@ -1629,18 +1631,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Update truncated class on input-group-value elements
+function updateTruncated(el) {
+    if (el && el.classList.contains('input-group-value')) {
+        if (el.scrollHeight > el.clientHeight) {
+            el.classList.add('truncated');
+        } else {
+            el.classList.remove('truncated');
+        }
+    }
+}
+
+function updateAllTruncated() {
+    document.querySelectorAll('.input-group-value').forEach(updateTruncated);
+}
+
 // Tooltip for truncated input-group-value elements
 document.addEventListener('DOMContentLoaded', () => {
     const tooltip = document.getElementById('valueTooltip');
     document.querySelectorAll('.input-group-value').forEach(el => {
         el.addEventListener('mouseenter', function(e) {
-            if (this.scrollHeight > this.clientHeight && this.textContent.trim()) {
+            if (this.classList.contains('truncated') && this.textContent.trim()) {
                 tooltip.textContent = this.textContent;
                 tooltip.style.display = 'block';
                 const rect = this.getBoundingClientRect();
                 tooltip.style.left = (rect.right + 8) + 'px';
                 tooltip.style.top = rect.top + 'px';
-                // Keep tooltip within viewport
                 const tooltipRect = tooltip.getBoundingClientRect();
                 if (tooltipRect.right > window.innerWidth) {
                     tooltip.style.left = (rect.left - tooltipRect.width - 8) + 'px';
