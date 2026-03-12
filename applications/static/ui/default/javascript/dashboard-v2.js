@@ -1182,7 +1182,20 @@ function processRealtimeObject(obj) {
     }
 }
 
+function openInfoPopup() {
+    const popup = document.getElementById('infoPopup');
+    popup.style.display = 'flex';
+    popup.querySelector('.popup-content').classList.add('show');
+}
+
+function closeInfoPopup() {
+    const popup = document.getElementById('infoPopup');
+    popup.querySelector('.popup-content').classList.remove('show');
+    setTimeout(() => { popup.style.display = 'none'; }, 300);
+}
+
 async function diagnostic() {
+    closeInfoPopup();
     try {
         const response = await fetch(`${pathname}/diagnostic.html`);
         

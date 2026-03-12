@@ -91,16 +91,7 @@
                                 <div class="weight">
                                     <h2 id="netWeight">------</h2>
                                     <div class="info-container" id="info-container">
-                                        <div class="info-icon"><strong><em>i</em></strong></div>
-                                        <div class="tooltip">
-                                            <h4>Dettagli terminale</h4>
-                                            <p>Firmware: <strong id="firmware"></strong></p>
-                                            <p>Model name: <strong id="modelName"></strong></p>
-                                            <p>Serial number: <strong id="serialNumber"></strong></p>
-                                            <p>Portata minima: <strong id="minWeight"></strong></p>
-                                            <p>Portata massima: <strong id="maxWeight"></strong></p>
-                                            <p>Divisione: <strong id="division"></strong></p>
-                                        </div>
+                                        <div class="info-icon" onclick="openInfoPopup()"><strong><em>i</em></strong></div>
                                     </div>
                                     <p id="uniteMisure">--</p>
                                     <p id="tare">------</p>
@@ -312,6 +303,24 @@
                 <div class="footer-buttons">
                     <button class="close-button" onclick="closePopup()">Annulla</button>
                     <button class="p-tare-button" onclick="confirmTestWeight()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="infoPopup" class="popup" onclick="closeInfoPopup()">
+            <div class="popup-content" onclick="event.stopPropagation();" style="max-width: 350px;">
+                <h3 style="margin-top: 0;">Dettagli terminale</h3>
+                <div style="text-align: left; line-height: 2;">
+                    <p>Firmware: <strong id="firmware"></strong></p>
+                    <p>Model name: <strong id="modelName"></strong></p>
+                    <p>Serial number: <strong id="serialNumber"></strong></p>
+                    <p>Portata minima: <strong id="minWeight"></strong></p>
+                    <p>Portata massima: <strong id="maxWeight"></strong></p>
+                    <p>Divisione: <strong id="division"></strong></p>
+                </div>
+                <div class="footer-buttons" style="gap: 8px;">
+                    <button onclick="diagnostic()">⚡ Diagnostica</button>
+                    <button class="close-button" onclick="closeInfoPopup()">Chiudi</button>
                 </div>
             </div>
         </div>
