@@ -930,7 +930,8 @@ button:active {
 }
 
 .weigher-bar .list-weigher {
-    flex: 1;
+    flex: none;
+    width: auto;
     margin: 0;
 }
 
