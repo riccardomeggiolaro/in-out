@@ -629,6 +629,19 @@ button:active {
         left: 20px;
     }
 
+    .tab-center {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .tab-center:hover {
+        transform: translateX(-50%) scale(1.1);
+    }
+
+    .tab-center:active {
+        transform: translateX(-50%) scale(0.95);
+    }
+
     .tab-right {
         right: 20px;
     }
@@ -677,8 +690,8 @@ button:active {
         display: block;
     }
 
-    /* Stile per anagrafic e ins su mobile */
-    .anagrafic, .ins {
+    /* Stile per anagrafic, ins e accessList su mobile */
+    .anagrafic, .ins, .accessList {
         width: 100%;
         height: 100vh;
         position: fixed;
@@ -711,6 +724,33 @@ button:active {
         transform: translateX(0);
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
         z-index: 1002;
+    }
+
+    .accessList {
+        left: 0;
+        transform: translateY(100%);
+        top: auto;
+        bottom: 0;
+    }
+
+    .accessList.active {
+        transform: translateY(0);
+        top: 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 1002;
+    }
+
+    .accessList .close-tab-button {
+        display: none;
+    }
+
+    .accessList.active .close-tab-button {
+        display: flex !important;
+    }
+
+    .access-list-mobile-content {
+        flex: 1;
+        overflow-y: auto;
     }
 
     /* Pulsante chiusura per anagrafic e ins */
@@ -1086,12 +1126,16 @@ button {
     .buttons-right button {
         flex: 1;
         height: auto;
+        padding: 12px 4px;
     }
     .buttons-left {
         padding-right: 0;
     }
     .buttons-right {
         padding-left: 0;
+    }
+    .access-list-wrapper {
+        display: none !important;
     }
     .weight-center {
         flex: 1 1 100%;

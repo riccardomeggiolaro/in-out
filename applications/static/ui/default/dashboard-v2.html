@@ -27,6 +27,9 @@
             <span>📝</span>
             <span class="notification-badge" id="badgeAnagrafic"></span>
         </button>
+        <button class="tab-button tab-center" id="tabAccessList" onclick="toggleTab('accessList')">
+            <span>📊</span>
+        </button>
         <button class="tab-button tab-right" id="tabIns" onclick="toggleTab('ins')">
             <span>📋</span>
             <span class="notification-badge" id="badgeIns"></span>
@@ -149,6 +152,14 @@
                     </ul>
                 </div>
             </div>
+        </div>
+
+        <!-- Pannello mobile lista accessi -->
+        <div class="item accessList" id="accessListPanel">
+            <button class="close-tab-button" onclick="closeTab('accessList')">✕</button>
+            <h2>Lista Accessi</h2>
+            <hr>
+            <div class="access-list-mobile-content"></div>
         </div>
 
         <!-- Popup dettagli OCR -->
