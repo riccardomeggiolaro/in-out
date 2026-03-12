@@ -44,7 +44,7 @@
                     <div class="input-group" onclick="showSuggestions('vehicle', 'plateVehicleInput', 'plate', '', ['description', 'date_created'], 'plateVehiclePopup', 'suggestionsListPlateVehicle'); openPopup('plateVehiclePopup', 'plateVehicleInput')">
                         <span class="input-group-label"><strong>VEICOLO</strong></span>
                         <span class="containerPlateVehicle">
-                            <input placeholder="" id="currentPlateVehicle" type="text" name="plate" oninput="this.value = ''" >
+                            <textarea placeholder="" id="currentPlateVehicle" name="plate" oninput="this.value = ''" rows="2" readonly></textarea>
                             <button onclick="event.stopPropagation(); deleteIdSelected()">X</button>
                         </span>
                     </div>
@@ -54,27 +54,27 @@
                             <option value="CUSTOMER">CLIENTE</option>
                             <option value="SUPPLIER">FORNITORE</option>
                         </select>
-                        <input placeholder="" id="currentSocialReasonSubject" type="text" name="social_reason" oninput="this.value = ''" >
+                        <textarea placeholder="" id="currentSocialReasonSubject" name="social_reason" oninput="this.value = ''" rows="2" readonly></textarea>
                     </div>
 
                     <div class="input-group" onclick="showSuggestions('vector', 'socialReasonVectorInput', 'social_reason', '', ['telephone', 'cfpiva', 'date_created'], 'socialReasonVectorPopup', 'suggestionsListSocialReasonVector'); openPopup('socialReasonVectorPopup', 'socialReasonVectorInput')">
                         <span class="input-group-label"><strong>VETTORE</strong></span>
-                        <input placeholder="" id="currentSocialReasonVector" type="text" name="social_reason" oninput="this.value = ''" >
+                        <textarea placeholder="" id="currentSocialReasonVector" name="social_reason" oninput="this.value = ''" rows="2" readonly></textarea>
                     </div>
 
                     <div class="input-group" onclick="showSuggestions('material', 'myDescriptionMaterialInput', 'description', '', ['date_created'], 'materialPopup', 'suggestionsListMaterial'); openPopup('materialPopup', 'myDescriptionMaterialInput')">
                         <span class="input-group-label"><strong>MATERIALE</strong></span>
-                        <input placeholder="" id="currentDescriptionMaterial" type="text" name="description" oninput="this.value = ''" >
+                        <textarea placeholder="" id="currentDescriptionMaterial" name="description" oninput="this.value = ''" rows="2" readonly></textarea>
                     </div>
 
                     <div class="input-group" onclick="openPopup('notePopup', 'myNoteInput')">
                         <span class="input-group-label"><strong>NOTE</strong></span>
-                        <input placeholder="" id="currentNote" type="text" name="note" oninput="this.value = ''" >
+                        <textarea placeholder="" id="currentNote" name="note" oninput="this.value = ''" rows="2" readonly></textarea>
                     </div>
 
                     <div class="input-group" onclick="openPopup('documentReferencePopup', 'myDocumentReferenceInput')">
                         <span class="input-group-label"><strong>DOCUMENTO</strong></span>
-                        <input placeholder="" id="currentDocumentReference" type="text" name="document_reference" oninput="this.value = ''" >
+                        <textarea placeholder="" id="currentDocumentReference" name="document_reference" oninput="this.value = ''" rows="2" readonly></textarea>
                     </div>
                 </div>
                 <div class="display item">
