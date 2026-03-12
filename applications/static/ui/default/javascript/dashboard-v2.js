@@ -1485,17 +1485,15 @@ function getParamsFromQueryString() {
 function toggleTab(tabName) {
     const anagraficElement = document.querySelector('.anagrafic');
     const insElement = document.querySelector('.ins');
+    const accessListElement = document.querySelector('.accessList');
     const overlay = document.getElementById('mobileOverlay');
 
     if (tabName === 'anagrafic') {
-        // Chiudi ins se aperto
         insElement.classList.remove('active');
+        if (accessListElement) accessListElement.classList.remove('active');
 
-        // Toggle anagrafic
-        const wasActive = anagraficElement.classList.contains('active');
         anagraficElement.classList.toggle('active');
 
-        // Mostra/nascondi overlay
         if (anagraficElement.classList.contains('active')) {
             overlay.classList.add('show');
             anagraficViewed = true;
@@ -1504,20 +1502,35 @@ function toggleTab(tabName) {
             overlay.classList.remove('show');
         }
     } else if (tabName === 'ins') {
-        // Chiudi anagrafic se aperto
         anagraficElement.classList.remove('active');
+        if (accessListElement) accessListElement.classList.remove('active');
 
-        // Toggle ins
-        const wasActive = insElement.classList.contains('active');
         insElement.classList.toggle('active');
 
-        // Mostra/nascondi overlay
         if (insElement.classList.contains('active')) {
             overlay.classList.add('show');
             insViewed = true;
             document.getElementById('badgeIns').classList.remove('show');
         } else {
             overlay.classList.remove('show');
+        }
+    } else if (tabName === 'accessList') {
+        anagraficElement.classList.remove('active');
+        insElement.classList.remove('active');
+
+        if (accessListElement) {
+            accessListElement.classList.toggle('active');
+            if (accessListElement.classList.contains('active')) {
+                // Clona la tabella accessi nel pannello mobile
+                const source = document.querySelector('.access-table-container');
+                const target = document.querySelector('.access-list-mobile-content');
+                if (source && target) {
+                    target.innerHTML = source.innerHTML;
+                }
+                overlay.classList.add('show');
+            } else {
+                overlay.classList.remove('show');
+            }
         }
     }
 }
@@ -1534,10 +1547,12 @@ function closeTab(tabName) {
 function closeAllTabs() {
     const anagraficElement = document.querySelector('.anagrafic');
     const insElement = document.querySelector('.ins');
+    const accessListElement = document.querySelector('.accessList');
     const overlay = document.getElementById('mobileOverlay');
 
     if (anagraficElement) anagraficElement.classList.remove('active');
     if (insElement) insElement.classList.remove('active');
+    if (accessListElement) accessListElement.classList.remove('active');
     if (overlay) overlay.classList.remove('show');
 }
 
