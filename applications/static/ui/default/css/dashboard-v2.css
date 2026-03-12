@@ -1085,6 +1085,13 @@ button {
     .buttons-left button,
     .buttons-right button {
         flex: 1;
+        height: auto;
+    }
+    .buttons-left {
+        padding-right: 0;
+    }
+    .buttons-right {
+        padding-left: 0;
     }
     .weight-center {
         flex: 1 1 100%;
