@@ -167,6 +167,8 @@ select {
     width: 100%;
     border-collapse: collapse;
     font-size: 1.05rem;
+    border: 1px solid #1362b8;
+    border-top: 3px solid white;
 }
 
 .access-table thead {
@@ -176,7 +178,7 @@ select {
 }
 
 .access-table th {
-    background-color: #0d4d8f;
+    background-color: #1362b8;
     color: white;
     padding: 6px 8px;
     text-align: left;
