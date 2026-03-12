@@ -227,7 +227,7 @@ async function getInstanceWeigher(path) {
             reles.forEach(([key, value]) => {
                 const btn = document.createElement('button');
                 btn.id = `rele-${key}`;
-                btn.innerHTML = '<span class="rele-circle"></span>';
+                btn.textContent = key;
                 if (value !== 0) btn.classList.add('rele-active');
                 btn.onclick = () => {
                     fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);

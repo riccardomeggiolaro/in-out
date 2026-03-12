@@ -1078,22 +1078,19 @@ button:active {
     align-items: center;
     justify-content: center;
     background: white;
+    color: #333;
     border: 1px solid #ccc;
     border-radius: 4px;
     cursor: pointer;
     flex: none;
+    font-size: 1rem;
+    font-weight: bold;
 }
 
-.rele-container button .rele-circle {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 3px solid #1362b8;
-    background: transparent;
-}
-
-.rele-container button.rele-active .rele-circle {
+.rele-container button.rele-active {
     background: #1362b8;
+    color: white;
+    border-color: #1362b8;
 }
 
 .weigher-bar .list-weigher {
