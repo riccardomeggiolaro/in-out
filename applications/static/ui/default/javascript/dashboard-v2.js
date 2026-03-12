@@ -248,13 +248,13 @@ async function getData(path) {
         } else {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
-        document.querySelector('#currentPlateVehicle').textContent = obj.vehicle.plate ? obj.vehicle.plate : '';
+        setGroupValue(document.querySelector('#currentPlateVehicle'), obj.vehicle.plate || '');
         document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
-        document.querySelector('#currentSocialReasonSubject').textContent = obj.subject.social_reason ? obj.subject.social_reason : '';
-        document.querySelector('#currentSocialReasonVector').textContent = obj.vector.social_reason ? obj.vector.social_reason : '';
-        document.querySelector('#currentDescriptionMaterial').textContent = obj.material.description ? obj.material.description : '';
-        document.querySelector('#currentNote').textContent = obj.note ? obj.note : '';
-        document.querySelector('#currentDocumentReference').textContent = obj.document_reference ? obj.document_reference : '';
+        setGroupValue(document.querySelector('#currentSocialReasonSubject'), obj.subject.social_reason || '');
+        setGroupValue(document.querySelector('#currentSocialReasonVector'), obj.vector.social_reason || '');
+        setGroupValue(document.querySelector('#currentDescriptionMaterial'), obj.material.description || '');
+        setGroupValue(document.querySelector('#currentNote'), obj.note || '');
+        setGroupValue(document.querySelector('#currentDocumentReference'), obj.document_reference || '');
 
         selectedIdWeight = res["id_selected"];
         console.log(selectedIdWeight)
@@ -1099,13 +1099,13 @@ function processRealtimeObject(obj) {
         } else {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
-        document.querySelector('#currentPlateVehicle').textContent = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
+        setGroupValue(document.querySelector('#currentPlateVehicle'), obj.data_in_execution.vehicle.plate || '');
         document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
-        document.querySelector('#currentSocialReasonSubject').textContent = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
-        document.querySelector('#currentSocialReasonVector').textContent = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
-        document.querySelector('#currentDescriptionMaterial').textContent = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
-        document.querySelector('#currentNote').textContent = obj.data_in_execution.note ? obj.data_in_execution.note : '';
-        document.querySelector('#currentDocumentReference').textContent = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
+        setGroupValue(document.querySelector('#currentSocialReasonSubject'), obj.data_in_execution.subject.social_reason || '');
+        setGroupValue(document.querySelector('#currentSocialReasonVector'), obj.data_in_execution.vector.social_reason || '');
+        setGroupValue(document.querySelector('#currentDescriptionMaterial'), obj.data_in_execution.material.description || '');
+        setGroupValue(document.querySelector('#currentNote'), obj.data_in_execution.note || '');
+        setGroupValue(document.querySelector('#currentDocumentReference'), obj.data_in_execution.document_reference || '');
 
 
         if (obj.type === "MANUALLY") {
@@ -1631,13 +1631,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Set text on input-group-value with JS truncation
+function setGroupValue(el, text) {
+    if (!el) return;
+    el.dataset.fullText = text;
+    el.textContent = text;
+    // Truncate until it fits within the visible height
+    if (text && el.scrollHeight > el.clientHeight) {
+        let truncated = text;
+        while (truncated.length > 0 && el.scrollHeight > el.clientHeight) {
+            truncated = truncated.slice(0, -1);
+            el.textContent = truncated + '...';
+        }
+    }
+}
+
 // Tooltip for truncated input-group-value elements
 document.addEventListener('DOMContentLoaded', () => {
     const tooltip = document.getElementById('valueTooltip');
     document.querySelectorAll('.input-group-value').forEach(el => {
         el.addEventListener('mouseenter', function(e) {
-            if (this.scrollHeight > this.clientHeight && this.textContent.trim()) {
-                tooltip.textContent = this.textContent;
+            const fullText = this.dataset.fullText || '';
+            if (fullText && fullText !== this.textContent) {
+                tooltip.textContent = fullText;
                 tooltip.style.display = 'block';
                 const rect = this.getBoundingClientRect();
                 tooltip.style.left = (rect.right + 8) + 'px';
