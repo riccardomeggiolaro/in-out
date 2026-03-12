@@ -154,6 +154,8 @@ select {
     align-items: center;
     min-height: 120px;
     overflow: hidden;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .access-table-container {
@@ -169,6 +171,8 @@ select {
     font-size: 1.05rem;
     border: 1px solid #1362b8;
     border-top: 3px solid white;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
 
 .access-table thead {
