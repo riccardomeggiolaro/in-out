@@ -227,7 +227,8 @@ async function getInstanceWeigher(path) {
             reles.forEach(([key, value]) => {
                 const btn = document.createElement('button');
                 btn.id = `rele-${key}`;
-                btn.innerHTML = `<strong>${key} - ${value === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+                btn.innerHTML = '<span class="rele-circle"></span>';
+                if (value !== 0) btn.classList.add('rele-active');
                 btn.onclick = () => {
                     fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);
                 };
@@ -1046,7 +1047,11 @@ function processRealtimeObject(obj) {
         const firstKey = Object.keys(obj)[0];
         const buttonRele = document.querySelector(`#rele-${firstKey}`);
         if (buttonRele) {
-            buttonRele.innerHTML = `<strong>${firstKey} - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+            if (obj[firstKey] !== 0) {
+                buttonRele.classList.add('rele-active');
+            } else {
+                buttonRele.classList.remove('rele-active');
+            }
         }
     } else if (obj.tare) {
         data_weight_realtime = obj;
