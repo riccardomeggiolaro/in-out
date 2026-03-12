@@ -219,6 +219,21 @@ async function getInstanceWeigher(path) {
         maxThesholdValue = obj.max_theshold;
         if (obj.printer_name === null || !obj.events.weighing.report.in && !obj.events.weighing.report.out && !obj.events.weighing.report.generic) reprint.style.display = 'none';
         else reprint.style.display = 'block';
+        // Genera pulsanti relè
+        const releContainer = document.getElementById('releContainer');
+        releContainer.innerHTML = '';
+        if (obj.rele) {
+            const reles = Object.entries(obj.rele);
+            reles.forEach(([key, value]) => {
+                const btn = document.createElement('button');
+                btn.id = `rele-${key}`;
+                btn.innerHTML = `<strong>${key} - ${value === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+                btn.onclick = () => {
+                    fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);
+                };
+                releContainer.appendChild(btn);
+            });
+        }
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -1026,6 +1041,13 @@ function processRealtimeObject(obj) {
             button.disabled = false;
             button.classList.remove("disabled-button"); // Aggi
         });
+    } else if (/^\d+$/.test(Object.keys(obj)[0])) {
+        // Aggiornamento stato relè
+        const firstKey = Object.keys(obj)[0];
+        const buttonRele = document.querySelector(`#rele-${firstKey}`);
+        if (buttonRele) {
+            buttonRele.innerHTML = `<strong>${firstKey} - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}</strong>`;
+        }
     } else if (obj.tare) {
         data_weight_realtime = obj;
         net = [undefined, '0'].includes(data_weight_realtime.tare);
