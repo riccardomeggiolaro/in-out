@@ -1065,11 +1065,16 @@ button:active {
     gap: 8px;
 }
 
-.weigher-bar .diagnostic-btn {
+.rele-container {
+    display: flex;
+    gap: 5px;
+}
+
+.rele-container button {
     height: fit-content;
     width: fit-content;
-    font-size: 1.3rem;
-    padding: 7px;
+    font-size: 0.85rem;
+    padding: 5px 8px;
     flex: none;
 }
 
