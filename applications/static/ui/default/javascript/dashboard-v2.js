@@ -1635,8 +1635,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function setGroupValue(el, text) {
     if (!el) return;
     el.dataset.fullText = text;
+    truncateElement(el);
+}
+
+function truncateElement(el) {
+    const text = el.dataset.fullText || '';
     el.textContent = text;
-    // Truncate until it fits within the visible height
     if (text && el.scrollHeight > el.clientHeight) {
         let truncated = text;
         while (truncated.length > 0 && el.scrollHeight > el.clientHeight) {
@@ -1645,6 +1649,10 @@ function setGroupValue(el, text) {
         }
     }
 }
+
+window.addEventListener('resize', function() {
+    document.querySelectorAll('.input-group-value').forEach(truncateElement);
+});
 
 // Tooltip for truncated input-group-value elements
 document.addEventListener('DOMContentLoaded', () => {
