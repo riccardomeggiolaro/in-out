@@ -89,7 +89,7 @@ body {
     align-items: center;
 }
 
-.anagrafic div,
+.anagrafic > div,
 .ins ul {
     margin: 5px;
     max-width: 99%;
