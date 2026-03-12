@@ -159,7 +159,7 @@ select {
 }
 
 .access-table-container {
-    width: 100%;
+    width: 99.9%;
     flex: 1;
     overflow-y: auto;
     background: white;
@@ -169,8 +169,6 @@ select {
     width: 100%;
     border-collapse: collapse;
     font-size: 1.05rem;
-    border: 1px solid #1362b8;
-    border-top: 3px solid white;
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
