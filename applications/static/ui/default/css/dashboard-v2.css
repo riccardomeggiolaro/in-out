@@ -573,6 +573,10 @@ button:active {
     display: none;
 }
 
+.accessList {
+    display: none;
+}
+
 /* Updated media queries */
 @media (max-width: 800px) {
     .display-wrapper,
