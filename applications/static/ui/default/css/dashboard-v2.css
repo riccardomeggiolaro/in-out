@@ -869,9 +869,8 @@ button:active {
 .weight-row {
     display: flex;
     align-items: stretch;
-    width: 100%;
+    width: calc(100% - 20px);
     margin: 0 auto;
-    padding: 0 10px;
     gap: 8px;
 }
 
