@@ -136,7 +136,7 @@ body {
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
-    padding: 4px 4px 0 !important;
+    padding: 4px 8px 0 !important;
     font-size: 0.85rem;
     font-weight: bold;
     color: #555;
@@ -144,9 +144,6 @@ body {
     cursor: pointer;
     text-align: left;
     width: auto;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
 }
 
 input,
