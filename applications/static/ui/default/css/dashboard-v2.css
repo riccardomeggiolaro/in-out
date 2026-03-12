@@ -909,6 +909,18 @@ button:active {
     gap: 8px;
 }
 
+.weigher-bar .spacer-left,
+.weigher-bar .spacer-right {
+    flex: 1 1 0;
+}
+
+.weigher-bar .weigher-bar-center {
+    flex: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .weigher-bar .diagnostic-btn {
     height: fit-content;
     width: fit-content;
@@ -985,6 +997,13 @@ button {
     .weight-center {
         flex: 1 1 100%;
         order: -1;
+    }
+    .weigher-bar .spacer-left,
+    .weigher-bar .spacer-right {
+        display: none;
+    }
+    .weigher-bar .weigher-bar-center {
+        flex: 1;
     }
 }
 
