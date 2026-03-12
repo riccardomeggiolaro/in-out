@@ -1071,11 +1071,26 @@ button:active {
 }
 
 .rele-container button {
-    height: fit-content;
-    width: fit-content;
-    font-size: 0.85rem;
-    padding: 5px 8px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
     flex: none;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.rele-container button.rele-active {
+    background: #1362b8;
+    color: white;
+    border-color: #1362b8;
 }
 
 .weigher-bar .list-weigher {
