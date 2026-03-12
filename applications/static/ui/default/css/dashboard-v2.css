@@ -780,8 +780,17 @@ button:active {
 
     /* Mostra i pulsanti X solo quando i tab sono attivi su mobile */
     .anagrafic.active .close-tab-button,
-    .ins.active .close-tab-button {
+    .ins.active .close-tab-button,
+    .accessList.active .close-tab-button {
         display: flex !important;
+    }
+
+    .access-list-wrapper {
+        display: none !important;
+    }
+
+    .accessList {
+        display: flex;
     }
 
     .weight {
@@ -1137,9 +1146,6 @@ button {
     }
     .buttons-right {
         padding-left: 0;
-    }
-    .access-list-wrapper {
-        display: none !important;
     }
     .weight-center {
         flex: 1 1 100%;
