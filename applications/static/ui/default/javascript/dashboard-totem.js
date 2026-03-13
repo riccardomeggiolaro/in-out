@@ -211,21 +211,23 @@ function setupInputListener(inputId, suggestionsId, anagrafic, filterField) {
         }
     });
 
-    // On blur, auto-select matching suggestion or hide list
+    // On blur, auto-select matching suggestion or create/set value
     input.addEventListener('blur', () => {
         setTimeout(() => {
             const suggestionsList = document.getElementById(suggestionsId);
             if (!suggestionsList) return;
-            const value = input.value.trim().toUpperCase();
+            const value = input.value.trim();
             if (value) {
                 const items = suggestionsList.querySelectorAll('li:not(.create-new)');
                 for (const li of items) {
                     const text = li.querySelector('span')?.textContent?.trim().toUpperCase();
-                    if (text === value) {
+                    if (text === value.toUpperCase()) {
                         li.click();
                         return;
                     }
                 }
+                // No exact match found, set the value via API
+                createOrSelectAnagrafic(anagrafic, filterField, value);
             }
             suggestionsList.innerHTML = '';
         }, 200);
