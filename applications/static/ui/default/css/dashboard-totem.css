@@ -31,6 +31,63 @@ body {
     50% { opacity: 1; transform: scale(1); }
 }
 
+/* Weigher Selection Screen */
+.weigher-selection {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0f2f5;
+}
+
+.weigher-selection-content {
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    padding: 20px;
+}
+
+.weigher-logo {
+    width: 160px;
+    margin-bottom: 24px;
+}
+
+.weigher-selection-content h2 {
+    font-size: 1.6rem;
+    color: #1362b8;
+    margin-bottom: 4px;
+}
+
+.weigher-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.weigher-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 24px;
+    background: white;
+    border: 3px solid #ddd;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.weigher-option:hover {
+    border-color: #1362b8;
+    background: #f0f6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(19, 98, 184, 0.15);
+}
+
 /* Totem Container */
 .totem-container {
     max-width: 800px;
