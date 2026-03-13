@@ -57,11 +57,14 @@ let vectorDebounce;
 let driverDebounce;
 let materialDebounce;
 
+// Weigher options cache
+let weigherOptions = [];
+
 // --- Init ---
 window.addEventListener('load', () => {
     setTimeout(() => {
         document.querySelector('.loading').style.display = 'none';
-        document.querySelector('.totem-container').style.display = 'flex';
+        document.getElementById('weigherSelection').style.display = 'flex';
     }, 300);
 });
 
@@ -69,30 +72,31 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(res => {
-        const weigherSelect = document.getElementById('weigherSelect');
-        currentWeigherPath = localStorage.getItem('currentWeigherPath');
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         test_mode = res["test_mode"] || false;
-        let selected = false;
-        for (let instance in res["weighers"]) {
-            for (let weigher in res["weighers"][instance]["nodes"]) {
-                const option = document.createElement('option');
-                option.value = `?instance_name=${instance}&weigher_name=${weigher}`;
-                option.innerText = weigher;
-                if (option.value === currentWeigherPath) {
-                    option.selected = true;
-                    selected = true;
-                }
-                weigherSelect.appendChild(option);
-            }
-        }
-        if (!selected) weigherSelect.selectedIndex = 0;
-        currentWeigherPath = weigherSelect.value;
-        localStorage.setItem('currentWeigherPath', currentWeigherPath);
         instances = res["weighers"];
 
-        // Connect WebSocket
-        connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+        // Build weigher options list
+        weigherOptions = [];
+        for (let instance in res["weighers"]) {
+            for (let weigher in res["weighers"][instance]["nodes"]) {
+                weigherOptions.push({
+                    path: `?instance_name=${instance}&weigher_name=${weigher}`,
+                    label: weigher
+                });
+            }
+        }
+
+        // Render weigher selection buttons
+        const weigherList = document.getElementById('weigherList');
+        weigherList.innerHTML = '';
+        weigherOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'weigher-option';
+            btn.textContent = opt.label;
+            btn.addEventListener('click', () => selectWeigher(opt.path));
+            weigherList.appendChild(btn);
+        });
     });
 
     // Setup input listeners with debounce
@@ -102,6 +106,18 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInputListener('driverInput', 'driverSuggestions', 'driver', 'social_reason');
     setupInputListener('materialInput', 'materialSuggestions', 'material', 'description');
 });
+
+function selectWeigher(path) {
+    currentWeigherPath = path;
+    localStorage.setItem('currentWeigherPath', currentWeigherPath);
+
+    // Hide selection, show totem
+    document.getElementById('weigherSelection').style.display = 'none';
+    document.querySelector('.totem-container').style.display = 'flex';
+
+    // Connect WebSocket
+    connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+}
 
 window.onbeforeunload = function() {
     isRefreshing = true;
