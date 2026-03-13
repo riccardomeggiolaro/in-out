@@ -58,9 +58,13 @@
             <!-- Step 0: Targa -->
             <div class="step active" id="step-0">
                 <h2>Inserisci Targa</h2>
-                <p class="step-description">Inserisci la targa manualmente oppure avvicina il badge / attendi la telecamera</p>
-                <div class="input-wrapper">
-                    <input type="text" id="plateInput" placeholder="Targa veicolo..." autocomplete="off" autofocus>
+                <div class="license-plate" onclick="document.getElementById('plateInput').focus()">
+                    <div class="plate-band plate-band-left">
+                        <div class="plate-stars">&#9733;</div>
+                        <div class="plate-country">I</div>
+                    </div>
+                    <input type="text" id="plateInput" class="plate-input" maxlength="10" placeholder="_ _ _ _ _ _ _" autocomplete="off" autofocus>
+                    <div class="plate-band plate-band-right"></div>
                 </div>
                 <ul class="suggestions-list" id="plateSuggestions"></ul>
                 <div class="step-buttons">
