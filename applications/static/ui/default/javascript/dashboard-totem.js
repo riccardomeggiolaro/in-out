@@ -160,13 +160,6 @@ function goToStep(step) {
 
     // Update summary on step 6
     if (step === 6) updateSummary();
-
-    // Load suggestions for the new step
-    if (step === 0) loadSuggestions('vehicle', 'plate', '', 'plateSuggestions');
-    if (step === 2) loadSuggestions('subject', 'social_reason', '', 'subjectSuggestions');
-    if (step === 3) loadSuggestions('vector', 'social_reason', '', 'vectorSuggestions');
-    if (step === 4) loadSuggestions('driver', 'social_reason', '', 'driverSuggestions');
-    if (step === 5) loadSuggestions('material', 'description', '', 'materialSuggestions');
 }
 
 // --- Type Subject ---
