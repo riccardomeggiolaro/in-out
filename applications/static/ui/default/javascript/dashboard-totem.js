@@ -210,6 +210,14 @@ function setupInputListener(inputId, suggestionsId, anagrafic, filterField) {
             }
         }
     });
+
+    // On blur, hide suggestions
+    input.addEventListener('blur', () => {
+        setTimeout(() => {
+            const suggestionsList = document.getElementById(suggestionsId);
+            if (suggestionsList) suggestionsList.innerHTML = '';
+        }, 200);
+    });
 }
 
 // --- Load Suggestions ---
@@ -298,6 +306,11 @@ function highlightText(text, input) {
 function selectItem(anagrafic, item, filterField) {
     const id = parseInt(item.id);
 
+    // Hide suggestions immediately on selection
+    const suggestionsMap = { vehicle: 'plateSuggestions', subject: 'subjectSuggestions', vector: 'vectorSuggestions', driver: 'driverSuggestions', material: 'materialSuggestions' };
+    const suggestionsList = document.getElementById(suggestionsMap[anagrafic]);
+    if (suggestionsList) suggestionsList.innerHTML = '';
+
     fetch(`/api/data${currentWeigherPath}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -359,6 +372,11 @@ function getAnagraficLabel(anagrafic) {
 
 // --- Create or select by value ---
 function createOrSelectAnagrafic(anagrafic, filterField, value) {
+    // Hide suggestions immediately
+    const suggestionsMap = { vehicle: 'plateSuggestions', subject: 'subjectSuggestions', vector: 'vectorSuggestions', driver: 'driverSuggestions', material: 'materialSuggestions' };
+    const suggestionsList = document.getElementById(suggestionsMap[anagrafic]);
+    if (suggestionsList) suggestionsList.innerHTML = '';
+
     const body = {
         data_in_execution: {
             [anagrafic]: {
