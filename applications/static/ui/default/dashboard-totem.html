@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Totem Pesatura</title>
+    <link rel="stylesheet" href="/static/css/dashboard-totem.css">
+    <link rel="stylesheet" href="/static/css/snackbar.css">
+</head>
+<body>
+    <!-- Loading -->
+    <div class="loading">
+        <img class="img-loading" src="/static/content/baronpesi_logo.png" alt="Logo Baron Pesi">
+    </div>
+
+    <!-- Main container -->
+    <div class="totem-container" style="display:none;">
+        <!-- Header with weight display -->
+        <div class="totem-header">
+            <div class="weight-display">
+                <span id="netWeight">------</span>
+                <span id="uniteMisure" class="unit">--</span>
+            </div>
+            <div class="weight-info">
+                <span id="tare">------</span>
+                <span id="status">--</span>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-bar">
+            <div class="progress-step active" data-step="0"><span>Targa</span></div>
+            <div class="progress-step" data-step="1"><span>Tipo</span></div>
+            <div class="progress-step" data-step="2"><span>Soggetto</span></div>
+            <div class="progress-step" data-step="3"><span>Vettore</span></div>
+            <div class="progress-step" data-step="4"><span>Autista</span></div>
+            <div class="progress-step" data-step="5"><span>Materiale</span></div>
+            <div class="progress-step" data-step="6"><span>Riepilogo</span></div>
+        </div>
+
+        <!-- Steps container -->
+        <div class="steps-wrapper">
+
+            <!-- Step 0: Targa -->
+            <div class="step active" id="step-0">
+                <h2>Inserisci Targa</h2>
+                <p class="step-description">Inserisci la targa manualmente oppure avvicina il badge / attendi la telecamera</p>
+                <div class="input-wrapper">
+                    <input type="text" id="plateInput" placeholder="Targa veicolo..." autocomplete="off" autofocus>
+                </div>
+                <ul class="suggestions-list" id="plateSuggestions"></ul>
+                <div class="step-buttons">
+                    <button class="btn btn-primary btn-next" onclick="goToStep(1)">Avanti</button>
+                </div>
+            </div>
+
+            <!-- Step 1: Cliente / Fornitore -->
+            <div class="step" id="step-1">
+                <h2>Tipo Soggetto</h2>
+                <p class="step-description">Seleziona il tipo di soggetto</p>
+                <div class="type-buttons">
+                    <button class="btn btn-type" id="btnCustomer" onclick="selectTypeSubject('CUSTOMER')">
+                        <span class="btn-type-icon">&#128100;</span>
+                        <span class="btn-type-label">Cliente</span>
+                    </button>
+                    <button class="btn btn-type" id="btnSupplier" onclick="selectTypeSubject('SUPPLIER')">
+                        <span class="btn-type-icon">&#128230;</span>
+                        <span class="btn-type-label">Fornitore</span>
+                    </button>
+                </div>
+                <div class="step-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(0)">Indietro</button>
+                    <button class="btn btn-primary btn-next" onclick="goToStep(2)">Avanti</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Ragione Sociale -->
+            <div class="step" id="step-2">
+                <h2>Ragione Sociale</h2>
+                <p class="step-description">Seleziona o crea un nuovo soggetto</p>
+                <div class="input-wrapper">
+                    <input type="text" id="subjectInput" placeholder="Cerca ragione sociale..." autocomplete="off">
+                </div>
+                <ul class="suggestions-list" id="subjectSuggestions"></ul>
+                <div class="selected-value" id="selectedSubject"></div>
+                <div class="step-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">Indietro</button>
+                    <button class="btn btn-primary btn-next" onclick="goToStep(3)">Avanti</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Vettore -->
+            <div class="step" id="step-3">
+                <h2>Vettore</h2>
+                <p class="step-description">Seleziona o crea un nuovo vettore</p>
+                <div class="input-wrapper">
+                    <input type="text" id="vectorInput" placeholder="Cerca vettore..." autocomplete="off">
+                </div>
+                <ul class="suggestions-list" id="vectorSuggestions"></ul>
+                <div class="selected-value" id="selectedVector"></div>
+                <div class="step-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">Indietro</button>
+                    <button class="btn btn-primary btn-next" onclick="goToStep(4)">Avanti</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Autista -->
+            <div class="step" id="step-4">
+                <h2>Autista</h2>
+                <p class="step-description">Seleziona o crea un nuovo autista</p>
+                <div class="input-wrapper">
+                    <input type="text" id="driverInput" placeholder="Cerca autista..." autocomplete="off">
+                </div>
+                <ul class="suggestions-list" id="driverSuggestions"></ul>
+                <div class="selected-value" id="selectedDriver"></div>
+                <div class="step-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">Indietro</button>
+                    <button class="btn btn-primary btn-next" onclick="goToStep(5)">Avanti</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Materiale -->
+            <div class="step" id="step-5">
+                <h2>Materiale</h2>
+                <p class="step-description">Seleziona o crea un nuovo materiale</p>
+                <div class="input-wrapper">
+                    <input type="text" id="materialInput" placeholder="Cerca materiale..." autocomplete="off">
+                </div>
+                <ul class="suggestions-list" id="materialSuggestions"></ul>
+                <div class="selected-value" id="selectedMaterial"></div>
+                <div class="step-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(4)">Indietro</button>
+                    <button class="btn btn-primary btn-next" onclick="goToStep(6)">Avanti</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Riepilogo -->
+            <div class="step" id="step-6">
+                <h2>Riepilogo</h2>
+                <p class="step-description">Verifica i dati e procedi con la pesatura</p>
+                <div class="summary-card">
+                    <div class="summary-row" onclick="goToStep(0)">
+                        <span class="summary-label">Targa</span>
+                        <span class="summary-value" id="summaryPlate">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
+                    <div class="summary-row" onclick="goToStep(1)">
+                        <span class="summary-label">Tipo</span>
+                        <span class="summary-value" id="summaryType">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
+                    <div class="summary-row" onclick="goToStep(2)">
+                        <span class="summary-label">Ragione Sociale</span>
+                        <span class="summary-value" id="summarySubject">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
+                    <div class="summary-row" onclick="goToStep(3)">
+                        <span class="summary-label">Vettore</span>
+                        <span class="summary-value" id="summaryVector">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
+                    <div class="summary-row" onclick="goToStep(4)">
+                        <span class="summary-label">Autista</span>
+                        <span class="summary-value" id="summaryDriver">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
+                    <div class="summary-row" onclick="goToStep(5)">
+                        <span class="summary-label">Materiale</span>
+                        <span class="summary-value" id="summaryMaterial">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
+                </div>
+                <div class="step-buttons summary-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(5)">Indietro</button>
+                    <button class="btn btn-weighing" onclick="handleGenericWeighing()">Pesatura Generica</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Snackbar -->
+    <div id="snackbar"></div>
+    <div id="snackbar-dashboard"></div>
+
+    <!-- Reconnection popup -->
+    <div class="popup" id="reconnectionPopup">
+        <div class="popup-content">
+            <p>Riconnessione in corso...</p>
+            <button id="reconnectionButton" onclick="attemptReconnect()">Riconnetti</button>
+        </div>
+    </div>
+
+    <!-- Confirm popup -->
+    <div class="popup" id="confirmPopup">
+        <div class="popup-content">
+            <p id="confirmDescription"></p>
+            <div class="popup-buttons">
+                <button class="btn btn-secondary close-button" onclick="closePopup()">Annulla</button>
+                <button class="btn btn-primary" onclick="if(confirmWeighing) confirmWeighing()">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weigher selector (hidden, auto-selected) -->
+    <select id="weigherSelect" style="display:none;"></select>
+
+    <script src="/static/javascript/snackbar.js"></script>
+    <script src="/static/javascript/dashboard-totem.js"></script>
+</body>
+</html>
