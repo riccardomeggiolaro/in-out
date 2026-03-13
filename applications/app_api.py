@@ -299,6 +299,10 @@ def init():
 			print(f"Errore nel caricamento report-designer: {e}")
 			return HTMLResponse(content=f"Errore: {str(e)}", status_code=500)
 
+	@app.get("/dashboard-totem", response_class=HTMLResponse)
+	async def DashboardTotem(request: Request):
+		return templates.TemplateResponse("dashboard-totem.html", {"request": request})
+
 	@app.get('/{filename:path}', response_class=HTMLResponse)
 	async def Static(request: Request, filename: str):
 		"""Gestisce le richieste di file statici (HTML, CSS, JS)."""
