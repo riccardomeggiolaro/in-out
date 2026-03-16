@@ -131,9 +131,20 @@ window.onclick = function(event) {
     }
 };
 
+// Flag to prevent blur handlers from firing during step navigation
+let isNavigating = false;
+
 // --- Step Navigation ---
 function goToStep(step) {
     if (step < 0 || step >= TOTAL_STEPS) return;
+
+    isNavigating = true;
+
+    // Clear suggestions from ALL steps before navigating
+    ['plateSuggestions', 'subjectSuggestions', 'vectorSuggestions', 'driverSuggestions', 'materialSuggestions'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
 
     // Hide current step
     const currentEl = document.getElementById(`step-${currentStep}`);
@@ -160,6 +171,16 @@ function goToStep(step) {
 
     // Update summary on step 6
     if (step === 6) updateSummary();
+
+    // Load suggestions for the new step
+    if (step === 0) loadSuggestions('vehicle', 'plate', '', 'plateSuggestions');
+    if (step === 2) loadSuggestions('subject', 'social_reason', '', 'subjectSuggestions');
+    if (step === 3) loadSuggestions('vector', 'social_reason', '', 'vectorSuggestions');
+    if (step === 4) loadSuggestions('driver', 'social_reason', '', 'driverSuggestions');
+    if (step === 5) loadSuggestions('material', 'description', '', 'materialSuggestions');
+
+    // Re-enable blur handlers after navigation completes
+    setTimeout(() => { isNavigating = false; }, 300);
 }
 
 // --- Type Subject ---
@@ -207,6 +228,8 @@ function setupInputListener(inputId, suggestionsId, anagrafic, filterField) {
     // On blur, auto-select matching suggestion or create/set value
     input.addEventListener('blur', () => {
         setTimeout(() => {
+            // Skip blur logic if we're navigating between steps
+            if (isNavigating) return;
             const suggestionsList = document.getElementById(suggestionsId);
             if (!suggestionsList) return;
             const value = input.value.trim();
