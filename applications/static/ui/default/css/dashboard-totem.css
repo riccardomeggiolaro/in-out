@@ -322,6 +322,53 @@ body {
     content: '+ ';
 }
 
+/* Grid layout for selection-only steps (2 items per row) */
+.suggestions-grid {
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-height: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    max-width: 600px;
+}
+
+.suggestions-grid:not(:empty) {
+    display: grid;
+}
+
+.suggestions-grid li {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-weight: 500;
+    border-bottom: none;
+    transition: all 0.2s;
+}
+
+.suggestions-grid li:hover {
+    border-color: #1362b8;
+    background: #f0f6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(19, 98, 184, 0.15);
+}
+
+.suggestions-grid li.selected {
+    border-color: #1362b8;
+    background: #e3effc;
+}
+
+.suggestions-grid li .secondary {
+    display: block;
+    margin-top: 4px;
+}
+
 /* Selected value display */
 .selected-value {
     margin-top: 8px;
