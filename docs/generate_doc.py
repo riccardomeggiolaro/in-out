@@ -1,7 +1,7 @@
 from docx import Document
-from docx.shared import Pt, Cm, RGBColor
+from docx.shared import Pt, Cm, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.style import WD_STYLE_TYPE
+from docx.enum.table import WD_TABLE_ALIGNMENT
 
 doc = Document()
 
@@ -23,8 +23,9 @@ for run in title.runs:
     run.font.color.rgb = RGBColor(0x1F, 0x3A, 0x5F)
 
 doc.add_paragraph(
-    'Sistema di gestione accessi e pesatura con doppia sbarra e priorità veicoli, '
-    'integrato con un sistema esterno di identificazione targhe.'
+    'Sistema di gestione accessi e pesatura con controllo sbarre automatico, '
+    'integrato con un sistema esterno di identificazione targhe. '
+    'La priorità determina l\'ordine di servizio in coda quando più prenotazioni hanno la stessa data.'
 )
 
 # --- Fase 1 ---
@@ -39,7 +40,12 @@ items = [
 for item in items:
     doc.add_paragraph(item, style='List Number')
 
-sub_items = ['Targa del veicolo', 'Data/Ora dell\'arrivo', 'Slot assegnato (fascia oraria o posizione)', 'Priorità (determina quale sbarra aprire)']
+sub_items = [
+    'Targa del veicolo',
+    'Data/Ora dell\'arrivo',
+    'Slot assegnato (fascia oraria o posizione)',
+    'Priorità (usata per ordinare la coda in caso di stessa data)',
+]
 for s in sub_items:
     p = doc.add_paragraph(style='List Bullet')
     p.paragraph_format.left_indent = Cm(2.5)
@@ -59,7 +65,7 @@ for bold_text, desc in types:
     p.add_run(desc)
 
 # --- Fase 2 ---
-doc.add_heading('Fase 2: Apertura Sbarra in Base alla Priorità', level=2)
+doc.add_heading('Fase 2: Gestione Coda e Apertura Sbarra', level=2)
 
 doc.add_paragraph(
     'Il software monitora continuamente la Pesa 1. '
@@ -67,10 +73,10 @@ doc.add_paragraph(
 )
 
 steps = [
-    'Cerca il prossimo accesso in coda (sia con pesatura che solo transito), ordinato per priorità decrescente. A parità di priorità viene servito il più vecchio.',
-    'In base alla priorità del veicolo selezionato:\n'
-    '    • Priorità ALTA → Apre Sbarra 1 (corsia preferenziale)\n'
-    '    • Priorità BASSA → Apre Sbarra 2 (corsia normale)',
+    'Cerca il prossimo accesso da servire:\n'
+    '    • Prima passa la prenotazione con data meno recente (la più vecchia ha precedenza)\n'
+    '    • A parità di data, passa quella con priorità più alta',
+    'Apre la sbarra corrispondente.',
     'Mostra la targa sul pannello e attiva la sirena.',
     'Quando il veicolo sale sulla pesa (peso rilevato) → chiude la sbarra.',
 ]
@@ -97,7 +103,7 @@ doc.add_heading('Fase 4: Transito Senza Pesata', level=2)
 doc.add_paragraph('Per i veicoli registrati come solo transito:')
 
 steps = [
-    'Le sbarre si aprono normalmente in base alla priorità.',
+    'La sbarra si apre normalmente seguendo l\'ordine di coda.',
     'Il veicolo transita sulla Pesa 1 ma la pesatura NON scatta.',
     'Viene registrato solo il passaggio (data/ora).',
     'Utile per veicoli di servizio o mezzi che non necessitano di pesatura.',
@@ -105,11 +111,51 @@ steps = [
 for s in steps:
     doc.add_paragraph(s, style='List Number')
 
+# --- Ordinamento Coda ---
+doc.add_heading('2. Ordinamento della Coda', level=1)
+
+doc.add_paragraph('La coda viene ordinata così:')
+
+p = doc.add_paragraph(style='List Number')
+run = p.add_run('Data prenotazione ASC')
+run.bold = True
+p.add_run(' — la prenotazione più vecchia passa prima')
+
+p = doc.add_paragraph(style='List Number')
+run = p.add_run('Priorità DESC')
+run.bold = True
+p.add_run(' — a parità di data, passa prima quella con priorità più alta')
+
+doc.add_paragraph('')  # spacer
+
+# Tabella esempio
+table = doc.add_table(rows=5, cols=4)
+table.style = 'Light Shading Accent 1'
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+headers = ['Targa', 'Data Prenotazione', 'Priorità', 'Ordine di Servizio']
+for i, h in enumerate(headers):
+    cell = table.rows[0].cells[i]
+    cell.text = h
+    for p in cell.paragraphs:
+        for r in p.runs:
+            r.bold = True
+
+data = [
+    ['AB123', '10/03 ore 08:00', '1', '1° (data più vecchia)'],
+    ['CD456', '11/03 ore 09:00', '3', '2° (stessa data, priorità alta)'],
+    ['EF789', '11/03 ore 09:00', '1', '3° (stessa data, priorità bassa)'],
+    ['GH012', '12/03 ore 10:00', '2', '4° (data più recente)'],
+]
+for row_idx, row_data in enumerate(data):
+    for col_idx, val in enumerate(row_data):
+        table.rows[row_idx + 1].cells[col_idx].text = val
+
 # --- Schema del Processo ---
-doc.add_heading('2. Schema del Processo', level=1)
+doc.add_heading('3. Schema del Processo', level=1)
 
 schema = (
-    'Sistema Esterno          Nostro Software            Pesa 1          Sbarra 1/2       Pesa 2\n'
+    'Sistema Esterno          Nostro Software            Pesa 1           Sbarra           Pesa 2\n'
     '     │                        │                       │                 │               │\n'
     '     │  POST /access          │                       │                 │               │\n'
     '     │  (targa, slot,         │                       │                 │               │\n'
@@ -121,11 +167,11 @@ schema = (
     '     │                        │◄──────────────────────│ pesa vuota      │               │\n'
     '     │                        │                       │                 │               │\n'
     '     │                        │  Cerca prossimo       │                 │               │\n'
-    '     │                        │  per priorità         │                 │               │\n'
+    '     │                        │  (data ASC, poi       │                 │               │\n'
+    '     │                        │   priorità DESC)      │                 │               │\n'
     '     │                        │                       │                 │               │\n'
     '     │                        │  Apri sbarra ─────────────────────────►│               │\n'
-    '     │                        │  (1 o 2 da priorità)  │                 │ APERTA        │\n'
-    '     │                        │                       │                 │               │\n'
+    '     │                        │                       │                 │ APERTA        │\n'
     '     │                        │  Pannello + Sirena    │                 │               │\n'
     '     │                        │                       │                 │               │\n'
     '     │                  [Veicolo sale sulla pesa]      │                 │               │\n'
@@ -153,12 +199,12 @@ run.font.name = 'Consolas'
 run.font.size = Pt(8)
 
 # --- Cosa Serve ---
-doc.add_heading('3. Cosa Serve Implementare', level=1)
+doc.add_heading('4. Cosa Serve Implementare', level=1)
 
 doc.add_heading('Tabella transit_access', level=2)
 doc.add_paragraph(
     'Tabella separata per i soli transiti (senza pesatura). '
-    'Contiene: targa, slot, priorità, sbarra usata, data ingresso/uscita, note, ID dal sistema esterno.'
+    'Contiene: targa, slot, priorità, data ingresso/uscita, note, ID dal sistema esterno.'
 )
 
 doc.add_heading('API per il Sistema Esterno', level=2)
@@ -177,8 +223,8 @@ for endpoint, desc in apis:
 
 doc.add_heading('Automatismo Apertura Sbarre', level=2)
 steps = [
-    'Nel Callback Realtime, quando la pesa è vuota: cercare il prossimo accesso/transito in coda per priorità.',
-    'Aprire il relè della sbarra corretta (configurazione gate → relè).',
+    'Nel Callback Realtime, quando la pesa è vuota: cercare il prossimo accesso/transito in coda (data ASC, priorità DESC).',
+    'Aprire il relè della sbarra.',
     'Quando il veicolo sale sulla pesa, chiudere la sbarra.',
     'Se è un transito → registrare solo il passaggio, non avviare pesatura.',
     'Se è un accesso normale → procedere con il flusso di pesatura esistente.',
@@ -187,25 +233,25 @@ for s in steps:
     doc.add_paragraph(s, style='List Number')
 
 # --- Esempi ---
-doc.add_heading('4. Esempi Pratici', level=1)
+doc.add_heading('5. Esempi Pratici', level=1)
 
-doc.add_heading('Veicolo priorità alta con pesatura', level=2)
+doc.add_heading('Veicolo con pesatura', level=2)
 doc.add_paragraph(
-    'Sistema esterno invia targa + priorità 3 → pesa vuota → apre Sbarra 1 → '
-    'veicolo pesa su Pesa 1 → chiude sbarra → va a Pesa 2 → pesatura automatica → accesso chiuso.'
+    'Sistema esterno invia targa + data + priorità → pesa vuota → apre sbarra → '
+    'veicolo transita su Pesa 1 → chiude sbarra → va a Pesa 2 → pesatura automatica → accesso chiuso.'
 )
 
 doc.add_heading('Veicolo solo transito', level=2)
 doc.add_paragraph(
-    'Sistema esterno invia targa + priorità 2 + tipo transito → pesa vuota → '
-    'apre sbarra in base a priorità → veicolo passa → chiude sbarra → '
-    'registra passaggio → nessuna pesatura.'
+    'Sistema esterno invia targa + data + priorità + tipo transito → pesa vuota → '
+    'apre sbarra → veicolo passa → chiude sbarra → registra passaggio → nessuna pesatura.'
 )
 
-doc.add_heading('Coda mista', level=2)
+doc.add_heading('Coda con stessa data', level=2)
 doc.add_paragraph(
-    'Tre veicoli in coda con priorità 1, 3, 2 → viene servito prima quello con priorità 3 (Sbarra 1), '
-    'poi 2 (Sbarra 1), poi 1 (Sbarra 2).'
+    'Due veicoli prenotati per la stessa data, uno con priorità 3 e uno con priorità 1 → '
+    'passa prima quello con priorità 3. Se hanno date diverse, passa prima quello con data '
+    'più vecchia indipendentemente dalla priorità.'
 )
 
 # --- Save ---
