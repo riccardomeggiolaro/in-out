@@ -29,6 +29,7 @@
                 <h2>Materiale</h2>
                 <p class="step-description">Seleziona un materiale</p>
                 <ul class="suggestions-list suggestions-grid" id="materialGrid"></ul>
+                <div class="selected-value" id="selectedMaterialDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-driver.html')">Indietro</button>
                 </div>
@@ -61,6 +62,9 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
+            if (selectedMaterial.description) {
+                document.getElementById('selectedMaterialDisplay').textContent = 'Selezionato: ' + selectedMaterial.description;
+            }
             loadItems('material', 'description', '', 'materialGrid', (item) => {
                 selectAndAdvance('material', item, 'totem-summary.html');
             });
