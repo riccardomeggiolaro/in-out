@@ -52,10 +52,6 @@ let snackbarTimeout;
 
 // Debounce timers
 let plateDebounce;
-let subjectDebounce;
-let vectorDebounce;
-let driverDebounce;
-let materialDebounce;
 
 // Weigher options cache
 let weigherOptions = [];
@@ -99,12 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Setup input listeners with debounce
+    // Setup input listener only for plate (typed manually)
     setupInputListener('plateInput', 'plateSuggestions', 'vehicle', 'plate');
-    setupInputListener('subjectInput', 'subjectSuggestions', 'subject', 'social_reason');
-    setupInputListener('vectorInput', 'vectorSuggestions', 'vector', 'social_reason');
-    setupInputListener('driverInput', 'driverSuggestions', 'driver', 'social_reason');
-    setupInputListener('materialInput', 'materialSuggestions', 'material', 'description');
 });
 
 function selectWeigher(path) {
@@ -163,10 +155,9 @@ function goToStep(step) {
     const newEl = document.getElementById(`step-${step}`);
     if (newEl) newEl.classList.add('active');
 
-    // Focus on input if step has one
-    const inputs = { 0: 'plateInput', 2: 'subjectInput', 3: 'vectorInput', 4: 'driverInput', 5: 'materialInput' };
-    if (inputs[step]) {
-        setTimeout(() => document.getElementById(inputs[step]).focus(), 100);
+    // Focus on plate input (only step with manual input)
+    if (step === 0) {
+        setTimeout(() => document.getElementById('plateInput').focus(), 100);
     }
 
     // Update summary on step 6
@@ -357,6 +348,10 @@ function selectItem(anagrafic, item, filterField) {
         } else {
             updateSelectedFromItem(anagrafic, item, filterField);
             showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
+            // Reload suggestions to update selected state in grid
+            if (anagrafic !== 'vehicle') {
+                loadSuggestions(anagrafic, filterField, '', suggestionsMap[anagrafic]);
+            }
         }
     });
 }
@@ -369,22 +364,18 @@ function updateSelectedFromItem(anagrafic, item, filterField) {
             break;
         case 'subject':
             selectedSubject = { id: item.id, social_reason: item.social_reason || '' };
-            document.getElementById('subjectInput').value = item.social_reason || '';
             updateSelectedDisplay('selectedSubject', item.social_reason);
             break;
         case 'vector':
             selectedVector = { id: item.id, social_reason: item.social_reason || '' };
-            document.getElementById('vectorInput').value = item.social_reason || '';
             updateSelectedDisplay('selectedVector', item.social_reason);
             break;
         case 'driver':
             selectedDriver = { id: item.id, social_reason: item.social_reason || '' };
-            document.getElementById('driverInput').value = item.social_reason || '';
             updateSelectedDisplay('selectedDriver', item.social_reason);
             break;
         case 'material':
             selectedMaterial = { id: item.id, description: item.description || '' };
-            document.getElementById('materialInput').value = item.description || '';
             updateSelectedDisplay('selectedMaterial', item.description);
             break;
     }
@@ -601,22 +592,10 @@ async function getData(path) {
         if (selectedVehicle.plate) document.getElementById('plateInput').value = selectedVehicle.plate;
         document.getElementById('btnCustomer').classList.toggle('active', selectedTypeSubject === 'CUSTOMER');
         document.getElementById('btnSupplier').classList.toggle('active', selectedTypeSubject === 'SUPPLIER');
-        if (selectedSubject.social_reason) {
-            document.getElementById('subjectInput').value = selectedSubject.social_reason;
-            updateSelectedDisplay('selectedSubject', selectedSubject.social_reason);
-        }
-        if (selectedVector.social_reason) {
-            document.getElementById('vectorInput').value = selectedVector.social_reason;
-            updateSelectedDisplay('selectedVector', selectedVector.social_reason);
-        }
-        if (selectedDriver.social_reason) {
-            document.getElementById('driverInput').value = selectedDriver.social_reason;
-            updateSelectedDisplay('selectedDriver', selectedDriver.social_reason);
-        }
-        if (selectedMaterial.description) {
-            document.getElementById('materialInput').value = selectedMaterial.description;
-            updateSelectedDisplay('selectedMaterial', selectedMaterial.description);
-        }
+        updateSelectedDisplay('selectedSubject', selectedSubject.social_reason);
+        updateSelectedDisplay('selectedVector', selectedVector.social_reason);
+        updateSelectedDisplay('selectedDriver', selectedDriver.social_reason);
+        updateSelectedDisplay('selectedMaterial', selectedMaterial.description);
 
         // Handle need_to_confirm
         if (res.id_selected.need_to_confirm === true) {
@@ -714,13 +693,9 @@ function processRealtimeObject(obj) {
         updateInputIfNotFocused('plateInput', selectedVehicle.plate);
         document.getElementById('btnCustomer').classList.toggle('active', selectedTypeSubject === 'CUSTOMER');
         document.getElementById('btnSupplier').classList.toggle('active', selectedTypeSubject === 'SUPPLIER');
-        updateInputIfNotFocused('subjectInput', selectedSubject.social_reason);
         updateSelectedDisplay('selectedSubject', selectedSubject.social_reason);
-        updateInputIfNotFocused('vectorInput', selectedVector.social_reason);
         updateSelectedDisplay('selectedVector', selectedVector.social_reason);
-        updateInputIfNotFocused('driverInput', selectedDriver.social_reason);
         updateSelectedDisplay('selectedDriver', selectedDriver.social_reason);
-        updateInputIfNotFocused('materialInput', selectedMaterial.description);
         updateSelectedDisplay('selectedMaterial', selectedMaterial.description);
 
         // Update summary if visible
