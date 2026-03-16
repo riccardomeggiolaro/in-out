@@ -348,9 +348,12 @@ function selectItem(anagrafic, item, filterField) {
         } else {
             updateSelectedFromItem(anagrafic, item, filterField);
             showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
-            // Reload suggestions to update selected state in grid
+            // Auto-advance to next step for grid selection steps
             if (anagrafic !== 'vehicle') {
-                loadSuggestions(anagrafic, filterField, '', suggestionsMap[anagrafic]);
+                const nextStepMap = { subject: 3, vector: 4, driver: 5, material: 6 };
+                if (nextStepMap[anagrafic] !== undefined) {
+                    setTimeout(() => goToStep(nextStepMap[anagrafic]), 300);
+                }
             }
         }
     });
