@@ -29,6 +29,7 @@
                 <h2>Vettore</h2>
                 <p class="step-description">Seleziona un vettore</p>
                 <ul class="suggestions-list suggestions-grid" id="vectorGrid"></ul>
+                <div class="selected-value" id="selectedVectorDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-subject.html')">Indietro</button>
                 </div>
@@ -61,6 +62,9 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
+            if (selectedVector.social_reason) {
+                document.getElementById('selectedVectorDisplay').textContent = 'Selezionato: ' + selectedVector.social_reason;
+            }
             loadItems('vector', 'social_reason', '', 'vectorGrid', (item) => {
                 selectAndAdvance('vector', item, 'totem-driver.html');
             });
