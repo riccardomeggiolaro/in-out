@@ -26,18 +26,15 @@
 
         <div class="steps-wrapper">
             <div class="step active">
-                <h2>Inserisci Targa</h2>
-                <div class="license-plate" onclick="document.getElementById('plateInput').focus()">
+                <h2>Targa</h2>
+                <p class="step-description" id="plateStatus">In attesa di lettura targa...</p>
+                <div class="license-plate" id="plateDisplay" style="display:none;">
                     <div class="plate-band plate-band-left">
                         <div class="plate-stars">&#9733;</div>
                         <div class="plate-country">I</div>
                     </div>
-                    <input type="text" id="plateInput" class="plate-input" maxlength="10" placeholder="_ _ _ _ _ _ _" autocomplete="off" autofocus>
+                    <div class="plate-text" id="plateText"></div>
                     <div class="plate-band plate-band-right"></div>
-                </div>
-                <ul class="suggestions-list" id="plateSuggestions"></ul>
-                <div class="step-buttons">
-                    <button class="btn btn-primary btn-next" onclick="goTo('totem-type.html')">Avanti</button>
                 </div>
             </div>
         </div>
@@ -67,61 +64,27 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/totem-common.js"></script>
     <script>
-        let plateDebounce;
+        function showPlate(plate) {
+            document.getElementById('plateStatus').textContent = 'Targa rilevata';
+            document.getElementById('plateDisplay').style.display = 'flex';
+            document.getElementById('plateText').textContent = plate;
+        }
 
         function onDataReady() {
-            const plateInput = document.getElementById('plateInput');
-            if (selectedVehicle.plate) plateInput.value = selectedVehicle.plate;
-            loadItems('vehicle', 'plate', '', 'plateSuggestions', selectVehicle);
+            if (selectedVehicle.plate) {
+                showPlate(selectedVehicle.plate);
+            }
         }
 
         function onDataUpdate() {
-            updateInputIfNotFocused('plateInput', selectedVehicle.plate);
+            if (selectedVehicle.plate) {
+                showPlate(selectedVehicle.plate);
+                // Auto-advance when plate is detected
+                setTimeout(() => goTo('totem-type.html'), 1000);
+            }
         }
 
-        function onCreateNew(value) {
-            createOrSelectAnagrafic('vehicle', 'plate', value);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const plateInput = document.getElementById('plateInput');
-            plateInput.addEventListener('input', () => {
-                const value = plateInput.value.trim();
-                clearTimeout(plateDebounce);
-                plateDebounce = setTimeout(() => {
-                    loadItems('vehicle', 'plate', value, 'plateSuggestions', selectVehicle);
-                }, 250);
-            });
-
-            plateInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const value = plateInput.value.trim();
-                    if (value) createOrSelectAnagrafic('vehicle', 'plate', value);
-                }
-            });
-
-            plateInput.addEventListener('blur', () => {
-                setTimeout(() => {
-                    const suggestionsList = document.getElementById('plateSuggestions');
-                    if (!suggestionsList) return;
-                    const value = plateInput.value.trim();
-                    if (value) {
-                        const items = suggestionsList.querySelectorAll('li:not(.create-new)');
-                        for (const li of items) {
-                            const text = li.querySelector('span')?.textContent?.trim().toUpperCase();
-                            if (text === value.toUpperCase()) {
-                                li.click();
-                                return;
-                            }
-                        }
-                        createOrSelectAnagrafic('vehicle', 'plate', value);
-                    }
-                    suggestionsList.innerHTML = '';
-                }, 200);
-            });
-
-            initTotemPage();
-        });
+        document.addEventListener('DOMContentLoaded', () => initTotemPage());
     </script>
 </body>
 </html>
