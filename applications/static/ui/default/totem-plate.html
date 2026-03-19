@@ -19,36 +19,36 @@
             height: 80px;
             z-index: 10;
         }
-        .plate-input-wrapper {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            margin-top: 20px;
-        }
-        .plate-input-wrapper.active {
-            display: flex;
+        .plate-empty .plate-text {
+            color: #ccc;
+            letter-spacing: 12px;
         }
         .plate-input {
-            font-size: 2rem;
+            display: none;
+            font-size: 2.5rem;
             font-weight: 700;
             font-family: 'Courier New', monospace;
             letter-spacing: 6px;
             text-align: center;
             text-transform: uppercase;
-            width: 300px;
-            padding: 10px 16px;
-            border: 2px solid #003399;
-            border-radius: 8px;
+            border: none;
             outline: none;
+            background: transparent;
+            width: 100%;
+            height: 100%;
+            padding: 0 8px;
+            box-sizing: border-box;
         }
-        .plate-input:focus {
-            border-color: #0055cc;
-            box-shadow: 0 0 0 3px rgba(0, 85, 204, 0.2);
+        .plate-input.active {
+            display: flex;
         }
-        .plate-empty .plate-text {
-            color: #ccc;
-            letter-spacing: 12px;
+        .manual-buttons {
+            display: none;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .manual-buttons.active {
+            display: flex;
         }
     </style>
 </head>
@@ -75,15 +75,13 @@
                         <div class="plate-stars">&#9733;</div>
                         <div class="plate-country">I</div>
                     </div>
-                    <div class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</div>
+                    <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+                    <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off">
                     <div class="plate-band plate-band-right"></div>
                 </div>
-                <div class="plate-input-wrapper" id="manualInputWrapper">
-                    <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="ES. AB123CD" autocomplete="off">
-                    <div class="step-buttons">
-                        <button class="btn btn-secondary" onclick="exitManualMode()">Annulla</button>
-                        <button class="btn btn-primary" onclick="confirmManualPlate()">Conferma</button>
-                    </div>
+                <div class="manual-buttons" id="manualButtons">
+                    <button class="btn btn-secondary" onclick="exitManualMode()">Annulla</button>
+                    <button class="btn btn-primary" onclick="confirmManualPlate()">Conferma</button>
                 </div>
             </div>
         </div>
@@ -122,11 +120,15 @@
             const display = document.getElementById('plateDisplay');
             display.classList.remove('plate-empty');
             document.getElementById('plateText').textContent = plate;
+            document.getElementById('plateText').style.display = '';
+            document.getElementById('manualPlateInput').style.display = 'none';
         }
 
         function showEmptyPlate() {
             document.getElementById('plateDisplay').classList.add('plate-empty');
             document.getElementById('plateText').innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
+            document.getElementById('plateText').style.display = '';
+            document.getElementById('manualPlateInput').style.display = 'none';
         }
 
         function onDataReady() {
@@ -160,18 +162,26 @@
         function enterManualMode() {
             manualMode = true;
             document.getElementById('plateStatus').textContent = 'Inserisci la targa manualmente';
-            document.getElementById('manualInputWrapper').classList.add('active');
-            document.getElementById('manualPlateInput').value = '';
-            document.getElementById('manualPlateInput').focus();
+            document.getElementById('plateDisplay').classList.remove('plate-empty');
+            // Hide plate text, show input inside the plate
+            document.getElementById('plateText').style.display = 'none';
+            const input = document.getElementById('manualPlateInput');
+            input.classList.add('active');
+            input.style.display = 'flex';
+            input.value = '';
+            input.focus();
+            document.getElementById('manualButtons').classList.add('active');
         }
 
         function exitManualMode() {
             manualMode = false;
-            document.getElementById('manualInputWrapper').classList.remove('active');
-            document.getElementById('manualPlateInput').value = '';
+            document.getElementById('manualPlateInput').classList.remove('active');
+            document.getElementById('manualPlateInput').style.display = 'none';
+            document.getElementById('manualButtons').classList.remove('active');
             if (selectedVehicle.plate) {
-                document.getElementById('plateStatus').textContent = 'Targa rilevata';
+                showPlate(selectedVehicle.plate);
             } else {
+                showEmptyPlate();
                 document.getElementById('plateStatus').textContent = 'In attesa di lettura targa...';
             }
         }
@@ -194,7 +204,9 @@
                     showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                 } else {
                     manualMode = false;
-                    document.getElementById('manualInputWrapper').classList.remove('active');
+                    document.getElementById('manualPlateInput').classList.remove('active');
+                    document.getElementById('manualPlateInput').style.display = 'none';
+                    document.getElementById('manualButtons').classList.remove('active');
                     showPlate(value);
                     showSnackbar("snackbar", "Targa impostata", 'rgb(208, 255, 208)', 'black');
                     setTimeout(() => goTo('totem-type.html'), 2000);
@@ -202,7 +214,6 @@
             });
         }
 
-        // Allow Enter key to confirm manual plate
         document.getElementById('manualPlateInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') confirmManualPlate();
         });
