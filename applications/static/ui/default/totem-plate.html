@@ -10,9 +10,51 @@
     <title>Totem - Targa</title>
     <link rel="stylesheet" href="/static/css/dashboard-totem.css">
     <link rel="stylesheet" href="/static/css/snackbar.css">
+    <style>
+        .secret-tap-zone {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 10;
+        }
+        .plate-input-wrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .plate-input-wrapper.active {
+            display: flex;
+        }
+        .plate-input {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 6px;
+            text-align: center;
+            text-transform: uppercase;
+            width: 300px;
+            padding: 10px 16px;
+            border: 2px solid #003399;
+            border-radius: 8px;
+            outline: none;
+        }
+        .plate-input:focus {
+            border-color: #0055cc;
+            box-shadow: 0 0 0 3px rgba(0, 85, 204, 0.2);
+        }
+        .plate-empty .plate-text {
+            color: #ccc;
+            letter-spacing: 12px;
+        }
+    </style>
 </head>
 <body>
     <div class="totem-container">
+        <div class="secret-tap-zone" id="secretTapZone"></div>
         <div class="totem-header">
             <div class="weight-display">
                 <span id="netWeight">------</span>
@@ -28,13 +70,20 @@
             <div class="step active">
                 <h2>Targa</h2>
                 <p class="step-description" id="plateStatus">In attesa di lettura targa...</p>
-                <div class="license-plate" id="plateDisplay" style="display:none;">
+                <div class="license-plate plate-empty" id="plateDisplay">
                     <div class="plate-band plate-band-left">
                         <div class="plate-stars">&#9733;</div>
                         <div class="plate-country">I</div>
                     </div>
-                    <div class="plate-text" id="plateText"></div>
+                    <div class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</div>
                     <div class="plate-band plate-band-right"></div>
+                </div>
+                <div class="plate-input-wrapper" id="manualInputWrapper">
+                    <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="ES. AB123CD" autocomplete="off">
+                    <div class="step-buttons">
+                        <button class="btn btn-secondary" onclick="exitManualMode()">Annulla</button>
+                        <button class="btn btn-primary" onclick="confirmManualPlate()">Conferma</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -64,25 +113,99 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/totem-common.js"></script>
     <script>
+        let manualMode = false;
+        let tapCount = 0;
+        let tapTimer = null;
+
         function showPlate(plate) {
             document.getElementById('plateStatus').textContent = 'Targa rilevata';
-            document.getElementById('plateDisplay').style.display = 'flex';
+            const display = document.getElementById('plateDisplay');
+            display.classList.remove('plate-empty');
             document.getElementById('plateText').textContent = plate;
+        }
+
+        function showEmptyPlate() {
+            document.getElementById('plateDisplay').classList.add('plate-empty');
+            document.getElementById('plateText').innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
         }
 
         function onDataReady() {
             if (selectedVehicle.plate) {
                 showPlate(selectedVehicle.plate);
+            } else {
+                showEmptyPlate();
             }
         }
 
         function onDataUpdate() {
+            if (manualMode) return;
             if (selectedVehicle.plate) {
                 showPlate(selectedVehicle.plate);
-                // Auto-advance when plate is detected
-                setTimeout(() => goTo('totem-type.html'), 1000);
+                setTimeout(() => goTo('totem-type.html'), 2000);
             }
         }
+
+        // --- Triple tap top-left corner for manual mode ---
+        document.getElementById('secretTapZone').addEventListener('click', function() {
+            tapCount++;
+            if (tapTimer) clearTimeout(tapTimer);
+            if (tapCount >= 3) {
+                tapCount = 0;
+                enterManualMode();
+            } else {
+                tapTimer = setTimeout(() => { tapCount = 0; }, 800);
+            }
+        });
+
+        function enterManualMode() {
+            manualMode = true;
+            document.getElementById('plateStatus').textContent = 'Inserisci la targa manualmente';
+            document.getElementById('manualInputWrapper').classList.add('active');
+            document.getElementById('manualPlateInput').value = '';
+            document.getElementById('manualPlateInput').focus();
+        }
+
+        function exitManualMode() {
+            manualMode = false;
+            document.getElementById('manualInputWrapper').classList.remove('active');
+            document.getElementById('manualPlateInput').value = '';
+            if (selectedVehicle.plate) {
+                document.getElementById('plateStatus').textContent = 'Targa rilevata';
+            } else {
+                document.getElementById('plateStatus').textContent = 'In attesa di lettura targa...';
+            }
+        }
+
+        function confirmManualPlate() {
+            const value = document.getElementById('manualPlateInput').value.trim().toUpperCase();
+            if (!value) {
+                showSnackbar("snackbar", "Inserisci una targa valida", 'rgb(255, 208, 208)', 'black');
+                return;
+            }
+
+            fetch(`/api/data${currentWeigherPath}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data_in_execution: { vehicle: { plate: value } } })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.detail) {
+                    showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+                } else {
+                    manualMode = false;
+                    document.getElementById('manualInputWrapper').classList.remove('active');
+                    showPlate(value);
+                    showSnackbar("snackbar", "Targa impostata", 'rgb(208, 255, 208)', 'black');
+                    setTimeout(() => goTo('totem-type.html'), 2000);
+                }
+            });
+        }
+
+        // Allow Enter key to confirm manual plate
+        document.getElementById('manualPlateInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') confirmManualPlate();
+        });
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());
     </script>
