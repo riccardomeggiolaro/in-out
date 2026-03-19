@@ -143,7 +143,7 @@
             if (manualMode) return;
             if (selectedVehicle.plate) {
                 showPlate(selectedVehicle.plate);
-                setTimeout(() => goTo('totem-type.html'), 2000);
+                setTimeout(() => goTo('totem-type.html'), 1000);
             }
         }
 
@@ -209,7 +209,7 @@
                     document.getElementById('manualButtons').classList.remove('active');
                     showPlate(value);
                     showSnackbar("snackbar", "Targa impostata", 'rgb(208, 255, 208)', 'black');
-                    setTimeout(() => goTo('totem-type.html'), 2000);
+                    setTimeout(() => goTo('totem-type.html'), 1000);
                 }
             });
         }
