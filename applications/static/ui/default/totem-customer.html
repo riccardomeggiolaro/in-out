@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Totem - Vettore</title>
+    <title>Totem - Cliente</title>
     <link rel="stylesheet" href="/static/css/dashboard-totem.css">
     <link rel="stylesheet" href="/static/css/snackbar.css">
 </head>
@@ -26,13 +26,13 @@
 
         <div class="steps-wrapper">
             <div class="step active">
-                <h2>Vettore</h2>
-                <p class="step-description">Seleziona un vettore</p>
-                <ul class="suggestions-list suggestions-grid" id="vectorGrid"></ul>
-                <div class="selected-value" id="selectedVectorDisplay"></div>
+                <h2>Cliente</h2>
+                <p class="step-description">Seleziona un cliente</p>
+                <ul class="suggestions-list suggestions-grid" id="customerGrid"></ul>
+                <div class="selected-value" id="selectedCustomerDisplay"></div>
                 <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-supplier.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-driver.html')">Avanti</button>
+                    <button class="btn btn-secondary" onclick="goTo('totem-plate.html')">Indietro</button>
+                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-supplier.html')">Avanti</button>
                 </div>
             </div>
         </div>
@@ -63,12 +63,19 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
-            if (selectedVector.social_reason) {
-                document.getElementById('selectedVectorDisplay').textContent = 'Selezionato: ' + selectedVector.social_reason;
+            // Set type to CUSTOMER automatically
+            fetch(`/api/data${currentWeigherPath}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data_in_execution: { typeSubject: 'CUSTOMER' } })
+            });
+
+            if (selectedSubject.social_reason) {
+                document.getElementById('selectedCustomerDisplay').textContent = 'Selezionato: ' + selectedSubject.social_reason;
                 document.getElementById('btnNext').style.display = '';
             }
-            loadItems('vector', 'social_reason', '', 'vectorGrid', (item) => {
-                selectAndAdvance('vector', item, 'totem-driver.html');
+            loadItems('subject', 'social_reason', '', 'customerGrid', (item) => {
+                selectAndAdvance('subject', item, 'totem-supplier.html');
             });
         }
 
