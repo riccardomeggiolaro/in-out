@@ -32,6 +32,7 @@
                 <div class="selected-value" id="selectedMaterialDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-driver.html')">Indietro</button>
+                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-summary.html')">Avanti</button>
                 </div>
             </div>
         </div>
@@ -64,6 +65,7 @@
         function onDataReady() {
             if (selectedMaterial.description) {
                 document.getElementById('selectedMaterialDisplay').textContent = 'Selezionato: ' + selectedMaterial.description;
+                document.getElementById('btnNext').style.display = '';
             }
             loadItems('material', 'description', '', 'materialGrid', (item) => {
                 selectAndAdvance('material', item, 'totem-summary.html');
