@@ -32,6 +32,7 @@
                 <div class="selected-value" id="selectedDriverDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-vector.html')">Indietro</button>
+                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-material.html')">Avanti</button>
                 </div>
             </div>
         </div>
@@ -64,6 +65,7 @@
         function onDataReady() {
             if (selectedDriver.social_reason) {
                 document.getElementById('selectedDriverDisplay').textContent = 'Selezionato: ' + selectedDriver.social_reason;
+                document.getElementById('btnNext').style.display = '';
             }
             loadItems('driver', 'social_reason', '', 'driverGrid', (item) => {
                 selectAndAdvance('driver', item, 'totem-material.html');

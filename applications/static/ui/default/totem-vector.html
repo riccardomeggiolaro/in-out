@@ -32,6 +32,7 @@
                 <div class="selected-value" id="selectedVectorDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-subject.html')">Indietro</button>
+                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-driver.html')">Avanti</button>
                 </div>
             </div>
         </div>
@@ -64,6 +65,7 @@
         function onDataReady() {
             if (selectedVector.social_reason) {
                 document.getElementById('selectedVectorDisplay').textContent = 'Selezionato: ' + selectedVector.social_reason;
+                document.getElementById('btnNext').style.display = '';
             }
             loadItems('vector', 'social_reason', '', 'vectorGrid', (item) => {
                 selectAndAdvance('vector', item, 'totem-driver.html');
