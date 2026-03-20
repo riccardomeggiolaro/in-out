@@ -41,7 +41,7 @@ class OpenToCustomerRouter:
                 limit=limit,
                 offset=offset,
                 order_by=('id', 'desc'),
-                excludeTestWeighing=True,
+                excludeTestWeighing=False,
                 get_is_last=False
             )
             

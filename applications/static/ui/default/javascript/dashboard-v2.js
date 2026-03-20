@@ -365,7 +365,7 @@ async function populateListIn() {
     const tbody = document.getElementById('accessTableBody');
     if (!tbody) return;
 
-    await fetch('/api/anagrafic/access/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
+    await fetch('/api/anagrafic/access/list?status=NOT_CLOSED&permanentIfWeight1=true')
     .then(res => res.json())
     .then(data => {
         tbody.innerHTML = '';

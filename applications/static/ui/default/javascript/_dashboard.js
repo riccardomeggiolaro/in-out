@@ -239,7 +239,7 @@ async function getData(path) {
 async function populateListIn() {
     const listIn = document.querySelector('.list-in');
 
-    await fetch('/api/anagrafic/access/list?excludeTestWeighing=true&status=NOT_CLOSED&permanentIfWeight1=true')
+    await fetch('/api/anagrafic/access/list?status=NOT_CLOSED&permanentIfWeight1=true')
     .then(res => res.json())
     .then(data => {
         listIn.innerHTML = '';

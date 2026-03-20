@@ -200,7 +200,7 @@ async function updateTable() {
 }
 
 async function exportTable(type) {
-    let queryParams = 'excludeTestWeighing=true&filterDateAccess=true&onlyInOutWithWeight2=true&';
+    let queryParams = 'filterDateAccess=true&onlyInOutWithWeight2=true&';
     const filters = document.querySelectorAll('#filters');
     let name;
     filters.forEach(container => {
