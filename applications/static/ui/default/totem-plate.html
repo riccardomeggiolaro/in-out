@@ -77,6 +77,9 @@
                     <button class="btn btn-secondary" onclick="exitManualMode()">Annulla</button>
                     <button class="btn btn-primary" onclick="confirmManualPlate()">Conferma</button>
                 </div>
+                <div class="step-buttons">
+                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goToNext()">Avanti</button>
+                </div>
             </div>
         </div>
     </div>
@@ -132,6 +135,7 @@
         function onDataReady() {
             if (selectedVehicle.plate) {
                 showPlate(selectedVehicle.plate);
+                document.getElementById('btnNext').style.display = '';
             } else {
                 showEmptyPlate();
             }
