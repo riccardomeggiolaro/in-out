@@ -603,12 +603,12 @@ body {
 .license-plate {
     display: flex;
     align-items: stretch;
-    width: 420px;
+    width: 520px;
     max-width: 95vw;
-    height: 115px;
+    height: 145px;
     background: #fff;
-    border: 4px solid #333;
-    border-radius: 10px;
+    border: 5px solid #333;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px #e0e0e0;
     margin: 20px auto 0;
@@ -621,7 +621,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 42px;
+    width: 52px;
     flex-shrink: 0;
     color: #fff;
 }
@@ -632,18 +632,18 @@ body {
 
 .plate-band-right {
     border-left: 2px solid #333;
-    width: 42px;
+    width: 52px;
 }
 
 .plate-stars {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     letter-spacing: 1px;
     color: #ffcc00;
     margin-bottom: 2px;
 }
 
 .plate-country {
-    font-size: 1.3rem;
+    font-size: 1.6rem;
     font-weight: 700;
     font-family: 'Arial', sans-serif;
 }
@@ -654,20 +654,20 @@ body {
     outline: none;
     background: transparent;
     text-align: center;
-    font-size: 2.8rem;
+    font-size: 3.5rem;
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
-    letter-spacing: 6px;
+    letter-spacing: 8px;
     text-transform: uppercase;
     color: #222;
-    padding: 0 8px;
+    padding: 0 10px;
     min-width: 0;
 }
 
 .plate-input::placeholder {
     color: #ccc;
-    letter-spacing: 5px;
-    font-size: 2.2rem;
+    letter-spacing: 6px;
+    font-size: 2.8rem;
 }
 
 .plate-text {
@@ -675,11 +675,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.8rem;
+    font-size: 3.5rem;
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
-    letter-spacing: 6px;
+    letter-spacing: 8px;
     text-transform: uppercase;
     color: #222;
-    padding: 0 8px;
+    padding: 0 10px;
 }
