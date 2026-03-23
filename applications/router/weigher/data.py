@@ -6,6 +6,7 @@ from applications.router.weigher.callback_weigher import CallbackWeigher
 from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
+from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
 from modules.md_database.functions.update_access import update_access
 from modules.md_database.interfaces.access import SetAccessDTO
 from modules.md_database.md_database import AccessStatus, TypeAccess
@@ -84,6 +85,21 @@ class DataRouter(CallbackWeigher):
 						checked = True
 					elif len(access["in_out"]) > 0 and access["in_out"][-1].idWeight2 is not None:
 						data_dto.id_selected.id = access["id"]
+						checked = True
+				if checked is False:
+					raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
+		elif data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
+			access = get_access_by_plate_if_uncomplete(data_dto.data_in_execution.vehicle.plate.upper())
+			if access:
+				checked = False
+				if id_selected is None and access["number_in_out"] is None and access.get("status") != AccessStatus.CLOSED:
+					if len(access["in_out"]) == 0:
+						data_dto.id_selected.id = access["id"]
+						data_dto.data_in_execution.vehicle.id = access["idVehicle"]
+						checked = True
+					elif len(access["in_out"]) > 0 and access["in_out"][-1].idWeight2 is not None:
+						data_dto.id_selected.id = access["id"]
+						data_dto.data_in_execution.vehicle.id = access["idVehicle"]
 						checked = True
 				if checked is False:
 					raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
