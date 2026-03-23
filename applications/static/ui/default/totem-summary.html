@@ -10,6 +10,16 @@
     <title>Totem - Riepilogo</title>
     <link rel="stylesheet" href="/static/css/dashboard-totem.css">
     <link rel="stylesheet" href="/static/css/snackbar.css">
+    <style>
+        .summary-row.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+            cursor: default;
+        }
+        .summary-row.disabled .summary-edit {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="totem-container">
@@ -29,39 +39,39 @@
                 <h2>Riepilogo</h2>
                 <p class="step-description">Verifica i dati e procedi con la pesatura</p>
                 <div class="summary-card">
-                    <div class="summary-row" onclick="goTo('totem-plate.html')">
+                    <div class="summary-row" id="rowPlate" onclick="goTo('totem-plate.html')">
                         <span class="summary-label">Targa</span>
                         <span class="summary-value" id="summaryPlate">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" onclick="goTo('totem-type.html')">
+                    <div class="summary-row" id="rowType" onclick="goTo('totem-type.html')">
                         <span class="summary-label">Tipo</span>
                         <span class="summary-value" id="summaryType">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" onclick="goTo('totem-subject.html')">
+                    <div class="summary-row" id="rowSubject" onclick="goTo('totem-subject.html')">
                         <span class="summary-label">Ragione Sociale</span>
                         <span class="summary-value" id="summarySubject">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" onclick="goTo('totem-vector.html')">
+                    <div class="summary-row" id="rowVector" onclick="goTo('totem-vector.html')">
                         <span class="summary-label">Vettore</span>
                         <span class="summary-value" id="summaryVector">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" onclick="goTo('totem-driver.html')">
+                    <div class="summary-row" id="rowDriver" onclick="goTo('totem-driver.html')">
                         <span class="summary-label">Autista</span>
                         <span class="summary-value" id="summaryDriver">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" onclick="goTo('totem-material.html')">
+                    <div class="summary-row" id="rowMaterial" onclick="goTo('totem-material.html')">
                         <span class="summary-label">Materiale</span>
                         <span class="summary-value" id="summaryMaterial">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
                 </div>
                 <div class="step-buttons summary-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-material.html')">Indietro</button>
+                    <button class="btn btn-secondary" id="btnBack" onclick="goTo('totem-material.html')">Indietro</button>
                     <button class="btn btn-weighing" onclick="handleGenericWeighing()">Pesatura Generica</button>
                 </div>
             </div>
@@ -92,6 +102,8 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/totem-common.js"></script>
     <script>
+        let isReservationMode = false;
+
         function updateSummary() {
             document.getElementById('summaryPlate').textContent = selectedVehicle.plate || '-';
             document.getElementById('summaryType').textContent = selectedTypeSubject === 'CUSTOMER' ? 'Cliente' : 'Fornitore';
@@ -101,12 +113,37 @@
             document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
         }
 
+        function applyReservationMode() {
+            // Check if there's a reservation (id_selected has an id set)
+            isReservationMode = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+
+            const rowIds = ['rowPlate', 'rowType', 'rowSubject', 'rowVector', 'rowDriver'];
+            rowIds.forEach(id => {
+                const row = document.getElementById(id);
+                if (row) {
+                    if (isReservationMode) {
+                        row.classList.add('disabled');
+                    } else {
+                        row.classList.remove('disabled');
+                    }
+                }
+            });
+
+            // Update back button destination
+            const btnBack = document.getElementById('btnBack');
+            if (btnBack) {
+                btnBack.onclick = () => goTo(isReservationMode ? 'totem-plate.html' : 'totem-material.html');
+            }
+        }
+
         function onDataReady() {
             updateSummary();
+            applyReservationMode();
         }
 
         function onDataUpdate() {
             updateSummary();
+            applyReservationMode();
         }
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());

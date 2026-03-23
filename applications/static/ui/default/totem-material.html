@@ -70,6 +70,13 @@
             loadItems('material', 'description', '', 'materialGrid', (item) => {
                 selectAndAdvance('material', item, 'totem-summary.html');
             });
+
+            // If coming from a reservation, back button should go to summary
+            const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+            if (hasReservation) {
+                const btnBack = document.querySelector('.btn-secondary');
+                if (btnBack) btnBack.onclick = () => goTo('totem-summary.html');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());
