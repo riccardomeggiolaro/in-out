@@ -22,7 +22,7 @@ body {
 }
 
 .img-loading {
-    width: 200px;
+    width: 150px;
     animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -48,12 +48,12 @@ body {
 }
 
 .weigher-logo {
-    width: 160px;
-    margin-bottom: 24px;
+    width: 120px;
+    margin-bottom: 16px;
 }
 
 .weigher-selection-content h2 {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     color: #1362b8;
     margin-bottom: 4px;
 }
@@ -69,12 +69,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px 24px;
+    padding: 14px 20px;
     background: white;
     border: 3px solid #ddd;
-    border-radius: 16px;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #333;
     transition: all 0.2s;
@@ -91,7 +91,7 @@ body {
 /* Totem Container */
 .totem-container {
     margin: 0 auto;
-    padding: 10px 20px 20px;
+    padding: 6px 16px 12px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -101,10 +101,10 @@ body {
 .totem-header {
     background: #1362b8;
     color: white;
-    border-radius: 16px;
-    padding: 16px 24px;
+    border-radius: 12px;
+    padding: 10px 16px;
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     flex-shrink: 0;
 }
 
@@ -116,31 +116,31 @@ body {
 }
 
 .weight-display #netWeight {
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: bold;
     font-family: 'Courier New', monospace;
     letter-spacing: 2px;
 }
 
 .weight-display .unit {
-    font-size: 1.2rem;
+    font-size: 1rem;
     opacity: 0.8;
 }
 
 .weight-info {
     display: flex;
     justify-content: center;
-    gap: 24px;
-    font-size: 0.9rem;
+    gap: 16px;
+    font-size: 0.8rem;
     opacity: 0.8;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 /* Progress bar */
 .progress-bar {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     padding: 0 4px;
     flex-shrink: 0;
 }
@@ -155,8 +155,8 @@ body {
 
 .progress-step::before {
     content: '';
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: #ddd;
     display: flex;
@@ -178,9 +178,9 @@ body {
 .progress-step::after {
     content: '';
     position: absolute;
-    top: 14px;
-    left: calc(50% + 18px);
-    width: calc(100% - 36px);
+    top: 11px;
+    left: calc(50% + 14px);
+    width: calc(100% - 28px);
     height: 2px;
     background: #ddd;
 }
@@ -232,15 +232,15 @@ body {
 }
 
 .step h2 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     margin-bottom: 4px;
     color: #1362b8;
 }
 
 .step-description {
     color: #777;
-    font-size: 0.9rem;
-    margin-bottom: 16px;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
     text-align: center;
 }
 
@@ -251,10 +251,10 @@ body {
 
 .input-wrapper input {
     width: 100%;
-    padding: 14px 18px;
-    font-size: 1.2rem;
+    padding: 10px 14px;
+    font-size: 1rem;
     border: 2px solid #ddd;
-    border-radius: 12px;
+    border-radius: 10px;
     outline: none;
     transition: border-color 0.3s;
     text-transform: uppercase;
@@ -268,9 +268,9 @@ body {
 .suggestions-list {
     list-style: none;
     width: 100%;
-    max-height: 280px;
+    max-height: 220px;
     overflow-y: auto;
-    margin-top: 8px;
+    margin-top: 6px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -281,10 +281,10 @@ body {
 }
 
 .suggestions-list li {
-    padding: 12px 18px;
+    padding: 10px 14px;
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: background 0.15s;
     display: flex;
     justify-content: space-between;
@@ -337,8 +337,8 @@ body {
 .suggestions-grid li {
     background: white;
     border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 10px;
+    padding: 12px;
     text-align: center;
     flex-direction: column;
     justify-content: center;
@@ -384,8 +384,8 @@ body {
 /* Type buttons (Cliente/Fornitore) */
 .type-buttons {
     display: flex;
-    gap: 24px;
-    margin: 20px 0;
+    gap: 16px;
+    margin: 12px 0;
 }
 
 .btn-type {
@@ -393,10 +393,10 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 180px;
-    height: 180px;
+    width: 140px;
+    height: 140px;
     border: 3px solid #ddd;
-    border-radius: 20px;
+    border-radius: 16px;
     background: white;
     cursor: pointer;
     transition: all 0.3s;
@@ -415,12 +415,12 @@ body {
 }
 
 .btn-type-icon {
-    font-size: 3.5rem;
-    margin-bottom: 12px;
+    font-size: 2.5rem;
+    margin-bottom: 8px;
 }
 
 .btn-type-label {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #333;
 }
@@ -436,8 +436,8 @@ body {
 }
 
 .btn {
-    padding: 14px 32px;
-    font-size: 1rem;
+    padding: 10px 24px;
+    font-size: 0.9rem;
     font-weight: 600;
     border: none;
     border-radius: 12px;
@@ -472,8 +472,8 @@ body {
 .btn-weighing {
     background: #27ae60;
     color: white;
-    padding: 16px 40px;
-    font-size: 1.1rem;
+    padding: 12px 32px;
+    font-size: 1rem;
 }
 
 .btn-weighing:hover:not(:disabled) {
@@ -496,7 +496,7 @@ body {
 .summary-row {
     display: flex;
     align-items: center;
-    padding: 14px 20px;
+    padding: 10px 16px;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: background 0.15s;
@@ -511,18 +511,18 @@ body {
 }
 
 .summary-label {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #999;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: 130px;
+    width: 110px;
     flex-shrink: 0;
 }
 
 .summary-value {
     flex: 1;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #333;
 }
 
@@ -558,9 +558,9 @@ body {
 
 .popup-content {
     background: white;
-    border-radius: 16px;
-    padding: 30px;
-    max-width: 400px;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 360px;
     width: 90%;
     text-align: center;
     transform: scale(0.9);
@@ -574,8 +574,8 @@ body {
 }
 
 .popup-content p {
-    margin-bottom: 20px;
-    font-size: 1.1rem;
+    margin-bottom: 14px;
+    font-size: 0.95rem;
     line-height: 1.5;
 }
 
@@ -595,15 +595,15 @@ body {
 .license-plate {
     display: flex;
     align-items: stretch;
-    width: 420px;
+    width: 340px;
     max-width: 90vw;
-    height: 120px;
+    height: 96px;
     background: #fff;
-    border: 4px solid #333;
-    border-radius: 10px;
+    border: 3px solid #333;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px #e0e0e0;
-    margin: 24px auto 0;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.12), inset 0 0 0 2px #e0e0e0;
+    margin: 16px auto 0;
     transition: box-shadow 0.3s;
 }
 
@@ -613,7 +613,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 44px;
+    width: 36px;
     flex-shrink: 0;
     color: #fff;
 }
@@ -624,18 +624,18 @@ body {
 
 .plate-band-right {
     border-left: 2px solid #333;
-    width: 44px;
+    width: 36px;
 }
 
 .plate-stars {
-    font-size: 0.7rem;
+    font-size: 0.55rem;
     letter-spacing: 1px;
     color: #ffcc00;
     margin-bottom: 2px;
 }
 
 .plate-country {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     font-weight: 700;
     font-family: 'Arial', sans-serif;
 }
@@ -646,20 +646,20 @@ body {
     outline: none;
     background: transparent;
     text-align: center;
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
-    letter-spacing: 8px;
+    letter-spacing: 5px;
     text-transform: uppercase;
     color: #222;
-    padding: 0 8px;
+    padding: 0 6px;
     min-width: 0;
 }
 
 .plate-input::placeholder {
     color: #ccc;
-    letter-spacing: 6px;
-    font-size: 2.5rem;
+    letter-spacing: 4px;
+    font-size: 1.8rem;
 }
 
 .plate-text {
@@ -667,110 +667,110 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-size: 2.2rem;
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
-    letter-spacing: 8px;
+    letter-spacing: 5px;
     text-transform: uppercase;
     color: #222;
-    padding: 0 8px;
+    padding: 0 6px;
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+/* Responsive - schermi molto piccoli */
+@media (max-width: 480px) {
     .totem-container {
-        padding: 8px 12px 12px;
+        padding: 4px 8px 8px;
     }
 
     .totem-header {
-        padding: 12px 16px;
-        border-radius: 12px;
-        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
     }
 
     .weight-display #netWeight {
-        font-size: 2.2rem;
+        font-size: 1.8rem;
     }
 
     .progress-step::before {
-        width: 22px;
-        height: 22px;
+        width: 18px;
+        height: 18px;
     }
 
     .progress-step span {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
     }
 
     .progress-step::after {
-        top: 11px;
-        left: calc(50% + 14px);
-        width: calc(100% - 28px);
+        top: 9px;
+        left: calc(50% + 12px);
+        width: calc(100% - 24px);
     }
 
     .step h2 {
-        font-size: 1.2rem;
-    }
-
-    .type-buttons {
-        gap: 16px;
-    }
-
-    .btn-type {
-        width: 140px;
-        height: 140px;
-    }
-
-    .btn-type-icon {
-        font-size: 2.5rem;
-    }
-
-    .btn-type-label {
         font-size: 1rem;
     }
 
+    .type-buttons {
+        gap: 12px;
+    }
+
+    .btn-type {
+        width: 110px;
+        height: 110px;
+    }
+
+    .btn-type-icon {
+        font-size: 2rem;
+    }
+
+    .btn-type-label {
+        font-size: 0.85rem;
+    }
+
     .btn {
-        padding: 12px 24px;
-        font-size: 0.9rem;
+        padding: 8px 18px;
+        font-size: 0.8rem;
     }
 
     .summary-label {
-        width: 100px;
-        font-size: 0.75rem;
+        width: 90px;
+        font-size: 0.7rem;
     }
 
     .license-plate {
-        width: 320px;
-        height: 96px;
+        width: 280px;
+        height: 80px;
     }
 
     .plate-band {
-        width: 34px;
+        width: 28px;
     }
 
     .plate-band-right {
-        width: 34px;
+        width: 28px;
     }
 
     .plate-input {
-        font-size: 2.2rem;
-        letter-spacing: 5px;
-    }
-
-    .plate-input::placeholder {
         font-size: 1.8rem;
         letter-spacing: 4px;
     }
 
+    .plate-input::placeholder {
+        font-size: 1.4rem;
+        letter-spacing: 3px;
+    }
+
     .plate-text {
-        font-size: 2.2rem;
-        letter-spacing: 5px;
+        font-size: 1.8rem;
+        letter-spacing: 4px;
     }
 
     .plate-stars {
-        font-size: 0.55rem;
+        font-size: 0.45rem;
     }
 
     .plate-country {
-        font-size: 1.1rem;
+        font-size: 0.9rem;
     }
 }
