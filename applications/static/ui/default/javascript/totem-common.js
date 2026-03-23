@@ -80,6 +80,96 @@ function goTo(page) {
     window.location.href = page;
 }
 
+// --- Pagination state ---
+let _paginationState = {};
+
+function _getItemsPerPage(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return 6;
+    const isGrid = container.classList.contains('suggestions-grid');
+    if (isGrid) {
+        // Calculate how many rows fit based on container height
+        const containerHeight = container.clientHeight;
+        const itemHeight = 100; // approximate height per grid item with padding+gap
+        const cols = 2;
+        const rows = Math.max(1, Math.floor(containerHeight / itemHeight));
+        return rows * cols;
+    }
+    // List mode
+    const containerHeight = container.clientHeight;
+    const itemHeight = 70;
+    return Math.max(1, Math.floor(containerHeight / itemHeight));
+}
+
+function _renderPage(containerId) {
+    const state = _paginationState[containerId];
+    if (!state) return;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    const start = state.currentPage * state.itemsPerPage;
+    const end = Math.min(start + state.itemsPerPage, state.items.length);
+    const pageItems = state.items.slice(start, end);
+
+    pageItems.forEach(({ li }) => {
+        container.appendChild(li);
+    });
+
+    // Update pagination controls
+    const arrows = document.getElementById(containerId + '-pagination');
+    if (arrows) {
+        const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+        if (totalPages <= 1) {
+            arrows.style.display = 'none';
+        } else {
+            arrows.style.display = 'flex';
+            const prevBtn = arrows.querySelector('.pagination-prev');
+            const nextBtn = arrows.querySelector('.pagination-next');
+            const indicator = arrows.querySelector('.page-indicator');
+            if (prevBtn) prevBtn.disabled = state.currentPage === 0;
+            if (nextBtn) nextBtn.disabled = state.currentPage >= totalPages - 1;
+            if (indicator) indicator.textContent = `${state.currentPage + 1} / ${totalPages}`;
+        }
+    }
+}
+
+function _ensurePaginationArrows(containerId) {
+    let arrows = document.getElementById(containerId + '-pagination');
+    if (!arrows) {
+        arrows = document.createElement('div');
+        arrows.id = containerId + '-pagination';
+        arrows.className = 'pagination-arrows';
+        arrows.innerHTML = `
+            <button class="pagination-prev" aria-label="Pagina precedente">&#9664;</button>
+            <span class="page-indicator">1 / 1</span>
+            <button class="pagination-next" aria-label="Pagina successiva">&#9654;</button>
+        `;
+        const container = document.getElementById(containerId);
+        if (container && container.parentNode) {
+            container.parentNode.insertBefore(arrows, container.nextSibling);
+        }
+        arrows.querySelector('.pagination-prev').addEventListener('click', () => {
+            const state = _paginationState[containerId];
+            if (state && state.currentPage > 0) {
+                state.currentPage--;
+                _renderPage(containerId);
+            }
+        });
+        arrows.querySelector('.pagination-next').addEventListener('click', () => {
+            const state = _paginationState[containerId];
+            if (state) {
+                const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+                if (state.currentPage < totalPages - 1) {
+                    state.currentPage++;
+                    _renderPage(containerId);
+                }
+            }
+        });
+    }
+    return arrows;
+}
+
 // --- Load items into a list/grid ---
 async function loadItems(anagrafic, filterField, inputValue, containerId, onItemClick) {
     const container = document.getElementById(containerId);
@@ -93,6 +183,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
         const response = await fetch(url);
         const data = await response.json();
         const currentId = getCurrentId(anagrafic);
+        const items = [];
 
         data.data.forEach(item => {
             const displayField = filterField === 'plate' ? item.plate :
@@ -116,7 +207,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             if (item.id === currentId) li.classList.add('selected');
 
             li.addEventListener('click', () => onItemClick(item));
-            container.appendChild(li);
+            items.push({ li, item });
         });
 
         // "Create new" option only if searching (plate page)
@@ -127,8 +218,18 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             li.addEventListener('click', () => {
                 if (typeof onCreateNew === 'function') onCreateNew(inputValue);
             });
-            container.appendChild(li);
+            items.push({ li, item: null });
         }
+
+        const itemsPerPage = _getItemsPerPage(containerId);
+        _paginationState[containerId] = {
+            items,
+            currentPage: 0,
+            itemsPerPage
+        };
+
+        _ensurePaginationArrows(containerId);
+        _renderPage(containerId);
     } catch (error) {
         console.error('Error loading items:', error);
     }
