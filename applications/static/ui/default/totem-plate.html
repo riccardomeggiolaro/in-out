@@ -77,9 +77,6 @@
                     <button class="btn btn-secondary" onclick="exitManualMode()">Annulla</button>
                     <button class="btn btn-primary" onclick="confirmManualPlate()">Conferma</button>
                 </div>
-                <div class="step-buttons">
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goToNext()">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -117,7 +114,6 @@
             document.getElementById('plateText').textContent = plate;
             document.getElementById('plateText').style.display = '';
             document.getElementById('manualPlateInput').style.display = 'none';
-            document.getElementById('btnNext').style.display = '';
         }
 
         function goToNext() {
@@ -145,6 +141,7 @@
             if (manualMode) return;
             if (selectedVehicle.plate) {
                 showPlate(selectedVehicle.plate);
+                goToNext();
             }
         }
 
@@ -208,7 +205,7 @@
                     document.getElementById('manualPlateInput').style.display = 'none';
                     document.getElementById('manualButtons').classList.remove('active');
                     showPlate(value);
-                    showSnackbar("snackbar", "Targa impostata", 'rgb(208, 255, 208)', 'black');
+                    goToNext();
                 }
             });
         }
