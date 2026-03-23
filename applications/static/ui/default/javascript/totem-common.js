@@ -82,43 +82,15 @@ function goTo(page) {
 
 // --- Pagination state ---
 let _paginationState = {};
+const GRID_COLS = 2;
+const GRID_MAX_ROWS = 6;
+const GRID_MAX_ROWS_PAGINATED = 5;
 
 function _calcItemsPerPage(containerId, items) {
-    const container = document.getElementById(containerId);
-    if (!container || items.length === 0) return items.length || 6;
-
-    const isGrid = container.classList.contains('suggestions-grid');
-
-    // Temporarily render one item to measure its real height
-    container.innerHTML = '';
-    container.appendChild(items[0].li);
-
-    // Force layout
-    const firstItemRect = items[0].li.getBoundingClientRect();
-    const itemHeight = firstItemRect.height;
-    container.innerHTML = '';
-
-    if (itemHeight <= 0) return isGrid ? 6 : 4;
-
-    // Calculate available height: viewport minus header, title, pagination, buttons, padding
-    const step = container.closest('.step');
-    const stepButtons = step ? step.querySelector('.step-buttons') : null;
-    const buttonsHeight = stepButtons ? stepButtons.getBoundingClientRect().height : 80;
-    const headerEl = document.querySelector('.totem-header');
-    const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 0;
-    const containerTop = container.getBoundingClientRect().top;
-    const paginationHeight = 60;
-    const bottomPadding = 10;
-
-    const availableHeight = window.innerHeight - containerTop - buttonsHeight - paginationHeight - bottomPadding;
-
-    if (isGrid) {
-        const gap = 16;
-        const rows = Math.max(1, Math.floor((availableHeight + gap) / (itemHeight + gap)));
-        return rows * 2;
-    }
-
-    return Math.max(1, Math.floor(availableHeight / itemHeight));
+    const totalItems = items.length;
+    const needsPagination = totalItems > GRID_MAX_ROWS * GRID_COLS;
+    const rows = needsPagination ? GRID_MAX_ROWS_PAGINATED : GRID_MAX_ROWS;
+    return rows * GRID_COLS;
 }
 
 function _renderPage(containerId) {
