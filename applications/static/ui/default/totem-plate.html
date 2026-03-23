@@ -77,6 +77,9 @@
                     <button class="btn btn-secondary" onclick="exitManualMode()">Annulla</button>
                     <button class="btn btn-primary" onclick="confirmManualPlate()">Conferma</button>
                 </div>
+                <div class="step-buttons">
+                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goToNext()">Avanti</button>
+                </div>
             </div>
         </div>
     </div>
@@ -114,6 +117,13 @@
             document.getElementById('plateText').textContent = plate;
             document.getElementById('plateText').style.display = '';
             document.getElementById('manualPlateInput').style.display = 'none';
+            document.getElementById('btnNext').style.display = '';
+        }
+
+        function goToNext() {
+            const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+            const nextPage = hasReservation ? 'totem-summary.html' : 'totem-customer.html';
+            goTo(nextPage);
         }
 
         function showEmptyPlate() {
@@ -135,10 +145,6 @@
             if (manualMode) return;
             if (selectedVehicle.plate) {
                 showPlate(selectedVehicle.plate);
-                // If a reservation was found, go directly to summary
-                const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-                const nextPage = hasReservation ? 'totem-summary.html' : 'totem-customer.html';
-                setTimeout(() => goTo(nextPage), 1000);
             }
         }
 
@@ -203,10 +209,6 @@
                     document.getElementById('manualButtons').classList.remove('active');
                     showPlate(value);
                     showSnackbar("snackbar", "Targa impostata", 'rgb(208, 255, 208)', 'black');
-                    // If a reservation was found, go directly to summary
-                    const hasReservation = res.id_selected && res.id_selected.id && res.id_selected.id !== -1;
-                    const nextPage = hasReservation ? 'totem-summary.html' : 'totem-customer.html';
-                    setTimeout(() => goTo(nextPage), 1000);
                 }
             });
         }
