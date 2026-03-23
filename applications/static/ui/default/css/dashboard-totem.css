@@ -503,11 +503,11 @@ body {
 .summary-row {
     display: flex;
     align-items: center;
-    padding: 14px 18px;
+    padding: 20px 24px;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: background 0.15s;
-    min-height: 52px;
+    min-height: 68px;
 }
 
 .summary-row:last-child {
@@ -519,26 +519,26 @@ body {
 }
 
 .summary-label {
-    font-size: 0.85rem;
+    font-size: 1.1rem;
     color: #999;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: 120px;
+    width: 150px;
     flex-shrink: 0;
 }
 
 .summary-value {
     flex: 1;
     font-weight: 600;
-    font-size: 1.05rem;
+    font-size: 1.4rem;
     color: #333;
 }
 
 .summary-edit {
     color: #1362b8;
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     opacity: 0.6;
-    margin-left: 8px;
+    margin-left: 10px;
 }
 
 .summary-row:hover .summary-edit {
