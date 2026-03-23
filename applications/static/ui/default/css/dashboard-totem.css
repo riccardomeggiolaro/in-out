@@ -233,15 +233,15 @@ body {
 }
 
 .step h2 {
-    font-size: 1.4rem;
-    margin-bottom: 2px;
+    font-size: 2.2rem;
+    margin-bottom: 6px;
     color: #1362b8;
 }
 
 .step-description {
     color: #777;
-    font-size: 0.9rem;
-    margin-bottom: 8px;
+    font-size: 1.3rem;
+    margin-bottom: 12px;
     text-align: center;
 }
 
@@ -282,15 +282,15 @@ body {
 }
 
 .suggestions-list li {
-    padding: 16px 18px;
+    padding: 20px 22px;
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     transition: background 0.15s;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-height: 54px;
+    min-height: 70px;
 }
 
 .suggestions-list li:last-child {
@@ -308,7 +308,7 @@ body {
 
 .suggestions-list li .secondary {
     color: #999;
-    font-size: 0.95rem;
+    font-size: 1.15rem;
 }
 
 .suggestions-list li.create-new {
@@ -325,7 +325,7 @@ body {
 .suggestions-grid {
     display: none;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 16px;
     max-height: none;
     background: transparent;
     box-shadow: none;
@@ -340,16 +340,16 @@ body {
     background: white;
     border: 2px solid #e0e0e0;
     border-radius: 14px;
-    padding: 18px 14px;
+    padding: 24px 18px;
     text-align: center;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     font-weight: 500;
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     border-bottom: none;
     transition: all 0.2s;
-    min-height: 60px;
+    min-height: 80px;
 }
 
 .suggestions-grid li:hover {
@@ -371,12 +371,12 @@ body {
 
 /* Selected value display */
 .selected-value {
-    margin-top: 8px;
-    padding: 10px 16px;
+    margin-top: 10px;
+    padding: 14px 20px;
     background: #e3effc;
     border-radius: 10px;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     color: #1362b8;
     min-height: 0;
     transition: all 0.3s;
@@ -441,15 +441,15 @@ body {
 }
 
 .btn {
-    padding: 14px 32px;
-    font-size: 1.1rem;
+    padding: 18px 38px;
+    font-size: 1.3rem;
     font-weight: 600;
     border: none;
     border-radius: 14px;
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
-    min-height: 50px;
+    min-height: 58px;
 }
 
 .btn:disabled {
