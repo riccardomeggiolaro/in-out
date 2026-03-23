@@ -11,13 +11,8 @@
     <link rel="stylesheet" href="/static/css/dashboard-totem.css">
     <link rel="stylesheet" href="/static/css/snackbar.css">
     <style>
-        .secret-tap-zone {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 80px;
-            height: 80px;
-            z-index: 10;
+        .license-plate {
+            cursor: pointer;
         }
         .plate-empty .plate-text {
             color: #ccc;
@@ -54,7 +49,6 @@
 </head>
 <body>
     <div class="totem-container">
-        <div class="secret-tap-zone" id="secretTapZone"></div>
         <div class="totem-header">
             <div class="weight-display">
                 <span id="netWeight">------</span>
@@ -112,8 +106,6 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         let manualMode = false;
-        let tapCount = 0;
-        let tapTimer = null;
 
         function showPlate(plate) {
             document.getElementById('plateStatus').textContent = 'Targa rilevata';
@@ -150,15 +142,10 @@
             }
         }
 
-        // --- Triple tap top-left corner for manual mode ---
-        document.getElementById('secretTapZone').addEventListener('click', function() {
-            tapCount++;
-            if (tapTimer) clearTimeout(tapTimer);
-            if (tapCount >= 3) {
-                tapCount = 0;
+        // --- Click sulla targa per modalità manuale ---
+        document.getElementById('plateDisplay').addEventListener('click', function() {
+            if (!manualMode) {
                 enterManualMode();
-            } else {
-                tapTimer = setTimeout(() => { tapCount = 0; }, 800);
             }
         });
 
