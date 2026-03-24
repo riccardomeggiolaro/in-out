@@ -292,10 +292,11 @@ body {
     gap: 8px;
     background: transparent;
     box-shadow: none;
-    padding: 0;
+    padding: 0 16px;
     overflow: hidden;
     flex: 1;
     min-height: 0;
+    box-sizing: border-box;
 }
 
 .suggestions-grid:not(:empty) {
