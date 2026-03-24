@@ -117,6 +117,10 @@
         }
 
         function goToNext() {
+            if (isFromSummary()) {
+                goTo('totem-summary.html');
+                return;
+            }
             const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
             const nextPage = hasReservation ? 'totem-summary.html' : 'totem-customer.html';
             goTo(nextPage);
