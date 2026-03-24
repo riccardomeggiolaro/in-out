@@ -373,16 +373,16 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 }
 
 // --- Full-page success/failure message after weighing ---
-function showWeighingSuccess(message, isError = false) {
+function showWeighingSuccess(isError = false) {
     const container = document.querySelector('#pageContent .step');
     if (!container) return;
     const color = isError ? '#d32f2f' : '#2e7d32';
     const icon = isError ? '&#10008;' : '&#10004;';
+    const text = isError ? 'Pesata non riuscita' : 'Pesata completata';
     container.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:2rem;">
-            <div style="font-size:5rem;color:${color};margin-bottom:1rem;">${icon}</div>
-            <h2 style="color:${color};font-size:2rem;margin-bottom:0.5rem;">${message}</h2>
-            <p style="color:#666;font-size:1.2rem;">Ritorno alla schermata iniziale...</p>
+            <div style="font-size:5rem;color:${color};">${icon}</div>
+            <h2 style="color:${color};font-size:2rem;margin-top:1rem;">${text}</h2>
         </div>
     `;
     setTimeout(() => {
@@ -792,9 +792,9 @@ function processRealtimeObject(obj) {
                     }
                 }
             }
-            showWeighingSuccess(message);
+            showWeighingSuccess();
         } else {
-            showWeighingSuccess("Pesata fallita", true);
+            showWeighingSuccess(true);
         }
         access_id = null;
         document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
