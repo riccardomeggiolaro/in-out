@@ -777,24 +777,6 @@ function processRealtimeObject(obj) {
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight !== "") {
             closePopup();
-            let message = "Pesata eseguita!";
-            if (obj.weight_executed.pid !== "") {
-                message += ` Pid: ${obj.weight_executed.pid}`;
-                if (return_pdf_copy_after_weighing && obj.data_assigned) {
-                    obj.data_assigned.accessId = JSON.parse(obj.data_assigned.accessId);
-                    if (obj.data_assigned.accessId.in_out && obj.data_assigned.accessId.in_out.length > 0) {
-                        const lastInOut = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length - 1];
-                        const id_in_out = lastInOut.id;
-                        const isTestAccess = obj.data_assigned.accessId.type === "Test";
-                        const typeOfWeight = isTestAccess ? "generic" : (lastInOut.idWeight2 === null ? "in" : "out");
-                        const params = getParamsFromQueryString();
-                        const inOutPdf = instances[params.instance_name]?.["nodes"]?.[params.weigher_name]?.["events"]?.["weighing"]?.["report"]?.[typeOfWeight];
-                        if (inOutPdf) {
-                            downloadPdf(id_in_out);
-                        }
-                    }
-                }
-            }
             showWeighingSuccess();
         } else {
             showWeighingSuccess(true);
