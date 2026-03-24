@@ -28,10 +28,6 @@
             <div class="step active">
                 <h2>Ragione Sociale</h2>
                 <ul class="suggestions-list suggestions-grid" id="subjectGrid"></ul>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-type.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-vector.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -61,9 +57,6 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
-            if (selectedSubject.social_reason) {
-                document.getElementById('btnNext').style.display = '';
-            }
             loadItems('subject', 'social_reason', '', 'subjectGrid', (item) => {
                 selectAndAdvance('subject', item, 'totem-vector.html');
             });

@@ -251,12 +251,6 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
-        // If list is empty, show the "Avanti" button so user can skip
-        if (items.length === 0) {
-            const btnNext = document.getElementById('btnNext');
-            if (btnNext) btnNext.style.display = '';
-        }
-
         // "Create new" option only if searching (plate page)
         if (inputValue) {
             const li = document.createElement('li');
