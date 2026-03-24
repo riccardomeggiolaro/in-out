@@ -289,7 +289,7 @@ body {
 .suggestions-grid {
     display: none;
     grid-template-columns: 1fr 1fr;
-    gap: 4px;
+    gap: 8px;
     background: transparent;
     box-shadow: none;
     padding: 0;
@@ -317,6 +317,10 @@ body {
     border-bottom: none;
     transition: all 0.2s;
     min-height: 0;
+}
+
+.suggestions-grid li:nth-last-child(-n+2) {
+    margin-top: 4px;
 }
 
 .suggestions-grid li:hover {
