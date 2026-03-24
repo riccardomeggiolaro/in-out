@@ -78,11 +78,11 @@ const totemViews = {
             window._plateConfirmManual = function() {
                 const value = document.getElementById('manualPlateInput').value.trim().toUpperCase();
                 if (!value) {
-                    showSnackbar("snackbar", "Inserisci una targa valida", 'rgb(255, 208, 208)', 'black');
+                    // showSnackbar("snackbar", "Inserisci una targa valida", 'rgb(255, 208, 208)', 'black');
                     return;
                 }
                 if (value.length > 10) {
-                    showSnackbar("snackbar", "La targa può avere massimo 10 caratteri", 'rgb(255, 208, 208)', 'black');
+                    // showSnackbar("snackbar", "La targa può avere massimo 10 caratteri", 'rgb(255, 208, 208)', 'black');
                     return;
                 }
 
@@ -94,7 +94,7 @@ const totemViews = {
                 .then(res => res.json())
                 .then(res => {
                     if (res.detail) {
-                        showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+                        // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
                     } else {
                         _plateManualMode = false;
                         document.getElementById('manualPlateInput').classList.remove('active');
