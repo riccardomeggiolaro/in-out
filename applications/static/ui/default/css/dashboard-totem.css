@@ -485,7 +485,6 @@ body {
     margin-top: auto;
     padding: 12px 0 8px;
     width: 100%;
-    justify-content: center;
     flex-shrink: 0;
     flex-grow: 0;
 }
