@@ -43,13 +43,8 @@
                         <span class="summary-value" id="summaryPlate">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" id="rowType" onclick="goTo('totem-type.html?from=summary')">
-                        <span class="summary-label">Tipo</span>
-                        <span class="summary-value" id="summaryType">-</span>
-                        <span class="summary-edit">&#9998;</span>
-                    </div>
                     <div class="summary-row" id="rowSubject" onclick="goTo('totem-subject.html?from=summary')">
-                        <span class="summary-label">Ragione Sociale</span>
+                        <span class="summary-label" id="summaryType">-</span>
                         <span class="summary-value" id="summarySubject">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
@@ -116,7 +111,7 @@
             // Check if there's a reservation (id_selected has an id set)
             isReservationMode = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
 
-            const rowIds = ['rowPlate', 'rowType', 'rowSubject', 'rowVector', 'rowDriver'];
+            const rowIds = ['rowPlate', 'rowSubject', 'rowVector', 'rowDriver'];
             rowIds.forEach(id => {
                 const row = document.getElementById(id);
                 if (row) {
