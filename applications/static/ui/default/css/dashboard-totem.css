@@ -99,44 +99,7 @@ body {
     overflow: hidden;
 }
 
-/* Header with weight */
-.totem-header {
-    background: #1362b8;
-    color: white;
-    border-radius: 12px;
-    padding: 8px 16px;
-    text-align: center;
-    margin-bottom: 8px;
-    flex-shrink: 0;
-}
-
-.weight-display {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 8px;
-}
-
-.weight-display #netWeight {
-    font-size: 2.4rem;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 2px;
-}
-
-.weight-display .unit {
-    font-size: 1.1rem;
-    opacity: 0.8;
-}
-
-.weight-info {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    font-size: 0.85rem;
-    opacity: 0.8;
-    margin-top: 2px;
-}
+/* Header with weight - moved to step-buttons area */
 
 /* Progress bar */
 .progress-bar {
@@ -481,13 +444,50 @@ body {
 .step-buttons {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 14px;
     margin-top: auto;
-    padding: 12px 0 8px;
+    padding: 16px 16px 12px;
     width: 100%;
-    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
     flex-grow: 0;
+    box-sizing: border-box;
+}
+
+.step-buttons-weight {
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.step-buttons-weight .weight-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+}
+
+.step-buttons-weight .weight-display #netWeight {
+    font-size: 1.8rem;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    color: #1362b8;
+}
+
+.step-buttons-weight .weight-display .unit {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.step-buttons-weight .weight-info {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 2px;
 }
 
 .btn {
