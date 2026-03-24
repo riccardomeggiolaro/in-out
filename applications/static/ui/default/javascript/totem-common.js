@@ -43,7 +43,7 @@ let autoReconnectInterval;
 let pingInterval;
 let pingTimeout;
 let currentPopup;
-let snackbarTimeout;
+// let snackbarTimeout;
 
 // SPA state
 let _fromSummary = false;
@@ -424,9 +424,9 @@ function selectAndAdvance(anagrafic, item, nextPage) {
     .then(res => res.json())
     .then(res => {
         if (res.detail) {
-            showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
-            showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
             const dest = isFromSummary() ? 'summary' : nextPage;
             setTimeout(() => goTo(dest), 300);
         }
@@ -445,12 +445,12 @@ function selectVehicle(item) {
     .then(res => res.json())
     .then(res => {
         if (res.detail) {
-            showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
             selectedVehicle = { id: item.id, plate: item.plate || '' };
             const plateInput = document.getElementById('plateInput');
             if (plateInput) plateInput.value = item.plate || '';
-            showSnackbar("snackbar", "Veicolo selezionato", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Veicolo selezionato", 'rgb(208, 255, 208)', 'black');
         }
     });
 }
@@ -469,9 +469,9 @@ function createOrSelectAnagrafic(anagrafic, filterField, value) {
     .then(res => res.json())
     .then(res => {
         if (res.detail) {
-            showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
-            showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} impostato`, 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} impostato`, 'rgb(208, 255, 208)', 'black');
         }
     });
 }
@@ -529,15 +529,15 @@ async function executeGenericWeighing() {
     try {
         const r = await fetch(url).then(res => res.json());
         if (r && r.command_details && r.command_details.command_executed === true) {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
             buttons.forEach(b => { b.disabled = false; });
         }
     } catch (error) {
         console.error('Weighing error:', error);
-        showSnackbar("snackbar", "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+        // showSnackbar("snackbar", "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
         buttons.forEach(b => { b.disabled = false; });
     }
 }
@@ -569,10 +569,10 @@ async function inWeighing() {
             body: JSON.stringify({ data_in_execution: dataInExecution })
         }).then(res => res.json());
         if (r && r.command_details && r.command_details.command_executed === true) {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
             document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
         }
     } catch (error) {
@@ -591,10 +591,10 @@ async function outWeighing() {
             body: JSON.stringify({ id_selected: selectedIdWeight["id"] })
         }).then(res => res.json());
         if (r && r.command_details && r.command_details.command_executed === true) {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
             document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
         }
     } catch (error) {
@@ -764,12 +764,12 @@ function updateUIRealtime(e) {
 function processRealtimeObject(obj) {
     if (obj.command_in_executing) {
         if (obj.command_in_executing === "WEIGHING") {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = true);
         } else if (obj.command_in_executing === "TARE") {
-            showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
         } else if (obj.command_in_executing === "ZERO") {
-            showSnackbar("snackbar", "Zero", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Zero", 'rgb(208, 255, 208)', 'black');
         }
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight !== "") {
@@ -825,11 +825,11 @@ function processRealtimeObject(obj) {
             handleNeedToConfirm(d.vehicle.plate);
         }
     } else if (obj.message) {
-        showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
+        // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
-        showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
+        // showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
     } else if (obj.cam_message) {
-        showSnackbar("snackbar", obj.cam_message, 'white', 'black');
+        // showSnackbar("snackbar", obj.cam_message, 'white', 'black');
     }
 }
 
