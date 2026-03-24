@@ -76,6 +76,10 @@ window.onclick = function(event) {
 };
 
 // --- Navigation ---
+function isFromSummary() {
+    return new URLSearchParams(window.location.search).get('from') === 'summary';
+}
+
 function goTo(page) {
     window.location.href = page;
 }
@@ -253,11 +257,12 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 
         // Show empty state message and next button if no items
         if (items.length === 0 && skipToUrl && !inputValue) {
+            const dest = isFromSummary() ? 'totem-summary.html' : skipToUrl;
             const emptyState = document.createElement('div');
             emptyState.className = 'empty-state';
             emptyState.innerHTML = `
                 <p class="empty-state-text">Nessun dato disponibile, passa alla pagina successiva</p>
-                <button class="btn btn-primary" onclick="goTo('${skipToUrl}')">Avanti</button>
+                <button class="btn btn-primary" onclick="goTo('${dest}')">Avanti</button>
             `;
             container.parentElement.insertBefore(emptyState, container.nextSibling);
             return;
@@ -328,7 +333,8 @@ function selectAndAdvance(anagrafic, item, nextPage) {
             showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
             showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
-            setTimeout(() => goTo(nextPage), 300);
+            const dest = isFromSummary() ? 'totem-summary.html' : nextPage;
+            setTimeout(() => goTo(dest), 300);
         }
     });
 }
