@@ -379,6 +379,8 @@ function showWeighingSuccess(isError = false) {
     const color = isError ? '#d32f2f' : '#2e7d32';
     const icon = isError ? '&#10008;' : '&#10004;';
     const text = isError ? 'Pesata non riuscita' : 'Pesata completata';
+    const header = document.querySelector('.totem-header');
+    if (header) header.style.display = 'none';
     container.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:2rem;">
             <div style="font-size:5rem;color:${color};">${icon}</div>
@@ -386,6 +388,7 @@ function showWeighingSuccess(isError = false) {
         </div>
     `;
     setTimeout(() => {
+        if (header) header.style.display = '';
         cancelTotem();
     }, 3000);
 }
