@@ -340,10 +340,8 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
-        // Auto-skip to next page if no items available
+        // No items available — just show empty list, buttons remain functional
         if (items.length === 0 && skipToUrl && !inputValue) {
-            const dest = isFromSummary() ? 'summary' : skipToUrl;
-            goTo(dest);
             return;
         }
 
