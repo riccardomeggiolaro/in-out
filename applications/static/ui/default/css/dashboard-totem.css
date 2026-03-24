@@ -459,12 +459,11 @@ body {
 }
 
 .step-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: clamp(6px, 2vw, 14px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
     margin-top: auto;
-    padding: clamp(4px, 1vw, 6px) 16px;
+    padding: 8px 16px;
     width: 100%;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
@@ -473,25 +472,17 @@ body {
 }
 
 .step-buttons-logo {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-width: 0;
-}
-
-.step-buttons-logo img {
-    height: clamp(0.9rem, 3.5vw, 2rem);
-    width: auto;
-    object-fit: contain;
+    display: none;
 }
 
 .btn {
-    padding: clamp(4px, 1.5vw, 12px) clamp(6px, 2vw, 18px);
-    font-size: clamp(0.7rem, 2.5vw, 1.4rem);
-    font-weight: 600;
-    border: none;
+    background: white;
+    border: 2px solid #e0e0e0;
     border-radius: clamp(8px, 2vw, 14px);
+    padding: clamp(4px, 1.5vw, 12px) clamp(6px, 2vw, 18px);
+    text-align: center;
+    font-weight: 500;
+    font-size: clamp(0.7rem, 2.5vw, 1.4rem);
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
@@ -506,6 +497,7 @@ body {
 .btn-primary {
     background: #1362b8;
     color: white;
+    border-color: #1362b8;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -515,6 +507,7 @@ body {
 .btn-secondary {
     background: #e0e0e0;
     color: #333;
+    border-color: #e0e0e0;
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -524,9 +517,7 @@ body {
 .btn-weighing {
     background: #27ae60;
     color: white;
-    padding: clamp(4px, 1.5vw, 12px) clamp(6px, 2vw, 18px);
-    font-size: clamp(0.7rem, 2.5vw, 1.4rem);
-    min-height: 0;
+    border-color: #27ae60;
 }
 
 .btn-weighing:hover:not(:disabled) {
@@ -534,7 +525,7 @@ body {
 }
 
 .btn-next {
-    min-width: clamp(80px, 20vw, 160px);
+    min-width: 0;
 }
 
 /* Summary card */
