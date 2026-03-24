@@ -271,6 +271,21 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 
         _ensurePaginationArrows(containerId);
         _renderPage(containerId);
+
+        // Recalculate after layout stabilizes (first load may have wrong measurements)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const state = _paginationState[containerId];
+                if (!state || state.items.length === 0) return;
+                const correctedPerPage = _calcItemsPerPage(containerId, state.items);
+                if (correctedPerPage !== state.itemsPerPage) {
+                    state.itemsPerPage = correctedPerPage;
+                    const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+                    if (state.currentPage >= totalPages) state.currentPage = Math.max(0, totalPages - 1);
+                    _renderPage(containerId);
+                }
+            });
+        });
     } catch (error) {
         console.error('Error loading items:', error);
     }
