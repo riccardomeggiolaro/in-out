@@ -212,7 +212,7 @@ function _ensurePaginationArrows(containerId) {
 }
 
 // --- Load items into a list/grid ---
-async function loadItems(anagrafic, filterField, inputValue, containerId, onItemClick) {
+async function loadItems(anagrafic, filterField, inputValue, containerId, onItemClick, skipToUrl) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
@@ -250,6 +250,12 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             li.addEventListener('click', () => onItemClick(item));
             items.push({ li, item });
         });
+
+        // Skip page if list is empty and a skip URL is provided
+        if (items.length === 0 && skipToUrl && !inputValue) {
+            goTo(skipToUrl);
+            return;
+        }
 
         // "Create new" option only if searching (plate page)
         if (inputValue) {

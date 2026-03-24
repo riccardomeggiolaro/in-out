@@ -59,7 +59,7 @@
         function onDataReady() {
             loadItems('material', 'description', '', 'materialGrid', (item) => {
                 selectAndAdvance('material', item, 'totem-summary.html');
-            });
+            }, 'totem-summary.html');
         }
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());
