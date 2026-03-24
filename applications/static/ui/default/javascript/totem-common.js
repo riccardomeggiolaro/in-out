@@ -123,31 +123,15 @@ function showView(name) {
     // Inject weight display into step-buttons
     const stepButtons = step.querySelector('.step-buttons');
     if (stepButtons) {
-        const weightEl = document.createElement('div');
-        weightEl.className = 'step-buttons-weight';
-        weightEl.innerHTML = `
-            <div class="weight-display">
-                <span id="netWeight">------</span>
-                <span id="uniteMisure" class="unit">--</span>
-            </div>
-            <div class="weight-info">
-                <span id="tare">------</span>
-                <span id="status">--</span>
-            </div>
-        `;
-        // Insert weight between the buttons
+        const logoEl = document.createElement('div');
+        logoEl.className = 'step-buttons-logo';
+        logoEl.innerHTML = `<img src="/static/content/baronpesi_logo.png" alt="Logo">`;
+        // Insert logo between the buttons
         const buttons = stepButtons.querySelectorAll('.btn');
         if (buttons.length >= 2) {
-            stepButtons.insertBefore(weightEl, buttons[1]);
+            stepButtons.insertBefore(logoEl, buttons[1]);
         } else {
-            stepButtons.prepend(weightEl);
-        }
-        // Populate with current data
-        if (data_weight_realtime.net_weight !== undefined) {
-            weightEl.querySelector('#netWeight').innerText = data_weight_realtime.net_weight;
-            weightEl.querySelector('#uniteMisure').innerText = data_weight_realtime.unite_measure || '--';
-            weightEl.querySelector('#tare').innerText = data_weight_realtime.tare || '------';
-            weightEl.querySelector('#status').innerText = data_weight_realtime.status || '--';
+            stepButtons.prepend(logoEl);
         }
     }
 
