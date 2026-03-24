@@ -289,7 +289,7 @@ body {
 .suggestions-grid {
     display: none;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 4px;
     background: transparent;
     box-shadow: none;
     padding: 0;
