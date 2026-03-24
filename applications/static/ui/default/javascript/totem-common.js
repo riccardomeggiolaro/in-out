@@ -340,16 +340,10 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
-        // Show empty state message and next button if no items
+        // Auto-skip to next page if no items available
         if (items.length === 0 && skipToUrl && !inputValue) {
             const dest = isFromSummary() ? 'summary' : skipToUrl;
-            const emptyState = document.createElement('div');
-            emptyState.className = 'empty-state';
-            emptyState.innerHTML = `
-                <p class="empty-state-text">Nessun dato disponibile, passa alla pagina successiva</p>
-                <button class="btn btn-primary" onclick="goTo('${dest}')">Avanti</button>
-            `;
-            container.parentElement.insertBefore(emptyState, container.nextSibling);
+            goTo(dest);
             return;
         }
 
