@@ -83,15 +83,64 @@ function goTo(page) {
 // --- Pagination state ---
 let _paginationState = {};
 const GRID_COLS = 2;
-const GRID_MAX_ROWS = 6;
-const GRID_MAX_ROWS_PAGINATED = 5;
 
 function _calcItemsPerPage(containerId, items) {
-    const totalItems = items.length;
-    const needsPagination = totalItems > GRID_MAX_ROWS * GRID_COLS;
-    const rows = needsPagination ? GRID_MAX_ROWS_PAGINATED : GRID_MAX_ROWS;
-    return rows * GRID_COLS;
+    const container = document.getElementById(containerId);
+    if (!container || items.length === 0) return 12;
+
+    const step = container.closest('.step');
+    if (!step) return 12;
+
+    // Calculate height used by sibling elements (h2, buttons, etc.)
+    let usedHeight = 0;
+    Array.from(step.children).forEach(child => {
+        if (child === container) return;
+        if (child.id === containerId + '-pagination') return;
+        if (!child.offsetHeight) return;
+        const style = getComputedStyle(child);
+        usedHeight += child.offsetHeight + parseFloat(style.marginTop || 0) + parseFloat(style.marginBottom || 0);
+    });
+
+    const availableHeight = step.clientHeight - usedHeight;
+
+    // Temporarily add an item to measure row height
+    const tempLi = items[0].li.cloneNode(true);
+    container.appendChild(tempLi);
+    const itemHeight = tempLi.getBoundingClientRect().height;
+    container.removeChild(tempLi);
+
+    const gap = 16;
+    const paginationHeight = 64;
+    const rowHeight = itemHeight + gap;
+
+    // Calculate max rows without pagination
+    let maxRows = Math.floor((availableHeight + gap) / rowHeight);
+    if (items.length > maxRows * GRID_COLS) {
+        // Need pagination, recalculate with space for arrows
+        maxRows = Math.floor((availableHeight - paginationHeight + gap) / rowHeight);
+    }
+
+    return Math.max(1, maxRows) * GRID_COLS;
 }
+
+// Recalculate pagination on resize
+let _resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => {
+        Object.keys(_paginationState).forEach(containerId => {
+            const state = _paginationState[containerId];
+            if (!state || state.items.length === 0) return;
+            const newItemsPerPage = _calcItemsPerPage(containerId, state.items);
+            if (newItemsPerPage !== state.itemsPerPage) {
+                state.itemsPerPage = newItemsPerPage;
+                const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+                if (state.currentPage >= totalPages) state.currentPage = Math.max(0, totalPages - 1);
+                _renderPage(containerId);
+            }
+        });
+    }, 200);
+});
 
 function _renderPage(containerId) {
     const state = _paginationState[containerId];

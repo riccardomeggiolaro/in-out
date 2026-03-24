@@ -244,13 +244,6 @@ body {
     flex-shrink: 0;
 }
 
-.step-description {
-    color: #777;
-    font-size: 1.3rem;
-    margin-bottom: 12px;
-    text-align: center;
-    flex-shrink: 0;
-}
 
 /* Input wrapper */
 .input-wrapper {
@@ -380,23 +373,6 @@ body {
     margin-top: 4px;
 }
 
-/* Selected value display */
-.selected-value {
-    margin-top: 10px;
-    padding: 14px 20px;
-    background: #e3effc;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 1.3rem;
-    color: #1362b8;
-    min-height: 0;
-    transition: all 0.3s;
-    flex-shrink: 0;
-}
-
-.selected-value:empty {
-    display: none;
-}
 
 /* Type buttons (Cliente/Fornitore) */
 .type-buttons {
