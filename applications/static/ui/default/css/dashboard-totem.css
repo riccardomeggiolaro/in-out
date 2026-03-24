@@ -201,8 +201,8 @@ body {
 }
 
 .step h2 {
-    font-size: clamp(1rem, 4vw, 2.2rem);
-    margin-bottom: clamp(2px, 1vw, 6px);
+    font-size: clamp(0.9rem, 3.5vw, 2rem);
+    margin-bottom: clamp(2px, 0.5vw, 6px);
     color: #1362b8;
     flex-shrink: 0;
     padding: 0 16px;
@@ -481,21 +481,21 @@ body {
 }
 
 .step-buttons-logo img {
-    height: clamp(1rem, 4vw, 2.2rem);
+    height: clamp(0.9rem, 3.5vw, 2rem);
     width: auto;
     object-fit: contain;
 }
 
 .btn {
-    padding: clamp(8px, 2.5vw, 18px) clamp(16px, 5vw, 38px);
-    font-size: clamp(0.8rem, 2.5vw, 1.3rem);
+    padding: clamp(4px, 1.5vw, 12px) clamp(6px, 2vw, 18px);
+    font-size: clamp(0.7rem, 2.5vw, 1.4rem);
     font-weight: 600;
     border: none;
     border-radius: clamp(8px, 2vw, 14px);
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
-    min-height: clamp(32px, 8vw, 58px);
+    min-height: 0;
 }
 
 .btn:disabled {
@@ -524,9 +524,9 @@ body {
 .btn-weighing {
     background: #27ae60;
     color: white;
-    padding: clamp(8px, 2.5vw, 16px) clamp(16px, 5vw, 40px);
-    font-size: clamp(0.8rem, 2.5vw, 1.2rem);
-    min-height: clamp(32px, 8vw, 56px);
+    padding: clamp(4px, 1.5vw, 12px) clamp(6px, 2vw, 18px);
+    font-size: clamp(0.7rem, 2.5vw, 1.4rem);
+    min-height: 0;
 }
 
 .btn-weighing:hover:not(:disabled) {
