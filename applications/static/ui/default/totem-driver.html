@@ -28,10 +28,6 @@
             <div class="step active">
                 <h2>Autista</h2>
                 <ul class="suggestions-list suggestions-grid" id="driverGrid"></ul>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-vector.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-material.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -61,9 +57,6 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
-            if (selectedDriver.social_reason) {
-                document.getElementById('btnNext').style.display = '';
-            }
             loadItems('driver', 'social_reason', '', 'driverGrid', (item) => {
                 selectAndAdvance('driver', item, 'totem-material.html');
             });

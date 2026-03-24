@@ -28,10 +28,6 @@
             <div class="step active">
                 <h2>Vettore</h2>
                 <ul class="suggestions-list suggestions-grid" id="vectorGrid"></ul>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-supplier.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-driver.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -61,9 +57,6 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
-            if (selectedVector.social_reason) {
-                document.getElementById('btnNext').style.display = '';
-            }
             loadItems('vector', 'social_reason', '', 'vectorGrid', (item) => {
                 selectAndAdvance('vector', item, 'totem-driver.html');
             });

@@ -28,10 +28,6 @@
             <div class="step active">
                 <h2>Cliente</h2>
                 <ul class="suggestions-list suggestions-grid" id="customerGrid"></ul>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-plate.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-supplier.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -68,9 +64,6 @@
                 body: JSON.stringify({ data_in_execution: { typeSubject: 'CUSTOMER' } })
             });
 
-            if (selectedSubject.social_reason) {
-                document.getElementById('btnNext').style.display = '';
-            }
             loadItems('subject', 'social_reason', '', 'customerGrid', (item) => {
                 selectAndAdvance('subject', item, 'totem-supplier.html');
             });
