@@ -1,4 +1,4 @@
-// ===== TOTEM COMMON - Shared utilities across all totem pages =====
+// ===== TOTEM COMMON - Shared utilities for totem SPA =====
 
 // --- State ---
 let currentWeigherPath = localStorage.getItem('currentWeigherPath');
@@ -45,6 +45,10 @@ let pingTimeout;
 let currentPopup;
 let snackbarTimeout;
 
+// SPA state
+let _fromSummary = false;
+let _dataLoaded = false;
+
 // --- Init ---
 function initTotemPage() {
     if (!currentWeigherPath) {
@@ -61,6 +65,9 @@ function initTotemPage() {
     });
 
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+
+    // Show initial view
+    showView('plate');
 }
 
 window.onbeforeunload = function() {
@@ -75,13 +82,60 @@ window.onclick = function(event) {
     }
 };
 
-// --- Navigation ---
+// --- SPA Navigation ---
 function isFromSummary() {
-    return new URLSearchParams(window.location.search).get('from') === 'summary';
+    return _fromSummary;
 }
 
 function goTo(page) {
-    window.location.href = page;
+    // Parse view name: 'plate', 'totem-plate.html', 'plate?from=summary'
+    let viewName = page.replace(/^totem-/, '').replace(/\.html.*$/, '').split('?')[0];
+    _fromSummary = page.includes('from=summary');
+
+    if (viewName === 'dashboard-totem') {
+        window.location.href = 'dashboard-totem.html';
+        return;
+    }
+
+    showView(viewName);
+}
+
+function showView(name) {
+    const view = totemViews[name];
+    if (!view) {
+        console.error('Unknown view:', name);
+        return;
+    }
+
+    // Clean up pagination state
+    _paginationState = {};
+
+    // Update title
+    document.title = view.title || 'Totem';
+
+    // Update view-specific styles
+    document.getElementById('viewStyle').textContent = view.style || '';
+
+    // Render content
+    const step = document.querySelector('#pageContent .step');
+    step.innerHTML = view.html();
+
+    // Re-trigger fade animation
+    step.style.animation = 'none';
+    void step.offsetWidth;
+    step.style.animation = '';
+
+    // Clear previous view callbacks
+    window.onDataReady = null;
+    window.onDataUpdate = null;
+
+    // Initialize view (sets onDataReady/onDataUpdate)
+    if (view.init) view.init();
+
+    // If data already loaded, trigger onDataReady for the new view
+    if (_dataLoaded && typeof onDataReady === 'function') {
+        onDataReady();
+    }
 }
 
 // --- Pagination state ---
@@ -257,7 +311,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 
         // Show empty state message and next button if no items
         if (items.length === 0 && skipToUrl && !inputValue) {
-            const dest = isFromSummary() ? 'totem-summary.html' : skipToUrl;
+            const dest = isFromSummary() ? 'summary' : skipToUrl;
             const emptyState = document.createElement('div');
             emptyState.className = 'empty-state';
             emptyState.innerHTML = `
@@ -333,7 +387,7 @@ function selectAndAdvance(anagrafic, item, nextPage) {
             showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
             showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
-            const dest = isFromSummary() ? 'totem-summary.html' : nextPage;
+            const dest = isFromSummary() ? 'summary' : nextPage;
             setTimeout(() => goTo(dest), 300);
         }
     });
@@ -631,6 +685,7 @@ async function getData(path) {
         selectedDriver = { id: obj.driver?.id || null, social_reason: obj.driver?.social_reason || '' };
         selectedMaterial = { id: obj.material.id, description: obj.material.description || '' };
 
+        _dataLoaded = true;
         if (typeof onDataReady === 'function') onDataReady();
 
         if (res.id_selected.need_to_confirm === true) {
