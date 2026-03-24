@@ -251,9 +251,15 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
-        // Skip page if list is empty and a skip URL is provided
+        // Show empty state message and next button if no items
         if (items.length === 0 && skipToUrl && !inputValue) {
-            goTo(skipToUrl);
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+                <p class="empty-state-text">Nessun dato disponibile, passa alla pagina successiva</p>
+                <button class="btn btn-primary" onclick="goTo('${skipToUrl}')">Avanti</button>
+            `;
+            container.parentElement.insertBefore(emptyState, container.nextSibling);
             return;
         }
 
