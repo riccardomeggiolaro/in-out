@@ -458,7 +458,7 @@ body {
     align-items: center;
     gap: 14px;
     margin-top: auto;
-    padding: 16px 16px 12px;
+    padding: 6px 16px 6px;
     width: 100%;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
@@ -466,39 +466,18 @@ body {
     box-sizing: border-box;
 }
 
-.step-buttons-weight {
-    text-align: center;
+.step-buttons-logo {
     flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     min-width: 0;
 }
 
-.step-buttons-weight .weight-display {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 6px;
-}
-
-.step-buttons-weight .weight-display #netWeight {
-    font-size: 1.8rem;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 2px;
-    color: #1362b8;
-}
-
-.step-buttons-weight .weight-display .unit {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.step-buttons-weight .weight-info {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    font-size: 0.75rem;
-    color: #888;
-    margin-top: 2px;
+.step-buttons-logo img {
+    height: 2.2rem;
+    width: auto;
+    object-fit: contain;
 }
 
 .btn {
