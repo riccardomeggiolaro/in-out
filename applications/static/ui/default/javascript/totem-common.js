@@ -173,46 +173,13 @@ function showView(name) {
 let _paginationState = {};
 const GRID_COLS = 2;
 
+const ITEMS_PER_PAGE = 10;
+
 function _calcItemsPerPage(containerId, items) {
-    const container = document.getElementById(containerId);
-    if (!container || items.length === 0) return 12;
-
-    const step = container.closest('.step');
-    if (!step) return 12;
-
-    // Calculate height used by sibling elements (h2, buttons, etc.)
-    let usedHeight = 0;
-    Array.from(step.children).forEach(child => {
-        if (child === container) return;
-        if (child.id === containerId + '-pagination') return;
-        if (!child.offsetHeight) return;
-        const style = getComputedStyle(child);
-        usedHeight += child.offsetHeight + parseFloat(style.marginTop || 0) + parseFloat(style.marginBottom || 0);
-    });
-
-    const availableHeight = step.clientHeight - usedHeight;
-
-    // Temporarily add an item to measure row height
-    const tempLi = items[0].li.cloneNode(true);
-    container.appendChild(tempLi);
-    const itemHeight = tempLi.getBoundingClientRect().height;
-    container.removeChild(tempLi);
-
-    const gap = 16;
-    const paginationHeight = 64;
-    const rowHeight = itemHeight + gap;
-
-    // Calculate max rows without pagination
-    let maxRows = Math.floor((availableHeight + gap) / rowHeight);
-    if (items.length > maxRows * GRID_COLS) {
-        // Need pagination, recalculate with space for arrows
-        maxRows = Math.floor((availableHeight - paginationHeight + gap) / rowHeight);
-    }
-
-    return Math.max(1, maxRows) * GRID_COLS;
+    return ITEMS_PER_PAGE;
 }
 
-// Recalculate pagination on resize
+// Re-render on resize (items per page is fixed, but layout may need refresh)
 let _resizeTimer;
 window.addEventListener('resize', () => {
     clearTimeout(_resizeTimer);
@@ -220,13 +187,7 @@ window.addEventListener('resize', () => {
         Object.keys(_paginationState).forEach(containerId => {
             const state = _paginationState[containerId];
             if (!state || state.items.length === 0) return;
-            const newItemsPerPage = _calcItemsPerPage(containerId, state.items);
-            if (newItemsPerPage !== state.itemsPerPage) {
-                state.itemsPerPage = newItemsPerPage;
-                const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
-                if (state.currentPage >= totalPages) state.currentPage = Math.max(0, totalPages - 1);
-                _renderPage(containerId);
-            }
+            _renderPage(containerId);
         });
     }, 200);
 });
@@ -245,6 +206,15 @@ function _renderPage(containerId) {
     pageItems.forEach(({ li }) => {
         container.appendChild(li);
     });
+
+    // Fill remaining slots with empty placeholders
+    const remaining = state.itemsPerPage - pageItems.length;
+    for (let i = 0; i < remaining; i++) {
+        const placeholder = document.createElement('li');
+        placeholder.classList.add('placeholder');
+        placeholder.innerHTML = '&nbsp;';
+        container.appendChild(placeholder);
+    }
 
     // Update pagination controls
     const arrows = document.getElementById(containerId + '-pagination');
@@ -371,25 +341,6 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
         _ensurePaginationArrows(containerId);
         _renderPage(containerId);
 
-        // Recalculate after layout stabilizes (first load may have wrong measurements)
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                const state = _paginationState[containerId];
-                if (!state || state.items.length === 0) return;
-                const correctedPerPage = _calcItemsPerPage(containerId, state.items);
-                if (correctedPerPage !== state.itemsPerPage) {
-                    state.itemsPerPage = correctedPerPage;
-                    // Recalculate selected page with corrected items per page
-                    const selIdx = state.items.findIndex(({ li }) => li.classList.contains('selected'));
-                    if (selIdx >= 0) {
-                        state.currentPage = Math.floor(selIdx / state.itemsPerPage);
-                    }
-                    const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
-                    if (state.currentPage >= totalPages) state.currentPage = Math.max(0, totalPages - 1);
-                    _renderPage(containerId);
-                }
-            });
-        });
     } catch (error) {
         console.error('Error loading items:', error);
     }
