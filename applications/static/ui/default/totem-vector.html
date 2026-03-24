@@ -27,9 +27,7 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Vettore</h2>
-                <p class="step-description">Seleziona un vettore</p>
                 <ul class="suggestions-list suggestions-grid" id="vectorGrid"></ul>
-                <div class="selected-value" id="selectedVectorDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-supplier.html')">Indietro</button>
                     <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-driver.html')">Avanti</button>
@@ -64,7 +62,6 @@
     <script>
         function onDataReady() {
             if (selectedVector.social_reason) {
-                document.getElementById('selectedVectorDisplay').textContent = 'Selezionato: ' + selectedVector.social_reason;
                 document.getElementById('btnNext').style.display = '';
             }
             loadItems('vector', 'social_reason', '', 'vectorGrid', (item) => {

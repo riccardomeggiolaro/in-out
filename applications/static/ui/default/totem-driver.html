@@ -27,9 +27,7 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Autista</h2>
-                <p class="step-description">Seleziona un autista</p>
                 <ul class="suggestions-list suggestions-grid" id="driverGrid"></ul>
-                <div class="selected-value" id="selectedDriverDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-vector.html')">Indietro</button>
                     <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-material.html')">Avanti</button>
@@ -64,7 +62,6 @@
     <script>
         function onDataReady() {
             if (selectedDriver.social_reason) {
-                document.getElementById('selectedDriverDisplay').textContent = 'Selezionato: ' + selectedDriver.social_reason;
                 document.getElementById('btnNext').style.display = '';
             }
             loadItems('driver', 'social_reason', '', 'driverGrid', (item) => {

@@ -27,9 +27,7 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Ragione Sociale</h2>
-                <p class="step-description">Seleziona un soggetto</p>
                 <ul class="suggestions-list suggestions-grid" id="subjectGrid"></ul>
-                <div class="selected-value" id="selectedSubjectDisplay"></div>
                 <div class="step-buttons">
                     <button class="btn btn-secondary" onclick="goTo('totem-type.html')">Indietro</button>
                     <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-vector.html')">Avanti</button>
@@ -64,7 +62,6 @@
     <script>
         function onDataReady() {
             if (selectedSubject.social_reason) {
-                document.getElementById('selectedSubjectDisplay').textContent = 'Selezionato: ' + selectedSubject.social_reason;
                 document.getElementById('btnNext').style.display = '';
             }
             loadItems('subject', 'social_reason', '', 'subjectGrid', (item) => {
