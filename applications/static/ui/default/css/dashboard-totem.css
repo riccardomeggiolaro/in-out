@@ -205,12 +205,17 @@ body {
     margin-bottom: 6px;
     color: #1362b8;
     flex-shrink: 0;
+    padding: 0 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 
 /* Input wrapper */
 .input-wrapper {
     width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
 }
 
 .input-wrapper input {
