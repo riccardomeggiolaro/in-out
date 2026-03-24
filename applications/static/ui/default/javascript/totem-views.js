@@ -51,7 +51,7 @@ const totemViews = {
             window._plateGoToNext = function() {
                 if (isFromSummary()) { goTo('summary'); return; }
                 const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-                goTo(hasReservation ? 'summary' : 'type');
+                goTo(hasReservation ? 'summary' : 'subject');
             };
 
             window._plateEnterManual = function() {
@@ -129,60 +129,6 @@ const totemViews = {
                     _plateShowPlate(selectedVehicle.plate);
                     _plateGoToNext();
                 }
-            };
-        }
-    },
-
-    // ==================== TYPE ====================
-    type: {
-        title: 'Totem - Tipo Soggetto',
-        html: () => `
-            <h2>Tipo Soggetto</h2>
-            <div class="type-buttons">
-                <button class="btn btn-type" id="btnCustomer" onclick="_typeSelect('CUSTOMER')">
-                    <span class="btn-type-icon">&#128100;</span>
-                    <span class="btn-type-label">Cliente</span>
-                </button>
-                <button class="btn btn-type" id="btnSupplier" onclick="_typeSelect('SUPPLIER')">
-                    <span class="btn-type-icon">&#128230;</span>
-                    <span class="btn-type-label">Fornitore</span>
-                </button>
-            </div>
-            <div class="step-buttons" id="typeButtons">
-                <button class="btn btn-secondary" onclick="goTo('plate')">Indietro</button>
-                <button class="btn btn-primary btn-next" onclick="goTo('subject')">Avanti</button>
-            </div>
-        `,
-        init: () => {
-            window._typeSelect = function(type) {
-                selectedTypeSubject = type;
-                document.getElementById('btnCustomer').classList.toggle('active', type === 'CUSTOMER');
-                document.getElementById('btnSupplier').classList.toggle('active', type === 'SUPPLIER');
-
-                fetch(`/api/data${currentWeigherPath}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data_in_execution: { typeSubject: type } })
-                })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.detail) showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
-                });
-            };
-
-            window.onDataReady = function() {
-                document.getElementById('btnCustomer').classList.toggle('active', selectedTypeSubject === 'CUSTOMER');
-                document.getElementById('btnSupplier').classList.toggle('active', selectedTypeSubject === 'SUPPLIER');
-
-                if (isFromSummary()) {
-                    document.getElementById('typeButtons').innerHTML =
-                        '<button class="btn btn-primary btn-next" onclick="goTo(\'summary\')">Avanti</button>';
-                }
-            };
-
-            window.onDataUpdate = function() {
-                document.getElementById('btnCustomer').classList.toggle('active', selectedTypeSubject === 'CUSTOMER');
-                document.getElementById('btnSupplier').classList.toggle('active', selectedTypeSubject === 'SUPPLIER');
             };
         }
     },
