@@ -263,9 +263,14 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
         }
 
         const itemsPerPage = _calcItemsPerPage(containerId, items);
+
+        // Find the page of the selected item
+        const selectedIndex = items.findIndex(({ li }) => li.classList.contains('selected'));
+        const startPage = selectedIndex >= 0 ? Math.floor(selectedIndex / itemsPerPage) : 0;
+
         _paginationState[containerId] = {
             items,
-            currentPage: 0,
+            currentPage: startPage,
             itemsPerPage
         };
 
@@ -280,6 +285,11 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
                 const correctedPerPage = _calcItemsPerPage(containerId, state.items);
                 if (correctedPerPage !== state.itemsPerPage) {
                     state.itemsPerPage = correctedPerPage;
+                    // Recalculate selected page with corrected items per page
+                    const selIdx = state.items.findIndex(({ li }) => li.classList.contains('selected'));
+                    if (selIdx >= 0) {
+                        state.currentPage = Math.floor(selIdx / state.itemsPerPage);
+                    }
                     const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
                     if (state.currentPage >= totalPages) state.currentPage = Math.max(0, totalPages - 1);
                     _renderPage(containerId);
