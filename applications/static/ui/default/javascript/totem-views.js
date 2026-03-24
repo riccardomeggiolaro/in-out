@@ -139,6 +139,10 @@ const totemViews = {
         html: () => `
             <h2 id="subjectTitle">Ragione Sociale</h2>
             <ul class="suggestions-list suggestions-grid" id="subjectGrid"></ul>
+            <div class="step-buttons">
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'plate')">Indietro</button>
+                <button class="btn btn-primary btn-next" onclick="goTo(isFromSummary() ? 'summary' : 'vector')">Avanti</button>
+            </div>
         `,
         init: () => {
             window.onDataReady = function() {
@@ -159,6 +163,10 @@ const totemViews = {
         html: () => `
             <h2>Vettore</h2>
             <ul class="suggestions-list suggestions-grid" id="vectorGrid"></ul>
+            <div class="step-buttons">
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'subject')">Indietro</button>
+                <button class="btn btn-primary btn-next" onclick="goTo(isFromSummary() ? 'summary' : 'driver')">Avanti</button>
+            </div>
         `,
         init: () => {
             window.onDataReady = function() {
@@ -176,6 +184,10 @@ const totemViews = {
         html: () => `
             <h2>Autista</h2>
             <ul class="suggestions-list suggestions-grid" id="driverGrid"></ul>
+            <div class="step-buttons">
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'vector')">Indietro</button>
+                <button class="btn btn-primary btn-next" onclick="goTo(isFromSummary() ? 'summary' : 'material')">Avanti</button>
+            </div>
         `,
         init: () => {
             window.onDataReady = function() {
@@ -193,6 +205,10 @@ const totemViews = {
         html: () => `
             <h2>Materiale</h2>
             <ul class="suggestions-list suggestions-grid" id="materialGrid"></ul>
+            <div class="step-buttons">
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'driver')">Indietro</button>
+                <button class="btn btn-primary btn-next" onclick="goTo('summary')">Avanti</button>
+            </div>
         `,
         init: () => {
             window.onDataReady = function() {
