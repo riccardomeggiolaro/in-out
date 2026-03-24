@@ -480,6 +480,7 @@ body {
 
 .step-buttons {
     display: flex;
+    justify-content: space-between;
     gap: 14px;
     margin-top: auto;
     padding: 12px 0 8px;
