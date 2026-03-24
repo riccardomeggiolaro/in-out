@@ -372,6 +372,37 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
     }
 }
 
+// --- Cancel / reset all data ---
+function cancelTotem() {
+    fetch(`/api/data${currentWeigherPath}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data_in_execution: {
+            vehicle: { id: 0 },
+            typeSubject: 'CUSTOMER',
+            subject: { id: 0 },
+            vector: { id: 0 },
+            driver: { id: 0 },
+            material: { id: 0 }
+        }})
+    })
+    .then(res => res.json())
+    .then(() => {
+        selectedVehicle = { id: null, plate: '' };
+        selectedTypeSubject = 'CUSTOMER';
+        selectedSubject = { id: null, social_reason: '' };
+        selectedVector = { id: null, social_reason: '' };
+        selectedDriver = { id: null, social_reason: '' };
+        selectedMaterial = { id: null, description: '' };
+        selectedIdWeight = null;
+        dataInExecution = null;
+        goTo('plate');
+    })
+    .catch(() => {
+        goTo('plate');
+    });
+}
+
 // --- Select and advance (for grid selection pages) ---
 function selectAndAdvance(anagrafic, item, nextPage) {
     const id = parseInt(item.id);
