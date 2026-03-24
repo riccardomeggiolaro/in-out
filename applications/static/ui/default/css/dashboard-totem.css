@@ -553,6 +553,8 @@ body {
 .summary-row {
     display: flex;
     align-items: center;
+    justify-content: center;
+    position: relative;
     padding: 20px 24px;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
@@ -573,15 +575,20 @@ body {
     color: #999;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: 150px;
+    width: 50%;
     flex-shrink: 0;
+    text-align: center;
+    border-right: 1px solid #e0e0e0;
+    padding-right: 12px;
 }
 
 .summary-value {
-    flex: 1;
+    width: 50%;
     font-weight: 600;
     font-size: 1.4rem;
     color: #333;
+    text-align: center;
+    padding-left: 12px;
 }
 
 .summary-edit {
@@ -589,6 +596,8 @@ body {
     font-size: 1.4rem;
     opacity: 0.6;
     margin-left: 10px;
+    position: absolute;
+    right: 16px;
 }
 
 .summary-row:hover .summary-edit {
