@@ -375,16 +375,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 // --- Cancel / reset all data ---
 function cancelTotem() {
     fetch(`/api/data${currentWeigherPath}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data_in_execution: {
-            vehicle: { id: 0 },
-            typeSubject: 'CUSTOMER',
-            subject: { id: 0 },
-            vector: { id: 0 },
-            driver: { id: 0 },
-            material: { id: 0 }
-        }})
+        method: 'DELETE'
     })
     .then(res => res.json())
     .then(() => {
