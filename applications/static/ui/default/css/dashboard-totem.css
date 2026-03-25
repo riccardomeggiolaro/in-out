@@ -572,6 +572,7 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    align-self: stretch;
 }
 
 .summary-row {
