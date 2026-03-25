@@ -285,8 +285,15 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
-        // No items available — just show empty list, buttons remain functional
+        // No items available — show empty placeholders to maintain layout
         if (items.length === 0 && skipToUrl && !inputValue) {
+            const itemsPerPage = _calcItemsPerPage(containerId, items);
+            _paginationState[containerId] = {
+                items,
+                currentPage: 0,
+                itemsPerPage
+            };
+            _renderPage(containerId);
             return;
         }
 
