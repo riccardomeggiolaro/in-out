@@ -10,8 +10,6 @@ const totemViews = {
             .plate-empty .plate-text { color: #ccc; letter-spacing: 12px; }
             .plate-input { display: none; font-size: 3.5rem; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase; border: none; outline: none; background: transparent; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; }
             .plate-input.active { display: flex; }
-            .manual-buttons { display: none; gap: 12px; margin-top: 20px; }
-            .manual-buttons.active { display: flex; }
         `,
         html: () => `
             <h2>Targa</h2>
@@ -23,12 +21,10 @@ const totemViews = {
                 <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off">
                 <div class="plate-band plate-band-right"></div>
             </div>
-            <div class="manual-buttons" id="manualButtons">
-                <button class="btn btn-secondary" onclick="_plateExitManual()">Annulla</button>
-                <button class="btn btn-primary" onclick="_plateConfirmManual()">Conferma</button>
-            </div>
             <div class="step-buttons">
-                <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="_plateGoToNext()">Avanti</button>
+                <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">Annulla</button>
+                <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">Conferma</button>
+                <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">Avanti</button>
             </div>
         `,
         init: () => {
@@ -63,16 +59,23 @@ const totemViews = {
                 input.style.display = 'flex';
                 input.value = '';
                 input.focus();
-                document.getElementById('manualButtons').classList.add('active');
+                document.getElementById('btnAnnulla').style.display = '';
+                document.getElementById('btnConferma').style.display = '';
+                document.getElementById('btnNext').style.display = 'none';
             };
 
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('manualPlateInput').classList.remove('active');
                 document.getElementById('manualPlateInput').style.display = 'none';
-                document.getElementById('manualButtons').classList.remove('active');
-                if (selectedVehicle.plate) _plateShowPlate(selectedVehicle.plate);
-                else _plateShowEmpty();
+                document.getElementById('btnAnnulla').style.display = 'none';
+                document.getElementById('btnConferma').style.display = 'none';
+                if (selectedVehicle.plate) {
+                    _plateShowPlate(selectedVehicle.plate);
+                    document.getElementById('btnNext').style.display = '';
+                } else {
+                    _plateShowEmpty();
+                }
             };
 
             window._plateConfirmManual = function() {
@@ -99,7 +102,8 @@ const totemViews = {
                         _plateManualMode = false;
                         document.getElementById('manualPlateInput').classList.remove('active');
                         document.getElementById('manualPlateInput').style.display = 'none';
-                        document.getElementById('manualButtons').classList.remove('active');
+                        document.getElementById('btnAnnulla').style.display = 'none';
+                        document.getElementById('btnConferma').style.display = 'none';
                         _plateShowPlate(value);
                         _plateGoToNext();
                     }
