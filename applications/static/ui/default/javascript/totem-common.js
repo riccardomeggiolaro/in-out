@@ -335,12 +335,12 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 }
 
 // --- Full-page success/failure message after weighing ---
-function showWeighingSuccess(isError = false) {
+function showWeighingSuccess(isError = false, message = null) {
     const container = document.querySelector('#pageContent .step');
     if (!container) return;
     const color = isError ? '#d32f2f' : '#2e7d32';
     const icon = isError ? '&#10008;' : '&#10004;';
-    const text = isError ? 'Pesata non riuscita' : 'Pesata completata';
+    const text = message || (isError ? 'Pesata non riuscita' : 'Pesata completata');
     const header = document.querySelector('.totem-header');
     if (header) header.style.display = 'none';
     container.innerHTML = `
@@ -492,17 +492,25 @@ async function executeGenericWeighing() {
 
     const url = `${pathname}/api/command-weigher/print${currentWeigherPath}`;
     try {
-        const r = await fetch(url).then(res => res.json());
+        const res = await fetch(url);
+        if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            const msg = (data && data.detail) || `Errore ${res.status}`;
+            showWeighingSuccess(true, msg);
+            buttons.forEach(b => { b.disabled = false; });
+            return;
+        }
+        const r = await res.json();
         if (r && r.command_details && r.command_details.command_executed === true) {
-            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+            const msg = r?.command_details?.error_message || "Errore durante la pesatura";
+            showWeighingSuccess(true, msg);
             buttons.forEach(b => { b.disabled = false; });
         }
     } catch (error) {
         console.error('Weighing error:', error);
-        // showSnackbar("snackbar", "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+        showWeighingSuccess(true, "Errore durante la pesatura");
         buttons.forEach(b => { b.disabled = false; });
     }
 }
