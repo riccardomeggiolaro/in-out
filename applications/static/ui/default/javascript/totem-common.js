@@ -351,7 +351,12 @@ function showWeighingSuccess(isError = false, message = null) {
     `;
     setTimeout(() => {
         if (header) header.style.display = '';
-        cancelTotem();
+        if (isError) {
+            // On error, go back to summary keeping all data
+            goTo('summary');
+        } else {
+            cancelTotem();
+        }
     }, 3000);
 }
 
