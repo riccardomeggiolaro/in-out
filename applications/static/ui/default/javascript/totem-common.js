@@ -120,7 +120,23 @@ function showView(name) {
     const step = document.querySelector('#pageContent .step');
     step.innerHTML = view.html();
 
-    // Inject logo at top-left of step
+    // Wrap content between h2 and step-buttons in step-content
+    const h2 = step.querySelector('h2');
+    const stepButtons = step.querySelector('.step-buttons');
+    const middleElements = [];
+    let sibling = h2 ? h2.nextElementSibling : step.firstElementChild;
+    while (sibling && sibling !== stepButtons) {
+        middleElements.push(sibling);
+        sibling = sibling.nextElementSibling;
+    }
+    if (middleElements.length > 0) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'step-content';
+        h2.after(wrapper);
+        middleElements.forEach(el => wrapper.appendChild(el));
+    }
+
+    // Inject logo at top-right of step
     const logoEl = document.createElement('div');
     logoEl.className = 'step-logo';
     logoEl.innerHTML = `<img src="/static/content/baronpesi_logo.png" alt="Logo">`;
