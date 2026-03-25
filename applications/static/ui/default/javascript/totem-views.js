@@ -31,18 +31,37 @@ const totemViews = {
             window._plateManualMode = false;
 
             window._plateFitText = function(el) {
-                el.style.transform = 'scaleX(1)';
-                requestAnimationFrame(() => {
-                    const parent = el.parentElement;
-                    const bands = parent.querySelectorAll('.plate-band');
-                    const bandsWidth = Array.from(bands).reduce((sum, b) => sum + b.offsetWidth, 0);
-                    const available = parent.offsetWidth - bandsWidth;
-                    const textWidth = el.scrollWidth;
-                    if (textWidth > available) {
-                        el.style.transform = `scaleX(${available / textWidth})`;
-                    }
-                });
+                if (!el || !el.parentElement) return;
+                const parent = el.parentElement;
+                const bands = parent.querySelectorAll('.plate-band');
+                const bandsWidth = Array.from(bands).reduce((sum, b) => sum + b.offsetWidth, 0);
+                const availW = parent.offsetWidth - bandsWidth;
+                const availH = parent.offsetHeight;
+                if (availW <= 0 || availH <= 0) return;
+
+                // Get text length for width calculation
+                const text = el.value !== undefined ? (el.value || el.placeholder || 'XXXXXXX') : (el.textContent || 'XXXXXXX');
+                const charCount = text.length || 7;
+
+                // Font height = available height * 0.8 (margin)
+                const fontByHeight = availH * 0.8;
+                // Font width = available width / chars * factor (monospace ~0.6 ratio)
+                const fontByWidth = (availW / (charCount * 0.65));
+                // Use the smaller of the two
+                const fontSize = Math.max(12, Math.min(fontByHeight, fontByWidth));
+
+                el.style.fontSize = fontSize + 'px';
+                el.style.transform = '';
             };
+
+            window._plateResizeObserver = new ResizeObserver(() => {
+                const plateText = document.getElementById('plateText');
+                const plateInput = document.getElementById('manualPlateInput');
+                if (plateText && plateText.style.display !== 'none') _plateFitText(plateText);
+                if (plateInput && plateInput.style.display !== 'none') _plateFitText(plateInput);
+            });
+            const plateDisplay = document.getElementById('plateDisplay');
+            if (plateDisplay) window._plateResizeObserver.observe(plateDisplay);
 
             window._plateShowPlate = function(plate) {
                 document.getElementById('plateDisplay').classList.remove('plate-empty');

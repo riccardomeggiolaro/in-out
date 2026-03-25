@@ -737,7 +737,7 @@ body {
     outline: none;
     background: transparent;
     text-align: center;
-    font-size: clamp(1.5rem, 20vh, 8rem);
+    font-size: 10px;
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
     letter-spacing: 4px;
@@ -758,7 +758,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(1.5rem, 20vh, 8rem);
+    font-size: 10px;
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
     letter-spacing: 4px;
