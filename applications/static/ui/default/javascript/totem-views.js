@@ -144,7 +144,7 @@ const totemViews = {
             <h2 id="subjectTitle">Ragione Sociale</h2>
             <ul class="suggestions-list suggestions-grid" id="subjectGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'plate')">Indietro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'plate?back=1')">Indietro</button>
                 <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('subjectGrid', 'vector')">Altro</button>
             </div>
         `,
@@ -168,7 +168,7 @@ const totemViews = {
             <h2>Vettore</h2>
             <ul class="suggestions-list suggestions-grid" id="vectorGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'subject')">Indietro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'subject?back=1')">Indietro</button>
                 <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('vectorGrid', 'driver')">Altro</button>
             </div>
         `,
@@ -189,7 +189,7 @@ const totemViews = {
             <h2>Autista</h2>
             <ul class="suggestions-list suggestions-grid" id="driverGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'vector')">Indietro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'vector?back=1')">Indietro</button>
                 <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('driverGrid', 'material')">Altro</button>
             </div>
         `,
@@ -210,7 +210,7 @@ const totemViews = {
             <h2>Materiale</h2>
             <ul class="suggestions-list suggestions-grid" id="materialGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'driver')">Indietro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : 'driver?back=1')">Indietro</button>
                 <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('materialGrid', 'summary')">Altro</button>
             </div>
         `,
