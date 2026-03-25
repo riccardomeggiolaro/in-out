@@ -10,6 +10,13 @@ const totemViews = {
             .plate-empty .plate-text { color: #ccc; letter-spacing: 12px; }
             .plate-input { display: none; font-size: 3.5rem; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase; border: none; outline: none; background: transparent; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; }
             .plate-input.active { display: flex; }
+            .virtual-keyboard { display: none; width: 100%; flex: 1; min-height: 0; padding: 4px 16px; box-sizing: border-box; flex-direction: column; gap: 4px; }
+            .virtual-keyboard.active { display: flex; }
+            .vk-row { display: flex; gap: 4px; flex: 1; justify-content: center; }
+            .vk-key { flex: 1; max-width: 10%; background: white; border: 2px solid #e0e0e0; border-radius: clamp(4px, 1vw, 8px); font-size: clamp(0.8rem, 4vh, 2.5rem); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: background 0.1s; user-select: none; -webkit-user-select: none; }
+            .vk-key:active { background: #e3effc; }
+            .vk-key.vk-wide { max-width: 15%; flex: 1.5; }
+            .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
         `,
         html: () => `
             <h2>Targa</h2>
@@ -18,8 +25,55 @@ const totemViews = {
                     <div class="plate-stars">&#9733;</div>
                 </div>
                 <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
-                <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="text" enterkeyhint="done">
+                <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
                 <div class="plate-band plate-band-right"></div>
+            </div>
+            <div class="virtual-keyboard" id="virtualKeyboard">
+                <div class="vk-row">
+                    <button class="vk-key" data-key="1">1</button>
+                    <button class="vk-key" data-key="2">2</button>
+                    <button class="vk-key" data-key="3">3</button>
+                    <button class="vk-key" data-key="4">4</button>
+                    <button class="vk-key" data-key="5">5</button>
+                    <button class="vk-key" data-key="6">6</button>
+                    <button class="vk-key" data-key="7">7</button>
+                    <button class="vk-key" data-key="8">8</button>
+                    <button class="vk-key" data-key="9">9</button>
+                    <button class="vk-key" data-key="0">0</button>
+                </div>
+                <div class="vk-row">
+                    <button class="vk-key" data-key="Q">Q</button>
+                    <button class="vk-key" data-key="W">W</button>
+                    <button class="vk-key" data-key="E">E</button>
+                    <button class="vk-key" data-key="R">R</button>
+                    <button class="vk-key" data-key="T">T</button>
+                    <button class="vk-key" data-key="Y">Y</button>
+                    <button class="vk-key" data-key="U">U</button>
+                    <button class="vk-key" data-key="I">I</button>
+                    <button class="vk-key" data-key="O">O</button>
+                    <button class="vk-key" data-key="P">P</button>
+                </div>
+                <div class="vk-row">
+                    <button class="vk-key" data-key="A">A</button>
+                    <button class="vk-key" data-key="S">S</button>
+                    <button class="vk-key" data-key="D">D</button>
+                    <button class="vk-key" data-key="F">F</button>
+                    <button class="vk-key" data-key="G">G</button>
+                    <button class="vk-key" data-key="H">H</button>
+                    <button class="vk-key" data-key="J">J</button>
+                    <button class="vk-key" data-key="K">K</button>
+                    <button class="vk-key" data-key="L">L</button>
+                </div>
+                <div class="vk-row">
+                    <button class="vk-key" data-key="Z">Z</button>
+                    <button class="vk-key" data-key="X">X</button>
+                    <button class="vk-key" data-key="C">C</button>
+                    <button class="vk-key" data-key="V">V</button>
+                    <button class="vk-key" data-key="B">B</button>
+                    <button class="vk-key" data-key="N">N</button>
+                    <button class="vk-key" data-key="M">M</button>
+                    <button class="vk-key vk-backspace" data-key="BACKSPACE">&#9003;</button>
+                </div>
             </div>
             <div class="step-buttons">
                 <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">Annulla</button>
@@ -88,15 +142,26 @@ const totemViews = {
                 goTo(hasReservation ? 'summary' : 'subject');
             };
 
+            window._manualPlateValue = '';
+
+            window._plateUpdateDisplay = function() {
+                const plateText = document.getElementById('plateText');
+                if (_manualPlateValue) {
+                    plateText.textContent = _manualPlateValue;
+                    document.getElementById('plateDisplay').classList.remove('plate-empty');
+                } else {
+                    plateText.innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
+                    document.getElementById('plateDisplay').classList.add('plate-empty');
+                }
+                plateText.style.display = '';
+                _plateFitText(plateText);
+            };
+
             window._plateEnterManual = function() {
                 _plateManualMode = true;
-                document.getElementById('plateDisplay').classList.remove('plate-empty');
-                document.getElementById('plateText').style.display = 'none';
-                const input = document.getElementById('manualPlateInput');
-                input.classList.add('active');
-                input.style.display = 'flex';
-                input.value = '';
-                setTimeout(() => { input.focus(); input.click(); }, 100);
+                _manualPlateValue = '';
+                _plateUpdateDisplay();
+                document.getElementById('virtualKeyboard').classList.add('active');
                 document.getElementById('btnAnnulla').style.display = '';
                 document.getElementById('btnConferma').style.display = '';
                 document.getElementById('btnNext').style.display = 'none';
@@ -104,8 +169,7 @@ const totemViews = {
 
             window._plateExitManual = function() {
                 _plateManualMode = false;
-                document.getElementById('manualPlateInput').classList.remove('active');
-                document.getElementById('manualPlateInput').style.display = 'none';
+                document.getElementById('virtualKeyboard').classList.remove('active');
                 document.getElementById('btnAnnulla').style.display = 'none';
                 document.getElementById('btnConferma').style.display = 'none';
                 if (selectedVehicle.plate) {
@@ -116,16 +180,22 @@ const totemViews = {
                 }
             };
 
+            // Virtual keyboard handler
+            document.getElementById('virtualKeyboard').addEventListener('click', (e) => {
+                const key = e.target.closest('.vk-key');
+                if (!key) return;
+                const val = key.dataset.key;
+                if (val === 'BACKSPACE') {
+                    _manualPlateValue = _manualPlateValue.slice(0, -1);
+                } else if (_manualPlateValue.length < 10) {
+                    _manualPlateValue += val;
+                }
+                _plateUpdateDisplay();
+            });
+
             window._plateConfirmManual = function() {
-                const value = document.getElementById('manualPlateInput').value.trim().toUpperCase();
-                if (!value) {
-                    // showSnackbar("snackbar", "Inserisci una targa valida", 'rgb(255, 208, 208)', 'black');
-                    return;
-                }
-                if (value.length > 10) {
-                    // showSnackbar("snackbar", "La targa può avere massimo 10 caratteri", 'rgb(255, 208, 208)', 'black');
-                    return;
-                }
+                const value = _manualPlateValue.trim().toUpperCase();
+                if (!value) return;
 
                 fetch(`/api/data${currentWeigherPath}`, {
                     method: 'PATCH',
@@ -135,11 +205,10 @@ const totemViews = {
                 .then(res => res.json())
                 .then(res => {
                     if (res.detail) {
-                        // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+                        // error
                     } else {
                         _plateManualMode = false;
-                        document.getElementById('manualPlateInput').classList.remove('active');
-                        document.getElementById('manualPlateInput').style.display = 'none';
+                        document.getElementById('virtualKeyboard').classList.remove('active');
                         document.getElementById('btnAnnulla').style.display = 'none';
                         document.getElementById('btnConferma').style.display = 'none';
                         _plateShowPlate(value);
@@ -151,12 +220,6 @@ const totemViews = {
             document.getElementById('plateDisplay').addEventListener('click', () => {
                 if (!_plateManualMode) _plateEnterManual();
             });
-
-            const plateInput = document.getElementById('manualPlateInput');
-            plateInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') _plateConfirmManual();
-            });
-            plateInput.addEventListener('input', () => _plateFitText(plateInput));
 
             window.onDataReady = function() {
                 if (selectedVehicle.plate) {
