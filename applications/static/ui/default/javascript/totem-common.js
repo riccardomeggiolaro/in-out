@@ -487,31 +487,49 @@ function updateInputIfNotFocused(inputId, value) {
     }
 }
 
-// --- Generic Weighing ---
-async function handleGenericWeighing() {
+// --- Weighing ---
+function _isSecondWeighing() {
+    const weight1 = selectedIdWeight !== null && selectedIdWeight["weight1"] !== null;
+    const hasNet = /[0-9]/.test(String(data_weight_realtime.potential_net_weight));
+    const hasTare = /[1-9]/.test(String((data_weight_realtime.tare || '').replace("PT", "")));
+    return hasNet || hasTare || weight1;
+}
+
+async function handleWeighing() {
     if (data_weight_realtime.over_max_theshold) {
-        confirmWeighing = executeGenericWeighing;
+        confirmWeighing = executeWeighing;
         document.getElementById('confirmDescription').innerHTML =
             `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
         openPopup('confirmPopup');
     } else {
-        await executeGenericWeighing();
+        await executeWeighing();
     }
 }
 
-async function executeGenericWeighing() {
+async function executeWeighing() {
     closePopup();
-    const buttons = document.querySelectorAll('.btn-weighing');
-    buttons.forEach(b => { b.disabled = true; });
+    const btns = document.querySelectorAll('.btn-weighing');
+    btns.forEach(b => { b.disabled = true; });
 
-    const url = `${pathname}/api/command-weigher/print${currentWeigherPath}`;
+    const isOut = _isSecondWeighing();
+    const url = isOut
+        ? `${pathname}/api/command-weigher/out${currentWeigherPath}`
+        : `${pathname}/api/command-weigher/in${currentWeigherPath}`;
+    const body = isOut
+        ? JSON.stringify({ id_selected: selectedIdWeight["id"] })
+        : JSON.stringify({ data_in_execution: dataInExecution });
+
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+        });
         if (!res.ok) {
             const data = await res.json().catch(() => null);
             const msg = (data && data.detail) || `Errore ${res.status}`;
             showWeighingSuccess(true, msg);
-            buttons.forEach(b => { b.disabled = false; });
+            btns.forEach(b => { b.disabled = false; });
             return;
         }
         const r = await res.json();
@@ -520,11 +538,13 @@ async function executeGenericWeighing() {
         } else {
             const msg = r?.command_details?.error_message || "Errore durante la pesatura";
             showWeighingSuccess(true, msg);
-            buttons.forEach(b => { b.disabled = false; });
+            btns.forEach(b => { b.disabled = false; });
         }
     } catch (error) {
         console.error('Weighing error:', error);
         showWeighingSuccess(true, "Errore durante la pesatura");
+        btns.forEach(b => { b.disabled = false; });
+    }
         buttons.forEach(b => { b.disabled = false; });
     }
 }
@@ -537,13 +557,7 @@ function handleNeedToConfirm(plate) {
 }
 
 async function confirmSemiAutomatic() {
-    const weight1 = selectedIdWeight !== null && selectedIdWeight["weight1"] !== null;
-    const hasTare = /[1-9]/.test(String(data_weight_realtime.tare || '').replace("PT", ""));
-    if (hasTare || weight1) {
-        await outWeighing();
-    } else {
-        await inWeighing();
-    }
+    await executeWeighing();
 }
 
 async function inWeighing() {
