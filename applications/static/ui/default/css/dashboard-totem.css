@@ -688,7 +688,7 @@ body {
     align-items: stretch;
     width: 80%;
     max-width: 95vw;
-    height: 60%;
+    height: 80%;
     background: #fff;
     border: 5px solid #333;
     border-radius: 12px;
@@ -736,7 +736,7 @@ body {
     outline: none;
     background: transparent;
     text-align: center;
-    font-size: clamp(2rem, 15vw, 8rem);
+    font-size: clamp(1.5rem, 5vw, 4rem);
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
     letter-spacing: 8px;
@@ -757,7 +757,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(2rem, 15vw, 8rem);
+    font-size: clamp(1.5rem, 5vw, 4rem);
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
     letter-spacing: 8px;
