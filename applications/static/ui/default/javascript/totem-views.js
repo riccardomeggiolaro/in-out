@@ -261,7 +261,7 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons summary-buttons">
-                <button class="btn btn-secondary" id="btnCancel" onclick="cancelTotem()">Annulla</button>
+                <button class="btn btn-secondary" id="btnBack" onclick="goTo('material?back=1')">Indietro</button>
                 <button class="btn btn-weighing" onclick="handleGenericWeighing()">Pesatura Generica</button>
             </div>
         `,
@@ -285,7 +285,7 @@ const totemViews = {
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {
-                    btnBack.onclick = () => goTo(isReservationMode ? 'plate' : 'material');
+                    btnBack.onclick = () => goTo(isReservationMode ? 'plate?back=1' : 'material?back=1');
                 }
             }
 
