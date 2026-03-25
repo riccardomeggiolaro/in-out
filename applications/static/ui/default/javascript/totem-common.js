@@ -336,26 +336,26 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 
 // --- Full-page success/failure message after weighing ---
 function showWeighingSuccess(isError = false, message = null) {
-    if (isError) {
-        // Show error as popup — user stays on summary
-        document.getElementById('errorDescription').textContent = message || 'Pesata non riuscita';
-        openPopup('errorPopup');
-        return;
-    }
-
     const container = document.querySelector('#pageContent .step');
     if (!container) return;
+    const color = isError ? '#d32f2f' : '#2e7d32';
+    const icon = isError ? '&#10008;' : '&#10004;';
+    const text = message || (isError ? 'Pesata non riuscita' : 'Pesata completata');
     const header = document.querySelector('.totem-header');
     if (header) header.style.display = 'none';
     container.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:2rem;">
-            <div style="font-size:5rem;color:#2e7d32;">&#10004;</div>
-            <h2 style="color:#2e7d32;font-size:2rem;margin-top:1rem;">Pesata completata</h2>
+            <div style="font-size:5rem;color:${color};">${icon}</div>
+            <h2 style="color:${color};font-size:2rem;margin-top:1rem;">${text}</h2>
         </div>
     `;
     setTimeout(() => {
         if (header) header.style.display = '';
-        cancelTotem();
+        if (isError) {
+            goTo('summary');
+        } else {
+            cancelTotem();
+        }
     }, 3000);
 }
 
