@@ -120,20 +120,11 @@ function showView(name) {
     const step = document.querySelector('#pageContent .step');
     step.innerHTML = view.html();
 
-    // Inject weight display into step-buttons
-    const stepButtons = step.querySelector('.step-buttons');
-    if (stepButtons) {
-        const logoEl = document.createElement('div');
-        logoEl.className = 'step-buttons-logo';
-        logoEl.innerHTML = `<img src="/static/content/baronpesi_logo.png" alt="Logo">`;
-        // Insert logo between the buttons
-        const buttons = stepButtons.querySelectorAll('.btn');
-        if (buttons.length >= 2) {
-            stepButtons.insertBefore(logoEl, buttons[1]);
-        } else {
-            stepButtons.prepend(logoEl);
-        }
-    }
+    // Inject logo at top-left of step
+    const logoEl = document.createElement('div');
+    logoEl.className = 'step-logo';
+    logoEl.innerHTML = `<img src="/static/content/baronpesi_logo.png" alt="Logo">`;
+    step.prepend(logoEl);
 
     // Re-trigger fade animation
     step.style.animation = 'none';
