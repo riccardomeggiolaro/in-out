@@ -30,18 +30,36 @@ const totemViews = {
         init: () => {
             window._plateManualMode = false;
 
+            window._plateFitText = function(el) {
+                el.style.transform = 'scaleX(1)';
+                requestAnimationFrame(() => {
+                    const parent = el.parentElement;
+                    const bands = parent.querySelectorAll('.plate-band');
+                    const bandsWidth = Array.from(bands).reduce((sum, b) => sum + b.offsetWidth, 0);
+                    const available = parent.offsetWidth - bandsWidth;
+                    const textWidth = el.scrollWidth;
+                    if (textWidth > available) {
+                        el.style.transform = `scaleX(${available / textWidth})`;
+                    }
+                });
+            };
+
             window._plateShowPlate = function(plate) {
                 document.getElementById('plateDisplay').classList.remove('plate-empty');
-                document.getElementById('plateText').textContent = plate;
-                document.getElementById('plateText').style.display = '';
+                const plateText = document.getElementById('plateText');
+                plateText.textContent = plate;
+                plateText.style.display = '';
                 document.getElementById('manualPlateInput').style.display = 'none';
+                _plateFitText(plateText);
             };
 
             window._plateShowEmpty = function() {
                 document.getElementById('plateDisplay').classList.add('plate-empty');
-                document.getElementById('plateText').innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
-                document.getElementById('plateText').style.display = '';
+                const plateText = document.getElementById('plateText');
+                plateText.innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
+                plateText.style.display = '';
                 document.getElementById('manualPlateInput').style.display = 'none';
+                _plateFitText(plateText);
             };
 
             window._plateGoToNext = function() {
@@ -114,9 +132,11 @@ const totemViews = {
                 if (!_plateManualMode) _plateEnterManual();
             });
 
-            document.getElementById('manualPlateInput').addEventListener('keydown', (e) => {
+            const plateInput = document.getElementById('manualPlateInput');
+            plateInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') _plateConfirmManual();
             });
+            plateInput.addEventListener('input', () => _plateFitText(plateInput));
 
             window.onDataReady = function() {
                 if (selectedVehicle.plate) {

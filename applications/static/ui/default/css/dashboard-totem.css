@@ -743,9 +743,9 @@ body {
     letter-spacing: 4px;
     text-transform: uppercase;
     color: #222;
-    padding: 0 10px;
+    padding: 0;
     min-width: 0;
-    transform: scaleX(0.7);
+    overflow: hidden;
 }
 
 .plate-input::placeholder {
@@ -764,6 +764,7 @@ body {
     letter-spacing: 4px;
     text-transform: uppercase;
     color: #222;
-    padding: 0 10px;
-    transform: scaleX(0.7);
+    padding: 0;
+    min-width: 0;
+    overflow: hidden;
 }
