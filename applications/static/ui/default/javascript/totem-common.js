@@ -207,58 +207,46 @@ function _renderPage(containerId) {
         container.appendChild(placeholder);
     }
 
-    // Update pagination controls
-    const arrows = document.getElementById(containerId + '-pagination');
-    if (arrows) {
-        const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
-        if (totalPages <= 1) {
-            arrows.style.display = 'none';
-        } else {
-            arrows.style.display = 'flex';
-            const prevBtn = arrows.querySelector('.pagination-prev');
-            const nextBtn = arrows.querySelector('.pagination-next');
-            const indicator = arrows.querySelector('.page-indicator');
-            if (prevBtn) prevBtn.disabled = state.currentPage === 0;
-            if (nextBtn) nextBtn.disabled = state.currentPage >= totalPages - 1;
-            if (indicator) indicator.textContent = `${state.currentPage + 1} / ${totalPages}`;
-        }
+    // Update "Altro"/"Avanti" button
+    _updateNextPageButton(containerId);
+}
+
+function _updateNextPageButton(containerId) {
+    const btn = document.getElementById('btnNextPage');
+    if (!btn) return;
+    const state = _paginationState[containerId];
+    if (!state) return;
+
+    const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+
+    if (state.items.length === 0) {
+        // No items — show "Avanti" to skip to next step
+        btn.textContent = 'Avanti';
+        btn.style.display = '';
+    } else if (totalPages > 1) {
+        // Multiple pages — show "Altro" to paginate
+        btn.textContent = 'Altro';
+        btn.style.display = '';
+    } else {
+        // Single page with items — hide button, must click item
+        btn.style.display = 'none';
     }
 }
 
-function _ensurePaginationArrows(containerId) {
-    let arrows = document.getElementById(containerId + '-pagination');
-    if (!arrows) {
-        arrows = document.createElement('div');
-        arrows.id = containerId + '-pagination';
-        arrows.className = 'pagination-arrows';
-        arrows.innerHTML = `
-            <button class="pagination-prev" aria-label="Pagina precedente">&#9664;</button>
-            <span class="page-indicator">1 / 1</span>
-            <button class="pagination-next" aria-label="Pagina successiva">&#9654;</button>
-        `;
-        const container = document.getElementById(containerId);
-        if (container && container.parentNode) {
-            container.parentNode.insertBefore(arrows, container.nextSibling);
-        }
-        arrows.querySelector('.pagination-prev').addEventListener('click', () => {
-            const state = _paginationState[containerId];
-            if (state && state.currentPage > 0) {
-                state.currentPage--;
-                _renderPage(containerId);
-            }
-        });
-        arrows.querySelector('.pagination-next').addEventListener('click', () => {
-            const state = _paginationState[containerId];
-            if (state) {
-                const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
-                if (state.currentPage < totalPages - 1) {
-                    state.currentPage++;
-                    _renderPage(containerId);
-                }
-            }
-        });
+function _nextPage(containerId, skipToUrl) {
+    const state = _paginationState[containerId];
+    if (!state) return;
+
+    // If no items, go to next step
+    if (state.items.length === 0) {
+        goTo(isFromSummary() ? 'summary' : skipToUrl);
+        return;
     }
-    return arrows;
+
+    // Paginate: go to next page, loop back to first
+    const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+    state.currentPage = (state.currentPage + 1) % totalPages;
+    _renderPage(containerId);
 }
 
 // --- Load items into a list/grid ---
@@ -336,7 +324,6 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             itemsPerPage
         };
 
-        _ensurePaginationArrows(containerId);
         _renderPage(containerId);
 
     } catch (error) {
