@@ -40,8 +40,9 @@ const totemViews = {
                 if (availW <= 0 || availH <= 0) return;
 
                 // Get text length for width calculation
-                const text = el.value !== undefined ? (el.value || el.placeholder || 'XXXXXXX') : (el.textContent || 'XXXXXXX');
-                const charCount = text.length || 7;
+                // Input always sizes for max 10 chars so it doesn't jump around
+                const isInput = el.value !== undefined;
+                const charCount = isInput ? 10 : (el.textContent || 'XXXXXXX').length || 7;
 
                 // Font height = available height * 0.8 (margin)
                 const fontByHeight = availH * 0.8;
