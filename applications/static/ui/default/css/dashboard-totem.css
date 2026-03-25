@@ -469,7 +469,7 @@ body {
 
 .step-buttons {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr auto 1fr;
     gap: 8px;
     padding: 0 16px;
     width: 100%;
@@ -479,7 +479,17 @@ body {
 }
 
 .step-buttons-logo {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.step-buttons-logo img {
+    height: 100%;
+    max-height: 100%;
+    width: auto;
+    object-fit: contain;
 }
 
 .btn {
