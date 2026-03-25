@@ -562,7 +562,8 @@ body {
 
 /* Summary card */
 .summary-card {
-    width: 100%;
+    width: auto;
+    margin: 0 16px;
     flex: 1;
     min-height: 0;
     background: white;
@@ -735,7 +736,7 @@ body {
     outline: none;
     background: transparent;
     text-align: center;
-    font-size: clamp(1.5rem, 8vw, 5rem);
+    font-size: clamp(2rem, 15vw, 8rem);
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
     letter-spacing: 8px;
@@ -756,7 +757,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(1.5rem, 8vw, 5rem);
+    font-size: clamp(2rem, 15vw, 8rem);
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
     letter-spacing: 8px;
