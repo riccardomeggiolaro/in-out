@@ -688,7 +688,7 @@ body {
     display: flex;
     align-items: stretch;
     width: 90%;
-    max-height: 80%;
+    max-height: 30%;
     aspect-ratio: 5 / 1.5;
     background: #fff;
     border: 5px solid #333;
@@ -697,6 +697,7 @@ body {
     box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px #e0e0e0;
     margin: 8px auto 0;
     transition: box-shadow 0.3s;
+    flex-shrink: 0;
 }
 
 .plate-band {
