@@ -289,15 +289,9 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
-        // No items available — show empty placeholders to maintain layout
+        // No items available — skip to next step automatically
         if (items.length === 0 && skipToUrl && !inputValue) {
-            const itemsPerPage = _calcItemsPerPage(containerId, items);
-            _paginationState[containerId] = {
-                items,
-                currentPage: 0,
-                itemsPerPage
-            };
-            _renderPage(containerId);
+            goTo(isFromSummary() ? 'summary' : skipToUrl);
             return;
         }
 
