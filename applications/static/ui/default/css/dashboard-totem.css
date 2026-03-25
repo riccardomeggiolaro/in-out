@@ -189,6 +189,21 @@ body {
     flex: 1;
     overflow: hidden;
     min-height: 0;
+    position: relative;
+}
+
+.step-logo {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+    height: calc((100% - 8px) / 6.5);
+    z-index: 1;
+}
+
+.step-logo img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
 }
 
 .step.active {
@@ -469,27 +484,13 @@ body {
 
 .step-buttons {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
     padding: 0 16px;
     width: 100%;
     flex: 1;
     min-height: 0;
     box-sizing: border-box;
-}
-
-.step-buttons-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-}
-
-.step-buttons-logo img {
-    height: 100%;
-    max-height: 100%;
-    width: auto;
-    object-fit: contain;
 }
 
 .btn {
