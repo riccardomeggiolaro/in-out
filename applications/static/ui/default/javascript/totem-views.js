@@ -18,7 +18,7 @@ const totemViews = {
                     <div class="plate-stars">&#9733;</div>
                 </div>
                 <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
-                <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off">
+                <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="text" enterkeyhint="done">
                 <div class="plate-band plate-band-right"></div>
             </div>
             <div class="step-buttons">
@@ -96,7 +96,7 @@ const totemViews = {
                 input.classList.add('active');
                 input.style.display = 'flex';
                 input.value = '';
-                input.focus();
+                setTimeout(() => { input.focus(); input.click(); }, 100);
                 document.getElementById('btnAnnulla').style.display = '';
                 document.getElementById('btnConferma').style.display = '';
                 document.getElementById('btnNext').style.display = 'none';
