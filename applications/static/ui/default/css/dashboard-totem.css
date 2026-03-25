@@ -563,7 +563,7 @@ body {
 /* Summary card */
 .summary-card {
     width: auto;
-    margin: 0 16px;
+    margin: 0 16px 8px 16px;
     flex: 1;
     min-height: 0;
     background: white;
