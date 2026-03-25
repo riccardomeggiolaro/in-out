@@ -686,9 +686,9 @@ body {
 .license-plate {
     display: flex;
     align-items: stretch;
-    width: 80%;
-    max-width: 95vw;
-    height: 80%;
+    max-width: 90%;
+    max-height: 80%;
+    aspect-ratio: 4 / 1;
     background: #fff;
     border: 5px solid #333;
     border-radius: 12px;
