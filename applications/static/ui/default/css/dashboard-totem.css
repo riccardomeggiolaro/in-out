@@ -297,7 +297,7 @@ body {
     gap: 8px;
     background: transparent;
     box-shadow: none;
-    padding: 0 16px;
+    padding: 0 16px 8px 16px;
     overflow: hidden;
     flex: 5;
     min-height: 0;
