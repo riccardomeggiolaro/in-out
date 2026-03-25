@@ -83,6 +83,8 @@ window.onclick = function(event) {
 };
 
 // --- SPA Navigation ---
+let _navigatingBack = false;
+
 function isFromSummary() {
     return _fromSummary;
 }
@@ -91,6 +93,7 @@ function goTo(page) {
     // Parse view name: 'plate', 'totem-plate.html', 'plate?from=summary'
     let viewName = page.replace(/^totem-/, '').replace(/\.html.*$/, '').split('?')[0];
     _fromSummary = page.includes('from=summary');
+    _navigatingBack = page.includes('back=1');
 
     if (viewName === 'dashboard-totem') {
         window.location.href = 'dashboard-totem.html';
@@ -289,9 +292,21 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
-        // No items available — skip to next step automatically
+        // No items available
         if (items.length === 0 && skipToUrl && !inputValue) {
-            goTo(isFromSummary() ? 'summary' : skipToUrl);
+            if (!_navigatingBack) {
+                // Going forward — skip to next step automatically
+                goTo(isFromSummary() ? 'summary' : skipToUrl);
+                return;
+            }
+            // Going back — show empty page with placeholders and "Avanti"
+            const itemsPerPage = _calcItemsPerPage(containerId, items);
+            _paginationState[containerId] = {
+                items,
+                currentPage: 0,
+                itemsPerPage
+            };
+            _renderPage(containerId);
             return;
         }
 
