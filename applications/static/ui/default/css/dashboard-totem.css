@@ -597,7 +597,7 @@ body {
 }
 
 .summary-label {
-    font-size: clamp(0.8rem, 2.5vh, 1.8rem);
+    font-size: clamp(0.7rem, 5vh, 3rem);
     color: #999;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -611,7 +611,7 @@ body {
 .summary-value {
     width: 50%;
     font-weight: 600;
-    font-size: clamp(0.9rem, 3vh, 2.2rem);
+    font-size: clamp(0.7rem, 5vh, 3rem);
     color: #333;
     text-align: center;
     padding-left: 12px;
