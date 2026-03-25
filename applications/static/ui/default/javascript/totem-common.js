@@ -344,19 +344,29 @@ function showWeighingSuccess(isError = false, message = null) {
     const header = document.querySelector('.totem-header');
     if (header) header.style.display = 'none';
     container.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:2rem;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:2rem;cursor:pointer;">
             <div style="font-size:5rem;color:${color};">${icon}</div>
             <h2 style="color:${color};font-size:2rem;margin-top:1rem;">${text}</h2>
         </div>
     `;
-    setTimeout(() => {
+
+    let dismissed = false;
+    const dismiss = () => {
+        if (dismissed) return;
+        dismissed = true;
+        clearTimeout(timer);
         if (header) header.style.display = '';
         if (isError) {
             goTo('summary');
         } else {
             cancelTotem();
         }
-    }, 3000);
+    };
+
+    const timer = setTimeout(dismiss, 3000);
+    if (isError) {
+        container.addEventListener('click', dismiss, { once: true });
+    }
 }
 
 // --- Cancel / reset all data ---
