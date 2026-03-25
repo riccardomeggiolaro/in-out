@@ -155,7 +155,7 @@ const totemViews = {
 
                 loadItems('subject', 'social_reason', '', 'subjectGrid', (item) => {
                     selectAndAdvance('subject', item, 'vector');
-                }, 'vector');
+                }, 'vector', 'plate');
             };
             window.onDataUpdate = null;
         }
@@ -176,7 +176,7 @@ const totemViews = {
             window.onDataReady = function() {
                 loadItems('vector', 'social_reason', '', 'vectorGrid', (item) => {
                     selectAndAdvance('vector', item, 'driver');
-                }, 'driver');
+                }, 'driver', 'subject');
             };
             window.onDataUpdate = null;
         }
@@ -197,7 +197,7 @@ const totemViews = {
             window.onDataReady = function() {
                 loadItems('driver', 'social_reason', '', 'driverGrid', (item) => {
                     selectAndAdvance('driver', item, 'material');
-                }, 'material');
+                }, 'material', 'vector');
             };
             window.onDataUpdate = null;
         }
@@ -218,7 +218,7 @@ const totemViews = {
             window.onDataReady = function() {
                 loadItems('material', 'description', '', 'materialGrid', (item) => {
                     selectAndAdvance('material', item, 'summary');
-                }, 'summary');
+                }, 'summary', 'driver');
             };
             window.onDataUpdate = null;
         }

@@ -253,7 +253,7 @@ function _nextPage(containerId, skipToUrl) {
 }
 
 // --- Load items into a list/grid ---
-async function loadItems(anagrafic, filterField, inputValue, containerId, onItemClick, skipToUrl) {
+async function loadItems(anagrafic, filterField, inputValue, containerId, onItemClick, skipToUrl, backToUrl) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
@@ -294,19 +294,13 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 
         // No items available
         if (items.length === 0 && skipToUrl && !inputValue) {
-            if (!_navigatingBack) {
+            if (_navigatingBack) {
+                // Going back — skip to previous step automatically
+                goTo(backToUrl ? backToUrl + '?back=1' : 'plate');
+            } else {
                 // Going forward — skip to next step automatically
                 goTo(isFromSummary() ? 'summary' : skipToUrl);
-                return;
             }
-            // Going back — show empty page with placeholders and "Avanti"
-            const itemsPerPage = _calcItemsPerPage(containerId, items);
-            _paginationState[containerId] = {
-                items,
-                currentPage: 0,
-                itemsPerPage
-            };
-            _renderPage(containerId);
             return;
         }
 
