@@ -739,17 +739,17 @@ body {
     font-size: clamp(1.5rem, 20vh, 8rem);
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
-    letter-spacing: 8px;
+    letter-spacing: 4px;
     text-transform: uppercase;
     color: #222;
     padding: 0 10px;
     min-width: 0;
+    transform: scaleX(0.7);
 }
 
 .plate-input::placeholder {
     color: #ccc;
-    letter-spacing: 6px;
-    font-size: 2.8rem;
+    letter-spacing: 4px;
 }
 
 .plate-text {
@@ -760,8 +760,9 @@ body {
     font-size: clamp(1.5rem, 20vh, 8rem);
     font-weight: 700;
     font-family: 'FE-Schrift', 'Courier New', monospace;
-    letter-spacing: 8px;
+    letter-spacing: 4px;
     text-transform: uppercase;
     color: #222;
     padding: 0 10px;
+    transform: scaleX(0.7);
 }
