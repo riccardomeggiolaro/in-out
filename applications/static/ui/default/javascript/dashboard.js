@@ -297,11 +297,19 @@ async function populateListIn() {
             if (item.subject && item.subject.social_reason) {
                 additionalInfo.push(item.subject.social_reason);
             }
+            // Material priority: 1) data_in_execution 2) in_out 3) access/reservation
+            const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
-            if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
-                additionalInfo.push(lastInOut.material.description);
+            let materialDesc = null;
+            if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
+                materialDesc = dataInExecution.material.description;
+            } else if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
+                materialDesc = lastInOut.material.description;
             } else if (item.material && item.material.description) {
-                additionalInfo.push(item.material.description);
+                materialDesc = item.material.description;
+            }
+            if (materialDesc) {
+                additionalInfo.push(materialDesc);
             }
             if (additionalInfo.length > 0) {
                 content += `<br><small style="font-size: 0.85em;">${additionalInfo.join(' - ')}</small>`;
