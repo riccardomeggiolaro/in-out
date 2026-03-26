@@ -388,15 +388,15 @@ async function populateListIn() {
             let subject = '';
             if (item.subject && item.subject.social_reason) subject = item.subject.social_reason;
 
-            // Materiale - priority: 1) data_in_execution 2) in_out 3) access/reservation
+            // Materiale - priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
             let material = '';
             const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
                 material = dataInExecution.material.description;
-            } else if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
-                material = lastInOut.material.description;
-            } else if (item.material && item.material.description) {
+            } else if (lastInOut && lastInOut.net_weight == null) {
+                material = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : '';
+            } else if (!lastInOut && item.material && item.material.description) {
                 material = item.material.description;
             }
 
