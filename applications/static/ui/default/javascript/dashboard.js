@@ -301,11 +301,12 @@ async function populateListIn() {
             const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             let materialDesc = null;
+            const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
             if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
                 materialDesc = dataInExecution.material.description;
-            } else if (lastInOut && lastInOut.net_weight == null) {
+            } else if (lastInOutOpen) {
                 materialDesc = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : null;
-            } else if (!lastInOut && item.material && item.material.description) {
+            } else if (item.material && item.material.description) {
                 materialDesc = item.material.description;
             }
             if (materialDesc) {

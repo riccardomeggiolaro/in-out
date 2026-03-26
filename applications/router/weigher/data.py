@@ -79,18 +79,20 @@ class DataRouter(CallbackWeigher):
 			access = get_access_by_id(data_dto.id_selected.id)
 			if access.status == AccessStatus.CLOSED:
 				raise HTTPException(status_code=400, detail=f"Non puoi selezionare l'accesso con id '{data_dto.id_selected.id}' perchè è già chiuso")
+			last_in_out_open = False
 			if len(access.in_out) > 0:
 				if access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
 					weight1 = access.in_out[-1].weight1.weight
 				elif access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is not None and access.number_in_out is not None:
 					weight1 = access.in_out[-1].weight2.weight
-				# in_out material has precedence (even if empty) over access material
+				# in_out material has precedence (even if empty) only if in_out is still open
 				if access.in_out[-1].net_weight is None:
+					last_in_out_open = True
 					if access.in_out[-1].idMaterial and access.in_out[-1].material:
 						id_material = access.in_out[-1].material.id
 						description_material = access.in_out[-1].material.description
-			else:
-				# No in_out — use access/reservation material
+			if not last_in_out_open:
+				# No in_out or last in_out is closed — use access/reservation material
 				if access.idMaterial and access.material:
 					id_material = access.material.id
 					description_material = access.material.description
@@ -139,18 +141,18 @@ class DataRouter(CallbackWeigher):
 		# Recalculate weight1 if an access was selected after the initial check
 		if data_dto.id_selected.id not in [-1, None] and weight1 is None:
 			access_for_weight = get_access_by_id(data_dto.id_selected.id)
+			recalc_in_out_open = False
 			if access_for_weight and len(access_for_weight.in_out) > 0:
 				if access_for_weight.in_out[-1].idWeight1 is not None and access_for_weight.in_out[-1].idWeight2 is None:
 					weight1 = access_for_weight.in_out[-1].weight1.weight
 				elif access_for_weight.in_out[-1].idWeight1 is not None and access_for_weight.in_out[-1].idWeight2 is not None and access_for_weight.number_in_out is not None:
 					weight1 = access_for_weight.in_out[-1].weight2.weight
-				# in_out material has precedence (even if empty)
 				if access_for_weight.in_out[-1].net_weight is None:
+					recalc_in_out_open = True
 					if access_for_weight.in_out[-1].idMaterial and access_for_weight.in_out[-1].material:
 						id_material = access_for_weight.in_out[-1].material.id
 						description_material = access_for_weight.in_out[-1].material.description
-			elif access_for_weight and access_for_weight.idMaterial and access_for_weight.material:
-				# No in_out — use access/reservation material
+			if not recalc_in_out_open and access_for_weight and access_for_weight.idMaterial and access_for_weight.material:
 				id_material = access_for_weight.material.id
 				description_material = access_for_weight.material.description
 		updated = None
