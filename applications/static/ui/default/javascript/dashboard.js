@@ -297,15 +297,15 @@ async function populateListIn() {
             if (item.subject && item.subject.social_reason) {
                 additionalInfo.push(item.subject.social_reason);
             }
-            // Material priority: 1) data_in_execution 2) in_out 3) access/reservation
+            // Material priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
             const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             let materialDesc = null;
             if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
                 materialDesc = dataInExecution.material.description;
-            } else if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
-                materialDesc = lastInOut.material.description;
-            } else if (item.material && item.material.description) {
+            } else if (lastInOut && lastInOut.net_weight == null) {
+                materialDesc = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : null;
+            } else if (!lastInOut && item.material && item.material.description) {
                 materialDesc = item.material.description;
             }
             if (materialDesc) {
