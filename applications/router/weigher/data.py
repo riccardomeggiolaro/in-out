@@ -36,26 +36,26 @@ class DataRouter(CallbackWeigher):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
 	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False, auto_select: Optional[bool] = False):
+		if auto_select:
+			# Auto-select anagrafiche by name/plate if they exist
+			if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
+				vehicle = get_data_by_attributes("vehicle", {"plate": data_dto.data_in_execution.vehicle.plate.upper()})
+				if vehicle:
+					data_dto.data_in_execution.vehicle.id = vehicle["id"]
+			if data_dto.data_in_execution.subject.social_reason and not data_dto.data_in_execution.subject.id:
+				subject = get_data_by_attributes("subject", {"social_reason": data_dto.data_in_execution.subject.social_reason})
+				if subject:
+					data_dto.data_in_execution.subject.id = subject["id"]
+			if data_dto.data_in_execution.vector.social_reason and not data_dto.data_in_execution.vector.id:
+				vector = get_data_by_attributes("vector", {"social_reason": data_dto.data_in_execution.vector.social_reason})
+				if vector:
+					data_dto.data_in_execution.vector.id = vector["id"]
+			if data_dto.data_in_execution.driver.social_reason and not data_dto.data_in_execution.driver.id:
+				driver = get_data_by_attributes("driver", {"social_reason": data_dto.data_in_execution.driver.social_reason})
+				if driver:
+					data_dto.data_in_execution.driver.id = driver["id"]
 		if request is not None:
 			if request.state.user.level == 1:
-				if auto_select:
-					# Auto-select anagrafiche by name/plate if they exist
-					if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
-						vehicle = get_data_by_attributes("vehicle", {"plate": data_dto.data_in_execution.vehicle.plate.upper()})
-						if vehicle:
-							data_dto.data_in_execution.vehicle.id = vehicle["id"]
-					if data_dto.data_in_execution.subject.social_reason and not data_dto.data_in_execution.subject.id:
-						subject = get_data_by_attributes("subject", {"social_reason": data_dto.data_in_execution.subject.social_reason})
-						if subject:
-							data_dto.data_in_execution.subject.id = subject["id"]
-					if data_dto.data_in_execution.vector.social_reason and not data_dto.data_in_execution.vector.id:
-						vector = get_data_by_attributes("vector", {"social_reason": data_dto.data_in_execution.vector.social_reason})
-						if vector:
-							data_dto.data_in_execution.vector.id = vector["id"]
-					if data_dto.data_in_execution.driver.social_reason and not data_dto.data_in_execution.driver.id:
-						driver = get_data_by_attributes("driver", {"social_reason": data_dto.data_in_execution.driver.social_reason})
-						if driver:
-							data_dto.data_in_execution.driver.id = driver["id"]
 				continues = True
 				if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
 					continues = False
