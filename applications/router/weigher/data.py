@@ -159,9 +159,9 @@ class DataRouter(CallbackWeigher):
 				# Just update material in data_in_execution memory, skip update_access
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["id"] = data_dto.data_in_execution.material.id
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["description"] = data_dto.data_in_execution.material.description
-				# If there's an in_out with weight1, also update material in the database
+				# If there's an incomplete in_out (weight1 done, weight2 not yet), update material in DB
 				access = get_access_by_id(id_selected)
-				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None:
+				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
 					body = SetAccessDTO(**data_dto.data_in_execution.dict())
 					update_access(id_selected, body, access.in_out[-1].id)
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
