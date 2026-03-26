@@ -129,6 +129,20 @@ class DataRouter(CallbackWeigher):
 						data_dto.data_in_execution.vehicle.id = access["idVehicle"]
 					else:
 						raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
+		# Recalculate weight1 if an access was selected after the initial check
+		if data_dto.id_selected.id not in [-1, None] and weight1 is None:
+			access_for_weight = get_access_by_id(data_dto.id_selected.id)
+			if access_for_weight and len(access_for_weight.in_out) > 0:
+				if access_for_weight.in_out[-1].idWeight1 is not None and access_for_weight.in_out[-1].idWeight2 is None:
+					weight1 = access_for_weight.in_out[-1].weight1.weight
+				elif access_for_weight.in_out[-1].idWeight1 is not None and access_for_weight.in_out[-1].idWeight2 is not None and access_for_weight.number_in_out is not None:
+					weight1 = access_for_weight.in_out[-1].weight2.weight
+				if access_for_weight.in_out[-1].net_weight is None and access_for_weight.in_out[-1].idMaterial:
+					id_material = access_for_weight.in_out[-1].material.id
+					description_material = access_for_weight.in_out[-1].material.description
+			if access_for_weight and access_for_weight.idMaterial and not id_material:
+				id_material = access_for_weight.material.id
+				description_material = access_for_weight.material.description
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and data_dto.id_selected.id is None:
