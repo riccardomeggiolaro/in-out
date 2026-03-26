@@ -207,11 +207,23 @@ const totemViews = {
                     if (res.detail) {
                         // error
                     } else {
+                        // Update state from PATCH response
+                        if (res.id_selected) selectedIdWeight = res.id_selected;
+                        if (res.data_in_execution) {
+                            dataInExecution = res.data_in_execution;
+                            const d = res.data_in_execution;
+                            selectedVehicle = { id: d.vehicle.id, plate: d.vehicle.plate || '' };
+                            if (d.typeSubject) selectedTypeSubject = d.typeSubject;
+                            selectedSubject = { id: d.subject.id, social_reason: d.subject.social_reason || '' };
+                            selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
+                            selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
+                            selectedMaterial = { id: d.material.id, description: d.material.description || '' };
+                        }
                         _plateManualMode = false;
                         document.getElementById('virtualKeyboard').classList.remove('active');
                         document.getElementById('btnAnnulla').style.display = 'none';
                         document.getElementById('btnConferma').style.display = 'none';
-                        _plateShowPlate(value);
+                        _plateShowPlate(selectedVehicle.plate || value);
                         _plateGoToNext();
                     }
                 });
