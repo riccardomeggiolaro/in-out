@@ -106,7 +106,10 @@ class DataRouter(CallbackWeigher):
 						data_dto.id_selected.id = access["id"]
 						checked = True
 				if checked is False:
-					raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
+					if auto_select:
+						data_dto.id_selected.id = access["id"]
+					else:
+						raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
 		elif data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
 			access = get_access_by_plate_if_uncomplete(data_dto.data_in_execution.vehicle.plate.upper())
 			if access:
@@ -121,7 +124,11 @@ class DataRouter(CallbackWeigher):
 						data_dto.data_in_execution.vehicle.id = access["idVehicle"]
 						checked = True
 				if checked is False:
-					raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
+					if auto_select:
+						data_dto.id_selected.id = access["id"]
+						data_dto.data_in_execution.vehicle.id = access["idVehicle"]
+					else:
+						raise HTTPException(status_code=400, detail=f"E' presente una prenotazione con la targa '{data_dto.data_in_execution.vehicle.plate}' ancora da chiudere")
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and data_dto.id_selected.id is None:
