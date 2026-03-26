@@ -79,7 +79,7 @@ class DataRouter(CallbackWeigher):
 			access = get_access_by_id(data_dto.id_selected.id)
 			if access.status == AccessStatus.CLOSED:
 				raise HTTPException(status_code=400, detail=f"Non puoi selezionare l'accesso con id '{data_dto.id_selected.id}' perchè è già chiuso")
-			if access.idMaterial:
+			if access.idMaterial and access.material:
 				id_material = access.material.id
 				description_material = access.material.description
 			if len(access.in_out) > 0:
@@ -87,7 +87,7 @@ class DataRouter(CallbackWeigher):
 					weight1 = access.in_out[-1].weight1.weight
 				elif access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is not None and access.number_in_out is not None:
 					weight1 = access.in_out[-1].weight2.weight
-				if access.in_out[-1].net_weight is None and access.in_out[-1].idMaterial:
+				if access.in_out[-1].net_weight is None and access.in_out[-1].idMaterial and access.in_out[-1].material:
 					id_material = access.in_out[-1].material.id
 					description_material = access.in_out[-1].material.description
 		if tare != "0" and data_dto.id_selected.id not in [-1, None] and weight1:
@@ -140,10 +140,10 @@ class DataRouter(CallbackWeigher):
 					weight1 = access_for_weight.in_out[-1].weight1.weight
 				elif access_for_weight.in_out[-1].idWeight1 is not None and access_for_weight.in_out[-1].idWeight2 is not None and access_for_weight.number_in_out is not None:
 					weight1 = access_for_weight.in_out[-1].weight2.weight
-				if access_for_weight.in_out[-1].net_weight is None and access_for_weight.in_out[-1].idMaterial:
+				if access_for_weight.in_out[-1].net_weight is None and access_for_weight.in_out[-1].idMaterial and access_for_weight.in_out[-1].material:
 					id_material = access_for_weight.in_out[-1].material.id
 					description_material = access_for_weight.in_out[-1].material.description
-			if access_for_weight and access_for_weight.idMaterial and not id_material:
+			if access_for_weight and access_for_weight.idMaterial and access_for_weight.material and not id_material:
 				id_material = access_for_weight.material.id
 				description_material = access_for_weight.material.description
 		updated = None
