@@ -149,14 +149,18 @@ class DataRouter(CallbackWeigher):
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and data_dto.id_selected.id is None:
-				# Allow material changes even for non-manual accesses
+				# Allow material changes even for non-manual accesses — only update in-memory, not the access
 				only_material = (
 					data_dto.data_in_execution.material.id is not None or
 					data_dto.data_in_execution.material.description is not None
 				) and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.subject.id and not data_dto.data_in_execution.vector.id and not data_dto.data_in_execution.driver.id
 				if not only_material:
 					raise HTTPException(status_code=400, detail=f"Non puoi modificare i dati di un accesso di tipo '{TypeAccess[type_current_access].value}'")
-				data_dto.id_selected.id = id_selected
+				# Just update material in data_in_execution memory, skip update_access
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["id"] = data_dto.data_in_execution.material.id
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["description"] = data_dto.data_in_execution.material.description
+				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				return data
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
 			access = get_access_by_id(id_selected)
 			idInOut = None
