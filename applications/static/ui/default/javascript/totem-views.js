@@ -365,7 +365,7 @@ const totemViews = {
             </div>
             <div class="step-buttons summary-buttons">
                 <button class="btn btn-secondary" id="btnBack" onclick="goTo('material?back=1')">Indietro</button>
-                <button class="btn btn-weighing" onclick="handleWeighing()">Pesata</button>
+                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">Entrata</button>
             </div>
         `,
         init: () => {
@@ -376,6 +376,8 @@ const totemViews = {
                 document.getElementById('summaryVector').textContent = selectedVector.social_reason || '-';
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
+                const btnWeigh = document.getElementById('btnWeigh');
+                if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? 'Uscita' : 'Entrata';
             }
 
             function applyReservationMode() {
