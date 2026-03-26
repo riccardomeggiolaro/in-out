@@ -365,7 +365,7 @@ const totemViews = {
             </div>
             <div class="step-buttons summary-buttons">
                 <button class="btn btn-secondary" id="btnBack" onclick="goTo('material?back=1')">Indietro</button>
-                <button class="btn btn-weighing" onclick="handleGenericWeighing()">Pesatura Generica</button>
+                <button class="btn btn-weighing" onclick="handleWeighing()">Pesata</button>
             </div>
         `,
         init: () => {
