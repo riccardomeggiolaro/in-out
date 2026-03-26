@@ -149,7 +149,14 @@ class DataRouter(CallbackWeigher):
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and data_dto.id_selected.id is None:
-				raise HTTPException(status_code=400, detail=f"Non puoi modificare i dati di un accesso di tipo '{TypeAccess[type_current_access].value}'")
+				# Allow material changes even for non-manual accesses
+				only_material = (
+					data_dto.data_in_execution.material.id is not None or
+					data_dto.data_in_execution.material.description is not None
+				) and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.subject.id and not data_dto.data_in_execution.vector.id and not data_dto.data_in_execution.driver.id
+				if not only_material:
+					raise HTTPException(status_code=400, detail=f"Non puoi modificare i dati di un accesso di tipo '{TypeAccess[type_current_access].value}'")
+				data_dto.id_selected.id = id_selected
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
 			access = get_access_by_id(id_selected)
 			idInOut = None
