@@ -545,8 +545,6 @@ async function executeWeighing() {
         showWeighingSuccess(true, "Errore durante la pesatura");
         btns.forEach(b => { b.disabled = false; });
     }
-        buttons.forEach(b => { b.disabled = false; });
-    }
 }
 
 function handleNeedToConfirm(plate) {
