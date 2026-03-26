@@ -159,6 +159,7 @@ class DataRouter(CallbackWeigher):
 				# Just update material in data_in_execution memory, skip update_access
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["id"] = data_dto.data_in_execution.material.id
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["description"] = data_dto.data_in_execution.material.description
+				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
