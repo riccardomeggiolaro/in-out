@@ -268,6 +268,9 @@ async function getData(path) {
             buttonsAndInputs.forEach(element => {
                 element.disabled = true;
             });
+            // Material remains editable for reservations
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = false;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
