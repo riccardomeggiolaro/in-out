@@ -35,7 +35,7 @@ class DataRouter(CallbackWeigher):
 	async def GetData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
-	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False, auto_select: Optional[bool] = False):
+	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False, auto_select: Optional[bool] = False, keep_selected: Optional[bool] = False):
 		if auto_select:
 			# Auto-select anagrafiche by name/plate if they exist
 			if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
@@ -94,6 +94,9 @@ class DataRouter(CallbackWeigher):
 			raise HTTPException(status_code=400, detail="E' necessario rimuovere la tara per selezionare il mezzo perchè ha già effettuato l'entrata.")
 		id_selected = weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]
 		type_current_access = weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"]
+		# Preserve current id_selected when keep_selected is true
+		if keep_selected and id_selected and data_dto.id_selected.id is None:
+			data_dto.id_selected.id = id_selected
 		if data_dto.data_in_execution.vehicle.id:
 			access = get_access_by_vehicle_id_if_uncomplete(data_dto.data_in_execution.vehicle.id)
 			if access:

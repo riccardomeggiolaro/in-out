@@ -410,7 +410,7 @@ function cancelTotem() {
 function selectAndAdvance(anagrafic, item, nextPage) {
     const id = parseInt(item.id);
 
-    fetch(`/api/data${currentWeigherPath}`, {
+    fetch(`/api/data${currentWeigherPath}&keep_selected=true`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data_in_execution: { [anagrafic]: { id } } })
