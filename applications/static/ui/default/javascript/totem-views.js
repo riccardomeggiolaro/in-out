@@ -197,7 +197,7 @@ const totemViews = {
                 const value = _manualPlateValue.trim().toUpperCase();
                 if (!value) return;
 
-                fetch(`/api/data${currentWeigherPath}`, {
+                fetch(`/api/data${currentWeigherPath}&auto_select=true`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data_in_execution: { vehicle: { plate: value } } })

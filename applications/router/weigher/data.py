@@ -7,6 +7,7 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
+from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.update_access import update_access
 from modules.md_database.interfaces.access import SetAccessDTO
 from modules.md_database.md_database import AccessStatus, TypeAccess
@@ -34,9 +35,27 @@ class DataRouter(CallbackWeigher):
 	async def GetData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
-	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False):
+	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False, auto_select: Optional[bool] = False):
 		if request is not None:
 			if request.state.user.level == 1:
+				if auto_select:
+					# Auto-select anagrafiche by name/plate if they exist
+					if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
+						vehicle = get_data_by_attributes("vehicle", {"plate": data_dto.data_in_execution.vehicle.plate.upper()})
+						if vehicle:
+							data_dto.data_in_execution.vehicle.id = vehicle["id"]
+					if data_dto.data_in_execution.subject.social_reason and not data_dto.data_in_execution.subject.id:
+						subject = get_data_by_attributes("subject", {"social_reason": data_dto.data_in_execution.subject.social_reason})
+						if subject:
+							data_dto.data_in_execution.subject.id = subject["id"]
+					if data_dto.data_in_execution.vector.social_reason and not data_dto.data_in_execution.vector.id:
+						vector = get_data_by_attributes("vector", {"social_reason": data_dto.data_in_execution.vector.social_reason})
+						if vector:
+							data_dto.data_in_execution.vector.id = vector["id"]
+					if data_dto.data_in_execution.driver.social_reason and not data_dto.data_in_execution.driver.id:
+						driver = get_data_by_attributes("driver", {"social_reason": data_dto.data_in_execution.driver.social_reason})
+						if driver:
+							data_dto.data_in_execution.driver.id = driver["id"]
 				continues = True
 				if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
 					continues = False
