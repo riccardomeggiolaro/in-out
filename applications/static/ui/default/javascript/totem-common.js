@@ -66,9 +66,24 @@ function initTotemPage() {
 
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
 
-    // Show initial view
+    // Show initial view — will be redirected by _resolveStartPage once data loads
+    _waitingForStartPage = true;
     showView('plate');
 }
+
+// Determine the furthest page the user can go based on already-filled data
+function _resolveStartPage() {
+    if (!_waitingForStartPage) return;
+    _waitingForStartPage = false;
+
+    if (selectedMaterial.id) { goTo('summary'); return; }
+    if (selectedDriver.id) { goTo('material'); return; }
+    if (selectedVector.id) { goTo('driver'); return; }
+    if (selectedSubject.id) { goTo('vector'); return; }
+    if (selectedVehicle.plate) { goTo('subject'); return; }
+    // Stay on plate
+}
+let _waitingForStartPage = false;
 
 window.onbeforeunload = function() {
     isRefreshing = true;
@@ -725,6 +740,7 @@ async function getData(path) {
         selectedMaterial = { id: obj.material.id, description: obj.material.description || '' };
 
         _dataLoaded = true;
+        _resolveStartPage();
         if (typeof onDataReady === 'function') onDataReady();
 
         if (res.id_selected.need_to_confirm === true) {
