@@ -1143,6 +1143,9 @@ function processRealtimeObject(obj) {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
                 element.disabled = true;
             });
+            // Material remains editable for reservations
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = false;
         }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
