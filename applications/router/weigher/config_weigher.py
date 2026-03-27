@@ -38,6 +38,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/configuration/use-preset-weight/{use_preset_weight}', self.SetUsePresetWeight, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/show-export-totals/{show_export_totals}', self.SetShowExportTotals, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/test-mode/{test_mode}', self.SetTestMode, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/configuration/totem-anagrafic/{anagrafic}/{status}', self.SetTotemAnagrafic, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-img', self.SavePathImg, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -56,6 +57,10 @@ class ConfigWeigher(CommandWeigherRouter):
 	async def GetAllConfiguration(self):
 		ver = { "ver": lb_config.g_config["ver"] }
 		app_api = lb_config.g_config["app_api"]
+		if "totem_anagrafiche" not in app_api:
+			app_api["totem_anagrafiche"] = {
+				"vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
+			}
 		configuration = {
 			**ver,
 			**app_api
@@ -114,6 +119,17 @@ class ConfigWeigher(CommandWeigherRouter):
 		lb_config.g_config["app_api"]["test_mode"] = test_mode
 		lb_config.saveconfig()
 		return { "test_mode": test_mode }
+
+	async def SetTotemAnagrafic(self, anagrafic: str, status: bool):
+		if "totem_anagrafiche" not in lb_config.g_config["app_api"]:
+			lb_config.g_config["app_api"]["totem_anagrafiche"] = {
+				"vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
+			}
+		if anagrafic not in ["vehicle", "subject", "vector", "driver", "material"]:
+			raise HTTPException(status_code=400, detail=f"Anagrafica '{anagrafic}' non valida")
+		lb_config.g_config["app_api"]["totem_anagrafiche"][anagrafic] = status
+		lb_config.saveconfig()
+		return lb_config.g_config["app_api"]["totem_anagrafiche"]
 
 	async def SavePathPdf(self, body: PathDTO):
 		path = body.path

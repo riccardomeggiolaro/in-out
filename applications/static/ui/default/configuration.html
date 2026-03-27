@@ -610,6 +610,30 @@
                 <br>
                 <div class="borders aliceblue">
                     <br>
+                    <h3>TOTEM</h3>
+                    <br>
+                    <label>Anagrafiche compilabili dall'utente sul totem:</label>
+                    <br><br>
+                    <label for="totem-vehicle">Veicolo (targa): </label>
+                    <input type="checkbox" id="totem-vehicle" onclick="setTotemAnagrafic('vehicle', this.checked)">
+                    <br>
+                    <label for="totem-subject">Soggetto: </label>
+                    <input type="checkbox" id="totem-subject" onclick="setTotemAnagrafic('subject', this.checked)">
+                    <br>
+                    <label for="totem-vector">Vettore: </label>
+                    <input type="checkbox" id="totem-vector" onclick="setTotemAnagrafic('vector', this.checked)">
+                    <br>
+                    <label for="totem-driver">Autista: </label>
+                    <input type="checkbox" id="totem-driver" onclick="setTotemAnagrafic('driver', this.checked)">
+                    <br>
+                    <label for="totem-material">Materiale: </label>
+                    <input type="checkbox" id="totem-material" onclick="setTotemAnagrafic('material', this.checked)">
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
                     <h3>MANUTENZIONE</h3>
                     <br>
                     <label>Riavvia il software: </label>
@@ -1736,6 +1760,14 @@
                 if (res.test_mode) testModeCheckbox.checked = true;
 
                 if (res.show_export_totals) showExportTotals.checked = true;
+
+                // Totem anagrafiche
+                const totemAnagrafiche = res.totem_anagrafiche || { vehicle: true, subject: false, vector: false, driver: false, material: true };
+                document.getElementById('totem-vehicle').checked = totemAnagrafiche.vehicle;
+                document.getElementById('totem-subject').checked = totemAnagrafiche.subject;
+                document.getElementById('totem-vector').checked = totemAnagrafiche.vector;
+                document.getElementById('totem-driver').checked = totemAnagrafiche.driver;
+                document.getElementById('totem-material').checked = totemAnagrafiche.material;
 
                 // Load sync folder configuration
                 if (res.sync_folder.remote_folder) {
@@ -3640,6 +3672,16 @@
 
         function setShowExportTotals(status) {
             fetch(`/api/config-weigher/configuration/show-export-totals/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setTotemAnagrafic(anagrafic, status) {
+            fetch(`/api/config-weigher/configuration/totem-anagrafic/${anagrafic}/${status}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
