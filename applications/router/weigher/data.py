@@ -195,6 +195,9 @@ class DataRouter(CallbackWeigher):
 				if len(access.in_out) > 0 and access.in_out[-1].net_weight is None:
 					idInOut = access.in_out[-1].id
 				update_access(id_selected, body, idInOut)
+				# Broadcast to dashboard/access list websockets
+				broadcast_data = json.dumps({"id": id_selected})
+				await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
