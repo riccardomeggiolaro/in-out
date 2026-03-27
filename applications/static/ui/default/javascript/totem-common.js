@@ -803,6 +803,7 @@ function processRealtimeObject(obj) {
         if (el('uniteMisure')) el('uniteMisure').innerText = obj.unite_measure !== undefined ? obj.unite_measure : 'N/A';
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
     } else if (obj.data_in_execution) {
+        const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         dataInExecution = obj.data_in_execution;
         selectedIdWeight = obj.id_selected;
         const d = obj.data_in_execution;
@@ -815,6 +816,12 @@ function processRealtimeObject(obj) {
         selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
         selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
         selectedMaterial = { id: d.material.id, description: d.material.description || '' };
+
+        // If access was deselected, go back to plate
+        if (prevId && (!obj.id_selected || obj.id_selected.id === null)) {
+            goTo('plate');
+            return;
+        }
 
         if (typeof onDataUpdate === 'function') onDataUpdate();
 
