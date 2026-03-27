@@ -30,6 +30,7 @@ let data_weight_realtime = {
 let return_pdf_copy_after_weighing = false;
 let test_mode = false;
 let instances = {};
+let totemAnagrafiche = { vehicle: true, subject: false, vector: false, driver: false, material: true };
 let access_id = null;
 let confirmWeighing = null;
 let minWeightValue = 0;
@@ -64,6 +65,7 @@ function initTotemPage() {
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         test_mode = res["test_mode"] || false;
         instances = res["weighers"];
+        totemAnagrafiche = res["totem_anagrafiche"] || { vehicle: true, subject: false, vector: false, driver: false, material: true };
     });
 
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
@@ -85,8 +87,8 @@ function _resolveStartPage() {
     if (hasAccess) {
         const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
         if (isReservation) {
-            // Reservation: only material can be filled from totem
-            goTo(!_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
+            // Reservation: only material can be filled from totem (if enabled)
+            goTo(totemAnagrafiche.material && !_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
         } else {
             // Manual access: go to first empty field
             const dest = _findNextEmptyStep('plate');
@@ -103,12 +105,13 @@ function _resolveStartPage() {
 let _waitingForStartPage = false;
 
 // Find the next step with an empty field, starting after the given step
+// Skips steps that are disabled in totem config
 function _findNextEmptyStep(afterStep) {
     const steps = [
-        { name: 'subject', filled: !!selectedSubject.id },
-        { name: 'vector', filled: !!selectedVector.id },
-        { name: 'driver', filled: !!selectedDriver.id },
-        { name: 'material', filled: !!selectedMaterial.id },
+        { name: 'subject', filled: !!selectedSubject.id, enabled: totemAnagrafiche.subject },
+        { name: 'vector', filled: !!selectedVector.id, enabled: totemAnagrafiche.vector },
+        { name: 'driver', filled: !!selectedDriver.id, enabled: totemAnagrafiche.driver },
+        { name: 'material', filled: !!selectedMaterial.id, enabled: totemAnagrafiche.material },
     ];
     let startIndex = 0;
     if (afterStep === 'plate') startIndex = 0;
@@ -118,7 +121,7 @@ function _findNextEmptyStep(afterStep) {
     else if (afterStep === 'material') return null;
 
     for (let i = startIndex; i < steps.length; i++) {
-        if (!steps[i].filled) return steps[i].name;
+        if (steps[i].enabled && !steps[i].filled) return steps[i].name;
     }
     return null;
 }
@@ -882,7 +885,7 @@ function processRealtimeObject(obj) {
             const isReservation = obj.type && obj.type !== "MANUALLY";
             if (isReservation) {
                 // Reservation: only material can be filled from totem
-                goTo(!_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
+                goTo(totemAnagrafiche.material && !_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
             } else {
                 // Manual access: go to first empty field
                 const dest = _findNextEmptyStep('plate');

@@ -140,7 +140,7 @@ const totemViews = {
                 if (isFromSummary()) { goTo('summary'); return; }
                 const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
                 if (hasReservation) {
-                    goTo(_reservationHasMaterial ? 'summary' : 'material');
+                    goTo(totemAnagrafiche.material && !_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
                 } else {
                     const dest = _findNextEmptyStep('plate');
                     goTo(dest || 'summary');
@@ -408,6 +408,19 @@ const totemViews = {
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
                 const btnWeigh = document.getElementById('btnWeigh');
                 if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? 'Uscita' : 'Entrata';
+
+                // Hide rows for disabled anagrafiche
+                const rowVisibility = {
+                    rowPlate: totemAnagrafiche.vehicle,
+                    rowSubject: totemAnagrafiche.subject,
+                    rowVector: totemAnagrafiche.vector,
+                    rowDriver: totemAnagrafiche.driver,
+                    rowMaterial: totemAnagrafiche.material,
+                };
+                Object.entries(rowVisibility).forEach(([id, visible]) => {
+                    const row = document.getElementById(id);
+                    if (row) row.style.display = visible ? '' : 'none';
+                });
             }
 
             function applyReservationMode() {
