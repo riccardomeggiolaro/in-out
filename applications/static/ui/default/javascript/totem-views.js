@@ -140,7 +140,7 @@ const totemViews = {
                 if (isFromSummary()) { goTo('summary'); return; }
                 const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
                 if (hasReservation) {
-                    goTo(selectedMaterial.id ? 'summary' : 'material');
+                    goTo(_reservationHasMaterial ? 'summary' : 'material');
                 } else {
                     const dest = _findNextEmptyStep('plate');
                     goTo(dest || 'summary');
@@ -420,7 +420,7 @@ const totemViews = {
                 });
                 // Material: locked only if reservation has it already set
                 const rowMaterial = document.getElementById('rowMaterial');
-                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && !!selectedMaterial.id);
+                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && _reservationHasMaterial);
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {

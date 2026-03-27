@@ -27,6 +27,7 @@ let selectedIdWeight;
 let numberInOutSelectedIdWeight;
 let dataInExecution;
 let currentAccessType = "MANUALLY";
+let _reservationHasMaterial = false;
 
 let isRefreshing = false;
 
@@ -282,6 +283,7 @@ async function getData(path) {
             handleNeedToConfirm(obj.vehicle.plate.replace("⭐", ""));
         }
         
+        _reservationHasMaterial = res.reservation_has_material || false;
         if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
             const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
             buttonsAndInputs.forEach(element => {
@@ -289,7 +291,7 @@ async function getData(path) {
             });
             // Material remains editable for reservations
             const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = !!selectedIdMaterial;
+            if (materialInput) materialInput.disabled = _reservationHasMaterial;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -1122,6 +1124,7 @@ function processRealtimeObject(obj) {
         // }
     } else if (obj.data_in_execution) {
         currentAccessType = obj.type || "MANUALLY";
+        _reservationHasMaterial = obj.reservation_has_material || false;
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;
@@ -1155,7 +1158,7 @@ function processRealtimeObject(obj) {
             });
             // Material remains editable for reservations
             const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = !!selectedIdMaterial;
+            if (materialInput) materialInput.disabled = _reservationHasMaterial;
         }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {

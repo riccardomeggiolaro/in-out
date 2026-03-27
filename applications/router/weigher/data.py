@@ -248,12 +248,14 @@ class DataRouter(CallbackWeigher):
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idAccess=data_dto.id_selected.id)
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_material"] = access.idMaterial is not None
 		else:
 			# FUNZIONE UTILE PER GLI AGGIORNAMENTI RAPIDI DEI DATI IN ESECUZIONE DALLA DASHBAORD
 			if request and updated:
 				await self.DeleteData(instance=instance)
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_material"] = access.idMaterial is not None
 			else:
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
