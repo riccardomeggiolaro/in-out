@@ -138,8 +138,13 @@ const totemViews = {
 
             window._plateGoToNext = function() {
                 if (isFromSummary()) { goTo('summary'); return; }
-                const dest = _findNextEmptyStep('plate');
-                goTo(dest || 'summary');
+                const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+                if (hasReservation) {
+                    goTo(selectedMaterial.id ? 'summary' : 'material');
+                } else {
+                    const dest = _findNextEmptyStep('plate');
+                    goTo(dest || 'summary');
+                }
             };
 
             window._manualPlateValue = '';
@@ -408,26 +413,11 @@ const totemViews = {
             function applyReservationMode() {
                 const isReservationMode = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
 
-                // Plate is always locked when reservation is selected
-                const rowPlate = document.getElementById('rowPlate');
-                if (rowPlate) rowPlate.classList.toggle('disabled', isReservationMode);
-
-                // Other fields: locked only if already filled on the reservation
-                if (isReservationMode) {
-                    const rowSubject = document.getElementById('rowSubject');
-                    if (rowSubject) rowSubject.classList.toggle('disabled', !!selectedSubject.id);
-                    const rowVector = document.getElementById('rowVector');
-                    if (rowVector) rowVector.classList.toggle('disabled', !!selectedVector.id);
-                    const rowDriver = document.getElementById('rowDriver');
-                    if (rowDriver) rowDriver.classList.toggle('disabled', !!selectedDriver.id);
-                    const rowMaterial = document.getElementById('rowMaterial');
-                    if (rowMaterial) rowMaterial.classList.toggle('disabled', !!selectedMaterial.id);
-                } else {
-                    ['rowSubject', 'rowVector', 'rowDriver', 'rowMaterial'].forEach(id => {
-                        const row = document.getElementById(id);
-                        if (row) row.classList.remove('disabled');
-                    });
-                }
+                // All fields locked except material when reservation is selected
+                ['rowPlate', 'rowSubject', 'rowVector', 'rowDriver'].forEach(id => {
+                    const row = document.getElementById(id);
+                    if (row) row.classList.toggle('disabled', isReservationMode);
+                });
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {

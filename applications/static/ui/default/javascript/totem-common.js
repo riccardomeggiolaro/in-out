@@ -78,6 +78,14 @@ function _resolveStartPage() {
 
     if (!selectedVehicle.plate) return; // Stay on plate
 
+    // With reservation: go to material if empty, otherwise summary
+    const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+    if (hasReservation) {
+        goTo(selectedMaterial.id ? 'summary' : 'material');
+        return;
+    }
+
+    // Without reservation: go to first empty step
     const dest = _findNextEmptyStep('plate');
     if (dest) { goTo(dest); }
     else { goTo('summary'); }
@@ -97,12 +105,12 @@ function _findNextEmptyStep(afterStep) {
     else if (afterStep === 'subject') startIndex = 1;
     else if (afterStep === 'vector') startIndex = 2;
     else if (afterStep === 'driver') startIndex = 3;
-    else if (afterStep === 'material') return null; // already at the end
+    else if (afterStep === 'material') return null;
 
     for (let i = startIndex; i < steps.length; i++) {
         if (!steps[i].filled) return steps[i].name;
     }
-    return null; // all filled
+    return null;
 }
 
 window.onbeforeunload = function() {
