@@ -138,8 +138,8 @@ const totemViews = {
 
             window._plateGoToNext = function() {
                 if (isFromSummary()) { goTo('summary'); return; }
-                const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-                goTo(hasReservation ? 'summary' : 'subject');
+                const dest = _findNextEmptyStep('plate');
+                goTo(dest || 'summary');
             };
 
             window._manualPlateValue = '';
