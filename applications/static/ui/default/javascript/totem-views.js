@@ -413,11 +413,14 @@ const totemViews = {
             function applyReservationMode() {
                 const isReservationMode = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
 
-                // All fields locked except material when reservation is selected
+                // All fields locked except material (if empty) when reservation is selected
                 ['rowPlate', 'rowSubject', 'rowVector', 'rowDriver'].forEach(id => {
                     const row = document.getElementById(id);
                     if (row) row.classList.toggle('disabled', isReservationMode);
                 });
+                // Material: locked only if reservation has it already set
+                const rowMaterial = document.getElementById('rowMaterial');
+                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && !!selectedMaterial.id);
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {

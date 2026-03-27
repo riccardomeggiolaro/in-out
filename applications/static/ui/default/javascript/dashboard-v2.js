@@ -289,7 +289,7 @@ async function getData(path) {
             });
             // Material remains editable for reservations
             const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = false;
+            if (materialInput) materialInput.disabled = !!selectedIdMaterial;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -1155,7 +1155,7 @@ function processRealtimeObject(obj) {
             });
             // Material remains editable for reservations
             const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = false;
+            if (materialInput) materialInput.disabled = !!selectedIdMaterial;
         }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
