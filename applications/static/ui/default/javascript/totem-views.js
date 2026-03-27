@@ -197,27 +197,30 @@ const totemViews = {
                 const value = _manualPlateValue.trim().toUpperCase();
                 if (!value) return;
 
-                fetch(`/api/data${currentWeigherPath}&auto_select=true`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data_in_execution: { vehicle: { plate: value } } })
-                })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.detail) {
-                        // error
-                    } else {
-                        // Update state from PATCH response
-                        if (res.id_selected) selectedIdWeight = res.id_selected;
-                        if (res.data_in_execution) {
-                            dataInExecution = res.data_in_execution;
-                            const d = res.data_in_execution;
-                            selectedVehicle = { id: d.vehicle.id, plate: d.vehicle.plate || '' };
-                            if (d.typeSubject) selectedTypeSubject = d.typeSubject;
-                            selectedSubject = { id: d.subject.id, social_reason: d.subject.social_reason || '' };
-                            selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
-                            selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
-                            selectedMaterial = { id: d.material.id, description: d.material.description || '' };
+                // Deselect current access first, then set new plate with auto_select
+                const hasAccess = selectedIdWeight && selectedIdWeight.id;
+                const doSetPlate = () => {
+                    fetch(`/api/data${currentWeigherPath}&auto_select=true`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data_in_execution: { vehicle: { plate: value } } })
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.detail) {
+                            // error
+                        } else {
+                            // Update state from PATCH response
+                            if (res.id_selected) selectedIdWeight = res.id_selected;
+                            if (res.data_in_execution) {
+                                dataInExecution = res.data_in_execution;
+                                const d = res.data_in_execution;
+                                selectedVehicle = { id: d.vehicle.id, plate: d.vehicle.plate || '' };
+                                if (d.typeSubject) selectedTypeSubject = d.typeSubject;
+                                selectedSubject = { id: d.subject.id, social_reason: d.subject.social_reason || '' };
+                                selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
+                                selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
+                                selectedMaterial = { id: d.material.id, description: d.material.description || '' };
                         }
                         _plateManualMode = false;
                         document.getElementById('virtualKeyboard').classList.remove('active');
@@ -227,6 +230,16 @@ const totemViews = {
                         _plateGoToNext();
                     }
                 });
+                };
+
+                if (hasAccess) {
+                    // Deselect current access before setting new plate
+                    fetch(`/api/data${currentWeigherPath}`, {
+                        method: 'DELETE'
+                    }).then(() => doSetPlate());
+                } else {
+                    doSetPlate();
+                }
             };
 
             document.getElementById('plateDisplay').addEventListener('click', () => {
