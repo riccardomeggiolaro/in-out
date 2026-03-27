@@ -16,6 +16,7 @@ let selectedMaterial = { id: null, description: '' };
 let dataInExecution = null;
 let selectedIdWeight = null;
 let _reservationHasMaterial = false;
+let weighers_data_type = "MANUALLY";
 let data_weight_realtime = {
     status: undefined,
     net_weight: undefined,
@@ -79,14 +80,22 @@ function _resolveStartPage() {
 
     if (!selectedVehicle.plate) return; // Stay on plate
 
-    // With reservation: go to material if empty, otherwise summary
-    const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-    if (hasReservation) {
-        goTo(_reservationHasMaterial ? 'summary' : 'material');
+    const hasAccess = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+
+    if (hasAccess) {
+        const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
+        if (isReservation) {
+            // Reservation: only material can be filled from totem
+            goTo(!_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
+        } else {
+            // Manual access: go to first empty field
+            const dest = _findNextEmptyStep('plate');
+            goTo(dest || 'summary');
+        }
         return;
     }
 
-    // Without reservation: go to first empty step
+    // No access: go to first empty step
     const dest = _findNextEmptyStep('plate');
     if (dest) { goTo(dest); }
     else { goTo('summary'); }
@@ -772,6 +781,7 @@ async function getData(path) {
         dataInExecution = res["data_in_execution"];
         selectedIdWeight = res["id_selected"];
         _reservationHasMaterial = res.reservation_has_material || false;
+        weighers_data_type = res.type || "MANUALLY";
         const obj = res["data_in_execution"];
 
         selectedVehicle = { id: obj.vehicle.id, plate: obj.vehicle.plate || '' };
@@ -847,6 +857,7 @@ function processRealtimeObject(obj) {
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         _reservationHasMaterial = obj.reservation_has_material || false;
+        weighers_data_type = obj.type || "MANUALLY";
         dataInExecution = obj.data_in_execution;
         selectedIdWeight = obj.id_selected;
         const d = obj.data_in_execution;
@@ -866,9 +877,17 @@ function processRealtimeObject(obj) {
             return;
         }
 
-        // If a new access was selected (from dashboard), go to summary
+        // If a new access was selected (from dashboard), navigate to first empty field or summary
         if (!prevId && obj.id_selected && obj.id_selected.id !== null) {
-            goTo('summary');
+            const isReservation = obj.type && obj.type !== "MANUALLY";
+            if (isReservation) {
+                // Reservation: only material can be filled from totem
+                goTo(!_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
+            } else {
+                // Manual access: go to first empty field
+                const dest = _findNextEmptyStep('plate');
+                goTo(dest || 'summary');
+            }
             return;
         }
 
