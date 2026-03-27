@@ -622,9 +622,11 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                     suggestion.accesses[suggestion.accesses.length - 1].number_in_out === null &&
                     suggestion.accesses[suggestion.accesses.length - 1].status !== 'Chiusa'
                 ) {
-                    if (suggestion.accesses[suggestion.accesses.length - 1].in_out.length === 0 ||
-                        suggestion.accesses[suggestion.accesses.length - 1].in_out.length > 0 && 
-                        suggestion.accesses[suggestion.accesses.length - 1].in_out[suggestion.accesses[suggestion.accesses.length - 1].in_out.length - 1].idWeight2 !== null
+                    const lastAccess = suggestion.accesses[suggestion.accesses.length - 1];
+                    const lastAccessInOut = lastAccess.in_out || [];
+                    if (lastAccessInOut.length === 0 ||
+                        lastAccessInOut.length > 0 &&
+                        lastAccessInOut[lastAccessInOut.length - 1].idWeight2 !== null
                     ) {
                         li.classList.add('permanent-associated');
                         text = `<span>${text}</span><span>⭐</span>`;
