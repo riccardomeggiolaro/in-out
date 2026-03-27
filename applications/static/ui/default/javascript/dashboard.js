@@ -26,6 +26,7 @@ let selectedIdMaterial;
 let selectedIdWeight;
 let numberInOutSelectedIdWeight;
 let dataInExecution;
+let currentAccessType = "MANUALLY";
 
 let isRefreshing = false;
 
@@ -233,6 +234,7 @@ async function getData(path) {
     })
     .then(res => {
         const type = res.type;
+        currentAccessType = type || "MANUALLY";
         const number_in_out = res.number_in_out;
         const weight1 = res.id_selected.weight1;
         dataInExecution = res["data_in_execution"];
@@ -1016,6 +1018,7 @@ function processRealtimeObject(obj) {
         //     outButton.disabled = true;
         // }
     } else if (obj.data_in_execution) {
+        currentAccessType = obj.type || "MANUALLY";
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;
@@ -1038,7 +1041,7 @@ function processRealtimeObject(obj) {
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
 
-        if (obj.type === "MANUALLY") {
+        if (currentAccessType === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
                 element.disabled = false;
             });
