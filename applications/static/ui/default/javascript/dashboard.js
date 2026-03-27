@@ -270,9 +270,9 @@ async function getData(path) {
             buttonsAndInputs.forEach(element => {
                 element.disabled = true;
             });
-            // Material remains editable for reservations
+            // Material editable only if not already set on reservation
             const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = false;
+            if (materialInput) materialInput.disabled = !!selectedIdMaterial;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -1049,9 +1049,9 @@ function processRealtimeObject(obj) {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
                 element.disabled = true;
             });
-            // Material remains editable for reservations
+            // Material editable only if not already set on reservation
             const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = false;
+            if (materialInput) materialInput.disabled = !!selectedIdMaterial;
         }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
@@ -1414,7 +1414,7 @@ function enableAllElements() {
             element.disabled = true;
         });
         const materialInput = document.getElementById('currentDescriptionMaterial');
-        if (materialInput) materialInput.disabled = false;
+        if (materialInput) materialInput.disabled = !!selectedIdMaterial;
     }
 }
 

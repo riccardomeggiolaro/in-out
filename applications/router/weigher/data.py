@@ -165,17 +165,19 @@ class DataRouter(CallbackWeigher):
 				) and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.subject.id and not data_dto.data_in_execution.vector.id and not data_dto.data_in_execution.driver.id
 				if not only_material:
 					raise HTTPException(status_code=400, detail=f"Non puoi modificare i dati di un accesso di tipo '{TypeAccess[type_current_access].value}'")
+				# Block if reservation already has material assigned
+				access = get_access_by_id(id_selected)
+				if access and access.idMaterial:
+					raise HTTPException(status_code=400, detail="Il materiale è già impostato sulla prenotazione")
 				# Update material in data_in_execution memory
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["id"] = data_dto.data_in_execution.material.id
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["description"] = data_dto.data_in_execution.material.description
 				# If there's an incomplete in_out, update material in DB on the in_out
-				access = get_access_by_id(id_selected)
 				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
 					body = SetAccessDTO(**data_dto.data_in_execution.dict())
 					update_access(id_selected, body, access.in_out[-1].id)
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-				return data
 				return data
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
 			access = get_access_by_id(id_selected)
