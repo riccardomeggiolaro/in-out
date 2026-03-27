@@ -15,6 +15,7 @@ let selectedMaterial = { id: null, description: '' };
 
 let dataInExecution = null;
 let selectedIdWeight = null;
+let _reservationHasMaterial = false;
 let data_weight_realtime = {
     status: undefined,
     net_weight: undefined,
@@ -81,7 +82,7 @@ function _resolveStartPage() {
     // With reservation: go to material if empty, otherwise summary
     const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
     if (hasReservation) {
-        goTo(selectedMaterial.id ? 'summary' : 'material');
+        goTo(_reservationHasMaterial ? 'summary' : 'material');
         return;
     }
 
@@ -770,6 +771,7 @@ async function getData(path) {
         const res = await fetch(`/api/data${path}`).then(r => r.json());
         dataInExecution = res["data_in_execution"];
         selectedIdWeight = res["id_selected"];
+        _reservationHasMaterial = res.reservation_has_material || false;
         const obj = res["data_in_execution"];
 
         selectedVehicle = { id: obj.vehicle.id, plate: obj.vehicle.plate || '' };
@@ -844,6 +846,7 @@ function processRealtimeObject(obj) {
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
+        _reservationHasMaterial = obj.reservation_has_material || false;
         dataInExecution = obj.data_in_execution;
         selectedIdWeight = obj.id_selected;
         const d = obj.data_in_execution;
