@@ -182,18 +182,25 @@ class DataRouter(CallbackWeigher):
 			if access and len(access.in_out) > 0:
 				idInOut = access.in_out[-1].id
 			updated = update_access(id_selected, body, idInOut)
-			# Refresh material from the updated in_out/access
-			if idInOut:
-				updated_access = get_access_by_id(id_selected)
-				if updated_access and len(updated_access.in_out) > 0:
-					last_io = updated_access.in_out[-1]
-					if last_io.net_weight is None:
-						if last_io.idMaterial and last_io.material:
-							id_material = last_io.material.id
-							description_material = last_io.material.description
-						else:
-							id_material = None
-							description_material = None
+			# Refresh material from the updated access/in_out after save
+			updated_access = get_access_by_id(id_selected)
+			if updated_access:
+				refreshed = False
+				if len(updated_access.in_out) > 0 and updated_access.in_out[-1].net_weight is None:
+					refreshed = True
+					if updated_access.in_out[-1].idMaterial and updated_access.in_out[-1].material:
+						id_material = updated_access.in_out[-1].material.id
+						description_material = updated_access.in_out[-1].material.description
+					else:
+						id_material = None
+						description_material = None
+				if not refreshed:
+					if updated_access.idMaterial and updated_access.material:
+						id_material = updated_access.material.id
+						description_material = updated_access.material.description
+					else:
+						id_material = None
+						description_material = None
 			if data_dto.id_selected.id != -1:
 				data = json.dumps({"id": id_selected})
 				await self.broadcastUpdateAnagrafic("access", {"access": data})
