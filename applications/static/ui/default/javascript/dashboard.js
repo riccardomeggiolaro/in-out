@@ -265,7 +265,15 @@ async function getData(path) {
             handleNeedToConfirm(obj.vehicle.plate.replace("⭐", ""));
         }
         
-        // All fields stay editable (reservation is just a template)
+        if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
+            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
+            buttonsAndInputs.forEach(element => {
+                element.disabled = true;
+            });
+            // Material remains editable for reservations
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = false;
+        }
     })
     .catch(error => console.error('Errore nella fetch:', error));
 }
@@ -1033,10 +1041,18 @@ function processRealtimeObject(obj) {
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
 
-        // All fields editable for any access type (reservation is just a template)
-        document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-            element.disabled = false;
-        });
+        if (currentAccessType === "MANUALLY") {
+            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
+                element.disabled = false;
+            });
+        } else {
+            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
+                element.disabled = true;
+            });
+            // Material remains editable for reservations
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = false;
+        }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
             if (selectedIdWeight["id"] !== null) {
@@ -1392,6 +1408,14 @@ function enableAllElements() {
         element.disabled = false;
     });
 
+    // Re-apply disabled state for non-manual accesses (reservations)
+    if (currentAccessType !== "MANUALLY" && selectedIdWeight && selectedIdWeight["id"] !== null) {
+        document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
+            element.disabled = true;
+        });
+        const materialInput = document.getElementById('currentDescriptionMaterial');
+        if (materialInput) materialInput.disabled = false;
+    }
 }
 
 function getParamsFromQueryString() {
