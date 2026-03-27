@@ -823,6 +823,12 @@ function processRealtimeObject(obj) {
             return;
         }
 
+        // If a new access was selected (from dashboard), go to summary
+        if (!prevId && obj.id_selected && obj.id_selected.id !== null) {
+            goTo('summary');
+            return;
+        }
+
         if (typeof onDataUpdate === 'function') onDataUpdate();
 
         if (obj.id_selected && obj.id_selected.need_to_confirm === true) {
