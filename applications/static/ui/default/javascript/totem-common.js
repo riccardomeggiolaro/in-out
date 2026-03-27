@@ -76,14 +76,34 @@ function _resolveStartPage() {
     if (!_waitingForStartPage) return;
     _waitingForStartPage = false;
 
-    if (selectedMaterial.id) { goTo('summary'); return; }
-    if (selectedDriver.id) { goTo('material'); return; }
-    if (selectedVector.id) { goTo('driver'); return; }
-    if (selectedSubject.id) { goTo('vector'); return; }
-    if (selectedVehicle.plate) { goTo('subject'); return; }
-    // Stay on plate
+    if (!selectedVehicle.plate) return; // Stay on plate
+
+    const dest = _findNextEmptyStep('plate');
+    if (dest) { goTo(dest); }
+    else { goTo('summary'); }
 }
 let _waitingForStartPage = false;
+
+// Find the next step with an empty field, starting after the given step
+function _findNextEmptyStep(afterStep) {
+    const steps = [
+        { name: 'subject', filled: !!selectedSubject.id },
+        { name: 'vector', filled: !!selectedVector.id },
+        { name: 'driver', filled: !!selectedDriver.id },
+        { name: 'material', filled: !!selectedMaterial.id },
+    ];
+    let startIndex = 0;
+    if (afterStep === 'plate') startIndex = 0;
+    else if (afterStep === 'subject') startIndex = 1;
+    else if (afterStep === 'vector') startIndex = 2;
+    else if (afterStep === 'driver') startIndex = 3;
+    else if (afterStep === 'material') return null; // already at the end
+
+    for (let i = startIndex; i < steps.length; i++) {
+        if (!steps[i].filled) return steps[i].name;
+    }
+    return null; // all filled
+}
 
 window.onbeforeunload = function() {
     isRefreshing = true;
@@ -420,8 +440,20 @@ function selectAndAdvance(anagrafic, item, nextPage) {
         if (res.detail) {
             // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
-            // showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
-            const dest = isFromSummary() ? 'summary' : nextPage;
+            // Update local state from response
+            if (res.data_in_execution) {
+                const d = res.data_in_execution;
+                if (d.subject) selectedSubject = { id: d.subject.id, social_reason: d.subject.social_reason || '' };
+                if (d.vector) selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
+                if (d.driver) selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
+                if (d.material) selectedMaterial = { id: d.material.id, description: d.material.description || '' };
+            }
+            let dest;
+            if (isFromSummary()) {
+                dest = 'summary';
+            } else {
+                dest = _findNextEmptyStep(anagrafic) || 'summary';
+            }
             setTimeout(() => goTo(dest), 300);
         }
     });
