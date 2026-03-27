@@ -158,14 +158,22 @@ class DataRouter(CallbackWeigher):
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and (data_dto.id_selected.id is None or keep_selected):
-				# Non-manual access (reservation): update only in-memory data_in_execution, not the access itself
-				# The reservation is just a template — modifications are saved on the in_out at weighing time
-				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
-				# If there's an incomplete in_out (weight1 done, weight2 not yet), also update in DB
+				# Allow material changes even for non-manual accesses — only update in-memory, not the access
+				only_material = (
+					data_dto.data_in_execution.material.id is not None or
+					data_dto.data_in_execution.material.description is not None
+				) and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.subject.id and not data_dto.data_in_execution.vector.id and not data_dto.data_in_execution.driver.id
+				if not only_material:
+					raise HTTPException(status_code=400, detail=f"Non puoi modificare i dati di un accesso di tipo '{TypeAccess[type_current_access].value}'")
+				# Just update material in data_in_execution memory, skip update_access
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["id"] = data_dto.data_in_execution.material.id
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["description"] = data_dto.data_in_execution.material.description
+				# If there's an incomplete in_out (weight1 done, weight2 not yet), update material in DB
 				access = get_access_by_id(id_selected)
 				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
 					body = SetAccessDTO(**data_dto.data_in_execution.dict())
 					update_access(id_selected, body, access.in_out[-1].id)
+				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
