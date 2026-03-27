@@ -1516,6 +1516,15 @@ function enableAllElements() {
     buttonsAndInputs.forEach(element => {
         element.disabled = false;
     });
+
+    // Re-apply disabled state for non-manual accesses (reservations)
+    if (currentAccessType !== "MANUALLY" && selectedIdWeight && selectedIdWeight["id"] !== null) {
+        document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
+            element.disabled = true;
+        });
+        const materialInput = document.getElementById('currentDescriptionMaterial');
+        if (materialInput) materialInput.disabled = false;
+    }
 }
 
 function getParamsFromQueryString() {
