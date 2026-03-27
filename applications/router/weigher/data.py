@@ -157,7 +157,7 @@ class DataRouter(CallbackWeigher):
 				description_material = access_for_weight.material.description
 		updated = None
 		if id_selected:
-			if type_current_access != TypeAccess.MANUALLY.name and data_dto.id_selected.id is None:
+			if type_current_access != TypeAccess.MANUALLY.name and (data_dto.id_selected.id is None or keep_selected):
 				# Allow material changes even for non-manual accesses — only update in-memory, not the access
 				only_material = (
 					data_dto.data_in_execution.material.id is not None or
