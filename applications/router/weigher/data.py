@@ -176,6 +176,8 @@ class DataRouter(CallbackWeigher):
 				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
 					body = SetAccessDTO(**data_dto.data_in_execution.dict())
 					update_access(id_selected, body, access.in_out[-1].id)
+					broadcast_data = json.dumps({"id": id_selected})
+					await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
