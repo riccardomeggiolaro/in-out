@@ -158,48 +158,24 @@ class DataRouter(CallbackWeigher):
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and (data_dto.id_selected.id is None or keep_selected):
+				# Only material changes allowed for non-manual accesses
+				only_material = (
+					data_dto.data_in_execution.material.id is not None or
+					data_dto.data_in_execution.material.description is not None
+				) and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.subject.id and not data_dto.data_in_execution.vector.id and not data_dto.data_in_execution.driver.id
+				if not only_material:
+					raise HTTPException(status_code=400, detail=f"Non puoi modificare i dati di un accesso di tipo '{TypeAccess[type_current_access].value}'")
+				# Update material in data_in_execution memory
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["id"] = data_dto.data_in_execution.material.id
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["material"]["description"] = data_dto.data_in_execution.material.description
+				# If there's an incomplete in_out, update material in DB on the in_out
 				access = get_access_by_id(id_selected)
-				# For reservations: only allow setting fields that are empty on the reservation
-				# Check each field being modified against the reservation
-				if data_dto.data_in_execution.subject.id and access.idSubject:
-					raise HTTPException(status_code=400, detail="Il soggetto è già impostato sulla prenotazione")
-				if data_dto.data_in_execution.vector.id and access.idVector:
-					raise HTTPException(status_code=400, detail="Il vettore è già impostato sulla prenotazione")
-				if data_dto.data_in_execution.driver.id and access.idDriver:
-					raise HTTPException(status_code=400, detail="L'autista è già impostato sulla prenotazione")
-				if (data_dto.data_in_execution.material.id or data_dto.data_in_execution.material.description) and access.idMaterial:
-					# Check in_out material too - if in_out is open and has material, block
-					if len(access.in_out) > 0 and access.in_out[-1].net_weight is None and access.in_out[-1].idMaterial:
-						raise HTTPException(status_code=400, detail="Il materiale è già impostato")
-					# If no open in_out or open in_out has no material, allow
-					if len(access.in_out) == 0 or access.in_out[-1].net_weight is not None:
-						# No open in_out - block if reservation has material
-						raise HTTPException(status_code=400, detail="Il materiale è già impostato sulla prenotazione")
-				# Update data_in_execution in memory for all provided fields
-				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
-				if data_dto.data_in_execution.subject.id:
-					die["subject"]["id"] = data_dto.data_in_execution.subject.id
-					die["subject"]["social_reason"] = data_dto.data_in_execution.subject.social_reason
-				if data_dto.data_in_execution.vector.id:
-					die["vector"]["id"] = data_dto.data_in_execution.vector.id
-					die["vector"]["social_reason"] = data_dto.data_in_execution.vector.social_reason
-				if data_dto.data_in_execution.driver.id:
-					die["driver"]["id"] = data_dto.data_in_execution.driver.id
-					die["driver"]["social_reason"] = data_dto.data_in_execution.driver.social_reason
-				if data_dto.data_in_execution.material.id or data_dto.data_in_execution.material.description:
-					die["material"]["id"] = data_dto.data_in_execution.material.id
-					die["material"]["description"] = data_dto.data_in_execution.material.description
-				# Also update the reservation in DB for fields that were empty
-				body = SetAccessDTO(**data_dto.data_in_execution.dict())
-				idInOut = None
-				if len(access.in_out) > 0 and access.in_out[-1].net_weight is None:
-					idInOut = access.in_out[-1].id
-				update_access(id_selected, body, idInOut)
-				# Broadcast to dashboard/access list websockets
-				broadcast_data = json.dumps({"id": id_selected})
-				await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
+				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
+					body = SetAccessDTO(**data_dto.data_in_execution.dict())
+					update_access(id_selected, body, access.in_out[-1].id)
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				return data
 				return data
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
 			access = get_access_by_id(id_selected)
