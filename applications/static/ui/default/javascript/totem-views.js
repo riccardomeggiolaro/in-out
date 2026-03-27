@@ -418,9 +418,11 @@ const totemViews = {
                     const row = document.getElementById(id);
                     if (row) row.classList.toggle('disabled', isReservationMode);
                 });
-                // Material: locked only if reservation has it already set
+                // Material: locked if reservation has it OR if in exit mode with material already on in_out
                 const rowMaterial = document.getElementById('rowMaterial');
-                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && _reservationHasMaterial);
+                const materialLockedByReservation = isReservationMode && _reservationHasMaterial;
+                const materialLockedByInOut = isReservationMode && _isSecondWeighing() && !!selectedMaterial.id;
+                if (rowMaterial) rowMaterial.classList.toggle('disabled', materialLockedByReservation || materialLockedByInOut);
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {
