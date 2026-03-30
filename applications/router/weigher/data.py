@@ -217,6 +217,8 @@ class DataRouter(CallbackWeigher):
 				if data_dto.data_in_execution.subject.id:
 					die["subject"]["id"] = data_dto.data_in_execution.subject.id
 					die["subject"]["social_reason"] = data_dto.data_in_execution.subject.social_reason
+					if data_dto.data_in_execution.typeSubject:
+						die["typeSubject"] = data_dto.data_in_execution.typeSubject
 				if data_dto.data_in_execution.vector.id:
 					die["vector"]["id"] = data_dto.data_in_execution.vector.id
 					die["vector"]["social_reason"] = data_dto.data_in_execution.vector.social_reason
@@ -226,9 +228,14 @@ class DataRouter(CallbackWeigher):
 				if data_dto.data_in_execution.material.id or data_dto.data_in_execution.material.description:
 					die["material"]["id"] = data_dto.data_in_execution.material.id
 					die["material"]["description"] = data_dto.data_in_execution.material.description
+				if data_dto.data_in_execution.note is not None:
+					die["note"] = data_dto.data_in_execution.note if data_dto.data_in_execution.note != "" else None
+				if data_dto.data_in_execution.document_reference is not None:
+					die["document_reference"] = data_dto.data_in_execution.document_reference if data_dto.data_in_execution.document_reference != "" else None
 				# If there's an incomplete in_out, also update in DB on the in_out
 				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
-					body = SetAccessDTO(**data_dto.data_in_execution.dict())
+					# Build body from current die state (not from dto which has empty defaults)
+					body = SetAccessDTO(**die)
 					update_access(id_selected, body, access.in_out[-1].id)
 					broadcast_data = json.dumps({"id": id_selected})
 					await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
