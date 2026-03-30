@@ -197,7 +197,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				net_weight = None
 				# CREA L'ACCESSO DI TIPO TEST
 				access = await self.addAccess(request=None, body=AddAccessDTO(**{
-					**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"],
+					"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"],
 					"number_in_out": 1,
 					"type": "TEST",
 					"hidden": True
@@ -281,7 +281,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		else:
 			# MODALITA' NORMALE: esegue il PID sulla pesa fisica
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-				**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"],
+				"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"],
 				"number_in_out": 1,
 				"type": "TEST",
 				"hidden": True
@@ -330,7 +330,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		elif not access:
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-					**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
+					"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"], 
 				 	"number_in_out": 1,
 				  	"type": "MANUALLY",
 				   	"hidden": True
@@ -390,7 +390,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					error_message = "Nessun id impostato per effettuare l'uscita."
 				else:
 					access = await self.addAccess(request=None, body=AddAccessDTO(**{
-						**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
+						"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"], 
 						"number_in_out": 1,
 					  	"type": "MANUALLY",
 						"hidden": True
