@@ -34,7 +34,10 @@ def get_access_by_id(access_id: int) -> Dict[str, Union[bool, str, dict]]:
                     selectinload(Weighing.user),
                     selectinload(Weighing.operator)
                 ),
-                selectinload(Access.in_out).selectinload(InOut.material)
+                selectinload(Access.in_out).selectinload(InOut.material),
+                selectinload(Access.in_out).selectinload(InOut.subject),
+                selectinload(Access.in_out).selectinload(InOut.vector),
+                selectinload(Access.in_out).selectinload(InOut.driver),
             )
             .filter(Access.id == access_id)
             .first()
