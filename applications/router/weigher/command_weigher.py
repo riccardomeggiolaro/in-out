@@ -141,7 +141,13 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"idMaterial": None,
 			"idWeight1": None,
 			"idWeight2": weighing_stored_db["id"],
-			"net_weight": net_weight - tare if tare else net_weight
+			"net_weight": net_weight - tare if tare else net_weight,
+			"idSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["subject"]["id"],
+			"idVector": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vector"]["id"],
+			"idDriver": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["driver"]["id"],
+			"typeSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"],
+			"note": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("note"),
+			"document_reference": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("document_reference"),
 		})
 		await self.setAccess(request=None, id=access.id, body=SetAccessDTO(**{"material": body.material.dict(), "operator2": body.operator.dict()}), idInOut=in_out["id"])
 		last_in_out = get_in_out_by_id(in_out["id"])
@@ -191,7 +197,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				net_weight = None
 				# CREA L'ACCESSO DI TIPO TEST
 				access = await self.addAccess(request=None, body=AddAccessDTO(**{
-					**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"],
+					"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"],
 					"number_in_out": 1,
 					"type": "TEST",
 					"hidden": True
@@ -219,7 +225,13 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					"idMaterial": id_material,
 					"idWeight1": weighing_stored_db["id"] if tare == 0 else None,
 					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
-					"net_weight": net_weight if tare > 0 else None
+					"net_weight": net_weight if tare > 0 else None,
+					"idSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["subject"]["id"],
+					"idVector": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vector"]["id"],
+					"idDriver": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["driver"]["id"],
+					"typeSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"],
+					"note": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("note"),
+					"document_reference": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("document_reference"),
 				})
 				in_out_id = in_out["id"]
 				# CHIUDI L'ACCESSO
@@ -269,7 +281,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		else:
 			# MODALITA' NORMALE: esegue il PID sulla pesa fisica
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-				**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"],
+				"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"],
 				"number_in_out": 1,
 				"type": "TEST",
 				"hidden": True
@@ -318,7 +330,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		elif not access:
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
-					**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
+					"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"], 
 				 	"number_in_out": 1,
 				  	"type": "MANUALLY",
 				   	"hidden": True
@@ -378,7 +390,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					error_message = "Nessun id impostato per effettuare l'uscita."
 				else:
 					access = await self.addAccess(request=None, body=AddAccessDTO(**{
-						**weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"], 
+						"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"], 
 						"number_in_out": 1,
 					  	"type": "MANUALLY",
 						"hidden": True

@@ -37,34 +37,28 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Riepilogo</h2>
-                <p class="step-description">Verifica i dati e procedi con la pesatura</p>
                 <div class="summary-card">
-                    <div class="summary-row" id="rowPlate" onclick="goTo('totem-plate.html')">
+                    <div class="summary-row" id="rowPlate" onclick="goTo('totem-plate.html?from=summary')">
                         <span class="summary-label">Targa</span>
                         <span class="summary-value" id="summaryPlate">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" id="rowType" onclick="goTo('totem-type.html')">
-                        <span class="summary-label">Tipo</span>
-                        <span class="summary-value" id="summaryType">-</span>
-                        <span class="summary-edit">&#9998;</span>
-                    </div>
-                    <div class="summary-row" id="rowSubject" onclick="goTo('totem-subject.html')">
-                        <span class="summary-label">Ragione Sociale</span>
+                    <div class="summary-row" id="rowSubject" onclick="goTo('totem-subject.html?from=summary')">
+                        <span class="summary-label" id="summaryType">-</span>
                         <span class="summary-value" id="summarySubject">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" id="rowVector" onclick="goTo('totem-vector.html')">
+                    <div class="summary-row" id="rowVector" onclick="goTo('totem-vector.html?from=summary')">
                         <span class="summary-label">Vettore</span>
                         <span class="summary-value" id="summaryVector">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" id="rowDriver" onclick="goTo('totem-driver.html')">
+                    <div class="summary-row" id="rowDriver" onclick="goTo('totem-driver.html?from=summary')">
                         <span class="summary-label">Autista</span>
                         <span class="summary-value" id="summaryDriver">-</span>
                         <span class="summary-edit">&#9998;</span>
                     </div>
-                    <div class="summary-row" id="rowMaterial" onclick="goTo('totem-material.html')">
+                    <div class="summary-row" id="rowMaterial" onclick="goTo('totem-material.html?from=summary')">
                         <span class="summary-label">Materiale</span>
                         <span class="summary-value" id="summaryMaterial">-</span>
                         <span class="summary-edit">&#9998;</span>
@@ -117,7 +111,7 @@
             // Check if there's a reservation (id_selected has an id set)
             isReservationMode = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
 
-            const rowIds = ['rowPlate', 'rowType', 'rowSubject', 'rowVector', 'rowDriver'];
+            const rowIds = ['rowPlate', 'rowSubject', 'rowVector', 'rowDriver'];
             rowIds.forEach(id => {
                 const row = document.getElementById(id);
                 if (row) {

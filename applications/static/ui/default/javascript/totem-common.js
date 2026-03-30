@@ -1,4 +1,4 @@
-// ===== TOTEM COMMON - Shared utilities across all totem pages =====
+// ===== TOTEM COMMON - Shared utilities for totem SPA =====
 
 // --- State ---
 let currentWeigherPath = localStorage.getItem('currentWeigherPath');
@@ -15,6 +15,11 @@ let selectedMaterial = { id: null, description: '' };
 
 let dataInExecution = null;
 let selectedIdWeight = null;
+let _reservationHasMaterial = false;
+let _reservationHasSubject = false;
+let _reservationHasVector = false;
+let _reservationHasDriver = false;
+let weighers_data_type = "MANUALLY";
 let data_weight_realtime = {
     status: undefined,
     net_weight: undefined,
@@ -28,6 +33,7 @@ let data_weight_realtime = {
 let return_pdf_copy_after_weighing = false;
 let test_mode = false;
 let instances = {};
+let totemAnagrafiche = { vehicle: true, subject: false, vector: false, driver: false, material: true };
 let access_id = null;
 let confirmWeighing = null;
 let minWeightValue = 0;
@@ -43,7 +49,11 @@ let autoReconnectInterval;
 let pingInterval;
 let pingTimeout;
 let currentPopup;
-let snackbarTimeout;
+// let snackbarTimeout;
+
+// SPA state
+let _fromSummary = false;
+let _dataLoaded = false;
 
 // --- Init ---
 function initTotemPage() {
@@ -58,9 +68,50 @@ function initTotemPage() {
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         test_mode = res["test_mode"] || false;
         instances = res["weighers"];
+        totemAnagrafiche = res["totem_anagrafiche"] || { vehicle: true, subject: false, vector: false, driver: false, material: true };
     });
 
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+
+    // Show initial view — will be redirected by _resolveStartPage once data loads
+    _waitingForStartPage = true;
+    showView('plate');
+}
+
+// Determine the furthest page the user can go based on already-filled data
+function _resolveStartPage() {
+    if (!_waitingForStartPage) return;
+    _waitingForStartPage = false;
+
+    if (!selectedVehicle.plate) return; // Stay on plate
+
+    // Go to first empty editable step, or summary if all filled
+    const dest = _findNextEmptyStep('plate');
+    goTo(dest || 'summary');
+}
+let _waitingForStartPage = false;
+
+// Find the next step with an empty field, starting after the given step
+// Skips steps disabled in totem config or already set on the reservation
+function _findNextEmptyStep(afterStep) {
+    const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
+    const steps = [
+        { name: 'subject', filled: !!selectedSubject.id, enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
+        { name: 'vector', filled: !!selectedVector.id, enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
+        { name: 'driver', filled: !!selectedDriver.id, enabled: totemAnagrafiche.driver && !(isReservation && _reservationHasDriver) },
+        { name: 'material', filled: !!selectedMaterial.id, enabled: totemAnagrafiche.material && !(isReservation && _reservationHasMaterial) },
+    ];
+    let startIndex = 0;
+    if (afterStep === 'plate') startIndex = 0;
+    else if (afterStep === 'subject') startIndex = 1;
+    else if (afterStep === 'vector') startIndex = 2;
+    else if (afterStep === 'driver') startIndex = 3;
+    else if (afterStep === 'material') return null;
+
+    for (let i = startIndex; i < steps.length; i++) {
+        if (steps[i].enabled && !steps[i].filled) return steps[i].name;
+    }
+    return null;
 }
 
 window.onbeforeunload = function() {
@@ -75,23 +126,109 @@ window.onclick = function(event) {
     }
 };
 
-// --- Navigation ---
+// --- SPA Navigation ---
+let _navigatingBack = false;
+
+function isFromSummary() {
+    return _fromSummary;
+}
+
 function goTo(page) {
-    window.location.href = page;
+    // Parse view name: 'plate', 'totem-plate.html', 'plate?from=summary'
+    let viewName = page.replace(/^totem-/, '').replace(/\.html.*$/, '').split('?')[0];
+    _fromSummary = page.includes('from=summary');
+    _navigatingBack = page.includes('back=1');
+
+    if (viewName === 'dashboard-totem') {
+        window.location.href = 'dashboard-totem.html';
+        return;
+    }
+
+    showView(viewName);
+}
+
+function showView(name) {
+    const view = totemViews[name];
+    if (!view) {
+        console.error('Unknown view:', name);
+        return;
+    }
+
+    // Clean up pagination state
+    _paginationState = {};
+
+    // Update title
+    document.title = view.title || 'Totem';
+
+    // Update view-specific styles
+    document.getElementById('viewStyle').textContent = view.style || '';
+
+    // Render content
+    const step = document.querySelector('#pageContent .step');
+    step.innerHTML = view.html();
+
+    // Wrap content between h2 and step-buttons in step-content
+    const h2 = step.querySelector('h2');
+    const stepButtons = step.querySelector('.step-buttons');
+    const middleElements = [];
+    let sibling = h2 ? h2.nextElementSibling : step.firstElementChild;
+    while (sibling && sibling !== stepButtons) {
+        middleElements.push(sibling);
+        sibling = sibling.nextElementSibling;
+    }
+    if (middleElements.length > 0) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'step-content';
+        h2.after(wrapper);
+        middleElements.forEach(el => wrapper.appendChild(el));
+    }
+
+    // Inject logo at top-right of step
+    const logoEl = document.createElement('div');
+    logoEl.className = 'step-logo';
+    logoEl.innerHTML = `<img src="/static/content/baronpesi_logo.png" alt="Logo">`;
+    step.prepend(logoEl);
+
+    // Re-trigger fade animation
+    step.style.animation = 'none';
+    void step.offsetWidth;
+    step.style.animation = '';
+
+    // Clear previous view callbacks
+    window.onDataReady = null;
+    window.onDataUpdate = null;
+
+    // Initialize view (sets onDataReady/onDataUpdate)
+    if (view.init) view.init();
+
+    // If data already loaded, trigger onDataReady for the new view
+    if (_dataLoaded && typeof onDataReady === 'function') {
+        onDataReady();
+    }
 }
 
 // --- Pagination state ---
 let _paginationState = {};
 const GRID_COLS = 2;
-const GRID_MAX_ROWS = 6;
-const GRID_MAX_ROWS_PAGINATED = 5;
+
+const ITEMS_PER_PAGE = 10;
 
 function _calcItemsPerPage(containerId, items) {
-    const totalItems = items.length;
-    const needsPagination = totalItems > GRID_MAX_ROWS * GRID_COLS;
-    const rows = needsPagination ? GRID_MAX_ROWS_PAGINATED : GRID_MAX_ROWS;
-    return rows * GRID_COLS;
+    return ITEMS_PER_PAGE;
 }
+
+// Re-render on resize (items per page is fixed, but layout may need refresh)
+let _resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => {
+        Object.keys(_paginationState).forEach(containerId => {
+            const state = _paginationState[containerId];
+            if (!state || state.items.length === 0) return;
+            _renderPage(containerId);
+        });
+    }, 200);
+});
 
 function _renderPage(containerId) {
     const state = _paginationState[containerId];
@@ -108,62 +245,59 @@ function _renderPage(containerId) {
         container.appendChild(li);
     });
 
-    // Update pagination controls
-    const arrows = document.getElementById(containerId + '-pagination');
-    if (arrows) {
-        const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
-        if (totalPages <= 1) {
-            arrows.style.display = 'none';
-        } else {
-            arrows.style.display = 'flex';
-            const prevBtn = arrows.querySelector('.pagination-prev');
-            const nextBtn = arrows.querySelector('.pagination-next');
-            const indicator = arrows.querySelector('.page-indicator');
-            if (prevBtn) prevBtn.disabled = state.currentPage === 0;
-            if (nextBtn) nextBtn.disabled = state.currentPage >= totalPages - 1;
-            if (indicator) indicator.textContent = `${state.currentPage + 1} / ${totalPages}`;
-        }
+    // Fill remaining slots with empty placeholders
+    const remaining = state.itemsPerPage - pageItems.length;
+    for (let i = 0; i < remaining; i++) {
+        const placeholder = document.createElement('li');
+        placeholder.classList.add('placeholder');
+        placeholder.innerHTML = '&nbsp;';
+        container.appendChild(placeholder);
+    }
+
+    // Update "Altro"/"Avanti" button
+    _updateNextPageButton(containerId);
+}
+
+function _updateNextPageButton(containerId) {
+    const btn = document.getElementById('btnNextPage');
+    if (!btn) return;
+    const state = _paginationState[containerId];
+    if (!state) return;
+
+    const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+
+    if (state.items.length === 0) {
+        // No items — show "Avanti" to skip to next step
+        btn.textContent = 'Avanti';
+        btn.style.display = '';
+    } else if (totalPages > 1) {
+        // Multiple pages — show "Altro" to paginate
+        btn.textContent = 'Altro';
+        btn.style.display = '';
+    } else {
+        // Single page with items — hide button, must click item
+        btn.style.display = 'none';
     }
 }
 
-function _ensurePaginationArrows(containerId) {
-    let arrows = document.getElementById(containerId + '-pagination');
-    if (!arrows) {
-        arrows = document.createElement('div');
-        arrows.id = containerId + '-pagination';
-        arrows.className = 'pagination-arrows';
-        arrows.innerHTML = `
-            <button class="pagination-prev" aria-label="Pagina precedente">&#9664;</button>
-            <span class="page-indicator">1 / 1</span>
-            <button class="pagination-next" aria-label="Pagina successiva">&#9654;</button>
-        `;
-        const container = document.getElementById(containerId);
-        if (container && container.parentNode) {
-            container.parentNode.insertBefore(arrows, container.nextSibling);
-        }
-        arrows.querySelector('.pagination-prev').addEventListener('click', () => {
-            const state = _paginationState[containerId];
-            if (state && state.currentPage > 0) {
-                state.currentPage--;
-                _renderPage(containerId);
-            }
-        });
-        arrows.querySelector('.pagination-next').addEventListener('click', () => {
-            const state = _paginationState[containerId];
-            if (state) {
-                const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
-                if (state.currentPage < totalPages - 1) {
-                    state.currentPage++;
-                    _renderPage(containerId);
-                }
-            }
-        });
+function _nextPage(containerId, skipToUrl) {
+    const state = _paginationState[containerId];
+    if (!state) return;
+
+    // If no items, go to next step
+    if (state.items.length === 0) {
+        goTo(isFromSummary() ? 'summary' : skipToUrl);
+        return;
     }
-    return arrows;
+
+    // Paginate: go to next page, loop back to first
+    const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
+    state.currentPage = (state.currentPage + 1) % totalPages;
+    _renderPage(containerId);
 }
 
 // --- Load items into a list/grid ---
-async function loadItems(anagrafic, filterField, inputValue, containerId, onItemClick) {
+async function loadItems(anagrafic, filterField, inputValue, containerId, onItemClick, skipToUrl, backToUrl) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
@@ -202,6 +336,18 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
             items.push({ li, item });
         });
 
+        // No items available
+        if (items.length === 0 && skipToUrl && !inputValue) {
+            if (_navigatingBack) {
+                // Going back — skip to previous step automatically
+                goTo(backToUrl ? backToUrl + '?back=1' : 'plate');
+            } else {
+                // Going forward — skip to next step automatically
+                goTo(isFromSummary() ? 'summary' : skipToUrl);
+            }
+            return;
+        }
+
         // "Create new" option only if searching (plate page)
         if (inputValue) {
             const li = document.createElement('li');
@@ -214,24 +360,86 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
         }
 
         const itemsPerPage = _calcItemsPerPage(containerId, items);
+
+        // Find the page of the selected item
+        const selectedIndex = items.findIndex(({ li }) => li.classList.contains('selected'));
+        const startPage = selectedIndex >= 0 ? Math.floor(selectedIndex / itemsPerPage) : 0;
+
         _paginationState[containerId] = {
             items,
-            currentPage: 0,
+            currentPage: startPage,
             itemsPerPage
         };
 
-        _ensurePaginationArrows(containerId);
         _renderPage(containerId);
+
     } catch (error) {
         console.error('Error loading items:', error);
     }
+}
+
+// --- Full-page success/failure message after weighing ---
+function showWeighingSuccess(isError = false, message = null) {
+    const container = document.querySelector('#pageContent .step');
+    if (!container) return;
+    const color = isError ? '#d32f2f' : '#2e7d32';
+    const icon = isError ? '&#10008;' : '&#10004;';
+    const text = message || (isError ? 'Pesata non riuscita' : 'Pesata completata');
+    const header = document.querySelector('.totem-header');
+    if (header) header.style.display = 'none';
+    container.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:2rem;cursor:pointer;">
+            <div style="font-size:5rem;color:${color};">${icon}</div>
+            <h2 style="color:${color};font-size:2rem;margin-top:1rem;">${text}</h2>
+        </div>
+    `;
+
+    let dismissed = false;
+    const dismiss = () => {
+        if (dismissed) return;
+        dismissed = true;
+        clearTimeout(timer);
+        if (header) header.style.display = '';
+        if (isError) {
+            goTo('summary');
+        } else {
+            cancelTotem();
+        }
+    };
+
+    const timer = setTimeout(dismiss, 3000);
+    if (isError) {
+        container.addEventListener('click', dismiss, { once: true });
+    }
+}
+
+// --- Cancel / reset all data ---
+function cancelTotem() {
+    fetch(`/api/data${currentWeigherPath}`, {
+        method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(() => {
+        selectedVehicle = { id: null, plate: '' };
+        selectedTypeSubject = 'CUSTOMER';
+        selectedSubject = { id: null, social_reason: '' };
+        selectedVector = { id: null, social_reason: '' };
+        selectedDriver = { id: null, social_reason: '' };
+        selectedMaterial = { id: null, description: '' };
+        selectedIdWeight = null;
+        dataInExecution = null;
+        goTo('plate');
+    })
+    .catch(() => {
+        goTo('plate');
+    });
 }
 
 // --- Select and advance (for grid selection pages) ---
 function selectAndAdvance(anagrafic, item, nextPage) {
     const id = parseInt(item.id);
 
-    fetch(`/api/data${currentWeigherPath}`, {
+    fetch(`/api/data${currentWeigherPath}&keep_selected=true`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data_in_execution: { [anagrafic]: { id } } })
@@ -239,10 +447,23 @@ function selectAndAdvance(anagrafic, item, nextPage) {
     .then(res => res.json())
     .then(res => {
         if (res.detail) {
-            showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
-            showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} selezionato`, 'rgb(208, 255, 208)', 'black');
-            setTimeout(() => goTo(nextPage), 300);
+            // Update local state from response
+            if (res.data_in_execution) {
+                const d = res.data_in_execution;
+                if (d.subject) selectedSubject = { id: d.subject.id, social_reason: d.subject.social_reason || '' };
+                if (d.vector) selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
+                if (d.driver) selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
+                if (d.material) selectedMaterial = { id: d.material.id, description: d.material.description || '' };
+            }
+            let dest;
+            if (isFromSummary()) {
+                dest = 'summary';
+            } else {
+                dest = _findNextEmptyStep(anagrafic) || 'summary';
+            }
+            setTimeout(() => goTo(dest), 300);
         }
     });
 }
@@ -259,12 +480,12 @@ function selectVehicle(item) {
     .then(res => res.json())
     .then(res => {
         if (res.detail) {
-            showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
             selectedVehicle = { id: item.id, plate: item.plate || '' };
             const plateInput = document.getElementById('plateInput');
             if (plateInput) plateInput.value = item.plate || '';
-            showSnackbar("snackbar", "Veicolo selezionato", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Veicolo selezionato", 'rgb(208, 255, 208)', 'black');
         }
     });
 }
@@ -283,9 +504,9 @@ function createOrSelectAnagrafic(anagrafic, filterField, value) {
     .then(res => res.json())
     .then(res => {
         if (res.detail) {
-            showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", res.detail, 'rgb(255, 208, 208)', 'black');
         } else {
-            showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} impostato`, 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", `${getAnagraficLabel(anagrafic)} impostato`, 'rgb(208, 255, 208)', 'black');
         }
     });
 }
@@ -322,37 +543,63 @@ function updateInputIfNotFocused(inputId, value) {
     }
 }
 
-// --- Generic Weighing ---
-async function handleGenericWeighing() {
+// --- Weighing ---
+function _isSecondWeighing() {
+    const weight1 = selectedIdWeight !== null && selectedIdWeight["weight1"] !== null;
+    const hasNet = /[0-9]/.test(String(data_weight_realtime.potential_net_weight));
+    const hasTare = /[1-9]/.test(String((data_weight_realtime.tare || '').replace("PT", "")));
+    return hasNet || hasTare || weight1;
+}
+
+async function handleWeighing() {
     if (data_weight_realtime.over_max_theshold) {
-        confirmWeighing = executeGenericWeighing;
+        confirmWeighing = executeWeighing;
         document.getElementById('confirmDescription').innerHTML =
             `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
         openPopup('confirmPopup');
     } else {
-        await executeGenericWeighing();
+        await executeWeighing();
     }
 }
 
-async function executeGenericWeighing() {
+async function executeWeighing() {
     closePopup();
-    const buttons = document.querySelectorAll('.btn-weighing');
-    buttons.forEach(b => { b.disabled = true; });
+    const btns = document.querySelectorAll('.btn-weighing');
+    btns.forEach(b => { b.disabled = true; });
 
-    const url = `${pathname}/api/command-weigher/print${currentWeigherPath}`;
+    const isOut = _isSecondWeighing();
+    const url = isOut
+        ? `${pathname}/api/command-weigher/out${currentWeigherPath}`
+        : `${pathname}/api/command-weigher/in${currentWeigherPath}`;
+    const body = isOut
+        ? JSON.stringify({ id_selected: selectedIdWeight["id"] })
+        : JSON.stringify({ data_in_execution: dataInExecution });
+
     try {
-        const r = await fetch(url).then(res => res.json());
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => null);
+            const msg = (data && data.detail) || `Errore ${res.status}`;
+            showWeighingSuccess(true, msg);
+            btns.forEach(b => { b.disabled = false; });
+            return;
+        }
+        const r = await res.json();
         if (r && r.command_details && r.command_details.command_executed === true) {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
-            buttons.forEach(b => { b.disabled = false; });
+            const msg = r?.command_details?.error_message || "Errore durante la pesatura";
+            showWeighingSuccess(true, msg);
+            btns.forEach(b => { b.disabled = false; });
         }
     } catch (error) {
         console.error('Weighing error:', error);
-        showSnackbar("snackbar", "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
-        buttons.forEach(b => { b.disabled = false; });
+        showWeighingSuccess(true, "Errore durante la pesatura");
+        btns.forEach(b => { b.disabled = false; });
     }
 }
 
@@ -364,13 +611,7 @@ function handleNeedToConfirm(plate) {
 }
 
 async function confirmSemiAutomatic() {
-    const weight1 = selectedIdWeight !== null && selectedIdWeight["weight1"] !== null;
-    const hasTare = /[1-9]/.test(String(data_weight_realtime.tare || '').replace("PT", ""));
-    if (hasTare || weight1) {
-        await outWeighing();
-    } else {
-        await inWeighing();
-    }
+    await executeWeighing();
 }
 
 async function inWeighing() {
@@ -383,10 +624,10 @@ async function inWeighing() {
             body: JSON.stringify({ data_in_execution: dataInExecution })
         }).then(res => res.json());
         if (r && r.command_details && r.command_details.command_executed === true) {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
             document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
         }
     } catch (error) {
@@ -405,10 +646,10 @@ async function outWeighing() {
             body: JSON.stringify({ id_selected: selectedIdWeight["id"] })
         }).then(res => res.json());
         if (r && r.command_details && r.command_details.command_executed === true) {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
+            // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
             document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
         }
     } catch (error) {
@@ -530,6 +771,11 @@ async function getData(path) {
         const res = await fetch(`/api/data${path}`).then(r => r.json());
         dataInExecution = res["data_in_execution"];
         selectedIdWeight = res["id_selected"];
+        _reservationHasMaterial = res.reservation_has_material || false;
+        _reservationHasSubject = res.reservation_has_subject || false;
+        _reservationHasVector = res.reservation_has_vector || false;
+        _reservationHasDriver = res.reservation_has_driver || false;
+        weighers_data_type = res.type || "MANUALLY";
         const obj = res["data_in_execution"];
 
         selectedVehicle = { id: obj.vehicle.id, plate: obj.vehicle.plate || '' };
@@ -539,6 +785,8 @@ async function getData(path) {
         selectedDriver = { id: obj.driver?.id || null, social_reason: obj.driver?.social_reason || '' };
         selectedMaterial = { id: obj.material.id, description: obj.material.description || '' };
 
+        _dataLoaded = true;
+        _resolveStartPage();
         if (typeof onDataReady === 'function') onDataReady();
 
         if (res.id_selected.need_to_confirm === true) {
@@ -577,37 +825,19 @@ function updateUIRealtime(e) {
 function processRealtimeObject(obj) {
     if (obj.command_in_executing) {
         if (obj.command_in_executing === "WEIGHING") {
-            showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
             document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = true);
         } else if (obj.command_in_executing === "TARE") {
-            showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
         } else if (obj.command_in_executing === "ZERO") {
-            showSnackbar("snackbar", "Zero", 'rgb(208, 255, 208)', 'black');
+            // showSnackbar("snackbar", "Zero", 'rgb(208, 255, 208)', 'black');
         }
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight !== "") {
             closePopup();
-            let message = "Pesata eseguita!";
-            if (obj.weight_executed.pid !== "") {
-                message += ` Pid: ${obj.weight_executed.pid}`;
-                if (return_pdf_copy_after_weighing && obj.data_assigned) {
-                    obj.data_assigned.accessId = JSON.parse(obj.data_assigned.accessId);
-                    if (obj.data_assigned.accessId.in_out && obj.data_assigned.accessId.in_out.length > 0) {
-                        const lastInOut = obj.data_assigned.accessId.in_out[obj.data_assigned.accessId.in_out.length - 1];
-                        const id_in_out = lastInOut.id;
-                        const isTestAccess = obj.data_assigned.accessId.type === "Test";
-                        const typeOfWeight = isTestAccess ? "generic" : (lastInOut.idWeight2 === null ? "in" : "out");
-                        const params = getParamsFromQueryString();
-                        const inOutPdf = instances[params.instance_name]?.["nodes"]?.[params.weigher_name]?.["events"]?.["weighing"]?.["report"]?.[typeOfWeight];
-                        if (inOutPdf) {
-                            downloadPdf(id_in_out);
-                        }
-                    }
-                }
-            }
-            showSnackbar("snackbar", message, 'rgb(208, 255, 208)', 'black');
+            showWeighingSuccess();
         } else {
-            showSnackbar("snackbar", "Pesata fallita", 'rgb(255, 208, 208)', 'black');
+            showWeighingSuccess(true);
         }
         access_id = null;
         document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
@@ -619,6 +849,12 @@ function processRealtimeObject(obj) {
         if (el('uniteMisure')) el('uniteMisure').innerText = obj.unite_measure !== undefined ? obj.unite_measure : 'N/A';
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
     } else if (obj.data_in_execution) {
+        const prevId = selectedIdWeight ? selectedIdWeight.id : null;
+        _reservationHasMaterial = obj.reservation_has_material || false;
+        _reservationHasSubject = obj.reservation_has_subject || false;
+        _reservationHasVector = obj.reservation_has_vector || false;
+        _reservationHasDriver = obj.reservation_has_driver || false;
+        weighers_data_type = obj.type || "MANUALLY";
         dataInExecution = obj.data_in_execution;
         selectedIdWeight = obj.id_selected;
         const d = obj.data_in_execution;
@@ -632,17 +868,30 @@ function processRealtimeObject(obj) {
         selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
         selectedMaterial = { id: d.material.id, description: d.material.description || '' };
 
+        // If access was deselected, go back to plate
+        if (prevId && (!obj.id_selected || obj.id_selected.id === null)) {
+            goTo('plate');
+            return;
+        }
+
+        // If a new access was selected (from dashboard), navigate to first empty field or summary
+        if (!prevId && obj.id_selected && obj.id_selected.id !== null) {
+            const dest = _findNextEmptyStep('plate');
+            goTo(dest || 'summary');
+            return;
+        }
+
         if (typeof onDataUpdate === 'function') onDataUpdate();
 
         if (obj.id_selected && obj.id_selected.need_to_confirm === true) {
             handleNeedToConfirm(d.vehicle.plate);
         }
     } else if (obj.message) {
-        showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
+        // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
-        showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
+        // showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
     } else if (obj.cam_message) {
-        showSnackbar("snackbar", obj.cam_message, 'white', 'black');
+        // showSnackbar("snackbar", obj.cam_message, 'white', 'black');
     }
 }
 

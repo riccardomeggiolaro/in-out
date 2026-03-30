@@ -237,13 +237,22 @@ class InOut(Base):
     __tablename__ = 'in_out'
     id = Column(Integer, primary_key=True, index=True)
     idAccess = Column(Integer, ForeignKey('access.id'))
+    typeSubject = Column(Enum(TypeSubjectEnum), default=None, nullable=True)
+    idSubject = Column(Integer, ForeignKey('subject.id'), nullable=True)
+    idVector = Column(Integer, ForeignKey('vector.id'), nullable=True)
+    idDriver = Column(Integer, ForeignKey('driver.id'), nullable=True)
     idMaterial = Column(Integer, ForeignKey('material.id'), nullable=True)
     idWeight1 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
     idWeight2 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
     net_weight = Column(Integer, nullable=True)
+    note = Column(String, nullable=True)
+    document_reference = Column(String, nullable=True)
 
     # Relationships
-    access = relationship("Access", back_populates="in_out")    
+    access = relationship("Access", back_populates="in_out")
+    subject = relationship("Subject", foreign_keys=[idSubject])
+    vector = relationship("Vector", foreign_keys=[idVector])
+    driver = relationship("Driver", foreign_keys=[idDriver])
     material = relationship("Material", back_populates="in_out")
     weight1 = relationship("Weighing", foreign_keys=[idWeight1], back_populates="in_out_weight1")  # FIXED: added foreign_keys
     weight2 = relationship("Weighing", foreign_keys=[idWeight2], back_populates="in_out_weight2")  # FIXED: added foreign_keys
@@ -547,6 +556,60 @@ def migrate_badge_unique_constraint():
     except Exception as e:
         lb_log.error(f"Errore durante la migrazione del vincolo access.badge: {e}")
 
+def migrate_in_out_anagrafiche_columns():
+    """
+    Migrazione per aggiungere colonne anagrafiche alla tabella in_out.
+    Aggiunge: typeSubject, idSubject, idVector, idDriver, note, document_reference
+    Popola i dati dalle prenotazioni/access esistenti.
+    """
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='in_out'"))
+            if result.fetchone() is None:
+                return
+
+            existing = {row[1] for row in conn.execute(text("PRAGMA table_info('in_out')")).fetchall()}
+
+            columns_to_add = {
+                'typeSubject': 'TEXT NULL',
+                'idSubject': 'INTEGER NULL',
+                'idVector': 'INTEGER NULL',
+                'idDriver': 'INTEGER NULL',
+                'note': 'TEXT NULL',
+                'document_reference': 'TEXT NULL',
+            }
+
+            added_columns = []
+            for col_name, col_def in columns_to_add.items():
+                if col_name not in existing:
+                    try:
+                        conn.execute(text(f'ALTER TABLE "in_out" ADD COLUMN "{col_name}" {col_def}'))
+                        conn.commit()
+                        added_columns.append(col_name)
+                        lb_log.info(f"  - Aggiunta colonna '{col_name}' a in_out")
+                    except Exception as e:
+                        lb_log.error(f"  - Errore aggiungendo colonna '{col_name}' a in_out: {e}")
+
+            # Popola le nuove colonne con i dati dell'access associato
+            if added_columns:
+                try:
+                    conn.execute(text("""
+                        UPDATE in_out SET
+                            typeSubject = (SELECT typeSubject FROM access WHERE access.id = in_out.idAccess),
+                            idSubject = (SELECT idSubject FROM access WHERE access.id = in_out.idAccess),
+                            idVector = (SELECT idVector FROM access WHERE access.id = in_out.idAccess),
+                            idDriver = (SELECT idDriver FROM access WHERE access.id = in_out.idAccess),
+                            note = (SELECT note FROM access WHERE access.id = in_out.idAccess),
+                            document_reference = (SELECT document_reference FROM access WHERE access.id = in_out.idAccess)
+                        WHERE typeSubject IS NULL AND idSubject IS NULL AND idVector IS NULL AND idDriver IS NULL
+                    """))
+                    conn.commit()
+                    lb_log.info("  - Popolate colonne in_out con dati dalle prenotazioni esistenti")
+                except Exception as e:
+                    lb_log.error(f"  - Errore popolando colonne in_out: {e}")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione in_out anagrafiche: {e}")
+
 # Esegui migrazione per stati deprecati
 migrate_called_status()
 
@@ -555,6 +618,9 @@ migrate_weighing_pid_constraint()
 
 # Esegui migrazione vincolo badge access
 migrate_badge_unique_constraint()
+
+# Esegui migrazione colonne anagrafiche in_out
+migrate_in_out_anagrafiche_columns()
 
 # Sincronizza le colonne del database prima di creare nuove tabelle
 sync_database_columns()

@@ -27,13 +27,7 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Fornitore</h2>
-                <p class="step-description">Seleziona un fornitore</p>
                 <ul class="suggestions-list suggestions-grid" id="supplierGrid"></ul>
-                <div class="selected-value" id="selectedSupplierDisplay"></div>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-customer.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-vector.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -70,13 +64,9 @@
                 body: JSON.stringify({ data_in_execution: { typeSubject: 'SUPPLIER' } })
             });
 
-            if (selectedSubject.social_reason) {
-                document.getElementById('selectedSupplierDisplay').textContent = 'Selezionato: ' + selectedSubject.social_reason;
-                document.getElementById('btnNext').style.display = '';
-            }
             loadItems('subject', 'social_reason', '', 'supplierGrid', (item) => {
                 selectAndAdvance('subject', item, 'totem-vector.html');
-            });
+            }, 'totem-vector.html');
         }
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());

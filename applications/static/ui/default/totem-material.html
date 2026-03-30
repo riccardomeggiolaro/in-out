@@ -27,13 +27,7 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Materiale</h2>
-                <p class="step-description">Seleziona un materiale</p>
                 <ul class="suggestions-list suggestions-grid" id="materialGrid"></ul>
-                <div class="selected-value" id="selectedMaterialDisplay"></div>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-driver.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-summary.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -63,20 +57,9 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
-            if (selectedMaterial.description) {
-                document.getElementById('selectedMaterialDisplay').textContent = 'Selezionato: ' + selectedMaterial.description;
-                document.getElementById('btnNext').style.display = '';
-            }
             loadItems('material', 'description', '', 'materialGrid', (item) => {
                 selectAndAdvance('material', item, 'totem-summary.html');
-            });
-
-            // If coming from a reservation, back button should go to summary
-            const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-            if (hasReservation) {
-                const btnBack = document.querySelector('.btn-secondary');
-                if (btnBack) btnBack.onclick = () => goTo('totem-summary.html');
-            }
+            }, 'totem-summary.html');
         }
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());

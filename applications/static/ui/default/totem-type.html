@@ -27,7 +27,6 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Tipo Soggetto</h2>
-                <p class="step-description">Seleziona il tipo di soggetto</p>
                 <div class="type-buttons">
                     <button class="btn btn-type" id="btnCustomer" onclick="selectTypeSubject('CUSTOMER')">
                         <span class="btn-type-icon">&#128100;</span>
@@ -38,7 +37,7 @@
                         <span class="btn-type-label">Fornitore</span>
                     </button>
                 </div>
-                <div class="step-buttons">
+                <div class="step-buttons" id="typeButtons">
                     <button class="btn btn-secondary" onclick="goTo('totem-plate.html')">Indietro</button>
                     <button class="btn btn-primary btn-next" onclick="goTo('totem-subject.html')">Avanti</button>
                 </div>
@@ -89,6 +88,11 @@
         function onDataReady() {
             document.getElementById('btnCustomer').classList.toggle('active', selectedTypeSubject === 'CUSTOMER');
             document.getElementById('btnSupplier').classList.toggle('active', selectedTypeSubject === 'SUPPLIER');
+
+            if (isFromSummary()) {
+                const btns = document.getElementById('typeButtons');
+                btns.innerHTML = '<button class="btn btn-primary btn-next" onclick="goTo(\'totem-summary.html\')">Avanti</button>';
+            }
         }
 
         function onDataUpdate() {

@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = opt.label;
             btn.addEventListener('click', () => {
                 localStorage.setItem('currentWeigherPath', opt.path);
-                window.location.href = 'totem-plate.html';
+                window.location.href = 'totem.html';
             });
             weigherList.appendChild(btn);
         });

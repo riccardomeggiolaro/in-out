@@ -27,13 +27,7 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Cliente</h2>
-                <p class="step-description">Seleziona un cliente</p>
                 <ul class="suggestions-list suggestions-grid" id="customerGrid"></ul>
-                <div class="selected-value" id="selectedCustomerDisplay"></div>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-plate.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-supplier.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -51,7 +45,7 @@
         <div class="popup-content">
             <p id="confirmDescription"></p>
             <div class="popup-buttons">
-                <button class="btn btn-secondary close-button" onclick="closePopup()">Annulla</button>
+                <button class="btn btn-secondary close-button" onclick="closePopup()">Indietro</button>
                 <button class="btn btn-primary" onclick="if(confirmWeighing) confirmWeighing()">Conferma</button>
             </div>
         </div>
@@ -70,13 +64,9 @@
                 body: JSON.stringify({ data_in_execution: { typeSubject: 'CUSTOMER' } })
             });
 
-            if (selectedSubject.social_reason) {
-                document.getElementById('selectedCustomerDisplay').textContent = 'Selezionato: ' + selectedSubject.social_reason;
-                document.getElementById('btnNext').style.display = '';
-            }
             loadItems('subject', 'social_reason', '', 'customerGrid', (item) => {
                 selectAndAdvance('subject', item, 'totem-supplier.html');
-            });
+            }, 'totem-supplier.html');
         }
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());

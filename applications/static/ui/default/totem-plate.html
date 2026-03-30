@@ -63,11 +63,9 @@
         <div class="steps-wrapper">
             <div class="step active">
                 <h2>Targa</h2>
-                <p class="step-description" id="plateStatus">In attesa di lettura targa...</p>
                 <div class="license-plate plate-empty" id="plateDisplay">
                     <div class="plate-band plate-band-left">
                         <div class="plate-stars">&#9733;</div>
-                        <div class="plate-country">I</div>
                     </div>
                     <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
                     <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off">
@@ -111,7 +109,6 @@
         let manualMode = false;
 
         function showPlate(plate) {
-            document.getElementById('plateStatus').textContent = 'Targa rilevata';
             const display = document.getElementById('plateDisplay');
             display.classList.remove('plate-empty');
             document.getElementById('plateText').textContent = plate;
@@ -120,8 +117,12 @@
         }
 
         function goToNext() {
+            if (isFromSummary()) {
+                goTo('totem-summary.html');
+                return;
+            }
             const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-            const nextPage = hasReservation ? 'totem-summary.html' : 'totem-customer.html';
+            const nextPage = hasReservation ? 'totem-summary.html' : 'totem-type.html';
             goTo(nextPage);
         }
 
@@ -158,7 +159,6 @@
 
         function enterManualMode() {
             manualMode = true;
-            document.getElementById('plateStatus').textContent = 'Inserisci la targa manualmente';
             document.getElementById('plateDisplay').classList.remove('plate-empty');
             // Hide plate text, show input inside the plate
             document.getElementById('plateText').style.display = 'none';
@@ -179,7 +179,6 @@
                 showPlate(selectedVehicle.plate);
             } else {
                 showEmptyPlate();
-                document.getElementById('plateStatus').textContent = 'In attesa di lettura targa...';
             }
         }
 

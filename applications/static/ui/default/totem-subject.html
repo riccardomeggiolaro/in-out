@@ -26,14 +26,8 @@
 
         <div class="steps-wrapper">
             <div class="step active">
-                <h2>Ragione Sociale</h2>
-                <p class="step-description">Seleziona un soggetto</p>
+                <h2 id="subjectTitle">Ragione Sociale</h2>
                 <ul class="suggestions-list suggestions-grid" id="subjectGrid"></ul>
-                <div class="selected-value" id="selectedSubjectDisplay"></div>
-                <div class="step-buttons">
-                    <button class="btn btn-secondary" onclick="goTo('totem-type.html')">Indietro</button>
-                    <button class="btn btn-primary btn-next" id="btnNext" style="display:none" onclick="goTo('totem-vector.html')">Avanti</button>
-                </div>
             </div>
         </div>
     </div>
@@ -51,7 +45,7 @@
         <div class="popup-content">
             <p id="confirmDescription"></p>
             <div class="popup-buttons">
-                <button class="btn btn-secondary close-button" onclick="closePopup()">Annulla</button>
+                <button class="btn btn-secondary close-button" onclick="closePopup()">Indietro</button>
                 <button class="btn btn-primary" onclick="if(confirmWeighing) confirmWeighing()">Conferma</button>
             </div>
         </div>
@@ -63,13 +57,12 @@
     <script src="/static/javascript/totem-common.js"></script>
     <script>
         function onDataReady() {
-            if (selectedSubject.social_reason) {
-                document.getElementById('selectedSubjectDisplay').textContent = 'Selezionato: ' + selectedSubject.social_reason;
-                document.getElementById('btnNext').style.display = '';
-            }
+            const title = selectedTypeSubject === 'CUSTOMER' ? 'Cliente' : 'Fornitore';
+            document.getElementById('subjectTitle').textContent = title;
+
             loadItems('subject', 'social_reason', '', 'subjectGrid', (item) => {
                 selectAndAdvance('subject', item, 'totem-vector.html');
-            });
+            }, 'totem-vector.html');
         }
 
         document.addEventListener('DOMContentLoaded', () => initTotemPage());

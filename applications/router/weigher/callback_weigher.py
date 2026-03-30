@@ -138,11 +138,18 @@ class CallbackWeigher(Functions, WebSocket):
 			if last_in_out and not last_in_out.idWeight2:
 				weight1 = last_in_out.weight1.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
+				die = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]
 				update_data("in_out", last_in_out.id, {
 					"idMaterial": id_material,
-        			"idWeight2": weighing_stored_db["id"],
-					"net_weight": net_weight
-	           })
+					"idWeight2": weighing_stored_db["id"],
+					"net_weight": net_weight,
+					"idSubject": die["subject"]["id"],
+					"idVector": die["vector"]["id"],
+					"idDriver": die["driver"]["id"],
+					"typeSubject": die["typeSubject"],
+					"note": die.get("note"),
+					"document_reference": die.get("document_reference"),
+				})
 			elif last_in_out and last_in_out.idWeight2 and tare == 0 and access.number_in_out is not None:
 				weight1 = last_in_out.weight2.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
@@ -152,6 +159,12 @@ class CallbackWeigher(Functions, WebSocket):
 					"idWeight1": last_in_out.idWeight2,
 					"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight,
+					"idSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"],
+					"idVector": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"],
+					"idDriver": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"],
+					"typeSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"],
+					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
+					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
 				})
 			else:
 				add_data("in_out", {
@@ -159,7 +172,13 @@ class CallbackWeigher(Functions, WebSocket):
 					"idMaterial": id_material,
 					"idWeight1": weighing_stored_db["id"] if tare == 0 else None,
 					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
-					"net_weight": net_weight if tare > 0 else None
+					"net_weight": net_weight if tare > 0 else None,
+					"idSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"],
+					"idVector": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"],
+					"idDriver": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"],
+					"typeSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"],
+					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
+					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
 				})
 			############################
 			# RECUPERO L'ACCESSO CON IL NUOVO IN-OUT CREATO

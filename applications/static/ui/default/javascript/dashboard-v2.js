@@ -26,6 +26,11 @@ let selectedIdMaterial;
 let selectedIdWeight;
 let numberInOutSelectedIdWeight;
 let dataInExecution;
+let currentAccessType = "MANUALLY";
+let _reservationHasMaterial = false;
+let _reservationHasSubject = false;
+let _reservationHasVector = false;
+let _reservationHasDriver = false;
 
 let isRefreshing = false;
 
@@ -249,6 +254,7 @@ async function getData(path) {
     })
     .then(res => {
         const type = res.type;
+        currentAccessType = type || "MANUALLY";
         const number_in_out = res.number_in_out;
         const weight1 = res.id_selected.weight1;
         dataInExecution = res["data_in_execution"];
@@ -280,11 +286,25 @@ async function getData(path) {
             handleNeedToConfirm(obj.vehicle.plate.replace("⭐", ""));
         }
         
+        _reservationHasMaterial = res.reservation_has_material || false;
+        _reservationHasSubject = res.reservation_has_subject || false;
+        _reservationHasVector = res.reservation_has_vector || false;
+        _reservationHasDriver = res.reservation_has_driver || false;
         if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            buttonsAndInputs.forEach(element => {
-                element.disabled = true;
-            });
+            const plateInput = document.getElementById('currentPlateVehicle');
+            if (plateInput) plateInput.disabled = true;
+            const typeSubjectSelect = document.getElementById('typeSubject');
+            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+            const subjectInput = document.getElementById('currentSocialReasonSubject');
+            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+            const vectorInput = document.getElementById('currentSocialReasonVector');
+            if (vectorInput) vectorInput.disabled = _reservationHasVector;
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = _reservationHasMaterial;
+            const noteInput = document.getElementById('currentNote');
+            if (noteInput) noteInput.disabled = false;
+            const docRefInput = document.getElementById('currentDocumentReference');
+            if (docRefInput) docRefInput.disabled = false;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -388,11 +408,15 @@ async function populateListIn() {
             let subject = '';
             if (item.subject && item.subject.social_reason) subject = item.subject.social_reason;
 
-            // Materiale
+            // Materiale - priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
             let material = '';
+            const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
-            if (lastInOut && lastInOut.net_weight == null && lastInOut.material && lastInOut.material.description) {
-                material = lastInOut.material.description;
+            const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
+            if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
+                material = dataInExecution.material.description;
+            } else if (lastInOutOpen) {
+                material = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : '';
             } else if (item.material && item.material.description) {
                 material = item.material.description;
             }
@@ -611,9 +635,11 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
                     suggestion.accesses[suggestion.accesses.length - 1].number_in_out === null &&
                     suggestion.accesses[suggestion.accesses.length - 1].status !== 'Chiusa'
                 ) {
-                    if (suggestion.accesses[suggestion.accesses.length - 1].in_out.length === 0 ||
-                        suggestion.accesses[suggestion.accesses.length - 1].in_out.length > 0 && 
-                        suggestion.accesses[suggestion.accesses.length - 1].in_out[suggestion.accesses[suggestion.accesses.length - 1].in_out.length - 1].idWeight2 !== null
+                    const lastAccess = suggestion.accesses[suggestion.accesses.length - 1];
+                    const lastAccessInOut = lastAccess.in_out || [];
+                    if (lastAccessInOut.length === 0 ||
+                        lastAccessInOut.length > 0 &&
+                        lastAccessInOut[lastAccessInOut.length - 1].idWeight2 !== null
                     ) {
                         li.classList.add('permanent-associated');
                         text = `<span>${text}</span><span>⭐</span>`;
@@ -1112,6 +1138,11 @@ function processRealtimeObject(obj) {
         //     outButton.disabled = true;
         // }
     } else if (obj.data_in_execution) {
+        currentAccessType = obj.type || "MANUALLY";
+        _reservationHasMaterial = obj.reservation_has_material || false;
+        _reservationHasSubject = obj.reservation_has_subject || false;
+        _reservationHasVector = obj.reservation_has_vector || false;
+        _reservationHasDriver = obj.reservation_has_driver || false;
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;
@@ -1135,14 +1166,25 @@ function processRealtimeObject(obj) {
         setGroupValue(document.querySelector('#currentDocumentReference'), obj.data_in_execution.document_reference || '');
 
 
-        if (obj.type === "MANUALLY") {
+        if (currentAccessType === "MANUALLY") {
             document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
                 element.disabled = false;
             });
         } else {
-            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-                element.disabled = true;
-            });
+            const plateInput = document.getElementById('currentPlateVehicle');
+            if (plateInput) plateInput.disabled = true;
+            const typeSubjectSelect = document.getElementById('typeSubject');
+            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+            const subjectInput = document.getElementById('currentSocialReasonSubject');
+            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+            const vectorInput = document.getElementById('currentSocialReasonVector');
+            if (vectorInput) vectorInput.disabled = _reservationHasVector;
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = _reservationHasMaterial;
+            const noteInput = document.getElementById('currentNote');
+            if (noteInput) noteInput.disabled = false;
+            const docRefInput = document.getElementById('currentDocumentReference');
+            if (docRefInput) docRefInput.disabled = false;
         }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
@@ -1503,6 +1545,20 @@ function enableAllElements() {
     buttonsAndInputs.forEach(element => {
         element.disabled = false;
     });
+
+    // Re-apply disabled state for non-manual accesses (reservations)
+    if (currentAccessType !== "MANUALLY" && selectedIdWeight && selectedIdWeight["id"] !== null) {
+        const plateInput = document.getElementById('currentPlateVehicle');
+        if (plateInput) plateInput.disabled = true;
+        const typeSubjectSelect = document.getElementById('typeSubject');
+        if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+        const subjectInput = document.getElementById('currentSocialReasonSubject');
+        if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+        const vectorInput = document.getElementById('currentSocialReasonVector');
+        if (vectorInput) vectorInput.disabled = _reservationHasVector;
+        const materialInput = document.getElementById('currentDescriptionMaterial');
+        if (materialInput) materialInput.disabled = _reservationHasMaterial;
+    }
 }
 
 function getParamsFromQueryString() {
