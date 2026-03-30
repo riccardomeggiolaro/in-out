@@ -556,6 +556,39 @@ def migrate_badge_unique_constraint():
     except Exception as e:
         lb_log.error(f"Errore durante la migrazione del vincolo access.badge: {e}")
 
+def migrate_in_out_anagrafiche_columns():
+    """
+    Migrazione per aggiungere colonne anagrafiche alla tabella in_out.
+    Aggiunge: typeSubject, idSubject, idVector, idDriver, note, document_reference
+    """
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='in_out'"))
+            if result.fetchone() is None:
+                return
+
+            existing = {row[1] for row in conn.execute(text("PRAGMA table_info('in_out')")).fetchall()}
+
+            columns_to_add = {
+                'typeSubject': 'TEXT NULL',
+                'idSubject': 'INTEGER NULL',
+                'idVector': 'INTEGER NULL',
+                'idDriver': 'INTEGER NULL',
+                'note': 'TEXT NULL',
+                'document_reference': 'TEXT NULL',
+            }
+
+            for col_name, col_def in columns_to_add.items():
+                if col_name not in existing:
+                    try:
+                        conn.execute(text(f'ALTER TABLE "in_out" ADD COLUMN "{col_name}" {col_def}'))
+                        conn.commit()
+                        lb_log.info(f"  - Aggiunta colonna '{col_name}' a in_out")
+                    except Exception as e:
+                        lb_log.error(f"  - Errore aggiungendo colonna '{col_name}' a in_out: {e}")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione in_out anagrafiche: {e}")
+
 # Esegui migrazione per stati deprecati
 migrate_called_status()
 
@@ -564,6 +597,9 @@ migrate_weighing_pid_constraint()
 
 # Esegui migrazione vincolo badge access
 migrate_badge_unique_constraint()
+
+# Esegui migrazione colonne anagrafiche in_out
+migrate_in_out_anagrafiche_columns()
 
 # Sincronizza le colonne del database prima di creare nuove tabelle
 sync_database_columns()
