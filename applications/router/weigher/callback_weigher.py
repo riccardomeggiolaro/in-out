@@ -152,6 +152,12 @@ class CallbackWeigher(Functions, WebSocket):
 					"idWeight1": last_in_out.idWeight2,
 					"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight,
+					"idSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"],
+					"idVector": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"],
+					"idDriver": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"],
+					"typeSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"],
+					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
+					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
 				})
 			else:
 				add_data("in_out", {
