@@ -291,13 +291,20 @@ async function getData(path) {
         _reservationHasVector = res.reservation_has_vector || false;
         _reservationHasDriver = res.reservation_has_driver || false;
         if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            buttonsAndInputs.forEach(element => {
-                element.disabled = true;
-            });
-            // Material remains editable for reservations
+            const plateInput = document.getElementById('currentPlateVehicle');
+            if (plateInput) plateInput.disabled = true;
+            const typeSubjectSelect = document.getElementById('typeSubject');
+            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+            const subjectInput = document.getElementById('currentSocialReasonSubject');
+            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+            const vectorInput = document.getElementById('currentSocialReasonVector');
+            if (vectorInput) vectorInput.disabled = _reservationHasVector;
             const materialInput = document.getElementById('currentDescriptionMaterial');
             if (materialInput) materialInput.disabled = _reservationHasMaterial;
+            const noteInput = document.getElementById('currentNote');
+            if (noteInput) noteInput.disabled = false;
+            const docRefInput = document.getElementById('currentDocumentReference');
+            if (docRefInput) docRefInput.disabled = false;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -1164,12 +1171,20 @@ function processRealtimeObject(obj) {
                 element.disabled = false;
             });
         } else {
-            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-                element.disabled = true;
-            });
-            // Material remains editable for reservations
+            const plateInput = document.getElementById('currentPlateVehicle');
+            if (plateInput) plateInput.disabled = true;
+            const typeSubjectSelect = document.getElementById('typeSubject');
+            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+            const subjectInput = document.getElementById('currentSocialReasonSubject');
+            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+            const vectorInput = document.getElementById('currentSocialReasonVector');
+            if (vectorInput) vectorInput.disabled = _reservationHasVector;
             const materialInput = document.getElementById('currentDescriptionMaterial');
             if (materialInput) materialInput.disabled = _reservationHasMaterial;
+            const noteInput = document.getElementById('currentNote');
+            if (noteInput) noteInput.disabled = false;
+            const docRefInput = document.getElementById('currentDocumentReference');
+            if (docRefInput) docRefInput.disabled = false;
         }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
@@ -1533,11 +1548,16 @@ function enableAllElements() {
 
     // Re-apply disabled state for non-manual accesses (reservations)
     if (currentAccessType !== "MANUALLY" && selectedIdWeight && selectedIdWeight["id"] !== null) {
-        document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-            element.disabled = true;
-        });
+        const plateInput = document.getElementById('currentPlateVehicle');
+        if (plateInput) plateInput.disabled = true;
+        const typeSubjectSelect = document.getElementById('typeSubject');
+        if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+        const subjectInput = document.getElementById('currentSocialReasonSubject');
+        if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+        const vectorInput = document.getElementById('currentSocialReasonVector');
+        if (vectorInput) vectorInput.disabled = _reservationHasVector;
         const materialInput = document.getElementById('currentDescriptionMaterial');
-        if (materialInput) materialInput.disabled = false;
+        if (materialInput) materialInput.disabled = _reservationHasMaterial;
     }
 }
 
