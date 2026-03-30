@@ -88,6 +88,12 @@ def get_list_in_out(
         
         if load_material:
             load_options.append(selectinload(InOut.material))
+        if load_subject:
+            load_options.append(selectinload(InOut.subject))
+        if load_vector:
+            load_options.append(selectinload(InOut.vector))
+        if load_driver:
+            load_options.append(selectinload(InOut.driver))
 
         query = query.options(*load_options)
 

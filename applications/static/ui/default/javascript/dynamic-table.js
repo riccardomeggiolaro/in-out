@@ -363,6 +363,13 @@ function populateTable(data) {
         if (item.access && item.access.id) {
             idInOut = item.id;
             item.id = item.access.id;
+            // Override access data with in_out-level data when available
+            if (item.subject && item.subject.id) item.access.subject = item.subject;
+            if (item.vector && item.vector.id) item.access.vector = item.vector;
+            if (item.driver && item.driver.id) item.access.driver = item.driver;
+            if (item.typeSubject) item.access.typeSubject = item.typeSubject;
+            if (item.note !== undefined && item.note !== null) item.access.note = item.note;
+            if (item.document_reference !== undefined && item.document_reference !== null) item.access.document_reference = item.document_reference;
         }
         if (item.log) item.pid = item.log;
         createRow(obj.table, obj.columns, item, idInOut);
