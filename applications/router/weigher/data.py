@@ -9,6 +9,7 @@ from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import 
 from modules.md_database.functions.get_access_by_plate_if_uncomplete import get_access_by_plate_if_uncomplete
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.functions.update_access import update_access
+from modules.md_database.functions.update_data import update_data
 from modules.md_database.interfaces.access import SetAccessDTO
 from modules.md_database.md_database import AccessStatus, TypeAccess
 import libs.lb_config as lb_config
@@ -232,11 +233,25 @@ class DataRouter(CallbackWeigher):
 					die["note"] = data_dto.data_in_execution.note if data_dto.data_in_execution.note != "" else None
 				if data_dto.data_in_execution.document_reference is not None:
 					die["document_reference"] = data_dto.data_in_execution.document_reference if data_dto.data_in_execution.document_reference != "" else None
-				# If there's an incomplete in_out, also update in DB on the in_out
+				# If there's an incomplete in_out, also update in DB on the in_out directly (NOT via update_access which would modify the reservation)
 				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
-					# Build body from current die state (not from dto which has empty defaults)
-					body = SetAccessDTO(**die)
-					update_access(id_selected, body, access.in_out[-1].id)
+					in_out_update = {}
+					if data_dto.data_in_execution.subject.id:
+						in_out_update["idSubject"] = data_dto.data_in_execution.subject.id
+					if data_dto.data_in_execution.vector.id:
+						in_out_update["idVector"] = data_dto.data_in_execution.vector.id
+					if data_dto.data_in_execution.driver.id:
+						in_out_update["idDriver"] = data_dto.data_in_execution.driver.id
+					if data_dto.data_in_execution.material.id:
+						in_out_update["idMaterial"] = data_dto.data_in_execution.material.id
+					if data_dto.data_in_execution.typeSubject:
+						in_out_update["typeSubject"] = data_dto.data_in_execution.typeSubject
+					if data_dto.data_in_execution.note is not None:
+						in_out_update["note"] = data_dto.data_in_execution.note if data_dto.data_in_execution.note != "" else None
+					if data_dto.data_in_execution.document_reference is not None:
+						in_out_update["document_reference"] = data_dto.data_in_execution.document_reference if data_dto.data_in_execution.document_reference != "" else None
+					if in_out_update:
+						update_data("in_out", access.in_out[-1].id, in_out_update)
 					broadcast_data = json.dumps({"id": id_selected})
 					await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
