@@ -138,11 +138,18 @@ class CallbackWeigher(Functions, WebSocket):
 			if last_in_out and not last_in_out.idWeight2:
 				weight1 = last_in_out.weight1.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
+				die = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]
 				update_data("in_out", last_in_out.id, {
 					"idMaterial": id_material,
-        			"idWeight2": weighing_stored_db["id"],
-					"net_weight": net_weight
-	           })
+					"idWeight2": weighing_stored_db["id"],
+					"net_weight": net_weight,
+					"idSubject": die["subject"]["id"],
+					"idVector": die["vector"]["id"],
+					"idDriver": die["driver"]["id"],
+					"typeSubject": die["typeSubject"],
+					"note": die.get("note"),
+					"document_reference": die.get("document_reference"),
+				})
 			elif last_in_out and last_in_out.idWeight2 and tare == 0 and access.number_in_out is not None:
 				weight1 = last_in_out.weight2.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
