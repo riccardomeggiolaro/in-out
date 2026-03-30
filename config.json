@@ -91,7 +91,7 @@
         "weighers": {
             "0": {
                 "connection": {
-                    "ip": "10.0.5.178",
+                    "ip": "10.0.5.174",
                     "port": 23,
                     "timeout": 3.0
                 },
@@ -104,30 +104,31 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "order": 1,
-                                            "rele": "1",
-                                            "set": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "order": 0,
-                                            "rele": "1",
-                                            "set": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
                                 "cams": [],
                                 "csv": {
+                                    "generic": false,
                                     "in": true,
                                     "out": true,
                                     "tare": true
+                                },
+                                "printer": {
+                                    "generic": null,
+                                    "in": null,
+                                    "out": null,
+                                    "tare": null
+                                },
+                                "prints": {
+                                    "generic": 1,
+                                    "in": 1,
+                                    "out": 1,
+                                    "tare": 1
                                 },
                                 "report": {
                                     "generic": true,
@@ -135,13 +136,7 @@
                                     "out": true,
                                     "tare": true
                                 },
-                                "set_rele": [
-                                    {
-                                        "order": 2,
-                                        "rele": "1",
-                                        "set": 0
-                                    }
-                                ]
+                                "set_rele": []
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
@@ -155,9 +150,7 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 0
-                        },
+                        "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
