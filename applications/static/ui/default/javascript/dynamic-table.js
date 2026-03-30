@@ -887,29 +887,14 @@ function editRow(item) {
         const bookingInfo = document.getElementById('edit-booking-info');
         if (bookingInfo) {
             const editForm = editPopup.querySelector('#edit');
-            if (isBookedAccess) {
-                bookingInfo.style.display = 'block';
-                // Hide all form sections except those containing material inputs
-                if (editForm) {
-                    Array.from(editForm.children).forEach(child => {
-                        if (child.tagName === 'HR' || child.tagName === 'H4' || child.tagName === 'DIV') {
-                            const hasMaterial = child.querySelector && child.querySelector('[id^="material."], [name^="material."]');
-                            const isMaterialHeader = child.tagName === 'H4' && child.textContent.trim() === 'Materiale';
-                            if (!hasMaterial && !isMaterialHeader) {
-                                child.style.display = 'none';
-                            }
-                        }
-                    });
-                }
-            } else {
-                bookingInfo.style.display = 'none';
-                if (editForm) {
-                    Array.from(editForm.children).forEach(child => {
-                        if (child.tagName === 'HR' || child.tagName === 'H4' || child.tagName === 'DIV') {
-                            child.style.display = '';
-                        }
-                    });
-                }
+            // All fields editable since data is saved on in_out, not access
+            bookingInfo.style.display = 'none';
+            if (editForm) {
+                Array.from(editForm.children).forEach(child => {
+                    if (child.tagName === 'HR' || child.tagName === 'H4' || child.tagName === 'DIV') {
+                        child.style.display = '';
+                    }
+                });
             }
         }
         const badgeInput = editPopup.querySelector('#badge');
