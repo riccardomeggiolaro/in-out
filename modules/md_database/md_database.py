@@ -560,6 +560,7 @@ def migrate_in_out_anagrafiche_columns():
     """
     Migrazione per aggiungere colonne anagrafiche alla tabella in_out.
     Aggiunge: typeSubject, idSubject, idVector, idDriver, note, document_reference
+    Popola i dati dalle prenotazioni/access esistenti.
     """
     try:
         with engine.connect() as conn:
@@ -578,14 +579,34 @@ def migrate_in_out_anagrafiche_columns():
                 'document_reference': 'TEXT NULL',
             }
 
+            added_columns = []
             for col_name, col_def in columns_to_add.items():
                 if col_name not in existing:
                     try:
                         conn.execute(text(f'ALTER TABLE "in_out" ADD COLUMN "{col_name}" {col_def}'))
                         conn.commit()
+                        added_columns.append(col_name)
                         lb_log.info(f"  - Aggiunta colonna '{col_name}' a in_out")
                     except Exception as e:
                         lb_log.error(f"  - Errore aggiungendo colonna '{col_name}' a in_out: {e}")
+
+            # Popola le nuove colonne con i dati dell'access associato
+            if added_columns:
+                try:
+                    conn.execute(text("""
+                        UPDATE in_out SET
+                            typeSubject = (SELECT typeSubject FROM access WHERE access.id = in_out.idAccess),
+                            idSubject = (SELECT idSubject FROM access WHERE access.id = in_out.idAccess),
+                            idVector = (SELECT idVector FROM access WHERE access.id = in_out.idAccess),
+                            idDriver = (SELECT idDriver FROM access WHERE access.id = in_out.idAccess),
+                            note = (SELECT note FROM access WHERE access.id = in_out.idAccess),
+                            document_reference = (SELECT document_reference FROM access WHERE access.id = in_out.idAccess)
+                        WHERE typeSubject IS NULL AND idSubject IS NULL AND idVector IS NULL AND idDriver IS NULL
+                    """))
+                    conn.commit()
+                    lb_log.info("  - Popolate colonne in_out con dati dalle prenotazioni esistenti")
+                except Exception as e:
+                    lb_log.error(f"  - Errore popolando colonne in_out: {e}")
     except Exception as e:
         lb_log.error(f"Errore durante la migrazione in_out anagrafiche: {e}")
 
