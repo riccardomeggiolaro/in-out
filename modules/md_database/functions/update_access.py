@@ -32,93 +32,97 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                 raise ValueError("Non puoi modificare il numero di operazioni per gli accessi manuali")
 
             current_model = Subject
-            if data.subject.id in [None, -1]:
-                add_subject = {
-                    "social_reason": data.subject.social_reason if data.subject.social_reason != "" else None,
-                    "telephone": data.subject.telephone if data.subject.telephone != "" else None,
-                    "cfpiva": data.subject.cfpiva if data.subject.cfpiva != "" else None
-                }
-                if has_non_none_value(add_subject):
-                    data_to_check = data.subject.dict()
-                    subject = current_model(**add_subject)
-                    session.add(subject)
-                    session.flush()
-                    access.idSubject = subject.id
-                elif data.subject.id == -1:
-                    access.idSubject = None
-            else:
-                access.idSubject = data.subject.id
+            if not idInOut:
+                if data.subject.id in [None, -1]:
+                    add_subject = {
+                        "social_reason": data.subject.social_reason if data.subject.social_reason != "" else None,
+                        "telephone": data.subject.telephone if data.subject.telephone != "" else None,
+                        "cfpiva": data.subject.cfpiva if data.subject.cfpiva != "" else None
+                    }
+                    if has_non_none_value(add_subject):
+                        data_to_check = data.subject.dict()
+                        subject = current_model(**add_subject)
+                        session.add(subject)
+                        session.flush()
+                        access.idSubject = subject.id
+                    elif data.subject.id == -1:
+                        access.idSubject = None
+                else:
+                    access.idSubject = data.subject.id
 
             current_model = Vector
-            if data.vector.id in [None, -1]:
-                add_vector = {
-                    "social_reason": data.vector.social_reason if data.vector.social_reason != "" else None,
-                    "telephone": data.vector.telephone if data.vector.telephone != "" else None,
-                    "cfpiva": data.vector.cfpiva if data.vector.cfpiva != "" else None
-                }
-                if has_non_none_value(add_vector):
-                    data_to_check = data.vector.dict()
-                    vector = current_model(**add_vector)
-                    session.add(vector)
-                    session.flush()
-                    access.idVector = vector.id
-                elif data.vector.id == -1:
-                    access.idVector = None
-            else:
-                access.idVector = data.vector.id
+            if not idInOut:
+                if data.vector.id in [None, -1]:
+                    add_vector = {
+                        "social_reason": data.vector.social_reason if data.vector.social_reason != "" else None,
+                        "telephone": data.vector.telephone if data.vector.telephone != "" else None,
+                        "cfpiva": data.vector.cfpiva if data.vector.cfpiva != "" else None
+                    }
+                    if has_non_none_value(add_vector):
+                        data_to_check = data.vector.dict()
+                        vector = current_model(**add_vector)
+                        session.add(vector)
+                        session.flush()
+                        access.idVector = vector.id
+                    elif data.vector.id == -1:
+                        access.idVector = None
+                else:
+                    access.idVector = data.vector.id
 
             current_model = Driver
-            if data.driver.id in [None, -1]:
-                add_driver = {
-                    "social_reason": data.driver.social_reason if data.driver.social_reason != "" else None,
-                    "telephone": data.driver.telephone if data.driver.telephone != "" else None
-                }
-                if has_non_none_value(add_driver):
-                    data_to_check = data.driver.dict()
-                    driver = current_model(**add_driver)
-                    session.add(driver)
-                    session.flush()
-                    access.idDriver = driver.id
-                elif data.driver.id == -1:
-                    access.idDriver = None
-            else:
-                access.idDriver = data.driver.id
+            if not idInOut:
+                if data.driver.id in [None, -1]:
+                    add_driver = {
+                        "social_reason": data.driver.social_reason if data.driver.social_reason != "" else None,
+                        "telephone": data.driver.telephone if data.driver.telephone != "" else None
+                    }
+                    if has_non_none_value(add_driver):
+                        data_to_check = data.driver.dict()
+                        driver = current_model(**add_driver)
+                        session.add(driver)
+                        session.flush()
+                        access.idDriver = driver.id
+                    elif data.driver.id == -1:
+                        access.idDriver = None
+                else:
+                    access.idDriver = data.driver.id
 
             # if data.vehicle.id and access.idVehicle and access.idVehicle != data.vehicle.id and len(access.in_out) > 0:
             #     raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
 
             current_reservation_vehicle = access.idVehicle
 
-            current_model = Vehicle
-            vehicle = None
-            if data.vehicle.id in [None, -1]:
-                add_vehicle = {
-                    "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
-                    "description": data.vehicle.description if data.vehicle.description != "" else None,
-                    "tare": data.vehicle.tare if data.vehicle.tare and data.vehicle.tare > 0 else None
-                }
-                if has_non_none_value(add_vehicle):
-                    data_to_check = data.vehicle.dict()
-                    vehicle = current_model(**add_vehicle)
-                    session.add(vehicle)
-                    session.flush()
-                    access.idVehicle = vehicle.id
-                elif data.vehicle.id == -1:
-                    access.idVehicle = None
-            else:
-                access.idVehicle = data.vehicle.id
+            if not idInOut:
+                current_model = Vehicle
+                vehicle = None
+                if data.vehicle.id in [None, -1]:
+                    add_vehicle = {
+                        "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
+                        "description": data.vehicle.description if data.vehicle.description != "" else None,
+                        "tare": data.vehicle.tare if data.vehicle.tare and data.vehicle.tare > 0 else None
+                    }
+                    if has_non_none_value(add_vehicle):
+                        data_to_check = data.vehicle.dict()
+                        vehicle = current_model(**add_vehicle)
+                        session.add(vehicle)
+                        session.flush()
+                        access.idVehicle = vehicle.id
+                    elif data.vehicle.id == -1:
+                        access.idVehicle = None
+                else:
+                    access.idVehicle = data.vehicle.id
 
-            if access.status != AccessStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
-                existing = get_access_by_vehicle_id_if_uncomplete(access.idVehicle)
+                if access.status != AccessStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
+                    existing = get_access_by_vehicle_id_if_uncomplete(access.idVehicle)
 
-                if existing and existing["id"] != access.id and existing["idVehicle"]:
-                    existing = existing["vehicle"].__dict__
-                    plate = existing["plate"]
-                    raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
-                elif existing is None and access.idVehicle is not None:
-                    existing = get_access_by_identify_if_uncomplete(identify=data.vehicle.plate)
                     if existing and existing["id"] != access.id and existing["idVehicle"]:
-                        raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
+                        existing = existing["vehicle"].__dict__
+                        plate = existing["plate"]
+                        raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
+                    elif existing is None and access.idVehicle is not None:
+                        existing = get_access_by_identify_if_uncomplete(identify=data.vehicle.plate)
+                        if existing and existing["id"] != access.id and existing["idVehicle"]:
+                            raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
 
             # Gestione material globale sull'accesso
             current_model = Material
@@ -270,7 +274,7 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                                 weight2.idOperator = data.operator2.id
                         break
 
-            if data.typeSubject:
+            if not idInOut and data.typeSubject:
                 access.typeSubject = TypeSubjectEnum[data.typeSubject]
 
             if data.number_in_out is not None:
@@ -286,11 +290,12 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                 else:
                     access.status = AccessStatus.WAITING
 
-            if data.note is not None:
-                access.note = data.note if data.note != "" else None
+            if not idInOut:
+                if data.note is not None:
+                    access.note = data.note if data.note != "" else None
 
-            if data.document_reference is not None:
-                access.document_reference = data.document_reference if data.document_reference != "" else None
+                if data.document_reference is not None:
+                    access.document_reference = data.document_reference if data.document_reference != "" else None
 
             badge = data.badge
             if badge is not None:
