@@ -28,6 +28,9 @@ let numberInOutSelectedIdWeight;
 let dataInExecution;
 let currentAccessType = "MANUALLY";
 let _reservationHasMaterial = false;
+let _reservationHasSubject = false;
+let _reservationHasVector = false;
+let _reservationHasDriver = false;
 
 let isRefreshing = false;
 
@@ -267,6 +270,9 @@ async function getData(path) {
         }
         
         _reservationHasMaterial = res.reservation_has_material || false;
+        _reservationHasSubject = res.reservation_has_subject || false;
+        _reservationHasVector = res.reservation_has_vector || false;
+        _reservationHasDriver = res.reservation_has_driver || false;
         if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
             const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
             buttonsAndInputs.forEach(element => {
@@ -1024,6 +1030,9 @@ function processRealtimeObject(obj) {
     } else if (obj.data_in_execution) {
         currentAccessType = obj.type || "MANUALLY";
         _reservationHasMaterial = obj.reservation_has_material || false;
+        _reservationHasSubject = obj.reservation_has_subject || false;
+        _reservationHasVector = obj.reservation_has_vector || false;
+        _reservationHasDriver = obj.reservation_has_driver || false;
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;

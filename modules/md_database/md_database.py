@@ -237,13 +237,22 @@ class InOut(Base):
     __tablename__ = 'in_out'
     id = Column(Integer, primary_key=True, index=True)
     idAccess = Column(Integer, ForeignKey('access.id'))
+    typeSubject = Column(Enum(TypeSubjectEnum), default=None, nullable=True)
+    idSubject = Column(Integer, ForeignKey('subject.id'), nullable=True)
+    idVector = Column(Integer, ForeignKey('vector.id'), nullable=True)
+    idDriver = Column(Integer, ForeignKey('driver.id'), nullable=True)
     idMaterial = Column(Integer, ForeignKey('material.id'), nullable=True)
     idWeight1 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
     idWeight2 = Column(Integer, ForeignKey('weighing.id'), nullable=True)  # ADDED: nullable=True
     net_weight = Column(Integer, nullable=True)
+    note = Column(String, nullable=True)
+    document_reference = Column(String, nullable=True)
 
     # Relationships
-    access = relationship("Access", back_populates="in_out")    
+    access = relationship("Access", back_populates="in_out")
+    subject = relationship("Subject", foreign_keys=[idSubject])
+    vector = relationship("Vector", foreign_keys=[idVector])
+    driver = relationship("Driver", foreign_keys=[idDriver])
     material = relationship("Material", back_populates="in_out")
     weight1 = relationship("Weighing", foreign_keys=[idWeight1], back_populates="in_out_weight1")  # FIXED: added foreign_keys
     weight2 = relationship("Weighing", foreign_keys=[idWeight2], back_populates="in_out_weight2")  # FIXED: added foreign_keys

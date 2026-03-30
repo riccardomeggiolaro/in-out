@@ -167,6 +167,33 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                         in_out.idMaterial = data.material.id
                         break
 
+            # Gestione subject per InOut specifico
+            if idInOut:
+                target_in_out = None
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        target_in_out = in_out
+                        break
+                if target_in_out:
+                    if data.subject.id and data.subject.id != -1:
+                        target_in_out.idSubject = data.subject.id
+                    elif data.subject.id == -1:
+                        target_in_out.idSubject = None
+                    if data.vector.id and data.vector.id != -1:
+                        target_in_out.idVector = data.vector.id
+                    elif data.vector.id == -1:
+                        target_in_out.idVector = None
+                    if data.driver.id and data.driver.id != -1:
+                        target_in_out.idDriver = data.driver.id
+                    elif data.driver.id == -1:
+                        target_in_out.idDriver = None
+                    if data.typeSubject:
+                        target_in_out.typeSubject = TypeSubjectEnum[data.typeSubject]
+                    if data.note is not None:
+                        target_in_out.note = data.note if data.note != "" else None
+                    if data.document_reference is not None:
+                        target_in_out.document_reference = data.document_reference if data.document_reference != "" else None
+
             # Gestione operator1 per InOut
             if idInOut and data.operator1.id in [None, -1]:
                 # Trova l'InOut specifico
