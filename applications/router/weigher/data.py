@@ -11,7 +11,7 @@ from modules.md_database.functions.get_data_by_attributes import get_data_by_att
 from modules.md_database.functions.update_access import update_access
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.interfaces.access import SetAccessDTO
-from modules.md_database.md_database import AccessStatus, TypeAccess
+from modules.md_database.md_database import AccessStatus, TypeAccess, TypeSubjectEnum
 import libs.lb_config as lb_config
 import json
 import modules.md_weigher.md_weigher as md_weigher
@@ -245,7 +245,7 @@ class DataRouter(CallbackWeigher):
 					if data_dto.data_in_execution.material.id:
 						in_out_update["idMaterial"] = data_dto.data_in_execution.material.id
 					if data_dto.data_in_execution.typeSubject:
-						in_out_update["typeSubject"] = data_dto.data_in_execution.typeSubject
+						in_out_update["typeSubject"] = TypeSubjectEnum[data_dto.data_in_execution.typeSubject] if data_dto.data_in_execution.typeSubject else None
 					if data_dto.data_in_execution.note is not None:
 						in_out_update["note"] = data_dto.data_in_execution.note if data_dto.data_in_execution.note != "" else None
 					if data_dto.data_in_execution.document_reference is not None:
