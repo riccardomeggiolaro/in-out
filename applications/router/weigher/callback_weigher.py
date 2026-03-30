@@ -146,7 +146,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"idSubject": die["subject"]["id"],
 					"idVector": die["vector"]["id"],
 					"idDriver": die["driver"]["id"],
-					"typeSubject": die["typeSubject"],
+					"typeSubject": TypeSubjectEnum[die["typeSubject"]] if die["typeSubject"] else None,
 					"note": die.get("note"),
 					"document_reference": die.get("document_reference"),
 				})
@@ -162,7 +162,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"idSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"],
 					"idVector": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"],
 					"idDriver": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"],
-					"typeSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"],
+					"typeSubject": TypeSubjectEnum[weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
 					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
 					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
 				})
@@ -176,7 +176,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"idSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"],
 					"idVector": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"],
 					"idDriver": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"],
-					"typeSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"],
+					"typeSubject": TypeSubjectEnum[weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
 					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
 					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
 				})

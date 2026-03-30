@@ -9,7 +9,7 @@ from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.access import AccessRouter
-from modules.md_database.md_database import TypeAccess, AccessStatus
+from modules.md_database.md_database import TypeAccess, AccessStatus, TypeSubjectEnum
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO
 from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
@@ -145,7 +145,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			"idSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["subject"]["id"],
 			"idVector": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vector"]["id"],
 			"idDriver": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["driver"]["id"],
-			"typeSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"],
+			"typeSubject": TypeSubjectEnum[weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
 			"note": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("note"),
 			"document_reference": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("document_reference"),
 		})
@@ -229,7 +229,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					"idSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["subject"]["id"],
 					"idVector": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vector"]["id"],
 					"idDriver": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["driver"]["id"],
-					"typeSubject": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"],
+					"typeSubject": TypeSubjectEnum[weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
 					"note": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("note"),
 					"document_reference": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"].get("document_reference"),
 				})
