@@ -138,13 +138,8 @@ const totemViews = {
 
             window._plateGoToNext = function() {
                 if (isFromSummary()) { goTo('summary'); return; }
-                const hasReservation = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-                if (hasReservation) {
-                    goTo(totemAnagrafiche.material && !_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
-                } else {
-                    const dest = _findNextEmptyStep('plate');
-                    goTo(dest || 'summary');
-                }
+                const dest = _findNextEmptyStep('plate');
+                goTo(dest || 'summary');
             };
 
             window._manualPlateValue = '';
@@ -425,17 +420,21 @@ const totemViews = {
 
             function applyReservationMode() {
                 const isReservationMode = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+                const isExit = _isSecondWeighing();
 
-                // All fields locked except material (if empty) when reservation is selected
-                ['rowPlate', 'rowSubject', 'rowVector', 'rowDriver'].forEach(id => {
-                    const row = document.getElementById(id);
-                    if (row) row.classList.toggle('disabled', isReservationMode);
-                });
-                // Material: locked if reservation has it OR if in exit mode with material already on in_out
+                // Plate always locked with reservation
+                const rowPlate = document.getElementById('rowPlate');
+                if (rowPlate) rowPlate.classList.toggle('disabled', isReservationMode);
+
+                // Each field: locked if reservation has it OR if in exit mode and already set on in_out
+                const rowSubject = document.getElementById('rowSubject');
+                if (rowSubject) rowSubject.classList.toggle('disabled', isReservationMode && (_reservationHasSubject || (isExit && !!selectedSubject.id)));
+                const rowVector = document.getElementById('rowVector');
+                if (rowVector) rowVector.classList.toggle('disabled', isReservationMode && (_reservationHasVector || (isExit && !!selectedVector.id)));
+                const rowDriver = document.getElementById('rowDriver');
+                if (rowDriver) rowDriver.classList.toggle('disabled', isReservationMode && (_reservationHasDriver || (isExit && !!selectedDriver.id)));
                 const rowMaterial = document.getElementById('rowMaterial');
-                const materialLockedByReservation = isReservationMode && _reservationHasMaterial;
-                const materialLockedByInOut = isReservationMode && _isSecondWeighing() && !!selectedMaterial.id;
-                if (rowMaterial) rowMaterial.classList.toggle('disabled', materialLockedByReservation || materialLockedByInOut);
+                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && (_reservationHasMaterial || (isExit && !!selectedMaterial.id)));
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {

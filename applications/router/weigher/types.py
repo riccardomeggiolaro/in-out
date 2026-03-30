@@ -40,6 +40,9 @@ class Data(BaseModel):
 	number_in_out: Optional[int] = 1
 	type: Optional[str] = TypeAccess.MANUALLY.name
 	reservation_has_material: Optional[bool] = False
+	reservation_has_subject: Optional[bool] = False
+	reservation_has_vector: Optional[bool] = False
+	reservation_has_driver: Optional[bool] = False
     
 class EventAction(BaseModel):
     take_picture: List[int] = []

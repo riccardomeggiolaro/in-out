@@ -16,6 +16,9 @@ let selectedMaterial = { id: null, description: '' };
 let dataInExecution = null;
 let selectedIdWeight = null;
 let _reservationHasMaterial = false;
+let _reservationHasSubject = false;
+let _reservationHasVector = false;
+let _reservationHasDriver = false;
 let weighers_data_type = "MANUALLY";
 let data_weight_realtime = {
     status: undefined,
@@ -82,36 +85,21 @@ function _resolveStartPage() {
 
     if (!selectedVehicle.plate) return; // Stay on plate
 
-    const hasAccess = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
-
-    if (hasAccess) {
-        const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
-        if (isReservation) {
-            // Reservation: only material can be filled from totem (if enabled)
-            goTo(totemAnagrafiche.material && !_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
-        } else {
-            // Manual access: go to first empty field
-            const dest = _findNextEmptyStep('plate');
-            goTo(dest || 'summary');
-        }
-        return;
-    }
-
-    // No access: go to first empty step
+    // Go to first empty editable step, or summary if all filled
     const dest = _findNextEmptyStep('plate');
-    if (dest) { goTo(dest); }
-    else { goTo('summary'); }
+    goTo(dest || 'summary');
 }
 let _waitingForStartPage = false;
 
 // Find the next step with an empty field, starting after the given step
-// Skips steps that are disabled in totem config
+// Skips steps disabled in totem config or already set on the reservation
 function _findNextEmptyStep(afterStep) {
+    const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
     const steps = [
-        { name: 'subject', filled: !!selectedSubject.id, enabled: totemAnagrafiche.subject },
-        { name: 'vector', filled: !!selectedVector.id, enabled: totemAnagrafiche.vector },
-        { name: 'driver', filled: !!selectedDriver.id, enabled: totemAnagrafiche.driver },
-        { name: 'material', filled: !!selectedMaterial.id, enabled: totemAnagrafiche.material },
+        { name: 'subject', filled: !!selectedSubject.id, enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
+        { name: 'vector', filled: !!selectedVector.id, enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
+        { name: 'driver', filled: !!selectedDriver.id, enabled: totemAnagrafiche.driver && !(isReservation && _reservationHasDriver) },
+        { name: 'material', filled: !!selectedMaterial.id, enabled: totemAnagrafiche.material && !(isReservation && _reservationHasMaterial) },
     ];
     let startIndex = 0;
     if (afterStep === 'plate') startIndex = 0;
@@ -784,6 +772,9 @@ async function getData(path) {
         dataInExecution = res["data_in_execution"];
         selectedIdWeight = res["id_selected"];
         _reservationHasMaterial = res.reservation_has_material || false;
+        _reservationHasSubject = res.reservation_has_subject || false;
+        _reservationHasVector = res.reservation_has_vector || false;
+        _reservationHasDriver = res.reservation_has_driver || false;
         weighers_data_type = res.type || "MANUALLY";
         const obj = res["data_in_execution"];
 
@@ -860,6 +851,9 @@ function processRealtimeObject(obj) {
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         _reservationHasMaterial = obj.reservation_has_material || false;
+        _reservationHasSubject = obj.reservation_has_subject || false;
+        _reservationHasVector = obj.reservation_has_vector || false;
+        _reservationHasDriver = obj.reservation_has_driver || false;
         weighers_data_type = obj.type || "MANUALLY";
         dataInExecution = obj.data_in_execution;
         selectedIdWeight = obj.id_selected;
@@ -882,15 +876,8 @@ function processRealtimeObject(obj) {
 
         // If a new access was selected (from dashboard), navigate to first empty field or summary
         if (!prevId && obj.id_selected && obj.id_selected.id !== null) {
-            const isReservation = obj.type && obj.type !== "MANUALLY";
-            if (isReservation) {
-                // Reservation: only material can be filled from totem
-                goTo(totemAnagrafiche.material && !_reservationHasMaterial && !selectedMaterial.id ? 'material' : 'summary');
-            } else {
-                // Manual access: go to first empty field
-                const dest = _findNextEmptyStep('plate');
-                goTo(dest || 'summary');
-            }
+            const dest = _findNextEmptyStep('plate');
+            goTo(dest || 'summary');
             return;
         }
 
