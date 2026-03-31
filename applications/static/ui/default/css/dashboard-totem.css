@@ -585,6 +585,7 @@ body {
     transition: background 0.15s;
     min-height: 0;
     flex: 1;
+    max-height: calc(100% / 5);
     position: relative;
     overflow: hidden;
     border-bottom: 2px solid #e0e0e0;
