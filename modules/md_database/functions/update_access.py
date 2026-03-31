@@ -92,7 +92,7 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
 
             current_reservation_vehicle = access.idVehicle
 
-            if not idInOut:
+            if not idInOut or access.type == TypeAccess.MANUALLY:
                 current_model = Vehicle
                 vehicle = None
                 if data.vehicle.id in [None, -1]:
