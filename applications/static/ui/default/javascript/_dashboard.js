@@ -1133,4 +1133,22 @@ function enableAllElements() {
     buttonsAndInputs.forEach(element => {
         element.disabled = false;
     });
+
+    // Re-apply disabled state for fields with pre-existing data
+    if (selectedIdWeight !== null) {
+        const plateInput = document.getElementById('currentPlateVehicle');
+        if (plateInput) plateInput.disabled = _reservationHasVehicle;
+        const typeSubjectSelect = document.getElementById('typeSubject');
+        if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+        const subjectInput = document.getElementById('currentSocialReasonSubject');
+        if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+        const vectorInput = document.getElementById('currentSocialReasonVector');
+        if (vectorInput) vectorInput.disabled = _reservationHasVector;
+        const materialInput = document.getElementById('currentDescriptionMaterial');
+        if (materialInput) materialInput.disabled = _reservationHasMaterial;
+        const noteInput = document.getElementById('currentNote');
+        if (noteInput) noteInput.disabled = _reservationHasNote;
+        const docRefInput = document.getElementById('currentDocumentReference');
+        if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
+    }
 }
