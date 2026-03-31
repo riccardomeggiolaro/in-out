@@ -562,30 +562,35 @@ body {
 
 /* Summary card */
 .summary-card {
-    width: auto;
-    margin: 0 16px 8px 16px;
-    flex: 0 1 auto;
-    min-height: 0;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: 8px;
+    background: transparent;
+    box-shadow: none;
+    padding: 0 16px 8px 16px;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-self: stretch;
+    flex: 1;
+    min-height: 0;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .summary-row {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: clamp(8px, 2vw, 14px);
+    padding: 0 8px;
+    text-align: center;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    position: relative;
-    padding: 12px 24px;
-    border-bottom: 1px solid #f0f0f0;
+    align-items: center;
     cursor: pointer;
-    transition: background 0.15s;
-    flex: 0 0 auto;
+    transition: all 0.2s;
     min-height: 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .summary-row:last-child {
@@ -593,42 +598,40 @@ body {
 }
 
 .summary-row:hover {
-    background: #f8faff;
+    border-color: #1362b8;
+    background: #f0f6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(19, 98, 184, 0.15);
 }
 
 .summary-label {
-    font-size: clamp(0.7rem, 5vh, 3rem);
+    font-size: clamp(0.5rem, 2vh, 1.2rem);
     color: #999;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: 50%;
-    flex-shrink: 0;
-    text-align: center;
-    border-right: 1px solid #e0e0e0;
-    padding-right: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 100%;
 }
 
 .summary-value {
-    width: 50%;
     font-weight: 600;
     font-size: clamp(0.7rem, 5vh, 3rem);
     color: #333;
-    text-align: center;
-    padding-left: 12px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 100%;
 }
 
 .summary-edit {
     color: #1362b8;
-    font-size: clamp(0.9rem, 3vh, 2.2rem);
+    font-size: clamp(0.5rem, 1.5vh, 1rem);
     opacity: 0.6;
     position: absolute;
-    right: 16px;
+    top: 4px;
+    right: 8px;
 }
 
 .summary-row:hover .summary-edit {

@@ -356,7 +356,7 @@ const totemViews = {
     summary: {
         title: 'Totem - Riepilogo',
         style: `
-            .summary-row.disabled { pointer-events: none; opacity: 0.6; cursor: default; }
+            .summary-row.disabled { pointer-events: none; opacity: 0.5; cursor: default; border-color: #e8e8e8; background: #f5f5f5; }
             .summary-row.disabled .summary-edit { display: none; }
         `,
         html: () => `
