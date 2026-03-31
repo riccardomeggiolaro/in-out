@@ -277,9 +277,9 @@ async function getData(path) {
         _reservationHasDriver = res.reservation_has_driver || false;
         _reservationHasNote = res.reservation_has_note || false;
         _reservationHasDocumentReference = res.reservation_has_document_reference || false;
-        if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
+        if (res.id_selected.id !== null) {
             const plateInput = document.getElementById('currentPlateVehicle');
-            if (plateInput) plateInput.disabled = true;
+            if (plateInput) plateInput.disabled = res.type !== "MANUALLY";
             const typeSubjectSelect = document.getElementById('typeSubject');
             if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
             const subjectInput = document.getElementById('currentSocialReasonSubject');
@@ -1065,14 +1065,9 @@ function processRealtimeObject(obj) {
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
 
-        if (currentAccessType === "MANUALLY") {
-            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-                element.disabled = false;
-            });
-        } else {
-            // Each field: disabled only if already set on the reservation
+        {
             const plateInput = document.getElementById('currentPlateVehicle');
-            if (plateInput) plateInput.disabled = true; // Plate always locked on reservation
+            if (plateInput) plateInput.disabled = currentAccessType !== "MANUALLY";
             const typeSubjectSelect = document.getElementById('typeSubject');
             if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
             const subjectInput = document.getElementById('currentSocialReasonSubject');
@@ -1442,9 +1437,9 @@ function enableAllElements() {
     });
 
     // Re-apply disabled state for non-manual accesses (reservations)
-    if (currentAccessType !== "MANUALLY" && selectedIdWeight && selectedIdWeight["id"] !== null) {
+    if (selectedIdWeight && selectedIdWeight["id"] !== null) {
         const plateInput = document.getElementById('currentPlateVehicle');
-        if (plateInput) plateInput.disabled = true;
+        if (plateInput) plateInput.disabled = currentAccessType !== "MANUALLY";
         const typeSubjectSelect = document.getElementById('typeSubject');
         if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
         const subjectInput = document.getElementById('currentSocialReasonSubject');
