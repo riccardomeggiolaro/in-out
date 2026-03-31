@@ -31,6 +31,8 @@ let _reservationHasMaterial = false;
 let _reservationHasSubject = false;
 let _reservationHasVector = false;
 let _reservationHasDriver = false;
+let _reservationHasNote = false;
+let _reservationHasDocumentReference = false;
 
 let isRefreshing = false;
 
@@ -290,6 +292,8 @@ async function getData(path) {
         _reservationHasSubject = res.reservation_has_subject || false;
         _reservationHasVector = res.reservation_has_vector || false;
         _reservationHasDriver = res.reservation_has_driver || false;
+        _reservationHasNote = res.reservation_has_note || false;
+        _reservationHasDocumentReference = res.reservation_has_document_reference || false;
         if (res.type !== "MANUALLY" && res.id_selected.id !== null) {
             const plateInput = document.getElementById('currentPlateVehicle');
             if (plateInput) plateInput.disabled = true;
@@ -302,9 +306,9 @@ async function getData(path) {
             const materialInput = document.getElementById('currentDescriptionMaterial');
             if (materialInput) materialInput.disabled = _reservationHasMaterial;
             const noteInput = document.getElementById('currentNote');
-            if (noteInput) noteInput.disabled = false;
+            if (noteInput) noteInput.disabled = _reservationHasNote;
             const docRefInput = document.getElementById('currentDocumentReference');
-            if (docRefInput) docRefInput.disabled = false;
+            if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -1143,6 +1147,8 @@ function processRealtimeObject(obj) {
         _reservationHasSubject = obj.reservation_has_subject || false;
         _reservationHasVector = obj.reservation_has_vector || false;
         _reservationHasDriver = obj.reservation_has_driver || false;
+        _reservationHasNote = obj.reservation_has_note || false;
+        _reservationHasDocumentReference = obj.reservation_has_document_reference || false;
         dataInExecution = obj.data_in_execution;
         selectedIdVehicle = obj.data_in_execution.vehicle.id;
         selectedIdTypeSubject = obj.data_in_execution.typeSubject;
@@ -1182,9 +1188,9 @@ function processRealtimeObject(obj) {
             const materialInput = document.getElementById('currentDescriptionMaterial');
             if (materialInput) materialInput.disabled = _reservationHasMaterial;
             const noteInput = document.getElementById('currentNote');
-            if (noteInput) noteInput.disabled = false;
+            if (noteInput) noteInput.disabled = _reservationHasNote;
             const docRefInput = document.getElementById('currentDocumentReference');
-            if (docRefInput) docRefInput.disabled = false;
+            if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
         }
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
@@ -1558,6 +1564,10 @@ function enableAllElements() {
         if (vectorInput) vectorInput.disabled = _reservationHasVector;
         const materialInput = document.getElementById('currentDescriptionMaterial');
         if (materialInput) materialInput.disabled = _reservationHasMaterial;
+        const noteInput = document.getElementById('currentNote');
+        if (noteInput) noteInput.disabled = _reservationHasNote;
+        const docRefInput = document.getElementById('currentDocumentReference');
+        if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
     }
 }
 

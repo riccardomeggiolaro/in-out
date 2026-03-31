@@ -43,6 +43,8 @@ class Data(BaseModel):
 	reservation_has_subject: Optional[bool] = False
 	reservation_has_vector: Optional[bool] = False
 	reservation_has_driver: Optional[bool] = False
+	reservation_has_note: Optional[bool] = False
+	reservation_has_document_reference: Optional[bool] = False
     
 class EventAction(BaseModel):
     take_picture: List[int] = []
