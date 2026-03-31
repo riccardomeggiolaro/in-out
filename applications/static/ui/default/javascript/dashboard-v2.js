@@ -412,24 +412,17 @@ async function populateListIn() {
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
 
-            // Soggetto - priority: 1) data_in_execution 2) in_out (if open, even if empty) 3) access/reservation
             let subject = '';
-            if (isCurrentAccess && dataInExecution && dataInExecution.subject && dataInExecution.subject.social_reason) {
-                subject = dataInExecution.subject.social_reason;
+            let material = '';
+            if (isCurrentAccess && dataInExecution) {
+                subject = (dataInExecution.subject && dataInExecution.subject.social_reason) ? dataInExecution.subject.social_reason : '';
+                material = (dataInExecution.material && dataInExecution.material.description) ? dataInExecution.material.description : '';
             } else if (lastInOutOpen) {
                 subject = (lastInOut.subject && lastInOut.subject.social_reason) ? lastInOut.subject.social_reason : '';
-            } else if (item.subject && item.subject.social_reason) {
-                subject = item.subject.social_reason;
-            }
-
-            // Materiale - priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
-            let material = '';
-            if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
-                material = dataInExecution.material.description;
-            } else if (lastInOutOpen) {
                 material = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : '';
-            } else if (item.material && item.material.description) {
-                material = item.material.description;
+            } else if (item.type === "RESERVATION") {
+                subject = (item.subject && item.subject.social_reason) ? item.subject.social_reason : '';
+                material = (item.material && item.material.description) ? item.material.description : '';
             }
 
             // PID
