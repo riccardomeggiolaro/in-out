@@ -133,10 +133,6 @@ class DataRouter(CallbackWeigher):
 		# Preserve current id_selected when keep_selected is true
 		if keep_selected and id_selected and data_dto.id_selected.id is None:
 			data_dto.id_selected.id = id_selected
-		# Auto-preserve selection for manual accesses when modifying non-vehicle fields
-		if id_selected and type_current_access == TypeAccess.MANUALLY.name and data_dto.id_selected.id is None:
-			if not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate:
-				data_dto.id_selected.id = id_selected
 		if data_dto.data_in_execution.vehicle.id:
 			access = get_access_by_vehicle_id_if_uncomplete(data_dto.data_in_execution.vehicle.id)
 			if access:
@@ -259,6 +255,18 @@ class DataRouter(CallbackWeigher):
 					broadcast_data = json.dumps({"id": id_selected})
 					await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				return data
+			elif type_current_access == TypeAccess.MANUALLY.name and data_dto.id_selected.id is None and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate:
+				# Manual access: update data without deselecting
+				access = get_access_by_id(id_selected)
+				idInOut = None
+				if access and len(access.in_out) > 0:
+					idInOut = access.in_out[-1].id
+				update_access(id_selected, SetAccessDTO(**data_dto.data_in_execution.dict()), idInOut)
+				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
+				broadcast_data = json.dumps({"id": id_selected})
+				await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
