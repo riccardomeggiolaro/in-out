@@ -37,6 +37,28 @@ let _reservationHasDocumentReference = false;
 
 let isRefreshing = false;
 
+function applyFieldLocks() {
+    const fields = [
+        { id: 'currentPlateVehicle', flag: _reservationHasVehicle },
+        { id: 'typeSubject', flag: _reservationHasSubject },
+        { id: 'currentSocialReasonSubject', flag: _reservationHasSubject },
+        { id: 'currentSocialReasonVector', flag: _reservationHasVector },
+        { id: 'currentDescriptionMaterial', flag: _reservationHasMaterial },
+        { id: 'currentNote', flag: _reservationHasNote },
+        { id: 'currentDocumentReference', flag: _reservationHasDocumentReference },
+    ];
+    fields.forEach(({ id, flag }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = flag;
+        const group = el.closest('.input-group');
+        if (group) {
+            group.style.pointerEvents = flag ? 'none' : '';
+            group.style.opacity = flag ? '0.6' : '';
+        }
+    });
+}
+
 let pathname = '';
 
 pathname = '/gateway';
@@ -297,20 +319,7 @@ async function getData(path) {
         _reservationHasNote = res.reservation_has_note || false;
         _reservationHasDocumentReference = res.reservation_has_document_reference || false;
         if (res.id_selected.id !== null) {
-            const plateInput = document.getElementById('currentPlateVehicle');
-            if (plateInput) plateInput.disabled = _reservationHasVehicle;
-            const typeSubjectSelect = document.getElementById('typeSubject');
-            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
-            const subjectInput = document.getElementById('currentSocialReasonSubject');
-            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
-            const vectorInput = document.getElementById('currentSocialReasonVector');
-            if (vectorInput) vectorInput.disabled = _reservationHasVector;
-            const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = _reservationHasMaterial;
-            const noteInput = document.getElementById('currentNote');
-            if (noteInput) noteInput.disabled = _reservationHasNote;
-            const docRefInput = document.getElementById('currentDocumentReference');
-            if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
+            applyFieldLocks();
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -1174,22 +1183,7 @@ function processRealtimeObject(obj) {
         setGroupValue(document.querySelector('#currentDocumentReference'), obj.data_in_execution.document_reference || '');
 
 
-        {
-            const plateInput = document.getElementById('currentPlateVehicle');
-            if (plateInput) plateInput.disabled = _reservationHasVehicle;
-            const typeSubjectSelect = document.getElementById('typeSubject');
-            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
-            const subjectInput = document.getElementById('currentSocialReasonSubject');
-            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
-            const vectorInput = document.getElementById('currentSocialReasonVector');
-            if (vectorInput) vectorInput.disabled = _reservationHasVector;
-            const materialInput = document.getElementById('currentDescriptionMaterial');
-            if (materialInput) materialInput.disabled = _reservationHasMaterial;
-            const noteInput = document.getElementById('currentNote');
-            if (noteInput) noteInput.disabled = _reservationHasNote;
-            const docRefInput = document.getElementById('currentDocumentReference');
-            if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
-        }
+        applyFieldLocks();
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
             if (selectedIdWeight["id"] !== null) {
@@ -1552,20 +1546,7 @@ function enableAllElements() {
 
     // Re-apply disabled state for all access types
     if (selectedIdWeight && selectedIdWeight["id"] !== null) {
-        const plateInput = document.getElementById('currentPlateVehicle');
-        if (plateInput) plateInput.disabled = _reservationHasVehicle;
-        const typeSubjectSelect = document.getElementById('typeSubject');
-        if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
-        const subjectInput = document.getElementById('currentSocialReasonSubject');
-        if (subjectInput) subjectInput.disabled = _reservationHasSubject;
-        const vectorInput = document.getElementById('currentSocialReasonVector');
-        if (vectorInput) vectorInput.disabled = _reservationHasVector;
-        const materialInput = document.getElementById('currentDescriptionMaterial');
-        if (materialInput) materialInput.disabled = _reservationHasMaterial;
-        const noteInput = document.getElementById('currentNote');
-        if (noteInput) noteInput.disabled = _reservationHasNote;
-        const docRefInput = document.getElementById('currentDocumentReference');
-        if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
+        applyFieldLocks();
     }
 }
 
