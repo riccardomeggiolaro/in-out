@@ -22,6 +22,14 @@ let dataInExecution;
 
 let isRefreshing = false;
 
+let _reservationHasMaterial = false;
+let _reservationHasSubject = false;
+let _reservationHasVector = false;
+let _reservationHasDriver = false;
+let _reservationHasVehicle = false;
+let _reservationHasNote = false;
+let _reservationHasDocumentReference = false;
+
 let pathname = '';
 
 pathname = '/gateway';
@@ -224,13 +232,28 @@ async function getData(path) {
         document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
         document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
         selectedIdWeight = res["id_selected"]["id"];
+        _reservationHasMaterial = res.reservation_has_material || false;
+        _reservationHasSubject = res.reservation_has_subject || false;
+        _reservationHasVector = res.reservation_has_vector || false;
+        _reservationHasDriver = res.reservation_has_driver || false;
+        _reservationHasVehicle = res.reservation_has_vehicle || false;
+        _reservationHasNote = res.reservation_has_note || false;
+        _reservationHasDocumentReference = res.reservation_has_document_reference || false;
         if (res.id_selected.id !== null) {
-            // Seleziona tutti i pulsanti e gli input
-            const buttonsAndInputs = document.querySelectorAll('.anagrafic input, .anagrafic select');
-            // Disabilita ogni elemento trovato
-            buttonsAndInputs.forEach(element => {
-                element.disabled = true;
-            });
+            const plateInput = document.getElementById('currentPlateVehicle');
+            if (plateInput) plateInput.disabled = _reservationHasVehicle;
+            const typeSubjectSelect = document.getElementById('typeSubject');
+            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+            const subjectInput = document.getElementById('currentSocialReasonSubject');
+            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+            const vectorInput = document.getElementById('currentSocialReasonVector');
+            if (vectorInput) vectorInput.disabled = _reservationHasVector;
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = _reservationHasMaterial;
+            const noteInput = document.getElementById('currentNote');
+            if (noteInput) noteInput.disabled = _reservationHasNote;
+            const docRefInput = document.getElementById('currentDocumentReference');
+            if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
         }
     })
     .catch(error => console.error('Errore nella fetch:', error));
@@ -761,14 +784,28 @@ function updateUIRealtime(e) {
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
         document.querySelector('#currentNote').value = obj.data_in_execution.note ? obj.data_in_execution.note : '';
         document.querySelector('#currentDocumentReference').value = obj.data_in_execution.document_reference ? obj.data_in_execution.document_reference : '';
-        if (obj.type === "MANUALLY") {
-            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-                element.disabled = false;
-            });
-        } else {
-            document.querySelectorAll('.anagrafic input, .anagrafic select').forEach(element => {
-                element.disabled = true;
-            });
+        _reservationHasMaterial = obj.reservation_has_material || false;
+        _reservationHasSubject = obj.reservation_has_subject || false;
+        _reservationHasVector = obj.reservation_has_vector || false;
+        _reservationHasDriver = obj.reservation_has_driver || false;
+        _reservationHasVehicle = obj.reservation_has_vehicle || false;
+        _reservationHasNote = obj.reservation_has_note || false;
+        _reservationHasDocumentReference = obj.reservation_has_document_reference || false;
+        {
+            const plateInput = document.getElementById('currentPlateVehicle');
+            if (plateInput) plateInput.disabled = _reservationHasVehicle;
+            const typeSubjectSelect = document.getElementById('typeSubject');
+            if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
+            const subjectInput = document.getElementById('currentSocialReasonSubject');
+            if (subjectInput) subjectInput.disabled = _reservationHasSubject;
+            const vectorInput = document.getElementById('currentSocialReasonVector');
+            if (vectorInput) vectorInput.disabled = _reservationHasVector;
+            const materialInput = document.getElementById('currentDescriptionMaterial');
+            if (materialInput) materialInput.disabled = _reservationHasMaterial;
+            const noteInput = document.getElementById('currentNote');
+            if (noteInput) noteInput.disabled = _reservationHasNote;
+            const docRefInput = document.getElementById('currentDocumentReference');
+            if (docRefInput) docRefInput.disabled = _reservationHasDocumentReference;
         }
         if (obj.id_selected.id != selectedIdWeight) {
             if (selectedIdWeight !== null) {
