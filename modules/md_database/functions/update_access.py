@@ -172,6 +172,89 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                         break
 
             # Gestione subject per InOut specifico
+            current_model = Subject
+            if idInOut and data.subject.id in [None, -1]:
+                add_subject = {
+                    "social_reason": data.subject.social_reason if data.subject.social_reason != "" else None,
+                    "telephone": data.subject.telephone if data.subject.telephone != "" else None,
+                    "cfpiva": data.subject.cfpiva if data.subject.cfpiva != "" else None
+                }
+                if has_non_none_value(add_subject):
+                    data_to_check = data.subject.dict()
+                    subject = current_model(**add_subject)
+                    session.add(subject)
+                    session.flush()
+                    for in_out in access.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idSubject = subject.id
+                            break
+                elif data.subject.id == -1:
+                    for in_out in access.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idSubject = None
+                            break
+            elif idInOut and data.subject.id:
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        in_out.idSubject = data.subject.id
+                        break
+
+            # Gestione vector per InOut specifico
+            current_model = Vector
+            if idInOut and data.vector.id in [None, -1]:
+                add_vector = {
+                    "social_reason": data.vector.social_reason if data.vector.social_reason != "" else None,
+                    "telephone": data.vector.telephone if data.vector.telephone != "" else None,
+                    "cfpiva": data.vector.cfpiva if data.vector.cfpiva != "" else None
+                }
+                if has_non_none_value(add_vector):
+                    data_to_check = data.vector.dict()
+                    vector = current_model(**add_vector)
+                    session.add(vector)
+                    session.flush()
+                    for in_out in access.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idVector = vector.id
+                            break
+                elif data.vector.id == -1:
+                    for in_out in access.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idVector = None
+                            break
+            elif idInOut and data.vector.id:
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        in_out.idVector = data.vector.id
+                        break
+
+            # Gestione driver per InOut specifico
+            current_model = Driver
+            if idInOut and data.driver.id in [None, -1]:
+                add_driver = {
+                    "social_reason": data.driver.social_reason if data.driver.social_reason != "" else None,
+                    "telephone": data.driver.telephone if data.driver.telephone != "" else None
+                }
+                if has_non_none_value(add_driver):
+                    data_to_check = data.driver.dict()
+                    driver = current_model(**add_driver)
+                    session.add(driver)
+                    session.flush()
+                    for in_out in access.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idDriver = driver.id
+                            break
+                elif data.driver.id == -1:
+                    for in_out in access.in_out:
+                        if in_out.id == idInOut:
+                            in_out.idDriver = None
+                            break
+            elif idInOut and data.driver.id:
+                for in_out in access.in_out:
+                    if in_out.id == idInOut:
+                        in_out.idDriver = data.driver.id
+                        break
+
+            # Gestione altri campi per InOut specifico
             if idInOut:
                 target_in_out = None
                 for in_out in access.in_out:
@@ -179,18 +262,6 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                         target_in_out = in_out
                         break
                 if target_in_out:
-                    if data.subject.id and data.subject.id != -1:
-                        target_in_out.idSubject = data.subject.id
-                    elif data.subject.id == -1:
-                        target_in_out.idSubject = None
-                    if data.vector.id and data.vector.id != -1:
-                        target_in_out.idVector = data.vector.id
-                    elif data.vector.id == -1:
-                        target_in_out.idVector = None
-                    if data.driver.id and data.driver.id != -1:
-                        target_in_out.idDriver = data.driver.id
-                    elif data.driver.id == -1:
-                        target_in_out.idDriver = None
                     if data.typeSubject:
                         target_in_out.typeSubject = TypeSubjectEnum[data.typeSubject]
                     if data.note is not None:
