@@ -90,6 +90,10 @@ def get_list_accesses(
         ]
         if load_subject:
             inout_options.append(selectinload(InOut.subject))
+        if load_vector:
+            inout_options.append(selectinload(InOut.vector))
+        if load_driver:
+            inout_options.append(selectinload(InOut.driver))
         if load_material:
             inout_options.append(selectinload(InOut.material))
 
