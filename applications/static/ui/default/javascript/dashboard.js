@@ -317,15 +317,11 @@ async function populateListIn() {
             }
 
             let additionalInfo = [];
-            const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
             let subjectName = null;
             let materialDesc = null;
-            if (isCurrentAccess && dataInExecution) {
-                subjectName = (dataInExecution.subject && dataInExecution.subject.social_reason) ? dataInExecution.subject.social_reason : null;
-                materialDesc = (dataInExecution.material && dataInExecution.material.description) ? dataInExecution.material.description : null;
-            } else if (lastInOutOpen) {
+            if (lastInOutOpen) {
                 subjectName = (lastInOut.subject && lastInOut.subject.social_reason) ? lastInOut.subject.social_reason : null;
                 materialDesc = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : null;
             } else if (item.type === "RESERVATION") {
