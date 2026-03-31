@@ -580,11 +580,9 @@ body {
     background: white;
     border: 2px solid #e0e0e0;
     border-radius: clamp(8px, 2vw, 14px);
-    padding: 0 8px;
-    text-align: center;
+    padding: 0;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex-direction: row;
     align-items: center;
     cursor: pointer;
     transition: all 0.2s;
@@ -605,24 +603,36 @@ body {
 }
 
 .summary-label {
-    font-size: clamp(0.5rem, 2vh, 1.2rem);
+    font-size: clamp(0.7rem, 5vh, 3rem);
     color: #999;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    width: 40%;
+    flex-shrink: 0;
+    text-align: center;
+    border-right: 2px solid #e0e0e0;
+    padding: 0 8px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 100%;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .summary-value {
     font-weight: 600;
     font-size: clamp(0.7rem, 5vh, 3rem);
     color: #333;
+    flex: 1;
+    text-align: center;
+    padding: 0 8px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 100%;
+    min-width: 0;
 }
 
 .summary-edit {
