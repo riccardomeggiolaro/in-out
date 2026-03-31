@@ -649,6 +649,10 @@ body {
     justify-content: center;
 }
 
+.direction-buttons {
+    flex: 5;
+}
+
 /* Popup */
 .popup {
     display: none;

@@ -2,6 +2,22 @@
 
 const totemViews = {
 
+    // ==================== DIRECTION ====================
+    direction: {
+        title: 'Totem - Direzione',
+        html: () => `
+            <h2>Seleziona operazione</h2>
+            <div class="step-buttons direction-buttons">
+                <button class="btn btn-primary" onclick="selectedDirection='in'; goTo('plate')">Entrata</button>
+                <button class="btn btn-primary" onclick="selectedDirection='out'; goTo('plate')">Uscita</button>
+            </div>
+        `,
+        init: () => {
+            window.onDataReady = null;
+            window.onDataUpdate = null;
+        }
+    },
+
     // ==================== PLATE ====================
     plate: {
         title: 'Totem - Targa',
@@ -222,6 +238,28 @@ const totemViews = {
                                 selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
                                 selectedMaterial = { id: d.material.id, description: d.material.description || '' };
                         }
+
+                        // Validate direction vs plate state
+                        const hasWeight1 = selectedIdWeight && selectedIdWeight.weight1 !== null;
+                        if (selectedDirection === 'out' && !hasWeight1) {
+                            showWeighingSuccess(true, `La targa "${value}" non ha un'entrata registrata`);
+                            fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
+                            selectedVehicle = { id: null, plate: '' };
+                            selectedIdWeight = null;
+                            dataInExecution = null;
+                            _plateExitManual();
+                            return;
+                        }
+                        if (selectedDirection === 'in' && hasWeight1) {
+                            showWeighingSuccess(true, `La targa "${value}" ha già un'entrata. Deve prima effettuare l'uscita`);
+                            fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
+                            selectedVehicle = { id: null, plate: '' };
+                            selectedIdWeight = null;
+                            dataInExecution = null;
+                            _plateExitManual();
+                            return;
+                        }
+
                         _plateManualMode = false;
                         document.getElementById('virtualKeyboard').classList.remove('active');
                         document.getElementById('btnAnnulla').style.display = 'none';
@@ -258,6 +296,26 @@ const totemViews = {
             window.onDataUpdate = function() {
                 if (_plateManualMode) return;
                 if (selectedVehicle.plate) {
+                    // Validate direction vs plate state
+                    const hasWeight1 = selectedIdWeight && selectedIdWeight.weight1 !== null;
+                    if (selectedDirection === 'out' && !hasWeight1) {
+                        showWeighingSuccess(true, `La targa "${selectedVehicle.plate}" non ha un'entrata registrata`);
+                        fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
+                        selectedVehicle = { id: null, plate: '' };
+                        selectedIdWeight = null;
+                        dataInExecution = null;
+                        _plateShowEmpty();
+                        return;
+                    }
+                    if (selectedDirection === 'in' && hasWeight1) {
+                        showWeighingSuccess(true, `La targa "${selectedVehicle.plate}" ha già un'entrata. Deve prima effettuare l'uscita`);
+                        fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
+                        selectedVehicle = { id: null, plate: '' };
+                        selectedIdWeight = null;
+                        dataInExecution = null;
+                        _plateShowEmpty();
+                        return;
+                    }
                     _plateShowPlate(selectedVehicle.plate);
                     _plateGoToNext();
                 }
@@ -390,7 +448,7 @@ const totemViews = {
             </div>
             <div class="step-buttons summary-buttons">
                 <button class="btn btn-secondary" id="btnBack" onclick="goTo('material?back=1')">Indietro</button>
-                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">Entrata</button>
+                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">Pesa</button>
             </div>
         `,
         init: () => {
@@ -402,7 +460,7 @@ const totemViews = {
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
                 const btnWeigh = document.getElementById('btnWeigh');
-                if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? 'Uscita' : 'Entrata';
+                if (btnWeigh) btnWeigh.textContent = selectedDirection === 'out' ? 'Uscita' : 'Entrata';
 
                 // Hide rows for disabled anagrafiche
                 const rowVisibility = {

@@ -15,6 +15,7 @@ let selectedMaterial = { id: null, description: '' };
 
 let dataInExecution = null;
 let selectedIdWeight = null;
+let selectedDirection = null; // 'in' or 'out'
 let _reservationHasMaterial = false;
 let _reservationHasSubject = false;
 let _reservationHasVector = false;
@@ -75,7 +76,7 @@ function initTotemPage() {
 
     // Show initial view — will be redirected by _resolveStartPage once data loads
     _waitingForStartPage = true;
-    showView('plate');
+    showView('direction');
 }
 
 // Determine the furthest page the user can go based on already-filled data
@@ -83,7 +84,8 @@ function _resolveStartPage() {
     if (!_waitingForStartPage) return;
     _waitingForStartPage = false;
 
-    if (!selectedVehicle.plate) return; // Stay on plate
+    if (!selectedDirection) return; // Stay on direction
+    if (!selectedVehicle.plate) { goTo('plate'); return; }
 
     // Go to first empty editable step, or summary if all filled
     const dest = _findNextEmptyStep('plate');
@@ -431,10 +433,11 @@ function cancelTotem() {
         selectedMaterial = { id: null, description: '' };
         selectedIdWeight = null;
         dataInExecution = null;
-        goTo('plate');
+        selectedDirection = null;
+        goTo('direction');
     })
     .catch(() => {
-        goTo('plate');
+        goTo('direction');
     });
 }
 
@@ -548,10 +551,7 @@ function updateInputIfNotFocused(inputId, value) {
 
 // --- Weighing ---
 function _isSecondWeighing() {
-    const weight1 = selectedIdWeight !== null && selectedIdWeight["weight1"] !== null;
-    const hasNet = /[0-9]/.test(String(data_weight_realtime.potential_net_weight));
-    const hasTare = /[1-9]/.test(String((data_weight_realtime.tare || '').replace("PT", "")));
-    return hasNet || hasTare || weight1;
+    return selectedDirection === 'out';
 }
 
 async function handleWeighing() {
