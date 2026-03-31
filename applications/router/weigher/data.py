@@ -270,13 +270,13 @@ class DataRouter(CallbackWeigher):
 				access = get_access_by_id(data_dto.id_selected.id)
 				data_in_execution = DataInExecutionType(**{
 					"typeSubject": io_data["typeSubject"] or (access.typeSubject.name if access.typeSubject else "CUSTOMER"),
-					"subject": io_data["subject"] if (io_data_from_in_out or io_data["subject"]["id"]) else {
+					"subject": io_data["subject"] if io_data["subject"]["id"] else {
 						"id": access.subject.id if access.subject else None,
 						"social_reason": access.subject.social_reason if access.subject else None,
 						"telephone": access.subject.telephone if access.subject else None,
 						"cfpiva": access.subject.cfpiva if access.subject else None
 					},
-					"vector": io_data["vector"] if (io_data_from_in_out or io_data["vector"]["id"]) else {
+					"vector": io_data["vector"] if io_data["vector"]["id"] else {
 						"id": access.vector.id if access.vector else None,
 						"social_reason": access.vector.social_reason if access.vector else None,
 						"telephone": access.vector.telephone if access.vector else None,
@@ -293,12 +293,12 @@ class DataRouter(CallbackWeigher):
 						"description": access.vehicle.description if access.vehicle else None,
 						"tare": access.vehicle.tare if access.vehicle else None
 					},
-					"material": io_data["material"] if (io_data_from_in_out or io_data["material"]["id"]) else {
+					"material": io_data["material"] if io_data["material"]["id"] else {
 						"id": access.material.id if access.material else None,
 						"description": access.material.description if access.material else None
 					},
-					"note": io_data["note"] if io_data_from_in_out else access.note,
-					"document_reference": io_data["document_reference"] if io_data_from_in_out else access.document_reference,
+					"note": io_data["note"] if (io_data_from_in_out and io_data["note"]) else (access.note or io_data["note"]),
+					"document_reference": io_data["document_reference"] if (io_data_from_in_out and io_data["document_reference"]) else (access.document_reference or io_data["document_reference"]),
 					"badge": access.badge,
 				})
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1, need_to_confirm=need_to_confirm)
