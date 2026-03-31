@@ -328,6 +328,8 @@ class DataRouter(CallbackWeigher):
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_subject"] = access.idSubject is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_vector"] = access.idVector is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_driver"] = access.idDriver is not None
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_note"] = access.note is not None and access.note != ""
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_document_reference"] = access.document_reference is not None and access.document_reference != ""
 		else:
 			# FUNZIONE UTILE PER GLI AGGIORNAMENTI RAPIDI DEI DATI IN ESECUZIONE DALLA DASHBAORD
 			if request and updated:
@@ -338,6 +340,8 @@ class DataRouter(CallbackWeigher):
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_subject"] = access.idSubject is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_vector"] = access.idVector is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_driver"] = access.idDriver is not None
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_note"] = access.note is not None and access.note != ""
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_document_reference"] = access.document_reference is not None and access.document_reference != ""
 			else:
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)

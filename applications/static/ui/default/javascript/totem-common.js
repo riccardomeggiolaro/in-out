@@ -19,6 +19,8 @@ let _reservationHasMaterial = false;
 let _reservationHasSubject = false;
 let _reservationHasVector = false;
 let _reservationHasDriver = false;
+let _reservationHasNote = false;
+let _reservationHasDocumentReference = false;
 let weighers_data_type = "MANUALLY";
 let data_weight_realtime = {
     status: undefined,
@@ -775,6 +777,8 @@ async function getData(path) {
         _reservationHasSubject = res.reservation_has_subject || false;
         _reservationHasVector = res.reservation_has_vector || false;
         _reservationHasDriver = res.reservation_has_driver || false;
+        _reservationHasNote = res.reservation_has_note || false;
+        _reservationHasDocumentReference = res.reservation_has_document_reference || false;
         weighers_data_type = res.type || "MANUALLY";
         const obj = res["data_in_execution"];
 
@@ -854,6 +858,8 @@ function processRealtimeObject(obj) {
         _reservationHasSubject = obj.reservation_has_subject || false;
         _reservationHasVector = obj.reservation_has_vector || false;
         _reservationHasDriver = obj.reservation_has_driver || false;
+        _reservationHasNote = obj.reservation_has_note || false;
+        _reservationHasDocumentReference = obj.reservation_has_document_reference || false;
         weighers_data_type = obj.type || "MANUALLY";
         dataInExecution = obj.data_in_execution;
         selectedIdWeight = obj.id_selected;
