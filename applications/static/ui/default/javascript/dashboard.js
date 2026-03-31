@@ -318,14 +318,23 @@ async function populateListIn() {
 
             // Add subject and material information (always show if present)
             let additionalInfo = [];
-            if (item.subject && item.subject.social_reason) {
-                additionalInfo.push(item.subject.social_reason);
-            }
-            // Material priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
+            // Subject priority: 1) data_in_execution 2) in_out open 3) access/reservation
             const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
-            let materialDesc = null;
             const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
+            let subjectName = null;
+            if (isCurrentAccess && dataInExecution && dataInExecution.subject && dataInExecution.subject.social_reason) {
+                subjectName = dataInExecution.subject.social_reason;
+            } else if (lastInOutOpen) {
+                subjectName = (lastInOut.subject && lastInOut.subject.social_reason) ? lastInOut.subject.social_reason : null;
+            } else if (item.subject && item.subject.social_reason) {
+                subjectName = item.subject.social_reason;
+            }
+            if (subjectName) {
+                additionalInfo.push(subjectName);
+            }
+            // Material priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
+            let materialDesc = null;
             if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
                 materialDesc = dataInExecution.material.description;
             } else if (lastInOutOpen) {

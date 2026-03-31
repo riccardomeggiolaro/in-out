@@ -88,6 +88,8 @@ def get_list_accesses(
             selectinload(InOut.weight1).options(*weighing1_options),
             selectinload(InOut.weight2).options(*weighing2_options)
         ]
+        if load_subject:
+            inout_options.append(selectinload(InOut.subject))
         if load_material:
             inout_options.append(selectinload(InOut.material))
 
