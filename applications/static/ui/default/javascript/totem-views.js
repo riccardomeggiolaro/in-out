@@ -92,6 +92,7 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons">
+                <button class="btn btn-secondary" id="btnBackPlate" onclick="goTo('direction')">Indietro</button>
                 <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">Annulla</button>
                 <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">Conferma</button>
                 <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">Avanti</button>
@@ -178,6 +179,7 @@ const totemViews = {
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
                 document.getElementById('virtualKeyboard').classList.add('active');
+                document.getElementById('btnBackPlate').style.display = 'none';
                 document.getElementById('btnAnnulla').style.display = '';
                 document.getElementById('btnConferma').style.display = '';
                 document.getElementById('btnNext').style.display = 'none';
@@ -186,6 +188,7 @@ const totemViews = {
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('virtualKeyboard').classList.remove('active');
+                document.getElementById('btnBackPlate').style.display = '';
                 document.getElementById('btnAnnulla').style.display = 'none';
                 document.getElementById('btnConferma').style.display = 'none';
                 if (selectedVehicle.plate) {
