@@ -16,7 +16,7 @@ from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.delete_data import delete_data
-from modules.md_database.functions.add_material_if_not_exist import add_material_if_not_exists
+from modules.md_database.functions.add_anagrafic_if_not_exists import add_anagrafic_if_not_exists
 from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.get_data_by_attributes import get_data_by_attributes
 from modules.md_database.interfaces.access import Access
@@ -126,11 +126,29 @@ class CallbackWeigher(Functions, WebSocket):
 			}
 			weighing_stored_db = add_data("weighing", weighing)
 			############################
-			# SALVATAGGIO DEL MATERIALE
+			# SALVATAGGIO DEL SOGGETTO, DEL VETTORE, DELL'AUTISTA E DEL MATERIALE SE PRESENTI
+			id_subject = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"]
+			social_reason_subject = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["social_reason"]
+			if not id_subject and social_reason_subject is not None:
+				subject = add_anagrafic_if_not_exists(table_name="subject", name="social_reason", value=social_reason_subject)
+				id_subject = subject["id"]
+				weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"] = id_subject
+			id_vector = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"]
+			social_reason_vector = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["social_reason"]
+			if not id_vector and social_reason_vector is not None:
+				vector = add_anagrafic_if_not_exists(table_name="vector", name="social_reason", value=social_reason_vector)
+				id_vector = vector["id"]
+				weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"] = id_vector
+			id_driver = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"]
+			social_reason_driver = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["social_reason"]
+			if not id_driver and social_reason_driver is not None:
+				driver = add_anagrafic_if_not_exists(table_name="driver", name="social_reason", value=social_reason_driver)
+				id_driver = driver["id"]
+				weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"] = id_driver
 			id_material = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["material"]["id"]
 			description_material = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["material"]["description"]
 			if not id_material and description_material is not None:
-				material = add_material_if_not_exists(description_material)
+				material = add_anagrafic_if_not_exists(table_name="material", name="description", value=description_material)
 				id_material = material["id"]
 			############################
 			# ASSOCIAZIONE DELLA PESATA SALVATA ALLA COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
