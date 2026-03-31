@@ -275,7 +275,28 @@ async function populateListIn() {
                 else if (item.in_out[0].idWeight2) content = item.in_out[0].weight2.pid;
             }
             if (item.vehicle && item.vehicle.plate) content = `${item.vehicle.plate}`;
-            li.textContent = content;
+
+            let additionalInfo = [];
+            const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
+            const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
+            let subjectName = null;
+            let materialDesc = null;
+            if (lastInOutOpen && lastInOut.subject && lastInOut.subject.social_reason) {
+                subjectName = lastInOut.subject.social_reason;
+            } else if (item.subject && item.subject.social_reason) {
+                subjectName = item.subject.social_reason;
+            }
+            if (lastInOutOpen && lastInOut.material && lastInOut.material.description) {
+                materialDesc = lastInOut.material.description;
+            } else if (item.material && item.material.description) {
+                materialDesc = item.material.description;
+            }
+            if (subjectName) additionalInfo.push(subjectName);
+            if (materialDesc) additionalInfo.push(materialDesc);
+            if (additionalInfo.length > 0) {
+                content += `<br><small style="font-size: 0.85em;">${additionalInfo.join(' - ')}</small>`;
+            }
+            li.innerHTML = content;
             li.setAttribute('data-id', item.id);
             if (item.id == selectedIdWeight) li.classList.add('selected');
             li.addEventListener('click', async () => {
