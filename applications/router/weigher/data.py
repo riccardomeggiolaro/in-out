@@ -215,15 +215,15 @@ class DataRouter(CallbackWeigher):
 					raise HTTPException(status_code=400, detail="Il materiale è già impostato sulla prenotazione")
 				# Update data_in_execution in memory
 				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
-				if data_dto.data_in_execution.subject.id:
+				if data_dto.data_in_execution.subject.id or data_dto.data_in_execution.subject.social_reason:
 					die["subject"]["id"] = data_dto.data_in_execution.subject.id
 					die["subject"]["social_reason"] = data_dto.data_in_execution.subject.social_reason
 					if data_dto.data_in_execution.typeSubject:
 						die["typeSubject"] = data_dto.data_in_execution.typeSubject
-				if data_dto.data_in_execution.vector.id:
+				if data_dto.data_in_execution.vector.id or data_dto.data_in_execution.vector.social_reason:
 					die["vector"]["id"] = data_dto.data_in_execution.vector.id
 					die["vector"]["social_reason"] = data_dto.data_in_execution.vector.social_reason
-				if data_dto.data_in_execution.driver.id:
+				if data_dto.data_in_execution.driver.id or data_dto.data_in_execution.driver.social_reason:
 					die["driver"]["id"] = data_dto.data_in_execution.driver.id
 					die["driver"]["social_reason"] = data_dto.data_in_execution.driver.social_reason
 				if data_dto.data_in_execution.material.id or data_dto.data_in_execution.material.description:
