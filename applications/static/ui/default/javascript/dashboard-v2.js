@@ -408,16 +408,12 @@ async function populateListIn() {
             let plate = '';
             if (item.vehicle && item.vehicle.plate) plate = item.vehicle.plate;
 
-            const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
 
             let subject = '';
             let material = '';
-            if (isCurrentAccess && dataInExecution) {
-                subject = (dataInExecution.subject && dataInExecution.subject.social_reason) ? dataInExecution.subject.social_reason : '';
-                material = (dataInExecution.material && dataInExecution.material.description) ? dataInExecution.material.description : '';
-            } else if (lastInOutOpen) {
+            if (lastInOutOpen) {
                 subject = (lastInOut.subject && lastInOut.subject.social_reason) ? lastInOut.subject.social_reason : '';
                 material = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : '';
             } else if (item.type === "RESERVATION") {
