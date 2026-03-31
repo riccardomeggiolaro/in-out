@@ -199,20 +199,11 @@ class DataRouter(CallbackWeigher):
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and (data_dto.id_selected.id is None or keep_selected):
-				# Non-manual access: allow changes only for fields empty on the reservation
+				# Non-manual access: block vehicle changes, allow all other fields
 				access = get_access_by_id(id_selected)
 				# Block vehicle changes entirely
 				if data_dto.data_in_execution.vehicle.id or data_dto.data_in_execution.vehicle.plate:
 					raise HTTPException(status_code=400, detail=f"Non puoi modificare il veicolo di un accesso di tipo '{TypeAccess[type_current_access].value}'")
-				# Block fields that are already set on the reservation
-				if data_dto.data_in_execution.subject.id and access.idSubject:
-					raise HTTPException(status_code=400, detail="Il soggetto è già impostato sulla prenotazione")
-				if data_dto.data_in_execution.vector.id and access.idVector:
-					raise HTTPException(status_code=400, detail="Il vettore è già impostato sulla prenotazione")
-				if data_dto.data_in_execution.driver.id and access.idDriver:
-					raise HTTPException(status_code=400, detail="L'autista è già impostato sulla prenotazione")
-				if (data_dto.data_in_execution.material.id or data_dto.data_in_execution.material.description) and access.idMaterial:
-					raise HTTPException(status_code=400, detail="Il materiale è già impostato sulla prenotazione")
 				# Update data_in_execution in memory
 				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
 				if data_dto.data_in_execution.subject.id or data_dto.data_in_execution.subject.social_reason:
@@ -318,26 +309,12 @@ class DataRouter(CallbackWeigher):
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idAccess=data_dto.id_selected.id)
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
-				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_material"] = die["material"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_subject"] = die["subject"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_vector"] = die["vector"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_driver"] = die["driver"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_note"] = die.get("note") is not None and die.get("note") != ""
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_document_reference"] = die.get("document_reference") is not None and die.get("document_reference") != ""
 		else:
 			# FUNZIONE UTILE PER GLI AGGIORNAMENTI RAPIDI DEI DATI IN ESECUZIONE DALLA DASHBAORD
 			if request and updated:
 				await self.DeleteData(instance=instance)
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
-				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_material"] = die["material"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_subject"] = die["subject"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_vector"] = die["vector"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_driver"] = die["driver"]["id"] is not None
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_note"] = die.get("note") is not None and die.get("note") != ""
-				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_document_reference"] = die.get("document_reference") is not None and die.get("document_reference") != ""
 			else:
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
