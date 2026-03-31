@@ -224,6 +224,8 @@ body {
     justify-content: flex-start;
     width: 100%;
     overflow: hidden;
+    container-type: size;
+    container-name: step-content;
 }
 
 .step h2 {
@@ -569,8 +571,7 @@ body {
     border-radius: clamp(8px, 2vw, 14px);
     border: 2px solid #e0e0e0;
     overflow: hidden;
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
     box-sizing: border-box;
     width: stretch;
 }
@@ -583,9 +584,7 @@ body {
     align-items: center;
     cursor: pointer;
     transition: background 0.15s;
-    min-height: 0;
-    flex: 1;
-    max-height: calc(100% / 5);
+    height: calc(100cqh / 5);
     position: relative;
     overflow: hidden;
     border-bottom: 2px solid #e0e0e0;
