@@ -39,6 +39,7 @@ class Data(BaseModel):
 	id_selected: IdSelectedExtended = IdSelectedExtended(**{})
 	number_in_out: Optional[int] = 1
 	type: Optional[str] = TypeAccess.MANUALLY.name
+	reservation_has_vehicle: Optional[bool] = False
 	reservation_has_material: Optional[bool] = False
 	reservation_has_subject: Optional[bool] = False
 	reservation_has_vector: Optional[bool] = False

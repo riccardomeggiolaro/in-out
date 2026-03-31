@@ -31,6 +31,7 @@ let _reservationHasMaterial = false;
 let _reservationHasSubject = false;
 let _reservationHasVector = false;
 let _reservationHasDriver = false;
+let _reservationHasVehicle = false;
 let _reservationHasNote = false;
 let _reservationHasDocumentReference = false;
 
@@ -292,11 +293,12 @@ async function getData(path) {
         _reservationHasSubject = res.reservation_has_subject || false;
         _reservationHasVector = res.reservation_has_vector || false;
         _reservationHasDriver = res.reservation_has_driver || false;
+        _reservationHasVehicle = res.reservation_has_vehicle || false;
         _reservationHasNote = res.reservation_has_note || false;
         _reservationHasDocumentReference = res.reservation_has_document_reference || false;
         if (res.id_selected.id !== null) {
             const plateInput = document.getElementById('currentPlateVehicle');
-            if (plateInput) plateInput.disabled = res.type !== "MANUALLY";
+            if (plateInput) plateInput.disabled = _reservationHasVehicle;
             const typeSubjectSelect = document.getElementById('typeSubject');
             if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
             const subjectInput = document.getElementById('currentSocialReasonSubject');
@@ -1146,6 +1148,7 @@ function processRealtimeObject(obj) {
         _reservationHasSubject = obj.reservation_has_subject || false;
         _reservationHasVector = obj.reservation_has_vector || false;
         _reservationHasDriver = obj.reservation_has_driver || false;
+        _reservationHasVehicle = obj.reservation_has_vehicle || false;
         _reservationHasNote = obj.reservation_has_note || false;
         _reservationHasDocumentReference = obj.reservation_has_document_reference || false;
         dataInExecution = obj.data_in_execution;
@@ -1173,7 +1176,7 @@ function processRealtimeObject(obj) {
 
         {
             const plateInput = document.getElementById('currentPlateVehicle');
-            if (plateInput) plateInput.disabled = currentAccessType !== "MANUALLY";
+            if (plateInput) plateInput.disabled = _reservationHasVehicle;
             const typeSubjectSelect = document.getElementById('typeSubject');
             if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
             const subjectInput = document.getElementById('currentSocialReasonSubject');
@@ -1550,7 +1553,7 @@ function enableAllElements() {
     // Re-apply disabled state for all access types
     if (selectedIdWeight && selectedIdWeight["id"] !== null) {
         const plateInput = document.getElementById('currentPlateVehicle');
-        if (plateInput) plateInput.disabled = currentAccessType !== "MANUALLY";
+        if (plateInput) plateInput.disabled = _reservationHasVehicle;
         const typeSubjectSelect = document.getElementById('typeSubject');
         if (typeSubjectSelect) typeSubjectSelect.disabled = _reservationHasSubject;
         const subjectInput = document.getElementById('currentSocialReasonSubject');
