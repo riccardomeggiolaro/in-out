@@ -92,36 +92,37 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
 
             current_reservation_vehicle = access.idVehicle
 
-            current_model = Vehicle
-            vehicle = None
-            if data.vehicle.id in [None, -1]:
-                add_vehicle = {
-                    "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
-                    "description": data.vehicle.description if data.vehicle.description != "" else None,
-                    "tare": data.vehicle.tare if data.vehicle.tare and data.vehicle.tare > 0 else None
-                }
-                if has_non_none_value(add_vehicle):
-                    data_to_check = data.vehicle.dict()
-                    vehicle = current_model(**add_vehicle)
-                    session.add(vehicle)
-                    session.flush()
-                    access.idVehicle = vehicle.id
-                elif data.vehicle.id == -1:
-                    access.idVehicle = None
-            else:
-                access.idVehicle = data.vehicle.id
+            if not idInOut or access.type == TypeAccess.MANUALLY:
+                current_model = Vehicle
+                vehicle = None
+                if data.vehicle.id in [None, -1]:
+                    add_vehicle = {
+                        "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
+                        "description": data.vehicle.description if data.vehicle.description != "" else None,
+                        "tare": data.vehicle.tare if data.vehicle.tare and data.vehicle.tare > 0 else None
+                    }
+                    if has_non_none_value(add_vehicle):
+                        data_to_check = data.vehicle.dict()
+                        vehicle = current_model(**add_vehicle)
+                        session.add(vehicle)
+                        session.flush()
+                        access.idVehicle = vehicle.id
+                    elif data.vehicle.id == -1:
+                        access.idVehicle = None
+                else:
+                    access.idVehicle = data.vehicle.id
 
-            if access.status != AccessStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
-                existing = get_access_by_vehicle_id_if_uncomplete(access.idVehicle)
+                if access.status != AccessStatus.CLOSED and current_reservation_vehicle != data.vehicle.id:
+                    existing = get_access_by_vehicle_id_if_uncomplete(access.idVehicle)
 
-                if existing and existing["id"] != access.id and existing["idVehicle"]:
-                    existing = existing["vehicle"].__dict__
-                    plate = existing["plate"]
-                    raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
-                elif existing is None and access.idVehicle is not None:
-                    existing = get_access_by_identify_if_uncomplete(identify=data.vehicle.plate)
                     if existing and existing["id"] != access.id and existing["idVehicle"]:
-                        raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
+                        existing = existing["vehicle"].__dict__
+                        plate = existing["plate"]
+                        raise ValueError(f"La targa '{plate}' è già assegnata ad un altro accesso ancora aperto")
+                    elif existing is None and access.idVehicle is not None:
+                        existing = get_access_by_identify_if_uncomplete(identify=data.vehicle.plate)
+                        if existing and existing["id"] != access.id and existing["idVehicle"]:
+                            raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
 
             # Gestione material globale sull'accesso
             current_model = Material
