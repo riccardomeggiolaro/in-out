@@ -199,12 +199,8 @@ class DataRouter(CallbackWeigher):
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and (data_dto.id_selected.id is None or keep_selected):
-				# Non-manual access: block vehicle changes, allow all other fields
+				# Non-manual access: update data_in_execution in memory
 				access = get_access_by_id(id_selected)
-				# Block vehicle changes entirely
-				if data_dto.data_in_execution.vehicle.id or data_dto.data_in_execution.vehicle.plate:
-					raise HTTPException(status_code=400, detail=f"Non puoi modificare il veicolo di un accesso di tipo '{TypeAccess[type_current_access].value}'")
-				# Update data_in_execution in memory
 				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
 				if data_dto.data_in_execution.subject.id or data_dto.data_in_execution.subject.social_reason:
 					die["subject"]["id"] = data_dto.data_in_execution.subject.id
@@ -310,6 +306,7 @@ class DataRouter(CallbackWeigher):
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["number_in_out"] = access.number_in_out
 				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_vehicle"] = die["vehicle"]["id"] is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_material"] = die["material"]["id"] is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_subject"] = die["subject"]["id"] is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_vector"] = die["vector"]["id"] is not None
