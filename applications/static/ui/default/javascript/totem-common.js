@@ -384,7 +384,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 }
 
 // --- Full-page success/failure message after weighing ---
-function showWeighingSuccess(isError = false, message = null) {
+function showWeighingSuccess(isError = false, message = null, errorRedirect = 'summary') {
     const container = document.querySelector('#pageContent .step');
     if (!container) return;
     const color = isError ? '#d32f2f' : '#2e7d32';
@@ -406,7 +406,7 @@ function showWeighingSuccess(isError = false, message = null) {
         clearTimeout(timer);
         if (header) header.style.display = '';
         if (isError) {
-            goTo('summary');
+            goTo(errorRedirect);
         } else {
             cancelTotem();
         }
