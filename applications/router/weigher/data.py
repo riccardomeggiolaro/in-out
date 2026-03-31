@@ -257,6 +257,18 @@ class DataRouter(CallbackWeigher):
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
+			elif type_current_access == TypeAccess.MANUALLY.name and data_dto.id_selected.id is None and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate:
+				# Manual access: update data without deselecting
+				access = get_access_by_id(id_selected)
+				idInOut = None
+				if access and len(access.in_out) > 0:
+					idInOut = access.in_out[-1].id
+				update_access(id_selected, SetAccessDTO(**data_dto.data_in_execution.dict()), idInOut)
+				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
+				broadcast_data = json.dumps({"id": id_selected})
+				await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
+				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+				return data
 			body = SetAccessDTO(**data_dto.data_in_execution.dict())
 			access = get_access_by_id(id_selected)
 			idInOut = None
