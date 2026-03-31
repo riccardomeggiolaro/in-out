@@ -413,12 +413,15 @@ async function populateListIn() {
 
             let subject = '';
             let material = '';
-            if (lastInOutOpen) {
-                subject = (lastInOut.subject && lastInOut.subject.social_reason) ? lastInOut.subject.social_reason : '';
-                material = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : '';
-            } else if (item.type === "RESERVATION") {
-                subject = (item.subject && item.subject.social_reason) ? item.subject.social_reason : '';
-                material = (item.material && item.material.description) ? item.material.description : '';
+            if (lastInOutOpen && lastInOut.subject && lastInOut.subject.social_reason) {
+                subject = lastInOut.subject.social_reason;
+            } else if (item.subject && item.subject.social_reason) {
+                subject = item.subject.social_reason;
+            }
+            if (lastInOutOpen && lastInOut.material && lastInOut.material.description) {
+                material = lastInOut.material.description;
+            } else if (item.material && item.material.description) {
+                material = item.material.description;
             }
 
             // PID

@@ -321,12 +321,15 @@ async function populateListIn() {
             const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
             let subjectName = null;
             let materialDesc = null;
-            if (lastInOutOpen) {
-                subjectName = (lastInOut.subject && lastInOut.subject.social_reason) ? lastInOut.subject.social_reason : null;
-                materialDesc = (lastInOut.material && lastInOut.material.description) ? lastInOut.material.description : null;
-            } else if (item.type === "RESERVATION") {
-                subjectName = (item.subject && item.subject.social_reason) ? item.subject.social_reason : null;
-                materialDesc = (item.material && item.material.description) ? item.material.description : null;
+            if (lastInOutOpen && lastInOut.subject && lastInOut.subject.social_reason) {
+                subjectName = lastInOut.subject.social_reason;
+            } else if (item.subject && item.subject.social_reason) {
+                subjectName = item.subject.social_reason;
+            }
+            if (lastInOutOpen && lastInOut.material && lastInOut.material.description) {
+                materialDesc = lastInOut.material.description;
+            } else if (item.material && item.material.description) {
+                materialDesc = item.material.description;
             }
             if (subjectName) additionalInfo.push(subjectName);
             if (materialDesc) additionalInfo.push(materialDesc);
