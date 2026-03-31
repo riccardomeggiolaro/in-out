@@ -233,37 +233,19 @@ class DataRouter(CallbackWeigher):
 					die["note"] = data_dto.data_in_execution.note if data_dto.data_in_execution.note != "" else None
 				if data_dto.data_in_execution.document_reference is not None:
 					die["document_reference"] = data_dto.data_in_execution.document_reference if data_dto.data_in_execution.document_reference != "" else None
-				# If there's an incomplete in_out, also update in DB on the in_out directly (NOT via update_access which would modify the reservation)
-				if access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
-					in_out_update = {}
-					if data_dto.data_in_execution.subject.id:
-						in_out_update["idSubject"] = data_dto.data_in_execution.subject.id
-					if data_dto.data_in_execution.vector.id:
-						in_out_update["idVector"] = data_dto.data_in_execution.vector.id
-					if data_dto.data_in_execution.driver.id:
-						in_out_update["idDriver"] = data_dto.data_in_execution.driver.id
-					if data_dto.data_in_execution.material.id:
-						in_out_update["idMaterial"] = data_dto.data_in_execution.material.id
-					if data_dto.data_in_execution.typeSubject:
-						in_out_update["typeSubject"] = TypeSubjectEnum[data_dto.data_in_execution.typeSubject] if data_dto.data_in_execution.typeSubject else None
-					if data_dto.data_in_execution.note is not None:
-						in_out_update["note"] = data_dto.data_in_execution.note if data_dto.data_in_execution.note != "" else None
-					if data_dto.data_in_execution.document_reference is not None:
-						in_out_update["document_reference"] = data_dto.data_in_execution.document_reference if data_dto.data_in_execution.document_reference != "" else None
-					if in_out_update:
-						update_data("in_out", access.in_out[-1].id, in_out_update)
-					broadcast_data = json.dumps({"id": id_selected})
-					await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
+				broadcast_data = json.dumps({"id": id_selected})
+				await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
 				self.Callback_DataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
 			elif type_current_access == TypeAccess.MANUALLY.name and data_dto.id_selected.id is None and not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate:
 				# Manual access: update data without deselecting
 				access = get_access_by_id(id_selected)
-				idInOut = None
-				if access and len(access.in_out) > 0:
-					idInOut = access.in_out[-1].id
-				update_access(id_selected, SetAccessDTO(**data_dto.data_in_execution.dict()), idInOut)
+				has_open_in_out = access and len(access.in_out) > 0 and access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None
+				if not has_open_in_out:
+					# No open in_out: save to access record in DB
+					update_access(id_selected, SetAccessDTO(**data_dto.data_in_execution.dict()), None)
+				# Always update in-memory (DB save for in_out happens at weighing time)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 				broadcast_data = json.dumps({"id": id_selected})
 				await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
