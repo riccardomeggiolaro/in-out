@@ -563,7 +563,7 @@ body {
 /* Summary card */
 .summary-card {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     grid-auto-rows: 1fr;
     gap: 8px;
     background: transparent;
