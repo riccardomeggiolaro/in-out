@@ -363,13 +363,14 @@ function populateTable(data) {
         if (item.access && item.access.id) {
             idInOut = item.id;
             item.id = item.access.id;
-            // Override access data with in_out-level data when available
-            if (item.subject && item.subject.id) item.access.subject = item.subject;
-            if (item.vector && item.vector.id) item.access.vector = item.vector;
-            if (item.driver && item.driver.id) item.access.driver = item.driver;
-            if (item.typeSubject) item.access.typeSubject = item.typeSubject;
-            if (item.note !== undefined && item.note !== null) item.access.note = item.note;
-            if (item.document_reference !== undefined && item.document_reference !== null) item.access.document_reference = item.document_reference;
+            // Always use in_out-level data instead of access data
+            item.access.subject = item.subject || null;
+            item.access.vector = item.vector || null;
+            item.access.driver = item.driver || null;
+            item.access.typeSubject = item.typeSubject || item.access.typeSubject;
+            item.access.note = item.note !== undefined ? item.note : null;
+            item.access.document_reference = item.document_reference !== undefined ? item.document_reference : null;
+            item.access.material = item.material || null;
         }
         if (item.log) item.pid = item.log;
         createRow(obj.table, obj.columns, item, idInOut);
@@ -811,11 +812,16 @@ function editRow(item) {
         currentId = item.id;
         if (currentIdInOut) {
             let current_in_out = item.in_out.find(in_out => in_out.id === currentIdInOut);
-            item.material = current_in_out ? current_in_out.material : '';
-            if (item.in_out.length > 0) {
-                const in_out = item.in_out.find(obj => obj.id === currentIdInOut);
-                item.operator1 = in_out.weight1 ? in_out.weight1.operator : null;
-                item.operator2 = in_out.weight2 ? in_out.weight2.operator : null;
+            if (current_in_out) {
+                item.material = current_in_out.material || '';
+                item.subject = current_in_out.subject || null;
+                item.vector = current_in_out.vector || null;
+                item.driver = current_in_out.driver || null;
+                item.typeSubject = current_in_out.typeSubject || item.typeSubject;
+                item.note = current_in_out.note !== undefined ? current_in_out.note : null;
+                item.document_reference = current_in_out.document_reference !== undefined ? current_in_out.document_reference : null;
+                item.operator1 = current_in_out.weight1 ? current_in_out.weight1.operator : null;
+                item.operator2 = current_in_out.weight2 ? current_in_out.weight2.operator : null;
             }
         }
         document.getElementById('overlay').classList.add('active');
@@ -951,7 +957,17 @@ function deleteRow(item) {
     const funct = () => {
         if (callback_populate_select) callback_populate_select('#delete', item);
         currentId = item.id;
-        if (currentIdInOut) item.material = item.in_out.find(in_out => in_out.id === currentIdInOut).material;
+        if (currentIdInOut) {
+            let current_in_out = item.in_out.find(in_out => in_out.id === currentIdInOut);
+            if (current_in_out) {
+                item.material = current_in_out.material || null;
+                item.subject = current_in_out.subject || null;
+                item.vector = current_in_out.vector || null;
+                item.driver = current_in_out.driver || null;
+                item.note = current_in_out.note !== undefined ? current_in_out.note : null;
+                item.document_reference = current_in_out.document_reference !== undefined ? current_in_out.document_reference : null;
+            }
+        }
         document.getElementById('overlay').classList.add('active');
         deletePopup.classList.add('active');
         for (key in item) {
