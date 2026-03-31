@@ -133,6 +133,10 @@ class DataRouter(CallbackWeigher):
 		# Preserve current id_selected when keep_selected is true
 		if keep_selected and id_selected and data_dto.id_selected.id is None:
 			data_dto.id_selected.id = id_selected
+		# Auto-preserve selection for manual accesses when modifying non-vehicle fields
+		if id_selected and type_current_access == TypeAccess.MANUALLY.name and data_dto.id_selected.id is None:
+			if not data_dto.data_in_execution.vehicle.id and not data_dto.data_in_execution.vehicle.plate:
+				data_dto.id_selected.id = id_selected
 		if data_dto.data_in_execution.vehicle.id:
 			access = get_access_by_vehicle_id_if_uncomplete(data_dto.data_in_execution.vehicle.id)
 			if access:
