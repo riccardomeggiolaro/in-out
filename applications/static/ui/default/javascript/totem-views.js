@@ -244,7 +244,8 @@ const totemViews = {
 
                         // Validate direction vs plate state
                         const hasWeight1 = selectedIdWeight && selectedIdWeight.weight1 !== null;
-                        if (selectedDirection === 'out' && !hasWeight1) {
+                        const vehicleTare = dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.tare;
+                        if (selectedDirection === 'out' && !hasWeight1 && !vehicleTare) {
                             fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
                             selectedVehicle = { id: null, plate: '' };
                             selectedIdWeight = null;
@@ -253,13 +254,16 @@ const totemViews = {
                             showWeighingSuccess(true, `La targa "${value}" non ha un'entrata registrata`, 'direction');
                             return;
                         }
-                        if (selectedDirection === 'in' && hasWeight1) {
+                        if (selectedDirection === 'in' && (hasWeight1 || vehicleTare)) {
+                            const msg = vehicleTare
+                                ? `La targa "${value}" ha una tara associata. Può solo effettuare l'uscita`
+                                : `La targa "${value}" ha già un'entrata. Deve prima effettuare l'uscita`;
                             fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
                             selectedVehicle = { id: null, plate: '' };
                             selectedIdWeight = null;
                             dataInExecution = null;
                             selectedDirection = null;
-                            showWeighingSuccess(true, `La targa "${value}" ha già un'entrata. Deve prima effettuare l'uscita`, 'direction');
+                            showWeighingSuccess(true, msg, 'direction');
                             return;
                         }
 
@@ -301,8 +305,9 @@ const totemViews = {
                 if (selectedVehicle.plate) {
                     // Validate direction vs plate state
                     const hasWeight1 = selectedIdWeight && selectedIdWeight.weight1 !== null;
+                    const vehicleTare = dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.tare;
                     const plate = selectedVehicle.plate;
-                    if (selectedDirection === 'out' && !hasWeight1) {
+                    if (selectedDirection === 'out' && !hasWeight1 && !vehicleTare) {
                         fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
                         selectedVehicle = { id: null, plate: '' };
                         selectedIdWeight = null;
@@ -311,13 +316,16 @@ const totemViews = {
                         showWeighingSuccess(true, `La targa "${plate}" non ha un'entrata registrata`, 'direction');
                         return;
                     }
-                    if (selectedDirection === 'in' && hasWeight1) {
+                    if (selectedDirection === 'in' && (hasWeight1 || vehicleTare)) {
+                        const msg = vehicleTare
+                            ? `La targa "${plate}" ha una tara associata. Può solo effettuare l'uscita`
+                            : `La targa "${plate}" ha già un'entrata. Deve prima effettuare l'uscita`;
                         fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
                         selectedVehicle = { id: null, plate: '' };
                         selectedIdWeight = null;
                         dataInExecution = null;
                         selectedDirection = null;
-                        showWeighingSuccess(true, `La targa "${plate}" ha già un'entrata. Deve prima effettuare l'uscita`, 'direction');
+                        showWeighingSuccess(true, msg, 'direction');
                         return;
                     }
                     _plateShowPlate(selectedVehicle.plate);
