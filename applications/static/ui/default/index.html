@@ -695,12 +695,12 @@
         async function showSuggestions(type, query) {
             const listId = type === 'material' ? 'materialSuggestions' : 'operatorSuggestions';
             const list = document.getElementById(listId);
-            let endpoint = type === 'material' ? 
-                `/api/anagrafic/material/list` :
-                `/api/anagrafic/operator/list`;
-            
+            let endpoint = type === 'material' ?
+                `/api/anagrafic/material/list?order_by=description&order_direction=asc` :
+                `/api/anagrafic/operator/list?order_by=description&order_direction=asc`;
+
             if (query) {
-                endpoint += `?description=${query}%`;
+                endpoint += `&description=${query}%`;
             }
 
             try {

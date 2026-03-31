@@ -302,8 +302,11 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
     if (!container) return;
     container.innerHTML = '';
 
-    let url = `/api/anagrafic/${anagrafic}/list?`;
-    if (inputValue) url += `${filterField}=${inputValue}%`;
+    const alphabeticalField = anagrafic === 'vehicle' ? 'plate'
+                             : anagrafic === 'material' || anagrafic === 'operator' ? 'description'
+                             : 'social_reason';
+    let url = `/api/anagrafic/${anagrafic}/list?order_by=${alphabeticalField}&order_direction=asc`;
+    if (inputValue) url += `&${filterField}=${inputValue}%`;
 
     try {
         const response = await fetch(url);

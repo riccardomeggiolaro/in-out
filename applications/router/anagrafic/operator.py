@@ -29,13 +29,18 @@ class OperatorRouter(WebSocket):
         self.router.add_api_route('', self.deleteAllOperators, methods=['DELETE'], dependencies=[Depends(is_writable_user)])
         self.router.add_api_route('/upload-file', self.upload_file, methods=['POST'], dependencies=[Depends(is_writable_user)])
 
-    async def getListOperators(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None):
+    async def getListOperators(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, order_by: Optional[str] = None, order_direction: Optional[str] = None):
         try:
             if limit is not None:
                 del query_params["limit"]
             if offset is not None:
                 del query_params["offset"]
-            data, total_rows = filter_data("operator", query_params, limit, offset, None, None, ('date_created', 'desc'))
+            if order_by is not None:
+                del query_params["order_by"]
+            if order_direction is not None:
+                del query_params["order_direction"]
+            sort = (order_by, order_direction if order_direction else 'asc') if order_by else ('date_created', 'desc')
+            data, total_rows = filter_data("operator", query_params, limit, offset, None, None, sort)
             return {
                 "data": data,
                 "total_rows": total_rows
