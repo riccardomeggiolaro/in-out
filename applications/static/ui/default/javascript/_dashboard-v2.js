@@ -394,7 +394,10 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
         anagrafic_to_set = 'material';
     }
 
-    let url = `/api/anagrafic/${name_list}/list?`;
+    const alphabeticalField = name_list === 'vehicle' ? 'plate'
+                             : name_list === 'material' || name_list === 'operator' ? 'description'
+                             : 'social_reason';
+    let url = `/api/anagrafic/${name_list}/list?order_by=${alphabeticalField}&order_direction=asc&`;
 
     if (anagrafic_to_set === 'vehicle' && selectedIdWeight === null) url += `permanentAssociatedFirstToWeighing1=true&`;
 
