@@ -404,15 +404,22 @@ async function populateListIn() {
             let plate = '';
             if (item.vehicle && item.vehicle.plate) plate = item.vehicle.plate;
 
-            // Soggetto
-            let subject = '';
-            if (item.subject && item.subject.social_reason) subject = item.subject.social_reason;
-
-            // Materiale - priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
-            let material = '';
             const isCurrentAccess = selectedIdWeight !== null && selectedIdWeight["id"] == item.id;
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
+
+            // Soggetto - priority: 1) data_in_execution 2) in_out (if open) 3) access/reservation
+            let subject = '';
+            if (isCurrentAccess && dataInExecution && dataInExecution.subject && dataInExecution.subject.social_reason) {
+                subject = dataInExecution.subject.social_reason;
+            } else if (lastInOutOpen && lastInOut.subject && lastInOut.subject.social_reason) {
+                subject = lastInOut.subject.social_reason;
+            } else if (item.subject && item.subject.social_reason) {
+                subject = item.subject.social_reason;
+            }
+
+            // Materiale - priority: 1) data_in_execution 2) in_out (even if empty, has precedence over access) 3) access/reservation
+            let material = '';
             if (isCurrentAccess && dataInExecution && dataInExecution.material && dataInExecution.material.description) {
                 material = dataInExecution.material.description;
             } else if (lastInOutOpen) {
