@@ -361,7 +361,10 @@
 
         function populateSuggestions(popup, suggestions, key, anagrafic, value) {
             let currentSuggestions = document.querySelector(suggestions);
-            fetch(`/api/anagrafic/${anagrafic}/list?${key}=${value}%`)
+            const alphabeticalField = anagrafic === 'vehicle' ? 'plate'
+                                     : anagrafic === 'material' || anagrafic === 'operator' ? 'description'
+                                     : 'social_reason';
+            fetch(`/api/anagrafic/${anagrafic}/list?order_by=${alphabeticalField}&order_direction=asc&${key}=${value}%`)
             .then(res => res.json())
             .then(res => {
                 currentSuggestions.innerHTML = '';
