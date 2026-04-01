@@ -361,7 +361,7 @@ const totemViews = {
     summary: {
         get title() { return 'Totem - ' + t('summary_title'); },
         style: `
-            .summary-row.disabled { pointer-events: none; opacity: 0.4; cursor: default; border-color: #333333; background: #1A1A1A; }
+            .summary-row.disabled { pointer-events: none; cursor: default; }
             .summary-row.disabled .summary-edit { display: none; }
         `,
         html: () => `

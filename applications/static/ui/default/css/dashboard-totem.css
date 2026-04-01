@@ -403,7 +403,7 @@ body {
 
 .suggestions-grid li {
     background: #1E1E1E;
-    border: 2px solid #444444;
+    border: 2px solid #555555;
     border-radius: clamp(8px, 2vw, 14px);
     padding: 0;
     text-align: center;
@@ -417,6 +417,7 @@ body {
     border-bottom: none;
     transition: all 0.2s;
     min-height: 0;
+    box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0,0,0,0.4);
 }
 
 .suggestions-grid li:nth-last-child(-n+2) {
@@ -427,12 +428,13 @@ body {
     border-color: #FFFFFF;
     background: #2A2A2A;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 0 #000000, 0 6px 12px rgba(0,0,0,0.5);
 }
 
 .suggestions-grid li.selected {
     border-color: #4CAF50;
     background: #2A2A2A;
+    box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0,0,0,0.4);
 }
 
 .suggestions-grid li .secondary {
@@ -446,6 +448,7 @@ body {
     cursor: default;
     pointer-events: none;
     opacity: 0.3;
+    box-shadow: none;
 }
 
 /* Type buttons (Cliente/Fornitore) */
