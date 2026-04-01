@@ -20,8 +20,8 @@ const totemTranslations = {
         back: 'Indietro',
         more: 'Altro',
         weigh: 'Pesa',
-        entry: 'In',
-        exit: 'Out',
+        entry: 'Entrata',
+        exit: 'Uscita',
         reconnect: 'Riconnetti',
 
         // Messages
@@ -59,8 +59,8 @@ const totemTranslations = {
         back: 'Back',
         more: 'More',
         weigh: 'Weigh',
-        entry: 'In',
-        exit: 'Out',
+        entry: 'Weight 1',
+        exit: 'Weight 2',
         reconnect: 'Reconnect',
 
         // Messages
