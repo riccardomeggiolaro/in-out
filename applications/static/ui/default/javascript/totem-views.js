@@ -7,14 +7,14 @@ const totemViews = {
         get title() { return 'Totem - ' + t('plate_title'); },
         style: `
             .license-plate { cursor: pointer; }
-            .plate-empty .plate-text { color: #ccc; letter-spacing: 12px; }
+            .plate-empty .plate-text { color: #AAAAAA; letter-spacing: 12px; }
             .plate-input { display: none; font-size: 3.5rem; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase; border: none; outline: none; background: transparent; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; }
             .plate-input.active { display: flex; }
             .virtual-keyboard { display: none; width: 100%; flex: 1; min-height: 0; padding: 4px 16px; box-sizing: border-box; flex-direction: column; gap: 4px; }
             .virtual-keyboard.active { display: flex; }
             .vk-row { display: flex; gap: 4px; flex: 1; justify-content: center; }
-            .vk-key { flex: 1; max-width: 10%; background: white; border: 2px solid #e0e0e0; border-radius: clamp(4px, 1vw, 8px); font-size: clamp(0.8rem, 4vh, 2.5rem); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: background 0.1s; user-select: none; -webkit-user-select: none; }
-            .vk-key:active { background: #e3effc; }
+            .vk-key { flex: 1; max-width: 10%; background: #1E1E1E; color: #FFFFFF; border: 2px solid #444444; border-radius: clamp(4px, 1vw, 8px); font-size: clamp(0.8rem, 4vh, 2.5rem); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: background 0.1s; user-select: none; -webkit-user-select: none; }
+            .vk-key:active { background: #444444; }
             .vk-key.vk-wide { max-width: 15%; flex: 1.5; }
             .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
         `,
@@ -361,7 +361,7 @@ const totemViews = {
     summary: {
         get title() { return 'Totem - ' + t('summary_title'); },
         style: `
-            .summary-row.disabled { pointer-events: none; opacity: 0.5; cursor: default; border-color: #e8e8e8; background: #f5f5f5; }
+            .summary-row.disabled { pointer-events: none; opacity: 0.4; cursor: default; border-color: #333333; background: #1A1A1A; }
             .summary-row.disabled .summary-edit { display: none; }
         `,
         html: () => `
