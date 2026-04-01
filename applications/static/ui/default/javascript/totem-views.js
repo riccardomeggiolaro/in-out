@@ -76,6 +76,7 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons">
+                <button class="btn btn-secondary" id="btnCancelPlate" style="display:none" onclick="cancelTotem()">Cancella</button>
                 <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">Annulla</button>
                 <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">Conferma</button>
                 <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">Avanti</button>
@@ -162,6 +163,7 @@ const totemViews = {
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
                 document.getElementById('virtualKeyboard').classList.add('active');
+                document.getElementById('btnCancelPlate').style.display = 'none';
                 document.getElementById('btnAnnulla').style.display = '';
                 document.getElementById('btnConferma').style.display = '';
                 document.getElementById('btnNext').style.display = 'none';
@@ -173,6 +175,7 @@ const totemViews = {
                 document.getElementById('btnAnnulla').style.display = 'none';
                 document.getElementById('btnConferma').style.display = 'none';
                 if (selectedVehicle.plate) {
+                    document.getElementById('btnCancelPlate').style.display = '';
                     _plateShowPlate(selectedVehicle.plate);
                     document.getElementById('btnNext').style.display = '';
                 } else {
@@ -250,6 +253,7 @@ const totemViews = {
             window.onDataReady = function() {
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
+                    document.getElementById('btnCancelPlate').style.display = '';
                     document.getElementById('btnNext').style.display = '';
                 } else {
                     _plateShowEmpty();
