@@ -116,6 +116,23 @@ function _findNextEmptyStep(afterStep) {
     return null;
 }
 
+// Find the previous enabled step before the given step
+function _findPrevEnabledStep(beforeStep) {
+    const steps = ['plate', 'subject', 'vector', 'driver', 'material'];
+    const enabledMap = {
+        plate: totemAnagrafiche.vehicle,
+        subject: totemAnagrafiche.subject,
+        vector: totemAnagrafiche.vector,
+        driver: totemAnagrafiche.driver,
+        material: totemAnagrafiche.material,
+    };
+    const idx = steps.indexOf(beforeStep);
+    for (let i = idx - 1; i >= 0; i--) {
+        if (enabledMap[steps[i]]) return steps[i];
+    }
+    return 'plate';
+}
+
 window.onbeforeunload = function() {
     isRefreshing = true;
     clearTimeout(reconnectTimeout);
