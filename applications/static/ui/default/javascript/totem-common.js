@@ -207,11 +207,13 @@ function showView(name) {
     // Inject topbar with logo (left) and language switcher (right)
     const topbar = document.createElement('div');
     topbar.className = 'step-topbar';
+    const flagIT = `<svg viewBox="0 0 120 120"><clipPath id="cIt"><circle cx="60" cy="60" r="60"/></clipPath><g clip-path="url(#cIt)"><rect x="0" y="0" width="40" height="120" fill="#009246"/><rect x="40" y="0" width="40" height="120" fill="#fff"/><rect x="80" y="0" width="40" height="120" fill="#ce2b37"/></g></svg>`;
+    const flagEN = `<svg viewBox="0 0 120 120"><clipPath id="cEn"><circle cx="60" cy="60" r="60"/></clipPath><g clip-path="url(#cEn)"><rect width="120" height="120" fill="#012169"/><path d="M0,0 L120,120 M120,0 L0,120" stroke="#fff" stroke-width="20"/><path d="M0,0 L120,120 M120,0 L0,120" stroke="#C8102E" stroke-width="12"/><path d="M60,0 V120 M0,60 H120" stroke="#fff" stroke-width="28"/><path d="M60,0 V120 M0,60 H120" stroke="#C8102E" stroke-width="16"/></g></svg>`;
     topbar.innerHTML = `
         <div class="step-logo"><img src="/static/content/baronpesi_logo.png" alt="Logo"></div>
         <div class="lang-switcher">
-            <button class="lang-btn ${currentLang === 'it' ? 'active' : ''}" data-lang="it" onclick="switchLang('it')">IT</button>
-            <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en" onclick="switchLang('en')">EN</button>
+            <button class="lang-btn ${currentLang === 'it' ? 'active' : ''}" data-lang="it" onclick="switchLang('it')">${flagIT}</button>
+            <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en" onclick="switchLang('en')">${flagEN}</button>
         </div>
     `;
     step.prepend(topbar);
