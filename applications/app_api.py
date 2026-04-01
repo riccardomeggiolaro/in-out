@@ -180,6 +180,10 @@ def init():
 	@app.get("/reservation", response_class=HTMLResponse)
 	async def Reservation(request: Request):
 		return templates.TemplateResponse("reservation.html", {"request": request})
+
+	@app.get("/booking", response_class=HTMLResponse)
+	async def Booking(request: Request):
+		return templates.TemplateResponse("booking.html", {"request": request})
  
 	@app.get('/report-designer/entrata', response_class=HTMLResponse)
 	async def report_designer(request: Request):
