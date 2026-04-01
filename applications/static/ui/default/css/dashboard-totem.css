@@ -694,8 +694,8 @@ body {
 }
 
 .summary-edit {
-    color: #4CAF50;
-    font-size: clamp(0.6rem, 3vh, 1.8rem);
+    color: #FFFFFF;
+    font-size: clamp(0.8rem, 4vh, 2.5rem);
     position: static;
     flex-shrink: 0;
     padding: 0 12px;
