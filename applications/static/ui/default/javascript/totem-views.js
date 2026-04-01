@@ -4,7 +4,7 @@ const totemViews = {
 
     // ==================== PLATE ====================
     plate: {
-        title: 'Totem - Targa',
+        get title() { return 'Totem - ' + t('plate_title'); },
         style: `
             .license-plate { cursor: pointer; }
             .plate-empty .plate-text { color: #ccc; letter-spacing: 12px; }
@@ -19,7 +19,7 @@ const totemViews = {
             .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
         `,
         html: () => `
-            <h2>Targa</h2>
+            <h2>${t('plate_title')}</h2>
             <div class="license-plate plate-empty" id="plateDisplay">
                 <div class="plate-band plate-band-left">
                     <div class="plate-stars">&#9733;</div>
@@ -76,10 +76,10 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons">
-                <button class="btn btn-secondary" id="btnCancelPlate" style="display:none" onclick="cancelTotem()">Cancella</button>
-                <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">Annulla</button>
-                <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">Conferma</button>
-                <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">Avanti</button>
+                <button class="btn btn-secondary" id="btnCancelPlate" style="display:none" onclick="cancelTotem()">${t('cancel')}</button>
+                <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">${t('undo')}</button>
+                <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">${t('confirm')}</button>
+                <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">${t('next')}</button>
             </div>
         `,
         init: () => {
@@ -272,19 +272,19 @@ const totemViews = {
 
     // ==================== SUBJECT ====================
     subject: {
-        title: 'Totem - Ragione Sociale',
+        get title() { return 'Totem - ' + t('subject_title'); },
         html: () => `
-            <h2 id="subjectTitle">Ragione Sociale</h2>
+            <h2 id="subjectTitle">${t('subject_title')}</h2>
             <ul class="suggestions-list suggestions-grid" id="subjectGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('subject') + '?back=1')">Indietro</button>
-                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('subjectGrid', 'vector')">Altro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('subject') + '?back=1')">${t('back')}</button>
+                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('subjectGrid', 'vector')">${t('more')}</button>
             </div>
         `,
         init: () => {
             window.onDataReady = function() {
                 document.getElementById('subjectTitle').textContent =
-                    selectedTypeSubject === 'CUSTOMER' ? 'Cliente' : 'Fornitore';
+                    selectedTypeSubject === 'CUSTOMER' ? t('customer') : t('supplier');
 
                 loadItems('subject', 'social_reason', '', 'subjectGrid', (item) => {
                     selectAndAdvance('subject', item, 'vector');
@@ -296,13 +296,13 @@ const totemViews = {
 
     // ==================== VECTOR ====================
     vector: {
-        title: 'Totem - Vettore',
+        get title() { return 'Totem - ' + t('vector_title'); },
         html: () => `
-            <h2>Vettore</h2>
+            <h2>${t('vector_title')}</h2>
             <ul class="suggestions-list suggestions-grid" id="vectorGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('vector') + '?back=1')">Indietro</button>
-                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('vectorGrid', 'driver')">Altro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('vector') + '?back=1')">${t('back')}</button>
+                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('vectorGrid', 'driver')">${t('more')}</button>
             </div>
         `,
         init: () => {
@@ -317,13 +317,13 @@ const totemViews = {
 
     // ==================== DRIVER ====================
     driver: {
-        title: 'Totem - Autista',
+        get title() { return 'Totem - ' + t('driver_title'); },
         html: () => `
-            <h2>Autista</h2>
+            <h2>${t('driver_title')}</h2>
             <ul class="suggestions-list suggestions-grid" id="driverGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('driver') + '?back=1')">Indietro</button>
-                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('driverGrid', 'material')">Altro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('driver') + '?back=1')">${t('back')}</button>
+                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('driverGrid', 'material')">${t('more')}</button>
             </div>
         `,
         init: () => {
@@ -338,13 +338,13 @@ const totemViews = {
 
     // ==================== MATERIAL ====================
     material: {
-        title: 'Totem - Materiale',
+        get title() { return 'Totem - ' + t('material_title'); },
         html: () => `
-            <h2>Materiale</h2>
+            <h2>${t('material_title')}</h2>
             <ul class="suggestions-list suggestions-grid" id="materialGrid"></ul>
             <div class="step-buttons">
-                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('material') + '?back=1')">Indietro</button>
-                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('materialGrid', 'summary')">Altro</button>
+                <button class="btn btn-secondary" onclick="goTo(isFromSummary() ? 'summary' : _findPrevEnabledStep('material') + '?back=1')">${t('back')}</button>
+                <button class="btn btn-primary btn-next" id="btnNextPage" onclick="_nextPage('materialGrid', 'summary')">${t('more')}</button>
             </div>
         `,
         init: () => {
@@ -359,16 +359,16 @@ const totemViews = {
 
     // ==================== SUMMARY ====================
     summary: {
-        title: 'Totem - Riepilogo',
+        get title() { return 'Totem - ' + t('summary_title'); },
         style: `
             .summary-row.disabled { pointer-events: none; opacity: 0.5; cursor: default; border-color: #e8e8e8; background: #f5f5f5; }
             .summary-row.disabled .summary-edit { display: none; }
         `,
         html: () => `
-            <h2>Riepilogo</h2>
+            <h2>${t('summary_title')}</h2>
             <div class="summary-card">
                 <div class="summary-row" id="rowPlate" onclick="goTo('plate?from=summary')">
-                    <span class="summary-label">Targa</span>
+                    <span class="summary-label">${t('plate_title')}</span>
                     <span class="summary-value" id="summaryPlate">-</span>
                     <span class="summary-edit">&#9998;</span>
                 </div>
@@ -378,36 +378,36 @@ const totemViews = {
                     <span class="summary-edit">&#9998;</span>
                 </div>
                 <div class="summary-row" id="rowVector" onclick="goTo('vector?from=summary')">
-                    <span class="summary-label">Vettore</span>
+                    <span class="summary-label">${t('vector_title')}</span>
                     <span class="summary-value" id="summaryVector">-</span>
                     <span class="summary-edit">&#9998;</span>
                 </div>
                 <div class="summary-row" id="rowDriver" onclick="goTo('driver?from=summary')">
-                    <span class="summary-label">Autista</span>
+                    <span class="summary-label">${t('driver_title')}</span>
                     <span class="summary-value" id="summaryDriver">-</span>
                     <span class="summary-edit">&#9998;</span>
                 </div>
                 <div class="summary-row" id="rowMaterial" onclick="goTo('material?from=summary')">
-                    <span class="summary-label">Materiale</span>
+                    <span class="summary-label">${t('material_title')}</span>
                     <span class="summary-value" id="summaryMaterial">-</span>
                     <span class="summary-edit">&#9998;</span>
                 </div>
             </div>
             <div class="step-buttons summary-buttons">
-                <button class="btn btn-secondary" id="btnBack" onclick="goTo(_findPrevEnabledStep('summary') + '?back=1')">Indietro</button>
-                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">Pesa</button>
+                <button class="btn btn-secondary" id="btnBack" onclick="goTo(_findPrevEnabledStep('summary') + '?back=1')">${t('back')}</button>
+                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">${t('weigh')}</button>
             </div>
         `,
         init: () => {
             function updateSummary() {
                 document.getElementById('summaryPlate').textContent = selectedVehicle.plate || '-';
-                document.getElementById('summaryType').textContent = selectedTypeSubject === 'CUSTOMER' ? 'Cliente' : 'Fornitore';
+                document.getElementById('summaryType').textContent = selectedTypeSubject === 'CUSTOMER' ? t('customer') : t('supplier');
                 document.getElementById('summarySubject').textContent = selectedSubject.social_reason || '-';
                 document.getElementById('summaryVector').textContent = selectedVector.social_reason || '-';
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
                 const btnWeigh = document.getElementById('btnWeigh');
-                if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? 'Uscita' : 'Entrata';
+                if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
 
                 // Hide rows for disabled anagrafiche
                 const rowVisibility = {
