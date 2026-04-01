@@ -414,7 +414,6 @@ body {
     font-weight: 500;
     font-size: clamp(0.7rem, 5vh, 3rem);
     color: #FFFFFF;
-    border-bottom: none;
     transition: all 0.2s;
     min-height: 0;
     box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0,0,0,0.4);
