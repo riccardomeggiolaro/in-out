@@ -172,6 +172,9 @@ function showView(name) {
         return;
     }
 
+    // Track current view for language switching
+    _currentViewName = name;
+
     // Clean up pagination state
     _paginationState = {};
 
@@ -201,11 +204,17 @@ function showView(name) {
         middleElements.forEach(el => wrapper.appendChild(el));
     }
 
-    // Inject logo at top-right of step
-    const logoEl = document.createElement('div');
-    logoEl.className = 'step-logo';
-    logoEl.innerHTML = `<img src="/static/content/baronpesi_logo.png" alt="Logo">`;
-    step.prepend(logoEl);
+    // Inject topbar with logo (left) and language switcher (right)
+    const topbar = document.createElement('div');
+    topbar.className = 'step-topbar';
+    topbar.innerHTML = `
+        <div class="step-logo"><img src="/static/content/baronpesi_logo.png" alt="Logo"></div>
+        <div class="lang-switcher">
+            <button class="lang-btn ${currentLang === 'it' ? 'active' : ''}" data-lang="it" onclick="switchLang('it')">IT</button>
+            <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en" onclick="switchLang('en')">EN</button>
+        </div>
+    `;
+    step.prepend(topbar);
 
     // Re-trigger fade animation
     step.style.animation = 'none';
@@ -285,12 +294,12 @@ function _updateNextPageButton(containerId) {
     const totalPages = Math.ceil(state.items.length / state.itemsPerPage);
 
     if (state.items.length === 0) {
-        // No items — show "Avanti" to skip to next step
-        btn.textContent = 'Avanti';
+        // No items — show "Next" to skip to next step
+        btn.textContent = t('next');
         btn.style.display = '';
     } else if (totalPages > 1) {
-        // Multiple pages — show "Altro" to paginate
-        btn.textContent = 'Altro';
+        // Multiple pages — show "More" to paginate
+        btn.textContent = t('more');
         btn.style.display = '';
     } else {
         // Single page with items — hide button, must click item
@@ -373,7 +382,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
         if (inputValue) {
             const li = document.createElement('li');
             li.classList.add('create-new');
-            li.textContent = `Crea "${inputValue.toUpperCase()}"`;
+            li.textContent = `${t('create_new')} "${inputValue.toUpperCase()}"`;
             li.addEventListener('click', () => {
                 if (typeof onCreateNew === 'function') onCreateNew(inputValue);
             });
@@ -405,7 +414,7 @@ function showWeighingSuccess(isError = false, message = null) {
     if (!container) return;
     const color = isError ? '#d32f2f' : '#2e7d32';
     const icon = isError ? '&#10008;' : '&#10004;';
-    const text = message || (isError ? 'Pesata non riuscita' : 'Pesata completata');
+    const text = message || (isError ? t('weighing_error') : t('weighing_success'));
     const header = document.querySelector('.totem-header');
     if (header) header.style.display = 'none';
     container.innerHTML = `
@@ -553,7 +562,7 @@ function highlightText(text, input) {
 }
 
 function getAnagraficLabel(anagrafic) {
-    const labels = { vehicle: 'Veicolo', subject: 'Soggetto', vector: 'Vettore', driver: 'Autista', material: 'Materiale' };
+    const labels = { vehicle: t('label_vehicle'), subject: t('label_subject'), vector: t('label_vector'), driver: t('label_driver'), material: t('label_material') };
     return labels[anagrafic] || anagrafic;
 }
 
@@ -575,7 +584,7 @@ async function handleWeighing() {
     if (data_weight_realtime.over_max_theshold) {
         confirmWeighing = executeWeighing;
         document.getElementById('confirmDescription').innerHTML =
-            `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
+            t('max_threshold_exceeded').replace('{value}', maxThesholdValue);
         openPopup('confirmPopup');
     } else {
         await executeWeighing();
@@ -603,7 +612,7 @@ async function executeWeighing() {
         });
         if (!res.ok) {
             const data = await res.json().catch(() => null);
-            const msg = (data && data.detail) || `Errore ${res.status}`;
+            const msg = (data && data.detail) || `${t('weighing_generic_error')} (${res.status})`;
             showWeighingSuccess(true, msg);
             btns.forEach(b => { b.disabled = false; });
             return;
@@ -612,13 +621,13 @@ async function executeWeighing() {
         if (r && r.command_details && r.command_details.command_executed === true) {
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
-            const msg = r?.command_details?.error_message || "Errore durante la pesatura";
+            const msg = r?.command_details?.error_message || t('weighing_generic_error');
             showWeighingSuccess(true, msg);
             btns.forEach(b => { b.disabled = false; });
         }
     } catch (error) {
         console.error('Weighing error:', error);
-        showWeighingSuccess(true, "Errore durante la pesatura");
+        showWeighingSuccess(true, t('weighing_generic_error'));
         btns.forEach(b => { b.disabled = false; });
     }
 }
@@ -626,7 +635,7 @@ async function executeWeighing() {
 function handleNeedToConfirm(plate) {
     confirmWeighing = confirmSemiAutomatic;
     document.getElementById('confirmDescription').innerHTML =
-        `Lettura automatica della targa <strong>'${plate}'</strong>. <br> Effettuare la pesatura?`;
+        t('auto_plate_confirm').replace('{plate}', plate);
     openPopup('confirmPopup');
 }
 
