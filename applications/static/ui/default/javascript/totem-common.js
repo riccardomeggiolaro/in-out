@@ -95,6 +95,7 @@ let _waitingForStartPage = false;
 // Skips steps disabled in totem config or already set on the reservation
 function _findNextEmptyStep(afterStep) {
     const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
+    const isExit = _isSecondWeighing();
     const steps = [
         { name: 'subject', filled: !!selectedSubject.id, enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
         { name: 'vector', filled: !!selectedVector.id, enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
@@ -109,7 +110,7 @@ function _findNextEmptyStep(afterStep) {
     else if (afterStep === 'material') return null;
 
     for (let i = startIndex; i < steps.length; i++) {
-        if (steps[i].enabled && !steps[i].filled) return steps[i].name;
+        if (steps[i].enabled && (isExit || !steps[i].filled)) return steps[i].name;
     }
     return null;
 }
