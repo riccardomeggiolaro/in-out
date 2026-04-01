@@ -92,7 +92,7 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons">
-                <button class="btn btn-secondary" id="btnBackPlate" onclick="goTo('direction')">Indietro</button>
+                <button class="btn btn-secondary" id="btnBackPlate" onclick="cancelTotem()">Indietro</button>
                 <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">Annulla</button>
                 <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">Conferma</button>
                 <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">Avanti</button>
