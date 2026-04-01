@@ -394,7 +394,7 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons summary-buttons">
-                <button class="btn btn-secondary" id="btnBack" onclick="goTo(_findPrevEnabledStep('summary') + '?back=1')">Indietro</button>
+                <button class="btn btn-secondary" id="btnBack" onclick="goTo(_findPrevEnabledStep('summary') + '?from=summary&back=1')">Indietro</button>
                 <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">Pesa</button>
             </div>
         `,
@@ -443,7 +443,7 @@ const totemViews = {
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {
-                    btnBack.onclick = () => goTo(_findPrevEnabledStep('summary') + '?back=1');
+                    btnBack.onclick = () => goTo(_findPrevEnabledStep('summary') + '?from=summary&back=1');
                 }
             }
 
