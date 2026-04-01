@@ -554,6 +554,47 @@
                     <input type="checkbox" id="badge" onclick="setUseBadge(this.checked)">
                     <br>
                     <br>
+                    <hr>
+                    <br>
+                    <label><b>Anagrafiche utilizzate</b>:</label>
+                    <br><br>
+                    <label for="access-anagrafic-subject">Soggetto: </label>
+                    <input type="checkbox" id="access-anagrafic-subject" onclick="setAccessAnagrafic('subject', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-vehicle">Veicolo (targa): </label>
+                    <input type="checkbox" id="access-anagrafic-vehicle" onclick="setAccessAnagrafic('vehicle', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-vector">Vettore: </label>
+                    <input type="checkbox" id="access-anagrafic-vector" onclick="setAccessAnagrafic('vector', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-driver">Autista: </label>
+                    <input type="checkbox" id="access-anagrafic-driver" onclick="setAccessAnagrafic('driver', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-material">Materiale: </label>
+                    <input type="checkbox" id="access-anagrafic-material" onclick="setAccessAnagrafic('material', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-operator">Operatore: </label>
+                    <input type="checkbox" id="access-anagrafic-operator" onclick="setAccessAnagrafic('operator', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-document_reference">Riferimento documento: </label>
+                    <input type="checkbox" id="access-anagrafic-document_reference" onclick="setAccessAnagrafic('document_reference', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-note">Note: </label>
+                    <input type="checkbox" id="access-anagrafic-note" onclick="setAccessAnagrafic('note', this.checked)">
+                    <br>
+                    <label for="access-anagrafic-weighing_pictures">Foto pesata: </label>
+                    <input type="checkbox" id="access-anagrafic-weighing_pictures" onclick="setAccessAnagrafic('weighing_pictures', this.checked)">
+                    <br>
+                    <br>
+                    <hr>
+                    <br>
+                    <label><b>Tipo soggetto predefinito</b>: </label>
+                    <input type="radio" name="default-type-subject" value="CUSTOMER" id="default-type-customer" oninput="setDefaultTypeSubject(this.value)">
+                    <label for="default-type-customer">Cliente</label>
+                    <input type="radio" name="default-type-subject" value="SUPPLIER" id="default-type-supplier" oninput="setDefaultTypeSubject(this.value)">
+                    <label for="default-type-supplier">Fornitore</label>
+                    <br>
+                    <br>
                 </div>
                 <br>
                 <div class="borders aliceblue">
@@ -1698,6 +1739,26 @@
                 if (res.use_recordings) useRecordings.checked = true;
 
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
+
+                // Access anagrafiche
+                const useAnagrafic = res.use_anagrafic || {};
+                document.getElementById('access-anagrafic-subject').checked = useAnagrafic.subject !== false;
+                document.getElementById('access-anagrafic-vehicle').checked = useAnagrafic.vehicle !== false;
+                document.getElementById('access-anagrafic-vector').checked = useAnagrafic.vector !== false;
+                document.getElementById('access-anagrafic-driver').checked = useAnagrafic.driver !== false;
+                document.getElementById('access-anagrafic-material').checked = useAnagrafic.material !== false;
+                document.getElementById('access-anagrafic-operator').checked = useAnagrafic.operator === true;
+                document.getElementById('access-anagrafic-document_reference').checked = useAnagrafic.document_reference !== false;
+                document.getElementById('access-anagrafic-note').checked = useAnagrafic.note !== false;
+                document.getElementById('access-anagrafic-weighing_pictures').checked = useAnagrafic.weighing_pictures !== false;
+
+                // Default type subject
+                const defaultTypeSubject = res.default_type_subject || 'CUSTOMER';
+                if (defaultTypeSubject === 'SUPPLIER') {
+                    document.getElementById('default-type-supplier').checked = true;
+                } else {
+                    document.getElementById('default-type-customer').checked = true;
+                }
 
                 // Load sync folder configuration
                 if (res.sync_folder.remote_folder) {
@@ -3552,6 +3613,26 @@
 
         function setUseBadge(status) {
             fetch(`/api/config-weigher/configuration/use-badge/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setAccessAnagrafic(anagrafic, status) {
+            fetch(`/api/config-weigher/configuration/access-anagrafic/${anagrafic}/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setDefaultTypeSubject(typeSubject) {
+            fetch(`/api/config-weigher/configuration/default-type-subject/${typeSubject}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'

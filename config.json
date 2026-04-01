@@ -83,6 +83,7 @@
                 "pid": true
             }
         },
+        "default_type_subject": "CUSTOMER",
         "use_badge": false,
         "use_preset_weight": true,
         "use_recordings": false,

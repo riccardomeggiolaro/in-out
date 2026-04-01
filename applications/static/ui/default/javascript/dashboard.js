@@ -27,6 +27,7 @@ let selectedIdWeight;
 let numberInOutSelectedIdWeight;
 let dataInExecution;
 let currentAccessType = "MANUALLY";
+let defaultTypeSubject = "CUSTOMER";
 let _reservationHasMaterial = false;
 let _reservationHasSubject = false;
 let _reservationHasVector = false;
@@ -119,6 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentWeigherPath = localStorage.getItem('currentWeigherPath');
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         test_mode = res["test_mode"] || false;
+        defaultTypeSubject = res["default_type_subject"] || "CUSTOMER";
         let selected = false;
         for (let instance in res["weighers"]) {
             for (let weigher in res["weighers"][instance]["nodes"]) {
@@ -258,11 +260,11 @@ async function getData(path) {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-        document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
+        document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : defaultTypeSubject;
         document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.vector.social_reason ? obj.vector.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
-        document.querySelector('#currentNote').value = obj.note ? obj.note : '';            
+        document.querySelector('#currentNote').value = obj.note ? obj.note : '';
         document.querySelector('#currentDocumentReference').value = obj.document_reference ? obj.document_reference : '';
         selectedIdWeight = res["id_selected"];
         console.log(selectedIdWeight)
@@ -1064,7 +1066,7 @@ function processRealtimeObject(obj) {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
-        document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
+        document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : defaultTypeSubject;
         document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';
