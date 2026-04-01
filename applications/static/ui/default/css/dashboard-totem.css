@@ -219,14 +219,15 @@ body {
 
 .lang-switcher {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     pointer-events: auto;
+    height: 100%;
 }
 
 .lang-btn {
-    width: 56px;
-    height: 56px;
+    height: 80%;
+    aspect-ratio: 1;
     border-radius: 50%;
     border: 3px solid #ddd;
     background: white;
