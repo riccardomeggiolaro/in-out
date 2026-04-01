@@ -226,7 +226,7 @@ body {
 }
 
 .lang-btn {
-    height: 80%;
+    height: 100%;
     aspect-ratio: 1;
     border-radius: 50%;
     border: 3px solid #ddd;
