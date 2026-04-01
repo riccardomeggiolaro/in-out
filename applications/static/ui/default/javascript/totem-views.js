@@ -139,7 +139,7 @@ const totemViews = {
 
             window._plateGoToNext = function() {
                 if (isFromSummary()) { goTo('summary'); return; }
-                const dest = _findNextEmptyStep('plate');
+                const dest = _findNextEnabledStep('plate');
                 goTo(dest || 'summary');
             };
 

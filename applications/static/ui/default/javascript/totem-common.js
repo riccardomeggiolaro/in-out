@@ -86,21 +86,20 @@ function _resolveStartPage() {
     if (!selectedVehicle.plate) return; // Stay on plate
 
     // Go to first empty editable step, or summary if all filled
-    const dest = _findNextEmptyStep('plate');
+    const dest = _findNextEnabledStep('plate');
     goTo(dest || 'summary');
 }
 let _waitingForStartPage = false;
 
 // Find the next step with an empty field, starting after the given step
 // Skips steps disabled in totem config or already set on the reservation
-function _findNextEmptyStep(afterStep) {
+function _findNextEnabledStep(afterStep) {
     const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
-    const isExit = _isSecondWeighing();
     const steps = [
-        { name: 'subject', filled: !!selectedSubject.id, enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
-        { name: 'vector', filled: !!selectedVector.id, enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
-        { name: 'driver', filled: !!selectedDriver.id, enabled: totemAnagrafiche.driver && !(isReservation && _reservationHasDriver) },
-        { name: 'material', filled: !!selectedMaterial.id, enabled: totemAnagrafiche.material && !(isReservation && _reservationHasMaterial) },
+        { name: 'subject', enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
+        { name: 'vector', enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
+        { name: 'driver', enabled: totemAnagrafiche.driver && !(isReservation && _reservationHasDriver) },
+        { name: 'material', enabled: totemAnagrafiche.material && !(isReservation && _reservationHasMaterial) },
     ];
     let startIndex = 0;
     if (afterStep === 'plate') startIndex = 0;
@@ -110,7 +109,7 @@ function _findNextEmptyStep(afterStep) {
     else if (afterStep === 'material') return null;
 
     for (let i = startIndex; i < steps.length; i++) {
-        if (steps[i].enabled && (isExit || !steps[i].filled)) return steps[i].name;
+        if (steps[i].enabled) return steps[i].name;
     }
     return null;
 }
@@ -483,7 +482,7 @@ function selectAndAdvance(anagrafic, item, nextPage) {
             if (isFromSummary()) {
                 dest = 'summary';
             } else {
-                dest = _findNextEmptyStep(anagrafic) || 'summary';
+                dest = _findNextEnabledStep(anagrafic) || 'summary';
             }
             setTimeout(() => goTo(dest), 300);
         }
@@ -897,7 +896,7 @@ function processRealtimeObject(obj) {
 
         // If a new access was selected (from dashboard), navigate to first empty field or summary
         if (!prevId && obj.id_selected && obj.id_selected.id !== null) {
-            const dest = _findNextEmptyStep('plate');
+            const dest = _findNextEnabledStep('plate');
             goTo(dest || 'summary');
             return;
         }
