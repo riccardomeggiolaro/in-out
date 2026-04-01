@@ -25,7 +25,7 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
             if access.vehicle and access.vehicle.accesses[-1].id != id and data.number_in_out and data.number_in_out is not None and data.number_in_out != access.number_in_out:
                 raise ValueError(f"Puoi modificare il numero di operazioni solo sull'ultimo accesso con la targa '{access.vehicle.plate}'")
 
-            if access.number_in_out is None and data.number_in_out is not None and data.number_in_out != -1:
+            if access.number_in_out is None and data.number_in_out is not None and data.number_in_out != -1 and data.permanent is not True:
                 raise ValueError(f"Non puoi modificare il numero di operazioni da illimitato a un numero specifico")
 
             if access.type == TypeAccess.MANUALLY and data.number_in_out is not None and data.number_in_out != access.number_in_out:
@@ -348,11 +348,17 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
             if not idInOut and data.typeSubject:
                 access.typeSubject = TypeSubjectEnum[data.typeSubject]
 
-            if data.number_in_out is not None:
+            if data.permanent is True:
+                access.number_in_out = None
+                if len(access.in_out) > 0:
+                    access.status = AccessStatus.ENTERED
+                else:
+                    access.status = AccessStatus.WAITING
+            elif data.number_in_out is not None:
                 if data.number_in_out != -1:
                     if len(access.in_out) > data.number_in_out:
                         raise ValueError("Non puoi assegnare un numero di pesate inferiore a quelle già effettuate")
-                access.number_in_out = data.number_in_out if data.number_in_out != -1 else None
+                access.number_in_out = data.number_in_out
                 if len(access.in_out) > 0:
                     if data.number_in_out == -1:
                         access.status = AccessStatus.ENTERED

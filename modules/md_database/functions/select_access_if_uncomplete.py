@@ -16,6 +16,9 @@ def select_access_if_uncomplete(access_id: int):
 			InOut.idAccess == access_id
 		).scalar()
 
+		if access.number_in_out == -1:
+			raise ValueError(f"Access {access_id} is access-only (no weighing allowed)")
+
 		if weighing_count == access.number_in_out and access.in_out[-1].idWeight2:
 			# Numero di pesate uguale o superiore al previsto, genera errore
 			raise ValueError(f"Access {access_id} already is just closed")
