@@ -2,22 +2,6 @@
 
 const totemViews = {
 
-    // ==================== DIRECTION ====================
-    direction: {
-        title: 'Totem - Direzione',
-        html: () => `
-            <h2>Seleziona operazione</h2>
-            <div class="step-buttons direction-buttons">
-                <button class="btn btn-primary" onclick="selectedDirection='in'; goTo('plate')">Entrata</button>
-                <button class="btn btn-primary" onclick="selectedDirection='out'; goTo('plate')">Uscita</button>
-            </div>
-        `,
-        init: () => {
-            window.onDataReady = null;
-            window.onDataUpdate = null;
-        }
-    },
-
     // ==================== PLATE ====================
     plate: {
         title: 'Totem - Targa',
@@ -92,7 +76,6 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons">
-                <button class="btn btn-secondary" id="btnBackPlate" onclick="cancelTotem()">Indietro</button>
                 <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">Annulla</button>
                 <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">Conferma</button>
                 <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">Avanti</button>
@@ -179,7 +162,6 @@ const totemViews = {
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
                 document.getElementById('virtualKeyboard').classList.add('active');
-                document.getElementById('btnBackPlate').style.display = 'none';
                 document.getElementById('btnAnnulla').style.display = '';
                 document.getElementById('btnConferma').style.display = '';
                 document.getElementById('btnNext').style.display = 'none';
@@ -188,7 +170,6 @@ const totemViews = {
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('virtualKeyboard').classList.remove('active');
-                document.getElementById('btnBackPlate').style.display = '';
                 document.getElementById('btnAnnulla').style.display = 'none';
                 document.getElementById('btnConferma').style.display = 'none';
                 if (selectedVehicle.plate) {
@@ -242,31 +223,6 @@ const totemViews = {
                                 selectedMaterial = { id: d.material.id, description: d.material.description || '' };
                         }
 
-                        // Validate direction vs plate state
-                        const hasWeight1 = selectedIdWeight && selectedIdWeight.weight1 !== null;
-                        const vehicleTare = dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.tare;
-                        if (selectedDirection === 'out' && !hasWeight1 && !vehicleTare) {
-                            fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
-                            selectedVehicle = { id: null, plate: '' };
-                            selectedIdWeight = null;
-                            dataInExecution = null;
-                            selectedDirection = null;
-                            showWeighingSuccess(true, `La targa "${value}" non ha un'entrata registrata`, 'direction');
-                            return;
-                        }
-                        if (selectedDirection === 'in' && (hasWeight1 || vehicleTare)) {
-                            const msg = vehicleTare
-                                ? `La targa "${value}" ha una tara associata. Può solo effettuare l'uscita`
-                                : `La targa "${value}" ha già un'entrata. Deve prima effettuare l'uscita`;
-                            fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
-                            selectedVehicle = { id: null, plate: '' };
-                            selectedIdWeight = null;
-                            dataInExecution = null;
-                            selectedDirection = null;
-                            showWeighingSuccess(true, msg, 'direction');
-                            return;
-                        }
-
                         _plateManualMode = false;
                         document.getElementById('virtualKeyboard').classList.remove('active');
                         document.getElementById('btnAnnulla').style.display = 'none';
@@ -303,31 +259,6 @@ const totemViews = {
             window.onDataUpdate = function() {
                 if (_plateManualMode) return;
                 if (selectedVehicle.plate) {
-                    // Validate direction vs plate state
-                    const hasWeight1 = selectedIdWeight && selectedIdWeight.weight1 !== null;
-                    const vehicleTare = dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.tare;
-                    const plate = selectedVehicle.plate;
-                    if (selectedDirection === 'out' && !hasWeight1 && !vehicleTare) {
-                        fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
-                        selectedVehicle = { id: null, plate: '' };
-                        selectedIdWeight = null;
-                        dataInExecution = null;
-                        selectedDirection = null;
-                        showWeighingSuccess(true, `La targa "${plate}" non ha un'entrata registrata`, 'direction');
-                        return;
-                    }
-                    if (selectedDirection === 'in' && (hasWeight1 || vehicleTare)) {
-                        const msg = vehicleTare
-                            ? `La targa "${plate}" ha una tara associata. Può solo effettuare l'uscita`
-                            : `La targa "${plate}" ha già un'entrata. Deve prima effettuare l'uscita`;
-                        fetch(`/api/data${currentWeigherPath}`, { method: 'DELETE' });
-                        selectedVehicle = { id: null, plate: '' };
-                        selectedIdWeight = null;
-                        dataInExecution = null;
-                        selectedDirection = null;
-                        showWeighingSuccess(true, msg, 'direction');
-                        return;
-                    }
                     _plateShowPlate(selectedVehicle.plate);
                     _plateGoToNext();
                 }
@@ -472,7 +403,7 @@ const totemViews = {
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
                 const btnWeigh = document.getElementById('btnWeigh');
-                if (btnWeigh) btnWeigh.textContent = selectedDirection === 'out' ? 'Uscita' : 'Entrata';
+                if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? 'Uscita' : 'Entrata';
 
                 // Hide rows for disabled anagrafiche
                 const rowVisibility = {
