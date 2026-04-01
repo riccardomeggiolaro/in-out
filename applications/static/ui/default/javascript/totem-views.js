@@ -424,7 +424,7 @@ const totemViews = {
             }
 
             function applyReservationMode() {
-                const isReservationMode = selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
+                const isReservationMode = weighers_data_type && weighers_data_type !== "MANUALLY" && selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
                 const isExit = _isSecondWeighing();
 
                 // Plate always locked with reservation
