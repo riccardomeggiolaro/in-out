@@ -768,7 +768,7 @@ body {
     max-height: 30%;
     aspect-ratio: 5 / 1.5;
     background: #fff;
-    border: 5px solid #333333;
+    border: 5px solid #FFFFFF;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
@@ -789,11 +789,11 @@ body {
 }
 
 .plate-band-left {
-    border-right: 2px solid #333333;
+    border-right: 2px solid #FFFFFF;
 }
 
 .plate-band-right {
-    border-left: 2px solid #333333;
+    border-left: 2px solid #FFFFFF;
 }
 
 .plate-stars {
