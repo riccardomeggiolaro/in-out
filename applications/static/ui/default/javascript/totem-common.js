@@ -116,18 +116,18 @@ function _findNextEnabledStep(afterStep) {
 
 // Find the previous enabled step before the given step
 function _findPrevEnabledStep(beforeStep) {
-    const steps = ['plate', 'subject', 'vector', 'driver', 'material'];
-    const enabledMap = {
-        plate: totemAnagrafiche.vehicle,
-        subject: totemAnagrafiche.subject,
-        vector: totemAnagrafiche.vector,
-        driver: totemAnagrafiche.driver,
-        material: totemAnagrafiche.material,
-    };
-    const idx = steps.indexOf(beforeStep);
+    const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
+    const steps = [
+        { name: 'plate', enabled: totemAnagrafiche.vehicle },
+        { name: 'subject', enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
+        { name: 'vector', enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
+        { name: 'driver', enabled: totemAnagrafiche.driver && !(isReservation && _reservationHasDriver) },
+        { name: 'material', enabled: totemAnagrafiche.material && !(isReservation && _reservationHasMaterial) },
+    ];
+    const idx = steps.findIndex(s => s.name === beforeStep);
     const startIdx = idx === -1 ? steps.length - 1 : idx - 1;
     for (let i = startIdx; i >= 0; i--) {
-        if (enabledMap[steps[i]]) return steps[i];
+        if (steps[i].enabled) return steps[i].name;
     }
     return 'plate';
 }
