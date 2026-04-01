@@ -403,7 +403,7 @@ body {
 
 .suggestions-grid li {
     background: #1E1E1E;
-    border: 2px solid #555555;
+    border: 3px solid #AAAAAA;
     border-radius: clamp(8px, 2vw, 14px);
     padding: 0;
     text-align: center;
@@ -433,7 +433,8 @@ body {
 
 .suggestions-grid li.selected {
     border-color: #4CAF50;
-    background: #2A2A2A;
+    background: #1B5E20;
+    color: #FFFFFF;
     box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0,0,0,0.4);
 }
 
