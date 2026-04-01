@@ -579,6 +579,7 @@ function updateInputIfNotFocused(inputId, value) {
 function _isSecondWeighing() {
     if (selectedIdWeight && selectedIdWeight.weight1 !== null) return true;
     if (dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.tare) return true;
+    if (data_weight_realtime.tare && Number(data_weight_realtime.tare) !== 0) return true;
     return false;
 }
 
@@ -879,6 +880,9 @@ function processRealtimeObject(obj) {
         if (el('netWeight')) el('netWeight').innerText = obj.net_weight !== undefined ? obj.net_weight : 'N/A';
         if (el('uniteMisure')) el('uniteMisure').innerText = obj.unite_measure !== undefined ? obj.unite_measure : 'N/A';
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
+        // Update weighing button text in real-time
+        const btnWeigh = document.getElementById('btnWeigh');
+        if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         _reservationHasMaterial = obj.reservation_has_material || false;
