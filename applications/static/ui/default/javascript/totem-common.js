@@ -15,7 +15,6 @@ let selectedMaterial = { id: null, description: '' };
 
 let dataInExecution = null;
 let selectedIdWeight = null;
-let selectedDirection = null; // 'in' or 'out'
 let _reservationHasMaterial = false;
 let _reservationHasSubject = false;
 let _reservationHasVector = false;
@@ -76,7 +75,7 @@ function initTotemPage() {
 
     // Show initial view — will be redirected by _resolveStartPage once data loads
     _waitingForStartPage = true;
-    showView('direction');
+    showView('plate');
 }
 
 // Determine the furthest page the user can go based on already-filled data
@@ -84,8 +83,7 @@ function _resolveStartPage() {
     if (!_waitingForStartPage) return;
     _waitingForStartPage = false;
 
-    if (!selectedDirection) return; // Stay on direction
-    if (!selectedVehicle.plate) { goTo('plate'); return; }
+    if (!selectedVehicle.plate) return; // Stay on plate
 
     // Go to first empty editable step, or summary if all filled
     const dest = _findNextEmptyStep('plate');
@@ -401,7 +399,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 }
 
 // --- Full-page success/failure message after weighing ---
-function showWeighingSuccess(isError = false, message = null, errorRedirect = 'summary') {
+function showWeighingSuccess(isError = false, message = null) {
     const container = document.querySelector('#pageContent .step');
     if (!container) return;
     const color = isError ? '#d32f2f' : '#2e7d32';
@@ -423,7 +421,7 @@ function showWeighingSuccess(isError = false, message = null, errorRedirect = 's
         clearTimeout(timer);
         if (header) header.style.display = '';
         if (isError) {
-            goTo(errorRedirect);
+            goTo('summary');
         } else {
             cancelTotem();
         }
@@ -450,11 +448,10 @@ function cancelTotem() {
         selectedMaterial = { id: null, description: '' };
         selectedIdWeight = null;
         dataInExecution = null;
-        selectedDirection = null;
-        goTo('direction');
+        goTo('plate');
     })
     .catch(() => {
-        goTo('direction');
+        goTo('plate');
     });
 }
 
@@ -568,7 +565,9 @@ function updateInputIfNotFocused(inputId, value) {
 
 // --- Weighing ---
 function _isSecondWeighing() {
-    return selectedDirection === 'out';
+    if (selectedIdWeight && selectedIdWeight.weight1 !== null) return true;
+    if (dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.tare) return true;
+    return false;
 }
 
 async function handleWeighing() {
