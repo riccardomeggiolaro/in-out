@@ -443,7 +443,7 @@ const totemViews = {
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {
-                    btnBack.onclick = () => goTo(isReservationMode ? 'plate?back=1' : _findPrevEnabledStep('summary') + '?back=1');
+                    btnBack.onclick = () => goTo(_findPrevEnabledStep('summary') + '?back=1');
                 }
             }
 
