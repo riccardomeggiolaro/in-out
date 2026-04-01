@@ -125,7 +125,8 @@ function _findPrevEnabledStep(beforeStep) {
         material: totemAnagrafiche.material,
     };
     const idx = steps.indexOf(beforeStep);
-    for (let i = idx - 1; i >= 0; i--) {
+    const startIdx = idx === -1 ? steps.length - 1 : idx - 1;
+    for (let i = startIdx; i >= 0; i--) {
         if (enabledMap[steps[i]]) return steps[i];
     }
     return 'plate';
