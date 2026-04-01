@@ -431,15 +431,15 @@ const totemViews = {
                 const rowPlate = document.getElementById('rowPlate');
                 if (rowPlate) rowPlate.classList.toggle('disabled', isReservationMode);
 
-                // Each field: locked if reservation has it OR if in exit mode and already set on in_out
+                // Each field: locked only if reservation has it
                 const rowSubject = document.getElementById('rowSubject');
-                if (rowSubject) rowSubject.classList.toggle('disabled', isReservationMode && (_reservationHasSubject || (isExit && !!selectedSubject.id)));
+                if (rowSubject) rowSubject.classList.toggle('disabled', isReservationMode && _reservationHasSubject);
                 const rowVector = document.getElementById('rowVector');
-                if (rowVector) rowVector.classList.toggle('disabled', isReservationMode && (_reservationHasVector || (isExit && !!selectedVector.id)));
+                if (rowVector) rowVector.classList.toggle('disabled', isReservationMode && _reservationHasVector);
                 const rowDriver = document.getElementById('rowDriver');
-                if (rowDriver) rowDriver.classList.toggle('disabled', isReservationMode && (_reservationHasDriver || (isExit && !!selectedDriver.id)));
+                if (rowDriver) rowDriver.classList.toggle('disabled', isReservationMode && _reservationHasDriver);
                 const rowMaterial = document.getElementById('rowMaterial');
-                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && (_reservationHasMaterial || (isExit && !!selectedMaterial.id)));
+                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && _reservationHasMaterial);
 
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {
