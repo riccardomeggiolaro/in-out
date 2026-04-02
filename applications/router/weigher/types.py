@@ -17,7 +17,7 @@ class DataAssignedDTO(BaseModel):
     identify_code: Optional[str] = None
 
 class DataInExecution(BaseModel):
-	typeSubject: Optional[str] = "CUSTOMER"
+	typeSubject: Optional[str] = None
 	subject: SubjectDTO = SubjectDTO(**{})
 	vector: VectorDTO = VectorDTO(**{})
 	driver: DriverDTO = DriverDTO(**{})

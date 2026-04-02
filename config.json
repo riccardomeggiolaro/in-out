@@ -1,5 +1,6 @@
 {
     "app_api": {
+        "default_type_subject": "SUPPLIER",
         "delete_pending_accesses_at_midnight": false,
         "mode": "AUTOMATIC",
         "panel": {
@@ -64,6 +65,13 @@
             ]
         },
         "test_mode": true,
+        "totem_anagrafiche": {
+            "driver": false,
+            "material": true,
+            "subject": false,
+            "vector": false,
+            "vehicle": true
+        },
         "use_anagrafic": {
             "document_reference": true,
             "driver": true,
@@ -83,7 +91,6 @@
                 "pid": true
             }
         },
-        "default_type_subject": "CUSTOMER",
         "use_badge": false,
         "use_preset_weight": true,
         "use_recordings": false,

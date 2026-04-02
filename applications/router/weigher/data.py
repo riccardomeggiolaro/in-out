@@ -80,7 +80,7 @@ class DataRouter(CallbackWeigher):
 			"subject": {"id": None, "social_reason": None, "telephone": None, "cfpiva": None},
 			"vector": {"id": None, "social_reason": None, "telephone": None, "cfpiva": None},
 			"driver": {"id": None, "social_reason": None, "telephone": None},
-			"typeSubject": None,
+			"typeSubject": lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER"),
 			"note": None,
 			"document_reference": None,
 		}

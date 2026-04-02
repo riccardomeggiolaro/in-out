@@ -515,6 +515,10 @@
             margin-bottom: 12px;
             color: #e65100;
         }
+
+        #access-anagrafic-section {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -566,44 +570,46 @@
                     <input type="checkbox" id="delete-pending-at-midnight" onclick="setDeletePendingAccessesAtMidnight(this.checked)">
                     <br>
                     <br>
-                    <hr>
-                    <br>
-                    <label><b>Anagrafiche utilizzate</b>:</label>
-                    <br><br>
-                    <label for="access-anagrafic-subject">Soggetto: </label>
-                    <input type="checkbox" id="access-anagrafic-subject" onclick="setAccessAnagrafic('subject', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-vehicle">Veicolo (targa): </label>
-                    <input type="checkbox" id="access-anagrafic-vehicle" onclick="setAccessAnagrafic('vehicle', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-vector">Vettore: </label>
-                    <input type="checkbox" id="access-anagrafic-vector" onclick="setAccessAnagrafic('vector', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-driver">Autista: </label>
-                    <input type="checkbox" id="access-anagrafic-driver" onclick="setAccessAnagrafic('driver', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-material">Materiale: </label>
-                    <input type="checkbox" id="access-anagrafic-material" onclick="setAccessAnagrafic('material', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-document_reference">Riferimento documento: </label>
-                    <input type="checkbox" id="access-anagrafic-document_reference" onclick="setAccessAnagrafic('document_reference', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-note">Note: </label>
-                    <input type="checkbox" id="access-anagrafic-note" onclick="setAccessAnagrafic('note', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-weighing_pictures">Foto pesata: </label>
-                    <input type="checkbox" id="access-anagrafic-weighing_pictures" onclick="setAccessAnagrafic('weighing_pictures', this.checked)">
-                    <br>
-                    <br>
-                    <hr>
-                    <br>
-                    <label><b>Tipo soggetto predefinito</b>: </label>
-                    <input type="radio" name="default-type-subject" value="CUSTOMER" id="default-type-customer" oninput="setDefaultTypeSubject(this.value)">
-                    <label for="default-type-customer">Cliente</label>
-                    <input type="radio" name="default-type-subject" value="SUPPLIER" id="default-type-supplier" oninput="setDefaultTypeSubject(this.value)">
-                    <label for="default-type-supplier">Fornitore</label>
-                    <br>
-                    <br>
+                    <div id="access-anagrafic-section">
+                        <hr>
+                        <br>
+                        <label><b>Anagrafiche utilizzate</b>:</label>
+                        <br><br>
+                        <label for="access-anagrafic-subject">Soggetto: </label>
+                        <input type="checkbox" id="access-anagrafic-subject" onclick="setAccessAnagrafic('subject', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-vehicle">Veicolo (targa): </label>
+                        <input type="checkbox" id="access-anagrafic-vehicle" onclick="setAccessAnagrafic('vehicle', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-vector">Vettore: </label>
+                        <input type="checkbox" id="access-anagrafic-vector" onclick="setAccessAnagrafic('vector', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-driver">Autista: </label>
+                        <input type="checkbox" id="access-anagrafic-driver" onclick="setAccessAnagrafic('driver', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-material">Materiale: </label>
+                        <input type="checkbox" id="access-anagrafic-material" onclick="setAccessAnagrafic('material', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-document_reference">Riferimento documento: </label>
+                        <input type="checkbox" id="access-anagrafic-document_reference" onclick="setAccessAnagrafic('document_reference', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-note">Note: </label>
+                        <input type="checkbox" id="access-anagrafic-note" onclick="setAccessAnagrafic('note', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-weighing_pictures">Foto pesata: </label>
+                        <input type="checkbox" id="access-anagrafic-weighing_pictures" onclick="setAccessAnagrafic('weighing_pictures', this.checked)">
+                        <br>
+                        <br>
+                        <hr>
+                        <br>
+                        <label><b>Tipo soggetto predefinito</b>: </label>
+                        <input type="radio" name="default-type-subject" value="CUSTOMER" id="default-type-customer" oninput="setDefaultTypeSubject(this.value)">
+                        <label for="default-type-customer">Cliente</label>
+                        <input type="radio" name="default-type-subject" value="SUPPLIER" id="default-type-supplier" oninput="setDefaultTypeSubject(this.value)">
+                        <label for="default-type-supplier">Fornitore</label>
+                        <br>
+                        <br>
+                    </div>
                 </div>
                 <br>
                 <div class="borders aliceblue">

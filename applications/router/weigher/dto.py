@@ -57,7 +57,7 @@ class DataToStoreDTO(CustomBaseModel):
 		return v
 
 class DataInExecutionDTO(CustomBaseModel):
-	typeSubject: Optional[str] = "CUSTOMER"
+	typeSubject: Optional[str] = None
 	subject: Optional[SubjectDTO] = SubjectDTO(**{})
 	vector: Optional[VectorDTO] = VectorDTO(**{})
 	driver: Optional[DriverDTO] = DriverDTO(**{})

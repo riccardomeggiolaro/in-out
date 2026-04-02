@@ -25,7 +25,9 @@ class Functions:
 			for weigher_name, weigher in instance.nodes.items():
 				nodes_sockets[weigher_name] = {
 					"sockets": NodeConnectionManager(),
-					"data": Data(**{}).dict()
+					"data": Data(**{
+						"data_in_execution": DataInExecution(**{"typeSubject": lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER")}),
+         			}).dict()
 				}
 				self.switch_to_call_instance_weigher[instance_name] = {weigher_name: None}
 			weighers_data[instance_name] = nodes_sockets
