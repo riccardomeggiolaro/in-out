@@ -38,6 +38,8 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/configuration/use-preset-weight/{use_preset_weight}', self.SetUsePresetWeight, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/show-export-totals/{show_export_totals}', self.SetShowExportTotals, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/test-mode/{test_mode}', self.SetTestMode, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/configuration/access-anagrafic/{anagrafic}/{status}', self.SetAccessAnagrafic, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/configuration/default-type-subject/{type_subject}', self.SetDefaultTypeSubject, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/totem-anagrafic/{anagrafic}/{status}', self.SetTotemAnagrafic, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -61,6 +63,8 @@ class ConfigWeigher(CommandWeigherRouter):
 			app_api["totem_anagrafiche"] = {
 				"vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
 			}
+		if "default_type_subject" not in app_api:
+			app_api["default_type_subject"] = "CUSTOMER"
 		configuration = {
 			**ver,
 			**app_api
@@ -119,6 +123,21 @@ class ConfigWeigher(CommandWeigherRouter):
 		lb_config.g_config["app_api"]["test_mode"] = test_mode
 		lb_config.saveconfig()
 		return { "test_mode": test_mode }
+
+	async def SetAccessAnagrafic(self, anagrafic: str, status: bool):
+		valid_anagrafiche = ["subject", "vehicle", "vector", "driver", "material", "operator", "document_reference", "note", "weighing_pictures"]
+		if anagrafic not in valid_anagrafiche:
+			raise HTTPException(status_code=400, detail=f"Anagrafica '{anagrafic}' non valida")
+		lb_config.g_config["app_api"]["use_anagrafic"][anagrafic] = status
+		lb_config.saveconfig()
+		return lb_config.g_config["app_api"]["use_anagrafic"]
+
+	async def SetDefaultTypeSubject(self, type_subject: str):
+		if type_subject not in ["CUSTOMER", "SUPPLIER"]:
+			raise HTTPException(status_code=400, detail=f"Tipo soggetto '{type_subject}' non valido. Usa 'CUSTOMER' o 'SUPPLIER'")
+		lb_config.g_config["app_api"]["default_type_subject"] = type_subject
+		lb_config.saveconfig()
+		return { "default_type_subject": type_subject }
 
 	async def SetTotemAnagrafic(self, anagrafic: str, status: bool):
 		if "totem_anagrafiche" not in lb_config.g_config["app_api"]:

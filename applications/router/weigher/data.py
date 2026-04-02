@@ -269,7 +269,7 @@ class DataRouter(CallbackWeigher):
 			if data_dto.id_selected.id != -1:
 				access = get_access_by_id(data_dto.id_selected.id)
 				data_in_execution = DataInExecutionType(**{
-					"typeSubject": io_data["typeSubject"] or (access.typeSubject.name if access.typeSubject else "CUSTOMER"),
+					"typeSubject": io_data["typeSubject"] or (access.typeSubject.name if access.typeSubject else lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER")),
 					"subject": io_data["subject"] if io_data["subject"]["id"] else {
 						"id": access.subject.id if access.subject else None,
 						"social_reason": access.subject.social_reason if access.subject else None,
