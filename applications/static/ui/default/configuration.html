@@ -585,9 +585,6 @@
                     <label for="access-anagrafic-material">Materiale: </label>
                     <input type="checkbox" id="access-anagrafic-material" onclick="setAccessAnagrafic('material', this.checked)">
                     <br>
-                    <label for="access-anagrafic-operator">Operatore: </label>
-                    <input type="checkbox" id="access-anagrafic-operator" onclick="setAccessAnagrafic('operator', this.checked)">
-                    <br>
                     <label for="access-anagrafic-document_reference">Riferimento documento: </label>
                     <input type="checkbox" id="access-anagrafic-document_reference" onclick="setAccessAnagrafic('document_reference', this.checked)">
                     <br>
@@ -1809,7 +1806,7 @@
                 document.getElementById('access-anagrafic-vector').checked = useAnagrafic.vector !== false;
                 document.getElementById('access-anagrafic-driver').checked = useAnagrafic.driver !== false;
                 document.getElementById('access-anagrafic-material').checked = useAnagrafic.material !== false;
-                document.getElementById('access-anagrafic-operator').checked = useAnagrafic.operator === true;
+
                 document.getElementById('access-anagrafic-document_reference').checked = useAnagrafic.document_reference !== false;
                 document.getElementById('access-anagrafic-note').checked = useAnagrafic.note !== false;
                 document.getElementById('access-anagrafic-weighing_pictures').checked = useAnagrafic.weighing_pictures !== false;

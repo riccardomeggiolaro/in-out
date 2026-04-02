@@ -388,6 +388,13 @@
         const toDate = document.querySelector('#filter\\.toDate');
 
         document.addEventListener("DOMContentLoaded", () => {
+            fetch('/api/config-weigher/configuration')
+            .then(res => res.json())
+            .then(res => {
+                const defaultType = res.default_type_subject || 'CUSTOMER';
+                const radios = document.querySelectorAll('#add-popup input[name="typeSubject"]');
+                radios.forEach(r => r.checked = r.value === defaultType);
+            });
             itemName = 'access';
             nextElementSibling = true;
             lastChar = 'a';

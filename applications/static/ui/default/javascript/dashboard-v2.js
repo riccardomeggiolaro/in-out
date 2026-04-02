@@ -27,6 +27,7 @@ let selectedIdWeight;
 let numberInOutSelectedIdWeight;
 let dataInExecution;
 let currentAccessType = "MANUALLY";
+let defaultTypeSubject = "CUSTOMER";
 let _reservationHasMaterial = false;
 let _reservationHasSubject = false;
 let _reservationHasVector = false;
@@ -141,6 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentWeigherPath = localStorage.getItem('currentWeigherPath');
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         test_mode = res["test_mode"] || false;
+        defaultTypeSubject = res["default_type_subject"] || "CUSTOMER";
         let selected = false;
         for (let instance in res["weighers"]) {
             for (let weigher in res["weighers"][instance]["nodes"]) {
@@ -296,7 +298,7 @@ async function getData(path) {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
         setGroupValue(document.querySelector('#currentPlateVehicle'), obj.vehicle.plate || '');
-        document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
+        document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : defaultTypeSubject;
         setGroupValue(document.querySelector('#currentSocialReasonSubject'), obj.subject.social_reason || '');
         setGroupValue(document.querySelector('#currentSocialReasonVector'), obj.vector.social_reason || '');
         setGroupValue(document.querySelector('#currentDescriptionMaterial'), obj.material.description || '');
@@ -1178,7 +1180,7 @@ function processRealtimeObject(obj) {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
         setGroupValue(document.querySelector('#currentPlateVehicle'), obj.data_in_execution.vehicle.plate || '');
-        document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
+        document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : defaultTypeSubject;
         setGroupValue(document.querySelector('#currentSocialReasonSubject'), obj.data_in_execution.subject.social_reason || '');
         setGroupValue(document.querySelector('#currentSocialReasonVector'), obj.data_in_execution.vector.social_reason || '');
         setGroupValue(document.querySelector('#currentDescriptionMaterial'), obj.data_in_execution.material.description || '');
