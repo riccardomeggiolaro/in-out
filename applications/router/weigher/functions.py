@@ -97,7 +97,8 @@ class Functions:
 				if "id" in value and value["id"] is not None:
 					unlock_record_by_attributes(key, value["id"], None, weigher_name)
 		# Per ogni chiave dei dati correnti
-		weighers_data[instance_name][weigher_name]["data"]["data_in_execution"] = DataInExecution(**{}).dict()
+		default_type = lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER")
+		weighers_data[instance_name][weigher_name]["data"]["data_in_execution"] = DataInExecution(**{"typeSubject": default_type}).dict()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	
 	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int, weight1: int, need_to_confirm: bool):

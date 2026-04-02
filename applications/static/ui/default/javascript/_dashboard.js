@@ -19,6 +19,7 @@ let selectedIdMaterial;
 let selectedIdWeight;
 let numberInOutSelectedIdWeight;
 let dataInExecution;
+let defaultTypeSubject = "CUSTOMER";
 
 let isRefreshing = false;
 
@@ -103,6 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     .then(res => {
         currentWeigherPath = localStorage.getItem('currentWeigherPath');
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
+        defaultTypeSubject = res["default_type_subject"] || "CUSTOMER";
         let selected = false;
         for (let instance in res["weighers"]) {
             for (let weigher in res["weighers"][instance]["nodes"]) {
@@ -225,7 +227,7 @@ async function getData(path) {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
         document.querySelector('#currentPlateVehicle').value = obj.vehicle.plate ? obj.vehicle.plate : '';
-        document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : 'CUSTOMER';
+        document.querySelector('#typeSubject').value = obj.typeSubject ? obj.typeSubject : defaultTypeSubject;
         document.querySelector('#currentSocialReasonSubject').value = obj.subject.social_reason ? obj.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.vector.social_reason ? obj.vector.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.material.description ? obj.material.description : '';
@@ -836,7 +838,7 @@ function updateUIRealtime(e) {
             document.querySelector('.containerPlateVehicle').classList.remove('permanent');
         }
         document.querySelector('#currentPlateVehicle').value = obj.data_in_execution.vehicle.plate ? obj.data_in_execution.vehicle.plate : '';
-        document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : 'CUSTOMER';
+        document.querySelector('#typeSubject').value = obj.data_in_execution.typeSubject ? obj.data_in_execution.typeSubject : defaultTypeSubject;
         document.querySelector('#currentSocialReasonSubject').value = obj.data_in_execution.subject.social_reason ? obj.data_in_execution.subject.social_reason : '';
         document.querySelector('#currentSocialReasonVector').value = obj.data_in_execution.vector.social_reason ? obj.data_in_execution.vector.social_reason : '';
         document.querySelector('#currentDescriptionMaterial').value = obj.data_in_execution.material.description ? obj.data_in_execution.material.description : '';

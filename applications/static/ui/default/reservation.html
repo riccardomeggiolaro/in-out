@@ -747,6 +747,17 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
+            fetch('/api/config-weigher/configuration')
+            .then(res => res.json())
+            .then(res => {
+                const defaultType = res.default_type_subject || 'CUSTOMER';
+                if (defaultType === 'SUPPLIER') {
+                    const customerRadio = document.querySelector('#add-popup #customer');
+                    const supplierRadio = document.querySelector('#add-popup #supplier');
+                    if (customerRadio) customerRadio.checked = false;
+                    if (supplierRadio) supplierRadio.checked = true;
+                }
+            });
             itemName = 'access';
             nextElementSibling = true;
             lastChar = 'a';

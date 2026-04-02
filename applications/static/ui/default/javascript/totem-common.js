@@ -34,6 +34,7 @@ let return_pdf_copy_after_weighing = false;
 let test_mode = false;
 let instances = {};
 let totemAnagrafiche = { vehicle: true, subject: false, vector: false, driver: false, material: true };
+let defaultTypeSubject = "CUSTOMER";
 let access_id = null;
 let confirmWeighing = null;
 let minWeightValue = 0;
@@ -69,6 +70,7 @@ function initTotemPage() {
         test_mode = res["test_mode"] || false;
         instances = res["weighers"];
         totemAnagrafiche = res["totem_anagrafiche"] || { vehicle: true, subject: false, vector: false, driver: false, material: true };
+        defaultTypeSubject = res["default_type_subject"] || "CUSTOMER";
     });
 
     connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
@@ -453,7 +455,7 @@ function cancelTotem() {
     .then(res => res.json())
     .then(() => {
         selectedVehicle = { id: null, plate: '' };
-        selectedTypeSubject = 'CUSTOMER';
+        selectedTypeSubject = defaultTypeSubject;
         selectedSubject = { id: null, social_reason: '' };
         selectedVector = { id: null, social_reason: '' };
         selectedDriver = { id: null, social_reason: '' };
@@ -811,7 +813,7 @@ async function getData(path) {
         const obj = res["data_in_execution"];
 
         selectedVehicle = { id: obj.vehicle.id, plate: obj.vehicle.plate || '' };
-        selectedTypeSubject = obj.typeSubject || 'CUSTOMER';
+        selectedTypeSubject = obj.typeSubject || defaultTypeSubject;
         selectedSubject = { id: obj.subject.id, social_reason: obj.subject.social_reason || '' };
         selectedVector = { id: obj.vector.id, social_reason: obj.vector.social_reason || '' };
         selectedDriver = { id: obj.driver?.id || null, social_reason: obj.driver?.social_reason || '' };
@@ -897,7 +899,7 @@ function processRealtimeObject(obj) {
         selectedVehicle = { id: d.vehicle.id, plate: d.vehicle.plate || '' };
         if (d.typeSubject === 'Cliente') selectedTypeSubject = 'CUSTOMER';
         else if (d.typeSubject === 'Fornitore') selectedTypeSubject = 'SUPPLIER';
-        else selectedTypeSubject = d.typeSubject || 'CUSTOMER';
+        else selectedTypeSubject = d.typeSubject || defaultTypeSubject;
         selectedSubject = { id: d.subject.id, social_reason: d.subject.social_reason || '' };
         selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
         selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
