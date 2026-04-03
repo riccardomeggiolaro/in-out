@@ -6,8 +6,10 @@ import libs.lb_config as lb_config
 from applications.utils.utils_weigher import InstanceNameDTO, InstanceNameWeigherDTO, get_query_params_name, get_query_params_name_node
 from applications.utils.utils import validate_time
 import modules.md_weigher.md_weigher as md_weigher
+import modules.md_rfid.md_rfid as md_rfid
 from modules.md_weigher.dto import ConfigurationDTO, SetupWeigherDTO, ChangeSetupWeigherDTO
 from modules.md_weigher.globals import terminalsClasses
+from modules.md_rfid.dto import RfidConfigurationDTO, RfidConnectionDTO
 from typing import Union
 from libs.lb_system import SerialPort, Tcp
 from applications.router.weigher.types import Data
@@ -55,6 +57,9 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/instance/connection/{instance_name}', self.DeleteInstanceConnection, methods=['DELETE'])
 		self.router_config_weigher.add_api_route('/terminals', self.GetTerminals, methods=['GET'])
 		self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/instance/rfid', self.GetInstanceRfid, methods=['GET'])
+		self.router_config_weigher.add_api_route('/instance/rfid', self.SetInstanceRfid, methods=['POST'])
+		self.router_config_weigher.add_api_route('/instance/rfid', self.DeleteInstanceRfid, methods=['DELETE'])
 
 	async def GetAllConfiguration(self):
 		ver = { "ver": lb_config.g_config["ver"] }
@@ -259,12 +264,36 @@ class ConfigWeigher(CommandWeigherRouter):
 		return response
 
 	async def DeleteInstanceConnection(self, instance_name: str):
+		# Elimina anche l'istanza RFID associata se presente
+		md_rfid.module_rfid.delete_instance(instance_name)
 		md_weigher.module_weigher.deleteInstance(instance_name=instance_name)
 		response = self.deleteInstanceSocket(instance_name=instance_name)
 		lb_config.g_config["app_api"]["weighers"].pop(instance_name)
 		lb_config.saveconfig()
 		del self.switch_to_call_instance_weigher[instance_name]
 		return { "deleted": response }
+
+	async def GetInstanceRfid(self, instance: InstanceNameDTO = Depends(get_query_params_name)):
+		instance_name = instance.instance_name
+		if instance_name not in lb_config.g_config["app_api"]["weighers"]:
+			raise HTTPException(status_code=404, detail=f"Istanza '{instance_name}' non trovata")
+		rfid = md_rfid.module_rfid.get_instance(instance_name)
+		return rfid
+
+	async def SetInstanceRfid(self, configuration: RfidConfigurationDTO, instance: InstanceNameDTO = Depends(get_query_params_name)):
+		instance_name = instance.instance_name
+		if instance_name not in lb_config.g_config["app_api"]["weighers"]:
+			raise HTTPException(status_code=404, detail=f"Istanza '{instance_name}' non trovata")
+		# Il name dell'istanza RFID corrisponde al nome dell'istanza pesatrice
+		cfg = RfidConfigurationDTO(name=instance_name, protocol=configuration.protocol, connection=configuration.connection, setup=configuration.setup)
+		return md_rfid.module_rfid.set_instance(instance_name, cfg)
+
+	async def DeleteInstanceRfid(self, instance: InstanceNameDTO = Depends(get_query_params_name)):
+		instance_name = instance.instance_name
+		if instance_name not in lb_config.g_config["app_api"]["weighers"]:
+			raise HTTPException(status_code=404, detail=f"Istanza '{instance_name}' non trovata")
+		deleted = md_rfid.module_rfid.delete_instance(instance_name)
+		return { "deleted": deleted }
 
 	async def GetInstanceWeigher(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		instance_weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)

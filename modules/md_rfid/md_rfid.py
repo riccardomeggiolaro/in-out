@@ -40,15 +40,20 @@ class RfidModule:
 	def __init__(self):
 		self.instances = {}
 
-	def initialize_from_config(self, config: dict):
-		"""Inizializza le istanze dalla configurazione JSON."""
-		for name, configuration in config.items():
+	def initialize_from_config(self, weighers_config: dict):
+		"""Inizializza le istanze RFID dal config delle pese.
+		   weighers_config = { "0": { ..., "rfid": {...} }, ... }
+		"""
+		for instance_name, weigher_cfg in weighers_config.items():
+			rfid_cfg = weigher_cfg.get("rfid")
+			if not rfid_cfg:
+				continue
 			try:
-				cfg = RfidConfigurationDTO(name=name, **configuration)
-				instance = RfidInstance(name, cfg)
-				self.instances[name] = instance
+				cfg = RfidConfigurationDTO(name=instance_name, **rfid_cfg)
+				instance = RfidInstance(instance_name, cfg)
+				self.instances[instance_name] = instance
 			except Exception as e:
-				lb_log.error(f"Error initializing RFID instance '{name}': {e}")
+				lb_log.error(f"Error initializing RFID for weigher '{instance_name}': {e}")
 
 	def set_application_callback(self, cb_cardcode: Callable[[str], any] = None):
 		"""Imposta la callback per tutti i lettori."""
@@ -58,54 +63,40 @@ class RfidModule:
 	def get_all_instances(self) -> dict:
 		return {name: instance.get_instance() for name, instance in self.instances.items()}
 
-	def get_instance(self, name: str) -> dict:
-		if name not in self.instances:
-			raise HTTPException(status_code=404, detail=f"Istanza '{name}' non trovata")
-		return {name: self.instances[name].get_instance()}
+	def get_instance(self, instance_name: str) -> Optional[dict]:
+		if instance_name not in self.instances:
+			return None
+		return self.instances[instance_name].get_instance()
 
-	def create_instance(self, configuration: RfidConfigurationDTO) -> dict:
-		if configuration.name in self.instances:
-			raise HTTPException(status_code=400, detail=[{
-				"type": "value_error", "loc": ["", "name"],
-				"msg": "Nome già esistente", "input": configuration.name, "ctx": {"error": {}}
-			}])
-		instance = RfidInstance(configuration.name, configuration)
-		self.instances[configuration.name] = instance
-		# Salva in config
-		lb_config.g_config["app_api"]["rfid"][configuration.name] = {
+	def set_instance(self, instance_name: str, configuration: RfidConfigurationDTO) -> dict:
+		"""Crea o sostituisce l'istanza RFID per una pesa."""
+		# Ferma eventuale istanza precedente
+		if instance_name in self.instances:
+			self.instances[instance_name].stop()
+			del self.instances[instance_name]
+
+		instance = RfidInstance(instance_name, configuration)
+		self.instances[instance_name] = instance
+
+		# Salva nel config della pesa corrispondente
+		lb_config.g_config["app_api"]["weighers"][instance_name]["rfid"] = {
 			"protocol": configuration.protocol,
 			"connection": configuration.connection.dict() if configuration.connection else None,
 			"setup": configuration.setup.dict() if configuration.setup else {}
 		}
 		lb_config.saveconfig()
-		return {configuration.name: instance.get_instance()}
+		return instance.get_instance()
 
-	def delete_instance(self, name: str) -> bool:
-		if name not in self.instances:
-			raise HTTPException(status_code=404, detail=f"Istanza '{name}' non trovata")
-		self.instances[name].stop()
-		del self.instances[name]
-		# Rimuove dalla config
-		lb_config.g_config["app_api"]["rfid"].pop(name, None)
+	def delete_instance(self, instance_name: str) -> bool:
+		"""Elimina l'istanza RFID di una pesa."""
+		if instance_name not in self.instances:
+			return False
+		self.instances[instance_name].stop()
+		del self.instances[instance_name]
+		# Rimuove dalla config della pesa
+		lb_config.g_config["app_api"]["weighers"][instance_name].pop("rfid", None)
 		lb_config.saveconfig()
 		return True
-
-	def set_instance_connection(self, name: str, connection: RfidConnectionDTO) -> dict:
-		if name not in self.instances:
-			raise HTTPException(status_code=404, detail=f"Istanza '{name}' non trovata")
-		result = self.instances[name].set_connection(connection)
-		# Aggiorna config
-		lb_config.g_config["app_api"]["rfid"][name]["connection"] = connection.dict()
-		lb_config.saveconfig()
-		return result
-
-	def delete_instance_connection(self, name: str) -> bool:
-		if name not in self.instances:
-			raise HTTPException(status_code=404, detail=f"Istanza '{name}' non trovata")
-		result = self.instances[name].delete_connection()
-		lb_config.g_config["app_api"]["rfid"][name]["connection"] = None
-		lb_config.saveconfig()
-		return result
 
 
 class RfidInstance:
@@ -137,10 +128,3 @@ class RfidInstance:
 
 	def set_action(self, cb_cardcode: Callable[[str], any] = None):
 		self.protocol.set_action(cb_cardcode)
-
-	def set_connection(self, connection: RfidConnectionDTO) -> dict:
-		self.protocol.initialize(connection, RfidSetupDTO())
-		return self.get_instance()
-
-	def delete_connection(self) -> bool:
-		return self.protocol.delete_config()
