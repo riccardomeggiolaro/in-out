@@ -35,6 +35,8 @@ def mainprg():
 
 	thr_logger = createThread(lb_log.start)
 
+	import modules.md_rfid.md_rfid as md_rfid
+
 	import modules.md_weigher.md_weigher as md_weigher
 
 	import modules.md_sync_folder.md_sync_folder as md_sync_folder
@@ -49,7 +51,7 @@ def mainprg():
 
 	APPS = [app_api]
 
-	MODULES = [md_weigher, md_sync_folder]
+	MODULES = [md_rfid, md_weigher, md_sync_folder]
 
 	# Carica thread per i mdouli esterni.
 
