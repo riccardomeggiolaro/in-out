@@ -1935,8 +1935,8 @@
                         errorsDiv.innerHTML = Array.isArray(data.detail) ? data.detail.map(e => e.msg).join('<br>') : JSON.stringify(data.detail);
                     } else {
                         updateRfidSection(instanceId, nodeId, data);
-                        renderRfidModalBody(instanceId, nodeId, data);
                         formModal.remove();
+                        document.querySelector(`#rfid-modal-${instanceId}-${nodeId}`)?.remove();
                     }
                 } catch (err) {
                     errorsDiv.innerHTML = 'Errore durante il salvataggio';
