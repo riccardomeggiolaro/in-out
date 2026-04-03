@@ -33,6 +33,9 @@ const totemTranslations = {
         max_threshold_exceeded: 'Soglia massima di <strong>{value} kg</strong> superata, procedere con la pesatura?',
         auto_plate_confirm: 'Lettura automatica della targa <strong>\'{plate}\'</strong>. <br> Effettuare la pesatura?',
 
+        // RFID
+        rfid_read_card: 'Leggere tessera',
+
         // Anagrafic labels
         label_vehicle: 'Veicolo',
         label_subject: 'Soggetto',
@@ -71,6 +74,9 @@ const totemTranslations = {
         create_new: 'Create',
         max_threshold_exceeded: 'Maximum threshold of <strong>{value} kg</strong> exceeded, proceed with weighing?',
         auto_plate_confirm: 'Automatic plate reading <strong>\'{plate}\'</strong>. <br> Proceed with weighing?',
+
+        // RFID
+        rfid_read_card: 'Read card',
 
         // Anagrafic labels
         label_vehicle: 'Vehicle',
