@@ -487,6 +487,7 @@ class ConfigWeigher(CommandWeigherRouter):
 
 	async def DeleteInstanceWeigher(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		response = md_weigher.module_weigher.deleteInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		md_rfid.module_rfid.delete_instance(instance.weigher_name)
 		self.deleteDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		self.deleteIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		self.deleteInstanceWeigherSocket(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
