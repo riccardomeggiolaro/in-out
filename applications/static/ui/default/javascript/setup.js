@@ -4,6 +4,8 @@ let list_printer_names = []
 
 let list_terminal_types = []
 
+let list_rfid_protocols = []
+
 let template_report_in = new DataTransfer();
 
 let template_report_out = new DataTransfer();
@@ -41,6 +43,14 @@ async function getTerminalTypes() {
     .then(res => res.json())
     .then(data => {
         list_terminal_types = data;
+    });
+}
+
+async function getRfidProtocols() {
+    await fetch('/api/rfid/protocols')
+    .then(res => res.json())
+    .then(data => {
+        list_rfid_protocols = data;
     });
 }
 
@@ -154,6 +164,8 @@ async function loadSetupWeighers() {
     await getPrintersList();
 
     await getTerminalTypes();
+
+    await getRfidProtocols();
 
     await getReportIn();
 
@@ -855,6 +867,7 @@ async function loadSetupWeighers() {
                         </div>
                     </div>
                 </div>
+                <div class="rfid-section borders"></div>
                 <button class="addWeigher width-fit-content">Configura pesa</button>
             `;
 
@@ -1290,6 +1303,153 @@ async function loadSetupWeighers() {
                 editModeTcp.style.display = 'block';
                 editModeSerial.style.display = 'none';
             });
+
+            // ===== SEZIONE RFID =====
+            const rfidSection = div.querySelector('.rfid-section');
+
+            const renderRfidSection = (rfidData) => {
+                rfidSection.innerHTML = '';
+                const title = document.createElement('h3');
+                title.textContent = 'RFID';
+                rfidSection.appendChild(title);
+
+                if (rfidData && rfidData.connection && rfidData.connection.serial_port_name) {
+                    // Vista: RFID configurato
+                    const viewDiv = document.createElement('div');
+                    viewDiv.classList.add('content');
+                    const statusText = rfidData.status === 305 ? 'connesso' : 'non connesso';
+                    viewDiv.innerHTML = `
+                        <h4>${rfidData.connection.serial_port_name}</h4>
+                        <p class="gray"><em>Protocollo: ${rfidData.protocol} &nbsp;&#8212;&nbsp; Baudrate: ${rfidData.connection.baudrate} &nbsp;&#8212;&nbsp; Stato: ${statusText}</em></p>
+                    `;
+                    rfidSection.appendChild(viewDiv);
+
+                    const btnDiv = document.createElement('div');
+                    btnDiv.classList.add('container-buttons');
+
+                    const deleteRfidBtn = document.createElement('button');
+                    deleteRfidBtn.classList.add('delete-btn');
+                    deleteRfidBtn.innerHTML = deleteButtonContent;
+                    deleteRfidBtn.addEventListener('click', () => {
+                        fetch(`/api/config-weigher/instance/rfid?instance_name=${key}`, { method: 'DELETE' })
+                        .then(res => res.json())
+                        .then(res => { if (res.deleted !== undefined) renderRfidSection(null); })
+                        .catch(err => console.error(err));
+                    });
+
+                    const editRfidBtn = document.createElement('button');
+                    editRfidBtn.classList.add('edit-btn');
+                    editRfidBtn.innerHTML = editButtonContent;
+                    editRfidBtn.addEventListener('click', () => renderRfidForm(rfidData));
+
+                    btnDiv.appendChild(deleteRfidBtn);
+                    btnDiv.appendChild(editRfidBtn);
+                    rfidSection.appendChild(btnDiv);
+                } else {
+                    // Vista: RFID non configurato
+                    const p = document.createElement('p');
+                    p.classList.add('gray');
+                    p.innerHTML = '<em>Nessun lettore RFID configurato</em>';
+                    rfidSection.appendChild(p);
+
+                    const btnDiv = document.createElement('div');
+                    btnDiv.classList.add('container-buttons');
+                    const configureBtn = document.createElement('button');
+                    configureBtn.textContent = 'Configura RFID';
+                    configureBtn.addEventListener('click', () => renderRfidForm(null));
+                    btnDiv.appendChild(configureBtn);
+                    rfidSection.appendChild(btnDiv);
+                }
+            };
+
+            const renderRfidForm = (rfidData) => {
+                rfidSection.innerHTML = '';
+                const title = document.createElement('h3');
+                title.textContent = 'RFID';
+                rfidSection.appendChild(title);
+
+                let protocolOptions = '';
+                for (const proto of list_rfid_protocols) {
+                    const sel = rfidData && rfidData.protocol === proto ? 'selected' : '';
+                    protocolOptions += `<option value="${proto}" ${sel}>${proto}</option>`;
+                }
+
+                const form = document.createElement('form');
+                form.classList.add('content');
+                form.innerHTML = `
+                    <label>Porta seriale:</label>
+                    <select name="rfid_port" required></select><br>
+                    <label>Baudrate:</label>
+                    <select name="rfid_baudrate" required>
+                        <option></option>
+                        <option value="9600" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 9600 ? 'selected' : ''}>9600</option>
+                        <option value="19200" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 19200 ? 'selected' : ''}>19200</option>
+                        <option value="115200" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 115200 ? 'selected' : ''}>115200</option>
+                    </select><br>
+                    <label>Timeout:</label>
+                    <input type="number" name="rfid_timeout" min="1" max="10" step="1" value="${rfidData && rfidData.connection ? rfidData.connection.timeout : 1}" required><br>
+                    <label>Protocollo:</label>
+                    <select name="rfid_protocol" required>${protocolOptions}</select><br>
+                    <div class="errors"></div>
+                    <div class="container-buttons">
+                        <button class="cancel-btn">Annulla</button>
+                        <button class="save-btn" disabled>Salva</button>
+                    </div>
+                `;
+
+                form.oninput = () => { form.querySelector('.save-btn').disabled = !form.checkValidity(); };
+
+                // Popola porte seriali
+                const portSelect = form.querySelector('select[name="rfid_port"]');
+                portSelect.appendChild(document.createElement('option'));
+                for (const p of list_serial_ports) {
+                    const opt = document.createElement('option');
+                    opt.value = p.port;
+                    opt.textContent = p.port;
+                    if (rfidData && rfidData.connection && rfidData.connection.serial_port_name === p.port) opt.selected = true;
+                    portSelect.appendChild(opt);
+                }
+
+                form.oninput();
+
+                form.querySelector('.cancel-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    renderRfidSection(rfidData);
+                });
+
+                form.querySelector('.save-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    form.querySelector('.errors').innerHTML = '';
+                    const body = {
+                        name: key,
+                        protocol: form.querySelector('select[name="rfid_protocol"]').value,
+                        connection: {
+                            serial_port_name: form.querySelector('select[name="rfid_port"]').value,
+                            baudrate: Number(form.querySelector('select[name="rfid_baudrate"]').value),
+                            timeout: Number(form.querySelector('input[name="rfid_timeout"]').value)
+                        }
+                    };
+                    fetch(`/api/config-weigher/instance/rfid?instance_name=${key}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.detail) {
+                            form.querySelector('.errors').innerHTML = JSON.stringify(res.detail);
+                        } else {
+                            renderRfidSection(res);
+                        }
+                    })
+                    .catch(err => console.error(err));
+                });
+
+                rfidSection.appendChild(form);
+            };
+
+            renderRfidSection(data.rfid || null);
+            // ===== FINE SEZIONE RFID =====
 
             const addWeigherModal = document.createElement('div');
             const ul = document.createElement('ul');

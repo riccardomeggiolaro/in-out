@@ -3,6 +3,7 @@ from applications.router.weigher.dto import DataInExecutionDTO
 from applications.router.weigher.types import Data
 from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_weigher import md_weigher
+import modules.md_rfid.md_rfid as md_rfid
 import libs.lb_config as lb_config
 from applications.utils.utils_weigher import NodeConnectionManager
 from modules.md_database.md_database import TypeAccess
@@ -14,6 +15,8 @@ from applications.utils.utils import just_locked_message
 class Functions:
 	def __init__(self):
 		md_weigher.module_weigher.initializeModuleConfig(config=lb_config.g_config["app_api"]["weighers"])
+		# Inizializza i lettori RFID associati alle pese
+		md_rfid.module_rfid.initialize_from_config(lb_config.g_config["app_api"]["weighers"])
 
 		self.switch_to_call_instance_weigher = {}
 

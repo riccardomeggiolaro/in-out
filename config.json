@@ -25,17 +25,6 @@
         "report_out": "weight_out.json",
         "report_tare": "weight_tare.json",
         "return_pdf_copy_after_weighing": true,
-        "rfid": {
-            "reader1": {
-                "protocol": "rfid",
-                "connection": {
-                    "serial_port_name": "/dev/ttyACM0",
-                    "baudrate": 9600,
-                    "timeout": 1
-                },
-                "setup": {}
-            }
-        },
         "show_export_totals": true,
         "siren": {
             "config": {},
