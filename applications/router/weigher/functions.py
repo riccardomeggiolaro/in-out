@@ -36,15 +36,23 @@ class Functions:
 			weighers_data[instance_name] = nodes_sockets
 
 		md_weigher.module_weigher.setApplicationCallback(
-			cb_realtime=self.Callback_Realtime, 
-			cb_diagnostic=self.Callback_Diagnostic, 
-			cb_weighing=self.Callback_Weighing, 
+			cb_realtime=self.Callback_Realtime,
+			cb_diagnostic=self.Callback_Diagnostic,
+			cb_weighing=self.Callback_Weighing,
 			cb_weighing_terminal=self.Callback_WeighingTerminal,
 			cb_tare_ptare_zero=self.Callback_TarePTareZero,
 			cb_action_in_execution=self.Callback_ActionInExecution,
 			cb_rele=self.Callback_Rele,
 			cb_code_identify=self.Callback_WeighingByIdentify
 		)
+
+		for instance_name, weigher_cfg in lb_config.g_config["app_api"]["weighers"].items():
+			for node_name in weigher_cfg.get("nodes", {}).keys():
+				def make_rfid_cb(inst, node):
+					def cb(code):
+						self.Callback_WeighingByIdentify(inst, node, code)
+					return cb
+				md_rfid.module_rfid.set_node_callback(node_name, make_rfid_cb(instance_name, node_name))
 	
 	def getData(self, instance_name: str, weigher_name: str):
 		return weighers_data[instance_name][weigher_name]["data"]

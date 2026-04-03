@@ -287,6 +287,9 @@ class ConfigWeigher(CommandWeigherRouter):
 			raise HTTPException(status_code=404, detail=f"Nodo '{node_name}' non trovato nell'istanza '{instance_name}'")
 		cfg = RfidConfigurationDTO(name=node_name, protocol=configuration.protocol, connection=configuration.connection, setup=configuration.setup)
 		result = md_rfid.module_rfid.set_instance(node_name, cfg)
+		def rfid_cb(code):
+			self.Callback_WeighingByIdentify(instance_name, node_name, code)
+		md_rfid.module_rfid.set_node_callback(node_name, rfid_cb)
 		weighers[instance_name]["nodes"][node_name]["rfid"] = {
 			"protocol": configuration.protocol,
 			"connection": configuration.connection.dict() if configuration.connection else None,
