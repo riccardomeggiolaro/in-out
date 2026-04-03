@@ -40,7 +40,7 @@ const totemViews = {
                     <path d="M58 32 Q82 50 58 68" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
                     <path d="M64 26 Q94 50 64 74" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
                 </svg>
-                <span class="rfid-label">${t('rfid_read_card') || 'leggere tessera'}</span>
+                <span class="rfid-label">${t('rfid_read_card')}</span>
             </div>
             <div class="virtual-keyboard" id="virtualKeyboard">
                 <div class="vk-row">
@@ -139,6 +139,7 @@ const totemViews = {
                 plateText.textContent = plate;
                 plateText.style.display = '';
                 document.getElementById('manualPlateInput').style.display = 'none';
+                document.getElementById('rfidHint').classList.add('hidden');
                 _plateFitText(plateText);
             };
 
@@ -148,6 +149,7 @@ const totemViews = {
                 plateText.innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
                 plateText.style.display = '';
                 document.getElementById('manualPlateInput').style.display = 'none';
+                document.getElementById('rfidHint').classList.remove('hidden');
                 _plateFitText(plateText);
             };
 
