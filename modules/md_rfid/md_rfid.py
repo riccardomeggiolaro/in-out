@@ -42,44 +42,42 @@ class RfidModule:
 
 	def initialize_from_config(self, weighers_config: dict):
 		"""Inizializza le istanze RFID dal config delle pese.
-		   weighers_config = { "0": { ..., "rfid": {...} }, ... }
+		   Ogni nodo/terminale può avere al massimo un lettore RFID.
+		   weighers_config = { "0": { "nodes": { "P1": { ..., "rfid": {...} } } } }
 		"""
 		for instance_name, weigher_cfg in weighers_config.items():
-			rfid_cfg = weigher_cfg.get("rfid")
-			if not rfid_cfg:
-				continue
-			try:
-				cfg = RfidConfigurationDTO(name=instance_name, **rfid_cfg)
-				instance = RfidInstance(instance_name, cfg)
-				self.instances[instance_name] = instance
-			except Exception as e:
-				lb_log.error(f"Error initializing RFID for weigher '{instance_name}': {e}")
+			for node_name, node_cfg in weigher_cfg.get("nodes", {}).items():
+				rfid_cfg = node_cfg.get("rfid")
+				if not rfid_cfg:
+					continue
+				try:
+					cfg = RfidConfigurationDTO(name=node_name, **rfid_cfg)
+					instance = RfidInstance(node_name, cfg)
+					self.instances[node_name] = instance
+				except Exception as e:
+					lb_log.error(f"Error initializing RFID for node '{node_name}': {e}")
 
 	def set_application_callback(self, cb_cardcode: Callable[[str], any] = None):
 		"""Imposta la callback per tutti i lettori."""
 		for instance in self.instances.values():
 			instance.set_action(cb_cardcode)
 
-	def get_all_instances(self) -> dict:
-		return {name: instance.get_instance() for name, instance in self.instances.items()}
-
-	def get_instance(self, instance_name: str) -> Optional[dict]:
-		if instance_name not in self.instances:
+	def get_instance(self, node_name: str) -> Optional[dict]:
+		if node_name not in self.instances:
 			return None
-		return self.instances[instance_name].get_instance()
+		return self.instances[node_name].get_instance()
 
-	def set_instance(self, instance_name: str, configuration: RfidConfigurationDTO) -> dict:
-		"""Crea o sostituisce l'istanza RFID per una pesa."""
-		# Ferma eventuale istanza precedente
-		if instance_name in self.instances:
-			self.instances[instance_name].stop()
-			del self.instances[instance_name]
+	def set_instance(self, instance_name: str, node_name: str, configuration: RfidConfigurationDTO) -> dict:
+		"""Crea o sostituisce il lettore RFID per un nodo/terminale."""
+		if node_name in self.instances:
+			self.instances[node_name].stop()
+			del self.instances[node_name]
 
-		instance = RfidInstance(instance_name, configuration)
-		self.instances[instance_name] = instance
+		instance = RfidInstance(node_name, configuration)
+		self.instances[node_name] = instance
 
-		# Salva nel config della pesa corrispondente
-		lb_config.g_config["app_api"]["weighers"][instance_name]["rfid"] = {
+		# Salva nella config del nodo corrispondente
+		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][node_name]["rfid"] = {
 			"protocol": configuration.protocol,
 			"connection": configuration.connection.dict() if configuration.connection else None,
 			"setup": configuration.setup.dict() if configuration.setup else {}
@@ -87,14 +85,20 @@ class RfidModule:
 		lb_config.saveconfig()
 		return instance.get_instance()
 
-	def delete_instance(self, instance_name: str) -> bool:
-		"""Elimina l'istanza RFID di una pesa."""
-		if instance_name not in self.instances:
+	def delete_instance(self, instance_name: str, node_name: str) -> bool:
+		"""Elimina il lettore RFID di un nodo/terminale."""
+		if node_name not in self.instances:
+			# Rimuove comunque dalla config se presente
+			weighers = lb_config.g_config["app_api"]["weighers"]
+			if instance_name in weighers and node_name in weighers[instance_name].get("nodes", {}):
+				weighers[instance_name]["nodes"][node_name].pop("rfid", None)
+				lb_config.saveconfig()
 			return False
-		self.instances[instance_name].stop()
-		del self.instances[instance_name]
-		# Rimuove dalla config della pesa
-		lb_config.g_config["app_api"]["weighers"][instance_name].pop("rfid", None)
+		self.instances[node_name].stop()
+		del self.instances[node_name]
+		weighers = lb_config.g_config["app_api"]["weighers"]
+		if instance_name in weighers and node_name in weighers[instance_name].get("nodes", {}):
+			weighers[instance_name]["nodes"][node_name].pop("rfid", None)
 		lb_config.saveconfig()
 		return True
 
