@@ -387,7 +387,8 @@ body {
 .suggestions-grid {
     display: none;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    column-gap: 3vw;
+    row-gap: 1vh;
     background: transparent;
     box-shadow: none;
     padding: 0 16px 8px 16px;
