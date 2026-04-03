@@ -1333,6 +1333,7 @@
         let printersList = [];
         let availableSerialPorts = [];
         let terminalTypes = [];
+        let rfidProtocols = [];
 
         // Funzione per caricare le porte seriali disponibili
         async function loadSerialPorts() {
@@ -1346,6 +1347,17 @@
                 console.error('Errore nel caricamento porte seriali:', error);
                 availableSerialPorts = [];
                 return [];
+            }
+        }
+
+        // Funzione per caricare i protocolli RFID disponibili
+        async function loadRfidProtocols() {
+            try {
+                const response = await fetch('/api/rfid/protocols');
+                rfidProtocols = await response.json();
+            } catch (error) {
+                console.error('Errore nel caricamento protocolli RFID:', error);
+                rfidProtocols = [];
             }
         }
 
@@ -1745,6 +1757,186 @@
             }
         }
 
+        // Funzione per aprire il modal RFID di una pesa
+        async function openRfidModal(instanceId, nodeId) {
+            // Rimuovi eventuale modal precedente
+            const existingModal = document.querySelector(`#rfid-modal-${instanceId}-${nodeId}`);
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = `rfid-modal-${instanceId}-${nodeId}`;
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="modal-content" style="min-width:340px">
+                    <h3>RFID - Pesa ${nodeId}</h3>
+                    <div id="rfid-modal-body-${instanceId}-${nodeId}">Caricamento...</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // Carica stato attuale RFID dal server
+            try {
+                const res = await fetch(`/api/config-weigher/instance/rfid?instance_name=${instanceId}&weigher_name=${nodeId}`);
+                const rfidData = await res.json();
+                renderRfidModalBody(instanceId, nodeId, rfidData);
+            } catch (e) {
+                renderRfidModalBody(instanceId, nodeId, null);
+            }
+        }
+
+        function renderRfidModalBody(instanceId, nodeId, rfidData) {
+            const body = document.querySelector(`#rfid-modal-body-${instanceId}-${nodeId}`);
+            if (!body) return;
+
+            const hasRfid = rfidData && rfidData.connection && rfidData.connection.serial_port_name;
+
+            if (hasRfid) {
+                const statusText = rfidData.status === 305 ? 'connesso' : 'non connesso';
+                body.innerHTML = `
+                    <p><b>Protocollo:</b> ${rfidData.protocol}</p>
+                    <p><b>Porta seriale:</b> ${rfidData.connection.serial_port_name}</p>
+                    <p><b>Baudrate:</b> ${rfidData.connection.baudrate}</p>
+                    <p><b>Timeout:</b> ${rfidData.connection.timeout}</p>
+                    <p><b>Stato:</b> ${statusText}</p>
+                    <div class="container-buttons" style="margin-top:12px">
+                        <button class="delete-btn" id="rfid-delete-btn-${instanceId}-${nodeId}">Elimina</button>
+                        <button class="edit-btn" id="rfid-edit-btn-${instanceId}-${nodeId}">Modifica</button>
+                    </div>
+                `;
+                document.querySelector(`#rfid-delete-btn-${instanceId}-${nodeId}`).addEventListener('click', async () => {
+                    const res = await fetch(`/api/config-weigher/instance/rfid?instance_name=${instanceId}&weigher_name=${nodeId}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.deleted !== undefined) {
+                        updateRfidSection(instanceId, nodeId, null);
+                        renderRfidModalBody(instanceId, nodeId, null);
+                    }
+                });
+                document.querySelector(`#rfid-edit-btn-${instanceId}-${nodeId}`).addEventListener('click', () => {
+                    renderRfidForm(instanceId, nodeId, rfidData);
+                });
+            } else {
+                body.innerHTML = `
+                    <p style="color:#888"><em>Nessun lettore RFID configurato</em></p>
+                    <div class="container-buttons" style="margin-top:12px">
+                        <button id="rfid-configure-btn-${instanceId}-${nodeId}">Configura RFID</button>
+                    </div>
+                `;
+                document.querySelector(`#rfid-configure-btn-${instanceId}-${nodeId}`).addEventListener('click', () => {
+                    renderRfidForm(instanceId, nodeId, null);
+                });
+            }
+        }
+
+        function renderRfidForm(instanceId, nodeId, rfidData) {
+            const body = document.querySelector(`#rfid-modal-body-${instanceId}-${nodeId}`);
+            if (!body) return;
+
+            let protocolOptions = rfidProtocols.map(p =>
+                `<option value="${p}" ${rfidData && rfidData.protocol === p ? 'selected' : ''}>${p}</option>`
+            ).join('');
+
+            let portOptions = '<option value="">Seleziona una porta...</option>';
+            availableSerialPorts.forEach(portInfo => {
+                const selected = rfidData && rfidData.connection && rfidData.connection.serial_port_name === portInfo.port ? 'selected' : '';
+                portOptions += `<option value="${portInfo.port}" ${selected}>${portInfo.port}</option>`;
+            });
+            // Aggiungi porta attuale se non nella lista
+            if (rfidData && rfidData.connection && rfidData.connection.serial_port_name) {
+                const currentPort = rfidData.connection.serial_port_name;
+                if (!availableSerialPorts.find(p => p.port === currentPort)) {
+                    portOptions += `<option value="${currentPort}" selected>${currentPort} (in uso)</option>`;
+                }
+            }
+
+            body.innerHTML = `
+                <form id="rfid-form-${instanceId}-${nodeId}">
+                    <div class="form-group">
+                        <label><b>Protocollo:</b></label>
+                        <select name="protocol" required>${protocolOptions}</select>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Porta seriale:</b></label>
+                        <select name="serial_port_name" required>${portOptions}</select>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Baudrate:</b></label>
+                        <select name="baudrate" required>
+                            <option value="">Seleziona...</option>
+                            <option value="9600" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 9600 ? 'selected' : ''}>9600</option>
+                            <option value="19200" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 19200 ? 'selected' : ''}>19200</option>
+                            <option value="115200" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 115200 ? 'selected' : ''}>115200</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><b>Timeout:</b></label>
+                        <input type="number" name="timeout" min="1" max="10" step="1" value="${rfidData && rfidData.connection ? rfidData.connection.timeout : 1}" required>
+                    </div>
+                    <div class="errors" style="color:red"></div>
+                    <div class="container-buttons" style="margin-top:12px">
+                        <button type="button" id="rfid-form-cancel-${instanceId}-${nodeId}">Annulla</button>
+                        <button type="submit" id="rfid-form-save-${instanceId}-${nodeId}">Salva</button>
+                    </div>
+                </form>
+            `;
+
+            document.querySelector(`#rfid-form-cancel-${instanceId}-${nodeId}`).addEventListener('click', () => {
+                renderRfidModalBody(instanceId, nodeId, rfidData);
+            });
+
+            document.querySelector(`#rfid-form-${instanceId}-${nodeId}`).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const errorsDiv = form.querySelector('.errors');
+                errorsDiv.innerHTML = '';
+                const body = {
+                    name: nodeId,
+                    protocol: form.querySelector('[name="protocol"]').value,
+                    connection: {
+                        serial_port_name: form.querySelector('[name="serial_port_name"]').value,
+                        baudrate: Number(form.querySelector('[name="baudrate"]').value),
+                        timeout: Number(form.querySelector('[name="timeout"]').value)
+                    }
+                };
+                try {
+                    const res = await fetch(`/api/config-weigher/instance/rfid?instance_name=${instanceId}&weigher_name=${nodeId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    const data = await res.json();
+                    if (data.detail) {
+                        errorsDiv.innerHTML = Array.isArray(data.detail) ? data.detail.map(e => e.msg).join('<br>') : JSON.stringify(data.detail);
+                    } else {
+                        updateRfidSection(instanceId, nodeId, data);
+                        renderRfidModalBody(instanceId, nodeId, data);
+                    }
+                } catch (err) {
+                    errorsDiv.innerHTML = 'Errore durante il salvataggio';
+                }
+            });
+        }
+
+        function updateRfidSection(instanceId, nodeId, rfidData) {
+            const section = document.querySelector(`#rfid-section-${instanceId}-${nodeId}`);
+            if (!section) return;
+            section.innerHTML = `
+                <h5>RFID</h5>
+                ${rfidData && rfidData.connection ? `
+                    <p><b>Protocollo:</b> ${rfidData.protocol}</p>
+                    <p><b>Porta seriale:</b> ${rfidData.connection.serial_port_name}</p>
+                    <p><b>Baudrate:</b> ${rfidData.connection.baudrate}</p>
+                ` : '<p style="color:#888"><em>Nessun lettore RFID configurato</em></p>'}
+            `;
+        }
+
         // Funzione per copiare il link endpoint
         function copyEndpointLink(instanceId, nodeId) {
             const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
@@ -1769,6 +1961,7 @@
             await loadPrinters();
             await loadSerialPorts();
             await loadTerminalTypes();
+            await loadRfidProtocols();
 
             // Load panel and siren configurations
             await loadPanelConfig();
@@ -2140,8 +2333,17 @@
                             ${camsHtml}
                             ${relesHtml}
                         </div>
+                        <div class="rfid-node-section" id="rfid-section-${instanceId}-${nodeId}">
+                            <h5>RFID</h5>
+                            ${node.rfid && node.rfid.connection ? `
+                                <p><b>Protocollo:</b> ${node.rfid.protocol}</p>
+                                <p><b>Porta seriale:</b> ${node.rfid.connection.serial_port_name}</p>
+                                <p><b>Baudrate:</b> ${node.rfid.connection.baudrate}</p>
+                            ` : '<p style="color:#888"><em>Nessun lettore RFID configurato</em></p>'}
+                        </div>
                         <div class="node-actions">
                             <button onclick="openEndpointModal('${instanceId}', '${nodeId}')">Link API</button>
+                            <button onclick="openRfidModal('${instanceId}', '${nodeId}')">RFID</button>
                             <button onclick="openEditNodeModal('${instanceId}', '${nodeId}')">Modifica</button>
                         </div>
                     `;
