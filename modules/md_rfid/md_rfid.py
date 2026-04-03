@@ -66,6 +66,13 @@ class RfidModule:
 			return None
 		return self.instances[node_name].get_instance()
 
+	def set_node_callback(self, node_name: str, cb_cardcode: Callable[[str], any]) -> bool:
+		"""Imposta la callback di lettura tessera per uno specifico nodo."""
+		if node_name not in self.instances:
+			return False
+		self.instances[node_name].set_action(cb_cardcode)
+		return True
+
 	def set_instance(self, node_name: str, configuration: RfidConfigurationDTO) -> dict:
 		"""Crea o sostituisce il lettore RFID per un nodo/terminale."""
 		if node_name in self.instances:
