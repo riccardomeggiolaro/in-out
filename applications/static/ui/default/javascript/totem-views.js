@@ -93,7 +93,7 @@ const totemViews = {
                 <button class="btn btn-secondary" id="btnCancelPlate" style="display:none" onclick="cancelTotem()">${t('cancel')}</button>
                 <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">${t('undo')}</button>
                 <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">${t('confirm')}</button>
-                <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 3;" onclick="_plateGoToNext()">${t('next')}</button>
+                <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">${t('next')}</button>
             </div>
         `,
         init: () => {
