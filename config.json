@@ -81,7 +81,7 @@
                 "pid": true
             }
         },
-        "use_badge": false,
+        "use_badge": true,
         "use_preset_weight": true,
         "use_recordings": false,
         "use_reservation": true,
@@ -149,6 +149,15 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {},
+                        "rfid": {
+                            "connection": {
+                                "baudrate": 19200,
+                                "serial_port_name": "/dev/ttyACM0",
+                                "timeout": 1
+                            },
+                            "protocol": "rfid",
+                            "setup": {}
+                        },
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
