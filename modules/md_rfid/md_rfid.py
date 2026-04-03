@@ -13,7 +13,6 @@ from modules.md_rfid.globals import protocolsClasses
 from modules.md_rfid.protocols.rfid_serial import RfidSerial
 from modules.md_rfid.protocols.apromix_rfid_serial import ApromixRfidSerial
 from modules.md_rfid.dto import RfidConfigurationDTO, RfidConnectionDTO, RfidSetupDTO
-from fastapi import HTTPException
 
 name_module = "md_rfid"
 
@@ -67,7 +66,7 @@ class RfidModule:
 			return None
 		return self.instances[node_name].get_instance()
 
-	def set_instance(self, instance_name: str, node_name: str, configuration: RfidConfigurationDTO) -> dict:
+	def set_instance(self, node_name: str, configuration: RfidConfigurationDTO) -> dict:
 		"""Crea o sostituisce il lettore RFID per un nodo/terminale."""
 		if node_name in self.instances:
 			self.instances[node_name].stop()
@@ -75,31 +74,14 @@ class RfidModule:
 
 		instance = RfidInstance(node_name, configuration)
 		self.instances[node_name] = instance
-
-		# Salva nella config del nodo corrispondente
-		lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][node_name]["rfid"] = {
-			"protocol": configuration.protocol,
-			"connection": configuration.connection.dict() if configuration.connection else None,
-			"setup": configuration.setup.dict() if configuration.setup else {}
-		}
-		lb_config.saveconfig()
 		return instance.get_instance()
 
-	def delete_instance(self, instance_name: str, node_name: str) -> bool:
+	def delete_instance(self, node_name: str) -> bool:
 		"""Elimina il lettore RFID di un nodo/terminale."""
 		if node_name not in self.instances:
-			# Rimuove comunque dalla config se presente
-			weighers = lb_config.g_config["app_api"]["weighers"]
-			if instance_name in weighers and node_name in weighers[instance_name].get("nodes", {}):
-				weighers[instance_name]["nodes"][node_name].pop("rfid", None)
-				lb_config.saveconfig()
 			return False
 		self.instances[node_name].stop()
 		del self.instances[node_name]
-		weighers = lb_config.g_config["app_api"]["weighers"]
-		if instance_name in weighers and node_name in weighers[instance_name].get("nodes", {}):
-			weighers[instance_name]["nodes"][node_name].pop("rfid", None)
-		lb_config.saveconfig()
 		return True
 
 
