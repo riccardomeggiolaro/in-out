@@ -194,23 +194,19 @@ body {
 }
 
 .step-topbar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: calc(0.5 / 6.5 * (100% - 16px));
-    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    pointer-events: none;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
     background: #2A2A2A;
 }
 
 .step-logo {
     height: 100%;
-    pointer-events: auto;
 }
 
 .step-logo img {
@@ -224,7 +220,6 @@ body {
     display: flex;
     gap: 8px;
     align-items: center;
-    pointer-events: auto;
     height: 100%;
 }
 
