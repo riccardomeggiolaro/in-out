@@ -664,8 +664,11 @@
                     <br>
                     <h3>TOTEM</h3>
                     <br>
-                    <label>Anagrafiche compilabili dall'utente sul totem:</label>
+                    <label>Sezioni abilitate per l'utente sul totem:</label>
                     <br><br>
+                    <label for="totem-card">Tessera: </label>
+                    <input type="checkbox" id="totem-card" onclick="setTotemAnagrafic('card', this.checked)">
+                    <br>
                     <label for="totem-vehicle">Veicolo (targa): </label>
                     <input type="checkbox" id="totem-vehicle" onclick="setTotemAnagrafic('vehicle', this.checked)">
                     <br>
@@ -2039,7 +2042,8 @@
                 }
 
                 // Totem anagrafiche
-                const totemAnagrafiche = res.totem_anagrafiche || { vehicle: true, subject: false, vector: false, driver: false, material: true };
+                const totemAnagrafiche = res.totem_anagrafiche || { card: true, vehicle: true, subject: false, vector: false, driver: false, material: true };
+                document.getElementById('totem-card').checked = totemAnagrafiche.card !== false;
                 document.getElementById('totem-vehicle').checked = totemAnagrafiche.vehicle;
                 document.getElementById('totem-subject').checked = totemAnagrafiche.subject;
                 document.getElementById('totem-vector').checked = totemAnagrafiche.vector;

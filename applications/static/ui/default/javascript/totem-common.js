@@ -70,15 +70,15 @@ function initTotemPage() {
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         test_mode = res["test_mode"] || false;
         instances = res["weighers"];
-        totemAnagrafiche = res["totem_anagrafiche"] || { vehicle: true, subject: false, vector: false, driver: false, material: true };
+        totemAnagrafiche = res["totem_anagrafiche"] || { card: true, vehicle: true, subject: false, vector: false, driver: false, material: true };
         defaultTypeSubject = res["default_type_subject"] || "CUSTOMER";
+
+        connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
+
+        // Show initial view — will be redirected by _resolveStartPage once data loads
+        _waitingForStartPage = true;
+        showView(totemAnagrafiche.card !== false ? 'card' : 'plate');
     });
-
-    connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
-
-    // Show initial view — will be redirected by _resolveStartPage once data loads
-    _waitingForStartPage = true;
-    showView('card');
 }
 
 // Determine the furthest page the user can go based on already-filled data
@@ -121,7 +121,7 @@ function _findNextEnabledStep(afterStep) {
 function _findPrevEnabledStep(beforeStep) {
     const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
     const steps = [
-        { name: 'card', enabled: true },
+        { name: 'card', enabled: totemAnagrafiche.card !== false },
         { name: 'plate', enabled: totemAnagrafiche.vehicle },
         { name: 'subject', enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
         { name: 'vector', enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
@@ -464,10 +464,10 @@ function cancelTotem() {
         selectedMaterial = { id: null, description: '' };
         selectedIdWeight = null;
         dataInExecution = null;
-        goTo('card');
+        goTo(totemAnagrafiche.card !== false ? 'card' : 'plate');
     })
     .catch(() => {
-        goTo('card');
+        goTo(totemAnagrafiche.card !== false ? 'card' : 'plate');
     });
 }
 
@@ -899,10 +899,10 @@ function processRealtimeObject(obj) {
         selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
         selectedMaterial = { id: d.material.id, description: d.material.description || '' };
 
-        // If access was deselected, go back to card (unless weighing is completing)
+        // If access was deselected, go back to start (unless weighing is completing)
         if (prevId && (!obj.id_selected || obj.id_selected.id === null)) {
             if (!_weighingCompleting) {
-                goTo('card');
+                goTo(totemAnagrafiche.card !== false ? 'card' : 'plate');
             }
             return;
         }
