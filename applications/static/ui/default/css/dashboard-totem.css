@@ -203,7 +203,7 @@ body {
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
-    background: #2A2A2A;
+    background: gray;
 }
 
 .step-logo {
@@ -213,7 +213,7 @@ body {
 }
 
 .step-logo img {
-    height: clamp(32px, 7vh, 72px);
+    height: clamp(50px, 10vh, 90px);
     width: auto;
     object-fit: contain;
     border-radius: 8px;
@@ -309,11 +309,15 @@ body {
     border: none;
     border-radius: 0;
     margin: 0;
-    padding: 0 8px;
     flex: none;
     min-height: 0;
     text-align: center;
     text-transform: uppercase;
+    background: white;
+    color: black;
+    font-size: clamp(0.7rem, 5vh, 3rem);
+    border: 3px solid black;
+    border-radius: clamp(8px, 2vw, 14px);
 }
 
 
@@ -394,7 +398,7 @@ body {
 .suggestions-list li.create-new {
     color: #4CAF50;
     font-weight: 600;
-    border-top: 2px solid #333333;
+    border-top: 3px solid #333333;
 }
 
 .suggestions-list li.create-new::before {
@@ -406,10 +410,10 @@ body {
     display: none;
     grid-template-columns: 1fr 1fr;
     column-gap: 3vw;
-    row-gap: 1vh;
+    row-gap: 3vh;
     background: transparent;
     box-shadow: none;
-    padding: 0 16px 8px 16px;
+    padding: 16px;
     overflow: hidden;
     flex: 1;
     min-height: 0;
@@ -583,15 +587,15 @@ body {
     row-gap: 1vh;
     padding: 8px 16px 0px 16px;
     width: 100%;
-    flex: 1;
+    flex: 0.7;
     min-height: 0;
     box-sizing: border-box;
-    background: #2A2A2A;
+    background: gray;
 }
 
 .btn {
     background: #FFFFFF;
-    border: 2px solid #CCCCCC;
+    border: 3px solid black;
     border-radius: clamp(8px, 2vw, 14px);
     padding: 0;
     text-align: center;
@@ -633,8 +637,8 @@ body {
 .summary-card {
     display: flex;
     flex-direction: column;
-    margin: 0 16px 8px 16px;
-    background: #1E1E1E;
+    margin: 16px;
+    background: white;
     border-radius: clamp(8px, 2vw, 14px);
     border: 2px solid #444444;
     overflow: hidden;
@@ -644,7 +648,7 @@ body {
 }
 
 .summary-row {
-    background: #1E1E1E;
+    background: white;
     padding: 0;
     display: flex;
     flex-direction: row;
@@ -654,7 +658,7 @@ body {
     height: calc(100cqh / 5);
     position: relative;
     overflow: hidden;
-    border-bottom: 2px solid #333333;
+    border-bottom: 3px solid #333333;
 }
 
 .summary-row:last-child {
@@ -667,13 +671,13 @@ body {
 
 .summary-label {
     font-size: clamp(0.7rem, 5vh, 3rem);
-    color: #AAAAAA;
+    color: #000000;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     width: 50%;
     flex-shrink: 0;
     text-align: center;
-    border-right: 2px solid #333333;
+    border-right: 3px solid #333333;
     padding: 0 8px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -688,7 +692,7 @@ body {
 .summary-value {
     font-weight: 600;
     font-size: clamp(0.7rem, 5vh, 3rem);
-    color: #FFFFFF;
+    color: #000000;
     flex: 1;
     text-align: center;
     padding: 0 8px;
@@ -699,7 +703,7 @@ body {
 }
 
 .summary-edit {
-    color: #FFFFFF;
+    color: #000000;
     font-size: clamp(0.8rem, 4vh, 2.5rem);
     position: static;
     flex-shrink: 0;
