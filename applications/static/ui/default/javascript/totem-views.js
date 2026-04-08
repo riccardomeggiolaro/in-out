@@ -112,10 +112,8 @@ const totemViews = {
                 </div>
             </div>
             <div class="step-buttons">
-                <button class="btn btn-secondary" id="btnCancelPlate" style="display:none" onclick="cancelTotem()">${t('cancel')}</button>
-                <button class="btn btn-secondary manual-btn" id="btnAnnulla" style="display:none" onclick="_plateExitManual()">${t('undo')}</button>
-                <button class="btn btn-primary manual-btn" id="btnConferma" style="display:none" onclick="_plateConfirmManual()">${t('confirm')}</button>
-                <button class="btn btn-primary btn-next" id="btnNext" style="display:none; grid-column: 2;" onclick="_plateGoToNext()">${t('next')}</button>
+                <button class="btn btn-secondary" id="btnCancelPlate" style="visibility:hidden" onclick="cancelTotem()">${t('cancel')}</button>
+                <button class="btn btn-primary btn-next" id="btnNext" style="visibility:hidden" onclick="_plateGoToNext()">${t('next')}</button>
             </div>
         `,
         init: () => {
@@ -199,22 +197,36 @@ const totemViews = {
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
                 document.getElementById('virtualKeyboard').classList.add('active');
-                document.getElementById('btnCancelPlate').style.display = 'none';
-                document.getElementById('btnAnnulla').style.display = '';
-                document.getElementById('btnConferma').style.display = '';
-                document.getElementById('btnNext').style.display = 'none';
+                const btnCancel = document.getElementById('btnCancelPlate');
+                const btnNext = document.getElementById('btnNext');
+                btnCancel.textContent = t('undo');
+                btnCancel.onclick = _plateExitManual;
+                btnCancel.style.visibility = '';
+                btnNext.textContent = t('confirm');
+                btnNext.onclick = _plateConfirmManual;
+                btnNext.style.visibility = '';
             };
+
+            function _plateRestoreButtons() {
+                const btnCancel = document.getElementById('btnCancelPlate');
+                const btnNext = document.getElementById('btnNext');
+                btnCancel.textContent = t('cancel');
+                btnCancel.onclick = cancelTotem;
+                btnNext.textContent = t('next');
+                btnNext.onclick = _plateGoToNext;
+            }
 
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('virtualKeyboard').classList.remove('active');
-                document.getElementById('btnAnnulla').style.display = 'none';
-                document.getElementById('btnConferma').style.display = 'none';
+                _plateRestoreButtons();
                 if (selectedVehicle.plate) {
-                    document.getElementById('btnCancelPlate').style.display = '';
+                    document.getElementById('btnCancelPlate').style.visibility = '';
+                    document.getElementById('btnNext').style.visibility = '';
                     _plateShowPlate(selectedVehicle.plate);
-                    document.getElementById('btnNext').style.display = '';
                 } else {
+                    document.getElementById('btnCancelPlate').style.visibility = 'hidden';
+                    document.getElementById('btnNext').style.visibility = 'hidden';
                     _plateShowEmpty();
                 }
             };
@@ -264,8 +276,7 @@ const totemViews = {
 
                         _plateManualMode = false;
                         document.getElementById('virtualKeyboard').classList.remove('active');
-                        document.getElementById('btnAnnulla').style.display = 'none';
-                        document.getElementById('btnConferma').style.display = 'none';
+                        _plateRestoreButtons();
                         _plateShowPlate(selectedVehicle.plate || value);
                         _plateGoToNext();
                     }
@@ -293,8 +304,8 @@ const totemViews = {
                 }
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
-                    document.getElementById('btnCancelPlate').style.display = '';
-                    document.getElementById('btnNext').style.display = '';
+                    document.getElementById('btnCancelPlate').style.visibility = '';
+                    document.getElementById('btnNext').style.visibility = '';
                 } else {
                     _plateShowEmpty();
                 }
