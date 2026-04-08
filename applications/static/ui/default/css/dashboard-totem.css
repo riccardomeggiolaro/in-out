@@ -205,6 +205,7 @@ body {
     justify-content: space-between;
     padding: 0 16px;
     pointer-events: none;
+    background: #2A2A2A;
 }
 
 .step-logo {
@@ -363,9 +364,9 @@ body {
 }
 
 .suggestions-list li.selected {
-    background: #FFFFFF;
+    background: #FFF176;
     color: #111111;
-    border-left: 4px solid #FFFFFF;
+    border-left: 4px solid #F9A825;
     font-weight: 600;
 }
 
@@ -434,10 +435,10 @@ body {
 }
 
 .suggestions-grid li.selected {
-    background: #FFFFFF;
+    background: #FFF176;
     color: #111111;
-    border-color: #FFFFFF;
-    box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0,0,0,0.4);
+    border-color: #F9A825;
+    box-shadow: 0 3px 0 #F9A825, 0 4px 8px rgba(249,168,37,0.4);
 }
 
 .suggestions-grid li .secondary {
@@ -569,6 +570,7 @@ body {
     flex: 1;
     min-height: 0;
     box-sizing: border-box;
+    background: #2A2A2A;
 }
 
 .btn {
