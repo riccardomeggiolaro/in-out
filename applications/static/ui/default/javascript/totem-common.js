@@ -858,14 +858,7 @@ function updateUIRealtime(e) {
 
 function processRealtimeObject(obj) {
     if (obj.command_in_executing) {
-        if (obj.command_in_executing === "WEIGHING") {
-            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
-            document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = true);
-        } else if (obj.command_in_executing === "TARE") {
-            // showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
-        } else if (obj.command_in_executing === "ZERO") {
-            // showSnackbar("snackbar", "Zero", 'rgb(208, 255, 208)', 'black');
-        }
+        return;
     } else if (obj.weight_executed) {
         if (obj.weight_executed.gross_weight !== "") {
             closePopup();
