@@ -204,7 +204,13 @@ function showView(name) {
     if (middleElements.length > 0) {
         const wrapper = document.createElement('div');
         wrapper.className = 'step-content';
-        h2.after(wrapper);
+        if (h2) {
+            h2.after(wrapper);
+        } else if (stepButtons) {
+            step.insertBefore(wrapper, stepButtons);
+        } else {
+            step.appendChild(wrapper);
+        }
         middleElements.forEach(el => wrapper.appendChild(el));
     }
 
