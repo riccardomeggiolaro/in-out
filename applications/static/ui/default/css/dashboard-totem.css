@@ -198,7 +198,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    flex: 1;
+    flex: 0.5;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
@@ -562,7 +562,7 @@ body {
     row-gap: 1vh;
     padding: 0 16px 8px 16px;
     width: 100%;
-    flex: 1;
+    flex: 0.5;
     min-height: 0;
     box-sizing: border-box;
     background: #2A2A2A;
