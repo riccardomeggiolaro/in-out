@@ -236,6 +236,7 @@ function showView(name) {
         if (firstBtn) {
             firstBtn.after(logoDiv);
         } else {
+            logoDiv.style.gridColumn = '1 / -1';
             stepButtons.appendChild(logoDiv);
         }
     }
