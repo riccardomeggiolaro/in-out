@@ -332,9 +332,9 @@ body {
     min-height: 0;
     overflow: hidden;
     margin-top: 8px;
-    background: #1E1E1E;
+    background: #FFFFFF;
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 
 .suggestions-list:empty {
@@ -344,9 +344,9 @@ body {
 .suggestions-list li {
     padding: 20px 22px;
     cursor: pointer;
-    border-bottom: 1px solid #333333;
+    border-bottom: 1px solid #DDDDDD;
     font-size: 1.4rem;
-    color: #FFFFFF;
+    color: #111111;
     transition: background 0.15s;
     display: flex;
     justify-content: space-between;
@@ -359,7 +359,7 @@ body {
 }
 
 .suggestions-list li:hover {
-    background: #2A2A2A;
+    background: #F0F0F0;
 }
 
 .suggestions-list li.selected {
@@ -370,7 +370,7 @@ body {
 }
 
 .suggestions-list li .secondary {
-    color: #AAAAAA;
+    color: #666666;
     font-size: 1.15rem;
 }
 
@@ -405,8 +405,8 @@ body {
 }
 
 .suggestions-grid li {
-    background: #1E1E1E;
-    border: 3px solid #AAAAAA;
+    background: #FFFFFF;
+    border: 3px solid #CCCCCC;
     border-radius: clamp(8px, 2vw, 14px);
     padding: 0;
     text-align: center;
@@ -416,10 +416,10 @@ body {
     align-items: center;
     font-weight: 500;
     font-size: clamp(0.7rem, 5vh, 3rem);
-    color: #FFFFFF;
+    color: #111111;
     transition: all 0.2s;
     min-height: 0;
-    box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0,0,0,0.4);
+    box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .suggestions-grid li:nth-last-child(-n+2) {
@@ -427,10 +427,10 @@ body {
 }
 
 .suggestions-grid li:hover {
-    border-color: #FFFFFF;
-    background: #2A2A2A;
+    border-color: #999999;
+    background: #F0F0F0;
     transform: translateY(-1px);
-    box-shadow: 0 4px 0 #000000, 0 6px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 0 #AAAAAA, 0 6px 12px rgba(0,0,0,0.2);
 }
 
 .suggestions-grid li.selected {
@@ -446,7 +446,7 @@ body {
 }
 
 .suggestions-grid li.placeholder {
-    background: #1A1A1A;
+    background: #1E1E1E;
     border-color: #333333;
     cursor: default;
     pointer-events: none;
