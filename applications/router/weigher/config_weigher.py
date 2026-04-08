@@ -66,7 +66,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		app_api = lb_config.g_config["app_api"]
 		if "totem_anagrafiche" not in app_api:
 			app_api["totem_anagrafiche"] = {
-				"vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
+				"card": True, "vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
 			}
 		if "default_type_subject" not in app_api:
 			app_api["default_type_subject"] = "CUSTOMER"
@@ -147,9 +147,9 @@ class ConfigWeigher(CommandWeigherRouter):
 	async def SetTotemAnagrafic(self, anagrafic: str, status: bool):
 		if "totem_anagrafiche" not in lb_config.g_config["app_api"]:
 			lb_config.g_config["app_api"]["totem_anagrafiche"] = {
-				"vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
+				"card": True, "vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
 			}
-		if anagrafic not in ["vehicle", "subject", "vector", "driver", "material"]:
+		if anagrafic not in ["card", "vehicle", "subject", "vector", "driver", "material"]:
 			raise HTTPException(status_code=400, detail=f"Anagrafica '{anagrafic}' non valida")
 		lb_config.g_config["app_api"]["totem_anagrafiche"][anagrafic] = status
 		lb_config.saveconfig()
