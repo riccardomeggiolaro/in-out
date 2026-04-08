@@ -37,6 +37,7 @@ let totemAnagrafiche = { vehicle: true, subject: false, vector: false, driver: f
 let defaultTypeSubject = "CUSTOMER";
 let access_id = null;
 let confirmWeighing = null;
+let _weighingCompleting = false;
 let minWeightValue = 0;
 let maxThesholdValue = 0;
 
@@ -624,6 +625,7 @@ async function executeWeighing() {
         }
         const r = await res.json();
         if (r && r.command_details && r.command_details.command_executed === true) {
+            _weighingCompleting = true;
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
             const msg = r?.command_details?.error_message || t('weighing_generic_error');
@@ -658,7 +660,7 @@ async function inWeighing() {
             body: JSON.stringify({ data_in_execution: dataInExecution })
         }).then(res => res.json());
         if (r && r.command_details && r.command_details.command_executed === true) {
-            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            _weighingCompleting = true;
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
             // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
@@ -680,7 +682,7 @@ async function outWeighing() {
             body: JSON.stringify({ id_selected: selectedIdWeight["id"] })
         }).then(res => res.json());
         if (r && r.command_details && r.command_details.command_executed === true) {
-            // showSnackbar("snackbar", "Pesando...", 'rgb(208, 255, 208)', 'black');
+            _weighingCompleting = true;
             if (return_pdf_copy_after_weighing) access_id = r.access_id;
         } else {
             // showSnackbar("snackbar", r?.command_details?.error_message || "Errore durante la pesatura", 'rgb(255, 208, 208)', 'black');
@@ -857,6 +859,7 @@ function processRealtimeObject(obj) {
     if (obj.command_in_executing) {
         return;
     } else if (obj.weight_executed) {
+        _weighingCompleting = false;
         if (obj.weight_executed.gross_weight !== "") {
             closePopup();
             showWeighingSuccess();
@@ -895,9 +898,11 @@ function processRealtimeObject(obj) {
         selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
         selectedMaterial = { id: d.material.id, description: d.material.description || '' };
 
-        // If access was deselected, go back to plate
+        // If access was deselected, go back to plate (unless weighing is completing)
         if (prevId && (!obj.id_selected || obj.id_selected.id === null)) {
-            goTo('plate');
+            if (!_weighingCompleting) {
+                goTo('plate');
+            }
             return;
         }
 
