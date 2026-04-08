@@ -287,6 +287,10 @@ const totemViews = {
             });
 
             window.onDataReady = function() {
+                if (_navigatingBack && totemAnagrafiche.card !== false) {
+                    cancelTotem();
+                    return;
+                }
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
                     document.getElementById('btnCancelPlate').style.display = '';
