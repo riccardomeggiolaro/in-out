@@ -921,7 +921,7 @@ function processRealtimeObject(obj) {
         if (typeof onDataUpdate === 'function') onDataUpdate();
 
         if (obj.id_selected && obj.id_selected.need_to_confirm === true) {
-            handleNeedToConfirm(d.vehicle.plate);
+            confirmSemiAutomatic();
         }
     } else if (obj.message) {
         // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
