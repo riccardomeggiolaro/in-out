@@ -195,11 +195,10 @@ body {
 
 .step-topbar {
     display: flex;
-    align-items: center;
     justify-content: center;
     position: relative;
     padding: 0 16px;
-    flex: 0.5;
+    flex: 0.7;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
@@ -228,6 +227,7 @@ body {
     right: 16px;
     top: 0;
     bottom: 0;
+    height: 90%;
 }
 
 .lang-btn {
@@ -282,6 +282,7 @@ body {
     overflow: hidden;
     container-type: size;
     container-name: step-content;
+    padding: 16px 0px;
 }
 
 .step h2 {
@@ -309,15 +310,15 @@ body {
     border: none;
     border-radius: 0;
     margin: 0;
-    flex: none;
     min-height: 0;
     text-align: center;
     text-transform: uppercase;
-    background: white;
+    background: yellow;
     color: black;
     font-size: clamp(0.7rem, 5vh, 3rem);
     border: 3px solid black;
     border-radius: clamp(8px, 2vw, 14px);
+    height: 90%;
 }
 
 
@@ -352,7 +353,6 @@ body {
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    margin-top: 8px;
     background: #FFFFFF;
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.15);
@@ -410,7 +410,7 @@ body {
     display: none;
     grid-template-columns: 1fr 1fr;
     column-gap: 3vw;
-    row-gap: 3vh;
+    row-gap: 2vh;
     background: transparent;
     box-shadow: none;
     padding: 16px;
@@ -594,7 +594,7 @@ body {
 }
 
 .btn {
-    background: #FFFFFF;
+    background: yellow;
     border: 3px solid black;
     border-radius: clamp(8px, 2vw, 14px);
     padding: 0;
@@ -665,10 +665,6 @@ body {
     border-bottom: none;
 }
 
-.summary-row:hover {
-    background: #2A2A2A;
-}
-
 .summary-label {
     font-size: clamp(0.7rem, 5vh, 3rem);
     color: #000000;
@@ -704,7 +700,7 @@ body {
 
 .summary-edit {
     color: #000000;
-    font-size: clamp(0.8rem, 4vh, 2.5rem);
+    font-size: clamp(0.7rem, 5vh, 3rem);
     position: static;
     flex-shrink: 0;
     padding: 0 12px;

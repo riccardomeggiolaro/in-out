@@ -56,7 +56,7 @@
         },
         "test_mode": true,
         "totem_anagrafiche": {
-            "card": true,
+            "card": false,
             "driver": false,
             "material": true,
             "subject": false,
