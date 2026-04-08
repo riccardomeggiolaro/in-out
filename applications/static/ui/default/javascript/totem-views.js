@@ -17,10 +17,7 @@ const totemViews = {
             .vk-key:active { background: #444444; }
             .vk-key.vk-wide { max-width: 15%; flex: 1.5; }
             .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
-            .rfid-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: clamp(8px, 2vh, 20px); color: #AAAAAA; }
-            .rfid-hint.hidden { display: none; }
-            .rfid-icon { width: clamp(60px, 15vh, 140px); height: clamp(60px, 15vh, 140px); opacity: 0.6; }
-            .rfid-label { font-size: clamp(1rem, 3.5vh, 2rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+            .rfid-hint { display: none; }
         `,
         html: () => `
             <h2>${t('plate_title')}</h2>
@@ -32,16 +29,7 @@ const totemViews = {
                 <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
                 <div class="plate-band plate-band-right"></div>
             </div>
-            <div class="rfid-hint" id="rfidHint">
-                <svg class="rfid-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                    <rect x="10" y="25" width="80" height="50" rx="6" ry="6" fill="none" stroke="currentColor" stroke-width="5"/>
-                    <rect x="20" y="35" width="20" height="30" rx="2" ry="2" fill="currentColor" opacity="0.8"/>
-                    <path d="M52 38 Q70 50 52 62" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M58 32 Q82 50 58 68" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M64 26 Q94 50 64 74" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                </svg>
-                <span class="rfid-label">${t('rfid_read_card')}</span>
-            </div>
+
             <div class="virtual-keyboard" id="virtualKeyboard">
                 <div class="vk-row">
                     <button class="vk-key" data-key="1">1</button>
@@ -139,7 +127,6 @@ const totemViews = {
                 plateText.textContent = plate;
                 plateText.style.display = '';
                 document.getElementById('manualPlateInput').style.display = 'none';
-                document.getElementById('rfidHint').classList.add('hidden');
                 _plateFitText(plateText);
             };
 
@@ -149,7 +136,6 @@ const totemViews = {
                 plateText.innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
                 plateText.style.display = '';
                 document.getElementById('manualPlateInput').style.display = 'none';
-                document.getElementById('rfidHint').classList.remove('hidden');
                 _plateFitText(plateText);
             };
 
@@ -178,7 +164,6 @@ const totemViews = {
                 _plateManualMode = true;
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
-                document.getElementById('rfidHint').classList.add('hidden');
                 document.getElementById('virtualKeyboard').classList.add('active');
                 document.getElementById('btnCancelPlate').style.display = 'none';
                 document.getElementById('btnAnnulla').style.display = '';
@@ -189,7 +174,6 @@ const totemViews = {
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('virtualKeyboard').classList.remove('active');
-                document.getElementById('rfidHint').classList.remove('hidden');
                 document.getElementById('btnAnnulla').style.display = 'none';
                 document.getElementById('btnConferma').style.display = 'none';
                 if (selectedVehicle.plate) {
