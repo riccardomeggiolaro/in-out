@@ -37,7 +37,6 @@ let totemAnagrafiche = { vehicle: true, subject: false, vector: false, driver: f
 let defaultTypeSubject = "CUSTOMER";
 let access_id = null;
 let confirmWeighing = null;
-let _pendingSemiAutoConfirm = false;
 let minWeightValue = 0;
 let maxThesholdValue = 0;
 
@@ -824,9 +823,6 @@ async function getData(path) {
         _resolveStartPage();
         if (typeof onDataReady === 'function') onDataReady();
 
-        if (res.id_selected.need_to_confirm === true) {
-            handleNeedToConfirm(obj.vehicle.plate);
-        }
     } catch (error) {
         console.error('Error fetching data:', error);
     }
@@ -879,10 +875,6 @@ function processRealtimeObject(obj) {
         // Update weighing button text in real-time
         const btnWeigh = document.getElementById('btnWeigh');
         if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
-        if (_pendingSemiAutoConfirm && obj.status === 'ST' && selectedIdWeight?.id) {
-            _pendingSemiAutoConfirm = false;
-            confirmSemiAutomatic();
-        }
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         _reservationHasMaterial = obj.reservation_has_material || false;
@@ -918,11 +910,6 @@ function processRealtimeObject(obj) {
 
         if (typeof onDataUpdate === 'function') onDataUpdate();
 
-        if (obj.id_selected && obj.id_selected.need_to_confirm === true) {
-            _pendingSemiAutoConfirm = true;
-        } else {
-            _pendingSemiAutoConfirm = false;
-        }
     } else if (obj.message) {
         // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
