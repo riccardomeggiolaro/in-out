@@ -196,7 +196,8 @@ body {
 .step-topbar {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
+    position: relative;
     padding: 0 16px;
     flex: 0.5;
     min-height: 0;
@@ -212,7 +213,7 @@ body {
 }
 
 .step-logo img {
-    height: clamp(24px, 4vh, 48px);
+    height: clamp(32px, 7vh, 72px);
     width: auto;
     object-fit: contain;
     border-radius: 8px;
@@ -223,6 +224,10 @@ body {
     gap: 8px;
     align-items: center;
     height: 100%;
+    position: absolute;
+    right: 16px;
+    top: 0;
+    bottom: 0;
 }
 
 .lang-btn {
@@ -295,6 +300,20 @@ body {
     background: #FFFFFF;
     border: 2px solid #CCCCCC;
     border-radius: clamp(8px, 2vw, 14px);
+}
+
+.step-topbar h2 {
+    font-size: clamp(0.6rem, 3vh, 1.6rem);
+    color: #FFFFFF;
+    background: none;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0 8px;
+    flex: none;
+    min-height: 0;
+    text-align: center;
+    text-transform: uppercase;
 }
 
 
