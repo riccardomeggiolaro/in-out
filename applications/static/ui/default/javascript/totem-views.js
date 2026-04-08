@@ -21,6 +21,7 @@ const totemViews = {
                 </svg>
                 <span class="card-label">${t('card_instruction')}</span>
             </div>
+            <div class="step-buttons"></div>
         `,
         init: () => {
             window.onDataReady = function() {
