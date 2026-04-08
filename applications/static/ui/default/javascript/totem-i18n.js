@@ -4,6 +4,7 @@ const totemTranslations = {
     it: {
         // Page titles
         plate_title: 'Targa',
+        card_title: 'Tessera',
         subject_title: 'Ragione Sociale',
         customer: 'Cliente',
         supplier: 'Fornitore',
@@ -35,6 +36,8 @@ const totemTranslations = {
 
         // RFID
         rfid_read_card: 'Leggere tessera',
+        card_instruction: 'Avvicina la tessera al lettore',
+        skip: 'Salta',
 
         // Anagrafic labels
         label_vehicle: 'Veicolo',
@@ -46,6 +49,7 @@ const totemTranslations = {
     en: {
         // Page titles
         plate_title: 'License Plate',
+        card_title: 'Card',
         subject_title: 'Company Name',
         customer: 'Customer',
         supplier: 'Supplier',
@@ -77,6 +81,8 @@ const totemTranslations = {
 
         // RFID
         rfid_read_card: 'Read card',
+        card_instruction: 'Hold card near reader',
+        skip: 'Skip',
 
         // Anagrafic labels
         label_vehicle: 'Vehicle',

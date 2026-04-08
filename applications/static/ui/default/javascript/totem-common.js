@@ -78,7 +78,7 @@ function initTotemPage() {
 
     // Show initial view — will be redirected by _resolveStartPage once data loads
     _waitingForStartPage = true;
-    showView('plate');
+    showView('card');
 }
 
 // Determine the furthest page the user can go based on already-filled data
@@ -121,6 +121,7 @@ function _findNextEnabledStep(afterStep) {
 function _findPrevEnabledStep(beforeStep) {
     const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
     const steps = [
+        { name: 'card', enabled: true },
         { name: 'plate', enabled: totemAnagrafiche.vehicle },
         { name: 'subject', enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
         { name: 'vector', enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
@@ -463,10 +464,10 @@ function cancelTotem() {
         selectedMaterial = { id: null, description: '' };
         selectedIdWeight = null;
         dataInExecution = null;
-        goTo('plate');
+        goTo('card');
     })
     .catch(() => {
-        goTo('plate');
+        goTo('card');
     });
 }
 
@@ -898,10 +899,10 @@ function processRealtimeObject(obj) {
         selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
         selectedMaterial = { id: d.material.id, description: d.material.description || '' };
 
-        // If access was deselected, go back to plate (unless weighing is completing)
+        // If access was deselected, go back to card (unless weighing is completing)
         if (prevId && (!obj.id_selected || obj.id_selected.id === null)) {
             if (!_weighingCompleting) {
-                goTo('plate');
+                goTo('card');
             }
             return;
         }
