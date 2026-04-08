@@ -206,15 +206,13 @@ body {
 }
 
 .step-logo {
-    height: 100%;
-    padding: 6px 0;
-    box-sizing: border-box;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .step-logo img {
-    height: 100%;
+    height: clamp(24px, 4vh, 48px);
     width: auto;
     object-fit: contain;
     border-radius: 8px;
