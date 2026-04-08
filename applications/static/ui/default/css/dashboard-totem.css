@@ -562,7 +562,7 @@ body {
     row-gap: 1vh;
     padding: 0 16px 8px 16px;
     width: 100%;
-    flex: 0.5;
+    flex: 1;
     min-height: 0;
     box-sizing: border-box;
     background: #2A2A2A;
