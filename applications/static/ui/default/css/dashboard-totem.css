@@ -363,8 +363,9 @@ body {
 }
 
 .suggestions-list li.selected {
-    background: #2A2A2A;
-    border-left: 4px solid #4CAF50;
+    background: #FFFFFF;
+    color: #111111;
+    border-left: 4px solid #FFFFFF;
     font-weight: 600;
 }
 
@@ -433,9 +434,9 @@ body {
 }
 
 .suggestions-grid li.selected {
-    border-color: #4CAF50;
-    background: #1B5E20;
-    color: #FFFFFF;
+    background: #FFFFFF;
+    color: #111111;
+    border-color: #FFFFFF;
     box-shadow: 0 3px 0 #000000, 0 4px 8px rgba(0,0,0,0.4);
 }
 
