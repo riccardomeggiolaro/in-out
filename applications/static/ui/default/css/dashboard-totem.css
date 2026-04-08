@@ -560,7 +560,7 @@ body {
     grid-template-columns: 1fr 1fr;
     column-gap: 3vw;
     row-gap: 1vh;
-    padding: 0 16px 8px 16px;
+    padding: 8px 16px 0px 16px;
     width: 100%;
     flex: 1;
     min-height: 0;
@@ -569,8 +569,8 @@ body {
 }
 
 .btn {
-    background: #1E1E1E;
-    border: 2px solid #444444;
+    background: #FFFFFF;
+    border: 2px solid #CCCCCC;
     border-radius: clamp(8px, 2vw, 14px);
     padding: 0;
     text-align: center;
@@ -579,11 +579,12 @@ body {
     justify-content: center;
     font-weight: 600;
     font-size: clamp(0.7rem, 5vh, 3rem);
-    color: #FFFFFF;
+    color: #111111;
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
     min-height: 0;
+    box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .btn:disabled {
@@ -591,34 +592,16 @@ body {
     cursor: not-allowed;
 }
 
-.btn-primary {
-    background: #4CAF50;
-    color: #FFFFFF;
-    border-color: #4CAF50;
-}
-
 .btn-primary:hover:not(:disabled) {
-    background: #388E3C;
-}
-
-.btn-secondary {
-    background: #333333;
-    color: #FFFFFF;
-    border-color: #444444;
+    background: #F0F0F0;
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: #444444;
-}
-
-.btn-weighing {
-    background: #2196F3;
-    color: #FFFFFF;
-    border-color: #2196F3;
+    background: #F0F0F0;
 }
 
 .btn-weighing:hover:not(:disabled) {
-    background: #1976D2;
+    background: #F0F0F0;
 }
 
 .btn-next {
