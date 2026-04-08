@@ -225,6 +225,7 @@ function showView(name) {
             <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en" onclick="switchLang('en')">${flagEN}</button>
         </div>
     `;
+    if (h2) topbar.insertBefore(h2, topbar.querySelector('.lang-switcher'));
     step.prepend(topbar);
 
     // Inject logo into center of step-buttons
