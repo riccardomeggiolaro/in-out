@@ -608,14 +608,14 @@ function _isSecondWeighing() {
 }
 
 async function handleWeighing() {
+    confirmWeighing = executeWeighing;
     if (data_weight_realtime.over_max_theshold) {
-        confirmWeighing = executeWeighing;
         document.getElementById('confirmDescription').innerHTML =
             t('max_threshold_exceeded').replace('{value}', maxThesholdValue);
-        openPopup('confirmPopup');
     } else {
-        await executeWeighing();
+        document.getElementById('confirmDescription').innerHTML = t('confirm_weigh_prompt');
     }
+    openPopup('confirmPopup');
 }
 
 async function executeWeighing() {

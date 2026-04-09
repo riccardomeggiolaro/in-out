@@ -47,6 +47,7 @@ const totemTranslations = {
         label_material: 'Materiale',
         weight_label: 'Peso',
         confirm_weigh: 'Conferma',
+        confirm_weigh_prompt: 'Procedere con la pesatura?',
     },
     en: {
         // Page titles
@@ -94,6 +95,7 @@ const totemTranslations = {
         label_material: 'Material',
         weight_label: 'Weight',
         confirm_weigh: 'Confirm',
+        confirm_weigh_prompt: 'Proceed with weighing?',
     }
 };
 
