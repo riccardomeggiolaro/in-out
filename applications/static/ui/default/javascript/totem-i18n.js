@@ -23,6 +23,7 @@ const totemTranslations = {
         weigh: 'Pesa',
         entry: 'Entrata',
         exit: 'Uscita',
+        confirm_weigh: '🖨 Conferma',
         reconnect: 'Riconnetti',
 
         // Messages
@@ -30,6 +31,7 @@ const totemTranslations = {
         weighing_success: 'Pesata completata',
         weighing_error: 'Pesata non riuscita',
         weighing_generic_error: 'Errore durante la pesatura',
+        net: 'Netto',
         create_new: 'Crea',
         max_threshold_exceeded: 'Soglia massima di <strong>{value} kg</strong> superata, procedere con la pesatura?',
         auto_plate_confirm: 'Lettura automatica della targa <strong>\'{plate}\'</strong>. <br> Effettuare la pesatura?',
@@ -69,6 +71,7 @@ const totemTranslations = {
         weigh: 'Weigh',
         entry: 'Weight 1',
         exit: 'Weight 2',
+        confirm_weigh: '🖨 Confirm',
         reconnect: 'Reconnect',
 
         // Messages
@@ -76,6 +79,7 @@ const totemTranslations = {
         weighing_success: 'Weighing completed',
         weighing_error: 'Weighing failed',
         weighing_generic_error: 'Error during weighing',
+        net: 'Net',
         create_new: 'Create',
         max_threshold_exceeded: 'Maximum threshold of <strong>{value} kg</strong> exceeded, proceed with weighing?',
         auto_plate_confirm: 'Automatic plate reading <strong>\'{plate}\'</strong>. <br> Proceed with weighing?',

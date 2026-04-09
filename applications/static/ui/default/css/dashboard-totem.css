@@ -198,7 +198,7 @@ body {
     justify-content: center;
     align-items: stretch;
     position: relative;
-    padding: 8px 16px;
+    padding: 0 16px;
     flex: 0.7;
     min-height: 0;
     width: 100%;
@@ -222,15 +222,15 @@ body {
 .lang-switcher {
     display: flex;
     gap: 8px;
-    align-items: center;
+    align-items: stretch;
     position: absolute;
     right: 16px;
     top: 8px;
-    bottom: 8px;
+    bottom: 0;
 }
 
 .lang-btn {
-    height: 100%;
+    height: auto;
     aspect-ratio: 1;
     border-radius: clamp(8px, 2vw, 14px);
     border: 3px solid #444444;
@@ -304,19 +304,19 @@ body {
 
 .step-topbar h2 {
     font-size: clamp(0.7rem, 5vh, 3rem);
-    color: black;
-    background: yellow;
-    border: 3px solid black;
+    color: #111111;
+    background: #FFFFFF;
+    border: 2px solid #CCCCCC;
     border-radius: clamp(8px, 2vw, 14px);
-    margin: 0;
-    min-height: 0;
-    text-align: center;
-    text-transform: uppercase;
+    margin: 8px 0 0 0;
+    padding: 0 16px;
+    flex: none;
     align-self: stretch;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 16px;
+    text-align: center;
+    text-transform: uppercase;
     box-sizing: border-box;
 }
 
@@ -630,15 +630,68 @@ body {
 .summary-card {
     display: flex;
     flex-direction: column;
-    gap: clamp(6px, 1.2vh, 14px);
-    margin: 0 16px 8px 16px;
-    background: transparent;
+    margin: 0 16px;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    gap: clamp(4px, 1vh, 10px);
     box-sizing: border-box;
-    width: stretch;
-    padding: 4px 2px;
+    padding-bottom: 8px;
+}
+
+.summary-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.summary-row.disabled {
+    pointer-events: none;
+    cursor: default;
+}
+
+.summary-row.disabled .summary-edit {
+    display: none;
+}
+
+.summary-label {
+    font-size: clamp(0.55rem, 2.5vh, 1.3rem);
+    color: #CCCCCC;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 4px;
+}
+
+.summary-value-row {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 2px solid #CCCCCC;
+    border-radius: clamp(6px, 1.5vw, 10px);
+    padding: 0 12px;
+    min-height: clamp(28px, 5vh, 56px);
+    box-sizing: border-box;
+}
+
+.summary-value {
+    font-weight: 600;
+    font-size: clamp(0.7rem, 3.5vh, 2rem);
+    color: #111111;
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.summary-edit {
+    color: #888888;
+    font-size: clamp(0.8rem, 3vh, 1.8rem);
+    flex-shrink: 0;
+    padding-left: 8px;
 }
 
 .summary-buttons {
@@ -691,6 +744,25 @@ body {
     justify-content: center;
 }
 
+/* Error overlay (non-destructive, shown over current step) */
+.error-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    color: #FFFFFF;
+    text-align: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.error-overlay-content p {
+    font-size: clamp(1rem, 4vh, 2rem);
+    margin-top: 0.5rem;
+    padding: 0 2rem;
+}
+
 /* Highlight */
 .highlight {
     background: #333333;
@@ -713,6 +785,15 @@ body {
     margin: 8px auto 0;
     transition: box-shadow 0.3s;
     flex-shrink: 0;
+}
+
+.plate-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .plate-band {
