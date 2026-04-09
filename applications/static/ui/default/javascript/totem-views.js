@@ -7,19 +7,22 @@ const totemViews = {
         get title() { return 'Totem - ' + t('card_title'); },
         style: `
             .card-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: clamp(12px, 3vh, 32px); color: #FFFFFF; }
-            .card-weight-display { display: flex; align-items: baseline; gap: clamp(6px, 1.5vw, 16px); }
-            .card-net-weight { font-size: clamp(2rem, 12vh, 8rem); font-weight: 700; letter-spacing: 2px; }
-            .card-unit { font-size: clamp(1rem, 5vh, 3rem); font-weight: 600; opacity: 0.8; }
-            .card-status { font-size: clamp(0.8rem, 3.5vh, 2rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; }
+            .card-weight-card { background: #1E1E1E; border: 3px solid #444444; border-radius: clamp(12px, 3vw, 24px); padding: clamp(16px, 4vw, 48px) clamp(24px, 6vw, 72px); display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2vh, 24px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+            .card-weight-display { display: flex; align-items: baseline; gap: clamp(8px, 2vw, 20px); }
+            .card-net-weight { font-size: clamp(3rem, 18vh, 12rem); font-weight: 700; letter-spacing: 4px; color: #FFFFFF; }
+            .card-unit { font-size: clamp(1.2rem, 7vh, 4rem); font-weight: 600; color: #AAAAAA; }
+            .card-status { font-size: clamp(0.9rem, 4vh, 2.5rem); font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #AAAAAA; border-top: 2px solid #333333; padding-top: clamp(8px, 2vh, 20px); width: 100%; text-align: center; }
         `,
         html: () => `
             <h2 style="flex: none">${t('card_instruction')}</h2>
             <div class="card-hint">
-                <div class="card-weight-display">
-                    <span class="card-net-weight" id="netWeight">------</span>
-                    <span class="card-unit" id="uniteMisure">--</span>
+                <div class="card-weight-card">
+                    <div class="card-weight-display">
+                        <span class="card-net-weight" id="netWeight">------</span>
+                        <span class="card-unit" id="uniteMisure">--</span>
+                    </div>
+                    <span class="card-status" id="status">--</span>
                 </div>
-                <span class="card-status" id="status">--</span>
             </div>
             <div class="step-buttons"></div>
         `,
