@@ -98,11 +98,12 @@ let _waitingForStartPage = false;
 // Skips steps disabled in totem config or already set on the reservation
 function _findNextEnabledStep(afterStep) {
     const isReservation = weighers_data_type && weighers_data_type !== "MANUALLY";
+    if (isReservation) return null; // automatic mode: always go directly to summary
     const steps = [
-        { name: 'subject', enabled: totemAnagrafiche.subject && !(isReservation && _reservationHasSubject) },
-        { name: 'vector', enabled: totemAnagrafiche.vector && !(isReservation && _reservationHasVector) },
-        { name: 'driver', enabled: totemAnagrafiche.driver && !(isReservation && _reservationHasDriver) },
-        { name: 'material', enabled: totemAnagrafiche.material && !(isReservation && _reservationHasMaterial) },
+        { name: 'subject', enabled: totemAnagrafiche.subject },
+        { name: 'vector', enabled: totemAnagrafiche.vector },
+        { name: 'driver', enabled: totemAnagrafiche.driver },
+        { name: 'material', enabled: totemAnagrafiche.material },
     ];
     let startIndex = 0;
     if (afterStep === 'plate') startIndex = 0;
