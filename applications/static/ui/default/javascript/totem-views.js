@@ -416,36 +416,53 @@ const totemViews = {
     summary: {
         get title() { return 'Totem - ' + t('summary_title'); },
         style: `
-            .summary-row.disabled { pointer-events: none; cursor: default; }
-            .summary-row.disabled .summary-edit { display: none; }
+            .summary-list { display: flex; flex-direction: column; gap: clamp(6px, 1.2vh, 14px); width: 100%; padding: 0 16px; box-sizing: border-box; flex: 1; min-height: 0; overflow: hidden; justify-content: center; }
+            .summary-item { display: flex; align-items: center; gap: clamp(8px, 2vw, 16px); min-height: 0; }
+            .summary-item-label { font-size: clamp(0.65rem, 2.8vh, 1.6rem); font-weight: 600; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; width: clamp(70px, 18vw, 180px); text-align: right; white-space: nowrap; }
+            .summary-item-value { flex: 1; background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 0 clamp(8px, 2vw, 16px); gap: 8px; cursor: pointer; transition: all 0.2s; color: #111111; font-weight: 500; font-size: clamp(0.65rem, 2.8vh, 1.6rem); min-height: clamp(36px, 7vh, 72px); overflow: hidden; }
+            .summary-item-value:hover { border-color: #999999; background: #F0F0F0; transform: translateY(-1px); box-shadow: 0 4px 0 #AAAAAA, 0 6px 12px rgba(0,0,0,0.2); }
+            .summary-item-text { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .summary-item-edit { font-size: clamp(0.7rem, 3vh, 1.8rem); flex-shrink: 0; }
+            .summary-item.disabled .summary-item-value { cursor: default; pointer-events: none; }
+            .summary-item.disabled .summary-item-edit { display: none; }
         `,
         html: () => `
             <h2>${t('summary_title')}</h2>
-            <div class="summary-card">
-                <div class="summary-row" id="rowPlate" onclick="goTo('plate?from=summary')">
-                    <span class="summary-label">${t('plate_title')}</span>
-                    <span class="summary-value" id="summaryPlate">-</span>
-                    <span class="summary-edit">&#9998;</span>
+            <div class="summary-list">
+                <div class="summary-item" id="rowPlate">
+                    <span class="summary-item-label">${t('plate_title')}</span>
+                    <div class="summary-item-value" onclick="goTo('plate?from=summary')">
+                        <span class="summary-item-text" id="summaryPlate">-</span>
+                        <span class="summary-item-edit">&#9998;</span>
+                    </div>
                 </div>
-                <div class="summary-row" id="rowSubject" onclick="goTo('subject?from=summary')">
-                    <span class="summary-label" id="summaryType">-</span>
-                    <span class="summary-value" id="summarySubject">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                <div class="summary-item" id="rowSubject">
+                    <span class="summary-item-label" id="summaryType">-</span>
+                    <div class="summary-item-value" onclick="goTo('subject?from=summary')">
+                        <span class="summary-item-text" id="summarySubject">-</span>
+                        <span class="summary-item-edit">&#9998;</span>
+                    </div>
                 </div>
-                <div class="summary-row" id="rowVector" onclick="goTo('vector?from=summary')">
-                    <span class="summary-label">${t('vector_title')}</span>
-                    <span class="summary-value" id="summaryVector">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                <div class="summary-item" id="rowVector">
+                    <span class="summary-item-label">${t('vector_title')}</span>
+                    <div class="summary-item-value" onclick="goTo('vector?from=summary')">
+                        <span class="summary-item-text" id="summaryVector">-</span>
+                        <span class="summary-item-edit">&#9998;</span>
+                    </div>
                 </div>
-                <div class="summary-row" id="rowDriver" onclick="goTo('driver?from=summary')">
-                    <span class="summary-label">${t('driver_title')}</span>
-                    <span class="summary-value" id="summaryDriver">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                <div class="summary-item" id="rowDriver">
+                    <span class="summary-item-label">${t('driver_title')}</span>
+                    <div class="summary-item-value" onclick="goTo('driver?from=summary')">
+                        <span class="summary-item-text" id="summaryDriver">-</span>
+                        <span class="summary-item-edit">&#9998;</span>
+                    </div>
                 </div>
-                <div class="summary-row" id="rowMaterial" onclick="goTo('material?from=summary')">
-                    <span class="summary-label">${t('material_title')}</span>
-                    <span class="summary-value" id="summaryMaterial">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                <div class="summary-item" id="rowMaterial">
+                    <span class="summary-item-label">${t('material_title')}</span>
+                    <div class="summary-item-value" onclick="goTo('material?from=summary')">
+                        <span class="summary-item-text" id="summaryMaterial">-</span>
+                        <span class="summary-item-edit">&#9998;</span>
+                    </div>
                 </div>
             </div>
             <div class="step-buttons summary-buttons">
