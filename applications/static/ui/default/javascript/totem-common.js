@@ -898,7 +898,7 @@ function processRealtimeObject(obj) {
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
         // Update weighing button text in real-time
         const btnWeigh = document.getElementById('btnWeigh');
-        if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
+        if (btnWeigh) btnWeigh.textContent = t('confirm_weigh');
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         _reservationHasMaterial = obj.reservation_has_material || false;

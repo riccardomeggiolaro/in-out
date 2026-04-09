@@ -481,7 +481,7 @@ const totemViews = {
             </div>
             <div class="step-buttons summary-buttons">
                 <button class="btn btn-secondary" id="btnBack" onclick="goTo(_findPrevEnabledStep('summary') + '?back=1')">${t('back')}</button>
-                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">${t('weigh')}</button>
+                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">${t('confirm_weigh')}</button>
             </div>
         `,
         init: () => {
@@ -493,7 +493,7 @@ const totemViews = {
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
                 const btnWeigh = document.getElementById('btnWeigh');
-                if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
+                if (btnWeigh) btnWeigh.textContent = t('confirm_weigh');
 
                 // Hide rows for disabled anagrafiche
                 const rowVisibility = {
