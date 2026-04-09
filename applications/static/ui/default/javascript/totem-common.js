@@ -20,6 +20,7 @@ let _reservationHasSubject = false;
 let _reservationHasVector = false;
 let _reservationHasDriver = false;
 let weighers_data_type = "MANUALLY";
+let weigherMode = "MANUALLY"; // weigher config mode: MANUALLY, SEMIAUTOMATIC, AUTOMATIC
 let data_weight_realtime = {
     status: undefined,
     net_weight: undefined,
@@ -72,6 +73,7 @@ function initTotemPage() {
         instances = res["weighers"];
         totemAnagrafiche = res["totem_anagrafiche"] || { card: true, vehicle: true, subject: false, vector: false, driver: false, material: true };
         defaultTypeSubject = res["default_type_subject"] || "CUSTOMER";
+        weigherMode = res["mode"] || "MANUALLY";
 
         connectWebSocket(`api/command-weigher/realtime${currentWeigherPath}`, updateUIRealtime);
 
@@ -97,9 +99,8 @@ let _waitingForStartPage = false;
 // Find the next step with an empty field, starting after the given step
 // Skips steps disabled in totem config or already set on the reservation
 function _findNextEnabledStep(afterStep) {
-    const isAutomatic = weighers_data_type === "AUTOMATIC";
-    const isSemiAutomatic = weighers_data_type === "SEMIAUTOMATIC";
-    if (isAutomatic) return null; // automatic: skip all anagrafic steps, go to summary
+    if (weigherMode === "AUTOMATIC") return null; // automatic: skip all anagrafic steps, go to summary
+    const isSemiAutomatic = weigherMode === "SEMIAUTOMATIC";
     const steps = [
         { name: 'subject', enabled: totemAnagrafiche.subject && !(isSemiAutomatic && _reservationHasSubject) },
         { name: 'vector', enabled: totemAnagrafiche.vector && !(isSemiAutomatic && _reservationHasVector) },
@@ -121,7 +122,7 @@ function _findNextEnabledStep(afterStep) {
 
 // Find the previous enabled step before the given step
 function _findPrevEnabledStep(beforeStep) {
-    const isSemiAutomatic = weighers_data_type === "SEMIAUTOMATIC";
+    const isSemiAutomatic = weigherMode === "SEMIAUTOMATIC";
     const steps = [
         { name: 'card', enabled: totemAnagrafiche.card !== false },
         { name: 'plate', enabled: totemAnagrafiche.vehicle },
