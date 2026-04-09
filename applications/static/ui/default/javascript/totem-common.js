@@ -608,14 +608,14 @@ function _isSecondWeighing() {
 }
 
 async function handleWeighing() {
-    confirmWeighing = executeWeighing;
     if (data_weight_realtime.over_max_theshold) {
+        confirmWeighing = executeWeighing;
         document.getElementById('confirmDescription').innerHTML =
             t('max_threshold_exceeded').replace('{value}', maxThesholdValue);
+        openPopup('confirmPopup');
     } else {
-        document.getElementById('confirmDescription').innerHTML = t('confirm_weigh_prompt');
+        await executeWeighing();
     }
-    openPopup('confirmPopup');
 }
 
 async function executeWeighing() {
@@ -934,7 +934,7 @@ function processRealtimeObject(obj) {
             return;
         }
 
-        if (typeof onDataUpdate === 'function') onDataUpdate();
+        if (!_weighingCompleting && typeof onDataUpdate === 'function') onDataUpdate();
 
     } else if (obj.message) {
         // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
