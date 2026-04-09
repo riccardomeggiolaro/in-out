@@ -56,7 +56,7 @@
         },
         "test_mode": true,
         "totem_anagrafiche": {
-            "card": false,
+            "card": true,
             "driver": false,
             "material": true,
             "subject": false,
@@ -152,7 +152,7 @@
                         "rele": {},
                         "rfid": {
                             "connection": {
-                                "baudrate": 19200,
+                                "baudrate": 9600,
                                 "serial_port_name": "/dev/ttyACM0",
                                 "timeout": 1
                             },
