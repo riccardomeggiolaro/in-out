@@ -28,12 +28,12 @@ const totemViews = {
         `,
         init: () => {
             window.onDataReady = function() {
-                if (selectedVehicle.plate) {
+                if (weigherMode !== "AUTOMATIC" && selectedVehicle.plate) {
                     goTo('plate');
                 }
             };
             window.onDataUpdate = function() {
-                if (selectedVehicle.plate) {
+                if (weigherMode !== "AUTOMATIC" && selectedVehicle.plate) {
                     goTo('plate');
                 }
             };
@@ -178,6 +178,7 @@ const totemViews = {
             };
 
             window._plateGoToNext = function() {
+                if (weigherMode === "AUTOMATIC") return;
                 if (isFromSummary()) { goTo('summary'); return; }
                 const dest = _findNextEnabledStep('plate');
                 goTo(dest || 'summary');
