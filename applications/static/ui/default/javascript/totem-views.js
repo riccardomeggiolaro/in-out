@@ -425,20 +425,14 @@ const totemViews = {
             .summary-item-edit { font-size: clamp(0.7rem, 4.5vh, 2.8rem); flex-shrink: 0; }
             .summary-item.disabled .summary-item-value { cursor: default; pointer-events: none; }
             .summary-item.disabled .summary-item-edit { display: none; }
-            .summary-weight { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2vw, 20px); padding: clamp(6px, 1.5vh, 16px) clamp(16px, 4vw, 40px); background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); flex-shrink: 0; margin: 0 16px; }
-            .summary-weight-net { font-size: clamp(1.2rem, 7vh, 5rem); font-weight: 700; letter-spacing: 3px; color: #111111; }
-            .summary-weight-unit { font-size: clamp(0.7rem, 4vh, 2.5rem); font-weight: 600; color: #666666; }
-            .summary-weight-sep { font-size: clamp(0.7rem, 4vh, 2.5rem); color: #CCCCCC; }
-            .summary-weight-status { font-size: clamp(0.7rem, 3.5vh, 2rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #666666; }
+            .summary-weight-value { max-width: clamp(150px, 38vw, 420px); background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: clamp(6px, 1.5vw, 12px); padding: 0 clamp(8px, 2vw, 16px); min-height: clamp(50px, 10vh, 110px); overflow: hidden; pointer-events: none; }
+            .summary-weight-net { font-size: clamp(0.7rem, 5vh, 3rem); font-weight: 700; letter-spacing: 2px; color: #111111; }
+            .summary-weight-unit { font-size: clamp(0.5rem, 3vh, 1.8rem); font-weight: 600; color: #666666; }
+            .summary-weight-sep { font-size: clamp(0.5rem, 3vh, 1.8rem); color: #CCCCCC; }
+            .summary-weight-status { font-size: clamp(0.5rem, 3vh, 1.8rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #666666; }
         `,
         html: () => `
             <h2>${t('summary_title')}</h2>
-            <div class="summary-weight">
-                <span class="summary-weight-net" id="netWeight">------</span>
-                <span class="summary-weight-unit" id="uniteMisure">--</span>
-                <span class="summary-weight-sep">·</span>
-                <span class="summary-weight-status" id="status">--</span>
-            </div>
             <div class="summary-list">
                 <div class="summary-item" id="rowPlate">
                     <span class="summary-item-label">${t('plate_title')}</span>
@@ -474,6 +468,15 @@ const totemViews = {
                         <span class="summary-item-text" id="summaryMaterial">-</span>
                         <span class="summary-item-edit">&#9998;</span>
                     </div>
+                </div>
+            </div>
+            <div class="summary-item" style="margin: 0 16px; flex-shrink: 0;">
+                <span class="summary-item-label">${t('weight_label')}</span>
+                <div class="summary-weight-value">
+                    <span class="summary-weight-net" id="netWeight">------</span>
+                    <span class="summary-weight-unit" id="uniteMisure">--</span>
+                    <span class="summary-weight-sep">·</span>
+                    <span class="summary-weight-status" id="status">--</span>
                 </div>
             </div>
             <div class="step-buttons summary-buttons">

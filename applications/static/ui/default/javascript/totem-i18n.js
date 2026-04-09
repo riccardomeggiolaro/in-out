@@ -45,6 +45,7 @@ const totemTranslations = {
         label_vector: 'Vettore',
         label_driver: 'Autista',
         label_material: 'Materiale',
+        weight_label: 'Peso',
     },
     en: {
         // Page titles
@@ -90,6 +91,7 @@ const totemTranslations = {
         label_vector: 'Carrier',
         label_driver: 'Driver',
         label_material: 'Material',
+        weight_label: 'Weight',
     }
 };
 
