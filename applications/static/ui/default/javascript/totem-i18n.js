@@ -46,7 +46,7 @@ const totemTranslations = {
         label_driver: 'Autista',
         label_material: 'Materiale',
         weight_label: 'Peso',
-        confirm_weigh: '🖨 Conferma',
+        confirm_weigh: 'Conferma',
     },
     en: {
         // Page titles
@@ -93,7 +93,7 @@ const totemTranslations = {
         label_driver: 'Driver',
         label_material: 'Material',
         weight_label: 'Weight',
-        confirm_weigh: '🖨 Confirm',
+        confirm_weigh: 'Confirm',
     }
 };
 

@@ -56,9 +56,12 @@ const totemViews = {
             .vk-key.vk-wide { max-width: 15%; flex: 1.5; }
             .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
             .rfid-hint { display: none; }
+            .plate-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; width: 100%; padding: 8px 0; box-sizing: border-box; transition: justify-content 0s; }
+            .plate-container.keyboard-active { justify-content: flex-start; }
         `,
         html: () => `
             <h2>${t('plate_title')}</h2>
+            <div class="plate-container" id="plateContainer">
             <div class="license-plate plate-empty" id="plateDisplay">
                 <div class="plate-band plate-band-left">
                     <div class="plate-stars">&#9733;</div>
@@ -66,6 +69,7 @@ const totemViews = {
                 <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
                 <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
                 <div class="plate-band plate-band-right"></div>
+            </div>
             </div>
 
             <div class="virtual-keyboard" id="virtualKeyboard">
@@ -201,6 +205,7 @@ const totemViews = {
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
                 document.getElementById('virtualKeyboard').classList.add('active');
+                document.getElementById('plateContainer').classList.add('keyboard-active');
                 const btnCancel = document.getElementById('btnCancelPlate');
                 const btnNext = document.getElementById('btnNext');
                 btnCancel.textContent = t('undo');
@@ -223,6 +228,7 @@ const totemViews = {
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('virtualKeyboard').classList.remove('active');
+                document.getElementById('plateContainer').classList.remove('keyboard-active');
                 _plateRestoreButtons();
                 if (selectedVehicle.plate) {
                     document.getElementById('btnCancelPlate').style.visibility = '';
@@ -481,7 +487,7 @@ const totemViews = {
             </div>
             <div class="step-buttons summary-buttons">
                 <button class="btn btn-secondary" id="btnBack" onclick="goTo(_findPrevEnabledStep('summary') + '?back=1')">${t('back')}</button>
-                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">${t('confirm_weigh')}</button>
+                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()"><svg viewBox="0 0 24 24" fill="currentColor" style="height:0.8em;flex-shrink:0;margin-right:0.25em"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg><span id="btnWeighLabel">${t('confirm_weigh')}</span></button>
             </div>
         `,
         init: () => {
@@ -493,7 +499,8 @@ const totemViews = {
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
                 const btnWeigh = document.getElementById('btnWeigh');
-                if (btnWeigh) btnWeigh.textContent = t('confirm_weigh');
+                const btnWeighLabel = document.getElementById('btnWeighLabel');
+                if (btnWeighLabel) btnWeighLabel.textContent = t('confirm_weigh');
 
                 // Hide rows for disabled anagrafiche
                 const rowVisibility = {
