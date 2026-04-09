@@ -6,20 +6,20 @@ const totemViews = {
     card: {
         get title() { return 'Totem - ' + t('card_title'); },
         style: `
-            .card-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: clamp(8px, 2vh, 20px); color: #FFFFFF; }
-            .card-icon { width: clamp(80px, 18vh, 160px); height: clamp(80px, 18vh, 160px); }
-            .card-label { font-size: clamp(1rem, 3.5vh, 2rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-align: center; }
+            .card-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: clamp(12px, 3vh, 32px); color: #FFFFFF; }
+            .card-weight-display { display: flex; align-items: baseline; gap: clamp(6px, 1.5vw, 16px); }
+            .card-net-weight { font-size: clamp(2rem, 12vh, 8rem); font-weight: 700; letter-spacing: 2px; }
+            .card-unit { font-size: clamp(1rem, 5vh, 3rem); font-weight: 600; opacity: 0.8; }
+            .card-status { font-size: clamp(0.8rem, 3.5vh, 2rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; }
         `,
         html: () => `
+            <h2 style="flex: none">${t('card_instruction')}</h2>
             <div class="card-hint">
-                <svg class="card-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                    <rect x="10" y="25" width="80" height="50" rx="6" ry="6" fill="none" stroke="currentColor" stroke-width="5"/>
-                    <rect x="20" y="35" width="20" height="30" rx="2" ry="2" fill="currentColor" opacity="0.8"/>
-                    <path d="M52 38 Q70 50 52 62" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M58 32 Q82 50 58 68" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M64 26 Q94 50 64 74" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                </svg>
-                <span class="card-label">${t('card_instruction')}</span>
+                <div class="card-weight-display">
+                    <span class="card-net-weight" id="netWeight">------</span>
+                    <span class="card-unit" id="uniteMisure">--</span>
+                </div>
+                <span class="card-status" id="status">--</span>
             </div>
             <div class="step-buttons"></div>
         `,
