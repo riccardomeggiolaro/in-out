@@ -45,6 +45,7 @@ const totemTranslations = {
         label_vector: 'Vettore',
         label_driver: 'Autista',
         label_material: 'Materiale',
+        net_weight: 'Netto in tempo reale',
     },
     en: {
         // Page titles
@@ -90,6 +91,7 @@ const totemTranslations = {
         label_vector: 'Carrier',
         label_driver: 'Driver',
         label_material: 'Material',
+        net_weight: 'Real-time Net',
     }
 };
 

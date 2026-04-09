@@ -435,7 +435,7 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
 }
 
 // --- Full-page success/failure message after weighing ---
-function showWeighingSuccess(isError = false, message = null) {
+function showWeighingSuccess(isError = false, message = null, redirectTo = null) {
     const container = document.querySelector('#pageContent .step');
     if (!container) return;
     const color = isError ? '#d32f2f' : '#2e7d32';
@@ -457,7 +457,7 @@ function showWeighingSuccess(isError = false, message = null) {
         clearTimeout(timer);
         if (header) header.style.display = '';
         if (isError) {
-            goTo('summary');
+            goTo(redirectTo || 'summary');
         } else {
             cancelTotem();
         }
@@ -896,9 +896,6 @@ function processRealtimeObject(obj) {
         if (el('netWeight')) el('netWeight').innerText = obj.net_weight !== undefined ? obj.net_weight : 'N/A';
         if (el('uniteMisure')) el('uniteMisure').innerText = obj.unite_measure !== undefined ? obj.unite_measure : 'N/A';
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
-        // Update weighing button text in real-time
-        const btnWeigh = document.getElementById('btnWeigh');
-        if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         _reservationHasMaterial = obj.reservation_has_material || false;
@@ -939,7 +936,7 @@ function processRealtimeObject(obj) {
     } else if (obj.message) {
         // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
     } else if (obj.error_message) {
-        // showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
+        showWeighingSuccess(true, obj.error_message, _currentViewName || 'card');
     } else if (obj.cam_message) {
         // showSnackbar("snackbar", obj.cam_message, 'white', 'black');
     }
