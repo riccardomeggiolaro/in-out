@@ -89,7 +89,7 @@ function _resolveStartPage() {
     _waitingForStartPage = false;
 
     if (!selectedVehicle.plate) return;
-    if (weigherMode === "AUTOMATIC") return; // backend handles it, stay on current view
+    if (weigherMode === "AUTOMATIC") return;
 
     const dest = _findNextEnabledStep('plate');
     goTo(dest || 'summary');
