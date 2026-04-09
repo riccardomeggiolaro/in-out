@@ -7,19 +7,28 @@ const totemViews = {
         get title() { return 'Totem - ' + t('card_title'); },
         style: `
             .card-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: clamp(8px, 2vh, 20px); color: #FFFFFF; }
-            .card-icon { width: clamp(80px, 18vh, 160px); height: clamp(80px, 18vh, 160px); }
-            .card-label { font-size: clamp(1rem, 3.5vh, 2rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-align: center; }
+            .card-icon { width: clamp(100px, 24vh, 200px); height: clamp(100px, 24vh, 200px); }
+            .card-label { font-size: clamp(1.4rem, 5.5vh, 3rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-align: center; }
+            .card-net { font-size: clamp(1.2rem, 4vh, 2.5rem); font-weight: 700; color: #FFFF00; letter-spacing: 1px; text-align: center; margin-top: 8px; }
         `,
         html: () => `
             <div class="card-hint">
-                <svg class="card-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                    <rect x="10" y="25" width="80" height="50" rx="6" ry="6" fill="none" stroke="currentColor" stroke-width="5"/>
-                    <rect x="20" y="35" width="20" height="30" rx="2" ry="2" fill="currentColor" opacity="0.8"/>
-                    <path d="M52 38 Q70 50 52 62" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M58 32 Q82 50 58 68" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-                    <path d="M64 26 Q94 50 64 74" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <svg class="card-icon" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <!-- Reader base -->
+                    <rect x="10" y="70" width="100" height="22" rx="6" ry="6" fill="currentColor" opacity="0.5"/>
+                    <rect x="20" y="75" width="80" height="8" rx="3" ry="3" fill="currentColor" opacity="0.3"/>
+                    <circle cx="90" cy="79" r="4" fill="currentColor" opacity="0.9"/>
+                    <!-- Card resting on reader (slightly tilted) -->
+                    <g transform="rotate(-8, 60, 50)">
+                        <rect x="18" y="20" width="74" height="48" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="4"/>
+                        <rect x="24" y="28" width="18" height="26" rx="2" ry="2" fill="currentColor" opacity="0.7"/>
+                        <line x1="50" y1="32" x2="82" y2="32" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                        <line x1="50" y1="42" x2="82" y2="42" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+                        <line x1="50" y1="52" x2="72" y2="52" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+                    </g>
                 </svg>
                 <span class="card-label">${t('card_instruction')}</span>
+                <span class="card-net" id="cardNetWeight"></span>
             </div>
             <div class="step-buttons"></div>
         `,
@@ -41,6 +50,8 @@ const totemViews = {
     plate: {
         get title() { return 'Totem - ' + t('plate_title'); },
         style: `
+            .step-content { justify-content: center; }
+            .step-content.keyboard-active { justify-content: flex-start; }
             .license-plate { cursor: pointer; }
             .plate-empty .plate-text { color: #AAAAAA; letter-spacing: 12px; }
             .plate-input { display: none; font-size: 3.5rem; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase; border: none; outline: none; background: transparent; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; }
@@ -48,21 +59,23 @@ const totemViews = {
             .virtual-keyboard { display: none; width: 100%; flex: 1; min-height: 0; padding: 4px 16px; box-sizing: border-box; flex-direction: column; gap: 4px; }
             .virtual-keyboard.active { display: flex; }
             .vk-row { display: flex; gap: 4px; flex: 1; justify-content: center; }
-            .vk-key { flex: 1; max-width: 10%; background: #ffffff; color: #000000; border: 2px solid #444444; border-radius: clamp(4px, 1vw, 8px); font-size: clamp(0.8rem, 4vh, 2.5rem); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: background 0.1s; user-select: none; -webkit-user-select: none; }
-            .vk-key:active { background: #444444; }
+            .vk-key { flex: 1; max-width: 10%; background: #FFFFFF; color: #111111; border: 2px solid #CCCCCC; border-radius: clamp(4px, 1vw, 8px); font-size: clamp(0.8rem, 4vh, 2.5rem); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: background 0.1s; user-select: none; -webkit-user-select: none; }
+            .vk-key:active { background: #E0E0E0; }
             .vk-key.vk-wide { max-width: 15%; flex: 1.5; }
             .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
             .rfid-hint { display: none; }
         `,
         html: () => `
             <h2>${t('plate_title')}</h2>
-            <div class="license-plate plate-empty" id="plateDisplay">
-                <div class="plate-band plate-band-left">
-                    <div class="plate-stars">&#9733;</div>
+            <div class="plate-container">
+                <div class="license-plate plate-empty" id="plateDisplay">
+                    <div class="plate-band plate-band-left">
+                        <div class="plate-stars">&#9733;</div>
+                    </div>
+                    <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+                    <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
+                    <div class="plate-band plate-band-right"></div>
                 </div>
-                <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
-                <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
-                <div class="plate-band plate-band-right"></div>
             </div>
 
             <div class="virtual-keyboard" id="virtualKeyboard">
@@ -198,6 +211,8 @@ const totemViews = {
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
                 document.getElementById('virtualKeyboard').classList.add('active');
+                const sc = document.querySelector('.step-content');
+                if (sc) sc.classList.add('keyboard-active');
                 const btnCancel = document.getElementById('btnCancelPlate');
                 const btnNext = document.getElementById('btnNext');
                 btnCancel.textContent = t('undo');
@@ -220,6 +235,8 @@ const totemViews = {
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('virtualKeyboard').classList.remove('active');
+                const sc = document.querySelector('.step-content');
+                if (sc) sc.classList.remove('keyboard-active');
                 _plateRestoreButtons();
                 if (selectedVehicle.plate) {
                     document.getElementById('btnCancelPlate').style.visibility = '';
@@ -277,6 +294,8 @@ const totemViews = {
 
                         _plateManualMode = false;
                         document.getElementById('virtualKeyboard').classList.remove('active');
+                        const sc = document.querySelector('.step-content');
+                        if (sc) sc.classList.remove('keyboard-active');
                         _plateRestoreButtons();
                         _plateShowPlate(selectedVehicle.plate || value);
                         _plateGoToNext();
@@ -421,33 +440,49 @@ const totemViews = {
             <div class="summary-card">
                 <div class="summary-row" id="rowPlate" onclick="goTo('plate?from=summary')">
                     <span class="summary-label">${t('plate_title')}</span>
-                    <span class="summary-value" id="summaryPlate">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                    <div class="summary-value-row">
+                        <span class="summary-value" id="summaryPlate">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
                 </div>
                 <div class="summary-row" id="rowSubject" onclick="goTo('subject?from=summary')">
                     <span class="summary-label" id="summaryType">-</span>
-                    <span class="summary-value" id="summarySubject">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                    <div class="summary-value-row">
+                        <span class="summary-value" id="summarySubject">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
                 </div>
                 <div class="summary-row" id="rowVector" onclick="goTo('vector?from=summary')">
                     <span class="summary-label">${t('vector_title')}</span>
-                    <span class="summary-value" id="summaryVector">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                    <div class="summary-value-row">
+                        <span class="summary-value" id="summaryVector">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
                 </div>
                 <div class="summary-row" id="rowDriver" onclick="goTo('driver?from=summary')">
                     <span class="summary-label">${t('driver_title')}</span>
-                    <span class="summary-value" id="summaryDriver">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                    <div class="summary-value-row">
+                        <span class="summary-value" id="summaryDriver">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
                 </div>
                 <div class="summary-row" id="rowMaterial" onclick="goTo('material?from=summary')">
                     <span class="summary-label">${t('material_title')}</span>
-                    <span class="summary-value" id="summaryMaterial">-</span>
-                    <span class="summary-edit">&#9998;</span>
+                    <div class="summary-value-row">
+                        <span class="summary-value" id="summaryMaterial">-</span>
+                        <span class="summary-edit">&#9998;</span>
+                    </div>
+                </div>
+                <div class="summary-row disabled" id="rowNet">
+                    <span class="summary-label">${t('net')}</span>
+                    <div class="summary-value-row">
+                        <span class="summary-value" id="summaryNetWeight">-</span>
+                    </div>
                 </div>
             </div>
             <div class="step-buttons summary-buttons">
                 <button class="btn btn-secondary" id="btnBack" onclick="goTo(_findPrevEnabledStep('summary') + '?back=1')">${t('back')}</button>
-                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">${t('weigh')}</button>
+                <button class="btn btn-weighing" id="btnWeigh" onclick="handleWeighing()">${t('confirm_weigh')}</button>
             </div>
         `,
         init: () => {
@@ -458,8 +493,6 @@ const totemViews = {
                 document.getElementById('summaryVector').textContent = selectedVector.social_reason || '-';
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
-                const btnWeigh = document.getElementById('btnWeigh');
-                if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
 
                 // Hide rows for disabled anagrafiche
                 const rowVisibility = {
