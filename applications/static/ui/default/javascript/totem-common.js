@@ -469,6 +469,25 @@ function showWeighingSuccess(isError = false, message = null) {
     }
 }
 
+// --- Temporary error/message overlay (non-destructive) ---
+function showErrorOverlay(message, isError = true) {
+    const step = document.querySelector('.step.active') || document.querySelector('#pageContent .step');
+    if (!step) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'error-overlay';
+    const color = isError ? '#d32f2f' : '#2e7d32';
+    const icon = isError ? '&#10008;' : '&#10004;';
+    overlay.innerHTML = `
+        <div class="error-overlay-content">
+            <div style="font-size:3rem;">${icon}</div>
+            <p>${message}</p>
+        </div>
+    `;
+    overlay.style.background = isError ? 'rgba(211,47,47,0.93)' : 'rgba(46,125,50,0.93)';
+    step.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 3000);
+}
+
 // --- Cancel / reset all data ---
 function cancelTotem() {
     fetch(`/api/data${currentWeigherPath}`, {
@@ -896,9 +915,9 @@ function processRealtimeObject(obj) {
         if (el('netWeight')) el('netWeight').innerText = obj.net_weight !== undefined ? obj.net_weight : 'N/A';
         if (el('uniteMisure')) el('uniteMisure').innerText = obj.unite_measure !== undefined ? obj.unite_measure : 'N/A';
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
-        // Update weighing button text in real-time
-        const btnWeigh = document.getElementById('btnWeigh');
-        if (btnWeigh) btnWeigh.textContent = _isSecondWeighing() ? t('exit') : t('entry');
+        const netVal = obj.net_weight !== undefined ? obj.net_weight : '';
+        if (el('cardNetWeight')) el('cardNetWeight').innerText = netVal;
+        if (el('summaryNetWeight')) el('summaryNetWeight').innerText = netVal;
     } else if (obj.data_in_execution) {
         const prevId = selectedIdWeight ? selectedIdWeight.id : null;
         _reservationHasMaterial = obj.reservation_has_material || false;
@@ -937,9 +956,9 @@ function processRealtimeObject(obj) {
         if (typeof onDataUpdate === 'function') onDataUpdate();
 
     } else if (obj.message) {
-        // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
+        showErrorOverlay(obj.message, false);
     } else if (obj.error_message) {
-        // showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
+        showErrorOverlay(obj.error_message, true);
     } else if (obj.cam_message) {
         // showSnackbar("snackbar", obj.cam_message, 'white', 'black');
     }

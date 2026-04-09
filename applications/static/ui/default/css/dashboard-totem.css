@@ -199,7 +199,7 @@ body {
     justify-content: center;
     position: relative;
     padding: 0 16px;
-    flex: 0.5;
+    flex: 1;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
@@ -782,6 +782,15 @@ body {
     margin: 8px auto 0;
     transition: box-shadow 0.3s;
     flex-shrink: 0;
+}
+
+.plate-container {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .plate-band {
