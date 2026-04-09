@@ -89,7 +89,7 @@ function _resolveStartPage() {
     _waitingForStartPage = false;
 
     if (!selectedVehicle.plate) return;
-    if (weigherMode === "AUTOMATIC" || weigherMode === "SEMIAUTOMATIC") return;
+    if (weigherMode === "AUTOMATIC") return;
 
     const dest = _findNextEnabledStep('plate');
     goTo(dest || 'summary');
@@ -934,7 +934,7 @@ function processRealtimeObject(obj) {
 
         // If a new access was selected (from dashboard), navigate to first empty field or summary
         if (!prevId && obj.id_selected && obj.id_selected.id !== null) {
-            if (weigherMode !== "AUTOMATIC" && weigherMode !== "SEMIAUTOMATIC") {
+            if (weigherMode !== "AUTOMATIC") {
                 const dest = _findNextEnabledStep('plate');
                 goTo(dest || 'summary');
             }
