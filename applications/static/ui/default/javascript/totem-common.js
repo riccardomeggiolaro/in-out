@@ -894,11 +894,13 @@ function processRealtimeObject(obj) {
         document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
     } else if (obj.tare) {
         data_weight_realtime = obj;
+        if (!_weighingCompleting) {
         const el = (id) => document.getElementById(id);
         if (el('tare')) el('tare').innerText = obj.tare !== undefined ? obj.tare : 'N/A';
         if (el('netWeight')) el('netWeight').innerText = obj.net_weight !== undefined ? obj.net_weight : 'N/A';
         if (el('uniteMisure')) el('uniteMisure').innerText = obj.unite_measure !== undefined ? obj.unite_measure : 'N/A';
         if (el('status')) el('status').innerText = obj.status !== undefined ? obj.status : 'N/A';
+        }
         // Update weighing button text in real-time
         const btnWeighLabel = document.getElementById('btnWeighLabel');
         if (btnWeighLabel) btnWeighLabel.textContent = t('confirm_weigh');
