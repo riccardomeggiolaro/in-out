@@ -469,14 +469,14 @@ const totemViews = {
                         <span class="summary-item-edit">&#9998;</span>
                     </div>
                 </div>
-            </div>
-            <div class="summary-item" style="margin: 0 16px; flex-shrink: 0;">
-                <span class="summary-item-label">${t('weight_label')}</span>
-                <div class="summary-weight-value">
-                    <span class="summary-weight-net" id="netWeight">------</span>
-                    <span class="summary-weight-unit" id="uniteMisure">--</span>
-                    <span class="summary-weight-sep">·</span>
-                    <span class="summary-weight-status" id="status">--</span>
+                <div class="summary-item">
+                    <span class="summary-item-label">${t('weight_label')}</span>
+                    <div class="summary-weight-value">
+                        <span class="summary-weight-net" id="netWeight">------</span>
+                        <span class="summary-weight-unit" id="uniteMisure">--</span>
+                        <span class="summary-weight-sep">·</span>
+                        <span class="summary-weight-status" id="status">--</span>
+                    </div>
                 </div>
             </div>
             <div class="step-buttons summary-buttons">
