@@ -56,12 +56,11 @@ const totemViews = {
             .vk-key.vk-wide { max-width: 15%; flex: 1.5; }
             .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
             .rfid-hint { display: none; }
-            .plate-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; width: 100%; padding: 8px 0; box-sizing: border-box; transition: justify-content 0s; }
-            .plate-container.keyboard-active { justify-content: flex-start; }
+            .step-content { justify-content: center; }
+            .step-content.keyboard-active { justify-content: flex-start; }
         `,
         html: () => `
             <h2>${t('plate_title')}</h2>
-            <div class="plate-container" id="plateContainer">
             <div class="license-plate plate-empty" id="plateDisplay">
                 <div class="plate-band plate-band-left">
                     <div class="plate-stars">&#9733;</div>
@@ -69,7 +68,6 @@ const totemViews = {
                 <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
                 <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
                 <div class="plate-band plate-band-right"></div>
-            </div>
             </div>
 
             <div class="virtual-keyboard" id="virtualKeyboard">
@@ -205,7 +203,7 @@ const totemViews = {
                 _manualPlateValue = '';
                 _plateUpdateDisplay();
                 document.getElementById('virtualKeyboard').classList.add('active');
-                document.getElementById('plateContainer').classList.add('keyboard-active');
+                document.querySelector('.step-content').classList.add('keyboard-active');
                 const btnCancel = document.getElementById('btnCancelPlate');
                 const btnNext = document.getElementById('btnNext');
                 btnCancel.textContent = t('undo');
@@ -228,7 +226,7 @@ const totemViews = {
             window._plateExitManual = function() {
                 _plateManualMode = false;
                 document.getElementById('virtualKeyboard').classList.remove('active');
-                document.getElementById('plateContainer').classList.remove('keyboard-active');
+                document.querySelector('.step-content').classList.remove('keyboard-active');
                 _plateRestoreButtons();
                 if (selectedVehicle.plate) {
                     document.getElementById('btnCancelPlate').style.visibility = '';
