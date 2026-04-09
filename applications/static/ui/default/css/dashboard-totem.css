@@ -222,16 +222,15 @@ body {
 .lang-switcher {
     display: flex;
     gap: 8px;
-    align-items: center;
-    height: 100%;
+    align-items: stretch;
     position: absolute;
     right: 16px;
-    top: 0;
+    top: 8px;
     bottom: 0;
 }
 
 .lang-btn {
-    height: 100%;
+    height: auto;
     aspect-ratio: 1;
     border-radius: 50%;
     border: 3px solid #444444;
@@ -308,10 +307,10 @@ body {
     background: #FFFFFF;
     border: 2px solid #CCCCCC;
     border-radius: clamp(8px, 2vw, 14px);
-    margin: 6px 0;
+    margin: 8px 0 0 0;
     padding: 0 16px;
     flex: none;
-    height: calc(100% - 12px);
+    align-self: stretch;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -617,6 +616,12 @@ body {
     cursor: not-allowed;
 }
 
+.btn:active:not(:disabled) {
+    background: #E8E8E8;
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #AAAAAA;
+}
+
 .btn-primary:hover:not(:disabled) {
     background: #F0F0F0;
 }
@@ -637,65 +642,57 @@ body {
 .summary-card {
     display: flex;
     flex-direction: column;
-    margin: 0 16px 8px 16px;
-    background: #1E1E1E;
-    border-radius: clamp(8px, 2vw, 14px);
-    border: 2px solid #444444;
-    overflow: hidden;
-    flex: 0 0 auto;
+    margin: 0 16px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    gap: clamp(4px, 1vh, 10px);
     box-sizing: border-box;
-    width: stretch;
+    padding-bottom: 8px;
 }
 
 .summary-row {
-    background: #1E1E1E;
-    padding: 0;
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    gap: 2px;
     cursor: pointer;
-    transition: background 0.15s;
-    height: calc(100cqh / 5);
-    position: relative;
-    overflow: hidden;
-    border-bottom: 2px solid #333333;
+    flex-shrink: 0;
 }
 
-.summary-row:last-child {
-    border-bottom: none;
+.summary-row.disabled {
+    pointer-events: none;
+    cursor: default;
 }
 
-.summary-row:hover {
-    background: #2A2A2A;
+.summary-row.disabled .summary-edit {
+    display: none;
 }
 
 .summary-label {
-    font-size: clamp(0.7rem, 5vh, 3rem);
-    color: #AAAAAA;
+    font-size: clamp(0.55rem, 2.5vh, 1.3rem);
+    color: #CCCCCC;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: 50%;
-    flex-shrink: 0;
-    text-align: center;
-    border-right: 2px solid #333333;
-    padding: 0 8px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    align-self: stretch;
+    padding: 0 4px;
+}
+
+.summary-value-row {
     display: flex;
     align-items: center;
-    justify-content: center;
+    background: #FFFFFF;
+    border: 2px solid #CCCCCC;
+    border-radius: clamp(6px, 1.5vw, 10px);
+    padding: 0 12px;
+    min-height: clamp(28px, 5vh, 56px);
     box-sizing: border-box;
 }
 
 .summary-value {
     font-weight: 600;
-    font-size: clamp(0.7rem, 5vh, 3rem);
-    color: #FFFFFF;
+    font-size: clamp(0.7rem, 3.5vh, 2rem);
+    color: #111111;
     flex: 1;
-    text-align: center;
-    padding: 0 8px;
+    text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -703,11 +700,10 @@ body {
 }
 
 .summary-edit {
-    color: #FFFFFF;
-    font-size: clamp(0.8rem, 4vh, 2.5rem);
-    position: static;
+    color: #888888;
+    font-size: clamp(0.8rem, 3vh, 1.8rem);
     flex-shrink: 0;
-    padding: 0 12px;
+    padding-left: 8px;
 }
 
 .summary-buttons {
@@ -758,6 +754,25 @@ body {
     display: flex;
     gap: 14px;
     justify-content: center;
+}
+
+/* Error overlay (non-destructive, shown over current step) */
+.error-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    color: #FFFFFF;
+    text-align: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.error-overlay-content p {
+    font-size: clamp(1rem, 4vh, 2rem);
+    margin-top: 0.5rem;
+    padding: 0 2rem;
 }
 
 /* Highlight */
