@@ -303,17 +303,21 @@ body {
 }
 
 .step-topbar h2 {
-    font-size: clamp(0.6rem, 3vh, 1.6rem);
-    color: #FFFFFF;
-    background: none;
-    border: none;
-    border-radius: 0;
-    margin: 0;
-    padding: 0 8px;
+    font-size: clamp(0.7rem, 5vh, 3rem);
+    color: #111111;
+    background: #FFFFFF;
+    border: 2px solid #CCCCCC;
+    border-radius: clamp(8px, 2vw, 14px);
+    margin: 6px 0;
+    padding: 0 16px;
     flex: none;
-    min-height: 0;
+    height: calc(100% - 12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     text-transform: uppercase;
+    box-sizing: border-box;
 }
 
 
