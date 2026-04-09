@@ -427,9 +427,9 @@ const totemViews = {
             .summary-item.disabled .summary-item-edit { display: none; }
             .summary-weight-value { max-width: clamp(150px, 38vw, 420px); background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: clamp(6px, 1.5vw, 12px); padding: 0 clamp(8px, 2vw, 16px); min-height: clamp(50px, 10vh, 110px); overflow: hidden; pointer-events: none; }
             .summary-weight-net { font-size: clamp(0.7rem, 5vh, 3rem); font-weight: 700; letter-spacing: 2px; color: #111111; }
-            .summary-weight-unit { font-size: clamp(0.5rem, 3vh, 1.8rem); font-weight: 600; color: #666666; }
-            .summary-weight-sep { font-size: clamp(0.5rem, 3vh, 1.8rem); color: #CCCCCC; }
-            .summary-weight-status { font-size: clamp(0.5rem, 3vh, 1.8rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #666666; }
+            .summary-weight-unit { font-size: clamp(0.7rem, 5vh, 3rem); font-weight: 600; color: #666666; }
+            .summary-weight-sep { font-size: clamp(0.7rem, 5vh, 3rem); color: #CCCCCC; }
+            .summary-weight-status { font-size: clamp(0.7rem, 5vh, 3rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #666666; }
         `,
         html: () => `
             <h2>${t('summary_title')}</h2>
