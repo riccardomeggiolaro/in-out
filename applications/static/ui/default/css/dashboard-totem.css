@@ -199,7 +199,7 @@ body {
     justify-content: center;
     position: relative;
     padding: 0 16px;
-    flex: 1;
+    flex: 0.7;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
@@ -213,7 +213,7 @@ body {
 }
 
 .step-logo img {
-    height: clamp(32px, 7vh, 72px);
+    height: clamp(50px, 10vh, 90px);
     width: auto;
     object-fit: contain;
     border-radius: 8px;
@@ -409,10 +409,10 @@ body {
     display: none;
     grid-template-columns: 1fr 1fr;
     column-gap: 3vw;
-    row-gap: 1vh;
+    row-gap: 2vh;
     background: transparent;
     box-shadow: none;
-    padding: 0 16px 8px 16px;
+    padding: 16px;
     overflow: hidden;
     flex: 1;
     min-height: 0;
@@ -586,7 +586,7 @@ body {
     row-gap: 1vh;
     padding: 8px 16px 0px 16px;
     width: 100%;
-    flex: 1;
+    flex: 0.7;
     min-height: 0;
     box-sizing: border-box;
     background: #2A2A2A;
