@@ -450,32 +450,6 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
     }
 }
 
-// --- Error overlay (cam_message) — dismisses in place, no navigation ---
-let _errorOverlayTimer = null;
-function showErrorOverlay(message) {
-    const existing = document.getElementById('_errorOverlay');
-    if (existing) existing.remove();
-    if (_errorOverlayTimer) { clearTimeout(_errorOverlayTimer); _errorOverlayTimer = null; }
-
-    const overlay = document.createElement('div');
-    overlay.id = '_errorOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9000;cursor:pointer;text-align:center;padding:2rem;';
-    overlay.innerHTML = `
-        <div style="font-size:5rem;color:#d32f2f;">&#10008;</div>
-        <h2 style="color:#d32f2f;font-size:2rem;margin-top:1rem;">${message}</h2>
-    `;
-
-    const dismiss = () => {
-        clearTimeout(_errorOverlayTimer);
-        _errorOverlayTimer = null;
-        overlay.remove();
-    };
-
-    overlay.addEventListener('click', dismiss, { once: true });
-    _errorOverlayTimer = setTimeout(dismiss, 4000);
-    document.body.appendChild(overlay);
-}
-
 // --- Toast notification ---
 let _toastTimer = null;
 function showToast(message, duration = 4000) {
@@ -491,7 +465,7 @@ function showToast(message, duration = 4000) {
 }
 
 // --- Full-page success/failure message after weighing ---
-function showWeighingSuccess(isError = false, message = null) {
+function showWeighingSuccess(isError = false, message = null, onDismiss = null) {
     const container = document.querySelector('#pageContent .step');
     if (!container) return;
     const color = isError ? '#d32f2f' : '#2e7d32';
@@ -512,7 +486,9 @@ function showWeighingSuccess(isError = false, message = null) {
         dismissed = true;
         clearTimeout(timer);
         if (header) header.style.display = '';
-        if (isError) {
+        if (onDismiss) {
+            onDismiss();
+        } else if (isError) {
             goTo('summary');
         } else {
             cancelTotem();
@@ -1003,7 +979,7 @@ function processRealtimeObject(obj) {
     } else if (obj.cam_message) {
         const dashIdx = obj.cam_message.indexOf(' - ');
         const msg = dashIdx !== -1 ? obj.cam_message.substring(dashIdx + 3) : obj.cam_message;
-        showErrorOverlay(msg);
+        showWeighingSuccess(true, msg, () => showView(_currentViewName));
     }
 }
 
