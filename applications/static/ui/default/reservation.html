@@ -169,7 +169,11 @@
                                     document.querySelector('#add-popup #idCardRegistry').value = '';
                                 }
                             "
-                            onfocus="populateCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge', this.value)"
+                            onfocus="
+                                if (!document.querySelector('#add-popup #idCardRegistry').value) {
+                                    populateCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge', this.value);
+                                }
+                            "
                             onblur="closeSuggestions('#add-popup', '#register #suggestions\\.badge', 'number', 'card-registry', this.value)">
                         <div id="suggestions.badge" class="suggestions"></div>
                     </div>
@@ -395,7 +399,11 @@
                                     document.querySelector('#edit-popup #idCardRegistry').value = '';
                                 }
                             "
-                            onfocus="populateCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge', this.value)"
+                            onfocus="
+                                if (!document.querySelector('#edit-popup #idCardRegistry').value) {
+                                    populateCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge', this.value);
+                                }
+                            "
                             onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.badge', 'number', 'card-registry', this.value)">
                         <div id="suggestions.badge" class="suggestions"></div>
                     </div>
