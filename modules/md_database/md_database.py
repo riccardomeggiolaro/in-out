@@ -146,6 +146,7 @@ class CardRegistry(Base):
     number = Column(String(collation="NOCASE"), index=True, unique=True)
     code = Column(String(collation="NOCASE"), index=True, unique=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
+    accesses = relationship("Access", back_populates="card_registry")
 
 class WeighingTerminal(Base):
     __tablename__ = 'weighing-terminal'
@@ -200,7 +201,7 @@ class Access(Base):
     driver = relationship("Driver", back_populates="accesses")
     vehicle = relationship("Vehicle", back_populates="accesses")
     material = relationship("Material", back_populates="accesses")
-    card_registry = relationship("CardRegistry")
+    card_registry = relationship("CardRegistry", back_populates="accesses")
     in_out = relationship("InOut", back_populates="access", cascade="all, delete")
 
     @hybrid_property
