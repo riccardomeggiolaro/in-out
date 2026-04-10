@@ -389,7 +389,7 @@ class CallbackWeigher(Functions, WebSocket):
 			error_message = f"Modalità automatica disattiva. Tentativo di pesatura {cam_message} bloccato"
 		else:
 			if notify_identify_code:
-				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message})
+				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": cam_message, "cam_is_error": False})
 			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 			division = weigher["division"]
 			take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
@@ -549,11 +549,11 @@ class CallbackWeigher(Functions, WebSocket):
 		if show_message:
 			if error_message:
 				error_message = cam_message + f" - {error_message}"
-				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": error_message})
+				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": error_message, "cam_is_error": True})
 			elif success_message:
 				success_message = cam_message + f" {success_message}"
 				if notify_identify_code:
-					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": success_message})
+					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": success_message, "cam_is_error": False})
 		return {
 			"message": error_message or success_message,
 			"access_id": access["id"] if access else None,

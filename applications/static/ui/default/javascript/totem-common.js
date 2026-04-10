@@ -977,9 +977,11 @@ function processRealtimeObject(obj) {
     } else if (obj.error_message) {
         showToast(obj.error_message);
     } else if (obj.cam_message) {
-        const dashIdx = obj.cam_message.indexOf(' - ');
-        const msg = dashIdx !== -1 ? obj.cam_message.substring(dashIdx + 3) : obj.cam_message;
-        showWeighingSuccess(true, msg, () => showView(_currentViewName));
+        if (obj.cam_is_error === true) {
+            const dashIdx = obj.cam_message.indexOf(' - ');
+            const msg = dashIdx !== -1 ? obj.cam_message.substring(dashIdx + 3) : obj.cam_message;
+            showWeighingSuccess(true, msg, () => showView(_currentViewName));
+        }
     }
 }
 
