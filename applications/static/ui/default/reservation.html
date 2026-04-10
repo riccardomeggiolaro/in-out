@@ -1324,6 +1324,11 @@
                     }
                     if (callback_select_anagrafic) selectAnagrafic(item.id, "SELECT", anagrafic, callback_select_anagrafic);
                 }
+            } else if (anagrafic === 'card-registry') {
+                const idInput = document.querySelector(`${popup} #idCardRegistry`);
+                if (!idInput || !idInput.value) {
+                    document.querySelector(`${popup} #badge`).value = '';
+                }
             }
         }
 
