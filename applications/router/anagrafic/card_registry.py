@@ -67,7 +67,7 @@ class CardRegistryRouter(WebSocket):
     async def setCard(self, request: Request, id: int, body: SetCardRegistryDTO):
         locked_data = None
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "card_registry", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "card-registry", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"Devi bloccare la tessera con id '{id}' prima di modificarla")
             data = update_data("card_registry", id, body.dict())
@@ -87,7 +87,7 @@ class CardRegistryRouter(WebSocket):
     async def deleteCard(self, request: Request, id: int):
         locked_data = None
         try:
-            locked_data = get_data_by_attributes('lock_record', {"table_name": "card_registry", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
+            locked_data = get_data_by_attributes('lock_record', {"table_name": "card-registry", "idRecord": id, "type": LockRecordType.DELETE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"Devi bloccare la tessera con id '{id}' prima di eliminarla")
             # Check if the card code is currently assigned to an open access
