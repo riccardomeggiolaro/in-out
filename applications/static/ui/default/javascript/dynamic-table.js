@@ -915,7 +915,7 @@ function editRow(item) {
         }
         triggerEventsForAll('.id');
     }
-    if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : item.weighings.length > 0)) {
+    if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : (item.weighings ? item.weighings.length > 0 : false))) {
         const accesses_or_weighings = item.accesses ? "prenotazioni" : "pesate";
         confirm_exec_funct = funct;
         document.querySelector('#confirm-title').textContent = "Attenzione!";
