@@ -91,8 +91,23 @@ function _resolveStartPage() {
     if (!selectedVehicle.plate) return;
     if (weigherMode === "AUTOMATIC") return;
 
-    const dest = _findNextEnabledStep('plate');
-    goTo(dest || 'summary');
+    // Find the first enabled step that doesn't have data yet
+    const steps = [
+        { name: 'subject', enabled: totemAnagrafiche.subject, hasData: () => !!selectedSubject.id },
+        { name: 'vector', enabled: totemAnagrafiche.vector, hasData: () => !!selectedVector.id },
+        { name: 'driver', enabled: totemAnagrafiche.driver, hasData: () => !!selectedDriver.id },
+        { name: 'material', enabled: totemAnagrafiche.material, hasData: () => !!selectedMaterial.id },
+    ];
+
+    for (const step of steps) {
+        if (step.enabled && !step.hasData()) {
+            goTo(step.name);
+            return;
+        }
+    }
+
+    // All enabled steps have data → go to summary
+    goTo('summary');
 }
 let _waitingForStartPage = false;
 
@@ -433,6 +448,20 @@ async function loadItems(anagrafic, filterField, inputValue, containerId, onItem
     } catch (error) {
         console.error('Error loading items:', error);
     }
+}
+
+// --- Toast notification ---
+let _toastTimer = null;
+function showToast(message, duration = 4000) {
+    const toast = document.getElementById('totemToast');
+    if (!toast) return;
+    if (_toastTimer) clearTimeout(_toastTimer);
+    toast.textContent = message;
+    toast.classList.add('visible');
+    _toastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+        _toastTimer = null;
+    }, duration);
 }
 
 // --- Full-page success/failure message after weighing ---
@@ -942,11 +971,11 @@ function processRealtimeObject(obj) {
         if (!_weighingCompleting && typeof onDataUpdate === 'function') onDataUpdate();
 
     } else if (obj.message) {
-        // showSnackbar("snackbar", obj.message, 'rgb(208, 255, 208)', 'black');
+        showToast(obj.message);
     } else if (obj.error_message) {
-        // showSnackbar("snackbar", obj.error_message, 'rgb(255, 208, 208)', 'black');
+        showToast(obj.error_message);
     } else if (obj.cam_message) {
-        // showSnackbar("snackbar", obj.cam_message, 'white', 'black');
+        showToast(obj.cam_message);
     }
 }
 
