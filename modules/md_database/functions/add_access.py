@@ -1,4 +1,4 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, TypeSubjectEnum, TypeAccess
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, TypeSubjectEnum, TypeAccess, CardRegistry
 from modules.md_database.interfaces.access import AddAccessDTO
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
@@ -27,7 +27,7 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
                 "status": status or AccessStatus.WAITING,
                 "document_reference": data.document_reference,
                 "type": TypeAccess[data.type],
-                "badge": data.badge if data.badge != "" else None,
+                "idCardRegistry": data.idCardRegistry if data.idCardRegistry and data.idCardRegistry != -1 else None,
                 "hidden": data.hidden
             }
 
@@ -112,19 +112,20 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
                 if existing:
                     raise ValueError(f"La targa '{data.vehicle.plate}' è già assegnata come BADGE ad un altro accesso ancora aperto")
 
-            badge = data.badge
-            if badge is not None:
-                if badge != "":
-                    existing_badge = session.query(Access).filter(
-                        Access.badge == badge,
-                        Access.status != AccessStatus.CLOSED
-                    ).first()
-
-                    if existing_badge:
-                        raise ValueError(f"Il badge '{badge}' è già assegnato ad un altro accesso ancora aperto")
-                    existing = get_access_by_identify_if_uncomplete(identify=badge)
-                    if existing:
-                        raise ValueError(f"Il badge '{badge}' è già assegnato come TARGA ad un altro accesso ancora aperto")
+            idCardRegistry = add_access.get("idCardRegistry")
+            if idCardRegistry is not None:
+                card = session.query(CardRegistry).filter_by(id=idCardRegistry).first()
+                if not card:
+                    raise ValueError(f"Tessera con id '{idCardRegistry}' non trovata")
+                existing_card = session.query(Access).filter(
+                    Access.idCardRegistry == idCardRegistry,
+                    Access.status != AccessStatus.CLOSED
+                ).first()
+                if existing_card:
+                    raise ValueError(f"La tessera '{card.number}' è già assegnata ad un altro accesso ancora aperto")
+                existing = get_access_by_identify_if_uncomplete(identify=card.code)
+                if existing:
+                    raise ValueError(f"Il codice della tessera '{card.code}' corrisponde ad una targa già assegnata ad un accesso aperto")
 
             current_model = Access
             data_to_check = data.dict()

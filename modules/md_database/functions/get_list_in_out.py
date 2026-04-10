@@ -1,6 +1,6 @@
 from sqlalchemy import func, or_, and_, alias
 from sqlalchemy.orm import selectinload, defer
-from modules.md_database.md_database import SessionLocal, Weighing, InOut, Access, AccessStatus, TypeAccess, User
+from modules.md_database.md_database import SessionLocal, Weighing, InOut, Access, AccessStatus, TypeAccess, User, CardRegistry
 
 def get_list_in_out(
     filters=None,
@@ -47,6 +47,7 @@ def get_list_in_out(
             access_options.append(selectinload(Access.vehicle))
         if load_material:
             access_options.append(selectinload(Access.material))
+        access_options.append(selectinload(Access.card_registry))
         if not load_note:
             access_options.append(defer(Access.note))
         if not load_document_reference:

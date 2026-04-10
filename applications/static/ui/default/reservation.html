@@ -73,8 +73,8 @@
                     </td>
                 </tr>
                 <tr>
-                    <th name="badge" class="badge">
-                        <input id="filter.badge" class="badge" name="badge" type="text" placeholder="Badge" autocomplete="off"
+                    <th name="card_registry.number" class="badge">
+                        <input id="filter.card_registry.number" class="badge" name="card_registry.number" type="text" placeholder="Badge" autocomplete="off"
                             oninput="if (this.value) this.value = this.value.toUpperCase(); updateTable()">
                     </th>
                     <th name="vehicle.plate">
@@ -160,13 +160,13 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
-                        <input id="card_registry.id" name="card_registry.id" type="number" class="suggestionId">
-                        <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
+                        <input id="idCardRegistry" name="idCardRegistry" type="number" class="suggestionId">
+                        <input placeholder="Badge (numero tessera)" id="badge" type="text" autocomplete="new-password"
                             oninput="
                                 if (this.value) this.value = this.value.toUpperCase();
                                 populateCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge', this.value);
-                                if (document.querySelector('#add-popup #card_registry\\.id').value != '') {
-                                    document.querySelector('#add-popup #card_registry\\.id').value = '';
+                                if (document.querySelector('#add-popup #idCardRegistry').value != '') {
+                                    document.querySelector('#add-popup #idCardRegistry').value = '';
                                 }
                             "
                             onfocus="populateCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge', this.value)"
@@ -386,13 +386,13 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
-                        <input id="card_registry.id" name="card_registry.id" type="number" class="suggestionId">
-                        <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
+                        <input id="idCardRegistry" name="idCardRegistry" type="number" class="suggestionId">
+                        <input placeholder="Badge (numero tessera)" id="badge" type="text" autocomplete="new-password"
                             oninput="
                                 if (this.value) this.value = this.value.toUpperCase();
                                 populateCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge', this.value);
-                                if (document.querySelector('#edit-popup #card_registry\\.id').value != '') {
-                                    document.querySelector('#edit-popup #card_registry\\.id').value = '';
+                                if (document.querySelector('#edit-popup #idCardRegistry').value != '') {
+                                    document.querySelector('#edit-popup #idCardRegistry').value = '';
                                 }
                             "
                             onfocus="populateCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge', this.value)"
@@ -900,8 +900,13 @@
             });
         }
         
-        function populateForm(idForm, item={typeSocialReason: 0, idSocialReason: null, idVector: null, idVehicle: null, idMaterial: null}) {
+        function populateForm(idForm, item={}) {
             if (idForm !== '#delete') {
+                const popup = idForm === '#edit' ? '#edit-popup' : '#add-popup';
+                const badgeDisplay = document.querySelector(`${popup} #badge`);
+                if (badgeDisplay) {
+                    badgeDisplay.value = (item.card_registry && item.card_registry.number) ? item.card_registry.number : '';
+                }
             }
         }
 
@@ -1163,8 +1168,8 @@
                     option.id = item.id;
                     option.onmousedown = () => {
                         const badgeInput = document.querySelector(`${popup} #badge`);
-                        const idInput = document.querySelector(`${popup} #card_registry\\.id`);
-                        if (badgeInput) badgeInput.value = item.code;
+                        const idInput = document.querySelector(`${popup} #idCardRegistry`);
+                        if (badgeInput) badgeInput.value = item.number;
                         if (idInput) idInput.value = item.id;
                         currentSuggestions.innerHTML = '';
                     };

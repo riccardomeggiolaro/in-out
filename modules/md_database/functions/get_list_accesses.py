@@ -1,7 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload, defer
 from sqlalchemy.sql import exists, and_, or_
-from modules.md_database.md_database import SessionLocal, InOut, Access, AccessStatus, TypeAccess, Weighing, User
+from modules.md_database.md_database import SessionLocal, InOut, Access, AccessStatus, TypeAccess, Weighing, User, CardRegistry
 from datetime import datetime, date
 
 def get_list_accesses(
@@ -55,6 +55,7 @@ def get_list_accesses(
             access_options.append(selectinload(Access.vehicle))
         if load_material:
             access_options.append(selectinload(Access.material))
+        access_options.append(selectinload(Access.card_registry))
         if not load_note:
             access_options.append(defer(Access.note))
         if not load_document_reference:
