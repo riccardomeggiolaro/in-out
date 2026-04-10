@@ -1166,6 +1166,7 @@
                         ? item.number.replace(regex, '<span class="highlight">$1</span>')
                         : item.number;
                     option.id = item.id;
+                    option.dataset.item = JSON.stringify(item);
                     option.onmousedown = () => {
                         const badgeInput = document.querySelector(`${popup} #badge`);
                         const idInput = document.querySelector(`${popup} #idCardRegistry`);
@@ -1182,13 +1183,28 @@
         }
 
         function closeCardRegistrySuggestions(popup, suggestionsSelector) {
-            setTimeout(() => {
-                const currentSuggestions = document.querySelector(suggestionsSelector);
-                if (currentSuggestions) {
-                    currentSuggestions.style.display = 'none';
-                    currentSuggestions.innerHTML = '';
+            const currentSuggestions = document.querySelector(suggestionsSelector);
+            if (!currentSuggestions) return;
+            currentSuggestions.style.display = 'none';
+            const badgeInput = document.querySelector(`${popup} #badge`);
+            const idInput = document.querySelector(`${popup} #idCardRegistry`);
+            const value = badgeInput ? badgeInput.value : '';
+            const options = currentSuggestions.querySelectorAll('p');
+            let matched = null;
+            for (const opt of options) {
+                const optItem = JSON.parse(opt.dataset.item);
+                if (optItem.number && optItem.number.toLowerCase() === value.toLowerCase()) {
+                    matched = optItem;
+                    break;
                 }
-            }, 150);
+            }
+            if (matched) {
+                if (badgeInput) badgeInput.value = matched.number;
+                if (idInput) idInput.value = matched.id;
+            } else if (!idInput || idInput.value === '') {
+                if (badgeInput) badgeInput.value = '';
+            }
+            currentSuggestions.innerHTML = '';
         }
 
         function populateSuggestions(popup, suggestions, key, anagrafic, value) {
