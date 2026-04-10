@@ -1171,10 +1171,12 @@
                         const idInput = document.querySelector(`${popup} #idCardRegistry`);
                         if (badgeInput) badgeInput.value = item.number;
                         if (idInput) idInput.value = item.id;
+                        currentSuggestions.style.display = 'none';
                         currentSuggestions.innerHTML = '';
                     };
                     currentSuggestions.appendChild(option);
                 });
+                currentSuggestions.style.display = res.data.length > 0 ? 'block' : 'none';
             })
             .catch(() => {});
         }
@@ -1182,7 +1184,10 @@
         function closeCardRegistrySuggestions(popup, suggestionsSelector) {
             setTimeout(() => {
                 const currentSuggestions = document.querySelector(suggestionsSelector);
-                if (currentSuggestions) currentSuggestions.innerHTML = '';
+                if (currentSuggestions) {
+                    currentSuggestions.style.display = 'none';
+                    currentSuggestions.innerHTML = '';
+                }
             }, 150);
         }
 

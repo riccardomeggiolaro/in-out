@@ -370,25 +370,29 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
 
             idCardRegistry = data.idCardRegistry
             if idCardRegistry is not None:
-                if access.status == AccessStatus.CLOSED:
-                    raise ValueError("Non è possibile modificare la tessera di un accesso chiuso")
-                if idCardRegistry == -1:
-                    access.idCardRegistry = None
+                # Skip if no actual change (e.g. form re-submits the same value for a closed access)
+                if idCardRegistry != -1 and idCardRegistry == access.idCardRegistry:
+                    pass
                 else:
-                    card = session.query(CardRegistry).filter_by(id=idCardRegistry).first()
-                    if not card:
-                        raise ValueError(f"Tessera con id '{idCardRegistry}' non trovata")
-                    existing_card = session.query(Access).filter(
-                        Access.idCardRegistry == idCardRegistry,
-                        Access.id != id,
-                        Access.status != AccessStatus.CLOSED
-                    ).first()
-                    if existing_card:
-                        raise ValueError(f"La tessera '{card.number}' è già assegnata ad un altro accesso ancora aperto")
-                    existing = get_access_by_identify_if_uncomplete(identify=card.code)
-                    if existing and existing["id"] != id:
-                        raise ValueError(f"Il codice della tessera '{card.code}' corrisponde ad una targa già assegnata ad un accesso aperto")
-                    access.idCardRegistry = idCardRegistry
+                    if access.status == AccessStatus.CLOSED:
+                        raise ValueError("Non è possibile modificare la tessera di un accesso chiuso")
+                    if idCardRegistry == -1:
+                        access.idCardRegistry = None
+                    else:
+                        card = session.query(CardRegistry).filter_by(id=idCardRegistry).first()
+                        if not card:
+                            raise ValueError(f"Tessera con id '{idCardRegistry}' non trovata")
+                        existing_card = session.query(Access).filter(
+                            Access.idCardRegistry == idCardRegistry,
+                            Access.id != id,
+                            Access.status != AccessStatus.CLOSED
+                        ).first()
+                        if existing_card:
+                            raise ValueError(f"La tessera '{card.number}' è già assegnata ad un altro accesso ancora aperto")
+                        existing = get_access_by_identify_if_uncomplete(identify=card.code)
+                        if existing and existing["id"] != id:
+                            raise ValueError(f"Il codice della tessera '{card.code}' corrisponde ad una targa già assegnata ad un accesso aperto")
+                        access.idCardRegistry = idCardRegistry
 
             session.commit()
 
