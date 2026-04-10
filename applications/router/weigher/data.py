@@ -299,7 +299,7 @@ class DataRouter(CallbackWeigher):
 					},
 					"note": io_data["note"] if (io_data_from_in_out and io_data["note"]) else (access.note or io_data["note"]),
 					"document_reference": io_data["document_reference"] if (io_data_from_in_out and io_data["document_reference"]) else (access.document_reference or io_data["document_reference"]),
-					"badge": access.badge,
+					"idCardRegistry": access.idCardRegistry,
 				})
 				# Set type, number_in_out and lock flags BEFORE setIdSelected/setDataInExecution (which broadcast via SSE)
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["type"] = access.type.name

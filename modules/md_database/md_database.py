@@ -191,7 +191,7 @@ class Access(Base):
     status = Column(Enum(AccessStatus), default=AccessStatus.WAITING)
     document_reference = Column(String, nullable=True)
     type = Column(Enum(TypeAccess), default=TypeAccess.MANUALLY)
-    badge = Column(String(collation='NOCASE'), index=True, nullable=True)
+    idCardRegistry = Column(Integer, ForeignKey('card_registry.id'), nullable=True, index=True)
     hidden = Column(Boolean, default=False)
 
     # Relationships
@@ -200,6 +200,7 @@ class Access(Base):
     driver = relationship("Driver", back_populates="accesses")
     vehicle = relationship("Vehicle", back_populates="accesses")
     material = relationship("Material", back_populates="accesses")
+    card_registry = relationship("CardRegistry")
     in_out = relationship("InOut", back_populates="access", cascade="all, delete")
 
     @hybrid_property
@@ -223,7 +224,7 @@ class Access(Base):
 
     @hybrid_property
     def is_latest_for_badge(self):
-        if not self.badge:
+        if not self.idCardRegistry:
             return None
 
         session = object_session(self)
@@ -231,14 +232,14 @@ class Access(Base):
             return False
 
         max_id = session.query(func.max(Access.id)).filter(
-            Access.badge == self.badge
+            Access.idCardRegistry == self.idCardRegistry
         ).scalar()
 
         return self.id == max_id
 
     @is_latest_for_badge.expression
     def is_latest_for_badge(cls):
-        return cls.id == func.max(cls.id).over(partition_by=cls.badge)
+        return cls.id == func.max(cls.id).over(partition_by=cls.idCardRegistry)
 
 class InOut(Base):
     __tablename__ = 'in_out'
@@ -327,7 +328,7 @@ upload_file_datas_required_columns = {
     "vehicle": {"plate": str, "description": str, "tare": int},
     "material": {"description": str},
     "operator": {"description": str},
-    "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "badge": str},
+    "access": {"typeSocialReason": int, "idSocialReason": int, "idVector": int, "idVehicle": int, "number_in_out": int, "note": str, "idCardRegistry": int},
     "weighing-terminal": {"type": str, "id": str, "bil": str, "datetime1": str, "date1": str, "time1": str, "datetime2": str, "date2": str, "time2": str, "prog1": str, "prog2": str, "badge": str, "plate": str, "customer": str, "supplier": str, "material": str, "notes1": str, "notes2": str, "weight1": int, "pid1": str, "weight2": int, "pid2": str, "net_weight": int}
 }
 
@@ -618,6 +619,66 @@ def migrate_in_out_anagrafiche_columns():
     except Exception as e:
         lb_log.error(f"Errore durante la migrazione in_out anagrafiche: {e}")
 
+def migrate_access_badge_to_idCardRegistry():
+    """
+    Migrazione per convertire access.badge (stringa) in access.idCardRegistry (FK).
+    Per ogni valore univoco di badge nella tabella access:
+    - Crea un record in card_registry con number=badge e code=badge (se non esiste già)
+    - Imposta access.idCardRegistry all'id del record card_registry corrispondente
+    Lascia la colonna badge esistente (SQLite non supporta DROP COLUMN facilmente).
+    """
+    try:
+        with engine.connect() as conn:
+            # Verifica che entrambe le tabelle esistano
+            tables = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
+            table_names = {row[0] for row in tables}
+            if 'access' not in table_names or 'card_registry' not in table_names:
+                return
+
+            # Verifica se idCardRegistry esiste già nell'access
+            access_cols = {row[1] for row in conn.execute(text("PRAGMA table_info('access')")).fetchall()}
+            if 'idCardRegistry' not in access_cols:
+                return  # sync_database_columns non ha ancora aggiunto la colonna, verrà eseguita dopo
+
+            # Verifica se badge esiste (vecchia colonna)
+            if 'badge' not in access_cols:
+                return  # Migrazione già completata o non necessaria
+
+            # Prendi tutti i badge unici non nulli dalla tabella access
+            badges = conn.execute(text(
+                "SELECT DISTINCT badge FROM access WHERE badge IS NOT NULL AND badge != '' AND idCardRegistry IS NULL"
+            )).fetchall()
+
+            for (badge_value,) in badges:
+                # Cerca se esiste già in card_registry
+                existing = conn.execute(text(
+                    "SELECT id FROM card_registry WHERE code = :code"
+                ), {"code": badge_value}).fetchone()
+
+                if existing:
+                    card_id = existing[0]
+                else:
+                    # Crea nuovo record in card_registry
+                    conn.execute(text(
+                        "INSERT INTO card_registry (number, code, date_created) VALUES (:number, :code, datetime('now'))"
+                    ), {"number": badge_value, "code": badge_value})
+                    conn.commit()
+                    card_id = conn.execute(text(
+                        "SELECT id FROM card_registry WHERE code = :code"
+                    ), {"code": badge_value}).fetchone()[0]
+
+                # Aggiorna access.idCardRegistry
+                conn.execute(text(
+                    "UPDATE access SET idCardRegistry = :card_id WHERE badge = :badge AND idCardRegistry IS NULL"
+                ), {"card_id": card_id, "badge": badge_value})
+                conn.commit()
+
+            if badges:
+                lb_log.info(f"Migrazione access.badge → idCardRegistry: {len(badges)} valori migrati")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione access.badge → idCardRegistry: {e}")
+
+
 # Esegui migrazione per stati deprecati
 migrate_called_status()
 
@@ -635,6 +696,9 @@ sync_database_columns()
 
 # Create tables (crea tabelle mancanti)
 Base.metadata.create_all(engine)
+
+# Esegui migrazione access.badge → idCardRegistry (dopo sync e create)
+migrate_access_badge_to_idCardRegistry()
 
 # Create default users
 def create_default_users():
