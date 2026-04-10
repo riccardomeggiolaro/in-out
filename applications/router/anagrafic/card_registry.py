@@ -96,7 +96,7 @@ class CardRegistryRouter(WebSocket):
                 from modules.md_database.md_database import SessionLocal, Access, AccessStatus
                 with SessionLocal() as session:
                     open_access = session.query(Access).filter(
-                        Access.badge == card["code"],
+                        Access.idCardRegistry == id,
                         Access.status != AccessStatus.CLOSED
                     ).first()
                     if open_access:
@@ -118,16 +118,16 @@ class CardRegistryRouter(WebSocket):
             # Only delete cards not assigned to open accesses
             from modules.md_database.md_database import SessionLocal, Access, AccessStatus, CardRegistry as CardRegistryModel
             with SessionLocal() as session:
-                open_badges = {a.badge for a in session.query(Access).filter(
+                open_card_ids = {a.idCardRegistry for a in session.query(Access).filter(
                     Access.status != AccessStatus.CLOSED,
-                    Access.badge != None
+                    Access.idCardRegistry != None
                 ).all()}
                 cards_to_delete = session.query(CardRegistryModel).filter(
-                    ~CardRegistryModel.code.in_(open_badges)
+                    ~CardRegistryModel.id.in_(open_card_ids)
                 ).all()
                 deleted_count = len(cards_to_delete)
                 preserved_count = session.query(CardRegistryModel).filter(
-                    CardRegistryModel.code.in_(open_badges)
+                    CardRegistryModel.id.in_(open_card_ids)
                 ).count()
                 total_records = session.query(CardRegistryModel).count()
                 for card in cards_to_delete:

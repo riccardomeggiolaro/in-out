@@ -1,8 +1,8 @@
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload
-from modules.md_database.md_database import SessionLocal, InOut, Access, Vehicle, TypeAccess
+from modules.md_database.md_database import SessionLocal, InOut, Access, Vehicle, CardRegistry, TypeAccess
 
-def get_access_by_vehicle_id_or_badge_if_uncomplete(vehicle_id: int, badge: str, access_id: int = None):
+def get_access_by_vehicle_id_or_badge_if_uncomplete(vehicle_id: int, badge: str = None, access_id: int = None):
     session = SessionLocal()
     try:
         weighing_count_subquery = (
@@ -38,10 +38,10 @@ def get_access_by_vehicle_id_or_badge_if_uncomplete(vehicle_id: int, badge: str,
         filters = or_(
             Vehicle.id == vehicle_id
         )
-        
+
         if badge:
             filters = or_(
-                Access.badge == badge,
+                CardRegistry.code == badge,
                 Vehicle.id == vehicle_id
             )
 
@@ -52,6 +52,8 @@ def get_access_by_vehicle_id_or_badge_if_uncomplete(vehicle_id: int, badge: str,
             joinedload(Access.vehicle)
         ).join(
             Vehicle, Access.idVehicle == Vehicle.id
+        ).outerjoin(
+            CardRegistry, Access.idCardRegistry == CardRegistry.id
         ).outerjoin(
             weighing_count_subquery,
             Access.id == weighing_count_subquery.c.idAccess

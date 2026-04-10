@@ -1,6 +1,6 @@
 from sqlalchemy import desc, func
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Weighing, Access, Vehicle
+from modules.md_database.md_database import SessionLocal, InOut, Weighing, Access, Vehicle, CardRegistry
 
 def delete_last_weighing_of_access(access_id):
     """
@@ -14,6 +14,7 @@ def delete_last_weighing_of_access(access_id):
             # Trova l'ultimo InOut per la prenotazione
             latest_inout = session.query(InOut).options(
                     selectinload(InOut.access).selectinload(Access.vehicle).selectinload(Vehicle.accesses),
+                    selectinload(InOut.access).selectinload(Access.card_registry),
                     selectinload(InOut.weight1).selectinload(Weighing.in_out_weight1),
                     selectinload(InOut.weight1).selectinload(Weighing.in_out_weight2),
                     selectinload(InOut.weight2).selectinload(Weighing.in_out_weight1),
@@ -25,12 +26,14 @@ def delete_last_weighing_of_access(access_id):
             if latest_inout.access.vehicle and latest_inout.access.vehicle.accesses[-1].id != access_id:
                 raise ValueError(f"E' possibile cancellare l'ultima pesata fatta solo dell'ultimo accesso con la targa '{latest_inout.access.vehicle.plate}'")
 
-            if latest_inout.access.badge:
-                max_id_for_badge = session.query(func.max(Access.id)).filter(
-                    Access.badge == latest_inout.access.badge
+            if latest_inout.access.idCardRegistry:
+                max_id_for_card = session.query(func.max(Access.id)).filter(
+                    Access.idCardRegistry == latest_inout.access.idCardRegistry
                 ).scalar()
-                if max_id_for_badge != access_id:
-                    raise ValueError(f"E' possibile cancellare l'ultima pesata fatta solo dell'ultimo accesso con il badge '{latest_inout.access.badge}'")
+                if max_id_for_card != access_id:
+                    card = latest_inout.access.card_registry
+                    card_number = card.number if card else str(latest_inout.access.idCardRegistry)
+                    raise ValueError(f"E' possibile cancellare l'ultima pesata fatta solo dell'ultimo accesso con la tessera '{card_number}'")
 
             if not latest_inout:
                 raise ValueError(f"No InOut records found for access {access_id}")

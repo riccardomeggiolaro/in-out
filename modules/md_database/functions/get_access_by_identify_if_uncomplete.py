@@ -1,6 +1,6 @@
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Access, Vehicle, TypeAccess, AccessStatus
+from modules.md_database.md_database import SessionLocal, InOut, Access, Vehicle, CardRegistry, TypeAccess, AccessStatus
 
 def get_access_by_identify_if_uncomplete(identify: str):
     session = SessionLocal()
@@ -41,11 +41,14 @@ def get_access_by_identify_if_uncomplete(identify: str):
             selectinload(Access.driver),
             selectinload(Access.vehicle),
             selectinload(Access.material),
+            selectinload(Access.card_registry),
             selectinload(Access.in_out).selectinload(InOut.weight1),
             selectinload(Access.in_out).selectinload(InOut.weight2),
             selectinload(Access.in_out).selectinload(InOut.material)
         ).join(
             Vehicle, Access.idVehicle == Vehicle.id
+        ).outerjoin(
+            CardRegistry, Access.idCardRegistry == CardRegistry.id
         ).outerjoin(
             weighing_count_subquery,
             Access.id == weighing_count_subquery.c.idAccess
@@ -54,7 +57,7 @@ def get_access_by_identify_if_uncomplete(identify: str):
             Access.id == last_inout_weight2_subq.c.idAccess
         ).filter(
             or_(
-                Access.badge == identify,
+                CardRegistry.code == identify,
                 Vehicle.plate == identify
             ),
             Access.type != TypeAccess.TEST.name,
