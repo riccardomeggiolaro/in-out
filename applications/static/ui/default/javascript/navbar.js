@@ -47,6 +47,10 @@ fetch('navbar.html')
             const pageOfReservation = document.querySelectorAll(".page-of-reservation");
             pageOfReservation.forEach(reservation => reservation.style.display = "none");
         }
+        if (!configRes.use_badge) {
+            const pageOfCardRegistry = document.querySelectorAll(".page-of-card-registry");
+            pageOfCardRegistry.forEach(el => el.style.display = "none");
+        }
         
         // Colora il link attivo
         const currentPath = window.location.pathname;
@@ -54,7 +58,7 @@ fetch('navbar.html')
             const link = li.querySelector('a');
             if (link && link.getAttribute('href') === currentPath) {
                 link.classList.add('active-link-navbar');
-                if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
+                if (["/subject", "/vector", "/driver", "/vehicle", "/material", "/card-registry"].includes(window.location.pathname)) {
                     const arrow = document.querySelector('.arrow-dropdown-navbar');
                     const dropdown = document.querySelector('.dropdown-navbar');
                     if (arrow) arrow.classList.toggle('up');
@@ -66,7 +70,7 @@ fetch('navbar.html')
             const link = li.querySelector('a');
             if (link && link.getAttribute('href') === currentPath) {
                 link.classList.add('active-link-navbar');
-                if (["/subject", "/vector", "/driver", "/vehicle", "/material"].includes(window.location.pathname)) {
+                if (["/subject", "/vector", "/driver", "/vehicle", "/material", "/card-registry"].includes(window.location.pathname)) {
                     const arrow = document.querySelector('.arrow-dropdown-navbar');
                     const dropdown = document.querySelector('.dropdown-navbar');
                     if (arrow) arrow.classList.toggle('up');

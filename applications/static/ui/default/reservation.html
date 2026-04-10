@@ -160,8 +160,18 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
+                        <input id="card_registry.id" name="card_registry.id" type="number" class="suggestionId">
                         <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
-                            oninput="if (this.value) this.value = this.value.toUpperCase();">
+                            oninput="
+                                if (this.value) this.value = this.value.toUpperCase();
+                                populateCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge', this.value);
+                                if (document.querySelector('#add-popup #card_registry\\.id').value != '') {
+                                    document.querySelector('#add-popup #card_registry\\.id').value = '';
+                                }
+                            "
+                            onfocus="populateCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge', this.value)"
+                            onblur="closeCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge')">
+                        <div id="suggestions.badge" class="suggestions"></div>
                     </div>
                 </div>
             </div>
@@ -376,8 +386,18 @@
             <div class="badge">
                 <div class="item-25">
                     <div class="item">
+                        <input id="card_registry.id" name="card_registry.id" type="number" class="suggestionId">
                         <input placeholder="Badge (barcode, QR code, chip RFID)" id="badge" name="badge" type="text" autocomplete="new-password"
-                            oninput="if (this.value) this.value = this.value.toUpperCase();">
+                            oninput="
+                                if (this.value) this.value = this.value.toUpperCase();
+                                populateCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge', this.value);
+                                if (document.querySelector('#edit-popup #card_registry\\.id').value != '') {
+                                    document.querySelector('#edit-popup #card_registry\\.id').value = '';
+                                }
+                            "
+                            onfocus="populateCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge', this.value)"
+                            onblur="closeCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge')">
+                        <div id="suggestions.badge" class="suggestions"></div>
                     </div>
                 </div>
             </div>
@@ -1124,6 +1144,41 @@
             })
             content += `</ul>`;
             return content;
+        }
+
+        function populateCardRegistrySuggestions(popup, suggestionsSelector, value) {
+            if (!useBadge) return;
+            const currentSuggestions = document.querySelector(suggestionsSelector);
+            if (!currentSuggestions) return;
+            fetch(`/api/anagrafic/card-registry/list?order_by=number&order_direction=asc&number=${value || ''}%`)
+            .then(res => res.json())
+            .then(res => {
+                currentSuggestions.innerHTML = '';
+                res.data.forEach(item => {
+                    const option = document.createElement('p');
+                    const regex = new RegExp(`^(${value || ''})`, 'i');
+                    option.innerHTML = item.number
+                        ? item.number.replace(regex, '<span class="highlight">$1</span>')
+                        : item.number;
+                    option.id = item.id;
+                    option.onmousedown = () => {
+                        const badgeInput = document.querySelector(`${popup} #badge`);
+                        const idInput = document.querySelector(`${popup} #card_registry\\.id`);
+                        if (badgeInput) badgeInput.value = item.code;
+                        if (idInput) idInput.value = item.id;
+                        currentSuggestions.innerHTML = '';
+                    };
+                    currentSuggestions.appendChild(option);
+                });
+            })
+            .catch(() => {});
+        }
+
+        function closeCardRegistrySuggestions(popup, suggestionsSelector) {
+            setTimeout(() => {
+                const currentSuggestions = document.querySelector(suggestionsSelector);
+                if (currentSuggestions) currentSuggestions.innerHTML = '';
+            }, 150);
         }
 
         function populateSuggestions(popup, suggestions, key, anagrafic, value) {
