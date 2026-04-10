@@ -184,6 +184,10 @@ def init():
 	@app.get("/reservation", response_class=HTMLResponse)
 	async def Reservation(request: Request):
 		return templates.TemplateResponse("reservation.html", {"request": request})
+
+	@app.get("/card-registry", response_class=HTMLResponse)
+	async def CardRegistry(request: Request):
+		return templates.TemplateResponse("card-registry.html", {"request": request})
  
 	@app.get('/report-designer/entrata', response_class=HTMLResponse)
 	async def report_designer(request: Request):

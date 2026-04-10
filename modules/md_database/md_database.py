@@ -140,6 +140,13 @@ class TypeAccess(PyEnum):
     MANUALLY = "Manuale"
     TEST = "Test"
 
+class CardRegistry(Base):
+    __tablename__ = 'card_registry'
+    id = Column(Integer, primary_key=True, index=True)
+    number = Column(String(collation="NOCASE"), index=True, unique=True)
+    code = Column(String(collation="NOCASE"), index=True, unique=True)
+    date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
+
 class WeighingTerminal(Base):
     __tablename__ = 'weighing-terminal'
     id = Column(Integer, primary_key=True, index=True)
@@ -309,7 +316,8 @@ table_models = {
     'lock_record': LockRecord,
     'weighing_picture': WeighingPicture,
     'weighing-terminal': WeighingTerminal,
-    'in_out': InOut  # ADDED: missing from original
+    'in_out': InOut,  # ADDED: missing from original
+    'card_registry': CardRegistry
 }
 
 upload_file_datas_required_columns = {
@@ -323,7 +331,7 @@ upload_file_datas_required_columns = {
     "weighing-terminal": {"type": str, "id": str, "bil": str, "datetime1": str, "date1": str, "time1": str, "datetime2": str, "date2": str, "time2": str, "prog1": str, "prog2": str, "badge": str, "plate": str, "customer": str, "supplier": str, "material": str, "notes1": str, "notes2": str, "weight1": int, "pid1": str, "weight2": int, "pid2": str, "net_weight": int}
 }
 
-instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal]
+instances = [User, Subject, Vector, Driver, Vehicle, Material, Operator, Weighing, WeighingPicture, Access, LockRecord, InOut, WeighingTerminal, CardRegistry]
 
 
 def sync_database_columns():

@@ -8,6 +8,7 @@ from applications.router.anagrafic.vehicle import VehicleRouter
 from applications.router.anagrafic.operator import OperatorRouter
 from applications.router.anagrafic.access import AccessRouter
 from applications.router.anagrafic.weighing_terminal import WeighingTerminalRouter
+from applications.router.anagrafic.card_registry import CardRegistryRouter
 from applications.router.anagrafic.manager_anagrafics import manager_anagrafics
 import asyncio
 from modules.md_database.functions.lock_record import lock_record
@@ -34,6 +35,7 @@ class AnagraficRouter:
 		operator = OperatorRouter()
 		access = AccessRouter()
 		weighing_terminal = WeighingTerminalRouter()
+		card_registry = CardRegistryRouter()
 
 		self.router.include_router(subject.router, prefix='/subject', tags=['subject'])
 		self.router.include_router(vector.router, prefix='/vector', tags=['vector'])
@@ -43,6 +45,7 @@ class AnagraficRouter:
 		self.router.include_router(operator.router, prefix='/operator', tags=['operator'])
 		self.router.include_router(access.router, prefix='/access', tags=['access'])
 		self.router.include_router(weighing_terminal.router, prefix='/weighing-terminal', tags=['weighing terminal'])
+		self.router.include_router(card_registry.router, prefix='/card-registry', tags=['card registry'])
 		self.router.include_router(access.panel_siren_router, prefix='', tags=['panel siren'])
 
 		self.router.add_api_websocket_route('/{anagrafic}', self.websocket_anagrafic)
