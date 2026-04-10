@@ -12,7 +12,7 @@ from modules.md_database.functions.get_data_by_id import get_data_by_id
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 from applications.utils.utils import get_query_params
 from applications.router.anagrafic.web_sockets import WebSocket
-from applications.middleware.admin import is_admin
+from applications.middleware.super_admin import is_super_admin
 
 
 class CardRegistryRouter(WebSocket):
@@ -22,10 +22,10 @@ class CardRegistryRouter(WebSocket):
         self.router = APIRouter()
 
         self.router.add_api_route('/list', self.getListCardRegistry, methods=['GET'])
-        self.router.add_api_route('', self.addCard, methods=['POST'], dependencies=[Depends(is_admin)])
-        self.router.add_api_route('/{id}', self.setCard, methods=['PATCH'], dependencies=[Depends(is_admin)])
-        self.router.add_api_route('/{id}', self.deleteCard, methods=['DELETE'], dependencies=[Depends(is_admin)])
-        self.router.add_api_route('', self.deleteAllCards, methods=['DELETE'], dependencies=[Depends(is_admin)])
+        self.router.add_api_route('', self.addCard, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/{id}', self.setCard, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/{id}', self.deleteCard, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('', self.deleteAllCards, methods=['DELETE'], dependencies=[Depends(is_super_admin)])
 
     async def getListCardRegistry(
         self,

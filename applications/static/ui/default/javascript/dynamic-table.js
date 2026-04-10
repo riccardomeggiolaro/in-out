@@ -7,6 +7,7 @@ let itemName = null;
 let nextElementSibling = null;
 let lastChar = 'o';
 let canAlwaysDelete = false;
+let minWriteLevel = 2;
 let useBadge = true;
 let listUrlPath = null;
 let exportUrlPath = null;
@@ -311,7 +312,7 @@ function getTableColumns() {
 }
 
 function populateTable(data) {
-    if (dataUser.level === 1) {
+    if (dataUser.level < minWriteLevel) {
         const registerButton = document.querySelector(".register-button");
         if (registerButton) registerButton.style.display = 'none';
     }
@@ -571,8 +572,8 @@ function createRow(table, columns, item, idInout) {
         console.log(config.panel.enabled)
         row.style.backgroundColor = 'whitesmoke';
         if (closeButton) closeButton.style.visibility = 'inherit';
-        if (dataUser.level > 1) editButton.style.visibility = 'inherit';
-        if (dataUser.level > 1) deleteButton.style.visibility = 'inherit';
+        if (dataUser.level >= minWriteLevel) editButton.style.visibility = 'inherit';
+        if (dataUser.level >= minWriteLevel) deleteButton.style.visibility = 'inherit';
         if (config.panel.enabled && callButton) callButton.style.visibility = 'inherit';
         if (pdfButton) pdfButton.style.visibility = 'inherit';
     });
