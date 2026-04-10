@@ -170,7 +170,7 @@
                                 }
                             "
                             onfocus="populateCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge', this.value)"
-                            onblur="closeCardRegistrySuggestions('#add-popup', '#register #suggestions\\.badge')">
+                            onblur="closeSuggestions('#add-popup', '#register #suggestions\\.badge', 'number', 'card-registry', this.value)">
                         <div id="suggestions.badge" class="suggestions"></div>
                     </div>
                 </div>
@@ -396,7 +396,7 @@
                                 }
                             "
                             onfocus="populateCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge', this.value)"
-                            onblur="closeCardRegistrySuggestions('#edit-popup', '#edit #suggestions\\.badge')">
+                            onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.badge', 'number', 'card-registry', this.value)">
                         <div id="suggestions.badge" class="suggestions"></div>
                     </div>
                 </div>
@@ -1182,31 +1182,6 @@
             .catch(() => {});
         }
 
-        function closeCardRegistrySuggestions(popup, suggestionsSelector) {
-            const currentSuggestions = document.querySelector(suggestionsSelector);
-            if (!currentSuggestions) return;
-            currentSuggestions.style.display = 'none';
-            const badgeInput = document.querySelector(`${popup} #badge`);
-            const idInput = document.querySelector(`${popup} #idCardRegistry`);
-            const value = badgeInput ? badgeInput.value : '';
-            const options = currentSuggestions.querySelectorAll('p');
-            let matched = null;
-            for (const opt of options) {
-                const optItem = JSON.parse(opt.dataset.item);
-                if (optItem.number && optItem.number.toLowerCase() === value.toLowerCase()) {
-                    matched = optItem;
-                    break;
-                }
-            }
-            if (matched) {
-                if (badgeInput) badgeInput.value = matched.number;
-                if (idInput) idInput.value = matched.id;
-            } else if (!idInput || idInput.value === '') {
-                if (badgeInput) badgeInput.value = '';
-            }
-            currentSuggestions.innerHTML = '';
-        }
-
         function populateSuggestions(popup, suggestions, key, anagrafic, value) {
             let currentSuggestions = document.querySelector(suggestions);
             const alphabeticalField = anagrafic === 'vehicle' ? 'plate'
@@ -1329,6 +1304,9 @@
                             document.querySelector(`${popup} #vehicle\\.tare`).disabled = true;
                             document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                         }
+                    } else if (anagrafic === 'card-registry' && document.querySelector(`${popup} #idCardRegistry`).value != item.id) {
+                        document.querySelector(`${popup} #badge`).value = item.number;
+                        document.querySelector(`${popup} #idCardRegistry`).value = item.id;
                     } else {
                         callback_select_anagrafic = () => {
                             document.querySelector(`${popup} #material\\.id`).value = item.id;
