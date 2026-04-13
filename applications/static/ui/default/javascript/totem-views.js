@@ -281,15 +281,32 @@ const totemViews = {
                                 selectedVector = { id: d.vector.id, social_reason: d.vector.social_reason || '' };
                                 selectedDriver = { id: d.driver?.id || null, social_reason: d.driver?.social_reason || '' };
                                 selectedMaterial = { id: d.material.id, description: d.material.description || '' };
-                        }
+                            }
 
-                        _plateManualMode = false;
-                        document.getElementById('virtualKeyboard').classList.remove('active');
-                        _plateRestoreButtons();
-                        _plateShowPlate(selectedVehicle.plate || value);
-                        _plateGoToNext();
-                    }
-                });
+                            _plateManualMode = false;
+                            document.getElementById('virtualKeyboard').classList.remove('active');
+                            document.querySelector('.step-content')?.classList.remove('keyboard-active');
+                            _plateRestoreButtons();
+                            _plateShowPlate(selectedVehicle.plate || value);
+
+                            // Navigate directly after manual confirmation (bypass automatic-mode block in _plateGoToNext)
+                            if (isFromSummary()) {
+                                goTo('summary');
+                            } else {
+                                const steps = [
+                                    { name: 'subject', enabled: totemAnagrafiche.subject },
+                                    { name: 'vector', enabled: totemAnagrafiche.vector },
+                                    { name: 'driver', enabled: totemAnagrafiche.driver },
+                                    { name: 'material', enabled: totemAnagrafiche.material },
+                                ];
+                                const dest = steps.find(s => s.enabled)?.name || 'summary';
+                                goTo(dest);
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        showToast(t('weighing_generic_error') || 'Errore di rete', 4000);
+                    });
                 };
 
                 if (hasAccess) {
