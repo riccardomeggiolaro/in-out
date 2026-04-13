@@ -160,11 +160,15 @@ const totemViews = {
             if (plateDisplay) window._plateResizeObserver.observe(plateDisplay);
 
             window._plateShowPlate = function(plate) {
-                document.getElementById('plateDisplay').classList.remove('plate-empty');
+                const plateDisplay = document.getElementById('plateDisplay');
+                if (!plateDisplay) return;
+                plateDisplay.classList.remove('plate-empty');
                 const plateText = document.getElementById('plateText');
+                if (!plateText) return;
                 plateText.textContent = plate;
                 plateText.style.display = '';
-                document.getElementById('manualPlateInput').style.display = 'none';
+                const manualInput = document.getElementById('manualPlateInput');
+                if (manualInput) manualInput.style.display = 'none';
                 _plateFitText(plateText);
             };
 
@@ -217,6 +221,7 @@ const totemViews = {
             function _plateRestoreButtons() {
                 const btnCancel = document.getElementById('btnCancelPlate');
                 const btnNext = document.getElementById('btnNext');
+                if (!btnCancel || !btnNext) return;
                 btnCancel.textContent = t('cancel');
                 btnCancel.onclick = cancelTotem;
                 btnNext.textContent = t('next');
@@ -283,7 +288,7 @@ const totemViews = {
                             }
 
                             _plateManualMode = false;
-                            document.getElementById('virtualKeyboard').classList.remove('active');
+                            document.getElementById('virtualKeyboard')?.classList.remove('active');
                             document.querySelector('.step-content')?.classList.remove('keyboard-active');
                             _plateRestoreButtons();
                             _plateShowPlate(selectedVehicle.plate || value);
