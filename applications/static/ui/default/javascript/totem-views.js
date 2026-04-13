@@ -508,6 +508,7 @@ const totemViews = {
         `,
         init: () => {
             function updateSummary() {
+                if (!document.getElementById('summaryPlate')) return;
                 document.getElementById('summaryPlate').textContent = selectedVehicle.plate || '-';
                 document.getElementById('summaryType').textContent = selectedTypeSubject === 'CUSTOMER' ? t('customer') : t('supplier');
                 document.getElementById('summarySubject').textContent = selectedSubject.social_reason || '-';
