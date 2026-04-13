@@ -297,7 +297,7 @@ const totemViews = {
                             if (isFromSummary()) {
                                 goTo('summary');
                             } else {
-                                const dest = _findNextEnabledStep('plate') || 'summary';
+                                const dest = _findNextEnabledStep('plate', true) || 'summary';
                                 goTo(dest);
                             }
                         }
