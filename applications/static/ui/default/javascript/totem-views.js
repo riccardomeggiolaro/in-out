@@ -339,7 +339,9 @@ const totemViews = {
                 if (_plateManualMode) return;
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
-                    _plateGoToNext();
+                    if (weigherMode !== "AUTOMATIC") {
+                        _plateGoToNext();
+                    }
                 }
             };
         }
