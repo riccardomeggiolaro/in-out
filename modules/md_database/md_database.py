@@ -319,7 +319,6 @@ table_models = {
     'weighing_picture': WeighingPicture,
     'weighing-terminal': WeighingTerminal,
     'in_out': InOut,  # ADDED: missing from original
-    'card_registry': CardRegistry,
     'card-registry': CardRegistry
 }
 

@@ -373,11 +373,11 @@ class CallbackWeigher(Functions, WebSocket):
 			(p for p in self.automatic_weighing_process if p["instance_name"] == instance.instance_name and p["weigher_name"] == instance.weigher_name),
 			None
 		)
-		cam_message = f'"{identify_dto.identify}"'
-		if request is not None:
-			cam_message = cam_message + f" ricevuto da {request.client.host}"
-		else:
-			cam_message = cam_message + f" ricevuto da terminale"
+		identify = identify_dto.identify
+		card_number = get_data_by_attribute("card-registry", "code", identify)
+		if card_number:
+			identify = card_number["number"]
+		cam_message = identify + f" ricevuto da {request.client.host}"
 		if existing_proc:
 			show_message = False
 			error_message = f"Pesatura automatica già in esecuzione sulla pesa '{instance.weigher_name}' con identify '{existing_proc['identify']}'."
@@ -544,8 +544,7 @@ class CallbackWeigher(Functions, WebSocket):
 							show_message = False
 							success_message = "Pesatura semiautomatica in attesa di conferma dall'operatore."
 				else:
-					show_message = False
-					error_message = f"Accesso con '{identify_dto.identify}' non esistente."
+					error_message = f"Prenotazione con '{identify}' non esistente."
 		if show_message:
 			if error_message:
 				error_message = cam_message + f" - {error_message}"
