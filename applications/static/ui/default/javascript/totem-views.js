@@ -268,7 +268,7 @@ const totemViews = {
                     .then(res => res.json())
                     .then(res => {
                         if (res.detail) {
-                            // error
+                            showToast(typeof res.detail === 'string' ? res.detail : JSON.stringify(res.detail), 5000);
                         } else {
                             // Update state from PATCH response
                             if (res.id_selected) selectedIdWeight = res.id_selected;
