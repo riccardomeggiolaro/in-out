@@ -45,7 +45,7 @@ class CardRegistryRouter(WebSocket):
             if order_direction is not None:
                 del query_params["order_direction"]
             sort = (order_by, order_direction if order_direction else 'asc') if order_by else ('date_created', 'desc')
-            data, total_rows = filter_data("card_registry", query_params, limit, offset, None, None, sort)
+            data, total_rows = filter_data("card-registry", query_params, limit, offset, None, None, sort)
             return {
                 "data": data,
                 "total_rows": total_rows
@@ -55,9 +55,9 @@ class CardRegistryRouter(WebSocket):
 
     async def addCard(self, body: AddCardRegistryDTO):
         try:
-            data = add_data("card_registry", body.dict())
+            data = add_data("card-registry", body.dict())
             card = CardRegistry(**data).json()
-            await self.broadcastAddAnagrafic("card-registry", {"card_registry": card})
+            await self.broadcastAddAnagrafic("card-registry", {"card-registry": card})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 400)
@@ -70,9 +70,9 @@ class CardRegistryRouter(WebSocket):
             locked_data = get_data_by_attributes('lock_record', {"table_name": "card-registry", "idRecord": id, "type": LockRecordType.UPDATE, "user_id": request.state.user.id})
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"Devi bloccare la tessera con id '{id}' prima di modificarla")
-            data = update_data("card_registry", id, body.dict())
+            data = update_data("card-registry", id, body.dict())
             card = CardRegistry(**data).json()
-            await self.broadcastUpdateAnagrafic("card-registry", {"card_registry": card})
+            await self.broadcastUpdateAnagrafic("card-registry", {"card-registry": card})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)
@@ -91,7 +91,7 @@ class CardRegistryRouter(WebSocket):
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"Devi bloccare la tessera con id '{id}' prima di eliminarla")
             # Check if the card code is currently assigned to an open access
-            card = get_data_by_id("card_registry", id)
+            card = get_data_by_id("card-registry", id)
             if card:
                 from modules.md_database.md_database import SessionLocal, Access, AccessStatus
                 with SessionLocal() as session:
@@ -101,9 +101,9 @@ class CardRegistryRouter(WebSocket):
                     ).first()
                     if open_access:
                         raise HTTPException(status_code=400, detail=f"La tessera è assegnata ad una prenotazione aperta e non può essere eliminata")
-            data = delete_data("card_registry", id)
+            data = delete_data("card-registry", id)
             card = CardRegistry(**data).json()
-            await self.broadcastDeleteAnagrafic("card-registry", {"card_registry": card})
+            await self.broadcastDeleteAnagrafic("card-registry", {"card-registry": card})
             return data
         except Exception as e:
             status_code = getattr(e, 'status_code', 404)

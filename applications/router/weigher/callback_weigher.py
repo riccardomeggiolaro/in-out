@@ -544,7 +544,7 @@ class CallbackWeigher(Functions, WebSocket):
 							show_message = False
 							success_message = "Pesatura semiautomatica in attesa di conferma dall'operatore."
 				else:
-					error_message = f"Prenotazione con '{identify}' non esistente."
+					error_message = f'Prenotazione con "{identify}" non esistente.'
 		if show_message:
 			if error_message:
 				error_message = cam_message + f" - {error_message}"
