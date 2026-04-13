@@ -35,8 +35,8 @@ const totemTranslations = {
         auto_plate_confirm: 'Lettura automatica della targa <strong>\'{plate}\'</strong>. <br> Effettuare la pesatura?',
 
         // RFID
-        rfid_read_card: 'Leggere tessera',
-        card_instruction: 'Avvicina la tessera al lettore',
+        rfid_read_card: 'Tessera',
+        card_instruction: 'Avvicina la tessera',
         skip: 'Salta',
 
         // Anagrafic labels
@@ -83,8 +83,8 @@ const totemTranslations = {
         auto_plate_confirm: 'Automatic plate reading <strong>\'{plate}\'</strong>. <br> Proceed with weighing?',
 
         // RFID
-        rfid_read_card: 'Read card',
-        card_instruction: 'Hold card near reader',
+        rfid_read_card: 'Card',
+        card_instruction: 'Hold card',
         skip: 'Skip',
 
         // Anagrafic labels
