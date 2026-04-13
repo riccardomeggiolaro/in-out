@@ -179,13 +179,7 @@ const totemViews = {
 
             window._plateGoToNext = function() {
                 if (isFromSummary()) { goTo('summary'); return; }
-                const steps = [
-                    { name: 'subject', enabled: totemAnagrafiche.subject, hasData: () => !!selectedSubject.id },
-                    { name: 'vector', enabled: totemAnagrafiche.vector, hasData: () => !!selectedVector.id },
-                    { name: 'driver', enabled: totemAnagrafiche.driver, hasData: () => !!selectedDriver.id },
-                    { name: 'material', enabled: totemAnagrafiche.material, hasData: () => !!selectedMaterial.id },
-                ];
-                const dest = steps.find(s => s.enabled && !s.hasData())?.name || 'summary';
+                const dest = _findNextEnabledStep('plate') || 'summary';
                 goTo(dest);
             };
 
@@ -294,17 +288,11 @@ const totemViews = {
                             _plateRestoreButtons();
                             _plateShowPlate(selectedVehicle.plate || value);
 
-                            // Navigate directly after manual confirmation (bypass automatic-mode block in _plateGoToNext)
+                            // Navigate directly after manual confirmation
                             if (isFromSummary()) {
                                 goTo('summary');
                             } else {
-                                const steps = [
-                                    { name: 'subject', enabled: totemAnagrafiche.subject, hasData: () => !!selectedSubject.id },
-                                    { name: 'vector', enabled: totemAnagrafiche.vector, hasData: () => !!selectedVector.id },
-                                    { name: 'driver', enabled: totemAnagrafiche.driver, hasData: () => !!selectedDriver.id },
-                                    { name: 'material', enabled: totemAnagrafiche.material, hasData: () => !!selectedMaterial.id },
-                                ];
-                                const dest = steps.find(s => s.enabled && !s.hasData())?.name || 'summary';
+                                const dest = _findNextEnabledStep('plate') || 'summary';
                                 goTo(dest);
                             }
                         }

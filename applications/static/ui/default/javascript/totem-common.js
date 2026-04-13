@@ -116,10 +116,10 @@ let _waitingForStartPage = false;
 function _findNextEnabledStep(afterStep) {
     if (weigherMode === "AUTOMATIC") return null;
     const steps = [
-        { name: 'subject', enabled: totemAnagrafiche.subject },
-        { name: 'vector', enabled: totemAnagrafiche.vector },
-        { name: 'driver', enabled: totemAnagrafiche.driver },
-        { name: 'material', enabled: totemAnagrafiche.material },
+        { name: 'subject', enabled: totemAnagrafiche.subject, hasData: () => !!selectedSubject.id },
+        { name: 'vector', enabled: totemAnagrafiche.vector, hasData: () => !!selectedVector.id },
+        { name: 'driver', enabled: totemAnagrafiche.driver, hasData: () => !!selectedDriver.id },
+        { name: 'material', enabled: totemAnagrafiche.material, hasData: () => !!selectedMaterial.id },
     ];
     let startIndex = 0;
     if (afterStep === 'plate') startIndex = 0;
@@ -129,7 +129,7 @@ function _findNextEnabledStep(afterStep) {
     else if (afterStep === 'material') return null;
 
     for (let i = startIndex; i < steps.length; i++) {
-        if (steps[i].enabled) return steps[i].name;
+        if (steps[i].enabled && !steps[i].hasData()) return steps[i].name;
     }
     return null;
 }
