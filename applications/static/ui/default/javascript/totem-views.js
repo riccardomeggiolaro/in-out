@@ -438,8 +438,8 @@ const totemViews = {
     summary: {
         get title() { return 'Totem - ' + t('summary_title'); },
         style: `
-            .summary-list { display: flex; flex-direction: column; gap: clamp(8px, 1.5vh, 20px); width: 100%; padding: 0 16px; box-sizing: border-box; flex: 1; min-height: 0; overflow: hidden; }
-            .summary-item { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: clamp(8px, 2vw, 16px); min-height: 0; flex: 1; }
+            .summary-list { display: flex; flex-direction: column; gap: clamp(8px, 1.5vh, 20px); width: 100%; padding: 0 16px; box-sizing: border-box; flex: 1; min-height: 0; overflow: hidden; justify-content: center; }
+            .summary-item { display: grid; grid-template-columns: 0.5fr 1fr; align-items: stretch; gap: clamp(8px, 2vw, 16px); min-height: 0; flex: 0.2; }
             .summary-item-label { font-size: clamp(0.7rem, 5vh, 3rem); font-weight: 600; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: flex-end; }
             .summary-item-value { background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 0 clamp(8px, 2vw, 16px); gap: 8px; cursor: pointer; transition: all 0.2s; color: #111111; font-weight: 500; font-size: clamp(0.7rem, 5vh, 3rem); min-height: 0; overflow: hidden; }
             .summary-item-value:hover { border-color: #999999; background: #F0F0F0; transform: translateY(-1px); box-shadow: 0 4px 0 #AAAAAA, 0 6px 12px rgba(0,0,0,0.2); }
