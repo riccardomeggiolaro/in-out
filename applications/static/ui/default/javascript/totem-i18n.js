@@ -36,7 +36,7 @@ const totemTranslations = {
 
         // RFID
         rfid_read_card: 'Tessera',
-        card_instruction: 'Avvicina la tessera',
+        card_instruction: 'Avvicinare la tessera',
         skip: 'Salta',
 
         // Anagrafic labels
