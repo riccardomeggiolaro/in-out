@@ -178,10 +178,15 @@ const totemViews = {
             };
 
             window._plateGoToNext = function() {
-                if (weigherMode === "AUTOMATIC") return;
                 if (isFromSummary()) { goTo('summary'); return; }
-                const dest = _findNextEnabledStep('plate');
-                goTo(dest || 'summary');
+                const steps = [
+                    { name: 'subject', enabled: totemAnagrafiche.subject },
+                    { name: 'vector', enabled: totemAnagrafiche.vector },
+                    { name: 'driver', enabled: totemAnagrafiche.driver },
+                    { name: 'material', enabled: totemAnagrafiche.material },
+                ];
+                const dest = steps.find(s => s.enabled)?.name || 'summary';
+                goTo(dest);
             };
 
             window._manualPlateValue = '';
