@@ -180,12 +180,12 @@ const totemViews = {
             window._plateGoToNext = function() {
                 if (isFromSummary()) { goTo('summary'); return; }
                 const steps = [
-                    { name: 'subject', enabled: totemAnagrafiche.subject },
-                    { name: 'vector', enabled: totemAnagrafiche.vector },
-                    { name: 'driver', enabled: totemAnagrafiche.driver },
-                    { name: 'material', enabled: totemAnagrafiche.material },
+                    { name: 'subject', enabled: totemAnagrafiche.subject, hasData: () => !!selectedSubject.id },
+                    { name: 'vector', enabled: totemAnagrafiche.vector, hasData: () => !!selectedVector.id },
+                    { name: 'driver', enabled: totemAnagrafiche.driver, hasData: () => !!selectedDriver.id },
+                    { name: 'material', enabled: totemAnagrafiche.material, hasData: () => !!selectedMaterial.id },
                 ];
-                const dest = steps.find(s => s.enabled)?.name || 'summary';
+                const dest = steps.find(s => s.enabled && !s.hasData())?.name || 'summary';
                 goTo(dest);
             };
 
@@ -299,12 +299,12 @@ const totemViews = {
                                 goTo('summary');
                             } else {
                                 const steps = [
-                                    { name: 'subject', enabled: totemAnagrafiche.subject },
-                                    { name: 'vector', enabled: totemAnagrafiche.vector },
-                                    { name: 'driver', enabled: totemAnagrafiche.driver },
-                                    { name: 'material', enabled: totemAnagrafiche.material },
+                                    { name: 'subject', enabled: totemAnagrafiche.subject, hasData: () => !!selectedSubject.id },
+                                    { name: 'vector', enabled: totemAnagrafiche.vector, hasData: () => !!selectedVector.id },
+                                    { name: 'driver', enabled: totemAnagrafiche.driver, hasData: () => !!selectedDriver.id },
+                                    { name: 'material', enabled: totemAnagrafiche.material, hasData: () => !!selectedMaterial.id },
                                 ];
-                                const dest = steps.find(s => s.enabled)?.name || 'summary';
+                                const dest = steps.find(s => s.enabled && !s.hasData())?.name || 'summary';
                                 goTo(dest);
                             }
                         }
