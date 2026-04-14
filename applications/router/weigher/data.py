@@ -36,7 +36,7 @@ class DataRouter(CallbackWeigher):
 	async def GetData(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		return self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 
-	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False, auto_select: Optional[bool] = False, keep_selected: Optional[bool] = False):
+	async def SetData(self, request: Request, data_dto: DataDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), need_to_confirm: Optional[bool] = False, auto_select: Optional[bool] = False, keep_selected: Optional[bool] = False, set_preset_tare_if_exists: Optional[bool] = True):
 		if auto_select:
 			# Auto-select anagrafiche by name/plate if they exist
 			if data_dto.data_in_execution.vehicle.plate and not data_dto.data_in_execution.vehicle.id:
@@ -323,7 +323,7 @@ class DataRouter(CallbackWeigher):
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_dto.data_in_execution)
 		data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		tare = data["data_in_execution"]["vehicle"]["tare"]
-		if data["id_selected"]["weight1"] is None and tare is not None:
+		if data["id_selected"]["weight1"] is None and tare is not None and set_preset_tare_if_exists:
 			r =	md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=tare)
 		return data
 

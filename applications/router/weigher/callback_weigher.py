@@ -406,6 +406,7 @@ class CallbackWeigher(Functions, WebSocket):
 					error_message = f"Il peso deve essere maggiore di {min_weight} kg"
 				elif access:
 					current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+					set_preset_tare_if_exists = None
 					if current_weigher_data["id_selected"]["id"] != access["id"]:
 						await self.DeleteData(instance=instance)
 						try:
@@ -413,13 +414,74 @@ class CallbackWeigher(Functions, WebSocket):
 								error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
 							else:
 								data_dto = DataDTO(**{"id_selected": {"id": access["id"]}})
-								need_to_confirm = True if mode == "SEMIAUTOMATIC" else False
-								await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm)
+								set_preset_tare_if_exists = True if access["number_in_out"] != 0 else False
+								need_to_confirm = True if mode == "SEMIAUTOMATIC" and set_preset_tare_if_exists else False
+								await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm, set_preset_tare_if_exists=set_preset_tare_if_exists)
 						except Exception as e:
 							error_message = e.detail
 					if not error_message:
 						self.automatic_weighing_process.append(proc)
-						if mode == "AUTOMATIC":
+						if not set_preset_tare_if_exists:
+							async def handleTransit():
+								timeout = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["connection"]["timeout"]
+								time_between_actions = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"]
+								data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
+								tare = data["data_in_execution"]["vehicle"]["tare"]
+								weight1 = data["id_selected"]["weight1"]
+								stable = 0
+								while True:
+									await asyncio.sleep(time_between_actions)
+									timeout = timeout - time_between_actions
+									current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+									modope = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+									current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+									realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+									current_tare = realtime.tare.replace("PT", "").replace(" ",  "")
+									m = modope if request is not None else current_modope
+									if modope != "PRESETTARE" and current_modope != "PRESETTARE":
+										if current_weigher_data["id_selected"]["id"] != access["id"]:
+											error_message = f"Pesatura automatica interrotta. Accesso con '{identify_dto.identify}' deselezionato."
+											await self.DeleteData(instance=instance)
+											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
+											break
+										elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+											error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
+											await self.DeleteData(instance=instance)
+											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
+											break
+										elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
+											if realtime.status == "ST":
+												if stable == 3:
+													status_modope, command_executed, error_message = None, None, None
+													for rele in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["set_rele"]:
+														modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
+														rele_status = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"][rele["rele"]]
+														status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
+														if error_message:
+															error_message = f"Errore nel settaggio del rele: {error_message}. Ritento."
+															await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
+															break
+													if not error_message:
+														success_message = f'Transito con "{identify_dto.identify}" completato con successo.'
+														await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": success_message})
+														await self.DeleteData(instance=instance)
+														break
+												else:
+													stable = stable + 1
+											else:
+												stable = 0
+								# Rimuovi il processo dalla lista in modo sicuro
+								self.automatic_weighing_process = [
+									p for p in self.automatic_weighing_process
+									if not (
+										p["instance_name"] == instance.instance_name and
+										p["weigher_name"] == instance.weigher_name and
+										p["identify"] == identify_dto.identify
+									)
+								]
+							threading.Thread(target=lambda: asyncio.run(handleTransit())).start()
+							success_message = "Gestione transito presa in carico."
+						elif mode == "AUTOMATIC":
 							async def handleAutomatic():
 								data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
 								tare = data["data_in_execution"]["vehicle"]["tare"]
@@ -442,7 +504,7 @@ class CallbackWeigher(Functions, WebSocket):
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 											break
-										if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division:
+										if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division and set_preset_tare_if_exists:
 											if current_tare == "0":
 												if timeout >= 0:
 													message = f"Impostando la tara per la pesatura automatica."
@@ -510,7 +572,7 @@ class CallbackWeigher(Functions, WebSocket):
 									if modope != "PRESETTARE" and current_modope != "PRESETTARE":
 										if current_weigher_data["id_selected"]["id"] != access["id"]:
 											break
-										if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division:
+										if weight1 is None and current_tare != "" and tare is not None and abs(float(current_tare) - float(tare)) > division and set_preset_tare_if_exists:
 											if current_tare == "0":
 												if timeout >= 0:
 													message = f"Impostando la tara per la pesatura semiautomatica."
@@ -550,7 +612,7 @@ class CallbackWeigher(Functions, WebSocket):
 				error_message = cam_message + f" - {error_message}"
 				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": error_message, "cam_is_error": True})
 			elif success_message:
-				success_message = cam_message + f" {success_message}"
+				success_message = cam_message + f" - {success_message}"
 				if notify_identify_code:
 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": success_message, "cam_is_error": False})
 		return {

@@ -326,8 +326,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			access = get_access_by_id(current_id)
 		if access and len(access.in_out) > 0 and weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["weight1"] is not None:
 			error_message = "Il mezzo ha già effettuato l'entrata."
-		elif tare != "0":
-			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
+		elif access and access.number_in_out == 0:
+			error_message = "L'accesso è abilitato per il solo transito sulla pesa."
 		elif not access:
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
 					"vehicle": weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]["vehicle"], 
@@ -336,6 +336,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				   	"hidden": True
 				}))
 			current_id = access.id
+		if tare != "0":
+			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		if not error_message:
 			data_assigned = DataAssignedDTO(**{"accessId": current_id, "userId": request.state.user.id})
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
@@ -344,8 +346,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				modope="WEIGHING", 
 				data_assigned=data_assigned
 			)
-			if error_message and access.hidden is True:
-				await self.deleteAccess(request=None, id=current_id)
+		if error_message and access.hidden is True:
+			await self.deleteAccess(request=None, id=current_id)
 		return {
 			"instance": instance,
 			"command_details": {
@@ -377,6 +379,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				access = get_access_by_id(idAccess)
 			just_created = False
 			if access:
+				if access.number_in_out == 0:
+					error_message = "L'accesso è abilitato per il solo transito sulla pesa."
 				if len(access.in_out) == 0 and access.number_in_out is not None and tare != "0":
 					error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
 				if len(access.in_out) > 0 and access.number_in_out is not None and access.in_out[-1].idWeight1 and access.in_out[-1].idWeight2 and tare != "0":
