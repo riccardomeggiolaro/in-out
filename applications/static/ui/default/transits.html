@@ -4,7 +4,7 @@
         <link rel="icon" href="/static/content/baronpesi_favicon.png">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Prenotazioni</title>
+        <title>Transiti</title>
         <meta name="description" content="About this app" />
         <link rel="stylesheet" href="/static/css/dynamic-table.css">
         <link rel="stylesheet" href="/static/css/snackbar.css">
@@ -50,16 +50,13 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Prenotazioni</h2>
+            <h2>Transiti</h2>
             <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
-                <button class="register-button" onclick="addRow()">Crea prenotazione</button>
+                <button class="register-button" onclick="addRow()">Crea transito</button>
             </div>
         </div>
         <div id="filters" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <input id="filter.permanent" name="permanent" type="checkbox" autocomplete="off" onchange="updateTable()">
-                <label for="filter.permanent">Solo permanenti</label>
-            </div>
+            <div></div>
             <div id="panel-buffer-display" style="display: none; align-items: center; gap: 10px;">
                 <span style="font-size: 0.9rem;"><strong>Buffer pannello:</strong> <span id="panel-buffer-text">---</span></span>
                 <button onclick="clearPanelBuffer()" style="padding: 5px 10px; font-size: 0.85rem;">Pulisci</button>
@@ -68,10 +65,6 @@
         </div>
         <table>
             <thead id="filters">
-                <tr>
-                    <td colspan="14" name="permanent" class="permanentFilter">
-                    </td>
-                </tr>
                 <tr>
                     <th name="card_registry.number" class="badge">
                         <input id="filter.card_registry.number" class="badge" name="card_registry.number" type="text" placeholder="Badge" autocomplete="off"
@@ -86,9 +79,6 @@
                     <th name="vector.social_reason">
                         <input id="filter.vector.social_reason" name="vector.social_reason" type="text" placeholder="Vettore" oninput="updateTable()">
                     </th>
-                    <th name="material.description">
-                        <input id="filter.material.description" name="material.description" type="text" placeholder="Materiale" oninput="updateTable()">
-                    </th>
                     <th name="note">
                         <input id="filter.note" name="note" type="text" placeholder="Note" oninput="updateTable()">
                     </th>
@@ -101,7 +91,6 @@
                     <th name="driver.telephone">
                         <input id="filter.driver.telephone" name="driver.telephone" type="text" placeholder="Tel. Autista" oninput="updateTable()">
                     </th>
-                    <th name="number_in_out">N. Operazioni</th>
                     <th name="status">
                         <select id="filter.status" name="status" onchange="updateTable()">
                             <option value="">Stato (Tutti)</option>
@@ -125,7 +114,7 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="14" style="text-align: center;">
+                    <td colspan="12" style="text-align: center;">
                         <label for="rows-per-page">Righe per pagina:</label>
                         <select id="rows-per-page" onchange="changeRowsPerPage()">
                             <option value="10">10</option>
@@ -143,19 +132,12 @@
         </table>
     </div>
 
-    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'edit-inout-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
+    <div class="overlay" id="overlay" onclick="closePopups(['add-popup', 'edit-popup', 'delete-popup', 'confirm-popup', 'img-popup'])"></div>
     
     <div id="add-popup" class="modal-content popup">
-        <h3>Crea prenotazione:</h3>
+        <h3>Crea transito:</h3>
         <form id="register" class="content form-content" oninput="document.querySelector('#add-popup .save-btn').disabled = !this.checkValidity()">
-            <div class="item">
-                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
-                    oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                <label for="permanent">Permanente: </label>
-                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#register')">
-            </div>
-
-            <hr>
+            <input type="number" name="number_in_out" value="0" hidden>
 
             <div class="badge">
                 <div class="item-25">
@@ -309,25 +291,6 @@
 
             <hr>
 
-            <h4>Materiale</h4>
-
-            <div>
-                <div class="item">
-                    <input id="material.id" name="material.id" type="number" class="suggestionId">
-                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
-                        "
-                        onfocus="if (!document.querySelector('#add-popup #material\\.id').value) {
-                            populateSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value);
-                        }"
-                        onblur="closeSuggestions('#add-popup', '#register #suggestions\\.material\\.description', 'description', 'material', this.value)">
-                    <div id="suggestions.material.description" class="suggestions"></div>
-                </div>
-            </div>
-
-            <hr>
-
             <div>
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
@@ -376,16 +339,9 @@
     </div>
 
     <div id="edit-popup" class="modal-content popup">
-        <h3>Modifica prenotazione:</h3>
+        <h3>Modifica transito:</h3>
         <form id="edit" class="content form-content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
-            <div class="item">
-                <input placeholder="Numero operazioni" id="number_in_out" name="number_in_out" type="number" pattern="\d*" autocomplete="new-password" required
-                    oninput="this.value = this.value.replace(/\D/g, '');" min="1" max="10">
-                <label for="permanent" name="permanent">Permanente: </label>
-                <input id="permanent" name="permanent" type="checkbox" onchange="disabledInputNumberInOut(event, '#edit')">
-            </div>
-
-            <hr name="permanent">
+            <input type="number" name="number_in_out" value="0" hidden>
 
             <div class="badge">
                 <div class="item-25">
@@ -555,30 +511,6 @@
 
             <hr>
 
-            <h4>Materiale</h4>
-
-            <div>
-                <div class="item">
-                    <input id="material.id" name="material.id" type="number" class="suggestionId">
-                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
-                            if (document.querySelector('#edit-popup #material\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-popup #material\\.id').value, 'material');
-                                document.querySelector('#edit-popup #material\\.id').value = '';
-                                document.querySelector('#edit-popup #material\\.description').disabled = false;
-                            }
-                        "
-                        onfocus="if (!document.querySelector('#edit-popup #material\\.id').value) {
-                            populateSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value);
-                        }"
-                        onblur="closeSuggestions('#edit-popup', '#edit #suggestions\\.material\\.description', 'description', 'material', this.value)">
-                    <div id="suggestions.material.description" class="suggestions"></div>
-                </div>
-            </div>
-
-            <hr>
-
             <div>
                 <div class="item-25">
                     <input placeholder="Note" id="note" name="note" type="text" autocomplete="new-password">
@@ -632,37 +564,6 @@
         </div>
     </div>
 
-    <div id="edit-inout-popup" class="modal-content popup">
-        <h3>Modifica materiale:</h3>
-        <form id="edit-inout" class="content form-content">
-            <div>
-                <div class="item">
-                    <input id="material.id" name="material.id" type="number" class="suggestionId id">
-                    <input placeholder="Materiale" id="material.description" name="material.description" type="text" autocomplete="new-password"
-                        oninput="
-                            populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
-                            if (document.querySelector('#edit-inout-popup #material\\.id').value != '') {
-                                deselectAnagrafic(document.querySelector('#edit-inout-popup #material\\.id').value, 'material');
-                                document.querySelector('#edit-inout-popup #material\\.id').value = '';
-                                document.querySelector('#edit-inout-popup #material\\.description').disabled = false;
-                            }
-                        "
-                        onfocus="
-                            if (!document.querySelector('#edit-inout-popup #material\\.id').value) {
-                                populateSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value);
-                            }
-                        "
-                        onblur="closeSuggestions('#edit-inout-popup', '#edit-inout #suggestions\\.material\\.description', 'description', 'material', this.value)">
-                    <div id="suggestions.material.description" class="suggestions"></div>
-                </div>
-            </div>
-        </form>
-        <div class="container-buttons right">                
-            <button class="cancel-btn" onclick="closePopups(['edit-inout-popup'])">Indietro</button>
-            <button id="save-btn" class="save-btn" onclick="confirm_exec_funct()">Avanti</button><br>
-        </div>
-    </div>
-    
     <div id="delete-popup" class="modal-content popup">
         <div id="delete">
             <h3>Elimina accesso:</h3>
@@ -713,19 +614,6 @@
     <!-- Snackbar -->
     <div id="snackbar" class="snackbar"></div>
 
-    <!-- Booking Type Legend -->
-    <div style="position: fixed; bottom: 0px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.95); border: 1px solid #ddd; border-radius: 8px; padding: 5px 15px; font-size: 0.85rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); z-index: 100;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 1.1rem;">📅</span>
-                <span style="color: #555;">Prenotazioni</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="font-size: 1.1rem;">⭐</span>
-                <span style="color: #555;">Permanenti</span>
-            </div>
-        </div>
-    </div>
 
     <script type="module" src="/static/javascript/auth.js"></script>
     <script type="module" src="/static/javascript/interceptor.js"></script>
@@ -802,7 +690,7 @@
             populate_detail_tr = populateDetailTr;
             callback_populate_table = onTablePopulated;
             callback_call_anagrafic = callAccess;
-            customQueryParams = 'excludeManuallyAccess=true&';
+            customQueryParams = 'excludeManuallyAccess=true&number_in_out=0&';
             params = {
                 "accesso con targa": "access.vehicle.plate",
                 "accesso con id": "access.id",
@@ -1025,46 +913,7 @@
             }
         }
 
-        function updateWeighingMaterial(idAccess, idInOut, idMaterial, descriptionMaterial) {
-            confirm_exec_funct = () => {
-                const id = document.querySelector("#edit-inout-popup #material\\.id").value || -1;
-                const description = document.querySelector("#edit-inout-popup #material\\.description").value || null;
-                const body = JSON.stringify({
-                    material: {
-                        id,
-                        description
-                    }
-                });
-                console.log(idMaterial, descriptionMaterial)
-                fetch(`/api/anagrafic/access/${idAccess}?idInOut=${idInOut}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body
-                })
-                .then(async res => {
-                    const [data, status] = await Promise.all([res.json(), Promise.resolve(res.status)]);
-                    return ({
-                        data,
-                        status
-                    });
-                })
-                .then(res => {
-                    if (res.status !== 200) {
-                        showSnackbar("snackbar", res.data.detail ? res.data.detail : res.data, 'rgb(255, 208, 208)', 'black');
-                    }
-                    closePopups(['edit-inout-popup'], false);
-                })
-            }
-            document.querySelector("#edit-inout-popup #material\\.id").value = idMaterial;
-            document.querySelector('#edit-inout-popup #material\\.description').value = descriptionMaterial;
-            document.querySelector('#edit-inout-popup .save-btn').disabled = false;
-            selectAnagrafic(idAccess, "UPDATE", "access", null, true);
-            currentId = idAccess;
-        }
-
-        function deleteLastWeighing(idAccess, plate, pid) {
+function deleteLastWeighing(idAccess, plate, pid) {
             confirm_exec_funct = () => {
                 fetch(`/api/anagrafic/access/last-weighing/${idAccess}`, {
                     method: 'DELETE',
@@ -1121,8 +970,6 @@
                 if (!weighing.weight2 && report.in || weighing.weight2 && report.out) content += `<button onclick="exportReportWeighing(${weighing.id})">📄</button>`;
 
                 if (dataUser.level > 1) {
-                    content += `<button onclick="updateWeighingMaterial(${item.id}, ${weighing.id}, ${weighing.material ? weighing.material.id : null}, '${weighing.material ? weighing.material.description : ''}')">✏️</button>`;
-
                     if (lengthWeighings === item.in_out.length && item.is_latest_for_vehicle !== false && item.is_latest_for_badge !== false) {
                         content += `<button onclick="deleteLastWeighing(${item.id}, '${item.vehicle ? item.vehicle.plate : ''}', '${weighing.weight2 ? weighing.weight2.pid : weighing.weight1.pid}')">🗑️</button>`;
                     }
