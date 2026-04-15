@@ -307,7 +307,14 @@ const totemViews = {
                     });
                 };
 
-                doSetPlate();
+                if (hasAccess) {
+                    // Deselect current access before setting new plate
+                    fetch(`/api/data${currentWeigherPath}`, {
+                        method: 'DELETE'
+                    }).then(() => doSetPlate());
+                } else {
+                    doSetPlate();
+                }
             };
 
             document.getElementById('plateDisplay').addEventListener('click', () => {
