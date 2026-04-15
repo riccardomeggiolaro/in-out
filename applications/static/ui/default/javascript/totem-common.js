@@ -503,15 +503,24 @@ function showWeighingSuccess(isError = false, message = null, onDismiss = null) 
 
 // --- Cancel / reset all data ---
 function cancelTotem() {
-    selectedVehicle = { id: null, plate: '' };
-    selectedTypeSubject = defaultTypeSubject;
-    selectedSubject = { id: null, social_reason: '' };
-    selectedVector = { id: null, social_reason: '' };
-    selectedDriver = { id: null, social_reason: '' };
-    selectedMaterial = { id: null, description: '' };
-    selectedIdWeight = null;
-    dataInExecution = null;
-    goTo(totemAnagrafiche.card !== false ? 'card' : 'plate');
+    fetch(`/api/data${currentWeigherPath}`, {
+        method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(() => {
+        selectedVehicle = { id: null, plate: '' };
+        selectedTypeSubject = defaultTypeSubject;
+        selectedSubject = { id: null, social_reason: '' };
+        selectedVector = { id: null, social_reason: '' };
+        selectedDriver = { id: null, social_reason: '' };
+        selectedMaterial = { id: null, description: '' };
+        selectedIdWeight = null;
+        dataInExecution = null;
+        goTo(totemAnagrafiche.card !== false ? 'card' : 'plate');
+    })
+    .catch(() => {
+        goTo(totemAnagrafiche.card !== false ? 'card' : 'plate');
+    });
 }
 
 // --- Select and advance (for grid selection pages) ---
@@ -906,13 +915,13 @@ function processRealtimeObject(obj) {
         _weighingCompleting = false;
         if (obj.weight_executed.pid === "NO") {
             if (weigherMode !== "AUTOMATIC") {
-                showWeighingSuccess(true);
+                showWeighingSuccess(true, t('weighing_unstable'));
             }
         } else if (obj.weight_executed.gross_weight !== "") {
             closePopup();
             showWeighingSuccess();
         } else {
-            showWeighingSuccess(true);
+            showWeighingSuccess(true, t('weighing_unstable'));
         }
         access_id = null;
         document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
