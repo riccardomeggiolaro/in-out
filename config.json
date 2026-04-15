@@ -90,7 +90,7 @@
         "weighers": {
             "0": {
                 "connection": {
-                    "ip": "10.0.5.174",
+                    "ip": "10.0.5.88",
                     "port": 23,
                     "timeout": 3.0
                 },

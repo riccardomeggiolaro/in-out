@@ -73,6 +73,59 @@ materials = [
     {"description": "Rifiuti misti"}
 ]
 
+card_registry = [
+  { "number": "A001", "code": "3C00CBC1A0" },
+  { "number": "A002", "code": "3C00CBFD75" },
+  { "number": "A003", "code": "3C00CBF455" },
+  { "number": "A004", "code": "3C00B57B9A" },
+  { "number": "A005", "code": "3C00CB92D2" },
+  { "number": "A006", "code": "3C00CB52656" },
+  { "number": "A007", "code": "3C00B71835" },
+  { "number": "A008", "code": "3C00B5402B" },
+  { "number": "A009", "code": "3C00CB78BA" },
+  { "number": "A010", "code": "3C00B70E4C" },
+  { "number": "A011", "code": "3C00B638A8" },
+  { "number": "A012", "code": "3C00CA2603" },
+  { "number": "A013", "code": "3C00CBE10D" },
+  { "number": "A014", "code": "3C00C871BC" },
+  { "number": "A015", "code": "3C00CAD737" },
+  { "number": "A016", "code": "3C00B58FEC" },
+  { "number": "A017", "code": "3C00CA5F12" },
+  { "number": "A018", "code": "3C00CA04F8" },
+  { "number": "A019", "code": "3C00CA03EB" },
+  { "number": "A020", "code": "3C00CABD69" },
+  { "number": "A021", "code": "3C00B5A760" },
+  { "number": "A022", "code": "3C00CBAD19" },
+  { "number": "A023", "code": "3C00CB43DF" },
+  { "number": "A024", "code": "3C00B5D437" },
+  { "number": "A025", "code": "3C00CA4B2A" },
+  { "number": "A026", "code": "3C00CC2C04" },
+  { "number": "A027", "code": "3C00B6C548" },
+  { "number": "A028", "code": "3C00B6729B" },
+  { "number": "A029", "code": "3C00CC41B3" },
+  { "number": "A030", "code": "3C00C9D1DA" },
+  { "number": "A031", "code": "3C00B65BAD" },
+  { "number": "A032", "code": "3C00B431C3" },
+  { "number": "A033", "code": "3C00B5D941" },
+  { "number": "A034", "code": "3C00B54100" },
+  { "number": "A035", "code": "3C00CBD3A8" },
+  { "number": "A036", "code": "01154A7C55" },
+  { "number": "A037", "code": "01154A6DBC" },
+  { "number": "A038", "code": "01154A6777" },
+  { "number": "A039", "code": "01154A91F9" },
+  { "number": "A040", "code": "01154A84C3" },
+  { "number": "A041", "code": "01154A8793" },
+  { "number": "A042", "code": "01154A865E" },
+  { "number": "A043", "code": "01154A5B57" },
+  { "number": "A044", "code": "01154A8F83" },
+  { "number": "A045", "code": "01154A5BFA" },
+  { "number": "A046", "code": "01154A834C" },
+  { "number": "A047", "code": "01154A901B" },
+  { "number": "A048", "code": "01154A800D" },
+  { "number": "A049", "code": "01154A5CCB" },
+  { "number": "A050", "code": "01154A7906" }
+]
+
 # Token di autenticazione
 AUTH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJiYXJvbnBlc2kiLCJwYXNzd29yZCI6IiQyYiQxMiRQQUhFNGtoNmxuWG8zdzlTRjl0ajdPamVjbzkxdmdXNzVDcFM5QzBuM0JPNHNoYVdHR08ubSIsImxldmVsIjo0LCJkZXNjcmlwdGlvbiI6ImJhcm9ub3Blc2kiLCJkYXRlX2NyZWF0ZWQiOiIyMDI1LTEwLTMxVDEwOjIyOjEwLjIyODgyNiIsImV4cCI6NDkxNTUwNjk1OH0.EsGLRj73mXHK5hJ-FUyKyy51VKKMvIwODXMi5H4Kpos"
 
@@ -109,5 +162,6 @@ create_and_upload_xlsx(drivers, "driver", f"{base_url}/driver/upload-file")
 create_and_upload_xlsx(vectors, "vector", f"{base_url}/vector/upload-file")
 create_and_upload_xlsx(subjects, "subject", f"{base_url}/subject/upload-file")
 create_and_upload_xlsx(materials, "material", f"{base_url}/material/upload-file")
+create_and_upload_xlsx(card_registry, "card-registry", f"{base_url}/card-registry/upload-file")
 
 print("\nCaricamento completato!")

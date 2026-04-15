@@ -14,10 +14,10 @@ def get_list_accesses(
     order_by=None,
     exclude_test_access=False,
     permanent=None,
+    transits=None,
     get_is_last_for_vehicle=False,
     permanentIfWeight1=False,
     exclude_manually_access=False,
-    exclude_only_transit=False,
     load_subject=True,
     load_vector=True,
     load_driver=True,
@@ -147,17 +147,17 @@ def get_list_accesses(
         if exclude_manually_access:
             query = query.filter(Access.type != TypeAccess.MANUALLY.name)
 
-        if exclude_only_transit:
-            query = query.filter(or_(
-                Access.number_in_out == None,
-                Access.number_in_out > 0
-            ))
-
         if permanent is not None:
             if permanent is True:
                 query = query.filter(Access.number_in_out == None)
             elif permanent is False:
                 query = query.filter(Access.number_in_out != None)
+
+        if transits is not None:
+            if transits is True:
+                query = query.filter(Access.number_in_out == -1)
+            elif transits is False:
+                query = query.filter(Access.number_in_out != -1)
 
         if fromDate:
             if isinstance(fromDate, str):

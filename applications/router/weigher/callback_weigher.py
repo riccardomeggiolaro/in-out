@@ -406,7 +406,7 @@ class CallbackWeigher(Functions, WebSocket):
 					error_message = f"Il peso deve essere maggiore di {min_weight} kg"
 				elif access:
 					current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-					set_preset_tare_if_exists = None
+					# set_preset_tare_if_exists = None
 					if current_weigher_data["id_selected"]["id"] != access["id"]:
 						await self.DeleteData(instance=instance)
 						try:
@@ -414,7 +414,7 @@ class CallbackWeigher(Functions, WebSocket):
 								error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
 							else:
 								data_dto = DataDTO(**{"id_selected": {"id": access["id"]}})
-								set_preset_tare_if_exists = True if access["number_in_out"] != 0 else False
+								set_preset_tare_if_exists = True if access["number_in_out"] != -1 else False
 								need_to_confirm = True if mode == "SEMIAUTOMATIC" and set_preset_tare_if_exists else False
 								await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm, set_preset_tare_if_exists=set_preset_tare_if_exists)
 						except Exception as e:

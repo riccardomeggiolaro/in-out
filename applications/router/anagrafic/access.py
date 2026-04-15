@@ -65,7 +65,7 @@ class AccessRouter(PanelSirenRouter):
         self.router.add_api_route('/call/{id}', self.callAccess, methods=["GET"])
         self.router.add_api_route('/cancel-call/{id}', self.cancelCallAccess, methods=["GET"])
         
-    async def getListAccesses(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, permanent: Optional[bool] = None, permanentIfWeight1: bool = None, excludeManuallyAccess: bool = False, excludeOnlyTransit: Optional[bool] = True):
+    async def getListAccesses(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, permanent: Optional[bool] = None, transits: Optional[bool] = None, permanentIfWeight1: bool = None, excludeManuallyAccess: bool = False):
         try:
             not_closed = False
             if "status" in query_params and query_params["status"] == "NOT_CLOSED":
@@ -84,26 +84,25 @@ class AccessRouter(PanelSirenRouter):
                 del query_params["excludeTestWeighing"]
             if "permanent" in query_params:
                 del query_params["permanent"]
+            if "transits" in query_params:
+                del query_params["transits"]
             if "permanentIfWeight1" in query_params:
                 del query_params["permanentIfWeight1"]
             if "excludeManuallyAccess" in query_params:
                 del query_params["excludeManuallyAccess"]
-            if "excludeOnlyTransit" in query_params:
-                del query_params["excludeOnlyTransit"]
             data, total_rows = get_list_accesses(
-                                    query_params,
-                                    not_closed,
-                                    fromDate,
-                                    toDate,
-                                    limit,
-                                    offset,
-                                    ('date_created', 'desc'),
-                                    excludeTestWeighing,
-                                    permanent,
-                                    True,
-                                    permanentIfWeight1,
+                                    filters=query_params,
+                                    not_closed=not_closed,
+                                    fromDate=fromDate,
+                                    toDate=toDate,
+                                    limit=limit,
+                                    offset=offset,
+                                    order_by=('date_created', 'desc'),
+                                    exclude_test_access=excludeTestWeighing,
+                                    permanent=permanent,
+                                    transits=transits,
+                                    permanentIfWeight1=permanentIfWeight1,
                                     exclude_manually_access=excludeManuallyAccess,
-                                    exclude_only_transit=excludeOnlyTransit,
                                     load_subject=lb_config.g_config["app_api"]["use_anagrafic"]["subject"],
                                     load_vector=lb_config.g_config["app_api"]["use_anagrafic"]["vector"],
                                     load_driver=lb_config.g_config["app_api"]["use_anagrafic"]["driver"],

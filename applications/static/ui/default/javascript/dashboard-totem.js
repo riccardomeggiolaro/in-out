@@ -35,3 +35,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// --- Fullscreen control (triple click top-left) ---
+(function () {
+    let _f11Clicks = 0;
+    let _f11Timer = null;
+
+    const zone = document.createElement('div');
+    zone.style.cssText = 'position:fixed;top:0;left:0;width:60px;height:60px;z-index:9999;cursor:default;-webkit-tap-highlight-color:transparent;';
+
+    zone.addEventListener('click', () => {
+        _f11Clicks++;
+        clearTimeout(_f11Timer);
+
+        if (_f11Clicks >= 3) {
+            _f11Clicks = 0;
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        } else {
+            _f11Timer = setTimeout(() => { _f11Clicks = 0; }, 800);
+        }
+    });
+
+    document.body.appendChild(zone);
+
+})();
