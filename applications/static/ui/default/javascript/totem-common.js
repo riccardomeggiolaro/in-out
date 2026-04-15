@@ -906,13 +906,13 @@ function processRealtimeObject(obj) {
         _weighingCompleting = false;
         if (obj.weight_executed.pid === "NO") {
             if (weigherMode !== "AUTOMATIC") {
-                showWeighingSuccess(true);
+                showWeighingSuccess(true, t('weighing_unstable'));
             }
         } else if (obj.weight_executed.gross_weight !== "") {
             closePopup();
             showWeighingSuccess();
         } else {
-            showWeighingSuccess(true);
+            showWeighingSuccess(true, t('weighing_unstable'));
         }
         access_id = null;
         document.querySelectorAll('.btn-weighing').forEach(b => b.disabled = false);
