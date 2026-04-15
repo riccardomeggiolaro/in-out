@@ -41,6 +41,7 @@ class CallbackWeigher(Functions, WebSocket):
 		super().__init__()
 
 		self.automatic_weighing_process = []
+		self._weighing_rele_pending: set = set()
   
 	# ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
@@ -321,6 +322,8 @@ class CallbackWeigher(Functions, WebSocket):
 							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
+				if lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
+					self._weighing_rele_pending.add((instance_name, weigher_name))
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
 					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
@@ -453,6 +456,8 @@ class CallbackWeigher(Functions, WebSocket):
 											if realtime.status == "ST":
 												if stable == 3:
 													status_modope, command_executed, error_message = None, None, None
+													if lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["set_rele"]:
+														self._weighing_rele_pending.add((instance.instance_name, instance.weigher_name))
 													for rele in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["set_rele"]:
 														modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 														rele_status = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"][rele["rele"]]
@@ -760,6 +765,21 @@ class CallbackWeigher(Functions, WebSocket):
 		except RuntimeError:
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(result))
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(result))
+		if (instance_name, weigher_name) in self._weighing_rele_pending:
+			self._weighing_rele_pending.discard((instance_name, weigher_name))
+			def reset_tare():
+				import time
+				for _ in range(20):
+					status, error = md_weigher.module_weigher.setModope(
+						instance_name=instance_name,
+						weigher_name=weigher_name,
+						modope="PRESETTARE",
+						presettare=0
+					)
+					if status == 100:
+						break
+					time.sleep(0.1)
+			threading.Thread(target=reset_tare, daemon=True).start()
    
 	def Callback_Message(self, instance_name: str, weigher_name: str, message: str):
 		result = {"message": message}
