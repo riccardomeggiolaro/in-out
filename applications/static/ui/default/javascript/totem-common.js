@@ -904,8 +904,8 @@ function processRealtimeObject(obj) {
         return;
     } else if (obj.weight_executed) {
         _weighingCompleting = false;
-        if (weigherMode === "AUTOMATIC" && obj.weight_executed.pid === "NO") {
-            // In automatic mode with no valid PID, do not show success
+        if (obj.weight_executed.pid === "NO") {
+            // No valid PID, do not show success
         } else if (obj.weight_executed.gross_weight !== "") {
             closePopup();
             showWeighingSuccess();
