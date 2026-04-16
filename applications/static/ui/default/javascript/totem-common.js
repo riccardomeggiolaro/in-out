@@ -1038,6 +1038,9 @@ function closePopup() {
     }
 }
 
+// --- Prevent context menu on long press ---
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
 // --- Fullscreen control (triple click top-left) ---
 (function () {
     let _f11Clicks = 0;
