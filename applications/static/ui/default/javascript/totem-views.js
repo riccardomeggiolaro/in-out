@@ -552,8 +552,8 @@ const totemViews = {
 
                 const btnWeigh = document.getElementById('btnWeigh');
                 const btnBack = document.getElementById('btnBack');
-                if (btnWeigh) btnWeigh.style.display = isAutomatic ? 'none' : '';
-                if (btnBack) btnBack.style.display = isAutomatic ? 'none' : '';
+                if (btnWeigh) btnWeigh.style.visibility = isAutomatic ? 'hidden' : '';
+                if (btnBack) btnBack.style.visibility = isAutomatic ? 'hidden' : '';
 
                 if (btnBack) {
                     btnBack.onclick = () => goTo(_findPrevEnabledStep('summary') + '?back=1');
