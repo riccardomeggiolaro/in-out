@@ -63,6 +63,7 @@
             "vector": false,
             "vehicle": true
         },
+        "totem_enabled": true,
         "use_anagrafic": {
             "document_reference": true,
             "driver": true,
