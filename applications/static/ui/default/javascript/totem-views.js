@@ -549,6 +549,9 @@ const totemViews = {
                 const rowMaterial = document.getElementById('rowMaterial');
                 if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && _reservationHasMaterial);
 
+                const btnWeigh = document.getElementById('btnWeigh');
+                if (btnWeigh) btnWeigh.disabled = weigherMode === "AUTOMATIC";
+
                 const btnBack = document.getElementById('btnBack');
                 if (btnBack) {
                     btnBack.onclick = () => goTo(_findPrevEnabledStep('summary') + '?back=1');
