@@ -532,26 +532,26 @@ const totemViews = {
             }
 
             function applyReservationMode() {
+                const isAutomatic = weigherMode === "AUTOMATIC";
                 const isReservationMode = (weigherMode === "AUTOMATIC" || weigherMode === "SEMIAUTOMATIC") && selectedIdWeight && selectedIdWeight.id && selectedIdWeight.id !== -1;
                 const isExit = _isSecondWeighing();
 
-                // Plate always locked with reservation
+                // Plate always locked with reservation or in automatic mode
                 const rowPlate = document.getElementById('rowPlate');
-                if (rowPlate) rowPlate.classList.toggle('disabled', isReservationMode);
+                if (rowPlate) rowPlate.classList.toggle('disabled', isAutomatic || isReservationMode);
 
-                // Each field: locked only if reservation has it
+                // Each field: locked in automatic mode or if reservation has it
                 const rowSubject = document.getElementById('rowSubject');
-                if (rowSubject) rowSubject.classList.toggle('disabled', isReservationMode && _reservationHasSubject);
+                if (rowSubject) rowSubject.classList.toggle('disabled', isAutomatic || (isReservationMode && _reservationHasSubject));
                 const rowVector = document.getElementById('rowVector');
-                if (rowVector) rowVector.classList.toggle('disabled', isReservationMode && _reservationHasVector);
+                if (rowVector) rowVector.classList.toggle('disabled', isAutomatic || (isReservationMode && _reservationHasVector));
                 const rowDriver = document.getElementById('rowDriver');
-                if (rowDriver) rowDriver.classList.toggle('disabled', isReservationMode && _reservationHasDriver);
+                if (rowDriver) rowDriver.classList.toggle('disabled', isAutomatic || (isReservationMode && _reservationHasDriver));
                 const rowMaterial = document.getElementById('rowMaterial');
-                if (rowMaterial) rowMaterial.classList.toggle('disabled', isReservationMode && _reservationHasMaterial);
+                if (rowMaterial) rowMaterial.classList.toggle('disabled', isAutomatic || (isReservationMode && _reservationHasMaterial));
 
                 const btnWeigh = document.getElementById('btnWeigh');
                 const btnBack = document.getElementById('btnBack');
-                const isAutomatic = weigherMode === "AUTOMATIC";
                 if (btnWeigh) btnWeigh.style.display = isAutomatic ? 'none' : '';
                 if (btnBack) btnBack.style.display = isAutomatic ? 'none' : '';
 
