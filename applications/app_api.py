@@ -307,9 +307,26 @@ def init():
 			print(f"Errore nel caricamento report-designer: {e}")
 			return HTMLResponse(content=f"Errore: {str(e)}", status_code=500)
 
+	def _totem_enabled() -> bool:
+		return lb_config.g_config.get("app_api", {}).get("totem_enabled", True)
+
 	@app.get("/dashboard-totem", response_class=HTMLResponse)
 	async def DashboardTotem(request: Request):
+		if not _totem_enabled():
+			return RedirectResponse(url="/not-found")
 		return templates.TemplateResponse("dashboard-totem.html", {"request": request})
+
+	@app.get("/totem", response_class=HTMLResponse)
+	async def Totem(request: Request):
+		if not _totem_enabled():
+			return RedirectResponse(url="/not-found")
+		return templates.TemplateResponse("totem.html", {"request": request})
+
+	@app.get("/totem.html", response_class=HTMLResponse)
+	async def TotemHtml(request: Request):
+		if not _totem_enabled():
+			return RedirectResponse(url="/not-found")
+		return templates.TemplateResponse("totem.html", {"request": request})
 
 	@app.get('/{filename:path}', response_class=HTMLResponse)
 	async def Static(request: Request, filename: str):
