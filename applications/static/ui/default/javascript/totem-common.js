@@ -1046,7 +1046,7 @@ function closePopup() {
     const zone = document.createElement('div');
     zone.style.cssText = 'position:fixed;top:0;left:0;width:60px;height:60px;z-index:9999;cursor:default;-webkit-tap-highlight-color:transparent;';
 
-    zone.addEventListener('click', () => {
+    function handleTap() {
         _f11Clicks++;
         clearTimeout(_f11Timer);
 
@@ -1060,7 +1060,14 @@ function closePopup() {
         } else {
             _f11Timer = setTimeout(() => { _f11Clicks = 0; }, 800);
         }
+    }
+
+    zone.addEventListener('touchend', (e) => {
+        e.preventDefault(); // prevent the subsequent click event
+        handleTap();
     });
+
+    zone.addEventListener('click', handleTap);
 
     document.body.appendChild(zone);
 
