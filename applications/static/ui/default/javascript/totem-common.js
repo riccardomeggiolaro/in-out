@@ -68,6 +68,10 @@ function initTotemPage() {
     fetch('/api/config-weigher/configuration')
     .then(res => res.json())
     .then(res => {
+        if (res["totem_enabled"] === false) {
+            document.body.innerHTML = '';
+            return;
+        }
         return_pdf_copy_after_weighing = res["return_pdf_copy_after_weighing"];
         test_mode = res["test_mode"] || false;
         instances = res["weighers"];

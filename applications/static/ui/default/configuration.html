@@ -664,6 +664,9 @@
                     <br>
                     <h3>TOTEM</h3>
                     <br>
+                    <label for="totem-enabled">Pagina totem abilitata: </label>
+                    <input type="checkbox" id="totem-enabled" onclick="setTotemEnabled(this.checked)">
+                    <br><br>
                     <label>Sezioni abilitate per l'utente sul totem:</label>
                     <br><br>
                     <label for="totem-card">Tessera: </label>
@@ -2040,6 +2043,9 @@
                 } else {
                     document.getElementById('default-type-customer').checked = true;
                 }
+
+                // Totem enabled
+                document.getElementById('totem-enabled').checked = res.totem_enabled !== false;
 
                 // Totem anagrafiche
                 const totemAnagrafiche = res.totem_anagrafiche || { card: true, vehicle: true, subject: false, vector: false, driver: false, material: true };
@@ -3992,6 +3998,16 @@
 
         function setTotemAnagrafic(anagrafic, status) {
             fetch(`/api/config-weigher/configuration/totem-anagrafic/${anagrafic}/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setTotemEnabled(status) {
+            fetch(`/api/config-weigher/configuration/totem-enabled/${status}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
