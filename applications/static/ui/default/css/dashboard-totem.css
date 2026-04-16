@@ -619,18 +619,6 @@ body {
     cursor: not-allowed;
 }
 
-.btn-primary:hover:not(:disabled) {
-    background: #F0F0F0;
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: #F0F0F0;
-}
-
-.btn-weighing:hover:not(:disabled) {
-    background: #F0F0F0;
-}
-
 .btn-next {
     min-width: 0;
 }

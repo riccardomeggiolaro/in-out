@@ -43,6 +43,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/configuration/access-anagrafic/{anagrafic}/{status}', self.SetAccessAnagrafic, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/default-type-subject/{type_subject}', self.SetDefaultTypeSubject, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/totem-anagrafic/{anagrafic}/{status}', self.SetTotemAnagrafic, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/configuration/totem-enabled/{totem_enabled}', self.SetTotemEnabled, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-pdf', self.SavePathPdf, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-csv', self.SavePathCsv, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/configuration/path-img', self.SavePathImg, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
@@ -64,6 +65,8 @@ class ConfigWeigher(CommandWeigherRouter):
 	async def GetAllConfiguration(self):
 		ver = { "ver": lb_config.g_config["ver"] }
 		app_api = lb_config.g_config["app_api"]
+		if "totem_enabled" not in app_api:
+			app_api["totem_enabled"] = True
 		if "totem_anagrafiche" not in app_api:
 			app_api["totem_anagrafiche"] = {
 				"card": True, "vehicle": True, "subject": False, "vector": False, "driver": False, "material": True
@@ -154,6 +157,11 @@ class ConfigWeigher(CommandWeigherRouter):
 		lb_config.g_config["app_api"]["totem_anagrafiche"][anagrafic] = status
 		lb_config.saveconfig()
 		return lb_config.g_config["app_api"]["totem_anagrafiche"]
+
+	async def SetTotemEnabled(self, totem_enabled: bool):
+		lb_config.g_config["app_api"]["totem_enabled"] = totem_enabled
+		lb_config.saveconfig()
+		return { "totem_enabled": totem_enabled }
 
 	async def SavePathPdf(self, body: PathDTO):
 		path = body.path
