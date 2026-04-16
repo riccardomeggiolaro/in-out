@@ -90,6 +90,7 @@ function _resolveStartPage() {
 
     if (!selectedVehicle.plate) return;
     if (weigherMode === "AUTOMATIC") return;
+    if (weigherMode === "SEMIAUTOMATIC") { goTo('summary'); return; }
 
     // Find the first enabled step that doesn't have data yet
     const steps = [
@@ -114,7 +115,7 @@ let _waitingForStartPage = false;
 // Find the next step with an empty field, starting after the given step
 // Skips steps disabled in totem config or already set on the reservation
 function _findNextEnabledStep(afterStep, ignoreMode = false) {
-    if (!ignoreMode && weigherMode === "AUTOMATIC") return null;
+    if (!ignoreMode && (weigherMode === "AUTOMATIC" || weigherMode === "SEMIAUTOMATIC")) return null;
     const steps = [
         { name: 'subject', enabled: totemAnagrafiche.subject, hasData: () => !!selectedSubject.id },
         { name: 'vector', enabled: totemAnagrafiche.vector, hasData: () => !!selectedVector.id },
