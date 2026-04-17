@@ -1045,24 +1045,27 @@ function closePopup() {
 // --- Prevent context menu on long press ---
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// --- Block touch scroll that triggers browser fullscreen-exit UI ---
-document.addEventListener('touchmove', (e) => { if (document.fullscreenElement) e.preventDefault(); }, { passive: false });
-
-// --- Fullscreen control (triple click top-left + F11) ---
+// --- Fullscreen control (triple click top-left + F11, auto re-enter on accidental exit) ---
 (function () {
     let _clicks = 0, _clickTimer = null, _intentionalExit = false;
-    const enterFs = () => document.documentElement.requestFullscreen().catch(() => {});
-    const exitFs = () => { _intentionalExit = true; document.exitFullscreen().catch(() => { _intentionalExit = false; }); };
+
+    function enterFs() { document.documentElement.requestFullscreen().catch(() => {}); }
+    function exitFs() { _intentionalExit = true; document.exitFullscreen().catch(() => { _intentionalExit = false; }); }
 
     document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) { _intentionalExit ? (_intentionalExit = false) : enterFs(); }
-        document.documentElement.style.cursor = document.fullscreenElement ? 'none' : '';
+        if (!document.fullscreenElement) {
+            if (_intentionalExit) { _intentionalExit = false; }
+            else { setTimeout(enterFs, 100); }
+        }
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? exitFs() : enterFs(); } });
 
     const zone = document.createElement('div');
     zone.style.cssText = 'position:fixed;top:0;left:0;width:60px;height:60px;z-index:9999;cursor:default;-webkit-tap-highlight-color:transparent;';
-    function handleTap() { if (++_clicks >= 3) { _clicks = 0; document.fullscreenElement ? exitFs() : enterFs(); } else { clearTimeout(_clickTimer); _clickTimer = setTimeout(() => { _clicks = 0; }, 800); } }
+    function handleTap() {
+        if (++_clicks >= 3) { _clicks = 0; document.fullscreenElement ? exitFs() : enterFs(); }
+        else { clearTimeout(_clickTimer); _clickTimer = setTimeout(() => { _clicks = 0; }, 800); }
+    }
     zone.addEventListener('touchend', (e) => { e.preventDefault(); handleTap(); });
     zone.addEventListener('click', handleTap);
     document.body.appendChild(zone);
