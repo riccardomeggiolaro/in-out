@@ -42,14 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const enterFs = () => document.documentElement.requestFullscreen().catch(() => {});
     const exitFs = () => { _intentionalExit = true; document.exitFullscreen().catch(() => { _intentionalExit = false; }); };
 
-    const overlay = Object.assign(document.createElement('div'), { onclick: (e) => { e.preventDefault(); overlay.style.display = 'none'; enterFs(); } });
-    overlay.style.cssText = 'display:none;position:fixed;inset:0;z-index:99999;background:#000;cursor:pointer;';
-    overlay.addEventListener('touchend', overlay.onclick);
-    document.body.appendChild(overlay);
-
     document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) { _intentionalExit ? (_intentionalExit = false) : (overlay.style.display = 'block'); }
-        else { overlay.style.display = 'none'; }
+        if (!document.fullscreenElement) { _intentionalExit ? (_intentionalExit = false) : enterFs(); }
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? exitFs() : enterFs(); } });
 
