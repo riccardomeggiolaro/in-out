@@ -198,8 +198,9 @@ async function loadSetupWeighers() {
                 <option value="1" ${status === 1 ? 'selected' : ''}>Attiva</option>
                 <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
             </select>
-            <select style="width: 150px">
-                <option value="weighing" ${on_event === "weighing" ? 'selected' : ''}>Dopo la pesata</option>
+            <select style="width: 180px">
+                <option value="weighing_in" ${on_event === "weighing_in" ? 'selected' : ''}>Dopo la pesata IN</option>
+                <option value="weighing_out" ${on_event === "weighing_out" ? 'selected' : ''}>Dopo la pesata OUT</option>
                 <option value="over_min" ${on_event === "over_min" ? 'selected' : ''}>Sopra peso minimo</option>
                 <option value="under_min" ${on_event === "under_min" ? 'selected' : ''}>Sotto peso minimo</option>
             </select>
@@ -1456,7 +1457,8 @@ async function loadSetupWeighers() {
                     cams: [],
                     over_min: [],
                     under_min: [],
-                    weighing: []
+                    weighing_in: [],
+                    weighing_out: []
                 };
                     
                 const inputs = addWeigherModal.querySelectorAll('input');
@@ -1554,7 +1556,8 @@ async function loadSetupWeighers() {
                     const cams = data.events.weighing.cams;
                     const over_min = data.events.realtime.over_min.set_rele;
                     const under_min = data.events.realtime.under_min.set_rele;
-                    const weighing = data.events.weighing.set_rele;
+                    const weighing_in = data.events.weighing.set_rele_in || [];
+                    const weighing_out = data.events.weighing.set_rele_out || [];
                     viewModeCFontent.innerHTML = `
                         <h4>${data.name} <span class="gray">${data.terminal}</span></h4>
                         <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
@@ -1575,7 +1578,7 @@ async function loadSetupWeighers() {
                             viewModeCFontent.innerHTML += `<p class="gray"><em>${cam.picture}</em> <strong>-</strong> ${cam.active ? '<em>Attiva</em>' : '<em>Disattiva</em>'}</p>`;
                         });
                     }
-                    if (over_min.length > 0 || under_min.length > 0 || weighing.length > 0) {
+                    if (over_min.length > 0 || under_min.length > 0 || weighing_in.length > 0 || weighing_out.length > 0) {
                         viewModeCFontent.innerHTML += '<h5 class="gray"><em>RELE</em></h5>';
                         over_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
@@ -1587,9 +1590,14 @@ async function loadSetupWeighers() {
                                 <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} sotto il peso minimo</em></p>
                             `;
                         });
-                        weighing.forEach(r => {
+                        weighing_in.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata</em></p>
+                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata IN</em></p>
+                            `;
+                        });
+                        weighing_out.forEach(r => {
+                            viewModeCFontent.innerHTML += `
+                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata OUT</em></p>
                             `;
                         });
                     }
@@ -1743,8 +1751,11 @@ async function loadSetupWeighers() {
                         addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "under_min");
                     })
 
-                    data.events.weighing.set_rele.forEach(rele => {
-                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "weighing");
+                    (data.events.weighing.set_rele_in || []).forEach(rele => {
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "weighing_in");
+                    });
+                    (data.events.weighing.set_rele_out || []).forEach(rele => {
+                        addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "weighing_out");
                     });
 
                     editWeigherForm.dispatchEvent(event);

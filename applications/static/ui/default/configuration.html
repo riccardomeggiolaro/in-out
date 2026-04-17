@@ -1493,7 +1493,8 @@
                     <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
                 </select>
                 <select class="rele-event" style="width: 180px;">
-                    <option value="weighing" ${event === 'weighing' ? 'selected' : ''}>Dopo la pesata</option>
+                    <option value="weighing_in" ${event === 'weighing_in' ? 'selected' : ''}>Dopo la pesata IN</option>
+                    <option value="weighing_out" ${event === 'weighing_out' ? 'selected' : ''}>Dopo la pesata OUT</option>
                     <option value="over_min" ${event === 'over_min' ? 'selected' : ''}>Sopra peso minimo</option>
                     <option value="under_min" ${event === 'under_min' ? 'selected' : ''}>Sotto peso minimo</option>
                 </select>
@@ -2288,9 +2289,14 @@
                     // Prepara HTML per relè
                     let relesHtml = '';
                     const allReles = [];
-                    if (node.events?.weighing?.set_rele) {
-                        node.events.weighing.set_rele.forEach(rele => {
-                            allReles.push({ ...rele, event: 'Dopo la pesata' });
+                    if (node.events?.weighing?.set_rele_in) {
+                        node.events.weighing.set_rele_in.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Dopo la pesata IN' });
+                        });
+                    }
+                    if (node.events?.weighing?.set_rele_out) {
+                        node.events.weighing.set_rele_out.forEach(rele => {
+                            allReles.push({ ...rele, event: 'Dopo la pesata OUT' });
                         });
                     }
                     if (node.events?.realtime?.over_min?.set_rele) {
@@ -2745,9 +2751,14 @@
 
                 // Popola relè esistenti ordinati per campo order
                 const allRelesEdit = [];
-                if (node.events?.weighing?.set_rele && Array.isArray(node.events.weighing.set_rele)) {
-                    node.events.weighing.set_rele.forEach(rele => {
-                        allRelesEdit.push({ ...rele, event: 'weighing' });
+                if (node.events?.weighing?.set_rele_in && Array.isArray(node.events.weighing.set_rele_in)) {
+                    node.events.weighing.set_rele_in.forEach(rele => {
+                        allRelesEdit.push({ ...rele, event: 'weighing_in' });
+                    });
+                }
+                if (node.events?.weighing?.set_rele_out && Array.isArray(node.events.weighing.set_rele_out)) {
+                    node.events.weighing.set_rele_out.forEach(rele => {
+                        allRelesEdit.push({ ...rele, event: 'weighing_out' });
                     });
                 }
                 if (node.events?.realtime?.over_min?.set_rele && Array.isArray(node.events.realtime.over_min.set_rele)) {
@@ -2789,7 +2800,8 @@
             const formData = new FormData(form);
             const data = {
                 cams: [],
-                weighing: [],
+                weighing_in: [],
+                weighing_out: [],
                 over_min: [],
                 under_min: []
             };
@@ -2951,7 +2963,8 @@
             const formData = new FormData(form);
             const data = {
                 cams: [],
-                weighing: [],
+                weighing_in: [],
+                weighing_out: [],
                 over_min: [],
                 under_min: []
             };

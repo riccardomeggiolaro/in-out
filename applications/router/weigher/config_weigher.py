@@ -385,12 +385,13 @@ class ConfigWeigher(CommandWeigherRouter):
 					"tare": setup.number_of_prints_tare if setup.number_of_prints_tare is not None else 1,
 					"generic": setup.number_of_prints_generic if setup.number_of_prints_generic is not None else 1
 				},
-				"set_rele": [rele.dict() for rele in setup.weighing],
+				"set_rele_in": [rele.dict() for rele in setup.weighing_in],
+				"set_rele_out": [rele.dict() for rele in setup.weighing_out],
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
 			}
 		}
 		weigher_created[setup.name]["rele"] = {}
-		reles = setup.over_min + setup.under_min + setup.weighing
+		reles = setup.over_min + setup.under_min + setup.weighing_in + setup.weighing_out
 		for obj in reles:
 			rele = obj.rele
 			if rele not in weigher_created[setup.name]["rele"]:
@@ -474,11 +475,12 @@ class ConfigWeigher(CommandWeigherRouter):
 					"tare": setup.number_of_prints_tare if setup.number_of_prints_tare is not None else 1,
 					"generic": setup.number_of_prints_generic if setup.number_of_prints_generic is not None else 1
 				},
-				"set_rele": [rele.dict() for rele in setup.weighing],
+				"set_rele_in": [rele.dict() for rele in setup.weighing_in],
+				"set_rele_out": [rele.dict() for rele in setup.weighing_out],
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
 			}
 		}
-		reles = setup.over_min + setup.under_min + setup.weighing
+		reles = setup.over_min + setup.under_min + setup.weighing_in + setup.weighing_out
 		number_reles = [rele.rele for rele in reles]
 		config_json_reles = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][weigher_name]["rele"].copy()
 		for key, value in config_json_reles.items():

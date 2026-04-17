@@ -49,7 +49,8 @@ class ChangeSetupWeigherDTO(CustomBaseModel):
 	number_of_prints_tare: Optional[int] = None
 	number_of_prints_generic: Optional[int] = None
 	cams: list[CamDTO] = []
-	weighing: list[ReleDTO] = []
+	weighing_in: list[ReleDTO] = []
+	weighing_out: list[ReleDTO] = []
 	over_min: list[ReleDTO] = []
 	under_min: list[ReleDTO] = []
 
@@ -114,7 +115,8 @@ class SetupWeigherDTO(BaseModel):
 	number_of_prints_tare: Optional[int] = 1
 	number_of_prints_generic: Optional[int] = 1
 	cams: list[CamDTO] = []
-	weighing: list[ReleDTO] = []
+	weighing_in: list[ReleDTO] = []
+	weighing_out: list[ReleDTO] = []
 	over_min: list[ReleDTO] = []
 	under_min: list[ReleDTO] = []
 
