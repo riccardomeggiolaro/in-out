@@ -256,6 +256,7 @@ class InOut(Base):
     net_weight = Column(Integer, nullable=True)
     note = Column(String, nullable=True)
     document_reference = Column(String, nullable=True)
+    idCardRegistry = Column(Integer, ForeignKey('card_registry.id'), nullable=True)
 
     # Relationships
     access = relationship("Access", back_populates="in_out")
@@ -265,6 +266,7 @@ class InOut(Base):
     material = relationship("Material", back_populates="in_out")
     weight1 = relationship("Weighing", foreign_keys=[idWeight1], back_populates="in_out_weight1")  # FIXED: added foreign_keys
     weight2 = relationship("Weighing", foreign_keys=[idWeight2], back_populates="in_out_weight2")  # FIXED: added foreign_keys
+    card_registry = relationship("CardRegistry", foreign_keys=[idCardRegistry])
 
     @hybrid_property  
     def is_last(self):
