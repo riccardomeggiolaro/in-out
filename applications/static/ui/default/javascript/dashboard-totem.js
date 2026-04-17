@@ -36,6 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// --- Intercept F11 to use JS fullscreen API (hides browser native exit toolbar) ---
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'F11') {
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            document.exitFullscreen().catch(() => {});
+        }
+    }
+});
+
 // --- Fullscreen control (triple click top-left) ---
 (function () {
     let _f11Clicks = 0;
