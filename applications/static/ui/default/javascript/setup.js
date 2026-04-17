@@ -199,8 +199,8 @@ async function loadSetupWeighers() {
                 <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
             </select>
             <select style="width: 180px">
-                <option value="weighing_in" ${on_event === "weighing_in" ? 'selected' : ''}>Dopo la pesata IN</option>
-                <option value="weighing_out" ${on_event === "weighing_out" ? 'selected' : ''}>Dopo la pesata OUT</option>
+                <option value="weighing_in" ${on_event === "weighing_in" ? 'selected' : ''}>Dopo la pesata in ENTRATA</option>
+                <option value="weighing_out" ${on_event === "weighing_out" ? 'selected' : ''}>Dopo la pesata in USCITA</option>
                 <option value="over_min" ${on_event === "over_min" ? 'selected' : ''}>Sopra peso minimo</option>
                 <option value="under_min" ${on_event === "under_min" ? 'selected' : ''}>Sotto peso minimo</option>
             </select>
@@ -1592,12 +1592,12 @@ async function loadSetupWeighers() {
                         });
                         weighing_in.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata IN</em></p>
+                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata in ENTRATA</em></p>
                             `;
                         });
                         weighing_out.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata OUT</em></p>
+                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata in USCITA</em></p>
                             `;
                         });
                     }
