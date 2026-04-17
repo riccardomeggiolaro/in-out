@@ -682,6 +682,46 @@ def migrate_access_badge_to_idCardRegistry():
         lb_log.error(f"Errore durante la migrazione access.badge → idCardRegistry: {e}")
 
 
+def migrate_in_out_idCardRegistry():
+    """
+    Copia access.idCardRegistry su ogni record in_out che non ha ancora
+    il campo valorizzato, preservando il badge usato al momento della pesata.
+    """
+    try:
+        with engine.connect() as conn:
+            tables = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
+            table_names = {row[0] for row in tables}
+            if 'in_out' not in table_names or 'access' not in table_names:
+                return
+
+            in_out_cols = {row[1] for row in conn.execute(text("PRAGMA table_info('in_out')")).fetchall()}
+            if 'idCardRegistry' not in in_out_cols:
+                return
+
+            conn.execute(text(
+                """
+                UPDATE in_out
+                SET idCardRegistry = (
+                    SELECT a.idCardRegistry FROM access a WHERE a.id = in_out.idAccess
+                )
+                WHERE idCardRegistry IS NULL
+                  AND EXISTS (
+                    SELECT 1 FROM access a
+                    WHERE a.id = in_out.idAccess AND a.idCardRegistry IS NOT NULL
+                  )
+                """
+            ))
+            conn.commit()
+
+            count = conn.execute(text(
+                "SELECT changes()"
+            )).fetchone()[0]
+            if count:
+                lb_log.info(f"Migrazione in_out.idCardRegistry: {count} record aggiornati")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione in_out.idCardRegistry: {e}")
+
+
 # Esegui migrazione per stati deprecati
 migrate_called_status()
 
@@ -702,6 +742,9 @@ Base.metadata.create_all(engine)
 
 # Esegui migrazione access.badge → idCardRegistry (dopo sync e create)
 migrate_access_badge_to_idCardRegistry()
+
+# Copia idCardRegistry da access a in_out per i record storici
+migrate_in_out_idCardRegistry()
 
 # Create default users
 def create_default_users():
