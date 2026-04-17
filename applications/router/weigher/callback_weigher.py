@@ -321,9 +321,10 @@ class CallbackWeigher(Functions, WebSocket):
 							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
-				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["set_rele"]:
+				rele_direction = "in" if event_type == "in" else "out"
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"].get("set_rele", {}).get(rele_direction, []):
 					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
-					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
+					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"].get(rele["rele"], 0)
 					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
 		elif not last_pesata.weight_executed.executed:
 			if last_pesata.data_assigned.accessId and access.hidden is True:
@@ -453,9 +454,10 @@ class CallbackWeigher(Functions, WebSocket):
 											if realtime.status == "ST":
 												if stable == 3:
 													status_modope, command_executed, error_message = None, None, None
-													for rele in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"]["set_rele"]:
+													auto_direction = "out" if weight1 else "in"
+													for rele in lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"].get("set_rele", {}).get(auto_direction, []):
 														modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
-														rele_status = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"][rele["rele"]]
+														rele_status = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"].get(rele["rele"], 0)
 														status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
 														if error_message:
 															error_message = f"Errore nel settaggio del rele: {error_message}. Ritento."

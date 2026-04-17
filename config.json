@@ -136,13 +136,16 @@
                                     "out": true,
                                     "tare": true
                                 },
-                                "set_rele": [
-                                    {
-                                        "order": 0,
-                                        "rele": "1",
-                                        "set": 1
-                                    }
-                                ]
+                                "set_rele": {
+                                    "in": [
+                                        {
+                                            "order": 0,
+                                            "rele": "1",
+                                            "set": 1
+                                        }
+                                    ],
+                                    "out": []
+                                }
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
