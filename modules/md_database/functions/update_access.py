@@ -87,8 +87,12 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                 else:
                     access.idDriver = data.driver.id
 
-            # if data.vehicle.id and access.idVehicle and access.idVehicle != data.vehicle.id and len(access.in_out) > 0:
-            #     raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
+            if len(access.in_out) > 0 and not idInOut and access.type != TypeAccess.MANUALLY:
+                current_plate = access.vehicle.plate.upper() if access.vehicle and access.vehicle.plate else None
+                if data.vehicle.id not in [None, -1] and data.vehicle.id != access.idVehicle:
+                    raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
+                if data.vehicle.id in [None, -1] and data.vehicle.plate and data.vehicle.plate.upper() != (current_plate or ''):
+                    raise ValueError("Non è possibile modificare la targa dopo che è stata effettuata la prima pesata")
 
             current_reservation_vehicle = access.idVehicle
 

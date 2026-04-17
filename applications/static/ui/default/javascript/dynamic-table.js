@@ -917,8 +917,14 @@ function editRow(item) {
         const plateInput = editPopup.querySelector('#vehicle\\.plate');
         if (plateInput) {
             const hasWeighings = item.in_out && item.in_out.length > 0;
-            const plateContainer = plateInput.closest('.item-25');
-            if (plateContainer) plateContainer.style.display = hasWeighings ? 'none' : '';
+            const vehicleDiv = plateInput.closest('.item-25')?.parentElement;
+            if (vehicleDiv) {
+                vehicleDiv.style.display = hasWeighings ? 'none' : '';
+                const h4 = vehicleDiv.previousElementSibling;
+                if (h4 && h4.tagName === 'H4') h4.style.display = hasWeighings ? 'none' : '';
+                const hr = vehicleDiv.nextElementSibling;
+                if (hr && hr.tagName === 'HR') hr.style.display = hasWeighings ? 'none' : '';
+            }
         }
         triggerEventsForAll('.id');
     }
