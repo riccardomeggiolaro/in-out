@@ -50,11 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (_f11Clicks >= 3) {
             _f11Clicks = 0;
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen().catch(() => {});
-            }
+            window.close();
         } else {
             _f11Timer = setTimeout(() => { _f11Clicks = 0; }, 800);
         }
