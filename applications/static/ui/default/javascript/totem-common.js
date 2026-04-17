@@ -968,7 +968,11 @@ function processRealtimeObject(obj) {
         // If a new access was selected (from dashboard), navigate to first empty field or summary
         if (!prevId && obj.id_selected && obj.id_selected.id !== null) {
             const dest = _findNextEnabledStep('plate');
-            goTo(dest || 'summary');
+            if (_currentViewName === 'plate' && selectedVehicle.plate && typeof onDataUpdate === 'function') {
+                onDataUpdate();
+            } else {
+                goTo(dest || 'summary');
+            }
             return;
         }
 
