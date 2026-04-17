@@ -123,6 +123,7 @@ const totemViews = {
             </div>
         `,
         init: () => {
+            if (window._plateAutoNavTimer) { clearTimeout(window._plateAutoNavTimer); window._plateAutoNavTimer = null; }
             window._plateManualMode = false;
 
             window._plateFitText = function(el) {
@@ -339,7 +340,13 @@ const totemViews = {
                 if (_plateManualMode) return;
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
-                    _plateGoToNext();
+                    document.getElementById('btnCancelPlate').style.visibility = '';
+                    document.getElementById('btnNext').style.visibility = '';
+                    if (window._plateAutoNavTimer) clearTimeout(window._plateAutoNavTimer);
+                    window._plateAutoNavTimer = setTimeout(() => {
+                        window._plateAutoNavTimer = null;
+                        _plateGoToNext();
+                    }, 3000);
                 }
             };
         }
@@ -436,20 +443,20 @@ const totemViews = {
     summary: {
         get title() { return 'Totem - ' + t('summary_title'); },
         style: `
-            .summary-list { display: flex; flex-direction: column; gap: clamp(8px, 1.5vh, 20px); width: 100%; padding: 0 16px; box-sizing: border-box; flex: 1; min-height: 0; overflow: hidden; justify-content: center; }
+            .summary-list { display: flex; flex-direction: column; gap: clamp(8px, 1.5vh, 24px); width: 100%; padding: 0 16px; box-sizing: border-box; flex: 1; min-height: 0; overflow: hidden; justify-content: center; }
             .summary-item { display: grid; grid-template-columns: 0.5fr 1fr; align-items: stretch; gap: clamp(8px, 2vw, 16px); min-height: 0; flex: 0.2; }
-            .summary-item-label { font-size: clamp(0.7rem, 5vh, 3rem); font-weight: 600; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: flex-end; }
-            .summary-item-value { background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 0 clamp(8px, 2vw, 16px); gap: 8px; cursor: pointer; transition: all 0.2s; color: #111111; font-weight: 500; font-size: clamp(0.7rem, 5vh, 3rem); min-height: 0; overflow: hidden; }
+            .summary-item-label { font-size: clamp(1rem, 7vh, 5rem); font-weight: 600; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: flex-end; }
+            .summary-item-value { background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 0 clamp(8px, 2vw, 16px); gap: 8px; cursor: pointer; transition: all 0.2s; color: #111111; font-weight: 500; font-size: clamp(1rem, 7vh, 5rem); min-height: 0; overflow: hidden; }
             .summary-item-value:hover { border-color: #999999; background: #F0F0F0; transform: translateY(-1px); box-shadow: 0 4px 0 #AAAAAA, 0 6px 12px rgba(0,0,0,0.2); }
             .summary-item-text { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            .summary-item-edit { font-size: clamp(0.7rem, 4.5vh, 2.8rem); flex-shrink: 0; }
+            .summary-item-edit { font-size: clamp(0.9rem, 6vh, 4rem); flex-shrink: 0; }
             .summary-item.disabled .summary-item-value { cursor: default; pointer-events: none; }
             .summary-item.disabled .summary-item-edit { display: none; }
             .summary-weight-value { background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 14px); box-shadow: 0 3px 0 #AAAAAA, 0 4px 8px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; gap: clamp(6px, 1.5vw, 12px); padding: 0 clamp(8px, 2vw, 16px); min-height: 0; overflow: hidden; pointer-events: none; }
-            .summary-weight-net { font-size: clamp(0.7rem, 5vh, 3rem); font-weight: 700; letter-spacing: 2px; color: #111111; }
-            .summary-weight-unit { font-size: clamp(0.6rem, 3.5vh, 2rem); font-weight: 600; color: #666666; }
-            .summary-weight-sep { font-size: clamp(0.6rem, 3.5vh, 2rem); color: #CCCCCC; }
-            .summary-weight-status { font-size: clamp(0.6rem, 3.5vh, 2rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #666666; }
+            .summary-weight-net { font-size: clamp(1rem, 7vh, 5rem); font-weight: 700; letter-spacing: 2px; color: #111111; }
+            .summary-weight-unit { font-size: clamp(0.8rem, 5vh, 3.5rem); font-weight: 600; color: #666666; }
+            .summary-weight-sep { font-size: clamp(0.8rem, 5vh, 3.5rem); color: #CCCCCC; }
+            .summary-weight-status { font-size: clamp(0.8rem, 5vh, 3.5rem); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #666666; }
         `,
         html: () => `
             <h2>${t('summary_title')}</h2>
