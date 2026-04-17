@@ -1990,13 +1990,13 @@
                     // Prepara HTML per relè
                     let relesHtml = '';
                     const allReles = [];
-                    if (node.events?.weighing?.set_rele_in) {
-                        node.events.weighing.set_rele_in.forEach(rele => {
+                    if (node.events?.weighing?.set_rele?.in) {
+                        node.events.weighing.set_rele.in.forEach(rele => {
                             allReles.push({ ...rele, event: 'Dopo la pesata IN' });
                         });
                     }
-                    if (node.events?.weighing?.set_rele_out) {
-                        node.events.weighing.set_rele_out.forEach(rele => {
+                    if (node.events?.weighing?.set_rele?.out) {
+                        node.events.weighing.set_rele.out.forEach(rele => {
                             allReles.push({ ...rele, event: 'Dopo la pesata OUT' });
                         });
                     }
@@ -2443,13 +2443,13 @@
 
                 // Popola relè esistenti ordinati per campo order
                 const allRelesEdit = [];
-                if (node.events?.weighing?.set_rele_in && Array.isArray(node.events.weighing.set_rele_in)) {
-                    node.events.weighing.set_rele_in.forEach(rele => {
+                if (node.events?.weighing?.set_rele?.in && Array.isArray(node.events.weighing.set_rele.in)) {
+                    node.events.weighing.set_rele.in.forEach(rele => {
                         allRelesEdit.push({ ...rele, event: 'weighing_in' });
                     });
                 }
-                if (node.events?.weighing?.set_rele_out && Array.isArray(node.events.weighing.set_rele_out)) {
-                    node.events.weighing.set_rele_out.forEach(rele => {
+                if (node.events?.weighing?.set_rele?.out && Array.isArray(node.events.weighing.set_rele.out)) {
+                    node.events.weighing.set_rele.out.forEach(rele => {
                         allRelesEdit.push({ ...rele, event: 'weighing_out' });
                     });
                 }

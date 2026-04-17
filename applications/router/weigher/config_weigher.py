@@ -385,8 +385,10 @@ class ConfigWeigher(CommandWeigherRouter):
 					"tare": setup.number_of_prints_tare if setup.number_of_prints_tare is not None else 1,
 					"generic": setup.number_of_prints_generic if setup.number_of_prints_generic is not None else 1
 				},
-				"set_rele_in": [rele.dict() for rele in setup.weighing_in],
-				"set_rele_out": [rele.dict() for rele in setup.weighing_out],
+				"set_rele": {
+					"in": [rele.dict() for rele in setup.weighing_in],
+					"out": [rele.dict() for rele in setup.weighing_out]
+				},
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
 			}
 		}
@@ -475,8 +477,10 @@ class ConfigWeigher(CommandWeigherRouter):
 					"tare": setup.number_of_prints_tare if setup.number_of_prints_tare is not None else 1,
 					"generic": setup.number_of_prints_generic if setup.number_of_prints_generic is not None else 1
 				},
-				"set_rele_in": [rele.dict() for rele in setup.weighing_in],
-				"set_rele_out": [rele.dict() for rele in setup.weighing_out],
+				"set_rele": {
+					"in": [rele.dict() for rele in setup.weighing_in],
+					"out": [rele.dict() for rele in setup.weighing_out]
+				},
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
 			}
 		}

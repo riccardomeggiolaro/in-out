@@ -1556,8 +1556,8 @@ async function loadSetupWeighers() {
                     const cams = data.events.weighing.cams;
                     const over_min = data.events.realtime.over_min.set_rele;
                     const under_min = data.events.realtime.under_min.set_rele;
-                    const weighing_in = data.events.weighing.set_rele_in || [];
-                    const weighing_out = data.events.weighing.set_rele_out || [];
+                    const weighing_in = data.events.weighing.set_rele?.in || [];
+                    const weighing_out = data.events.weighing.set_rele?.out || [];
                     viewModeCFontent.innerHTML = `
                         <h4>${data.name} <span class="gray">${data.terminal}</span></h4>
                         <p class="gray"><em>Nodo: ${data.node ? data.node : 'Nessuno'}</em></p>
@@ -1751,10 +1751,10 @@ async function loadSetupWeighers() {
                         addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "under_min");
                     })
 
-                    (data.events.weighing.set_rele_in || []).forEach(rele => {
+                    (data.events.weighing.set_rele?.in || []).forEach(rele => {
                         addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "weighing_in");
                     });
-                    (data.events.weighing.set_rele_out || []).forEach(rele => {
+                    (data.events.weighing.set_rele?.out || []).forEach(rele => {
                         addRele(null, `#${idEditForm}`, addReleWeigher, rele.rele, rele.set, "weighing_out");
                     });
 
