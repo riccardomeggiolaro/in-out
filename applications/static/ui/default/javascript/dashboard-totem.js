@@ -36,49 +36,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// --- Fullscreen control (triple click top-left + F11, auto re-enter on accidental exit) ---
+// --- Fullscreen control (triple click top-left + F11, overlay on accidental exit) ---
 (function () {
-    let _clicks = 0;
-    let _clickTimer = null;
-    let _intentionalExit = false;
-
-    function enterFs() { document.documentElement.requestFullscreen().catch(() => {}); }
-    function exitFs() {
-        _intentionalExit = true;
-        document.exitFullscreen().catch(() => { _intentionalExit = false; });
-    }
+    let _clicks = 0, _clickTimer = null, _intentionalExit = false;
+    const enterFs = () => document.documentElement.requestFullscreen().catch(() => {});
+    const exitFs = () => { _intentionalExit = true; document.exitFullscreen().catch(() => { _intentionalExit = false; }); };
 
     document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) {
-            if (_intentionalExit) {
-                _intentionalExit = false;
-            } else {
-                setTimeout(enterFs, 0);
-            }
-        }
+        if (!document.fullscreenElement) { _intentionalExit ? (_intentionalExit = false) : enterFs(); }
     });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'F11') {
-            e.preventDefault();
-            document.fullscreenElement ? exitFs() : enterFs();
-        }
-    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? exitFs() : enterFs(); } });
 
     const zone = document.createElement('div');
     zone.style.cssText = 'position:fixed;top:0;left:0;width:60px;height:60px;z-index:9999;cursor:default;-webkit-tap-highlight-color:transparent;';
-
-    function handleTap() {
-        _clicks++;
-        clearTimeout(_clickTimer);
-        if (_clicks >= 3) {
-            _clicks = 0;
-            document.fullscreenElement ? exitFs() : enterFs();
-        } else {
-            _clickTimer = setTimeout(() => { _clicks = 0; }, 800);
-        }
-    }
-
-    zone.addEventListener('click', handleTap);
+    zone.addEventListener('click', () => { if (++_clicks >= 3) { _clicks = 0; document.fullscreenElement ? exitFs() : enterFs(); } else { clearTimeout(_clickTimer); _clickTimer = setTimeout(() => { _clicks = 0; }, 800); } });
     document.body.appendChild(zone);
 })();
