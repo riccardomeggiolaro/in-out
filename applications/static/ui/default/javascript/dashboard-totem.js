@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (_intentionalExit) {
                 _intentionalExit = false;
             } else {
-                setTimeout(enterFs, 100);
+                setTimeout(enterFs, 0);
             }
         }
     });

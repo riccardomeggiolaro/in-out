@@ -1062,7 +1062,7 @@ document.addEventListener('contextmenu', (e) => e.preventDefault());
             if (_intentionalExit) {
                 _intentionalExit = false;
             } else {
-                setTimeout(enterFs, 100);
+                setTimeout(enterFs, 0);
             }
         }
     });
