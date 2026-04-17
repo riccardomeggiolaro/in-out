@@ -91,6 +91,7 @@ class GenericRouter:
         self.router.add_api_route('/list/default-reports', self.listDefualtReports, dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/restart', self.restartSoftware, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/show-desktop', self.showDesktop, methods=['POST'])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -386,3 +387,14 @@ class GenericRouter:
 
         asyncio.create_task(restart_after_response())
         return {"message": f"Riavvio del servizio {service_name} in corso..."}
+
+    async def showDesktop(self):
+        """Simula il tasto Windows per minimizzare il kiosk e mostrare il desktop."""
+        try:
+            if lb_system.is_windows():
+                subprocess.Popen(["powershell", "-Command", "(New-Object -ComObject Shell.Application).MinimizeAll()"])
+            else:
+                subprocess.Popen(["xdotool", "key", "super"])
+            return {"ok": True}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
