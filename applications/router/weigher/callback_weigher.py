@@ -167,6 +167,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"typeSubject": TypeSubjectEnum[die["typeSubject"]] if die["typeSubject"] else None,
 					"note": die.get("note"),
 					"document_reference": die.get("document_reference"),
+					"idCardRegistry": access.idCardRegistry,
 				})
 			elif last_in_out and last_in_out.idWeight2 and tare == 0 and access.number_in_out is not None:
 				weight1 = last_in_out.weight2.weight
@@ -183,6 +184,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"typeSubject": TypeSubjectEnum[weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
 					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
 					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
+					"idCardRegistry": access.idCardRegistry,
 				})
 			else:
 				add_data("in_out", {
@@ -197,6 +199,7 @@ class CallbackWeigher(Functions, WebSocket):
 					"typeSubject": TypeSubjectEnum[weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
 					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
 					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
+					"idCardRegistry": access.idCardRegistry,
 				})
 			############################
 			# RECUPERO L'ACCESSO CON IL NUOVO IN-OUT CREATO
