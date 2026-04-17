@@ -1407,8 +1407,8 @@
                     <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
                 </select>
                 <select class="rele-event" style="width: 180px;">
-                    <option value="weighing_in" ${event === 'weighing_in' ? 'selected' : ''}>Dopo la pesata IN</option>
-                    <option value="weighing_out" ${event === 'weighing_out' ? 'selected' : ''}>Dopo la pesata OUT</option>
+                    <option value="weighing_in" ${event === 'weighing_in' ? 'selected' : ''}>Dopo la pesata in ENTRATA</option>
+                    <option value="weighing_out" ${event === 'weighing_out' ? 'selected' : ''}>Dopo la pesata in USCITA</option>
                     <option value="over_min" ${event === 'over_min' ? 'selected' : ''}>Sopra peso minimo</option>
                     <option value="under_min" ${event === 'under_min' ? 'selected' : ''}>Sotto peso minimo</option>
                 </select>
@@ -1992,12 +1992,12 @@
                     const allReles = [];
                     if (node.events?.weighing?.set_rele?.in) {
                         node.events.weighing.set_rele.in.forEach(rele => {
-                            allReles.push({ ...rele, event: 'Dopo la pesata IN' });
+                            allReles.push({ ...rele, event: 'Dopo la pesata in ENTRATA' });
                         });
                     }
                     if (node.events?.weighing?.set_rele?.out) {
                         node.events.weighing.set_rele.out.forEach(rele => {
-                            allReles.push({ ...rele, event: 'Dopo la pesata OUT' });
+                            allReles.push({ ...rele, event: 'Dopo la pesata in USCITA' });
                         });
                     }
                     if (node.events?.realtime?.over_min?.set_rele) {
