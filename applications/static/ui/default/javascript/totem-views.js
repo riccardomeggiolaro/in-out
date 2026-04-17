@@ -340,8 +340,6 @@ const totemViews = {
                 if (_plateManualMode) return;
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
-                    document.getElementById('btnCancelPlate').style.visibility = '';
-                    document.getElementById('btnNext').style.visibility = '';
                     if (window._plateAutoNavTimer) clearTimeout(window._plateAutoNavTimer);
                     window._plateAutoNavTimer = setTimeout(() => {
                         window._plateAutoNavTimer = null;
