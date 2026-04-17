@@ -914,6 +914,12 @@ function editRow(item) {
             if (badgeHr) badgeHr.style.display = shouldHide ? 'none' : '';
             badgeInput.disabled = shouldHide;
         }
+        const plateInput = editPopup.querySelector('#vehicle\\.plate');
+        if (plateInput) {
+            const hasWeighings = item.in_out && item.in_out.length > 0;
+            const plateContainer = plateInput.closest('.item-25');
+            if (plateContainer) plateContainer.style.display = hasWeighings ? 'none' : '';
+        }
         triggerEventsForAll('.id');
     }
     if (item.accesses ? item.accesses.length > 0 : (item.in_out ? item.in_out.length > 0 : (item.weighings ? item.weighings.length > 0 : false))) {
