@@ -387,7 +387,9 @@ class ConfigWeigher(CommandWeigherRouter):
 				},
 				"set_rele": {
 					"in": [rele.dict() for rele in setup.weighing_in],
-					"out": [rele.dict() for rele in setup.weighing_out]
+					"out": [rele.dict() for rele in setup.weighing_out],
+					"generic": [rele.dict() for rele in setup.weighing_in],
+					"tare": [rele.dict() for rele in setup.weighing_out]
 				},
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
 			}
@@ -479,7 +481,9 @@ class ConfigWeigher(CommandWeigherRouter):
 				},
 				"set_rele": {
 					"in": [rele.dict() for rele in setup.weighing_in],
-					"out": [rele.dict() for rele in setup.weighing_out]
+					"out": [rele.dict() for rele in setup.weighing_out],
+					"generic": [rele.dict() for rele in setup.weighing_in],
+					"tare": [rele.dict() for rele in setup.weighing_out]
 				},
 				"cams": [{"picture": str(cam.picture), "live": str(cam.live), "active": cam.active} for cam in setup.cams]
 			}
