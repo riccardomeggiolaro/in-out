@@ -1045,28 +1045,37 @@ function closePopup() {
 // --- Prevent context menu on long press ---
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// --- Fullscreen control (triple click top-left + F11, auto re-enter on accidental exit) ---
+// --- Fullscreen control (triple click top-left) ---
 (function () {
-    let _clicks = 0, _clickTimer = null, _intentionalExit = false;
-
-    function enterFs() { document.documentElement.requestFullscreen().catch(() => {}); }
-    function exitFs() { _intentionalExit = true; document.exitFullscreen().catch(() => { _intentionalExit = false; }); }
-
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) {
-            if (_intentionalExit) { _intentionalExit = false; }
-            else { setTimeout(enterFs, 100); }
-        }
-    });
-    document.addEventListener('keydown', (e) => { if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? exitFs() : enterFs(); } });
+    let _f11Clicks = 0;
+    let _f11Timer = null;
 
     const zone = document.createElement('div');
     zone.style.cssText = 'position:fixed;top:0;left:0;width:60px;height:60px;z-index:9999;cursor:default;-webkit-tap-highlight-color:transparent;';
+
     function handleTap() {
-        if (++_clicks >= 3) { _clicks = 0; document.fullscreenElement ? exitFs() : enterFs(); }
-        else { clearTimeout(_clickTimer); _clickTimer = setTimeout(() => { _clicks = 0; }, 800); }
+        _f11Clicks++;
+        clearTimeout(_f11Timer);
+
+        if (_f11Clicks >= 3) {
+            _f11Clicks = 0;
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        } else {
+            _f11Timer = setTimeout(() => { _f11Clicks = 0; }, 800);
+        }
     }
-    zone.addEventListener('touchend', (e) => { e.preventDefault(); handleTap(); });
+
+    zone.addEventListener('touchend', (e) => {
+        e.preventDefault(); // prevent the subsequent click event
+        handleTap();
+    });
+
     zone.addEventListener('click', handleTap);
+
     document.body.appendChild(zone);
+
 })();
