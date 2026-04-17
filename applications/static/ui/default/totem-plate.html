@@ -142,11 +142,18 @@
             }
         }
 
+        let autoNavTimer = null;
+
         function onDataUpdate() {
             if (manualMode) return;
             if (selectedVehicle.plate) {
                 showPlate(selectedVehicle.plate);
-                goToNext();
+                document.getElementById('btnNext').style.display = '';
+                if (autoNavTimer) clearTimeout(autoNavTimer);
+                autoNavTimer = setTimeout(() => {
+                    autoNavTimer = null;
+                    goToNext();
+                }, 3000);
             }
         }
 
