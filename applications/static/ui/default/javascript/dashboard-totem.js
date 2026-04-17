@@ -36,7 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// --- Fullscreen control (triple click top-left + F11, overlay on accidental exit) ---
+// --- Block touch scroll that triggers browser fullscreen-exit UI ---
+document.addEventListener('touchmove', (e) => { if (document.fullscreenElement) e.preventDefault(); }, { passive: false });
+
+// --- Fullscreen control (triple click top-left + F11) ---
 (function () {
     let _clicks = 0, _clickTimer = null, _intentionalExit = false;
     const enterFs = () => document.documentElement.requestFullscreen().catch(() => {});
@@ -44,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('fullscreenchange', () => {
         if (!document.fullscreenElement) { _intentionalExit ? (_intentionalExit = false) : enterFs(); }
+        document.documentElement.style.cursor = document.fullscreenElement ? 'none' : '';
     });
     document.addEventListener('keydown', (e) => { if (e.key === 'F11') { e.preventDefault(); document.fullscreenElement ? exitFs() : enterFs(); } });
 
