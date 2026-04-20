@@ -5,20 +5,33 @@ import sys
 
 # === CONFIG ===
 PROJECT_DIR = "."
-DIST_DIR = os.path.join("dist", ".")
+DIST_DIR = "dist"
 
 CONFIG_FILE = "config.json"
-STATIC_DIR = os.path.join("application", "static")
+STATIC_DIR = os.path.join("applications", "static")
+
+EXCLUDE_DIRS = ["dist", ".venv", "__pycache__", ".git", "tmt-cups", "documentations", "utilities"]
+
+
+# === STEP 0: Pulizia dist ===
+def clean_dist():
+    if os.path.exists(DIST_DIR):
+        print("🧹 Pulizia dist...")
+        shutil.rmtree(DIST_DIR)
+
 
 # === STEP 1: PyArmor ===
 def run_pyarmor():
     print("🔐 Offuscazione con PyArmor...")
-    
-    result = subprocess.run(
-        ["pyarmor", "gen", "-r", PROJECT_DIR],
-        capture_output=True,
-        text=True
-    )
+
+    cmd = ["pyarmor", "gen", "-r"]
+
+    for ex in EXCLUDE_DIRS:
+        cmd.extend(["--exclude", ex])
+
+    cmd.append(PROJECT_DIR)
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
         print("❌ Errore PyArmor:")
@@ -55,7 +68,9 @@ def copy_files():
 
 # === MAIN ===
 if __name__ == "__main__":
+    print("🚀 BUILD START\n")
+    clean_dist()
     run_pyarmor()
     copy_files()
 
-    print("\n🚀 Build completata!")
+    print("\n✅ Build completata!")
