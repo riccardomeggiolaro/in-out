@@ -7,8 +7,8 @@ class SyncFolderDTO(BaseModel):
     domain: Optional[str] = ""
     share_name: str
     sub_path: Optional[str] = ""
-    username: str
-    password: str
+    username: Optional[str] = ""
+    password: Optional[str] = ""
     protocol: Literal["samba", "ftp", "sftp"] = "samba"
     port: Optional[int] = None
 
