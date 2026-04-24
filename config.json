@@ -137,6 +137,13 @@
                                     "tare": true
                                 },
                                 "set_rele": {
+                                    "generic": [
+                                        {
+                                            "order": 0,
+                                            "rele": "1",
+                                            "set": 1
+                                        }
+                                    ],
                                     "in": [
                                         {
                                             "order": 0,
@@ -145,13 +152,6 @@
                                         }
                                     ],
                                     "out": [],
-                                    "generic": [
-                                        {
-                                            "order": 0,
-                                            "rele": "1",
-                                            "set": 1
-                                        }
-                                    ],
                                     "tare": []
                                 }
                             }
