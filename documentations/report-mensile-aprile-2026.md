@@ -10,7 +10,7 @@
 | | |
 |---|---|
 | Periodo | 1 – 30 aprile 2026 |
-| Giorni lavorativi | 20 (il 6 aprile è Pasquetta) |
+| Giorni lavorativi | 20 (il 6 aprile è Pasquetta; il 27 aprile ferie) |
 | Pull Request completate | ~163 |
 
 ---
@@ -173,7 +173,15 @@
 **Martedì 21 aprile**
 - Aggiunto script utility `delete_table_data.py` per svuotare una o più tabelle del database; supporta `--tables`, `--all`, `--force`, `--list`
 
-**Mercoledì 22 – Giovedì 30 aprile** *(nessuna attività di sviluppo registrata)*
+**Mercoledì 22 aprile** — *Trasferta: montaggio e messa in opera del totem presso il cliente*
+
+**Giovedì 23 aprile** — *Trasferta mezza giornata: sopralluogo presso Alluminio di Qualità per risoluzione problemi di rete*
+
+**Venerdì 24 aprile** *(nessuna attività di sviluppo registrata)*
+
+**Lunedì 27 aprile** — *Ferie*
+
+**Martedì 28 – Giovedì 30 aprile** *(nessuna attività di sviluppo registrata)*
 
 ---
 
