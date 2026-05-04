@@ -289,17 +289,15 @@ class AccessRouter(PanelSirenRouter):
             if "offset" in filters:
                 del filters["offset"]
                 
-            if fromDate is not None:
-                del filters["fromDate"]
-                
+            filters.pop("fromDate", None)
             if toDate is not None:
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
-                del filters["toDate"]
+            filters.pop("toDate", None)
 
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
 
-            if "filterDateAccess" in query_params:
+            if "filterDateAccess" in filters:
                 del filters["filterDateAccess"]
 
             if "onlyInOutWithWeight2" in filters:
@@ -307,7 +305,7 @@ class AccessRouter(PanelSirenRouter):
 
             if "onlyInOutWithoutWeight2" in filters:
                 del filters["onlyInOutWithoutWeight2"]
-            
+
             # Leggi configurazioni
             load_subject = lb_config.g_config["app_api"]["use_anagrafic"]["subject"]
             load_vector = lb_config.g_config["app_api"]["use_anagrafic"]["vector"]
@@ -322,7 +320,7 @@ class AccessRouter(PanelSirenRouter):
             load_pid_weight1 = lb_config.g_config["app_api"]["use_anagrafic"]["weight1"]["pid"]
             load_date_weight2 = lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["date"]
             load_pid_weight2 = lb_config.g_config["app_api"]["use_anagrafic"]["weight2"]["pid"]
-                
+
             data, total_rows = get_list_in_out(
                 filters=filters,
                 not_closed=not_closed,
@@ -467,17 +465,15 @@ class AccessRouter(PanelSirenRouter):
             if "offset" in filters:
                 del filters["offset"]
                 
-            if fromDate is not None:
-                del filters["fromDate"]
-                
+            filters.pop("fromDate", None)
             if toDate is not None:
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
-                del filters["toDate"]
+            filters.pop("toDate", None)
 
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
 
-            if "filterDateAccess" in query_params:
+            if "filterDateAccess" in filters:
                 del filters["filterDateAccess"]
 
             if "onlyInOutWithWeight2" in filters:
