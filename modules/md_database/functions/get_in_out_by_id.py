@@ -1,5 +1,5 @@
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Access, Weighing
+from modules.md_database.md_database import SessionLocal, InOut, Access, Weighing, Subject, Vector, Driver
 
 def get_in_out_by_id(id):
     """
@@ -16,6 +16,9 @@ def get_in_out_by_id(id):
                         selectinload(Access.vector),
                         selectinload(Access.material)
                     ),
+                    selectinload(InOut.subject),
+                    selectinload(InOut.vector),
+                    selectinload(InOut.driver),
                     selectinload(InOut.weight1).options(
                         selectinload(Weighing.weighing_pictures),
                         selectinload(Weighing.user),
