@@ -201,13 +201,13 @@ async function updateTable() {
 }
 
 async function exportTable(type) {
-    let queryParams = 'filterDateAccess=true&onlyInOutWithWeight2=true&';
+    let queryParams = 'onlyInOutWithWeight2=true&';
     const filters = document.querySelectorAll('#filters');
     let name;
     filters.forEach(container => {
         container.querySelectorAll('input').forEach(input => {
             if (input.name && input.value) {
-            name = itemName === "access" && !input.name.includes("access") ? `${itemName}.${input.name}` : input.name;
+                name = input.type === 'date' || !itemName || itemName !== "access" || input.name.includes("access") ? input.name : `${itemName}.${input.name}`;
                 if (input.type == 'text') queryParams += `${name}=${input.value}%&`;
                 else if (input.type == 'number') queryParams += `${name}=${input.value}&`;
                 else if (input.type == 'date') queryParams += `${name}=${input.value}&`;
