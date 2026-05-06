@@ -38,6 +38,7 @@ let report = {
     out: false
 }
 let customQueryParams = "";
+let lastExportQueryParams = "";
 let typeUpdate = null;
 // Track pending requests
 const pendingRequests = new Map();
@@ -180,6 +181,7 @@ async function updateTable() {
             }
         })        
     })
+    lastExportQueryParams = queryParams;
     const offset = (currentPage - 1) * rowsPerPage;
     const res = await fetch(`${listUrlPath}?limit=${rowsPerPage}&offset=${offset}&${queryParams}`);
     const data = await res.json();
@@ -201,30 +203,7 @@ async function updateTable() {
 }
 
 async function exportTable(type) {
-    let queryParams = 'onlyInOutWithWeight2=true&';
-    const filters = document.querySelectorAll('#filters');
-    let name;
-    filters.forEach(container => {
-        container.querySelectorAll('input').forEach(input => {
-            if (input.name && input.value) {
-                name = input.type === 'date' || !itemName || itemName !== "access" || input.name.includes("access") ? input.name : `${itemName}.${input.name}`;
-                if (input.type == 'text') queryParams += `${name}=${input.value}%&`;
-                else if (input.type == 'number') queryParams += `${name}=${input.value}&`;
-                else if (input.type == 'date') queryParams += `${name}=${input.value}&`;
-            }
-        })
-        container.querySelectorAll('select').forEach(select => {
-            name = itemName === "access" && !select.name.includes("access") ? `${itemName}.${select.name}` : select.name;
-            if (name === "access.status" && select.value === "ENTERED") queryParams += "onlyInOutWithoutWeight2=true&";
-            else if (select.name === "access.status" && select.value === "CLOSED") queryParams += "onlyInOutWithWeight2=true&";
-            else if (select.value) {
-                queryParams += `${name}=${select.value}&`;
-            }
-        })        
-    })
-    const offset = (currentPage - 1) * rowsPerPage;
-    
-    const response = await fetch(`${exportUrlPath}/${type}?${queryParams}`);
+    const response = await fetch(`${exportUrlPath}/${type}?${lastExportQueryParams}`);
     const blob = await response.blob();
     
     // Create a link element
