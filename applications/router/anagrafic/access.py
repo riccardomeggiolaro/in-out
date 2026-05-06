@@ -290,9 +290,18 @@ class AccessRouter(PanelSirenRouter):
                 del filters["offset"]
                 
             filters.pop("fromDate", None)
+            access_from_date_str = filters.pop("access.fromDate", None)
+            if fromDate is None and access_from_date_str is not None:
+                from datetime import datetime as dt
+                fromDate = dt.fromisoformat(str(access_from_date_str))
+
             if toDate is not None:
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
             filters.pop("toDate", None)
+            access_to_date_str = filters.pop("access.toDate", None)
+            if toDate is None and access_to_date_str is not None:
+                from datetime import datetime as dt
+                toDate = dt.fromisoformat(str(access_to_date_str)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
@@ -466,9 +475,18 @@ class AccessRouter(PanelSirenRouter):
                 del filters["offset"]
                 
             filters.pop("fromDate", None)
+            access_from_date_str = filters.pop("access.fromDate", None)
+            if fromDate is None and access_from_date_str is not None:
+                from datetime import datetime as dt
+                fromDate = dt.fromisoformat(str(access_from_date_str))
+
             if toDate is not None:
                 toDate = toDate.replace(hour=23, minute=59, second=59, microsecond=999999)
             filters.pop("toDate", None)
+            access_to_date_str = filters.pop("access.toDate", None)
+            if toDate is None and access_to_date_str is not None:
+                from datetime import datetime as dt
+                toDate = dt.fromisoformat(str(access_to_date_str)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
             if "excludeTestWeighing" in filters:
                 del filters["excludeTestWeighing"]
