@@ -76,20 +76,22 @@ class WeigherModule:
 			)
    
 	def setApplicationCallback(
-		self, 
-		cb_realtime: Callable[[dict], any] = None, 
-		cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+		self,
+		cb_realtime: Callable[[dict], any] = None,
+		cb_diagnostic: Callable[[dict], any] = None,
+		cb_weighing: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
+    	cb_code_identify: Callable[[str], any] = None,
+		cb_has_connections: Callable[[], bool] = None):
 		for name, instance in self.instances.items():
+			instance.cb_has_connections = cb_has_connections
 			instance.setActionAllWeigher(
-				cb_realtime=cb_realtime, 
-				cb_diagnostic=cb_diagnostic, 
-				cb_weighing=cb_weighing, 
+				cb_realtime=cb_realtime,
+				cb_diagnostic=cb_diagnostic,
+				cb_weighing=cb_weighing,
 				cb_weighing_terminal=cb_weighing_terminal,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
@@ -263,6 +265,7 @@ class WeigherInstance:
 		self.nodes = {}
 		self.connection = ConfigConnection()
 		self.time_between_actions = 0
+		self.cb_has_connections = None
 
 		lb_log.info("initialize")
 		# inizializzazione della conn
@@ -311,13 +314,43 @@ class WeigherInstance:
 		max_reconnection_attempts = 3
 		last_reconnection_time = 0
 		min_reconnection_interval = 10  # Secondi minimi tra riconnessioni
-		
+		no_clients_timeout = 30  # Secondi di inattività prima di chiudere la connessione
+		no_clients_since = None
+		connection_paused = False
+
 		while self.m_enabled:
 			# Se non ci sono nodi, attendi
 			if len(self.nodes) == 0:
 				time.sleep(1)
 				continue
-				
+
+			if self.cb_has_connections is not None:
+				if not self.cb_has_connections(self.name):
+					if not connection_paused:
+						if no_clients_since is None:
+							no_clients_since = time.time()
+						elif time.time() - no_clients_since >= no_clients_timeout:
+							mode = lb_config.g_config.get("app_api", {}).get("mode", "MANUAL")
+							if mode == "MANUAL":
+								lb_log.info(f"Nessun client da {no_clients_timeout}s, chiudo la connessione per ridurre il traffico di rete...")
+								try:
+									self.connection.connection.close()
+								except Exception as e:
+									lb_log.warning(f"Errore chiusura connessione: {e}")
+								connection_paused = True
+							else:
+								no_clients_since = None
+					time.sleep(0.5)
+					continue
+				else:
+					no_clients_since = None
+					if connection_paused:
+						lb_log.info("Client connesso, riapro la connessione...")
+						connection_paused = False
+						self._perform_reconnection()
+						consecutive_errors = {}
+						reconnection_attempts = 0
+
 			# Flag per tracciare se serve riconnessione
 			needs_reconnection = False
 			all_nodes_failing = True  # Assume che tutti falliscano finché non provato il contrario
