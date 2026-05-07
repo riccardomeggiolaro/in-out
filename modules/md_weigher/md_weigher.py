@@ -325,16 +325,18 @@ class WeigherInstance:
 				continue
 
 			if self.cb_has_connections is not None:
-				if not self.cb_has_connections(self.name):
+				has_conn = self.cb_has_connections(self.name)
+				lb_log.info(f"[{self.name}] cb_has_connections={has_conn} connection_paused={connection_paused} no_clients_since={no_clients_since}")
+				if not has_conn:
 					if not connection_paused:
 						if no_clients_since is None:
 							no_clients_since = time.time()
 						elif time.time() - no_clients_since >= no_clients_timeout:
-							lb_log.info(f"Nessun client da {no_clients_timeout}s, chiudo la connessione per ridurre il traffico di rete...")
+							lb_log.info(f"[{self.name}] Nessun client da {no_clients_timeout}s, chiudo la connessione...")
 							try:
 								self.connection.connection.close()
 							except Exception as e:
-								lb_log.warning(f"Errore chiusura connessione: {e}")
+								lb_log.warning(f"[{self.name}] Errore chiusura connessione: {e}")
 							connection_paused = True
 					time.sleep(0.5)
 					continue
