@@ -517,7 +517,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				connecting = md_weigher.module_weigher.getInstanceConnecting(instance_name=instance.instance_name)
 				if connecting:
 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
-						"status": "Tentativo di connessione in corso...",
+						"status": "Connessione in corso...",
 						"type":"--",
 						"net_weight": "--",
 						"gross_weight":"--",
