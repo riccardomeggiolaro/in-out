@@ -681,9 +681,12 @@
         // Aggiorna visualizzazione peso
         function updateWeightDisplay(data) {
             if (data.tare !== undefined) {
-                weightValue.textContent = data.net_weight !== undefined ? data.net_weight : 'N/A';
-                weightUnit.textContent = data.unite_measure !== undefined ? data.unite_measure : '--';
-                weightStatus.textContent = data.status !== undefined ? data.status : '--';
+                const hasRealWeight = data.gross_weight !== undefined && data.gross_weight !== '--';
+                weightValue.textContent = hasRealWeight
+                    ? (data.net_weight !== undefined ? data.net_weight : 'N/A')
+                    : (data.status || '--');
+                weightUnit.textContent = hasRealWeight && data.unite_measure !== undefined ? data.unite_measure : '--';
+                weightStatus.textContent = hasRealWeight && data.status !== undefined ? data.status : '';
             }
             
             if (data.message) {
