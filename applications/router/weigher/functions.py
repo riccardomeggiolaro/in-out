@@ -12,6 +12,12 @@ from modules.md_database.functions.lock_record import lock_record
 from applications.router.weigher.types import DataInExecution
 from applications.utils.utils import just_locked_message
 
+def _connection_needed(instance_name: str) -> bool:
+	mode = lb_config.g_config.get("app_api", {}).get("mode", "MANUAL")
+	if mode != "MANUAL":
+		return True
+	return has_active_connections(instance_name)
+
 class Functions:
 	def __init__(self):
 		md_weigher.module_weigher.initializeModuleConfig(config=lb_config.g_config["app_api"]["weighers"])
@@ -44,7 +50,7 @@ class Functions:
 			cb_action_in_execution=self.Callback_ActionInExecution,
 			cb_rele=self.Callback_Rele,
 			cb_code_identify=self.Callback_WeighingByIdentify,
-			cb_has_connections=has_active_connections
+			cb_has_connections=_connection_needed
 		)
 
 		for instance_name, weigher_cfg in lb_config.g_config["app_api"]["weighers"].items():
