@@ -987,11 +987,21 @@ function processRealtimeObject(obj) {
     } else if (obj.tare) {
         data_weight_realtime = obj;
         const hasRealWeight = data_weight_realtime.gross_weight !== undefined && data_weight_realtime.gross_weight !== '--';
+        const connectionStatus = document.getElementById('connectionStatus');
+        const connectionMessage = document.getElementById('connectionMessage');
+        if (connectionStatus) {
+            if (!hasRealWeight && data_weight_realtime.status) {
+                connectionMessage.innerText = data_weight_realtime.status;
+                connectionStatus.style.display = 'block';
+            } else {
+                connectionStatus.style.display = 'none';
+            }
+        }
         net = [undefined, '0'].includes(data_weight_realtime.tare);
-        document.getElementById('tare').innerText = hasRealWeight ? (data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : '--') : '--';
-        document.getElementById('netWeight').innerText = hasRealWeight ? (data_weight_realtime.net_weight !== undefined ? data_weight_realtime.net_weight : '--') : (data_weight_realtime.status || '--');
-        document.getElementById('uniteMisure').innerText = hasRealWeight && data_weight_realtime.unite_measure !== undefined ? data_weight_realtime.unite_measure : '--';
-        document.getElementById('status').innerText = hasRealWeight ? (data_weight_realtime.status !== undefined ? data_weight_realtime.status : '--') : '';
+        document.getElementById('tare').innerText = data_weight_realtime.tare !== undefined ? data_weight_realtime.tare : 'N/A';
+        document.getElementById('netWeight').innerText = data_weight_realtime.net_weight !== undefined ? data_weight_realtime.net_weight : 'N/A';
+        document.getElementById('uniteMisure').innerText = data_weight_realtime.unite_measure !== undefined ? data_weight_realtime.unite_measure : 'N/A';
+        document.getElementById('status').innerText = data_weight_realtime.status !== undefined ? data_weight_realtime.status : 'N/A';
         document.getElementById('potential_net_weight').innerHTML = data_weight_realtime.potential_net_weight !== null ? `NET ${data_weight_realtime.potential_net_weight}` : !net ? 'NET' : '';
         if (!net) {
             document.getElementById('potential_net_weight').style.top = '3rem';
