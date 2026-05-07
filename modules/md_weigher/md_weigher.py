@@ -330,16 +330,12 @@ class WeigherInstance:
 						if no_clients_since is None:
 							no_clients_since = time.time()
 						elif time.time() - no_clients_since >= no_clients_timeout:
-							mode = lb_config.g_config.get("app_api", {}).get("mode", "MANUAL")
-							if mode == "MANUAL":
-								lb_log.info(f"Nessun client da {no_clients_timeout}s, chiudo la connessione per ridurre il traffico di rete...")
-								try:
-									self.connection.connection.close()
-								except Exception as e:
-									lb_log.warning(f"Errore chiusura connessione: {e}")
-								connection_paused = True
-							else:
-								no_clients_since = None
+							lb_log.info(f"Nessun client da {no_clients_timeout}s, chiudo la connessione per ridurre il traffico di rete...")
+							try:
+								self.connection.connection.close()
+							except Exception as e:
+								lb_log.warning(f"Errore chiusura connessione: {e}")
+							connection_paused = True
 					time.sleep(0.5)
 					continue
 				else:
