@@ -266,6 +266,7 @@ class WeigherInstance:
 		self.connection = ConfigConnection()
 		self.time_between_actions = 0
 		self.cb_has_connections = None
+		self.reconnecting = False
 
 		lb_log.info("initialize")
 		# inizializzazione della conn
@@ -345,7 +346,9 @@ class WeigherInstance:
 					if connection_paused:
 						lb_log.info("Client connesso, riapro la connessione...")
 						connection_paused = False
+						self.reconnecting = True
 						self._perform_reconnection()
+						self.reconnecting = False
 						consecutive_errors = {}
 						reconnection_attempts = 0
 
@@ -523,7 +526,7 @@ class WeigherInstance:
 	# ==== FUNZIONI RICHIAMABILI DA MODULI ESTERNI =================
 
 	def getInstanceConnecting(self):
-		return self.connection.connection.connecting
+		return self.reconnecting or self.connection.connection.connecting
 
 	def getInstance(self):
 		conn = self.getConnection()
