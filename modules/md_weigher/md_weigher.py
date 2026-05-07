@@ -314,17 +314,38 @@ class WeigherInstance:
 		max_reconnection_attempts = 3
 		last_reconnection_time = 0
 		min_reconnection_interval = 10  # Secondi minimi tra riconnessioni
-		
+		no_clients_timeout = 30  # Secondi di inattività prima di chiudere la connessione
+		no_clients_since = None
+		connection_paused = False
+
 		while self.m_enabled:
 			# Se non ci sono nodi, attendi
 			if len(self.nodes) == 0:
 				time.sleep(1)
 				continue
 
-			# Se nessun client è connesso, sospendi la lettura per non ingolfare la rete
-			if self.cb_has_connections is not None and not self.cb_has_connections(self.name):
-				time.sleep(0.5)
-				continue
+			if self.cb_has_connections is not None:
+				if not self.cb_has_connections(self.name):
+					if not connection_paused:
+						if no_clients_since is None:
+							no_clients_since = time.time()
+						elif time.time() - no_clients_since >= no_clients_timeout:
+							lb_log.info(f"Nessun client da {no_clients_timeout}s, chiudo la connessione per ridurre il traffico di rete...")
+							try:
+								self.connection.connection.close()
+							except Exception as e:
+								lb_log.warning(f"Errore chiusura connessione: {e}")
+							connection_paused = True
+					time.sleep(0.5)
+					continue
+				else:
+					no_clients_since = None
+					if connection_paused:
+						lb_log.info("Client connesso, riapro la connessione...")
+						connection_paused = False
+						self._perform_reconnection()
+						consecutive_errors = {}
+						reconnection_attempts = 0
 
 			# Flag per tracciare se serve riconnessione
 			needs_reconnection = False
