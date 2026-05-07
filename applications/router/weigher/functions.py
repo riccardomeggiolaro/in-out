@@ -13,9 +13,6 @@ from applications.router.weigher.types import DataInExecution
 from applications.utils.utils import just_locked_message
 
 def _connection_needed(instance_name: str) -> bool:
-	mode = lb_config.g_config.get("app_api", {}).get("mode", "MANUAL")
-	if mode != "MANUAL":
-		return True
 	return has_active_connections(instance_name)
 
 class Functions:
