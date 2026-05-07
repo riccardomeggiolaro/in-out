@@ -514,7 +514,18 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
 			if len(weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.active_connections) > 0:
-				if status == 200:
+				connecting = md_weigher.module_weigher.getInstanceConnecting(instance_name=instance.instance_name)
+				if connecting:
+					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
+						"status": "Tentativo di connessione in corso...",
+						"type":"--",
+						"net_weight": "--",
+						"gross_weight":"--",
+						"tare":"--",
+						"unite_measure": "--",
+						"potential_net_weight": None
+					})
+				elif status == 200:
 					modope_in_execution = md_weigher.module_weigher.getModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 					if modope_in_execution in ["OK", "DIAGNOSTIC"]:
 						if modope_in_execution == "DIAGNOSTIC":
@@ -529,10 +540,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 							})
 						md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
 				else:
-					connecting = md_weigher.module_weigher.getInstanceConnecting(instance_name=instance.instance_name)
 					message = "Errore di connessione"
-					if connecting:
-						message = "Tentativo di connessione in corso..."
 					if status in [305, 201]:
 						message = "Errore di ricezione"
 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({
