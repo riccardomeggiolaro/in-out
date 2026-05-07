@@ -185,7 +185,8 @@
                         "terminal": "egt-af03-rext"
                     }
                 },
-                "time_between_actions": 0.4
+                "time_between_actions": 0.4,
+                "auto_close_connection": false
             }
         }
     },
