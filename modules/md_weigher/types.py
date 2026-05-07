@@ -87,8 +87,10 @@ class Configuration(CustomBaseModel):
 	nodes: Optional[Dict[str, SetupWeigher]] = {}
 	connection: Optional[Union[SerialPort, Tcp, Connection]] = Connection(**{})
 	time_between_actions: Union[int, float]
- 
+	auto_close_connection: bool = False
+
 class ConfigurationWithoutControls(CustomBaseModel):
 	nodes: Optional[Dict[str, SetupWeigher]] = {}
 	connection: Optional[Union[SerialPortWithoutControls, TcpWithoutControls, Connection]] = Connection(**{})
 	time_between_actions: Union[int, float]
+	auto_close_connection: bool = False
