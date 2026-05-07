@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from applications.router.weigher.dto import DataInExecutionDTO
 from applications.router.weigher.types import Data
-from applications.router.weigher.manager_weighers_data import weighers_data
+from applications.router.weigher.manager_weighers_data import weighers_data, has_active_connections
 from modules.md_weigher import md_weigher
 import modules.md_rfid.md_rfid as md_rfid
 import libs.lb_config as lb_config
@@ -43,7 +43,8 @@ class Functions:
 			cb_tare_ptare_zero=self.Callback_TarePTareZero,
 			cb_action_in_execution=self.Callback_ActionInExecution,
 			cb_rele=self.Callback_Rele,
-			cb_code_identify=self.Callback_WeighingByIdentify
+			cb_code_identify=self.Callback_WeighingByIdentify,
+			cb_has_connections=has_active_connections
 		)
 
 		for instance_name, weigher_cfg in lb_config.g_config["app_api"]["weighers"].items():
