@@ -915,7 +915,6 @@ function updateUIRealtime(e) {
 }
 
 function processRealtimeObject(obj) {
-    console.log('WS msg:', JSON.stringify(obj));
     if (obj.command_in_executing) {
         if (obj.command_in_executing == "TARE") showSnackbar("snackbar", "Tara", 'rgb(208, 255, 208)', 'black');
         if (obj.command_in_executing == "PRESETTARE") showSnackbar("snackbar", "Preset tara", 'rgb(208, 255, 208)', 'black');
