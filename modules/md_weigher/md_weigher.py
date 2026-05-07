@@ -76,20 +76,22 @@ class WeigherModule:
 			)
    
 	def setApplicationCallback(
-		self, 
-		cb_realtime: Callable[[dict], any] = None, 
-		cb_diagnostic: Callable[[dict], any] = None, 
-		cb_weighing: Callable[[dict], any] = None, 
+		self,
+		cb_realtime: Callable[[dict], any] = None,
+		cb_diagnostic: Callable[[dict], any] = None,
+		cb_weighing: Callable[[dict], any] = None,
 		cb_weighing_terminal: Callable[[dict], any] = None,
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
+    	cb_code_identify: Callable[[str], any] = None,
+		cb_has_connections: Callable[[], bool] = None):
 		for name, instance in self.instances.items():
+			instance.cb_has_connections = cb_has_connections
 			instance.setActionAllWeigher(
-				cb_realtime=cb_realtime, 
-				cb_diagnostic=cb_diagnostic, 
-				cb_weighing=cb_weighing, 
+				cb_realtime=cb_realtime,
+				cb_diagnostic=cb_diagnostic,
+				cb_weighing=cb_weighing,
 				cb_weighing_terminal=cb_weighing_terminal,
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
@@ -263,6 +265,7 @@ class WeigherInstance:
 		self.nodes = {}
 		self.connection = ConfigConnection()
 		self.time_between_actions = 0
+		self.cb_has_connections = None
 
 		lb_log.info("initialize")
 		# inizializzazione della conn
@@ -317,7 +320,12 @@ class WeigherInstance:
 			if len(self.nodes) == 0:
 				time.sleep(1)
 				continue
-				
+
+			# Se nessun client è connesso, sospendi la lettura per non ingolfare la rete
+			if self.cb_has_connections is not None and not self.cb_has_connections(self.name):
+				time.sleep(0.5)
+				continue
+
 			# Flag per tracciare se serve riconnessione
 			needs_reconnection = False
 			all_nodes_failing = True  # Assume che tutti falliscano finché non provato il contrario
