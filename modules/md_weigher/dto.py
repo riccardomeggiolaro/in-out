@@ -142,6 +142,7 @@ class ConfigurationDTO(CustomBaseModel):
 	name: str
 	connection: Optional[Union[SerialPort, Tcp, Connection]]
 	time_between_actions: Union[int, float]
+	auto_close_connection: bool = False
  
 	@validator('connection', pre=True, always=True)
 	def check_connection(cls, v, values, **kwargs):

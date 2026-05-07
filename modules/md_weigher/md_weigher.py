@@ -265,6 +265,7 @@ class WeigherInstance:
 		self.nodes = {}
 		self.connection = ConfigConnection()
 		self.time_between_actions = 0
+		self.auto_close_connection = configuration.auto_close_connection
 		self.cb_has_connections = None
 		self.reconnecting = False
 
@@ -325,7 +326,7 @@ class WeigherInstance:
 				time.sleep(1)
 				continue
 
-			if self.cb_has_connections is not None:
+			if self.auto_close_connection and self.cb_has_connections is not None:
 				has_conn = self.cb_has_connections(self.name)
 				lb_log.info(f"[{self.name}] cb_has_connections={has_conn} connection_paused={connection_paused} no_clients_since={no_clients_since}")
 				if not has_conn:
