@@ -617,7 +617,6 @@
             
             websocket.addEventListener('message', (e) => {
                 const data = JSON.parse(e.data);
-                console.log('WS message:', JSON.stringify(data));
                 updateWeightDisplay(data);
             });
 
