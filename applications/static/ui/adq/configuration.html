@@ -287,6 +287,14 @@
             margin: 5px 0;
         }
 
+        .rfid-node-section {
+            padding: 10px;
+        }
+
+        .rfid-node-section p {
+            margin: 5px 0;
+        }
+
         .node-actions {
             padding: 10px;
             display: flex;
@@ -515,6 +523,10 @@
             margin-bottom: 12px;
             color: #e65100;
         }
+
+        #access-anagrafic-section {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -546,7 +558,11 @@
                         <label for="radio-2">Semiautomatico</label>
                     </div>
                     <br>
-                    <label for="reservetion">Usa <b>prenotazioni</b>: </label>
+                    <label for="test-mode">Modalità <b>test</b>: </label>
+                    <input type="checkbox" id="test-mode" onclick="setTestMode(this.checked)">
+                    <br>
+                    <br>
+                    <label for="reservation">Usa <b>prenotazioni</b>: </label>
                     <input type="checkbox" id="reservation" onclick="setUseReservation(this.checked)">
                     <br>
                     <br>
@@ -554,51 +570,61 @@
                     <input type="checkbox" id="badge" onclick="setUseBadge(this.checked)">
                     <br>
                     <br>
-                    <hr>
-                    <br>
-                    <label><b>Anagrafiche utilizzate</b>:</label>
-                    <br><br>
-                    <label for="access-anagrafic-subject">Soggetto: </label>
-                    <input type="checkbox" id="access-anagrafic-subject" onclick="setAccessAnagrafic('subject', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-vehicle">Veicolo (targa): </label>
-                    <input type="checkbox" id="access-anagrafic-vehicle" onclick="setAccessAnagrafic('vehicle', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-vector">Vettore: </label>
-                    <input type="checkbox" id="access-anagrafic-vector" onclick="setAccessAnagrafic('vector', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-driver">Autista: </label>
-                    <input type="checkbox" id="access-anagrafic-driver" onclick="setAccessAnagrafic('driver', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-material">Materiale: </label>
-                    <input type="checkbox" id="access-anagrafic-material" onclick="setAccessAnagrafic('material', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-document_reference">Riferimento documento: </label>
-                    <input type="checkbox" id="access-anagrafic-document_reference" onclick="setAccessAnagrafic('document_reference', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-note">Note: </label>
-                    <input type="checkbox" id="access-anagrafic-note" onclick="setAccessAnagrafic('note', this.checked)">
-                    <br>
-                    <label for="access-anagrafic-weighing_pictures">Foto pesata: </label>
-                    <input type="checkbox" id="access-anagrafic-weighing_pictures" onclick="setAccessAnagrafic('weighing_pictures', this.checked)">
+                    <label for="export-totals">Mostra <b>totali</b> nell'esportazione della lista: </label>
+                    <input type="checkbox" id="export-totals" onclick="setShowExportTotals(this.checked)">
                     <br>
                     <br>
-                    <hr>
-                    <br>
-                    <label><b>Tipo soggetto predefinito</b>: </label>
-                    <input type="radio" name="default-type-subject" value="CUSTOMER" id="default-type-customer" oninput="setDefaultTypeSubject(this.value)">
-                    <label for="default-type-customer">Cliente</label>
-                    <input type="radio" name="default-type-subject" value="SUPPLIER" id="default-type-supplier" oninput="setDefaultTypeSubject(this.value)">
-                    <label for="default-type-supplier">Fornitore</label>
+                    <label for="delete-pending-at-midnight">Cancella accessi pendenti (non prenotati) a <b>mezzanotte</b>: </label>
+                    <input type="checkbox" id="delete-pending-at-midnight" onclick="setDeletePendingAccessesAtMidnight(this.checked)">
                     <br>
                     <br>
+                    <div id="access-anagrafic-section">
+                        <hr>
+                        <br>
+                        <label><b>Anagrafiche utilizzate</b>:</label>
+                        <br><br>
+                        <label for="access-anagrafic-subject">Soggetto: </label>
+                        <input type="checkbox" id="access-anagrafic-subject" onclick="setAccessAnagrafic('subject', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-vehicle">Veicolo (targa): </label>
+                        <input type="checkbox" id="access-anagrafic-vehicle" onclick="setAccessAnagrafic('vehicle', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-vector">Vettore: </label>
+                        <input type="checkbox" id="access-anagrafic-vector" onclick="setAccessAnagrafic('vector', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-driver">Autista: </label>
+                        <input type="checkbox" id="access-anagrafic-driver" onclick="setAccessAnagrafic('driver', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-material">Materiale: </label>
+                        <input type="checkbox" id="access-anagrafic-material" onclick="setAccessAnagrafic('material', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-document_reference">Riferimento documento: </label>
+                        <input type="checkbox" id="access-anagrafic-document_reference" onclick="setAccessAnagrafic('document_reference', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-note">Note: </label>
+                        <input type="checkbox" id="access-anagrafic-note" onclick="setAccessAnagrafic('note', this.checked)">
+                        <br>
+                        <label for="access-anagrafic-weighing_pictures">Foto pesata: </label>
+                        <input type="checkbox" id="access-anagrafic-weighing_pictures" onclick="setAccessAnagrafic('weighing_pictures', this.checked)">
+                        <br>
+                        <br>
+                        <hr>
+                        <br>
+                        <label><b>Tipo soggetto predefinito</b>: </label>
+                        <input type="radio" name="default-type-subject" value="CUSTOMER" id="default-type-customer" oninput="setDefaultTypeSubject(this.value)">
+                        <label for="default-type-customer">Cliente</label>
+                        <input type="radio" name="default-type-subject" value="SUPPLIER" id="default-type-supplier" oninput="setDefaultTypeSubject(this.value)">
+                        <label for="default-type-supplier">Fornitore</label>
+                        <br>
+                        <br>
+                    </div>
                 </div>
                 <br>
                 <div class="borders aliceblue">
                     <br>
                     <h3>REGISTRATORE</h3>
                     <br>
-                    <label for="reservetion">Registra <b>pesate</b> effettuate dagli <b>indicatori</b>: </label>
+                    <label for="recordings">Registra <b>pesate</b> effettuate dagli <b>indicatori</b>: </label>
                     <input type="checkbox" id="recordings" onclick="setUseRecordings(this.checked)">
                     <br>
                     <br>
@@ -610,6 +636,10 @@
                     <br>
                     <label for="report-copy">Ritorna copia del report a chi effettua la pesata: </label>
                     <input type="checkbox" id="report-copy" onclick="setReturnCopy(this.checked)">
+                    <br>
+                    <br>
+                    <label for="preset-weight">Usa peso preimpostato con netto negativo (P.Peso): </label>
+                    <input type="checkbox" id="preset-weight" onclick="setUsePresetWeight(this.checked)">
                     <br>
                     <br>
                     <label for="entry-report">Report di stampa per <b>l'entrata</b>: </label>
@@ -626,6 +656,46 @@
                     <br>
                     <label for="tare-report">Report di stampa per la <b>tara</b>: </label>
                     <button onclick="openTemplateEditor('tara')">Apri report designer</button>
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>TOTEM</h3>
+                    <br>
+                    <label for="totem-enabled">Abilitata: </label>
+                    <input type="checkbox" id="totem-enabled" onclick="setTotemEnabled(this.checked)">
+                    <br><br>
+                    <label>Sezioni abilitate per l'utente sul totem:</label>
+                    <br><br>
+                    <label for="totem-card">Tessera: </label>
+                    <input type="checkbox" id="totem-card" onclick="setTotemAnagrafic('card', this.checked)">
+                    <br>
+                    <label for="totem-vehicle">Veicolo (targa): </label>
+                    <input type="checkbox" id="totem-vehicle" onclick="setTotemAnagrafic('vehicle', this.checked)">
+                    <br>
+                    <label for="totem-subject">Soggetto: </label>
+                    <input type="checkbox" id="totem-subject" onclick="setTotemAnagrafic('subject', this.checked)">
+                    <br>
+                    <label for="totem-vector">Vettore: </label>
+                    <input type="checkbox" id="totem-vector" onclick="setTotemAnagrafic('vector', this.checked)">
+                    <br>
+                    <label for="totem-driver">Autista: </label>
+                    <input type="checkbox" id="totem-driver" onclick="setTotemAnagrafic('driver', this.checked)">
+                    <br>
+                    <label for="totem-material">Materiale: </label>
+                    <input type="checkbox" id="totem-material" onclick="setTotemAnagrafic('material', this.checked)">
+                    <br>
+                    <br>
+                </div>
+                <br>
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>MANUTENZIONE</h3>
+                    <br>
+                    <label>Riavvia il software: </label>
+                    <button onclick="restartSoftware()" style="background-color: #ff9800; color: white;">Riavvia Software</button>
                     <br>
                     <br>
                 </div>
@@ -1240,8 +1310,12 @@
         const radio2 = document.querySelector("#radio-2");
         const useReservation = document.querySelector("#reservation");
         const useBadge = document.querySelector("#badge");
+        const deletePendingAtMidnight = document.querySelector("#delete-pending-at-midnight");
         const useRecordings = document.querySelector("#recordings");
         const reportCopy = document.querySelector("#report-copy");
+        const presetWeight = document.querySelector("#preset-weight");
+        const testModeCheckbox = document.querySelector("#test-mode");
+        const showExportTotals = document.querySelector("#export-totals");
 
         // Sync folder modal elements
         const syncFolderModal = document.querySelector("#sync-folder-modal");
@@ -1273,6 +1347,7 @@
         let printersList = [];
         let availableSerialPorts = [];
         let terminalTypes = [];
+        let rfidProtocols = [];
 
         // Funzione per caricare le porte seriali disponibili
         async function loadSerialPorts() {
@@ -1286,6 +1361,17 @@
                 console.error('Errore nel caricamento porte seriali:', error);
                 availableSerialPorts = [];
                 return [];
+            }
+        }
+
+        // Funzione per caricare i protocolli RFID disponibili
+        async function loadRfidProtocols() {
+            try {
+                const response = await fetch('/api/rfid/protocols');
+                rfidProtocols = await response.json();
+            } catch (error) {
+                console.error('Errore nel caricamento protocolli RFID:', error);
+                rfidProtocols = [];
             }
         }
 
@@ -1686,6 +1772,198 @@
             }
         }
 
+        // Funzione per aprire il modal RFID di una pesa
+        async function openRfidModal(instanceId, nodeId) {
+            // Rimuovi eventuale modal precedente
+            const existingModal = document.querySelector(`#rfid-modal-${instanceId}-${nodeId}`);
+            if (existingModal) existingModal.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = `rfid-modal-${instanceId}-${nodeId}`;
+            modal.style.display = 'flex';
+
+            modal.innerHTML = `
+                <div class="modal-content" style="min-width:340px">
+                    <h3>RFID - Pesa ${nodeId}</h3>
+                    <div id="rfid-modal-body-${instanceId}-${nodeId}">Caricamento...</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // Carica stato attuale RFID dal server
+            try {
+                const res = await fetch(`/api/config-weigher/instance/rfid?instance_name=${instanceId}&weigher_name=${nodeId}`);
+                const rfidData = await res.json();
+                renderRfidModalBody(instanceId, nodeId, rfidData);
+            } catch (e) {
+                renderRfidModalBody(instanceId, nodeId, null);
+            }
+        }
+
+        function renderRfidModalBody(instanceId, nodeId, rfidData) {
+            const body = document.querySelector(`#rfid-modal-body-${instanceId}-${nodeId}`);
+            if (!body) return;
+
+            const hasRfid = rfidData && rfidData.connection && rfidData.connection.serial_port_name;
+
+            if (hasRfid) {
+                const statusText = rfidData.status === 305 ? 'connesso' : 'non connesso';
+                body.innerHTML = `
+                    <p><b>Protocollo:</b> ${rfidData.protocol}</p>
+                    <p><b>Porta seriale:</b> ${rfidData.connection.serial_port_name}</p>
+                    <p><b>Baudrate:</b> ${rfidData.connection.baudrate}</p>
+                    <p><b>Timeout:</b> ${rfidData.connection.timeout}</p>
+                    <p><b>Stato:</b> ${statusText}</p>
+                    <div class="container-buttons right">
+                        <button class="delete-btn" id="rfid-delete-btn-${instanceId}-${nodeId}">Elimina</button>
+                        <button class="save-btn" id="rfid-edit-btn-${instanceId}-${nodeId}">Modifica</button>
+                    </div>
+                `;
+                document.querySelector(`#rfid-delete-btn-${instanceId}-${nodeId}`).addEventListener('click', async () => {
+                    const res = await fetch(`/api/config-weigher/instance/rfid?instance_name=${instanceId}&weigher_name=${nodeId}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.deleted !== undefined) {
+                        updateRfidSection(instanceId, nodeId, null);
+                        renderRfidModalBody(instanceId, nodeId, null);
+                    }
+                });
+                document.querySelector(`#rfid-edit-btn-${instanceId}-${nodeId}`).addEventListener('click', () => {
+                    openRfidFormModal(instanceId, nodeId, rfidData);
+                });
+            } else {
+                body.innerHTML = `
+                    <p style="color:#888"><em>Nessun lettore RFID configurato</em></p>
+                    <div class="container-buttons right">
+                        <button class="save-btn" id="rfid-configure-btn-${instanceId}-${nodeId}">Configura RFID</button>
+                    </div>
+                `;
+                document.querySelector(`#rfid-configure-btn-${instanceId}-${nodeId}`).addEventListener('click', () => {
+                    openRfidFormModal(instanceId, nodeId, null);
+                });
+            }
+        }
+
+        function openRfidFormModal(instanceId, nodeId, rfidData) {
+            const existingForm = document.querySelector(`#rfid-form-modal-${instanceId}-${nodeId}`);
+            if (existingForm) existingForm.remove();
+
+            let protocolOptions = rfidProtocols.map(p =>
+                `<option value="${p}" ${rfidData && rfidData.protocol === p ? 'selected' : ''}>${p}</option>`
+            ).join('');
+
+            let portOptions = '<option value="">Seleziona una porta...</option>';
+            availableSerialPorts.forEach(portInfo => {
+                const selected = rfidData && rfidData.connection && rfidData.connection.serial_port_name === portInfo.port ? 'selected' : '';
+                portOptions += `<option value="${portInfo.port}" ${selected}>${portInfo.port}</option>`;
+            });
+            if (rfidData && rfidData.connection && rfidData.connection.serial_port_name) {
+                const currentPort = rfidData.connection.serial_port_name;
+                if (!availableSerialPorts.find(p => p.port === currentPort)) {
+                    portOptions += `<option value="${currentPort}" selected>${currentPort} (in uso)</option>`;
+                }
+            }
+
+            const formModal = document.createElement('div');
+            formModal.className = 'modal';
+            formModal.id = `rfid-form-modal-${instanceId}-${nodeId}`;
+            formModal.style.display = 'flex';
+            formModal.innerHTML = `
+                <div class="modal-content" style="min-width:340px">
+                    <h3>${rfidData ? 'Modifica RFID' : 'Configura RFID'} - Pesa ${nodeId}</h3>
+                    <form id="rfid-form-${instanceId}-${nodeId}">
+                        <div class="form-group">
+                            <label><b>Protocollo:</b></label>
+                            <select name="protocol" required>${protocolOptions}</select>
+                        </div>
+                        <div class="form-group">
+                            <label><b>Porta seriale:</b></label>
+                            <select name="serial_port_name" required>${portOptions}</select>
+                        </div>
+                        <div class="form-group">
+                            <label><b>Baudrate:</b></label>
+                            <select name="baudrate" required>
+                                <option value="">Seleziona...</option>
+                                <option value="9600" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 9600 ? 'selected' : ''}>9600</option>
+                                <option value="19200" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 19200 ? 'selected' : ''}>19200</option>
+                                <option value="115200" ${rfidData && rfidData.connection && rfidData.connection.baudrate === 115200 ? 'selected' : ''}>115200</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><b>Timeout:</b></label>
+                            <input type="number" name="timeout" min="1" max="10" step="1" value="${rfidData && rfidData.connection ? rfidData.connection.timeout : 1}" required>
+                        </div>
+                        <div class="errors" style="color:red"></div>
+                        <div class="container-buttons right">
+                            <button type="button" class="cancel-btn" id="rfid-form-cancel-${instanceId}-${nodeId}">Annulla</button>
+                            <button type="submit" class="save-btn" id="rfid-form-save-${instanceId}-${nodeId}">Salva</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(formModal);
+
+            formModal.addEventListener('click', (e) => {
+                if (e.target === formModal) formModal.remove();
+            });
+
+            document.querySelector(`#rfid-form-cancel-${instanceId}-${nodeId}`).addEventListener('click', () => {
+                formModal.remove();
+            });
+
+            document.querySelector(`#rfid-form-${instanceId}-${nodeId}`).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const errorsDiv = form.querySelector('.errors');
+                errorsDiv.innerHTML = '';
+                const payload = {
+                    name: nodeId,
+                    protocol: form.querySelector('[name="protocol"]').value,
+                    connection: {
+                        serial_port_name: form.querySelector('[name="serial_port_name"]').value,
+                        baudrate: Number(form.querySelector('[name="baudrate"]').value),
+                        timeout: Number(form.querySelector('[name="timeout"]').value)
+                    }
+                };
+                try {
+                    const res = await fetch(`/api/config-weigher/instance/rfid?instance_name=${instanceId}&weigher_name=${nodeId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (data.detail) {
+                        errorsDiv.innerHTML = Array.isArray(data.detail) ? data.detail.map(e => e.msg).join('<br>') : JSON.stringify(data.detail);
+                    } else {
+                        updateRfidSection(instanceId, nodeId, data);
+                        formModal.remove();
+                        document.querySelector(`#rfid-modal-${instanceId}-${nodeId}`)?.remove();
+                    }
+                } catch (err) {
+                    errorsDiv.innerHTML = 'Errore durante il salvataggio';
+                }
+            });
+        }
+
+        function updateRfidSection(instanceId, nodeId, rfidData) {
+            const section = document.querySelector(`#rfid-section-${instanceId}-${nodeId}`);
+            if (!section) return;
+            section.innerHTML = `
+                <h5>RFID</h5>
+                ${rfidData && rfidData.connection ? `
+                    <p><b>Protocollo:</b> ${rfidData.protocol}</p>
+                    <p><b>Porta seriale:</b> ${rfidData.connection.serial_port_name}</p>
+                    <p><b>Baudrate:</b> ${rfidData.connection.baudrate}</p>
+                ` : '<p style="color:#888"><em>Nessun lettore RFID configurato</em></p>'}
+            `;
+        }
+
         // Funzione per copiare il link endpoint
         function copyEndpointLink(instanceId, nodeId) {
             const endpointElement = document.querySelector(`#endpoint-link-${instanceId}-${nodeId}`);
@@ -1710,6 +1988,7 @@
             await loadPrinters();
             await loadSerialPorts();
             await loadTerminalTypes();
+            await loadRfidProtocols();
 
             // Load panel and siren configurations
             await loadPanelConfig();
@@ -1734,9 +2013,17 @@
 
                 if (res.use_badge) useBadge.checked = true;
 
+                if (res.delete_pending_accesses_at_midnight) deletePendingAtMidnight.checked = true;
+
                 if (res.use_recordings) useRecordings.checked = true;
 
                 if (res.return_pdf_copy_after_weighing) reportCopy.checked = true;
+
+                if (res.use_preset_weight) presetWeight.checked = true;
+
+                if (res.test_mode) testModeCheckbox.checked = true;
+
+                if (res.show_export_totals) showExportTotals.checked = true;
 
                 // Access anagrafiche
                 const useAnagrafic = res.use_anagrafic || {};
@@ -1757,6 +2044,18 @@
                 } else {
                     document.getElementById('default-type-customer').checked = true;
                 }
+
+                // Totem enabled
+                document.getElementById('totem-enabled').checked = res.totem_enabled !== false;
+
+                // Totem anagrafiche
+                const totemAnagrafiche = res.totem_anagrafiche || { card: true, vehicle: true, subject: false, vector: false, driver: false, material: true };
+                document.getElementById('totem-card').checked = totemAnagrafiche.card !== false;
+                document.getElementById('totem-vehicle').checked = totemAnagrafiche.vehicle;
+                document.getElementById('totem-subject').checked = totemAnagrafiche.subject;
+                document.getElementById('totem-vector').checked = totemAnagrafiche.vector;
+                document.getElementById('totem-driver').checked = totemAnagrafiche.driver;
+                document.getElementById('totem-material').checked = totemAnagrafiche.material;
 
                 // Load sync folder configuration
                 if (res.sync_folder.remote_folder) {
@@ -2070,8 +2369,17 @@
                             ${camsHtml}
                             ${relesHtml}
                         </div>
+                        <div class="rfid-node-section" id="rfid-section-${instanceId}-${nodeId}">
+                            <h5>RFID</h5>
+                            ${node.rfid && node.rfid.connection ? `
+                                <p><b>Protocollo:</b> ${node.rfid.protocol}</p>
+                                <p><b>Porta seriale:</b> ${node.rfid.connection.serial_port_name}</p>
+                                <p><b>Baudrate:</b> ${node.rfid.connection.baudrate}</p>
+                            ` : '<p style="color:#888"><em>Nessun lettore RFID configurato</em></p>'}
+                        </div>
                         <div class="node-actions">
                             <button onclick="openEndpointModal('${instanceId}', '${nodeId}')">Link API</button>
+                            <button onclick="openRfidModal('${instanceId}', '${nodeId}')">RFID</button>
                             <button onclick="openEditNodeModal('${instanceId}', '${nodeId}')">Modifica</button>
                         </div>
                     `;
@@ -3631,6 +3939,56 @@
             .then(res => res.json());
         }
 
+        function setDeletePendingAccessesAtMidnight(status) {
+            fetch(`/api/config-weigher/configuration/delete-pending-accesses-at-midnight/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setReturnCopy(status) {
+            fetch(`/api/config-weigher/configuration/return-pdf-copy-after-weighing/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setUsePresetWeight(status) {
+            fetch(`/api/config-weigher/configuration/use-preset-weight/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setTestMode(status) {
+            fetch(`/api/config-weigher/configuration/test-mode/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function setShowExportTotals(status) {
+            fetch(`/api/config-weigher/configuration/show-export-totals/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
         function setAccessAnagrafic(anagrafic, status) {
             fetch(`/api/config-weigher/configuration/access-anagrafic/${anagrafic}/${status}`, {
                 method: 'PATCH',
@@ -3651,14 +4009,50 @@
             .then(res => res.json());
         }
 
-        function setReturnCopy(status) {
-            fetch(`/api/config-weigher/configuration/return-pdf-copy-after-weighing/${status}`, {
+        function setTotemAnagrafic(anagrafic, status) {
+            fetch(`/api/config-weigher/configuration/totem-anagrafic/${anagrafic}/${status}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
             .then(res => res.json());
+        }
+
+        function setTotemEnabled(status) {
+            fetch(`/api/config-weigher/configuration/totem-enabled/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json());
+        }
+
+        function restartSoftware() {
+            if (confirm('Sei sicuro di voler riavviare il software?')) {
+                showSnackbar("snackbar", "Riavvio in corso...", 'rgb(255, 255, 208)', 'black');
+                fetch('/api/generic/restart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok) {
+                        showSnackbar("snackbar", data.message, 'rgb(208, 255, 208)', 'black');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
+                    } else {
+                        showSnackbar("snackbar", data.detail || "Errore durante il riavvio", 'rgb(255, 208, 208)', 'black');
+                    }
+                })
+                .catch(err => {
+                    showSnackbar("snackbar", "Errore durante il riavvio", 'rgb(255, 208, 208)', 'black');
+                });
+            }
         }
 
         function openTemplateEditor(type) {
