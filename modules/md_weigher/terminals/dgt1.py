@@ -209,6 +209,20 @@ class Dgt1(Terminal):
 						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
 							self.take_of_weight_on_startup = False
 							self.take_of_weight_before_weighing = False
+					elif length_split_response == 3 and length_response == 14:
+						nw = (re.sub('[KkGg\x00\n]', '', split_response[1]).lstrip())
+						gw = (re.sub('[KkGg\x00\n]', '', split_response[1]).lstrip())
+						t = "0"
+						self.pesa_real_time.status = split_response[0]
+						self.pesa_real_time.type = "GS" if t == "0" else "NT"
+						self.pesa_real_time.net_weight = nw
+						self.pesa_real_time.gross_weight = gw
+						self.pesa_real_time.tare = t
+						self.pesa_real_time.unite_measure = split_response[2][-2:]
+						self.diagnostic.status = 200
+						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
+							self.take_of_weight_on_startup = False
+							self.take_of_weight_before_weighing = False
 					# Se formato stringa del peso in tempo reale non corretto, manda a video errore
 					else:
 						self.diagnostic.status = 201
