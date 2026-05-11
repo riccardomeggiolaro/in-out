@@ -11,7 +11,7 @@ import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight, WeightTerminal
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
-from modules.md_database.md_database import AccessStatus, TypeAccess, TypeSubjectEnum
+from modules.md_database.md_database import AccessStatus, TypeAccess, AccessMode, TypeSubjectEnum
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
@@ -413,11 +413,12 @@ class CallbackWeigher(Functions, WebSocket):
 					if current_weigher_data["id_selected"]["id"] != access["id"]:
 						await self.DeleteData(instance=instance)
 						try:
-							if access["type"].name == TypeAccess.RESERVATION.name and access["number_in_out"] is not None and realtime.tare != "0":
+							is_transit = access.get("mode") == AccessMode.TRANSIT
+							if access["type"].name == TypeAccess.RESERVATION.name and access["number_in_out"] is not None and realtime.tare != "0" and not is_transit:
 								error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
 							else:
 								data_dto = DataDTO(**{"id_selected": {"id": access["id"]}})
-								set_preset_tare_if_exists = True if access["number_in_out"] != -1 else False
+								set_preset_tare_if_exists = not is_transit
 								need_to_confirm = True if mode == "SEMIAUTOMATIC" and set_preset_tare_if_exists else False
 								await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm, set_preset_tare_if_exists=set_preset_tare_if_exists)
 						except Exception as e:

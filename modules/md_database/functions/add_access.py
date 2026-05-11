@@ -1,4 +1,4 @@
-from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, TypeSubjectEnum, TypeAccess, CardRegistry
+from modules.md_database.md_database import SessionLocal, Subject, Vector, Driver, Vehicle, Material, Access, AccessStatus, TypeSubjectEnum, TypeAccess, AccessMode, CardRegistry
 from modules.md_database.interfaces.access import AddAccessDTO
 from modules.md_database.functions.get_access_by_vehicle_id_if_uncompete import get_access_by_vehicle_id_if_uncomplete
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
@@ -28,7 +28,8 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
                 "document_reference": data.document_reference,
                 "type": TypeAccess[data.type],
                 "idCardRegistry": data.idCardRegistry if data.idCardRegistry and data.idCardRegistry != -1 else None,
-                "hidden": data.hidden
+                "hidden": data.hidden,
+                "mode": AccessMode[data.mode] if data.mode else AccessMode.STANDARD
             }
 
             current_model = Subject

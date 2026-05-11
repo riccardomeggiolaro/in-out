@@ -1,7 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload, defer
 from sqlalchemy.sql import exists, and_, or_
-from modules.md_database.md_database import SessionLocal, InOut, Access, AccessStatus, TypeAccess, Weighing, User, CardRegistry
+from modules.md_database.md_database import SessionLocal, InOut, Access, AccessStatus, TypeAccess, AccessMode, Weighing, User, CardRegistry
 from datetime import datetime, date
 
 def get_list_accesses(
@@ -155,9 +155,9 @@ def get_list_accesses(
 
         if transits is not None:
             if transits is True:
-                query = query.filter(Access.number_in_out == -1)
+                query = query.filter(Access.mode == AccessMode.TRANSIT)
             elif transits is False:
-                query = query.filter(Access.number_in_out != -1)
+                query = query.filter(Access.mode != AccessMode.TRANSIT)
 
         if fromDate:
             if isinstance(fromDate, str):

@@ -1,6 +1,6 @@
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import selectinload
-from modules.md_database.md_database import SessionLocal, InOut, Access, Vehicle, CardRegistry, TypeAccess, AccessStatus
+from modules.md_database.md_database import SessionLocal, InOut, Access, Vehicle, CardRegistry, TypeAccess, AccessMode, AccessStatus
 
 def get_access_by_identify_if_uncomplete(identify: str):
     session = SessionLocal()
@@ -63,6 +63,7 @@ def get_access_by_identify_if_uncomplete(identify: str):
             Access.type != TypeAccess.TEST.name,
             Access.status != AccessStatus.CLOSED.name,
             or_(
+                Access.mode == AccessMode.TRANSIT,
                 weighing_count_subquery.c.weighing_count == None,
                 weighing_count_subquery.c.weighing_count < Access.number_in_out,
                 Access.number_in_out == None,
