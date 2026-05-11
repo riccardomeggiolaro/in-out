@@ -185,6 +185,10 @@ def init():
 	async def Reservation(request: Request):
 		return templates.TemplateResponse("reservation.html", {"request": request})
 
+	@app.get("/transit", response_class=HTMLResponse)
+	async def Transit(request: Request):
+		return templates.TemplateResponse("transit.html", {"request": request})
+
 	@app.get("/card-registry", response_class=HTMLResponse)
 	async def CardRegistry(request: Request):
 		return templates.TemplateResponse("card-registry.html", {"request": request})
