@@ -459,10 +459,12 @@ function createRow(table, columns, item, idInout) {
     const isInBuffer = item.vehicle && item.vehicle.plate && buffer.includes(item.vehicle.plate);
     if (itemName === "access" && "status" in item && item.status !== "Chiusa" && !isInBuffer && item.type === "Prenotazione") {
         const th = document.querySelector('th[name="waiting"]');
-        const index = Array.from(th.parentNode.children).indexOf(th);
-        // Usa la data dell'ultima pesata se esiste, altrimenti la data di accettazione
-        const lastWeighingDate = row.dataset.lastWeighingDate;
-        startTimer(row, index, lastWeighingDate || item.date_created);
+        if (th) {
+            const index = Array.from(th.parentNode.children).indexOf(th);
+            // Usa la data dell'ultima pesata se esiste, altrimenti la data di accettazione
+            const lastWeighingDate = row.dataset.lastWeighingDate;
+            startTimer(row, index, lastWeighingDate || item.date_created);
+        }
     } else if (itemName === "access" && idInout) {
         if (!item.weight2 && report.in || item.weight2 && report.out) {
             pdfButton = document.createElement("button");

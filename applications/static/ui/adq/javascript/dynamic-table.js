@@ -440,8 +440,10 @@ function createRow(table, columns, item, idInout) {
     let pdfButton;
     if (itemName === "access" && "status" in item && item.status === "Attesa") {
         const th = document.querySelector('th[name="waiting"]');
-        const index = Array.from(th.parentNode.children).indexOf(th);
-        startTimer(row, index, item.date_created);
+        if (th) {
+            const index = Array.from(th.parentNode.children).indexOf(th);
+            startTimer(row, index, item.date_created);
+        }
     } else if (itemName === "access" && idInout) {
         if (!item.weight2 && report.in || item.weight2 && report.out || report.generic) {
             pdfButton = document.createElement("button");
