@@ -13,6 +13,7 @@ def get_list_accesses(
     offset=None,
     order_by=None,
     exclude_test_access=False,
+    exclude_transit_access=False,
     permanent=None,
     transits=None,
     get_is_last_for_vehicle=False,
@@ -143,6 +144,9 @@ def get_list_accesses(
 
         if exclude_test_access:
             query = query.filter(Access.type != TypeAccess.TEST.name)
+
+        if exclude_transit_access:
+            query = query.filter(Access.mode != AccessMode.TRANSIT)
 
         if exclude_manually_access:
             query = query.filter(Access.type != TypeAccess.MANUALLY.name)

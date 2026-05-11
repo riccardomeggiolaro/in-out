@@ -65,7 +65,7 @@ class AccessRouter(PanelSirenRouter):
         self.router.add_api_route('/call/{id}', self.callAccess, methods=["GET"])
         self.router.add_api_route('/cancel-call/{id}', self.cancelCallAccess, methods=["GET"])
         
-    async def getListAccesses(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, permanent: Optional[bool] = None, transits: Optional[bool] = None, permanentIfWeight1: bool = None, excludeManuallyAccess: bool = False):
+    async def getListAccesses(self, query_params: Dict[str, Union[str, int]] = Depends(get_query_params), limit: Optional[int] = None, offset: Optional[int] = None, fromDate: Optional[datetime] = None, toDate: Optional[datetime] = None, excludeTestWeighing = False, excludeTransitAccess: bool = False, permanent: Optional[bool] = None, transits: Optional[bool] = None, permanentIfWeight1: bool = None, excludeManuallyAccess: bool = False):
         try:
             not_closed = False
             if "status" in query_params and query_params["status"] == "NOT_CLOSED":
@@ -82,6 +82,8 @@ class AccessRouter(PanelSirenRouter):
                 del query_params["offset"]
             if "excludeTestWeighing" in query_params:
                 del query_params["excludeTestWeighing"]
+            if "excludeTransitAccess" in query_params:
+                del query_params["excludeTransitAccess"]
             if "permanent" in query_params:
                 del query_params["permanent"]
             if "transits" in query_params:
@@ -99,6 +101,7 @@ class AccessRouter(PanelSirenRouter):
                                     offset=offset,
                                     order_by=('date_created', 'desc'),
                                     exclude_test_access=excludeTestWeighing,
+                                    exclude_transit_access=excludeTransitAccess,
                                     permanent=permanent,
                                     transits=transits,
                                     permanentIfWeight1=permanentIfWeight1,
