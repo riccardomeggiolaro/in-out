@@ -12,9 +12,7 @@
             .table-container {
                 max-width: 2000px;
             }
-            #dateRange {
-                width: 200px;
-            }
+
             .popup.active {
                 max-width: 800px !important;
             }
@@ -37,8 +35,7 @@
                 border-radius: 5px;
             }
         </style>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     </head>
 <body>
     <div id="navbar-container"></div>
@@ -89,14 +86,8 @@
                         <select id="filter.status" name="status" onchange="updateTable()">
                             <option value="" selected>Stato (Tutti)</option>
                             <option value="NOT_CLOSED">Aperti</option>
-                            <option value="ENTERED">Entrati</option>
                             <option value="CLOSED">Chiusi</option>
                         </select>
-                    </th>
-                    <th name="date_created">
-                        <input type="text" id="dateRange" placeholder="Data accettazione" spellcheck="false" autocomplete="new-password" aria-autocomplete="none" onclick="this.select()">
-                        <input type="date" id="filter.fromDate" name="fromDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
-                        <input type="date" id="filter.toDate" name="toDate" spellcheck="false" autocomplete="new-password" aria-autocomplete="none">
                     </th>
                     <th></th>
                 </tr>
@@ -680,9 +671,6 @@
     <script src="/static/javascript/snackbar.js"></script>
     <script src="/static/javascript/dynamic-table.js"></script>
     <script>
-        const fromDate = document.querySelector('#filter\\.fromDate');
-        const toDate = document.querySelector('#filter\\.toDate');
-
         document.addEventListener("DOMContentLoaded", () => {
             fetch('/api/config-weigher/configuration')
             .then(res => res.json())
@@ -724,33 +712,6 @@
                 "pesata con id": "weighing.id"
             }
             init();
-        });
-
-        flatpickr("#dateRange", {
-            locale: {
-                rangeSeparator: ' / '
-            },
-            mode: 'range',
-            dateFormat: "d-m-Y",
-            onClose: function(selectedDates, dateStr, instance) {
-                document.querySelector('#dateRange').setSelectionRange(0, 0);
-                const firstDay = selectedDates[0];
-                let secondDay = selectedDates[1];
-                if (firstDay && secondDay === undefined) {
-                    secondDay = new Date(Date.now());
-                    secondDay.setHours(12, 0, 0, 0);
-                } else if (selectedDates.length === 2 && firstDay == secondDay) {
-                    secondDay.setHours(12, 0, 0, 0);
-                }
-                instance.setDate([firstDay, secondDay]);
-                const adjustedFirstDay = new Date(firstDay);
-                adjustedFirstDay.setHours(12, 0, 0, 0);
-                const adjustedSecondDay = new Date(secondDay);
-                adjustedSecondDay.setHours(12, 0, 0, 0);
-                fromDate.valueAsDate = adjustedFirstDay;
-                toDate.valueAsDate = adjustedSecondDay;
-                updateTable();
-            }
         });
 
         function populateForm(idForm, item={}) {
