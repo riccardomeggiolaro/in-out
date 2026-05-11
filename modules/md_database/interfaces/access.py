@@ -26,6 +26,7 @@ class Access(BaseModel):
     date_created: Optional[datetime] = None
     type: Optional[str] = None
     hidden: Optional[bool] = None
+    mode: Optional[str] = None
 
     subject: Optional[Subject] = None
     vector: Optional[Vector] = None
@@ -49,6 +50,7 @@ class AddAccessDTO(BaseModel):
     idCardRegistry: Optional[int] = None
     permanent: Optional[bool] = False
     hidden: Optional[bool] = False
+    mode: str = "STANDARD"
 
     @validator('typeSubject', pre=True, always=True)
     def check_type_subject(cls, v, values):
@@ -61,6 +63,12 @@ class AddAccessDTO(BaseModel):
         if v in ['RESERVATION', 'MANUALLY', 'TEST']:
             return v
         raise ValueError("type is not a valid string")
+
+    @validator('mode', pre=True, always=True)
+    def check_mode(cls, v, values):
+        if v in ['STANDARD', 'TRANSIT']:
+            return v
+        raise ValueError("mode is not a valid string")
 
 class SetAccessDTO(BaseModel):
     typeSubject: Optional[str] = None
@@ -77,6 +85,7 @@ class SetAccessDTO(BaseModel):
     idCardRegistry: Optional[int] = None
     permanent: Optional[bool] = None
     close: Optional[bool] = None
+    mode: Optional[str] = None
 
     @validator('typeSubject', pre=True, always=True)
     def check_type_subject(cls, v, values):
@@ -85,4 +94,10 @@ class SetAccessDTO(BaseModel):
                 return v
             else:
                 raise ValueError("typeSubject is not a valid string")
+        return v
+
+    @validator('mode', pre=True, always=True)
+    def check_mode(cls, v, values):
+        if v is not None and v not in ['STANDARD', 'TRANSIT']:
+            raise ValueError("mode is not a valid string")
         return v

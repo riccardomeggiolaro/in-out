@@ -9,7 +9,7 @@ from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.access import AccessRouter
-from modules.md_database.md_database import TypeAccess, AccessStatus, TypeSubjectEnum
+from modules.md_database.md_database import TypeAccess, AccessMode, AccessStatus, TypeSubjectEnum
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO
 from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
@@ -326,7 +326,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			access = get_access_by_id(current_id)
 		if access and len(access.in_out) > 0 and weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["weight1"] is not None:
 			error_message = "Il mezzo ha già effettuato l'entrata."
-		elif access and access.number_in_out == 0:
+		elif access and access.mode == AccessMode.TRANSIT:
 			error_message = "L'accesso è abilitato per il solo transito sulla pesa."
 		elif not access:
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
@@ -379,7 +379,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				access = get_access_by_id(idAccess)
 			just_created = False
 			if access:
-				if access.number_in_out == 0:
+				if access.mode == AccessMode.TRANSIT:
 					error_message = "L'accesso è abilitato per il solo transito sulla pesa."
 				if len(access.in_out) == 0 and access.number_in_out is not None and tare != "0":
 					error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."

@@ -140,6 +140,10 @@ class TypeAccess(PyEnum):
     MANUALLY = "Manuale"
     TEST = "Test"
 
+class AccessMode(PyEnum):
+    STANDARD = "Standard"
+    TRANSIT = "Transito"
+
 class CardRegistry(Base):
     __tablename__ = 'card_registry'
     id = Column(Integer, primary_key=True, index=True)
@@ -194,6 +198,7 @@ class Access(Base):
     type = Column(Enum(TypeAccess), default=TypeAccess.MANUALLY)
     idCardRegistry = Column(Integer, ForeignKey('card_registry.id'), nullable=True, index=True)
     hidden = Column(Boolean, default=False)
+    mode = Column(Enum(AccessMode), default=AccessMode.STANDARD, nullable=True)
 
     # Relationships
     subject = relationship("Subject", back_populates="accesses")
@@ -682,6 +687,40 @@ def migrate_access_badge_to_idCardRegistry():
         lb_log.error(f"Errore durante la migrazione access.badge → idCardRegistry: {e}")
 
 
+def migrate_access_mode():
+    """
+    Migrazione per aggiungere il campo mode alla tabella access.
+    - Accessi con number_in_out IN (-1, 0) → TRANSIT (erano già marcati come transito)
+    - Tutti gli altri → STANDARD
+    """
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='access'"))
+            if result.fetchone() is None:
+                return
+
+            access_cols = {row[1] for row in conn.execute(text("PRAGMA table_info('access')")).fetchall()}
+            if 'mode' not in access_cols:
+                return
+
+            result_transit = conn.execute(text("""
+                UPDATE access SET mode = 'TRANSIT'
+                WHERE (number_in_out = -1 OR number_in_out = 0)
+                AND mode IS NULL
+            """))
+            result_standard = conn.execute(text("""
+                UPDATE access SET mode = 'STANDARD'
+                WHERE mode IS NULL
+            """))
+            conn.commit()
+
+            total = result_transit.rowcount + result_standard.rowcount
+            if total > 0:
+                lb_log.info(f"Migrazione access.mode: {result_transit.rowcount} TRANSIT, {result_standard.rowcount} STANDARD")
+    except Exception as e:
+        lb_log.error(f"Errore durante la migrazione access.mode: {e}")
+
+
 def migrate_in_out_idCardRegistry():
     """
     Copia access.idCardRegistry su ogni record in_out che non ha ancora
@@ -745,6 +784,9 @@ migrate_access_badge_to_idCardRegistry()
 
 # Copia idCardRegistry da access a in_out per i record storici
 migrate_in_out_idCardRegistry()
+
+# Esegui migrazione campo mode (STANDARD/TRANSIT)
+migrate_access_mode()
 
 # Create default users
 def create_default_users():
