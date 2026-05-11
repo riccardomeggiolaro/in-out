@@ -603,6 +603,7 @@ function getFormData(form, set_minus_one) {
                 if (i === keys.length - 1) {
                     if (element.type === 'checkbox') currentObj[key] = element.checked;
                     else if (element.type === 'radio' && element.checked) currentObj[key] = element.value;
+                    else if (element.type === 'hidden') currentObj[key] = element.value;
                     else if (element.type === 'text') currentObj[key] = element.value;
                     else if (element.type === 'number') currentObj[key] = element.value !== "" ? Number(element.value) : set_minus_one ? -1 : null;
                 } else {
