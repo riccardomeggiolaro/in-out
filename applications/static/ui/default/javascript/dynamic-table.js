@@ -1046,8 +1046,11 @@ function closePopups(idPopups, deselectCurrentId = true) {
             if (input.type === 'checkbox') input.checked = false;
             if (input.dataset.id) input.dataset.id = '';
             if (idPopup == "add-popup" && itemName == "access") {
-                document.querySelector(`#${idPopup} #number_in_out`).required = true;
-                document.querySelector(`#${idPopup} #number_in_out`).color = 'black';
+                const numInOut = document.querySelector(`#${idPopup} #number_in_out`);
+                if (numInOut) {
+                    numInOut.required = true;
+                    numInOut.color = 'black';
+                }
             }
         });
     });
