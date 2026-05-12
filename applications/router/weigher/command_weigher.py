@@ -14,6 +14,7 @@ from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.interfaces.access import AddAccessDTO, SetAccessDTO
 from applications.router.weigher.dto import IdentifyDTO, DataDTO, DataToStoreDTO
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
+from modules.md_database.functions.get_access_by_identify_if_not_closed import get_access_by_identify_if_not_closed
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.functions.get_in_out_by_id import get_in_out_by_id
@@ -47,6 +48,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		self.router_action_weigher.add_api_route('/tare/preset', self.PresetTare, methods=['GET'])
 		self.router_action_weigher.add_api_route('/zero', self.Zero, methods=['GET'])
 		self.router_action_weigher.add_api_route('/rele', self.Rele, methods=['GET'])
+		self.router_action_weigher.add_api_route('/access-control', self.AccessControl, methods=['GET'])
 
 		self.router_action_weigher.add_api_websocket_route('/realtime', self.websocket_endpoint_realtime)
 		self.router_action_weigher.add_api_websocket_route('/diagnostic', self.websocket_endpoint_diagnostic)
@@ -485,6 +487,34 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			}
 		}
   
+	async def AccessControl(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), identify: Optional[str] = None, rele: Optional[str] = None):
+		if not identify:
+			raise HTTPException(status_code=400, detail="Need to insert an identify")
+		if not rele:
+			raise HTTPException(status_code=400, detail="Need to insert a rele")
+		reles = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"].copy()
+		if rele not in reles:
+			raise HTTPException(status_code=400, detail="Rele doesn't exist in configuration")
+		access = get_access_by_identify_if_not_closed(identify=identify)
+		if not access:
+			raise HTTPException(status_code=404, detail=f"No active access found for identify '{identify}'")
+		rele_tuple = (rele, lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"][rele])
+		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
+			instance_name=instance.instance_name,
+			weigher_name=instance.weigher_name,
+			modope="OPENRELE",
+			port_rele=rele_tuple
+		)
+		return {
+			"instance": instance,
+			"access": access,
+			"command_details": {
+				"status_modope": status_modope,
+				"command_executed": command_executed,
+				"error_message": error_message
+			}
+		}
+
 	async def websocket_endpoint_realtime(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.connect(websocket)
 
