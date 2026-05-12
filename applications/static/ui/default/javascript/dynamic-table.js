@@ -7,6 +7,7 @@ let itemName = null;
 let nextElementSibling = null;
 let lastChar = 'o';
 let canAlwaysDelete = false;
+let showPermanentStar = true;
 let minWriteLevel = 2;
 let useBadge = true;
 let listUrlPath = null;
@@ -541,7 +542,7 @@ function createRow(table, columns, item, idInout) {
         else if (idInout && !isReservation && item.is_last && isLatest) actionsCell.appendChild(deleteButton);
         else if (item.in_out && item.in_out.length === 0 || item.weighings && item.weighings.length === 0 || item.accesses && item.accesses.length === 0) actionsCell.appendChild(deleteButton);
         else if (!idInout && !item.in_out && !item.weighings && !item.accesses) actionsCell.appendChild(deleteButton);
-        if (itemName === "access" && item.type === "Prenotazione" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
+        if (showPermanentStar && itemName === "access" && item.type === "Prenotazione" && "in_out" in item && !String(item.number_in_out).includes("/")) actionsCell.appendChild(permanentAccess);
         if (itemName === "access" && item.type === "Prenotazione" && String(item.number_in_out).includes("/")) actionsCell.appendChild(bookingAccess);
         if (itemName === "access" && item.type === "Manuale") actionsCell.appendChild(manualAccess);
     } else if (itemName == "weighing-terminal") {
