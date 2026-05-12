@@ -5,6 +5,7 @@ from applications.router.weigher.types import DataAssignedDTO
 from applications.utils.utils_auth import create_access_token
 from applications.utils.utils_weigher import InstanceNameWeigherDTO, get_query_params_name_node
 from modules.md_database.functions.get_access_by_identify_if_uncomplete import get_access_by_identify_if_uncomplete
+from modules.md_database.functions.get_access_by_identify_if_not_closed import get_access_by_identify_if_not_closed
 from modules.md_database.functions.get_data_by_attribute import get_data_by_attribute
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
@@ -397,7 +398,26 @@ class CallbackWeigher(Functions, WebSocket):
 			division = weigher["division"]
 			take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
 			take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
-			if take_of_weight_on_startup is True:
+			if identify_dto.rele is not None:
+				reles = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"]
+				if identify_dto.rele not in reles:
+					error_message = f"Relè '{identify_dto.rele}' non trovato nella configurazione"
+				else:
+					access = get_access_by_identify_if_not_closed(identify=identify_dto.identify)
+					if not access:
+						error_message = f"Nessun accesso attivo trovato per '{identify_dto.identify}'"
+					else:
+						_, _, rele_error = md_weigher.module_weigher.setModope(
+							instance_name=instance.instance_name,
+							weigher_name=instance.weigher_name,
+							modope="OPENRELE",
+							port_rele=(identify_dto.rele, reles[identify_dto.rele])
+						)
+						if rele_error:
+							error_message = rele_error
+						else:
+							success_message = f'Relè aperto per "{identify_dto.identify}"'
+			elif take_of_weight_on_startup is True:
 				error_message = "Scaricare la pesa dopo l'avvio del programma"
 			elif take_of_weight_before_weighing is True:
 				error_message = "Scaricare la pesa prima di eseguire nuova pesata"

@@ -92,6 +92,7 @@ class DataDTO(BaseModel):
 
 class IdentifyDTO(BaseModel):
 	identify: str
+	rele: Optional[str] = None
 
 class CamDTO(BaseModel):
 	name: str
