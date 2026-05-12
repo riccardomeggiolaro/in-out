@@ -16,6 +16,7 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
     with SessionLocal() as session:
         data_to_check = None
         try:
+            mode = AccessMode[data.mode] if data.mode else AccessMode.STANDARD
             add_access = {
                 "typeSubject": TypeSubjectEnum[data.typeSubject],
                 "idSubject": data.subject.id,
@@ -24,12 +25,12 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
                 "idVehicle": data.vehicle.id,
                 "number_in_out": data.number_in_out,
                 "note": data.note,
-                "status": status or AccessStatus.WAITING,
+                "status": status or (AccessStatus.OPEN if mode == AccessMode.TRANSIT else AccessStatus.WAITING),
                 "document_reference": data.document_reference,
                 "type": TypeAccess[data.type],
                 "idCardRegistry": data.idCardRegistry if data.idCardRegistry and data.idCardRegistry != -1 else None,
                 "hidden": data.hidden,
-                "mode": AccessMode[data.mode] if data.mode else AccessMode.STANDARD
+                "mode": mode
             }
 
             current_model = Subject
