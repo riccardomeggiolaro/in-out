@@ -87,7 +87,7 @@
         "use_preset_weight": true,
         "use_recordings": false,
         "use_reservation": true,
-        "use_transit": true,
+        "use_transit": false,
         "use_white_list": false,
         "weighers": {
             "0": {
