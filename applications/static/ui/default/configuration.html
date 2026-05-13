@@ -566,6 +566,10 @@
                     <input type="checkbox" id="reservation" onclick="setUseReservation(this.checked)">
                     <br>
                     <br>
+                    <label for="transit">Usa <b>transiti</b>: </label>
+                    <input type="checkbox" id="transit" onclick="setUseTransit(this.checked)">
+                    <br>
+                    <br>
                     <label for="badge">Usa <b>badge</b> per riconoscimento tramite tessere: </label>
                     <input type="checkbox" id="badge" onclick="setUseBadge(this.checked)">
                     <br>
@@ -1309,6 +1313,7 @@
         const radio1 = document.querySelector("#radio-1");
         const radio2 = document.querySelector("#radio-2");
         const useReservation = document.querySelector("#reservation");
+        const useTransit = document.querySelector("#transit");
         const useBadge = document.querySelector("#badge");
         const deletePendingAtMidnight = document.querySelector("#delete-pending-at-midnight");
         const useRecordings = document.querySelector("#recordings");
@@ -2018,6 +2023,8 @@
                 }
 
                 if (res.use_reservation) useReservation.checked = true;
+
+                if (res.use_transit) useTransit.checked = true;
 
                 if (res.use_badge) useBadge.checked = true;
 
@@ -3909,6 +3916,25 @@
                 }
 
                 // Crea e inserisci il nuovo script
+                const newScript = document.createElement('script');
+                newScript.src = '/static/javascript/navbar.js?t=' + Date.now();
+                document.body.appendChild(newScript);
+            });
+        }
+
+        function setUseTransit(status) {
+            fetch(`/api/config-weigher/configuration/use-transit/${status}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(res => {
+                const oldScript = document.querySelector('script[src*="navbar.js"]');
+                if (oldScript) {
+                    oldScript.remove();
+                }
                 const newScript = document.createElement('script');
                 newScript.src = '/static/javascript/navbar.js?t=' + Date.now();
                 document.body.appendChild(newScript);
