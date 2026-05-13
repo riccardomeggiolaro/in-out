@@ -780,11 +780,11 @@
             const path = window.location.pathname;
             const titleIcons = document.getElementById('title-icons');
             if (path === '/reservation-multiple') {
-                document.getElementById('page-title').childNodes[0].textContent = 'Prenotazioni Multiple';
+                document.getElementById('page-title').childNodes[0].textContent = 'Multiple';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
                 titleIcons.innerHTML = '<span class="title-icon">📅</span>';
             } else if (path === '/reservation-permanenti') {
-                document.getElementById('page-title').childNodes[0].textContent = 'Prenotazioni Permanenti';
+                document.getElementById('page-title').childNodes[0].textContent = 'Permanenti';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
                 titleIcons.innerHTML = '<span class="title-icon">⭐</span>';
             } else {
