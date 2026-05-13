@@ -783,10 +783,22 @@
                 document.getElementById('page-title').childNodes[0].textContent = 'Multiple';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
                 titleIcons.innerHTML = '';
+                // Nascondi il campo permanente nel popup di creazione
+                document.querySelectorAll('#add-popup label[for="permanent"], #add-popup input#permanent').forEach(el => el.style.display = 'none');
             } else if (path === '/reservation-permanenti') {
                 document.getElementById('page-title').childNodes[0].textContent = 'Permanenti';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
                 titleIcons.innerHTML = '<span class="title-icon">⭐</span>';
+                // Pre-setta permanente=true e disabilita numero operazioni nel popup di creazione
+                const addPermanentCheckbox = document.querySelector('#register input#permanent');
+                if (addPermanentCheckbox) {
+                    addPermanentCheckbox.checked = true;
+                    disabledInputNumberInOut({ target: addPermanentCheckbox }, '#register');
+                }
+                // Nascondi l'intera riga numero operazioni + permanente nel popup di creazione
+                document.querySelectorAll('#add-popup .item').forEach(div => {
+                    if (div.querySelector('input#number_in_out')) div.style.display = 'none';
+                });
             }
 
             fetch('/api/config-weigher/configuration')
