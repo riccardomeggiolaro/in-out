@@ -185,6 +185,14 @@ def init():
 	async def Reservation(request: Request):
 		return templates.TemplateResponse("reservation.html", {"request": request})
 
+	@app.get("/reservation-multiple", response_class=HTMLResponse)
+	async def ReservationMultiple(request: Request):
+		return templates.TemplateResponse("reservation.html", {"request": request})
+
+	@app.get("/reservation-permanenti", response_class=HTMLResponse)
+	async def ReservationPermanenti(request: Request):
+		return templates.TemplateResponse("reservation.html", {"request": request})
+
 	@app.get("/transit", response_class=HTMLResponse)
 	async def Transit(request: Request):
 		return templates.TemplateResponse("transit.html", {"request": request})

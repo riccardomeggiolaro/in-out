@@ -58,15 +58,20 @@ fetch('navbar.html')
         
         // Colora il link attivo
         const currentPath = window.location.pathname;
+        const dropdownPaths = ["/subject", "/vector", "/driver", "/vehicle", "/material", "/card-registry", "/reservation-multiple", "/reservation-permanenti", "/transit"];
         document.querySelectorAll('.side-menu-navbar li').forEach(li => {
             const link = li.querySelector('a');
             if (link && link.getAttribute('href') === currentPath) {
                 link.classList.add('active-link-navbar');
-                if (["/subject", "/vector", "/driver", "/vehicle", "/material", "/card-registry"].includes(window.location.pathname)) {
-                    const arrow = document.querySelector('.arrow-dropdown-navbar');
-                    const dropdown = document.querySelector('.dropdown-navbar');
-                    if (arrow) arrow.classList.toggle('up');
-                    if (dropdown) dropdown.classList.toggle('active');
+                if (dropdownPaths.includes(currentPath)) {
+                    const parentDropdown = li.closest('.dropdown-navbar');
+                    if (parentDropdown) {
+                        parentDropdown.classList.add('active');
+                        const arrow = parentDropdown.previousElementSibling;
+                        if (arrow && arrow.classList.contains('arrow-dropdown-navbar')) {
+                            arrow.classList.add('up');
+                        }
+                    }
                 }
             }
         });
@@ -74,12 +79,6 @@ fetch('navbar.html')
             const link = li.querySelector('a');
             if (link && link.getAttribute('href') === currentPath) {
                 link.classList.add('active-link-navbar');
-                if (["/subject", "/vector", "/driver", "/vehicle", "/material", "/card-registry"].includes(window.location.pathname)) {
-                    const arrow = document.querySelector('.arrow-dropdown-navbar');
-                    const dropdown = document.querySelector('.dropdown-navbar');
-                    if (arrow) arrow.classList.toggle('up');
-                    if (dropdown) dropdown.classList.toggle('active');
-                }
             }
         });
         

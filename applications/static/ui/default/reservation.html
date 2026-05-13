@@ -50,13 +50,13 @@
 
     <div class="table-container">
         <div class="title">
-            <h2>Prenotazioni</h2>
+            <h2 id="page-title">Prenotazioni</h2>
             <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button class="register-button" onclick="addRow()">Crea prenotazione</button>
             </div>
         </div>
         <div id="filters" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
+            <div id="permanent-filter-wrapper">
                 <input id="filter.permanent" name="permanent" type="checkbox" autocomplete="off" onchange="updateTable()">
                 <label for="filter.permanent">Solo permanenti</label>
             </div>
@@ -775,6 +775,15 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
+            const path = window.location.pathname;
+            if (path === '/reservation-multiple') {
+                document.getElementById('page-title').textContent = 'Prenotazioni Multiple';
+                document.getElementById('permanent-filter-wrapper').style.display = 'none';
+            } else if (path === '/reservation-permanenti') {
+                document.getElementById('page-title').textContent = 'Prenotazioni Permanenti';
+                document.getElementById('permanent-filter-wrapper').style.display = 'none';
+            }
+
             fetch('/api/config-weigher/configuration')
             .then(res => res.json())
             .then(res => {
@@ -802,7 +811,13 @@
             populate_detail_tr = populateDetailTr;
             callback_populate_table = onTablePopulated;
             callback_call_anagrafic = callAccess;
-            customQueryParams = 'excludeManuallyAccess=true&excludeTransitAccess=true&';
+            if (path === '/reservation-multiple') {
+                customQueryParams = 'excludeManuallyAccess=true&excludeTransitAccess=true&permanent=false&';
+            } else if (path === '/reservation-permanenti') {
+                customQueryParams = 'excludeManuallyAccess=true&excludeTransitAccess=true&permanent=true&';
+            } else {
+                customQueryParams = 'excludeManuallyAccess=true&excludeTransitAccess=true&';
+            }
             params = {
                 "accesso con targa": "access.vehicle.plate",
                 "accesso con id": "access.id",
