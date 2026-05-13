@@ -47,6 +47,10 @@ fetch('navbar.html')
             const pageOfReservation = document.querySelectorAll(".page-of-reservation");
             pageOfReservation.forEach(reservation => reservation.style.display = "none");
         }
+        if (!configRes.use_transit) {
+            const pageOfTransit = document.querySelectorAll(".page-of-transit");
+            pageOfTransit.forEach(el => el.style.display = "none");
+        }
         if (!configRes.use_badge) {
             const pageOfCardRegistry = document.querySelectorAll(".page-of-card-registry");
             pageOfCardRegistry.forEach(el => el.style.display = "none");
