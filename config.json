@@ -2,7 +2,7 @@
     "app_api": {
         "default_type_subject": "SUPPLIER",
         "delete_pending_accesses_at_midnight": false,
-        "mode": "SEMIAUTOMATIC",
+        "mode": "MANUALLY",
         "panel": {
             "config": {},
             "connection": {
@@ -18,14 +18,14 @@
         "path_database": "/var/opt/in-out/database.db",
         "path_img": "/var/opt/in-out/images",
         "path_pdf": "/var/opt/in-out/pdf",
-        "path_ui": "static/ui/default",
+        "path_ui": "static/ui/adq",
         "port": 80,
         "report_generic": "weight_generic.json",
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
         "report_tare": "weight_tare.json",
-        "return_pdf_copy_after_weighing": true,
-        "show_export_totals": true,
+        "return_pdf_copy_after_weighing": false,
+        "show_export_totals": false,
         "siren": {
             "config": {},
             "connection": {
@@ -54,16 +54,16 @@
                 "images"
             ]
         },
-        "test_mode": true,
+        "test_mode": false,
         "totem_anagrafiche": {
-            "card": true,
+            "card": false,
             "driver": false,
-            "material": true,
+            "material": false,
             "subject": false,
             "vector": false,
-            "vehicle": true
+            "vehicle": false
         },
-        "totem_enabled": true,
+        "totem_enabled": false,
         "use_anagrafic": {
             "document_reference": true,
             "driver": true,
@@ -83,10 +83,10 @@
                 "pid": true
             }
         },
-        "use_badge": true,
-        "use_preset_weight": true,
+        "use_badge": false,
+        "use_preset_weight": false,
         "use_recordings": false,
-        "use_reservation": true,
+        "use_reservation": false,
         "use_transit": false,
         "use_white_list": false,
         "weighers": {
