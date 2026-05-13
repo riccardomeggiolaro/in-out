@@ -782,13 +782,11 @@
             if (path === '/reservation-multiple') {
                 document.getElementById('page-title').childNodes[0].textContent = 'Multiple';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
-                titleIcons.innerHTML = '<span class="title-icon">📅</span>';
+                titleIcons.innerHTML = '';
             } else if (path === '/reservation-permanenti') {
                 document.getElementById('page-title').childNodes[0].textContent = 'Permanenti';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
                 titleIcons.innerHTML = '<span class="title-icon">⭐</span>';
-            } else {
-                titleIcons.innerHTML = '<span class="title-icon" title="Permanente">⭐</span><span class="title-icon" title="Multipla">📅</span><span class="title-icon" title="Manuale">✍️</span>';
             }
 
             fetch('/api/config-weigher/configuration')
