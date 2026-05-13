@@ -39,6 +39,8 @@
                 border: 1px solid #ccc;
                 border-radius: 5px;
             }
+            .row-icon { display: none; }
+            .title-icon { font-size: 1.2rem; margin-left: 8px; }
         </style>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
         <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -50,7 +52,7 @@
 
     <div class="table-container">
         <div class="title">
-            <h2 id="page-title">Prenotazioni</h2>
+            <h2 id="page-title">Prenotazioni<span id="title-icons"></span></h2>
             <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px;">
                 <button class="register-button" onclick="addRow()">Crea prenotazione</button>
             </div>
@@ -776,12 +778,17 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             const path = window.location.pathname;
+            const titleIcons = document.getElementById('title-icons');
             if (path === '/reservation-multiple') {
-                document.getElementById('page-title').textContent = 'Prenotazioni Multiple';
+                document.getElementById('page-title').childNodes[0].textContent = 'Prenotazioni Multiple';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
+                titleIcons.innerHTML = '<span class="title-icon">📅</span>';
             } else if (path === '/reservation-permanenti') {
-                document.getElementById('page-title').textContent = 'Prenotazioni Permanenti';
+                document.getElementById('page-title').childNodes[0].textContent = 'Prenotazioni Permanenti';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
+                titleIcons.innerHTML = '<span class="title-icon">⭐</span>';
+            } else {
+                titleIcons.innerHTML = '<span class="title-icon" title="Permanente">⭐</span><span class="title-icon" title="Multipla">📅</span><span class="title-icon" title="Manuale">✍️</span>';
             }
 
             fetch('/api/config-weigher/configuration')

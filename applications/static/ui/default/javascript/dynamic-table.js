@@ -526,10 +526,13 @@ function createRow(table, columns, item, idInout) {
     };
     const permanentAccess = document.createElement("span");
     permanentAccess.textContent = "⭐";
+    permanentAccess.className = "row-icon row-icon-permanent";
     const bookingAccess = document.createElement("span");
     bookingAccess.textContent = "📅";
+    bookingAccess.className = "row-icon row-icon-booking";
     const manualAccess = document.createElement("span");
     manualAccess.textContent = "✍️";
+    manualAccess.className = "row-icon row-icon-manual";
     if (!["pid", "weighing-terminal"].includes(itemName)) {
         if (itemName === "access" && item.in_out && item.status !== "Chiusa" && item.in_out.length > 0 && item.in_out[item.in_out.length-1].idWeight2 !== null) actionsCell.appendChild(closeButton);
         actionsCell.appendChild(editButton);
