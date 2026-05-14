@@ -33,6 +33,7 @@ from applications.utils.utils_report import get_data_variables, generate_html_re
 from libs.lb_printer import printer
 import applications.utils.utils as utils
 import threading
+import time
 from libs.lb_utils import base_path
 from datetime import datetime
 import json
@@ -338,10 +339,12 @@ class CallbackWeigher(Functions, WebSocket):
 							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
+				time_between_actions = lb_config.g_config["app_api"]["weighers"][instance_name]["time_between_actions"]
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"].get("set_rele", {}).get(event_type, []):
 					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"].get(rele["rele"], 0)
 					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
+					time.sleep(time_between_actions)
 		elif not last_pesata.weight_executed.executed:
 			if last_pesata.data_assigned.accessId and access.hidden is True:
 				# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
