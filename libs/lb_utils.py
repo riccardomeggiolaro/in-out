@@ -149,14 +149,3 @@ def hash_password(password: str):
 
 def has_non_none_value(d):
     return any(value not in [None, ""] for value in d.values())
-
-def wrec_checksum(stringa: str) -> str:
-	totale = 0
-	for i in stringa:
-		totale = totale + ord(i)
-	return hex(totale)[-2:]
-
-def build_wrec_command(identify: str) -> str:
-	stringa = identify + "; ;         0;0;         0;         0;0;         0;         0;"
-	checksum = wrec_checksum(stringa)
-	return "WREC,3,0000," + stringa + "," + checksum

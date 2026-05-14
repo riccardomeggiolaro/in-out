@@ -34,7 +34,7 @@ from libs.lb_printer import printer
 import applications.utils.utils as utils
 import threading
 import time
-from libs.lb_utils import base_path, build_wrec_command
+from libs.lb_utils import base_path
 from datetime import datetime
 import json
 
@@ -625,8 +625,6 @@ class CallbackWeigher(Functions, WebSocket):
 							threading.Thread(target=lambda: asyncio.run(handleAutomatic())).start()
 							success_message = "Pesatura automatica presa in carico."
 						elif mode == "SEMIAUTOMATIC":
-							wrec_cmd = build_wrec_command(identify)
-							md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="WREC", data_assigned=wrec_cmd)
 							async def handleSemiautomatic():
 								data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
 								tare = data["data_in_execution"]["vehicle"]["tare"]
