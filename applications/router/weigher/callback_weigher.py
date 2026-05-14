@@ -418,6 +418,7 @@ class CallbackWeigher(Functions, WebSocket):
 				if identify_dto.rele not in reles:
 					error_message = f"Relè '{identify_dto.rele}' non trovato nella configurazione"
 				elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
+					show_message = False
 					error_message = f"Il peso deve essere inferiore di {min_weight} kg"
 				else:
 					access = get_access_by_identify_if_not_closed(identify=identify_dto.identify)
