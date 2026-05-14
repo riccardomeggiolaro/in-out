@@ -195,8 +195,8 @@ async function loadSetupWeighers() {
             <button class="delete-btn">${deleteButtonContent}</button>
             <span>Numero: </span> <input type="number" min="1" value="${number_rele ? number_rele : ''}" style="width: 50px" required>
             <select style="width: 75px">
-                <option value="1" ${status === 1 ? 'selected' : ''}>Attiva</option>
-                <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
+                <option value="1" ${status === 1 ? 'selected' : ''}>Attivo</option>
+                <option value="0" ${status === 0 ? 'selected' : ''}>Disattivo</option>
             </select>
             <select style="width: 180px">
                 <option value="weighing_in" ${on_event === "weighing_in" ? 'selected' : ''}>Dopo la pesata in ENTRATA</option>
@@ -1582,22 +1582,22 @@ async function loadSetupWeighers() {
                         viewModeCFontent.innerHTML += '<h5 class="gray"><em>RELE</em></h5>';
                         over_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} sopra il peso minimo</em></p>
+                                <p class="gray"><em>${r.set ? 'Attivo' : 'Disattivo'} relè ${r.rele} sopra il peso minimo</em></p>
                             `;
                         });
                         under_min.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} sotto il peso minimo</em></p>
+                                <p class="gray"><em>${r.set ? 'Attivo' : 'Disattivo'} relè ${r.rele} sotto il peso minimo</em></p>
                             `;
                         });
                         weighing_in.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata in ENTRATA</em></p>
+                                <p class="gray"><em>${r.set ? 'Attivo' : 'Disattivo'} relè ${r.rele} dopo la pesata in ENTRATA</em></p>
                             `;
                         });
                         weighing_out.forEach(r => {
                             viewModeCFontent.innerHTML += `
-                                <p class="gray"><em>${r.set ? 'Attiva' : 'Disattiva'} relè ${r.rele} dopo la pesata in USCITA</em></p>
+                                <p class="gray"><em>${r.set ? 'Attivo' : 'Disattivo'} relè ${r.rele} dopo la pesata in USCITA</em></p>
                             `;
                         });
                     }

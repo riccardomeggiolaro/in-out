@@ -133,7 +133,7 @@
                     Object.entries(obj.rele).forEach(([key, value]) => {
                         const buttonRele = document.createElement("button");
                         buttonRele.id = `rele-${key}`;
-                        buttonRele.innerHTML = `<strong>${key}</strong> - ${value === 0 ? 'Chiuso' : 'Aperto'}`;
+                        buttonRele.innerHTML = `<strong>${key}</strong> - ${value === 0 ? 'Disattivo' : 'Attivo'}`;
                         buttonRele.onclick = () => {
                             fetch(`${pathname}/api/command-weigher/rele${currentWeigherPath}&rele=${key}`);
                         }
@@ -213,7 +213,7 @@
                 vl.textContent = obj.vl;
             } else if (isDigit) {
                 const buttonRele = document.querySelector(`#rele-${firstKey}`);
-                buttonRele.innerHTML = `<strong>${firstKey}</strong> - ${obj[firstKey] === 0 ? 'Chiuso' : 'Aperto'}`;
+                buttonRele.innerHTML = `<strong>${firstKey}</strong> - ${obj[firstKey] === 0 ? 'Disattivo' : 'Attivo'}`;
             }
         }
     </script>
