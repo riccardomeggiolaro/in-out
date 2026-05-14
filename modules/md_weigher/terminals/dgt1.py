@@ -52,6 +52,10 @@ class Dgt1(Terminal):
 			self.write("OUTP" + str(key) + "0000")
 			self.modope_to_execute = "OK" # setto modope_to_execute a stringa vuota per evitare che la stessa funzione venga eseguita anche nel prossimo ciclo
 			self.maintaineSessionRealtime()
+		elif self.modope == "WREC":
+			self.write(self.wrec_command)
+			self.modope_to_execute = "OK"
+			self.maintaineSessionRealtime()
 		elif self.modope == "VER":
 			self.write("VER")
 		elif self.modope == "SN":
@@ -313,6 +317,14 @@ class Dgt1(Terminal):
 					# Se formato stringa non valido setto ok_value a None
 					else:
 						self.diagnostic.status = 201
+				elif self.modope == "WREC":
+					if response in skip_response_messages:
+						pass
+					elif length_response == 2 and response == "OK":
+						self.diagnostic.status = 200
+					else:
+						self.diagnostic.status = 201
+					self.wrec_command = None
 				elif self.modope in ["OPENRELE", "CLOSERELE"]:
 					if response in skip_response_messages:
 						pass

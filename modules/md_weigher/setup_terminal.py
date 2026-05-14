@@ -169,6 +169,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.preset_tare: int = 0
 		self.port_rele: int = None
 		self.rele_queue: list = []
+		self.wrec_command: str = None
 		self.code_identify: str = ""
 		self.callback_realtime: str = ""
 		self.callback_diagnostic: str = ""
@@ -304,6 +305,12 @@ class __SetupWeigher(__SetupWeigherConnection):
 				return 400, "Diagnostica in esecuzione"
 			self.modope_to_execute = mod # se non si è verificata nessuna delle condizioni imposto REALTIME come comando da eseguire
 			return 100, None # ritorno il successo
+		if mod == "WREC":
+			if data_assigned is None:
+				return 500, "Need wrec command"
+			self.wrec_command = data_assigned
+			self.modope_to_execute = "WREC"
+			return 100, None
 		if mod == "OPENRELE":
 			if port_rele is None:
 				return 500, "Need port rele"

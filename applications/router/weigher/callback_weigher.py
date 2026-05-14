@@ -516,7 +516,7 @@ class CallbackWeigher(Functions, WebSocket):
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 											break
-										elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+										elif realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
 											error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
@@ -588,7 +588,7 @@ class CallbackWeigher(Functions, WebSocket):
 												await self.DeleteData(instance=instance)
 												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 												break
-										elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+										elif realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
 											error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
@@ -625,11 +625,8 @@ class CallbackWeigher(Functions, WebSocket):
 							threading.Thread(target=lambda: asyncio.run(handleAutomatic())).start()
 							success_message = "Pesatura automatica presa in carico."
 						elif mode == "SEMIAUTOMATIC":
-							try:
-								wrec_cmd = build_wrec_command(identify)
-								md_weigher.module_weigher.sendRaw(instance.instance_name, instance.weigher_name, wrec_cmd)
-							except Exception as e:
-								lb_log.error(f"Errore invio WREC: {e}")
+							wrec_cmd = build_wrec_command(identify)
+							md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="WREC", data_assigned=wrec_cmd)
 							async def handleSemiautomatic():
 								data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
 								tare = data["data_in_execution"]["vehicle"]["tare"]
@@ -661,7 +658,7 @@ class CallbackWeigher(Functions, WebSocket):
 												await self.DeleteData(instance=instance)
 												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 												break
-										elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+										elif realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
 											error_message = f"Pesatura semiautomatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
