@@ -61,21 +61,7 @@ class CallbackWeigher(Functions, WebSocket):
 			except:
 				pass
 			if type(numeric_gross_weight) in [float, int]:
-				switch = self.switch_to_call_instance_weigher[instance_name][weigher_name]
-				if switch in ("in", "out"):
-					rele_list = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"].get("set_rele", {}).get(switch, [])
-					idx = self.relay_index_tracker[instance_name][weigher_name]
-					if idx < len(rele_list):
-						rele = rele_list[idx]
-						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
-						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"].get(rele["rele"], 0)
-						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
-						self.relay_index_tracker[instance_name][weigher_name] += 1
-					else:
-						min_weight = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"]
-						self.switch_to_call_instance_weigher[instance_name][weigher_name] = 1 if numeric_gross_weight >= min_weight else 0
-						self.relay_index_tracker[instance_name][weigher_name] = 0
-				elif numeric_gross_weight < lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call_instance_weigher[instance_name][weigher_name] in [0, None]:
+				if numeric_gross_weight < lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call_instance_weigher[instance_name][weigher_name] in [0, None]:
 					data = self.getData(instance_name=instance_name, weigher_name=weigher_name)
 					if data["id_selected"]["need_to_confirm"] is True:
 						self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
@@ -353,9 +339,13 @@ class CallbackWeigher(Functions, WebSocket):
 							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
-				if event_type in ("in", "out"):
-					self.switch_to_call_instance_weigher[instance_name][weigher_name] = event_type
-					self.relay_index_tracker[instance_name][weigher_name] = 0
+				time_between_actions = lb_config.g_config["app_api"]["weighers"][instance_name]["time_between_actions"]
+				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"].get("set_rele", {}).get(event_type, []):
+					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
+					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"].get(rele["rele"], 0)
+					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
+					lb_log.info(f"Settaggio relè {rele['rele']} in modalità {modope} con stato {rele_status} per evento {event_type}: {r}")
+					time.sleep(time_between_actions)
 		elif not last_pesata.weight_executed.executed:
 			if last_pesata.data_assigned.accessId and access.hidden is True:
 				# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
