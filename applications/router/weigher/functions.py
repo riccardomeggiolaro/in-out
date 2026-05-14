@@ -22,11 +22,13 @@ class Functions:
 		md_rfid.module_rfid.initialize_from_config(lb_config.g_config["app_api"]["weighers"])
 
 		self.switch_to_call_instance_weigher = {}
+		self.relay_index_tracker = {}
 
 		import libs.lb_log as lb_log
 
 		for instance_name, instance in md_weigher.module_weigher.instances.items():
 			self.switch_to_call_instance_weigher[instance_name] = {}
+			self.relay_index_tracker[instance_name] = {}
 			nodes_sockets = {}
 			for weigher_name, weigher in instance.nodes.items():
 				nodes_sockets[weigher_name] = {
@@ -36,6 +38,7 @@ class Functions:
          			}).dict()
 				}
 				self.switch_to_call_instance_weigher[instance_name] = {weigher_name: None}
+				self.relay_index_tracker[instance_name] = {weigher_name: 0}
 			weighers_data[instance_name] = nodes_sockets
 
 		md_weigher.module_weigher.setApplicationCallback(
