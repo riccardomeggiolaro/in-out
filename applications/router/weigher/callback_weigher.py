@@ -34,7 +34,7 @@ from libs.lb_printer import printer
 import applications.utils.utils as utils
 import threading
 import time
-from libs.lb_utils import base_path
+from libs.lb_utils import base_path, build_wrec_command
 from datetime import datetime
 import json
 
@@ -416,6 +416,11 @@ class CallbackWeigher(Functions, WebSocket):
 		if card_number:
 			identify = card_number["number"]
 		cam_message = identify + f" ricevuto da {request.client.host}"
+		try:
+			wrec_cmd = build_wrec_command(identify)
+			md_weigher.module_weigher.sendRaw(instance.instance_name, instance.weigher_name, wrec_cmd)
+		except Exception as e:
+			lb_log.error(f"Errore invio WREC: {e}")
 		if existing_proc:
 			show_message = False
 			error_message = f"Pesatura automatica già in esecuzione sulla pesa '{instance.weigher_name}' con identify '{existing_proc['identify']}'."
