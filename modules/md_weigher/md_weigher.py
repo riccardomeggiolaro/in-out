@@ -240,8 +240,8 @@ class WeigherModule:
 	def getCurrentModope(self, instance_name, weigher_name: str):
 		return self.instances[instance_name].getCurrentModope(weigher_name=weigher_name)
 
-	def setModope(self, instance_name, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None, from_callback: bool = False):
-		return self.instances[instance_name].setModope(weigher_name=weigher_name, modope=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele, from_callback=from_callback)
+	def setModope(self, instance_name, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None, check_just_modope: bool = True):
+		return self.instances[instance_name].setModope(weigher_name=weigher_name, modope=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele, check_just_modope=check_just_modope)
 
 	def canStartWeighing(self, instance_name, weigher_name: str):
 		return self.instances[instance_name].canStartWeighing(weigher_name=weigher_name)
@@ -686,8 +686,8 @@ class WeigherInstance:
 	def getCurrentModope(self, weigher_name: str):
 		return self.nodes[weigher_name].modope
 
-	def setModope(self, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None, from_callback: bool = False):
-		status_modope, error_message = self.nodes[weigher_name].setModope(mod=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele, from_callback=from_callback)
+	def setModope(self, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None, check_just_modope: bool = True):
+		status_modope, error_message = self.nodes[weigher_name].setModope(mod=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele, check_just_modope=check_just_modope)
 		command_executed = status_modope == 100
 		return status_modope, command_executed, error_message
 
