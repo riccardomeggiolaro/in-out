@@ -343,7 +343,7 @@ class CallbackWeigher(Functions, WebSocket):
 				for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"].get("set_rele", {}).get(event_type, []):
 					modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 					rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"].get(rele["rele"], 0)
-					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
+					r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status), check_just_modope=False)
 					lb_log.info(f"Settaggio relè {rele['rele']} in modalità {modope} con stato {rele_status} per evento {event_type}: {r}")
 					time.sleep(time_between_actions)
 		elif not last_pesata.weight_executed.executed:
