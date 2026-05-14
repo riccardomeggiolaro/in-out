@@ -168,6 +168,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.valore_alterno: int = 1
 		self.preset_tare: int = 0
 		self.port_rele: int = None
+		self.rele_queue: list = []
 		self.code_identify: str = ""
 		self.callback_realtime: str = ""
 		self.callback_diagnostic: str = ""
@@ -304,19 +305,21 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.modope_to_execute = mod # se non si è verificata nessuna delle condizioni imposto REALTIME come comando da eseguire
 			return 100, None # ritorno il successo
 		if mod == "OPENRELE":
-			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
-				return 400, f"Settaggio del rele {port_rele[0]} già in esecuzione"
 			if port_rele is None:
 				return 500, "Need port rele"
+			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
+				self.rele_queue.append((mod, port_rele))
+				return 100, None
 			self.modope_to_execute = mod
 			self.port_rele = port_rele
 			callCallback(self.callback_action_in_execution)
 			return 100, None
 		if mod == "CLOSERELE":
-			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
-				return 400, f"Settaggio del rele {port_rele[0]} già in esecuzione"
 			if port_rele is None:
 				return 500, "Need port rele"
+			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
+				self.rele_queue.append((mod, port_rele))
+				return 100, None
 			self.modope_to_execute = mod
 			self.port_rele = port_rele
 			callCallback(self.callback_action_in_execution)

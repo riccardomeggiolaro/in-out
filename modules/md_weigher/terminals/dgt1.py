@@ -328,6 +328,11 @@ class Dgt1(Terminal):
 						self.diagnostic.status = 201
 					callCallback(self.callback_rele)
 					self.port_rele = None
+					if self.rele_queue:
+						next_mod, next_port_rele = self.rele_queue.pop(0)
+						self.modope_to_execute = next_mod
+						self.port_rele = next_port_rele
+						callCallback(self.callback_action_in_execution)
 				elif length_response == 16 and "$" in response:
 					self.diagnostic.status = 200
 					self.code_identify = response
