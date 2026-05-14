@@ -416,11 +416,6 @@ class CallbackWeigher(Functions, WebSocket):
 		if card_number:
 			identify = card_number["number"]
 		cam_message = identify + f" ricevuto da {request.client.host}"
-		try:
-			wrec_cmd = build_wrec_command(identify)
-			md_weigher.module_weigher.sendRaw(instance.instance_name, instance.weigher_name, wrec_cmd)
-		except Exception as e:
-			lb_log.error(f"Errore invio WREC: {e}")
 		if existing_proc:
 			show_message = False
 			error_message = f"Pesatura automatica già in esecuzione sulla pesa '{instance.weigher_name}' con identify '{existing_proc['identify']}'."
@@ -630,6 +625,11 @@ class CallbackWeigher(Functions, WebSocket):
 							threading.Thread(target=lambda: asyncio.run(handleAutomatic())).start()
 							success_message = "Pesatura automatica presa in carico."
 						elif mode == "SEMIAUTOMATIC":
+							try:
+								wrec_cmd = build_wrec_command(identify)
+								md_weigher.module_weigher.sendRaw(instance.instance_name, instance.weigher_name, wrec_cmd)
+							except Exception as e:
+								lb_log.error(f"Errore invio WREC: {e}")
 							async def handleSemiautomatic():
 								data = weighers_data[instance.instance_name][instance.weigher_name]["data"]
 								tare = data["data_in_execution"]["vehicle"]["tare"]
