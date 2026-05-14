@@ -168,6 +168,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 		self.valore_alterno: int = 1
 		self.preset_tare: int = 0
 		self.port_rele: int = None
+		self.rele_queue: list = []
 		self.code_identify: str = ""
 		self.callback_realtime: str = ""
 		self.callback_diagnostic: str = ""
@@ -282,7 +283,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.callback_code_identify = lambda: cb_code_identify(self.self_config.name, weigher_name, self.code_identify)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: Union[int, float] = 0, data_assigned: Any = None, port_rele: tuple = None, check_just_modope: bool = True):
+	def setModope(self, mod: str, presettare: Union[int, float] = 0, data_assigned: Any = None, port_rele: tuple = None):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
@@ -306,8 +307,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		if mod == "OPENRELE":
 			if port_rele is None:
 				return 500, "Need port rele"
-			if check_just_modope and (self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands):
-				return 400, f"Settaggio del rele {port_rele[0]} già in esecuzione"
+			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
+				self.rele_queue.append((mod, port_rele))
+				return 100, None
 			self.modope_to_execute = mod
 			self.port_rele = port_rele
 			callCallback(self.callback_action_in_execution)
@@ -315,8 +317,9 @@ class __SetupWeigher(__SetupWeigherConnection):
 		if mod == "CLOSERELE":
 			if port_rele is None:
 				return 500, "Need port rele"
-			if check_just_modope and (self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands):
-				return 400, f"Settaggio del rele {port_rele[0]} già in esecuzione"
+			if self.modope_to_execute in self.rele_commands or self.modope in self.rele_commands:
+				self.rele_queue.append((mod, port_rele))
+				return 100, None
 			self.modope_to_execute = mod
 			self.port_rele = port_rele
 			callCallback(self.callback_action_in_execution)
