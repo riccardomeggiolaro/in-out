@@ -243,9 +243,6 @@ class WeigherModule:
 	def setModope(self, instance_name, weigher_name: str, modope, presettare=0, data_assigned: Any = None, port_rele=None):
 		return self.instances[instance_name].setModope(weigher_name=weigher_name, modope=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele)
 
-	def sendRaw(self, instance_name, weigher_name: str, cmd: str):
-		return self.instances[instance_name].sendRaw(weigher_name=weigher_name, cmd=cmd)
-
 	def canStartWeighing(self, instance_name, weigher_name: str):
 		return self.instances[instance_name].canStartWeighing(weigher_name=weigher_name)
 
@@ -693,9 +690,6 @@ class WeigherInstance:
 		status_modope, error_message = self.nodes[weigher_name].setModope(mod=modope, presettare=presettare, data_assigned=data_assigned, port_rele=port_rele)
 		command_executed = status_modope == 100
 		return status_modope, command_executed, error_message
-
-	def sendRaw(self, weigher_name: str, cmd: str):
-		self.nodes[weigher_name].write(cmd)
 
 	def setActionWeigher(
     	self, 
