@@ -413,23 +413,37 @@ class CallbackWeigher(Functions, WebSocket):
 			take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
 			if identify_dto.rele is not None:
 				reles = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["rele"]
+				min_weight = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["min_weight"]
+				realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				if identify_dto.rele not in reles:
 					error_message = f"Relè '{identify_dto.rele}' non trovato nella configurazione"
+				elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
+					show_message = False
+					error_message = f"Il peso deve essere inferiore di {min_weight} kg"
 				else:
 					access = get_access_by_identify_if_not_closed(identify=identify_dto.identify)
 					if not access:
 						error_message = f"Nessun accesso attivo trovato per '{identify_dto.identify}'"
 					else:
+						self.automatic_weighing_process.append(proc)
 						_, _, rele_error = md_weigher.module_weigher.setModope(
 							instance_name=instance.instance_name,
 							weigher_name=instance.weigher_name,
 							modope="OPENRELE",
 							port_rele=(identify_dto.rele, reles[identify_dto.rele])
 						)
+						self.automatic_weighing_process = [
+							p for p in self.automatic_weighing_process
+							if not (
+								p["instance_name"] == instance.instance_name and
+								p["weigher_name"] == instance.weigher_name and
+								p["identify"] == identify_dto.identify
+							)
+						]
 						if rele_error:
 							error_message = rele_error
 						else:
-							success_message = f'Relè aperto per "{identify_dto.identify}"'
+							success_message = f'Relè "{identify_dto.rele}" aperto'
 			elif take_of_weight_on_startup is True:
 				error_message = "Scaricare la pesa dopo l'avvio del programma"
 			elif take_of_weight_before_weighing is True:
