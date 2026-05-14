@@ -132,9 +132,9 @@ class TypeSubjectEnum(PyEnum):
 
 class AccessStatus(PyEnum):
     WAITING = "Attesa"
-    OPEN = "Attivo"
+    OPEN = "Aperto"
     ENTERED = "Entrato"
-    CLOSED = "Disattivo"
+    CLOSED = "Chiusa"
 
 class TypeAccess(PyEnum):
     RESERVATION = "Prenotazione"

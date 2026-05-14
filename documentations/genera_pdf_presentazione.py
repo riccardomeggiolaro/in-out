@@ -76,7 +76,7 @@ sections = [
         "L'operatore completa i dati: autista, soggetto, materiale, documenti.",
         "Quando il veicolo esce, si registra il <b>peso in uscita</b> e il sistema calcola il "
         "<b>peso netto in automatico</b>.",
-        "Ogni accesso segue tre stati chiari: <b>In attesa, Entrato, Disattivo</b>. Sempre tutto sotto controllo."
+        "Ogni accesso segue tre stati chiari: <b>In attesa, Entrato, Chiuso</b>. Sempre tutto sotto controllo."
     ]),
     ("3. Interfaccia", [
         "Dashboard web con <b>peso in tempo reale</b>, lista accessi, inserimento dati. "
