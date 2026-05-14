@@ -1494,8 +1494,8 @@
                 <label>Numero:</label>
                 <input type="number" class="rele-number" value="${number}" min="1" style="width: 80px;">
                 <select class="rele-status" style="width: 100px;">
-                    <option value="1" ${status === 1 ? 'selected' : ''}>Attiva</option>
-                    <option value="0" ${status === 0 ? 'selected' : ''}>Disattiva</option>
+                    <option value="1" ${status === 1 ? 'selected' : ''}>Attivo</option>
+                    <option value="0" ${status === 0 ? 'selected' : ''}>Disattivo</option>
                 </select>
                 <select class="rele-event" style="width: 180px;">
                     <option value="weighing_in" ${event === 'weighing_in' ? 'selected' : ''}>Dopo la pesata in ENTRATA</option>
@@ -2331,7 +2331,7 @@
                         allReles.forEach(rele => {
                             relesHtml += `
                                 <div class="rele-item">
-                                    <p><b>Relè:</b> ${rele.rele} - <b>Azione:</b> ${rele.set === 1 ? 'Attiva' : 'Disattiva'} - <b>Evento:</b> ${rele.event}</p>
+                                    <p><b>Relè:</b> ${rele.rele} - <b>Azione:</b> ${rele.set === 1 ? 'Attivo' : 'Disattivo'} - <b>Evento:</b> ${rele.event}</p>
                                 </div>
                             `;
                         });
