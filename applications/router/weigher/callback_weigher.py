@@ -516,7 +516,7 @@ class CallbackWeigher(Functions, WebSocket):
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 											break
-										elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+										elif realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
 											error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
@@ -588,7 +588,7 @@ class CallbackWeigher(Functions, WebSocket):
 												await self.DeleteData(instance=instance)
 												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 												break
-										elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+										elif realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
 											error_message = f"Pesatura automatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
@@ -661,7 +661,7 @@ class CallbackWeigher(Functions, WebSocket):
 												await self.DeleteData(instance=instance)
 												await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 												break
-										elif realtime.gross_weight == "" or float(realtime.gross_weight) != "" and float(realtime.gross_weight) < min_weight:
+										elif realtime.gross_weight == "" or realtime.gross_weight != "" and float(realtime.gross_weight) < min_weight:
 											error_message = f"Pesatura semiautomatica interrotta. Il peso deve essere maggiore di {min_weight} kg."
 											await self.DeleteData(instance=instance)
 											await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
