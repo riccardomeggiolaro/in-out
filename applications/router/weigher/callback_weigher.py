@@ -443,7 +443,7 @@ class CallbackWeigher(Functions, WebSocket):
 						if rele_error:
 							error_message = rele_error
 						else:
-							success_message = f'Relè "{identify_dto.rele}" aperto'
+							success_message = f'Relè "{identify_dto.rele}" aperto per "{identify}"'
 			elif take_of_weight_on_startup is True:
 				error_message = "Scaricare la pesa dopo l'avvio del programma"
 			elif take_of_weight_before_weighing is True:
