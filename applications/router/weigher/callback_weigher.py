@@ -50,6 +50,7 @@ class CallbackWeigher(Functions, WebSocket):
 			gross_weight = pesa_real_time.gross_weight
 			if gross_weight == "":
 				self.switch_to_call_instance_weigher[instance_name][weigher_name] = None
+				self.relay_index_tracker[instance_name][weigher_name] = 0
 			numeric_gross_weight = None
 			try:
 				if "," in gross_weight or "." in gross_weight:
@@ -64,17 +65,29 @@ class CallbackWeigher(Functions, WebSocket):
 					if data["id_selected"]["need_to_confirm"] is True:
 						self.deleteData(instance_name=instance_name, weigher_name=weigher_name)
 						thread = threading.Thread()
-					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]:
+					rele_list = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["under_min"]["set_rele"]
+					idx = self.relay_index_tracker[instance_name][weigher_name]
+					if idx < len(rele_list):
+						rele = rele_list[idx]
 						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
-					self.switch_to_call_instance_weigher[instance_name][weigher_name] = 1
+						self.relay_index_tracker[instance_name][weigher_name] += 1
+					if self.relay_index_tracker[instance_name][weigher_name] >= len(rele_list):
+						self.relay_index_tracker[instance_name][weigher_name] = 0
+						self.switch_to_call_instance_weigher[instance_name][weigher_name] = 1
 				elif numeric_gross_weight >= lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"] and self.switch_to_call_instance_weigher[instance_name][weigher_name] in [1, None]:
-					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]:
+					rele_list = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["realtime"]["over_min"]["set_rele"]
+					idx = self.relay_index_tracker[instance_name][weigher_name]
+					if idx < len(rele_list):
+						rele = rele_list[idx]
 						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
 						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"][rele["rele"]]
 						md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
-					self.switch_to_call_instance_weigher[instance_name][weigher_name] = 0
+						self.relay_index_tracker[instance_name][weigher_name] += 1
+					if self.relay_index_tracker[instance_name][weigher_name] >= len(rele_list):
+						self.relay_index_tracker[instance_name][weigher_name] = 0
+						self.switch_to_call_instance_weigher[instance_name][weigher_name] = 0
 				weight1 = weighers_data[instance_name][weigher_name]["data"]["id_selected"]["weight1"]
 				if pesa_real_time.status == "ST" and weight1:
 					pesa_real_time.potential_net_weight = numeric_gross_weight - weight1 if numeric_gross_weight > weight1 else weight1 - numeric_gross_weight
