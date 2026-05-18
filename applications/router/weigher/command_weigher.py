@@ -7,7 +7,6 @@ from typing import Optional
 import asyncio
 from applications.router.weigher.data import DataRouter
 import libs.lb_config as lb_config
-import libs.lb_log as lb_log
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.anagrafic.access import AccessRouter
 from modules.md_database.md_database import TypeAccess, AccessMode, AccessStatus, TypeSubjectEnum
@@ -87,15 +86,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		}
 
 	async def WeighingWithoutPid(self, request: Request, body: DataToStoreDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), tare: Optional[int] = None):
-		try:
-			return await self._WeighingWithoutPid_impl(request, body, instance, tare)
-		except HTTPException:
-			raise
-		except Exception as e:
-			lb_log.weighing_error(e)
-			raise
-
-	async def _WeighingWithoutPid_impl(self, request: Request, body: DataToStoreDTO, instance: InstanceNameWeigherDTO, tare: Optional[int]):
 		status_modope, command_executed, error_message = 500, False, ""
 		realtime = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		status = realtime.status
@@ -193,15 +183,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		}
 
 	async def Generic(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), weight: Optional[int] = None):
-		try:
-			return await self._Generic_impl(request, instance, weight)
-		except HTTPException:
-			raise
-		except Exception as e:
-			lb_log.weighing_error(e)
-			raise
-
-	async def _Generic_impl(self, request: Request, instance: InstanceNameWeigherDTO, weight: Optional[int]):
 		status_modope, command_executed, error_message = 500, False, ""
 		access_id = None
 		in_out_id = None
@@ -327,15 +308,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		}
 
 	async def Weight1(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		try:
-			return await self._Weight1_impl(request, instance)
-		except HTTPException:
-			raise
-		except Exception as e:
-			lb_log.weighing_error(e)
-			raise
-
-	async def _Weight1_impl(self, request: Request, instance: InstanceNameWeigherDTO):
 		status_modope, command_executed, error_message = 500, False, ""
 		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
@@ -387,15 +359,6 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		}
 
 	async def Weight2(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
-		try:
-			return await self._Weight2_impl(request, instance)
-		except HTTPException:
-			raise
-		except Exception as e:
-			lb_log.weighing_error(e)
-			raise
-
-	async def _Weight2_impl(self, request: Request, instance: InstanceNameWeigherDTO):
 		status_modope, command_executed, error_message = 500, False, ""
 		pesa_real_time = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		net_weight = pesa_real_time.net_weight
