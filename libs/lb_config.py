@@ -138,6 +138,7 @@ def init():
 	global g_enabled  # Variabile per abilitare/disabilitare funzionalità.
 	global g_workpath  # Variabile per memorizzare il percorso di lavoro.
 	global g_defalogfile  # Variabile per memorizzare il percorso del file di log predefinito.
+	global g_weighing_error_logfile  # Variabile per memorizzare il percorso del file di log degli errori di pesatura.
 	global config_path  # Variabile per memorizzare il percorso della configurazione.
 	global g_name
 	global g_vers
@@ -159,6 +160,8 @@ def init():
 	g_config_ts = ""
 	# Imposta il percorso predefinito per il file di log.
 	g_defalogfile = g_workpath + "/service.log"
+	# Imposta il percorso del file di log dedicato agli errori di pesatura.
+	g_weighing_error_logfile = g_workpath + "/weighing_errors.log"
 	# Imposta il fuso orario predefinito su 'Europe / Rome'.
 	g_tz = tz.gettz('Europe / Rome')
 

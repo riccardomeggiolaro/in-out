@@ -1,6 +1,7 @@
 import os
 import time
 import inspect
+import traceback
 import libs.lb_config as lb_config
 from datetime import datetime
 
@@ -94,6 +95,35 @@ def error(msg):
     # Stampa il messaggio di errore con il timestamp, il modulo e il messaggio stesso nella console
     print(f"{bcolors.FAIL}(err!){bcolors.ENDC}", now.strftime("%Y/%m/%d %H:%M:%S"), module, msg, end="")
 
+# Funzione per registrare errori imprevisti nei moduli di pesatura, con traceback completo su file dedicato.
+def weighing_error(msg):
+    now = datetime.now()
+    module = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0].lower()
+    if len(module) > 10:
+        module = module[:9] + "~"
+    else:
+        module = module.ljust(10)
+    module = module + "|"
+    if type(msg) is not str:
+        msg = str(msg)
+    tb_str = traceback.format_exc()
+
+    newline()
+
+    if lb_config.g_defalogfile:
+        with open(lb_config.g_defalogfile, 'a') as f:
+            f.write("E" + now.strftime(" %Y/%m/%d %H:%M:%S ") + module.ljust(10) + msg)
+
+    if lb_config.g_weighing_error_logfile:
+        with open(lb_config.g_weighing_error_logfile, 'a') as f:
+            f.write(chr(13) + chr(10))
+            f.write("E" + now.strftime(" %Y/%m/%d %H:%M:%S ") + module.ljust(10) + msg)
+            if tb_str and tb_str.strip() not in ("NoneType: None", "None"):
+                f.write(chr(13) + chr(10))
+                f.write(tb_str)
+
+    print(f"{bcolors.FAIL}(err!){bcolors.ENDC}", now.strftime("%Y/%m/%d %H:%M:%S"), module, msg, end="")
+
 # Funzione per stampare un messaggio in linea con un eventuale attributo di formattazione.
 # Questa funzione accetta un messaggio e un attributo di formattazione opzionale come input e lo stampa.
 def inline(msg, att=""):
@@ -144,14 +174,17 @@ def mainprg():
         secwait = 5  # Intervallo di attesa in secondi
         # Continua il loop finché il flag g_enabled di lb_config è True
         while lb_config.g_enabled:
-            # Gestisce il log
-            if os.path.exists(lb_config.g_defalogfile):  # Controlla se il file di log esiste
-                # Ottiene la dimensione del file di log in megabyte
+            # Gestisce il log principale
+            if os.path.exists(lb_config.g_defalogfile):
                 file_size = os.path.getsize(lb_config.g_defalogfile) / 1048576
-                # Verifica se la dimensione del file di log supera la dimensione massima consentita
                 if file_size >= lb_config.g_config["log"]["max-size-mb"]:
-                    os.remove(lb_config.g_defalogfile)  # Rimuove il file di log
-            time.sleep(secwait)  # Attende per un periodo di tempo specificato prima di ripetere il ciclo
+                    os.remove(lb_config.g_defalogfile)
+            # Gestisce il log degli errori di pesatura
+            if os.path.exists(lb_config.g_weighing_error_logfile):
+                file_size = os.path.getsize(lb_config.g_weighing_error_logfile) / 1048576
+                if file_size >= lb_config.g_config["log"]["max-size-mb"]:
+                    os.remove(lb_config.g_weighing_error_logfile)
+            time.sleep(secwait)
     except Exception as e:
         info(e)
 # ==============================================================
