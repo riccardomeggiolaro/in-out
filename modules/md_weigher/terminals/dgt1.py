@@ -408,12 +408,11 @@ class Dgt1(Terminal):
 			self.weight.weight_executed.pid = ""
 			self.weight.weight_executed.bil = ""
 			self.weight.weight_executed.status = ""
-			self.weight.weight_executed.log = None
+			self.weight.weight_executed.log = error
 			self.weight.weight_executed.serial_number = None
 			self.weight.data_assigned = None
 			self.ok_value = ""
 			self.port_rele = None
-			self.diagnostic.status = 301
 			if self.modope == "WEIGHING":
 				self.weight.status = self.diagnostic.status
 				callCallback(self.callback_weighing)
