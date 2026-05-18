@@ -2,7 +2,7 @@ import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import psutil
@@ -339,6 +339,14 @@ def init():
 		if not _totem_enabled():
 			return RedirectResponse(url="/not-found")
 		return templates.TemplateResponse("totem.html", {"request": request})
+
+	@app.get('/logs/weighing-errors', response_class=PlainTextResponse)
+	async def WeighingErrorsLog():
+		if os.path.exists(lb_config.g_weighing_error_logfile):
+			with open(lb_config.g_weighing_error_logfile, 'r', errors='replace') as f:
+				content = f.read()
+			return PlainTextResponse(content or "Nessun errore di pesatura registrato.")
+		return PlainTextResponse("Nessun errore di pesatura registrato.")
 
 	@app.get('/{filename:path}', response_class=HTMLResponse)
 	async def Static(request: Request, filename: str):

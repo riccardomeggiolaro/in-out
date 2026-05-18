@@ -12,6 +12,7 @@ import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight, WeightTerminal
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
+import traceback as _traceback
 from modules.md_database.md_database import AccessStatus, TypeAccess, AccessMode, TypeSubjectEnum
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.add_data import add_data
@@ -119,10 +120,19 @@ class CallbackWeigher(Functions, WebSocket):
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
 	def Callback_Diagnostic(self, instance_name: str, weigher_name: str, diagnostic: Diagnostic):
-		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(diagnostic.dict()))
+		try:
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_diagnostic.broadcast(diagnostic.dict()))
+		except Exception as e:
+			lb_log.weighing_error(e)
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
+		try:
+			self._Callback_Weighing_impl(instance_name, weigher_name, last_pesata)
+		except Exception as e:
+			lb_log.weighing_error(e)
+
+	def _Callback_Weighing_impl(self, instance_name: str, weigher_name: str, last_pesata: Weight):
 		access = get_access_by_id(last_pesata.data_assigned.accessId)
 		user = get_data_by_id("user", last_pesata.data_assigned.userId)
 		# lb_log.warning(last_pesata.data_assigned.userId)
@@ -381,10 +391,11 @@ class CallbackWeigher(Functions, WebSocket):
 				asyncio.run(weighers_data[instance][weigher]["sockets"].manager_realtime.broadcast(weight))
 
 	def Fallback_Weighing(self, instance_name: str, weigher_name: str, data_assigned: DataAssignedDTO):
-		# asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
-		# asyncio.run(self.WeighingByIdentify(request=None, identify_dto=IdentifyDTO(identify=last_pesata.data_assigned.identify_code), instance=InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)))
-		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": "Pesatura automatica non risucita, ritento..."}))
-		asyncio.run(self.WeighingByIdentify(request=None, identify_dto=IdentifyDTO(identify=data_assigned.identify_code), instance=InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name), token=data_assigned.token, notify_identify_code=False))
+		try:
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": "Pesatura automatica non risucita, ritento..."}))
+			asyncio.run(self.WeighingByIdentify(request=None, identify_dto=IdentifyDTO(identify=data_assigned.identify_code), instance=InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name), token=data_assigned.token, notify_identify_code=False))
+		except Exception as e:
+			lb_log.weighing_error(e)
 
 	async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None, notify_identify_code: bool = True):
 		response = get_user(token=token)
@@ -695,19 +706,31 @@ class CallbackWeigher(Functions, WebSocket):
 		}
 
 	def Callback_WeighingByIdentify(self, instance_name: str, weigher_name: str, identify: str):
-		instance = InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)
-		identify_dto = IdentifyDTO(identify=identify)
-		user = get_data_by_attribute("user", "username", "terminal")
-		user["date_created"] = user["date_created"].isoformat()
-		token = create_access_token(user)      
+		try:
+			instance = InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)
+			identify_dto = IdentifyDTO(identify=identify)
+			user = get_data_by_attribute("user", "username", "terminal")
+			user["date_created"] = user["date_created"].isoformat()
+			token = create_access_token(user)
 
-		def run_in_thread():
-			asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto, token=token))
+			def run_in_thread():
+				try:
+					asyncio.run(self.WeighingByIdentify(request=None, instance=instance, identify_dto=identify_dto, token=token))
+				except Exception as e:
+					lb_log.weighing_error(e)
 
-		thread = threading.Thread(target=run_in_thread)
-		thread.start()
+			thread = threading.Thread(target=run_in_thread)
+			thread.start()
+		except Exception as e:
+			lb_log.weighing_error(e)
 
 	def Callback_WeighingTerminal(self, instance_name: str, weigher_name: str, weight_terminal: WeightTerminal):
+		try:
+			self._Callback_WeighingTerminal_impl(instance_name, weigher_name, weight_terminal)
+		except Exception as e:
+			lb_log.weighing_error(e)
+
+	def _Callback_WeighingTerminal_impl(self, instance_name: str, weigher_name: str, weight_terminal: WeightTerminal):
 		if lb_config.g_config["app_api"]["use_recordings"]:
 			id = None
 			weighing_terminal = None
@@ -793,7 +816,10 @@ class CallbackWeigher(Functions, WebSocket):
 			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(message))
 
 	def Callback_TarePTareZero(self, instance_name: str, weigher_name: str, ok_value: str):
-		asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"command_executed": ok_value}))
+		try:
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast({"command_executed": ok_value}))
+		except Exception as e:
+			lb_log.weighing_error(e)
 
 	def Callback_DataInExecution(self, instance_name, weigher_name):
 		try:
