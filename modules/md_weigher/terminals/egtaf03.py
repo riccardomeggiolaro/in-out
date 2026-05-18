@@ -511,4 +511,22 @@ class EgtAf03(Terminal):
 			self.weight.data_assigned = None
 			self.ok_value = ""
 			self.port_rele = None
+			self.diagnostic.status = 301
+			if self.modope == "WEIGHING":
+				self.weight.status = self.diagnostic.status
+				callCallback(self.callback_weighing)
+				self.weight.status = ""
+			elif self.modope in ["TARE", "PTARE", "ZERO"]:
+				self.ok_value = self.diagnostic.status
+				callCallback(self.callback_tare_ptare_zero)
+				self.ok_value = ""
+			elif self.modope == "REALTIME":
+				self.pesa_real_time.status = self.diagnostic.status
+				callCallback(self.callback_realtime)
+				self.pesa_real_time.status = ""
+			elif self.modope in ["OPENRELE", "CLOSERELE"]:
+				self.port_rele = self.diagnostic.status
+				callCallback(self.callback_rele)
+				self.port_rele = None
+			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		return self.diagnostic.status, self.modope, response, error
