@@ -321,115 +321,116 @@ class WeigherInstance:
 		connection_paused = False
 
 		while self.m_enabled:
-			# Se non ci sono nodi, attendi
-			if len(self.nodes) == 0:
-				time.sleep(1)
-				continue
-
-			if self.auto_close_connection and self.cb_has_connections is not None:
-				has_conn = self.cb_has_connections(self.name)
-				lb_log.info(f"[{self.name}] cb_has_connections={has_conn} connection_paused={connection_paused} no_clients_since={no_clients_since}")
-				if not has_conn:
-					if not connection_paused:
-						if no_clients_since is None:
-							no_clients_since = time.time()
-						elif time.time() - no_clients_since >= no_clients_timeout:
-							lb_log.info(f"[{self.name}] Nessun client da {no_clients_timeout}s, chiudo la connessione...")
-							try:
-								self.connection.connection.close()
-							except Exception as e:
-								lb_log.warning(f"[{self.name}] Errore chiusura connessione: {e}")
-							connection_paused = True
-					time.sleep(0.5)
+			try:
+				# Se non ci sono nodi, attendi
+				if len(self.nodes) == 0:
+					time.sleep(1)
 					continue
-				else:
-					no_clients_since = None
-					if connection_paused:
-						lb_log.info("Client connesso, riapro la connessione...")
-						connection_paused = False
-						self.reconnecting = True
-						self._perform_reconnection()
-						self.reconnecting = False
-						consecutive_errors = {}
-						reconnection_attempts = 0
 
-			# Flag per tracciare se serve riconnessione
-			needs_reconnection = False
-			all_nodes_failing = True  # Assume che tutti falliscano finché non provato il contrario
-			
-			for name, weigher in self.nodes.items():
-				if not weigher.run:
-					continue
-					
-				# Inizializza contatore errori per questo nodo se non esiste
-				if name not in consecutive_errors:
-					consecutive_errors[name] = 0
-				
-				time_start = time.time()
-				status, command, response, error = weigher.main()
-				time_end = time.time()
-				time_execute = time_end - time_start
-				timeout = max(0, self.time_between_actions - time_execute)
-				time.sleep(timeout)
-				
-				# lb_log.info(f"Node: {weigher.node}, Status: {status}, Command: {command}, Response: {response}, Error: {error}")
-				
-				# Gestione errori di comunicazione
-				if weigher.diagnostic.status == 301:  # Timeout error
-					consecutive_errors[name] += 1
-					
-					# Solo dopo N errori consecutivi tenta la riconnessione
-					if consecutive_errors[name] >= 3:
-						lb_log.warning(f"Node {name} has {consecutive_errors[name]} consecutive timeout errors")
-						
-				elif weigher.diagnostic.status == 305:  # Node not reachable
-					consecutive_errors[name] += 1
-					if consecutive_errors[name] >= 2:
-						lb_log.warning(f"Node {name} not reachable for {consecutive_errors[name]} attempts")
-						
-				elif weigher.diagnostic.status == 200:  # Success
-					consecutive_errors[name] = 0  # Reset error counter
-					reconnection_attempts = 0  # Reset reconnection attempts
-					all_nodes_failing = False  # Almeno un nodo funziona
-					
-				elif weigher.diagnostic.status == 201:  # Bad response format
-					consecutive_errors[name] += 1
-					if consecutive_errors[name] >= 5:
-						lb_log.warning(f"Node {name} returning bad format for {consecutive_errors[name]} attempts")
-			
-			# Determina se serve riconnessione: tutti i nodi attivi devono essere in errore
-			if all_nodes_failing and len(self.nodes) > 0:
-				active_nodes = [name for name, w in self.nodes.items() if w.run]
-				if active_nodes:
-					failing_nodes = [name for name in active_nodes if consecutive_errors.get(name, 0) >= 3]
-					if len(failing_nodes) == len(active_nodes):
-						needs_reconnection = True
-						lb_log.warning(f"All active nodes are failing: {failing_nodes}")
-			
-			# Controlla se è passato abbastanza tempo dall'ultima riconnessione
-			current_time = time.time()
-			time_since_last_reconnection = current_time - last_reconnection_time
-			
-			# Esegui riconnessione solo se necessario e con controllo temporale
-			if needs_reconnection and time_since_last_reconnection >= min_reconnection_interval:
-				if reconnection_attempts < max_reconnection_attempts:
-					lb_log.info(f"Attempting reconnection {reconnection_attempts + 1}/{max_reconnection_attempts}...")
-					if self._perform_reconnection():
-						# Reset error counters dopo riconnessione riuscita
-						for name in consecutive_errors:
-							consecutive_errors[name] = 0
-						reconnection_attempts = 0
+				if self.auto_close_connection and self.cb_has_connections is not None:
+					has_conn = self.cb_has_connections(self.name)
+					lb_log.info(f"[{self.name}] cb_has_connections={has_conn} connection_paused={connection_paused} no_clients_since={no_clients_since}")
+					if not has_conn:
+						if not connection_paused:
+							if no_clients_since is None:
+								no_clients_since = time.time()
+							elif time.time() - no_clients_since >= no_clients_timeout:
+								lb_log.info(f"[{self.name}] Nessun client da {no_clients_timeout}s, chiudo la connessione...")
+								try:
+									self.connection.connection.close()
+								except Exception as e:
+									lb_log.warning(f"[{self.name}] Errore chiusura connessione: {e}")
+								connection_paused = True
+						time.sleep(0.5)
+						continue
 					else:
-						reconnection_attempts += 1
-					last_reconnection_time = current_time
-				else:
-					lb_log.error(f"Max reconnection attempts reached. Waiting {min_reconnection_interval} seconds...")
-					time.sleep(min_reconnection_interval)
-					reconnection_attempts = 0
+						no_clients_since = None
+						if connection_paused:
+							lb_log.info("Client connesso, riapro la connessione...")
+							connection_paused = False
+							self.reconnecting = True
+							self._perform_reconnection()
+							self.reconnecting = False
+							consecutive_errors = {}
+							reconnection_attempts = 0
+
+				# Flag per tracciare se serve riconnessione
+				needs_reconnection = False
+				all_nodes_failing = True  # Assume che tutti falliscano finché non provato il contrario
+			
+				for name, weigher in self.nodes.items():
+					if not weigher.run:
+						continue
 					
-			# except Exception as e:
-			# 	lb_log.error(f"Unexpected error in main loop: {e}")
-			# 	time.sleep(1)
+					# Inizializza contatore errori per questo nodo se non esiste
+					if name not in consecutive_errors:
+						consecutive_errors[name] = 0
+				
+					time_start = time.time()
+					status, command, response, error = weigher.main()
+					time_end = time.time()
+					time_execute = time_end - time_start
+					timeout = max(0, self.time_between_actions - time_execute)
+					time.sleep(timeout)
+				
+					# lb_log.info(f"Node: {weigher.node}, Status: {status}, Command: {command}, Response: {response}, Error: {error}")
+				
+					# Gestione errori di comunicazione
+					if weigher.diagnostic.status == 301:  # Timeout error
+						consecutive_errors[name] += 1
+					
+						# Solo dopo N errori consecutivi tenta la riconnessione
+						if consecutive_errors[name] >= 3:
+							lb_log.warning(f"Node {name} has {consecutive_errors[name]} consecutive timeout errors")
+						
+					elif weigher.diagnostic.status == 305:  # Node not reachable
+						consecutive_errors[name] += 1
+						if consecutive_errors[name] >= 2:
+							lb_log.warning(f"Node {name} not reachable for {consecutive_errors[name]} attempts")
+						
+					elif weigher.diagnostic.status == 200:  # Success
+						consecutive_errors[name] = 0  # Reset error counter
+						reconnection_attempts = 0  # Reset reconnection attempts
+						all_nodes_failing = False  # Almeno un nodo funziona
+					
+					elif weigher.diagnostic.status == 201:  # Bad response format
+						consecutive_errors[name] += 1
+						if consecutive_errors[name] >= 5:
+							lb_log.warning(f"Node {name} returning bad format for {consecutive_errors[name]} attempts")
+			
+				# Determina se serve riconnessione: tutti i nodi attivi devono essere in errore
+				if all_nodes_failing and len(self.nodes) > 0:
+					active_nodes = [name for name, w in self.nodes.items() if w.run]
+					if active_nodes:
+						failing_nodes = [name for name in active_nodes if consecutive_errors.get(name, 0) >= 3]
+						if len(failing_nodes) == len(active_nodes):
+							needs_reconnection = True
+							lb_log.warning(f"All active nodes are failing: {failing_nodes}")
+			
+				# Controlla se è passato abbastanza tempo dall'ultima riconnessione
+				current_time = time.time()
+				time_since_last_reconnection = current_time - last_reconnection_time
+			
+				# Esegui riconnessione solo se necessario e con controllo temporale
+				if needs_reconnection and time_since_last_reconnection >= min_reconnection_interval:
+					if reconnection_attempts < max_reconnection_attempts:
+						lb_log.info(f"Attempting reconnection {reconnection_attempts + 1}/{max_reconnection_attempts}...")
+						if self._perform_reconnection():
+							# Reset error counters dopo riconnessione riuscita
+							for name in consecutive_errors:
+								consecutive_errors[name] = 0
+							reconnection_attempts = 0
+						else:
+							reconnection_attempts += 1
+						last_reconnection_time = current_time
+					else:
+						lb_log.error(f"Max reconnection attempts reached. Waiting {min_reconnection_interval} seconds...")
+						time.sleep(min_reconnection_interval)
+						reconnection_attempts = 0
+					
+			except Exception as e:
+				lb_log.weighing_error(e)
+				time.sleep(1)
 
 	def _perform_reconnection(self):
 		"""Gestisce la procedura di riconnessione in modo pulito"""

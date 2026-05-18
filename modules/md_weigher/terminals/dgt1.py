@@ -112,6 +112,11 @@ class Dgt1(Terminal):
 			self.diagnostic.firmware = None
 			self.diagnostic.model_name = None
 			self.diagnostic.serial_number = None
+		except Exception as e:
+			lb_log.weighing_error(e)
+			self.diagnostic.firmware = None
+			self.diagnostic.model_name = None
+			self.diagnostic.serial_number = None
 
 	def initialize(self):
 		self.initialize_content()
@@ -386,4 +391,26 @@ class Dgt1(Terminal):
 			error = "Node not receivable"
 			self.diagnostic.status = 305
 			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
+		except Exception as e:
+			error = str(e)
+			lb_log.weighing_error(e)
+			self.pesa_real_time.status = ""
+			self.pesa_real_time.type = ""
+			self.pesa_real_time.net_weight = ""
+			self.pesa_real_time.gross_weight = ""
+			self.pesa_real_time.tare = ""
+			self.pesa_real_time.unite_measure = ""
+			self.weight.weight_executed.net_weight = ""
+			self.weight.weight_executed.gross_weight = ""
+			self.weight.weight_executed.tare.value = ""
+			self.weight.weight_executed.tare.is_preset_tare = False
+			self.weight.weight_executed.unite_misure = ""
+			self.weight.weight_executed.pid = ""
+			self.weight.weight_executed.bil = ""
+			self.weight.weight_executed.status = ""
+			self.weight.weight_executed.log = None
+			self.weight.weight_executed.serial_number = None
+			self.weight.data_assigned = None
+			self.ok_value = ""
+			self.port_rele = None
 		return self.diagnostic.status, self.modope, response, error
