@@ -93,6 +93,7 @@ class DataDTO(BaseModel):
 class IdentifyDTO(BaseModel):
 	identify: str
 	rele: Optional[str] = None
+	timeout: Optional[int] = None
 
 class CamDTO(BaseModel):
 	name: str
