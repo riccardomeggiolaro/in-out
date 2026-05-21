@@ -2,7 +2,7 @@
     "app_api": {
         "default_type_subject": "SUPPLIER",
         "delete_pending_accesses_at_midnight": false,
-        "mode": "MANUALLY",
+        "mode": "SEMIAUTOMATIC",
         "panel": {
             "config": {},
             "connection": {
@@ -18,7 +18,7 @@
         "path_database": "/var/opt/in-out/database.db",
         "path_img": "/var/opt/in-out/images",
         "path_pdf": "/var/opt/in-out/pdf",
-        "path_ui": "static/ui/adq",
+        "path_ui": "static/ui/default",
         "port": 80,
         "report_generic": "weight_generic.json",
         "report_in": "weight_in.json",
@@ -86,21 +86,20 @@
         "use_badge": false,
         "use_preset_weight": false,
         "use_recordings": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_transit": false,
         "use_white_list": false,
         "weighers": {
             "0": {
-                "auto_close_connection": false,
                 "connection": {
-                    "ip": "10.1.24.154",
+                    "ip": "10.0.5.88",
                     "port": 23,
                     "timeout": 2.0
                 },
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
-                        "continuous_transmission": true,
+                        "continuous_transmission": false,
                         "diagnostic_has_priority_than_realtime": true,
                         "division": 1,
                         "events": {
@@ -109,7 +108,13 @@
                                     "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "order": 0,
+                                            "rele": "1",
+                                            "set": 0
+                                        }
+                                    ]
                                 }
                             },
                             "weighing": {
@@ -135,7 +140,7 @@
                                 "report": {
                                     "generic": false,
                                     "in": false,
-                                    "out": true,
+                                    "out": false,
                                     "tare": false
                                 },
                                 "set_rele": {
@@ -149,7 +154,7 @@
                         "maintaine_session_realtime_after_command": true,
                         "max_theshold": null,
                         "max_weight": 60000,
-                        "min_weight": 1,
+                        "min_weight": 200,
                         "name": "P1",
                         "need_take_of_weight_before_weighing": false,
                         "need_take_of_weight_on_startup": false,
@@ -157,308 +162,13 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {},
-                        "run": true,
-                        "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
-                        "terminal": "dgt1"
-                    }
-                },
-                "time_between_actions": 0.5
-            },
-            "1": {
-                "connection": {
-                    "ip": "10.1.24.154",
-                    "port": 23,
-                    "timeout": 2.0
-                },
-                "nodes": {
-                    "P2": {
-                        "always_execute_realtime_in_undeground": true,
-                        "continuous_transmission": true,
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "events": {
-                            "realtime": {
-                                "over_min": {
-                                    "set_rele": []
-                                },
-                                "under_min": {
-                                    "set_rele": []
-                                }
-                            },
-                            "weighing": {
-                                "cams": [],
-                                "csv": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": false,
-                                    "tare": false
-                                },
-                                "printer": {
-                                    "generic": null,
-                                    "in": null,
-                                    "out": null,
-                                    "tare": null
-                                },
-                                "prints": {
-                                    "generic": 1,
-                                    "in": 1,
-                                    "out": 1,
-                                    "tare": 1
-                                },
-                                "report": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": true,
-                                    "tare": false
-                                },
-                                "set_rele": {
-                                    "generic": [],
-                                    "in": [],
-                                    "out": [],
-                                    "tare": []
-                                }
-                            }
+                        "rele": {
+                            "1": 0
                         },
-                        "maintaine_session_realtime_after_command": true,
-                        "max_theshold": null,
-                        "max_weight": 60000,
-                        "min_weight": 1,
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
-                        "node": null,
-                        "number_of_prints": 1,
-                        "port_rele": null,
-                        "printer_name": null,
-                        "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
-                        "terminal": "dgt1"
-                    }
-                },
-                "time_between_actions": 0.5
-            },
-            "2": {
-                "connection": {
-                    "ip": "10.1.24.160",
-                    "port": 23,
-                    "timeout": 2.0
-                },
-                "nodes": {
-                    "P3": {
-                        "always_execute_realtime_in_undeground": true,
-                        "continuous_transmission": true,
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "events": {
-                            "realtime": {
-                                "over_min": {
-                                    "set_rele": []
-                                },
-                                "under_min": {
-                                    "set_rele": []
-                                }
-                            },
-                            "weighing": {
-                                "cams": [],
-                                "csv": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": false,
-                                    "tare": false
-                                },
-                                "printer": {
-                                    "generic": null,
-                                    "in": null,
-                                    "out": null,
-                                    "tare": null
-                                },
-                                "prints": {
-                                    "generic": 1,
-                                    "in": 1,
-                                    "out": 1,
-                                    "tare": 1
-                                },
-                                "report": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": true,
-                                    "tare": false
-                                },
-                                "set_rele": {
-                                    "generic": [],
-                                    "in": [],
-                                    "out": [],
-                                    "tare": []
-                                }
-                            }
-                        },
-                        "maintaine_session_realtime_after_command": true,
-                        "max_theshold": null,
-                        "max_weight": 60000,
-                        "min_weight": 1,
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
-                        "node": null,
-                        "number_of_prints": 1,
-                        "port_rele": null,
-                        "printer_name": null,
-                        "rele": {},
-                        "run": true,
-                        "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
-                        "terminal": "dgt1"
-                    }
-                },
-                "time_between_actions": 0.5
-            },
-            "3": {
-                "connection": {
-                    "ip": "10.1.24.161",
-                    "port": 23,
-                    "timeout": 2.0
-                },
-                "nodes": {
-                    "P4": {
-                        "always_execute_realtime_in_undeground": true,
-                        "continuous_transmission": true,
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "events": {
-                            "realtime": {
-                                "over_min": {
-                                    "set_rele": []
-                                },
-                                "under_min": {
-                                    "set_rele": []
-                                }
-                            },
-                            "weighing": {
-                                "cams": [],
-                                "csv": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": false,
-                                    "tare": false
-                                },
-                                "printer": {
-                                    "generic": null,
-                                    "in": null,
-                                    "out": null,
-                                    "tare": null
-                                },
-                                "prints": {
-                                    "generic": 1,
-                                    "in": 1,
-                                    "out": 1,
-                                    "tare": 1
-                                },
-                                "report": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": true,
-                                    "tare": false
-                                },
-                                "set_rele": {
-                                    "generic": [],
-                                    "in": [],
-                                    "out": [],
-                                    "tare": []
-                                }
-                            }
-                        },
-                        "maintaine_session_realtime_after_command": true,
-                        "max_theshold": null,
-                        "max_weight": 60000,
-                        "min_weight": 1,
-                        "name": "P4",
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
-                        "node": null,
-                        "number_of_prints": 1,
-                        "port_rele": null,
-                        "printer_name": null,
-                        "rele": {},
-                        "run": true,
-                        "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
-                        "terminal": "dgt1"
-                    }
-                },
-                "time_between_actions": 0.3
-            },
-            "4": {
-                "connection": {
-                    "ip": "10.1.24.162",
-                    "port": 23,
-                    "timeout": 2.0
-                },
-                "nodes": {
-                    "P5": {
-                        "always_execute_realtime_in_undeground": true,
-                        "continuous_transmission": true,
-                        "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
-                        "events": {
-                            "realtime": {
-                                "over_min": {
-                                    "set_rele": []
-                                },
-                                "under_min": {
-                                    "set_rele": []
-                                }
-                            },
-                            "weighing": {
-                                "cams": [],
-                                "csv": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": false,
-                                    "tare": false
-                                },
-                                "printer": {
-                                    "generic": null,
-                                    "in": null,
-                                    "out": null,
-                                    "tare": null
-                                },
-                                "prints": {
-                                    "generic": 1,
-                                    "in": 1,
-                                    "out": 1,
-                                    "tare": 1
-                                },
-                                "report": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": true,
-                                    "tare": false
-                                },
-                                "set_rele": {
-                                    "generic": [],
-                                    "in": [],
-                                    "out": [],
-                                    "tare": []
-                                }
-                            }
-                        },
-                        "maintaine_session_realtime_after_command": true,
-                        "max_theshold": null,
-                        "max_weight": 60000,
-                        "min_weight": 1,
-                        "need_take_of_weight_before_weighing": false,
-                        "need_take_of_weight_on_startup": false,
-                        "node": null,
-                        "number_of_prints": 1,
-                        "port_rele": null,
-                        "printer_name": null,
-                        "rele": {},
-                        "run": true,
-                        "take_of_weight_before_weighing": false,
-                        "take_of_weight_on_startup": false,
-                        "terminal": "dgt1"
+                        "terminal": "egt-af03-rext"
                     }
                 },
                 "time_between_actions": 0.3

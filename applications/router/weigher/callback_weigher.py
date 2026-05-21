@@ -465,6 +465,15 @@ class CallbackWeigher(Functions, WebSocket):
 							error_message = rele_error
 						else:
 							success_message = f'Relè "{identify_dto.rele}" attivo per "{identify}"'
+							if identify_dto.timeout is not None:
+								await asyncio.sleep(identify_dto.timeout)
+								md_weigher.module_weigher.setModope(
+									instance_name=instance.instance_name,
+									weigher_name=instance.weigher_name,
+									modope="CLOSERELE",
+									port_rele=(identify_dto.rele, reles[identify_dto.rele])
+								)
+							success_message = success_message + " per " + str(identify_dto.timeout) + " secondi" if identify_dto.timeout else success_message
 			elif take_of_weight_on_startup is True:
 				error_message = "Scaricare la pesa dopo l'avvio del programma"
 			elif take_of_weight_before_weighing is True:

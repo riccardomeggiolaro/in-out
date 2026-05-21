@@ -93,6 +93,16 @@ class DataDTO(BaseModel):
 class IdentifyDTO(BaseModel):
 	identify: str
 	rele: Optional[str] = None
+	timeout: Optional[int] = None
+ 
+	@validator('timeout', pre=True, always=True)
+	def check_timeout(cls, v, values):
+		if v is not None:
+			if v < 0:
+				raise ValueError("Timeout must be a non-negative integer")
+			elif v > 5:
+				raise ValueError("Timeout must be less than or equal to 5 seconds")
+		return v
 
 class CamDTO(BaseModel):
 	name: str
