@@ -215,6 +215,7 @@ echo "Abilitazione delle porte 80 (HTTP) e 443 (HTTPS) su ufw..."
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow 22
+sudo ufw allow 631/tcp
 
 # Abilita ufw se non è già attivo
 if ! sudo ufw status | grep -q "Status: active"; then
