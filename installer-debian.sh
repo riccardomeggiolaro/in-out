@@ -225,7 +225,7 @@ else
 fi
 
 # Esegui l'installer nella cartella tmt-cups
-TMT_CUPS_DIR="$INSTALL_DIR/tmt-cups"
+TMT_CUPS_DIR="$INSTALL_DIR/printers-driver/tmt-cups"
 if [ -d "$TMT_CUPS_DIR" ]; then
     echo "Cartella tmt-cups trovata, esecuzione dell'installer..."
     if [ -f "$TMT_CUPS_DIR/install.sh" ]; then
@@ -239,6 +239,39 @@ if [ -d "$TMT_CUPS_DIR" ]; then
     fi
 else
     echo "ATTENZIONE: Cartella tmt-cups non trovata in $INSTALL_DIR!"
+fi
+
+# Esegui l'installer nella cartelle VKP80_CUPSDrv-PKG
+VKP80_CUPSDrv_DIR="$INSTALL_DIR/printers-driver/VKP80_CUPSDrv-PKG"
+if [ -d "$VKP80_CUPSDrv_DIR" ]; then
+    echo "Cartella VKP80_CUPSDrv-PKG trovata, esecuzione dell'installer..."
+    if [ -f "$VKP80_CUPSDrv_DIR/VKP80_CUPSDrv.sh" ]; then
+        echo "Esecuzione di $VKP80_CUPSDrv_DIR/VKP80_CUPSDrv.sh..."
+        cd "$VKP80_CUPSDrv_DIR"
+        sudo bash VKP80_CUPSDrv.sh
+        cd "$INSTALL_DIR"
+        echo "Installer VKP80_CUPSDrv-PKG completato."
+    else
+        echo "ATTENZIONE: File install.sh non trovato in $VKP80_CUPSDrv-PKG!"
+    fi
+else
+    echo "ATTENZIONE: Cartella VKP80_CUPSDrv-PKG non trovata in $INSTALL_DIR!"
+fi
+
+VKP80III_CUPSDrv_DIR="$INSTALL_DIR/printers-driver/VKP80III_CUPSDrv-PKG"
+if [ -d "$VKP80III_CUPSDrv_DIR" ]; then
+    echo "Cartella VKP80III_CUPSDrv-PKG trovata, esecuzione dell'installer..."
+    if [ -f "$VKP80III_CUPSDrv_DIR/VKP80III_CUPSDrv.sh" ]; then
+        echo "Esecuzione di $VKP80III_CUPSDrv_DIR/VKP80III_CUPSDrv.sh..."
+        cd "$VKP80III_CUPSDrv_DIR"
+        sudo bash VKP80III_CUPSDrv.sh
+        cd "$INSTALL_DIR"
+        echo "Installer VKP80III_CUPSDrv-PKG completato."
+    else
+        echo "ATTENZIONE: File install.sh non trovato in $VKP80III_CUPSDrv-PKG!"
+    fi
+else
+    echo "ATTENZIONE: Cartella VKP80III_CUPSDrv-PKG non trovata in $INSTALL_DIR!"
 fi
 
 # Crea il servizio systemd se non esiste
