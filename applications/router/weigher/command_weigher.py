@@ -22,6 +22,7 @@ import threading
 from applications.router.weigher.manager_weighers_data import weighers_data
 from applications.router.weigher.types import DataAssignedDTO
 import datetime as dt
+import copy
 import applications.utils.utils as utils
 from applications.utils.utils_report import get_data_variables, generate_html_report, generate_csv_report, save_file_dir
 from libs.lb_printer import printer
@@ -286,7 +287,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				"type": "TEST",
 				"hidden": True
 			}))
-			data_assigned = DataAssignedDTO(**{"accessId": access.id, "userId": request.state.user.id})
+			data_assigned = DataAssignedDTO(**{"accessId": access.id, "userId": request.state.user.id, "data_in_execution": copy.deepcopy(weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"])})
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 				instance_name=instance.instance_name,
 				weigher_name=instance.weigher_name,
@@ -339,11 +340,11 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		if tare != "0":
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
 		if not error_message:
-			data_assigned = DataAssignedDTO(**{"accessId": current_id, "userId": request.state.user.id})
+			data_assigned = DataAssignedDTO(**{"accessId": current_id, "userId": request.state.user.id, "data_in_execution": copy.deepcopy(weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"])})
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
-				instance_name=instance.instance_name, 
-				weigher_name=instance.weigher_name, 
-				modope="WEIGHING", 
+				instance_name=instance.instance_name,
+				weigher_name=instance.weigher_name,
+				modope="WEIGHING",
 				data_assigned=data_assigned
 			)
 		if error_message and access.hidden is True:
@@ -402,11 +403,11 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					idAccess = access.id
 					just_created = True
 			if idAccess and not error_message:
-				data_assigned = DataAssignedDTO(**{"accessId": idAccess, "userId": request.state.user.id})
+				data_assigned = DataAssignedDTO(**{"accessId": idAccess, "userId": request.state.user.id, "data_in_execution": copy.deepcopy(weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"])})
 				status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
-					instance_name=instance.instance_name, 
-					weigher_name=instance.weigher_name, 
-					modope="WEIGHING", 
+					instance_name=instance.instance_name,
+					weigher_name=instance.weigher_name,
+					modope="WEIGHING",
 					data_assigned=data_assigned)
 			if error_message and just_created:
 				await self.deleteAccess(request=None, id=idAccess)

@@ -34,6 +34,7 @@ from libs.lb_printer import printer
 import applications.utils.utils as utils
 import threading
 import time
+import copy
 from libs.lb_utils import base_path
 from datetime import datetime
 import json
@@ -155,26 +156,27 @@ class CallbackWeigher(Functions, WebSocket):
 			weighing_stored_db = add_data("weighing", weighing)
 			############################
 			# SALVATAGGIO DEL SOGGETTO, DEL VETTORE, DELL'AUTISTA E DEL MATERIALE SE PRESENTI
-			id_subject = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"]
-			social_reason_subject = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["social_reason"]
+			die = last_pesata.data_assigned.data_in_execution or weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]
+			id_subject = die["subject"]["id"]
+			social_reason_subject = die["subject"]["social_reason"]
 			if not id_subject and social_reason_subject is not None:
 				subject = add_anagrafic_if_not_exists(table_name="subject", name="social_reason", value=social_reason_subject)
 				id_subject = subject["id"]
-				weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"] = id_subject
-			id_vector = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"]
-			social_reason_vector = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["social_reason"]
+				die["subject"]["id"] = id_subject
+			id_vector = die["vector"]["id"]
+			social_reason_vector = die["vector"]["social_reason"]
 			if not id_vector and social_reason_vector is not None:
 				vector = add_anagrafic_if_not_exists(table_name="vector", name="social_reason", value=social_reason_vector)
 				id_vector = vector["id"]
-				weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"] = id_vector
-			id_driver = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"]
-			social_reason_driver = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["social_reason"]
+				die["vector"]["id"] = id_vector
+			id_driver = die["driver"]["id"]
+			social_reason_driver = die["driver"]["social_reason"]
 			if not id_driver and social_reason_driver is not None:
 				driver = add_anagrafic_if_not_exists(table_name="driver", name="social_reason", value=social_reason_driver)
 				id_driver = driver["id"]
-				weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"] = id_driver
-			id_material = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["material"]["id"]
-			description_material = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["material"]["description"]
+				die["driver"]["id"] = id_driver
+			id_material = die["material"]["id"]
+			description_material = die["material"]["description"]
 			if not id_material and description_material is not None:
 				material = add_anagrafic_if_not_exists(table_name="material", name="description", value=description_material)
 				id_material = material["id"]
@@ -184,7 +186,6 @@ class CallbackWeigher(Functions, WebSocket):
 			if last_in_out and not last_in_out.idWeight2:
 				weight1 = last_in_out.weight1.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
-				die = weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]
 				update_data("in_out", last_in_out.id, {
 					"idMaterial": id_material,
 					"idWeight2": weighing_stored_db["id"],
@@ -206,12 +207,12 @@ class CallbackWeigher(Functions, WebSocket):
 					"idWeight1": last_in_out.idWeight2,
 					"idWeight2": weighing_stored_db["id"],
 					"net_weight": net_weight,
-					"idSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"],
-					"idVector": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"],
-					"idDriver": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"],
-					"typeSubject": TypeSubjectEnum[weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
-					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
-					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
+					"idSubject": die["subject"]["id"],
+					"idVector": die["vector"]["id"],
+					"idDriver": die["driver"]["id"],
+					"typeSubject": TypeSubjectEnum[die["typeSubject"]] if die["typeSubject"] else None,
+					"note": die.get("note"),
+					"document_reference": die.get("document_reference"),
 					"idCardRegistry": access.idCardRegistry,
 				})
 			else:
@@ -221,12 +222,12 @@ class CallbackWeigher(Functions, WebSocket):
 					"idWeight1": weighing_stored_db["id"] if tare == 0 else None,
 					"idWeight2": weighing_stored_db["id"] if tare > 0 else None,
 					"net_weight": net_weight if tare > 0 else None,
-					"idSubject": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["subject"]["id"],
-					"idVector": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["vector"]["id"],
-					"idDriver": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["driver"]["id"],
-					"typeSubject": TypeSubjectEnum[weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"]] if weighers_data[instance_name][weigher_name]["data"]["data_in_execution"]["typeSubject"] else None,
-					"note": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("note"),
-					"document_reference": weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("document_reference"),
+					"idSubject": die["subject"]["id"],
+					"idVector": die["vector"]["id"],
+					"idDriver": die["driver"]["id"],
+					"typeSubject": TypeSubjectEnum[die["typeSubject"]] if die["typeSubject"] else None,
+					"note": die.get("note"),
+					"document_reference": die.get("document_reference"),
 					"idCardRegistry": access.idCardRegistry,
 				})
 			############################
@@ -605,7 +606,7 @@ class CallbackWeigher(Functions, WebSocket):
 										elif realtime.gross_weight != "" and float(realtime.gross_weight) >= min_weight:
 											if realtime.status == "ST":
 												if stable == 3:
-													data_assigned = DataAssignedDTO(**{"accessId": access["id"], "userId": request.state.user.id, "mode": "AUTOMATIC", "token": token, "identify_code": identify_dto.identify})
+													data_assigned = DataAssignedDTO(**{"accessId": access["id"], "userId": request.state.user.id, "mode": "AUTOMATIC", "token": token, "identify_code": identify_dto.identify, "data_in_execution": copy.deepcopy(weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"])})
 													status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
 														instance_name=instance.instance_name, 
 														weigher_name=instance.weigher_name, 

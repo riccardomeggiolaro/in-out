@@ -15,6 +15,7 @@ class DataAssignedDTO(BaseModel):
     mode: str = "MANUAL" # MANUAL or AUTOMATIC
     token: Optional[str] = None
     identify_code: Optional[str] = None
+    data_in_execution: Optional[dict] = None
 
 class DataInExecution(BaseModel):
 	typeSubject: Optional[str] = None
