@@ -590,7 +590,6 @@ class CallbackWeigher(Functions, WebSocket):
 											if current_tare == "0":
 												if timeout >= 0:
 													message = f"Impostando la tara per la pesatura automatica."
-													await self.DeleteData(instance=instance)
 													await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": message})
 											elif timeout >= 0:
 												error_message = f"Pesatura automatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
@@ -613,10 +612,8 @@ class CallbackWeigher(Functions, WebSocket):
 														data_assigned=data_assigned)
 													if error_message:
 														error_message = f"Errore nella pesatura automatica: {error_message}. Ritento."
-														await self.DeleteData(instance=instance)
 														await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"error_message": error_message})
 													if command_executed:
-														await self.DeleteData(instance=instance)
 														break
 												else:
 													stable = stable + 1
@@ -658,7 +655,6 @@ class CallbackWeigher(Functions, WebSocket):
 											if current_tare == "0":
 												if timeout >= 0:
 													message = f"Impostando la tara per la pesatura semiautomatica."
-													await self.DeleteData(instance=instance)
 													await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"message": message})
 											elif timeout >= 0:
 												error_message = f"Pesatura semiautomatica interrotta. La tara di {tare} kg non è stata impostata correttamente."
