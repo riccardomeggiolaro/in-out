@@ -21,6 +21,7 @@ let callback_websocket_message = null;
 let callback_close_popups = null;
 let callback_populate_table = null;
 let callback_call_anagrafic = null;
+let callback_open_add_popup = null;
 let populate_detail_tr = null;
 let currentId = null;
 let currentIdInOut = null;
@@ -694,6 +695,7 @@ function addRow() {
     if (callback_populate_select) callback_populate_select('#register');
     document.getElementById('overlay').classList.add('active');
     addPopup.classList.add('active');
+    if (callback_open_add_popup) callback_open_add_popup();
 }
 
 const editPopup = document.getElementById('edit-popup');

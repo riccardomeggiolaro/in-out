@@ -789,16 +789,19 @@
                 document.getElementById('page-title').childNodes[0].textContent = 'Permanenti';
                 document.getElementById('permanent-filter-wrapper').style.display = 'none';
                 titleIcons.innerHTML = '<span class="title-icon">⭐</span>';
-                // Pre-setta permanente=true e disabilita numero operazioni nel popup di creazione
-                const addPermanentCheckbox = document.querySelector('#register input#permanent');
-                if (addPermanentCheckbox) {
-                    addPermanentCheckbox.checked = true;
-                    disabledInputNumberInOut({ target: addPermanentCheckbox }, '#register');
-                }
                 // Nascondi l'intera riga numero operazioni + permanente nel popup di creazione
                 document.querySelectorAll('#add-popup .item').forEach(div => {
                     if (div.querySelector('input#number_in_out')) div.style.display = 'none';
                 });
+                // Ripristina lo stato permanente ogni volta che si apre il popup di creazione
+                callback_open_add_popup = () => {
+                    const addPermanentCheckbox = document.querySelector('#register input#permanent');
+                    if (addPermanentCheckbox) {
+                        addPermanentCheckbox.checked = true;
+                        disabledInputNumberInOut({ target: addPermanentCheckbox }, '#register');
+                    }
+                };
+                callback_open_add_popup();
             }
 
             fetch('/api/config-weigher/configuration')
