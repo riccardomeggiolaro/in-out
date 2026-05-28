@@ -486,7 +486,7 @@ class CallbackWeigher(Functions, WebSocket):
 					error_message = f"Il peso deve essere maggiore di {min_weight} kg"
 				elif access:
 					current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-					# set_preset_tare_if_exists = None
+					set_preset_tare_if_exists = None
 					if current_weigher_data["id_selected"]["id"] != access["id"]:
 						await self.DeleteData(instance=instance)
 						try:
