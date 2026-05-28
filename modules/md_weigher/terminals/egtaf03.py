@@ -472,9 +472,9 @@ class EgtAf03(Terminal):
 			self.port_rele = None
 			self.diagnostic.status = 301
 			if self.modope == "WEIGHING":
-				self.weight.status = self.diagnostic.status
+				self.weight.weight_executed.status = self.diagnostic.status
 				callCallback(self.callback_weighing)
-				self.weight.status = ""
+				self.weight.weight_executed.status = ""
 			elif self.modope in ["TARE", "PTARE", "ZERO"]:
 				self.ok_value = self.diagnostic.status
 				callCallback(self.callback_tare_ptare_zero)
@@ -512,9 +512,9 @@ class EgtAf03(Terminal):
 			self.ok_value = ""
 			self.port_rele = None
 			if self.modope == "WEIGHING":
-				self.weight.status = self.diagnostic.status
+				self.weight.weight_executed.status = self.diagnostic.status
 				callCallback(self.callback_weighing)
-				self.weight.status = ""
+				self.weight.weight_executed.status = ""
 			elif self.modope in ["TARE", "PTARE", "ZERO"]:
 				self.ok_value = self.diagnostic.status
 				callCallback(self.callback_tare_ptare_zero)
