@@ -567,62 +567,7 @@ DELETE /api/data
 
 ---
 
-## 8. Configurazione pesa (lettura)
-
-```
-GET /api/config-weigher/configuration
-```
-Restituisce la configurazione completa del sistema.
-
-```
-GET /api/config-weigher/all/instance
-```
-Elenco di tutte le istanze configurate.
-
-```
-GET /api/config-weigher/instance/node
-```
-**Query parameters:** `instance_name`
-Dettagli di una singola istanza.
-
-```
-GET /api/config-weigher/instance/node/endpoint
-```
-Endpoint di connessione di un'istanza.
-
-```
-GET /api/config-weigher/terminals
-```
-Elenco dei tipi di terminale supportati.
-
-```
-GET /api/config-weigher/instance/rfid
-```
-Configurazione RFID dell'istanza.
-
----
-
-## 9. Stampante
-
-```
-GET /api/printer/list
-```
-Elenco delle stampanti disponibili.
-
-```
-GET /api/printer/connection
-```
-Verifica se la stampante è connessa.
-**Risposta:** `{ "connection": true }`
-
-```
-GET /api/printer/test/{printer_name}
-```
-Stampa una pagina di test sulla stampante specificata.
-
----
-
-## 10. WebSocket – Aggiornamenti real-time
+## 8. WebSocket – Aggiornamenti real-time
 
 ### Dati anagrafici
 ```
@@ -667,53 +612,6 @@ Stream continuo con peso lordo, netto, tara, stato bilancia.
 ```
 WS /api/command-weigher/diagnostic?token=<jwt>&instance_name=...&weigher_name=...
 ```
-
----
-
-## Strutture dati principali
-
-### Access (Accesso/Prenotazione)
-| Campo | Tipo | Descrizione |
-|-------|------|-------------|
-| `id` | int | ID univoco |
-| `typeSubject` | string | `CUSTOMER` o `SUPPLIER` |
-| `type` | string | `RESERVATION`, `MANUALLY`, `TEST` |
-| `mode` | string | `STANDARD`, `TRANSIT` |
-| `status` | string | `WAITING`, `ENTERED`, `CLOSED` |
-| `permanent` | bool | Se è un accesso permanente |
-| `hidden` | bool | Se è nascosto dalla lista |
-| `note` | string | Note libere |
-| `document_reference` | string | Riferimento documento (es. DDT) |
-| `number_in_out` | int | Numero di pesate previste |
-| `date_created` | datetime | Data creazione |
-| `subject` | object | Soggetto associato |
-| `vehicle` | object | Veicolo associato |
-| `driver` | object | Autista associato |
-| `vector` | object | Vettore associato |
-| `material` | object | Materiale associato |
-| `in_out` | array | Lista delle pesate eseguite |
-
-### Subject / Vector / Driver / Operator
-| Campo | Tipo | Descrizione |
-|-------|------|-------------|
-| `id` | int | ID univoco |
-| `social_reason` | string | Ragione sociale o nome |
-| `telephone` | string | Telefono |
-| `cfpiva` | string | Codice fiscale / P.IVA |
-
-### Vehicle (Veicolo)
-| Campo | Tipo | Descrizione |
-|-------|------|-------------|
-| `id` | int | ID univoco |
-| `plate` | string | Targa |
-| `description` | string | Descrizione |
-| `tare` | int | Tara in kg (> 0) |
-
-### Material (Materiale)
-| Campo | Tipo | Descrizione |
-|-------|------|-------------|
-| `id` | int | ID univoco |
-| `description` | string | Descrizione del materiale |
 
 ---
 
