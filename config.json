@@ -2,7 +2,7 @@
     "app_api": {
         "default_type_subject": "SUPPLIER",
         "delete_pending_accesses_at_midnight": false,
-        "mode": "SEMIAUTOMATIC",
+        "mode": "AUTOMATIC",
         "panel": {
             "config": {},
             "connection": {
@@ -24,7 +24,7 @@
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
         "report_tare": "weight_tare.json",
-        "return_pdf_copy_after_weighing": false,
+        "return_pdf_copy_after_weighing": true,
         "show_export_totals": false,
         "siren": {
             "config": {},
@@ -138,10 +138,10 @@
                                     "tare": 1
                                 },
                                 "report": {
-                                    "generic": false,
-                                    "in": false,
-                                    "out": false,
-                                    "tare": false
+                                    "generic": true,
+                                    "in": true,
+                                    "out": true,
+                                    "tare": true
                                 },
                                 "set_rele": {
                                     "generic": [],
