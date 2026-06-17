@@ -231,6 +231,10 @@ class WeigherModule:
 	def setInstanceTimeBetweenActions(self, instance_name, time_between_actions):
 		return self.instances[instance_name].setTimeBetweenActions(time=time_between_actions)
 
+	def setInstanceAutoCloseConnection(self, instance_name, auto_close_connection):
+		self.instances[instance_name].auto_close_connection = auto_close_connection
+		return auto_close_connection
+
 	def getRealtime(self, instance_name, weigher_name: str):
 		return self.instances[instance_name].getRealtime(weigher_name=weigher_name)
 
@@ -535,6 +539,7 @@ class WeigherInstance:
 		return {
 			"connection": conn,
 			"time_between_actions": self.time_between_actions,
+			"auto_close_connection": self.auto_close_connection,
 			"nodes": nodes
 		}
 

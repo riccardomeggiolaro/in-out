@@ -1274,6 +1274,10 @@
                     <span id="edit-time-between-actions-error" class="error-message">Deve essere maggiore di 0</span>
                     <br>
                     <br>
+                    <label for="edit-auto-close-connection">Chiudi automaticamente la connessione se nessun utente è connesso: </label>
+                    <input type="checkbox" id="edit-auto-close-connection" onclick="setInstanceAutoCloseConnection(this.checked)">
+                    <br>
+                    <br>
                 </div>
 
                 <div class="container-buttons right">
@@ -3288,7 +3292,8 @@
             }
             
             document.querySelector('#edit-time-between-actions').value = instance.time_between_actions;
-            
+            document.querySelector('#edit-auto-close-connection').checked = instance.auto_close_connection ? true : false;
+
             // Mostra i campi corretti
             toggleEditConnectionFields();
             
@@ -3415,6 +3420,22 @@
         }
 
         document.querySelector('#edit-instance-form').addEventListener('input', validateEditInstanceForm);
+
+        function setInstanceAutoCloseConnection(status) {
+            const instanceId = document.querySelector('#edit-instance-id').value;
+            fetch(`/api/config-weigher/instance/auto-close-connection/${status}?instance_name=${instanceId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(() => {
+                if (weighersData[instanceId]) {
+                    weighersData[instanceId].auto_close_connection = status;
+                }
+            });
+        }
 
         function updateInstance() {
             const instanceId = document.querySelector('#edit-instance-id').value;

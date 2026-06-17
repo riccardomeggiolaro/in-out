@@ -59,6 +59,7 @@ class ConfigWeigher(CommandWeigherRouter):
 		self.router_config_weigher.add_api_route('/instance/connection/{instance_name}', self.DeleteInstanceConnection, methods=['DELETE'])
 		self.router_config_weigher.add_api_route('/terminals', self.GetTerminals, methods=['GET'])
 		self.router_config_weigher.add_api_route('/instance/time-between-actions/{time}', self.SetInstanceTimeBetweenActions, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
+		self.router_config_weigher.add_api_route('/instance/auto-close-connection/{auto_close_connection}', self.SetInstanceAutoCloseConnection, methods=['PATCH'], dependencies=[Depends(is_super_admin)])
 		self.router_config_weigher.add_api_route('/instance/rfid', self.GetInstanceRfid, methods=['GET'])
 		self.router_config_weigher.add_api_route('/instance/rfid', self.SetInstanceRfid, methods=['POST'])
 		self.router_config_weigher.add_api_route('/instance/rfid', self.DeleteInstanceRfid, methods=['DELETE'])
@@ -541,3 +542,9 @@ class ConfigWeigher(CommandWeigherRouter):
 		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["time_between_actions"] = time
 		lb_config.saveconfig()
 		return { "time_between_actions": new_time_set }
+
+	async def SetInstanceAutoCloseConnection(self, auto_close_connection: bool, instance: InstanceNameDTO = Depends(get_query_params_name)):
+		new_value_set = md_weigher.module_weigher.setInstanceAutoCloseConnection(instance_name=instance.instance_name, auto_close_connection=auto_close_connection)
+		lb_config.g_config["app_api"]["weighers"][instance.instance_name]["auto_close_connection"] = auto_close_connection
+		lb_config.saveconfig()
+		return { "auto_close_connection": new_value_set }
