@@ -320,8 +320,6 @@ class WeigherInstance:
 		max_reconnection_attempts = 3
 		last_reconnection_time = 0
 		min_reconnection_interval = 10  # Secondi minimi tra riconnessioni
-		no_clients_timeout = 30  # Secondi di inattività prima di chiudere la connessione
-		no_clients_since = None
 		connection_paused = False
 
 		while self.m_enabled:
@@ -332,22 +330,18 @@ class WeigherInstance:
 
 			if self.auto_close_connection and self.cb_has_connections is not None:
 				has_conn = self.cb_has_connections(self.name)
-				lb_log.info(f"[{self.name}] cb_has_connections={has_conn} connection_paused={connection_paused} no_clients_since={no_clients_since}")
+				lb_log.info(f"[{self.name}] cb_has_connections={has_conn} connection_paused={connection_paused}")
 				if not has_conn:
 					if not connection_paused:
-						if no_clients_since is None:
-							no_clients_since = time.time()
-						elif time.time() - no_clients_since >= no_clients_timeout:
-							lb_log.info(f"[{self.name}] Nessun client da {no_clients_timeout}s, chiudo la connessione...")
-							try:
-								self.connection.connection.close()
-							except Exception as e:
-								lb_log.warning(f"[{self.name}] Errore chiusura connessione: {e}")
-							connection_paused = True
+						lb_log.info(f"[{self.name}] Nessun client connesso, chiudo la connessione...")
+						try:
+							self.connection.connection.close()
+						except Exception as e:
+							lb_log.warning(f"[{self.name}] Errore chiusura connessione: {e}")
+						connection_paused = True
 					time.sleep(0.5)
 					continue
 				else:
-					no_clients_since = None
 					if connection_paused:
 						lb_log.info("Client connesso, riapro la connessione...")
 						connection_paused = False
