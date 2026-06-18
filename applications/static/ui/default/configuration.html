@@ -702,6 +702,10 @@
                     <button onclick="restartSoftware()" style="background-color: #ff9800; color: white;">Riavvia Software</button>
                     <br>
                     <br>
+                    <label>Scarica documentazione e configurazione: </label>
+                    <button onclick="exportConfigDoc()" class="btn-secondary">Scarica Configurazione</button>
+                    <br>
+                    <br>
                 </div>
                 <br>
             </div>
@@ -4109,6 +4113,31 @@
                     showSnackbar("snackbar", "Errore durante il riavvio", 'rgb(255, 208, 208)', 'black');
                 });
             }
+        }
+
+        function exportConfigDoc() {
+            showSnackbar("snackbar", "Generazione export in corso...", 'rgb(255, 255, 208)', 'black');
+            fetch('/api/generic/export-config-doc')
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(data => { throw new Error(data.detail || "Errore durante l'export"); });
+                    }
+                    return res.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'in-out-config-export.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showSnackbar("snackbar", "Export scaricato con successo", 'rgb(208, 255, 208)', 'black');
+                })
+                .catch(err => {
+                    showSnackbar("snackbar", err.message || "Errore durante l'export", 'rgb(255, 208, 208)', 'black');
+                });
         }
 
         function openTemplateEditor(type) {
