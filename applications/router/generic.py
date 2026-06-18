@@ -573,10 +573,25 @@ class GenericRouter:
 
             pdf_bytes = await asyncio.to_thread(printer.generate_pdf_from_html, html)
 
+            app = config_dict.get("app_api", {})
+            reports_dir = Path(__file__).cwd() / "applications" / app.get("path_content", "") / "report"
+            report_files = {
+                "report_in": app.get("report_in"),
+                "report_out": app.get("report_out"),
+                "report_tare": app.get("report_tare"),
+                "report_generic": app.get("report_generic"),
+            }
+
             zip_buffer = BytesIO()
             with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
                 zip_file.writestr("documentazione_configurazione.pdf", pdf_bytes)
                 zip_file.writestr("config.json", config_raw)
+                for report_filename in report_files.values():
+                    if not report_filename:
+                        continue
+                    report_path = reports_dir / report_filename
+                    if report_path.exists():
+                        zip_file.write(report_path, f"report/{report_filename}")
             zip_buffer.seek(0)
 
             return StreamingResponse(
