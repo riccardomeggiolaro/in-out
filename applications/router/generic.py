@@ -412,7 +412,6 @@ class GenericRouter:
             + self._row("Versione installata", config.get("ver", "N/D"))
             + self._row("Porta web utilizzata", app.get("port", "N/D"))
             + self._row("Modalità di funzionamento", mode_desc)
-            + self._row("Tipo soggetto predefinito nelle nuove pesate", app.get("default_type_subject", "N/D"))
         )
 
         # --- Sezione: percorsi dati ---
@@ -426,14 +425,15 @@ class GenericRouter:
         # --- Sezione: funzionalità abilitate ---
         use_anagrafic = app.get("use_anagrafic", {})
         features_rows = (
-            self._row("Richiesta del documento di riferimento", self._si_no(use_anagrafic.get("document_reference")))
-            + self._row("Richiesta del conducente (driver)", self._si_no(use_anagrafic.get("driver")))
-            + self._row("Richiesta del materiale trasportato", self._si_no(use_anagrafic.get("material")))
-            + self._row("Possibilità di inserire note", self._si_no(use_anagrafic.get("note")))
-            + self._row("Richiesta dell'operatore", self._si_no(use_anagrafic.get("operator")))
-            + self._row("Richiesta del soggetto (cliente/fornitore)", self._si_no(use_anagrafic.get("subject")))
-            + self._row("Richiesta del vettore", self._si_no(use_anagrafic.get("vector")))
-            + self._row("Richiesta del veicolo", self._si_no(use_anagrafic.get("vehicle")))
+            self._row("Tipo soggetto predefinito nelle nuove pesate", app.get("default_type_subject", "N/D"))
+            + self._row("Anagrafica documento di riferimento", self._si_no(use_anagrafic.get("document_reference")))
+            + self._row("Anagrafica conducente (driver)", self._si_no(use_anagrafic.get("driver")))
+            + self._row("Anagrafica materiale trasportato", self._si_no(use_anagrafic.get("material")))
+            + self._row("Anagrafica note", self._si_no(use_anagrafic.get("note")))
+            + self._row("Anagrafica operatore", self._si_no(use_anagrafic.get("operator")))
+            + self._row("Anagrafica soggetto (cliente/fornitore)", self._si_no(use_anagrafic.get("subject")))
+            + self._row("Anagrafica vettore", self._si_no(use_anagrafic.get("vector")))
+            + self._row("Anagrafica veicolo", self._si_no(use_anagrafic.get("vehicle")))
             + self._row("Salvataggio foto durante la pesata", self._si_no(use_anagrafic.get("weighing_pictures")))
             + self._row("Uso del badge per identificare l'utente", self._si_no(app.get("use_badge")))
             + self._row("Uso di un peso preimpostato", self._si_no(app.get("use_preset_weight")))
@@ -441,19 +441,22 @@ class GenericRouter:
             + self._row("Uso delle prenotazioni", self._si_no(app.get("use_reservation")))
             + self._row("Gestione transiti", self._si_no(app.get("use_transit")))
             + self._row("Uso della lista bianca (white list)", self._si_no(app.get("use_white_list")))
-            + self._row("Totem self-service abilitato", self._si_no(app.get("totem_enabled")))
             + self._row("Visualizzazione totali esportati", self._si_no(app.get("show_export_totals")))
             + self._row("Eliminazione automatica pesate in sospeso a mezzanotte", self._si_no(app.get("delete_pending_accesses_at_midnight")))
             + self._row("Copia del PDF restituita dopo la pesata", self._si_no(app.get("return_pdf_copy_after_weighing")))
             + self._row("Modalità di test attiva", self._si_no(app.get("test_mode")))
         )
 
-        # --- Sezione: report di pesata ---
-        reports_rows = (
-            self._row("Modello report per pesata in entrata (\"in\")", app.get("report_in") or "Nessuno")
-            + self._row("Modello report per pesata in uscita (\"out\")", app.get("report_out") or "Nessuno")
-            + self._row("Modello report per la tara", app.get("report_tare") or "Nessuno")
-            + self._row("Modello report generico", app.get("report_generic") or "Nessuno")
+        # --- Sezione: totem ---
+        totem_anagrafiche = app.get("totem_anagrafiche", {})
+        totem_rows = (
+            self._row("Totem self-service abilitato", self._si_no(app.get("totem_enabled")))
+            + self._row("Anagrafica badge/tessera al totem", self._si_no(totem_anagrafiche.get("card")))
+            + self._row("Anagrafica conducente (driver) al totem", self._si_no(totem_anagrafiche.get("driver")))
+            + self._row("Anagrafica materiale trasportato al totem", self._si_no(totem_anagrafiche.get("material")))
+            + self._row("Anagrafica soggetto al totem", self._si_no(totem_anagrafiche.get("subject")))
+            + self._row("Anagrafica vettore al totem", self._si_no(totem_anagrafiche.get("vector")))
+            + self._row("Anagrafica veicolo al totem", self._si_no(totem_anagrafiche.get("vehicle")))
         )
 
         # --- Sezione: pannello e sirena ---
@@ -477,49 +480,52 @@ class GenericRouter:
             + self._row("Sottocartelle sincronizzate", ", ".join(sync.get("sub_paths", [])) or "Nessuna")
         )
 
-        # --- Sezione: connessione remota (tunnel SSH) — dati sensibili oscurati ---
-        ssh = app.get("ssh_reverse_tunneling", {})
-        ssh_rows = (
-            self._row("Server di appoggio per la connessione remota", ssh.get("server", "N/D"))
-            + self._row("Porta di accesso remoto", ssh.get("forwarding_port", "N/D"))
-            + self._row("Utente di accesso", ssh.get("user", "N/D"))
-            + self._row("Password", "••••••••• (omessa per sicurezza)")
-        )
-
         # --- Sezione: pese collegate ---
         weighers = app.get("weighers", {})
         weighers_html = ""
-        for w_id, weigher in sorted(weighers.items()):
+        for index, (w_id, weigher) in enumerate(sorted(weighers.items()), start=1):
             connection = weigher.get("connection", {})
-            weighers_html += f'<h3>Pesa "{w_id}"</h3><table>'
+            weighers_html += f'<h3>Connessione {index}</h3><table>'
             weighers_html += self._row("Indirizzo IP della pesa", connection.get("ip", "N/D"))
             weighers_html += self._row("Porta di comunicazione", connection.get("port", "N/D"))
+            weighers_html += self._row("Timeout di comunicazione (secondi)", connection.get("timeout", "N/D"))
+            weighers_html += self._row("Attesa tra un'azione e l'altra (secondi)", weigher.get("time_between_actions", "N/D"))
             weighers_html += "</table>"
 
             nodes = weigher.get("nodes", {})
             for n_id, node in sorted(nodes.items()):
-                weighers_html += f'<h4>Punto di pesata "{n_id}" ({node.get("name", n_id)})</h4><table>'
+                weighers_html += f'<h4>Pesa {node.get("name", n_id)}</h4><table>'
                 weighers_html += self._row("Tipo di terminale di pesata", node.get("terminal", "N/D"))
+                weighers_html += self._row("Punto di pesata attivo", self._si_no(node.get("run")))
                 weighers_html += self._row("Peso minimo accettato (kg)", node.get("min_weight", "N/D"))
                 weighers_html += self._row("Peso massimo accettato (kg)", node.get("max_weight", "N/D"))
-                weighers_html += self._row("Numero di copie di stampa", node.get("number_of_prints", "N/D"))
-                weighers_html += self._row("Punto di pesata attivo", self._si_no(node.get("run")))
+                weighers_html += self._row("Soglia massima di allarme", node.get("max_theshold") if node.get("max_theshold") is not None else "Non impostata")
+                weighers_html += self._row("Divisione (risoluzione del peso)", node.get("division", "N/D"))
+                weighers_html += self._row("Numero di copie di stampa predefinito", node.get("number_of_prints", "N/D"))
+                weighers_html += self._row("Stampante associata", node.get("printer_name") or "Predefinita di sistema")
+                weighers_html += self._row("Scarico (azzeramento) richiesto prima della pesata", self._si_no(node.get("need_take_of_weight_before_weighing")))
+                weighers_html += self._row("Scarico (azzeramento) richiesto all'avvio", self._si_no(node.get("need_take_of_weight_on_startup")))
+                weighers_html += self._row("Trasmissione continua del peso (continuous transmission)", self._si_no(node.get("continuous_transmission")))
+                weighers_html += self._row("Mantieni la sessione attiva dopo un comando", self._si_no(node.get("maintaine_session_realtime_after_command")))
+                weighers_html += self._row("Diagnostica con priorità sul tempo reale", self._si_no(node.get("diagnostic_has_priority_than_realtime")))
+                weighers_html += self._row("Esecuzione tempo reale anche sotto soglia minima", self._si_no(node.get("always_execute_realtime_in_undeground")))
+                weighers_html += self._row("Relè collegati", ", ".join(node.get("rele", {}).keys()) or "Nessuno")
+                weighers_html += self._row("Porta del modulo relè", node.get("port_rele") or "Non configurata")
                 weighers_html += "</table>"
 
         sections = [
             ("1. Informazioni generali", general_rows),
             ("2. Percorsi dei dati", paths_rows),
             ("3. Funzionalità abilitate", features_rows),
-            ("4. Modelli di report utilizzati", reports_rows),
+            ("4. Totem self-service", totem_rows),
             ("5. Pannello e sirena", devices_rows),
             ("6. Sincronizzazione con cartella remota", sync_rows),
-            ("7. Connessione remota per assistenza (tunnel SSH)", ssh_rows),
         ]
 
         sections_html = ""
         for title, rows in sections:
             sections_html += f"<h2>{title}</h2><table>{rows}</table>"
-        sections_html += "<h2>8. Pese collegate</h2>" + (weighers_html or "<p>Nessuna pesa configurata.</p>")
+        sections_html += "<h2>7. Pese collegate</h2>" + (weighers_html or "<p>Nessuna pesa configurata.</p>")
 
         return sections_html
 
