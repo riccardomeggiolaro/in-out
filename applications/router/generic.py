@@ -388,33 +388,144 @@ class GenericRouter:
         asyncio.create_task(restart_after_response())
         return {"message": f"Riavvio del servizio {service_name} in corso..."}
 
-    def _config_to_html_rows(self, value, level=0):
-        """Trasforma ricorsivamente un valore di configurazione in righe HTML."""
-        if isinstance(value, dict):
-            rows = ""
-            for key, val in sorted(value.items()):
-                if isinstance(val, (dict, list)):
-                    rows += f'<tr><td colspan="2" style="padding-left:{level*16}px;"><strong>{key}</strong></td></tr>'
-                    rows += self._config_to_html_rows(val, level + 1)
-                else:
-                    rows += (
-                        f'<tr><td style="padding-left:{level*16}px;">{key}</td>'
-                        f'<td>{val}</td></tr>'
-                    )
-            return rows
-        elif isinstance(value, list):
-            if not value:
-                return f'<tr><td style="padding-left:{level*16}px;" colspan="2"><em>(vuoto)</em></td></tr>'
-            rows = ""
-            for i, item in enumerate(value):
-                rows += f'<tr><td colspan="2" style="padding-left:{level*16}px;"><strong>[{i}]</strong></td></tr>'
-                rows += self._config_to_html_rows(item, level + 1)
-            return rows
-        else:
-            return f'<tr><td colspan="2" style="padding-left:{level*16}px;">{value}</td></tr>'
+    @staticmethod
+    def _si_no(value):
+        return "Sì" if value else "No"
+
+    @staticmethod
+    def _row(label, value):
+        return f'<tr><td>{label}</td><td>{value}</td></tr>'
+
+    def _build_config_explanation_html(self, config):
+        app = config.get("app_api", {})
+
+        mode_descriptions = {
+            "AUTOMATIC": "Automatica (la pesata viene gestita in modo automatico dal sistema)",
+            "MANUAL": "Manuale (l'operatore gestisce manualmente le fasi di pesata)",
+        }
+        mode = app.get("mode", "N/D")
+        mode_desc = mode_descriptions.get(mode, mode)
+
+        # --- Sezione: informazioni generali ---
+        general_rows = (
+            self._row("Nome software", config.get("name", "N/D"))
+            + self._row("Versione installata", config.get("ver", "N/D"))
+            + self._row("Porta web utilizzata", app.get("port", "N/D"))
+            + self._row("Modalità di funzionamento", mode_desc)
+            + self._row("Tipo soggetto predefinito nelle nuove pesate", app.get("default_type_subject", "N/D"))
+        )
+
+        # --- Sezione: percorsi dati ---
+        paths_rows = (
+            self._row("Database (tutti i dati di pesate, anagrafiche, ecc.)", app.get("path_database", "N/D"))
+            + self._row("Cartella dei file CSV esportati", app.get("path_csv", "N/D"))
+            + self._row("Cartella delle immagini salvate (es. foto pesate)", app.get("path_img", "N/D"))
+            + self._row("Cartella dei PDF generati (report di pesata)", app.get("path_pdf", "N/D"))
+        )
+
+        # --- Sezione: funzionalità abilitate ---
+        use_anagrafic = app.get("use_anagrafic", {})
+        features_rows = (
+            self._row("Richiesta del documento di riferimento", self._si_no(use_anagrafic.get("document_reference")))
+            + self._row("Richiesta del conducente (driver)", self._si_no(use_anagrafic.get("driver")))
+            + self._row("Richiesta del materiale trasportato", self._si_no(use_anagrafic.get("material")))
+            + self._row("Possibilità di inserire note", self._si_no(use_anagrafic.get("note")))
+            + self._row("Richiesta dell'operatore", self._si_no(use_anagrafic.get("operator")))
+            + self._row("Richiesta del soggetto (cliente/fornitore)", self._si_no(use_anagrafic.get("subject")))
+            + self._row("Richiesta del vettore", self._si_no(use_anagrafic.get("vector")))
+            + self._row("Richiesta del veicolo", self._si_no(use_anagrafic.get("vehicle")))
+            + self._row("Salvataggio foto durante la pesata", self._si_no(use_anagrafic.get("weighing_pictures")))
+            + self._row("Uso del badge per identificare l'utente", self._si_no(app.get("use_badge")))
+            + self._row("Uso di un peso preimpostato", self._si_no(app.get("use_preset_weight")))
+            + self._row("Salvataggio delle registrazioni (recordings)", self._si_no(app.get("use_recordings")))
+            + self._row("Uso delle prenotazioni", self._si_no(app.get("use_reservation")))
+            + self._row("Gestione transiti", self._si_no(app.get("use_transit")))
+            + self._row("Uso della lista bianca (white list)", self._si_no(app.get("use_white_list")))
+            + self._row("Totem self-service abilitato", self._si_no(app.get("totem_enabled")))
+            + self._row("Visualizzazione totali esportati", self._si_no(app.get("show_export_totals")))
+            + self._row("Eliminazione automatica pesate in sospeso a mezzanotte", self._si_no(app.get("delete_pending_accesses_at_midnight")))
+            + self._row("Copia del PDF restituita dopo la pesata", self._si_no(app.get("return_pdf_copy_after_weighing")))
+            + self._row("Modalità di test attiva", self._si_no(app.get("test_mode")))
+        )
+
+        # --- Sezione: report di pesata ---
+        reports_rows = (
+            self._row("Modello report per pesata in entrata (\"in\")", app.get("report_in") or "Nessuno")
+            + self._row("Modello report per pesata in uscita (\"out\")", app.get("report_out") or "Nessuno")
+            + self._row("Modello report per la tara", app.get("report_tare") or "Nessuno")
+            + self._row("Modello report generico", app.get("report_generic") or "Nessuno")
+        )
+
+        # --- Sezione: pannello e sirena ---
+        panel = app.get("panel", {})
+        siren = app.get("siren", {})
+        devices_rows = (
+            self._row("Pannello informativo abilitato", self._si_no(panel.get("enabled")))
+            + self._row("Tipo di pannello", panel.get("type", "N/D"))
+            + self._row("Indirizzo IP del pannello", panel.get("connection", {}).get("ip", "N/D"))
+            + self._row("Sirena/segnalatore abilitato", self._si_no(siren.get("enabled")))
+            + self._row("Tipo di sirena", siren.get("type", "N/D"))
+            + self._row("Indirizzo IP della sirena", siren.get("connection", {}).get("ip", "N/D"))
+        )
+
+        # --- Sezione: sincronizzazione cartella remota ---
+        sync = app.get("sync_folder", {})
+        sync_rows = (
+            self._row("Cartella locale sincronizzata", sync.get("local_dir", "N/D"))
+            + self._row("Punto di mount della cartella remota", sync.get("mount_point", "N/D"))
+            + self._row("Cartella remota di destinazione", sync.get("remote_folder") or "Non configurata")
+            + self._row("Sottocartelle sincronizzate", ", ".join(sync.get("sub_paths", [])) or "Nessuna")
+        )
+
+        # --- Sezione: connessione remota (tunnel SSH) — dati sensibili oscurati ---
+        ssh = app.get("ssh_reverse_tunneling", {})
+        ssh_rows = (
+            self._row("Server di appoggio per la connessione remota", ssh.get("server", "N/D"))
+            + self._row("Porta di accesso remoto", ssh.get("forwarding_port", "N/D"))
+            + self._row("Utente di accesso", ssh.get("user", "N/D"))
+            + self._row("Password", "••••••••• (omessa per sicurezza)")
+        )
+
+        # --- Sezione: pese collegate ---
+        weighers = app.get("weighers", {})
+        weighers_html = ""
+        for w_id, weigher in sorted(weighers.items()):
+            connection = weigher.get("connection", {})
+            weighers_html += f'<h3>Pesa "{w_id}"</h3><table>'
+            weighers_html += self._row("Indirizzo IP della pesa", connection.get("ip", "N/D"))
+            weighers_html += self._row("Porta di comunicazione", connection.get("port", "N/D"))
+            weighers_html += "</table>"
+
+            nodes = weigher.get("nodes", {})
+            for n_id, node in sorted(nodes.items()):
+                weighers_html += f'<h4>Punto di pesata "{n_id}" ({node.get("name", n_id)})</h4><table>'
+                weighers_html += self._row("Tipo di terminale di pesata", node.get("terminal", "N/D"))
+                weighers_html += self._row("Peso minimo accettato (kg)", node.get("min_weight", "N/D"))
+                weighers_html += self._row("Peso massimo accettato (kg)", node.get("max_weight", "N/D"))
+                weighers_html += self._row("Numero di copie di stampa", node.get("number_of_prints", "N/D"))
+                weighers_html += self._row("Punto di pesata attivo", self._si_no(node.get("run")))
+                weighers_html += "</table>"
+
+        sections = [
+            ("1. Informazioni generali", general_rows),
+            ("2. Percorsi dei dati", paths_rows),
+            ("3. Funzionalità abilitate", features_rows),
+            ("4. Modelli di report utilizzati", reports_rows),
+            ("5. Pannello e sirena", devices_rows),
+            ("6. Sincronizzazione con cartella remota", sync_rows),
+            ("7. Connessione remota per assistenza (tunnel SSH)", ssh_rows),
+        ]
+
+        sections_html = ""
+        for title, rows in sections:
+            sections_html += f"<h2>{title}</h2><table>{rows}</table>"
+        sections_html += "<h2>8. Pese collegate</h2>" + (weighers_html or "<p>Nessuna pesa configurata.</p>")
+
+        return sections_html
 
     async def exportConfigDoc(self):
-        """Genera un PDF con la documentazione della configurazione e lo esporta insieme al config.json in un file ZIP."""
+        """Genera un PDF con la documentazione della configurazione (in linguaggio comprensibile)
+        e lo esporta insieme al config.json in un file ZIP."""
         try:
             config_dict = lb_config.g_config
             config_path = os.path.join(lb_config.config_path, "config.json")
@@ -423,25 +534,33 @@ class GenericRouter:
                 config_raw = f.read()
 
             generated_at = time.strftime("%Y-%m-%d %H:%M:%S")
-            rows = self._config_to_html_rows(config_dict)
+            sections_html = self._build_config_explanation_html(config_dict)
             html = f"""
             <html>
             <head>
                 <meta charset="utf-8">
                 <style>
-                    body {{ font-family: Arial, sans-serif; font-size: 11px; }}
-                    h1 {{ font-size: 18px; }}
-                    table {{ width: 100%; border-collapse: collapse; }}
-                    td {{ border-bottom: 1px solid #ddd; padding: 3px 6px; vertical-align: top; word-break: break-all; }}
-                    td:first-child {{ width: 45%; color: #333; }}
+                    body {{ font-family: Arial, sans-serif; font-size: 12px; color: #222; }}
+                    h1 {{ font-size: 20px; margin-bottom: 0; }}
+                    h2 {{ font-size: 15px; margin-top: 22px; border-bottom: 2px solid #4CAF50; padding-bottom: 4px; }}
+                    h3 {{ font-size: 13px; margin-top: 14px; color: #2196F3; }}
+                    h4 {{ font-size: 12px; margin-top: 8px; }}
+                    p.subtitle {{ color: #666; margin-top: 2px; }}
+                    table {{ width: 100%; border-collapse: collapse; margin-top: 4px; }}
+                    td {{ border-bottom: 1px solid #ddd; padding: 4px 6px; vertical-align: top; }}
+                    td:first-child {{ width: 55%; color: #333; }}
+                    td:last-child {{ font-weight: bold; word-break: break-all; }}
                 </style>
             </head>
             <body>
-                <h1>Documentazione configurazione - {lb_config.g_config.get('name', '')}</h1>
-                <p>Generato il: {generated_at}</p>
-                <table>
-                    {rows}
-                </table>
+                <h1>Documentazione della configurazione</h1>
+                <p class="subtitle">Software: {config_dict.get('name', '')} — Generato il {generated_at}</p>
+                <p>
+                    Questo documento descrive, in modo semplice e leggibile, come è attualmente
+                    configurato il software. Per i dettagli tecnici completi è incluso anche il
+                    file <strong>config.json</strong> in questo stesso archivio.
+                </p>
+                {sections_html}
             </body>
             </html>
             """
