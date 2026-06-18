@@ -91,6 +91,7 @@ class GenericRouter:
         self.router.add_api_route('/list/default-reports', self.listDefualtReports, dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/restart', self.restartSoftware, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/export-config-doc', self.exportConfigDoc, dependencies=[Depends(is_super_admin)])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -386,3 +387,77 @@ class GenericRouter:
 
         asyncio.create_task(restart_after_response())
         return {"message": f"Riavvio del servizio {service_name} in corso..."}
+
+    def _config_to_html_rows(self, value, level=0):
+        """Trasforma ricorsivamente un valore di configurazione in righe HTML."""
+        if isinstance(value, dict):
+            rows = ""
+            for key, val in sorted(value.items()):
+                if isinstance(val, (dict, list)):
+                    rows += f'<tr><td colspan="2" style="padding-left:{level*16}px;"><strong>{key}</strong></td></tr>'
+                    rows += self._config_to_html_rows(val, level + 1)
+                else:
+                    rows += (
+                        f'<tr><td style="padding-left:{level*16}px;">{key}</td>'
+                        f'<td>{val}</td></tr>'
+                    )
+            return rows
+        elif isinstance(value, list):
+            if not value:
+                return f'<tr><td style="padding-left:{level*16}px;" colspan="2"><em>(vuoto)</em></td></tr>'
+            rows = ""
+            for i, item in enumerate(value):
+                rows += f'<tr><td colspan="2" style="padding-left:{level*16}px;"><strong>[{i}]</strong></td></tr>'
+                rows += self._config_to_html_rows(item, level + 1)
+            return rows
+        else:
+            return f'<tr><td colspan="2" style="padding-left:{level*16}px;">{value}</td></tr>'
+
+    async def exportConfigDoc(self):
+        """Genera un PDF con la documentazione della configurazione e lo esporta insieme al config.json in un file ZIP."""
+        try:
+            config_dict = lb_config.g_config
+            config_path = os.path.join(lb_config.config_path, "config.json")
+
+            with open(config_path, "r", encoding="utf-8") as f:
+                config_raw = f.read()
+
+            generated_at = time.strftime("%Y-%m-%d %H:%M:%S")
+            rows = self._config_to_html_rows(config_dict)
+            html = f"""
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; font-size: 11px; }}
+                    h1 {{ font-size: 18px; }}
+                    table {{ width: 100%; border-collapse: collapse; }}
+                    td {{ border-bottom: 1px solid #ddd; padding: 3px 6px; vertical-align: top; word-break: break-all; }}
+                    td:first-child {{ width: 45%; color: #333; }}
+                </style>
+            </head>
+            <body>
+                <h1>Documentazione configurazione - {lb_config.g_config.get('name', '')}</h1>
+                <p>Generato il: {generated_at}</p>
+                <table>
+                    {rows}
+                </table>
+            </body>
+            </html>
+            """
+
+            pdf_bytes = await asyncio.to_thread(printer.generate_pdf_from_html, html)
+
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                zip_file.writestr("documentazione_configurazione.pdf", pdf_bytes)
+                zip_file.writestr("config.json", config_raw)
+            zip_buffer.seek(0)
+
+            return StreamingResponse(
+                zip_buffer,
+                media_type="application/zip",
+                headers={"Content-Disposition": "attachment; filename=in-out-config-export.zip"}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore nella generazione dell'export: {str(e)}")
