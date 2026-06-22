@@ -139,21 +139,25 @@ class FTPProtocolHandler(ProtocolHandler):
                 except:
                     pass
 
+            # Determine if using anonymous login
+            username = self.config.username if self.config.username else 'anonymous'
+            password = self.config.password if self.config.password else 'anonymous@'
+
             # Try FTP_TLS first for security, fallback to regular FTP
             try:
                 self.ftp = FTP_TLS()
                 self.ftp.connect(self.config.ip, self.config.port or 21, timeout=10)
-                self.ftp.login(self.config.username, self.config.password)
+                self.ftp.login(username, password)
                 self.ftp.prot_p()  # Enable secure data connection
                 self.use_tls = True
-                lb_log.info("Connected using FTPS (FTP with TLS)")
+                lb_log.info(f"Connected using FTPS (FTP with TLS) - {'anonymous' if username == 'anonymous' else 'authenticated'}")
             except:
                 # Fallback to regular FTP
                 self.ftp = FTP()
                 self.ftp.connect(self.config.ip, self.config.port or 21, timeout=10)
-                self.ftp.login(self.config.username, self.config.password)
+                self.ftp.login(username, password)
                 self.use_tls = False
-                lb_log.info("Connected using regular FTP")
+                lb_log.info(f"Connected using regular FTP - {'anonymous' if username == 'anonymous' else 'authenticated'}")
 
             # Change to share_name directory if specified
             if self.config.share_name:
@@ -335,13 +339,23 @@ class SFTPProtocolHandler(ProtocolHandler):
 
             self.ssh = paramiko.SSHClient()
             self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.ssh.connect(
-                self.config.ip,
-                port=self.config.port or 22,
-                username=self.config.username,
-                password=self.config.password,
-                timeout=10
-            )
+
+            # Build connection parameters
+            connect_params = {
+                'hostname': self.config.ip,
+                'port': self.config.port or 22,
+                'timeout': 10
+            }
+
+            # Add credentials if provided
+            if self.config.username:
+                connect_params['username'] = self.config.username
+            if self.config.password:
+                connect_params['password'] = self.config.password
+
+            # If no password but username is provided, try key-based auth
+            # If no username, paramiko will use current user
+            self.ssh.connect(**connect_params)
 
             self.sftp = self.ssh.open_sftp()
 
@@ -358,7 +372,15 @@ class SFTPProtocolHandler(ProtocolHandler):
                         lb_log.error(f"Cannot change to directory {self.config.share_name}: {e}")
 
             self.connected = True
-            lb_log.info(f"SFTP connected to {self.config.ip}:{self.config.port or 22}")
+
+            # Determine authentication method for logging
+            auth_method = "key-based"
+            if self.config.password:
+                auth_method = "password"
+            elif not self.config.username:
+                auth_method = "default user"
+
+            lb_log.info(f"SFTP connected to {self.config.ip}:{self.config.port or 22} using {auth_method} authentication")
             return True
         except Exception as e:
             lb_log.error(f"SFTP connection error: {e}")
