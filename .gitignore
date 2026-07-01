@@ -181,6 +181,11 @@ cython_debug/
 /client/vite.config.js.timestamp-*
 /client/vite.config.ts.timestamp-*
 
+# Cloud portal
+/cloud-portal/cloud_portal.db
+/cloud-portal/.env
+/cloud-portal/!.env.example
+
 ssh_tools.jsonc
 
 main.spec

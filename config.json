@@ -1,5 +1,14 @@
 {
     "app_api": {
+        "cloud_portal": {
+            "api_key": "",
+            "base_url": "",
+            "batch_size": 50,
+            "enabled": false,
+            "only_closed": true,
+            "sync_interval_seconds": 10.0,
+            "verify_ssl": true
+        },
         "default_type_subject": "SUPPLIER",
         "delete_pending_accesses_at_midnight": false,
         "mode": "AUTOMATIC",

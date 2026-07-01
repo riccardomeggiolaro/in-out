@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cloud_portal}
+      POSTGRES_USER: ${POSTGRES_USER:-cloud_portal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - cloud_portal_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cloud_portal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  portal:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-cloud_portal}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-cloud_portal}
+      SECRET_KEY: ${SECRET_KEY:?set a random secret key in .env}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set an admin password in .env}
+    ports:
+      - "${PORTAL_PORT:-8000}:8000"
+
+volumes:
+  cloud_portal_db:

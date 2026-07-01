@@ -47,11 +47,13 @@ def mainprg():
 
 	import modules.md_desktop_interface.md_desktop_interface as md_desktop_interface
 
+	import modules.md_cloud_portal.md_cloud_portal as md_cloud_portal
+
 	import applications.app_api as app_api
 
 	APPS = [app_api]
 
-	MODULES = [md_rfid, md_weigher, md_sync_folder]
+	MODULES = [md_rfid, md_weigher, md_sync_folder, md_cloud_portal]
 
 	# Carica thread per i mdouli esterni.
 
