@@ -16,6 +16,7 @@ from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
 from applications.router.open_to_customer import OpenToCustomerRouter
 from applications.router.sync_folder import SyncFolderRouter
+from applications.router.cloud_portal import CloudPortalRouter
 from applications.router.rfid.router import RfidRouter
 from pathlib import Path
 import os
@@ -145,6 +146,7 @@ def init():
 	tunnel_connections_router = TunnelConnectionsRouter()
 	open_to_customer = OpenToCustomerRouter()
 	sync_folder_router = SyncFolderRouter()
+	cloud_portal_router = CloudPortalRouter()
 	rfid_router = RfidRouter()
 
 	# Avvia il thread di pulizia mezzanotte per eliminare accessi pendenti non prenotati
@@ -168,6 +170,8 @@ def init():
 	app.include_router(open_to_customer.router, prefix="/api", tags=["open to customer"])
 
 	app.include_router(sync_folder_router.router, prefix="/api/sync-folder", tags=["sync folder"])
+
+	app.include_router(cloud_portal_router.router, prefix="/api/cloud-portal", tags=["cloud portal"])
 
 	app.include_router(rfid_router.router, prefix="/api/rfid", tags=["rfid"])
 
