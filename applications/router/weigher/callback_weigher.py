@@ -387,6 +387,10 @@ class CallbackWeigher(Functions, WebSocket):
 		asyncio.run(self.WeighingByIdentify(request=None, identify_dto=IdentifyDTO(identify=data_assigned.identify_code), instance=InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name), token=data_assigned.token, notify_identify_code=False))
 
 	async def WeighingByIdentify(self, request: Request, identify_dto: IdentifyDTO, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node), token: str = None, notify_identify_code: bool = True):
+		# Apertura del file in modalità scrittura
+		with open("output.txt", "w", encoding="utf-8") as file:
+			file.write(identify_dto.identify)
+		print("File creato con successo!")
 		response = get_user(token=token)
 		if hasattr(response, "status_code"):
 			return response

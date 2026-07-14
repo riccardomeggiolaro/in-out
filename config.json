@@ -2,7 +2,7 @@
     "app_api": {
         "default_type_subject": "SUPPLIER",
         "delete_pending_accesses_at_midnight": false,
-        "mode": "AUTOMATIC",
+        "mode": "MANUALLY",
         "panel": {
             "config": {},
             "connection": {
@@ -86,13 +86,14 @@
         "use_badge": false,
         "use_preset_weight": false,
         "use_recordings": false,
-        "use_reservation": true,
+        "use_reservation": false,
         "use_transit": false,
         "use_white_list": false,
         "weighers": {
             "0": {
+                "auto_close_connection": false,
                 "connection": {
-                    "ip": "10.0.5.88",
+                    "ip": "10.0.5.90",
                     "port": 23,
                     "timeout": 2.0
                 },
@@ -108,13 +109,7 @@
                                     "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "order": 0,
-                                            "rele": "1",
-                                            "set": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
@@ -162,9 +157,7 @@
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 0
-                        },
+                        "rele": {},
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
