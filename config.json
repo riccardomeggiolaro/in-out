@@ -2,7 +2,7 @@
     "app_api": {
         "default_type_subject": "SUPPLIER",
         "delete_pending_accesses_at_midnight": false,
-        "mode": "MANUALLY",
+        "mode": "AUTOMATIC",
         "panel": {
             "config": {},
             "connection": {
@@ -25,7 +25,7 @@
         "report_out": "weight_out.json",
         "report_tare": "weight_tare.json",
         "return_pdf_copy_after_weighing": true,
-        "show_export_totals": false,
+        "show_export_totals": true,
         "siren": {
             "config": {},
             "connection": {
@@ -86,7 +86,7 @@
         "use_badge": false,
         "use_preset_weight": false,
         "use_recordings": false,
-        "use_reservation": false,
+        "use_reservation": true,
         "use_transit": false,
         "use_white_list": false,
         "weighers": {
