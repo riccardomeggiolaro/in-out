@@ -169,6 +169,12 @@ else
     print_info "CUPS e le sue dipendenze sono già installati"
 fi
 
+# Abilita l'accesso remoto a CUPS (interfaccia web raggiungibile da altri host)
+print_info "Adesso abilito l'accesso remoto a CUPS..."
+cupsctl --remote-admin --remote-any --share-printers
+systemctl restart cups
+print_info "Accesso remoto a CUPS abilitato"
+
 # Crea la directory di installazione /opt/in-out e copia i file
 if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
     print_info "Creazione directory di installazione $INSTALL_DIR..."

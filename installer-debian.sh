@@ -100,6 +100,11 @@ else
     echo "CUPS, libcups2-dev e libcupsimage2 sono già installati, procedo..."
 fi
 
+# Abilita l'accesso remoto a CUPS (interfaccia web raggiungibile da altri host)
+echo "Abilitazione dell'accesso remoto a CUPS..."
+sudo cupsctl --remote-admin --remote-any --share-printers
+sudo systemctl restart cups
+
 # Crea la directory di installazione /opt/in-out e copia i file
 if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
     echo "Creazione directory di installazione $INSTALL_DIR..."
