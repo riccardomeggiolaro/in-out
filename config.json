@@ -93,27 +93,70 @@
             "0": {
                 "auto_close_connection": false,
                 "connection": {
-                    "ip": "10.0.5.90",
-                    "port": 23,
-                    "timeout": 2.0
+                    "baudrate": 9600,
+                    "serial_port_name": "/dev/ttyS0",
+                    "timeout": 3.0
                 },
                 "nodes": {
                     "P1": {
                         "always_execute_realtime_in_undeground": true,
                         "continuous_transmission": false,
                         "diagnostic_has_priority_than_realtime": true,
-                        "division": 1,
+                        "division": 20,
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "order": 4,
+                                            "rele": "3",
+                                            "set": 0
+                                        },
+                                        {
+                                            "order": 6,
+                                            "rele": "4",
+                                            "set": 0
+                                        }
+                                    ]
                                 },
                                 "under_min": {
-                                    "set_rele": []
+                                    "set_rele": [
+                                        {
+                                            "order": 0,
+                                            "rele": "1",
+                                            "set": 0
+                                        },
+                                        {
+                                            "order": 2,
+                                            "rele": "2",
+                                            "set": 0
+                                        },
+                                        {
+                                            "order": 5,
+                                            "rele": "4",
+                                            "set": 1
+                                        }
+                                    ]
                                 }
                             },
                             "weighing": {
-                                "cams": [],
+                                "cams": [
+                                    {
+                                        "active": true,
+                                        "live": "None",
+                                        "picture": "http://admin:Baronpesi2026@192.168.246.104/ISAPI/Streaming/channels/1/picture"
+                                    },
+                                    {
+                                        "active": true,
+                                        "live": "None",
+                                        "picture": "http://admin:Baronpesi2026@192.168.246.105/ISAPI/Streaming/channels/1/picture"
+                                    },
+                                    {
+                                        "active": true,
+                                        "live": "None",
+                                        "picture": "http://admin:Baronpesi2026@192.168.246.106/ISAPI/Streaming/channels/1/picture"
+                                    }
+                                ],
                                 "csv": {
                                     "generic": false,
                                     "in": false,
@@ -123,7 +166,7 @@
                                 "printer": {
                                     "generic": null,
                                     "in": null,
-                                    "out": null,
+                                    "out": "TMT88VII",
                                     "tare": null
                                 },
                                 "prints": {
@@ -133,38 +176,87 @@
                                     "tare": 1
                                 },
                                 "report": {
-                                    "generic": true,
-                                    "in": true,
+                                    "generic": false,
+                                    "in": false,
                                     "out": true,
-                                    "tare": true
+                                    "tare": false
                                 },
                                 "set_rele": {
-                                    "generic": [],
-                                    "in": [],
-                                    "out": [],
-                                    "tare": []
+                                    "generic": [
+                                        {
+                                            "order": 1,
+                                            "rele": "1",
+                                            "set": 1
+                                        },
+                                        {
+                                            "order": 7,
+                                            "rele": "4",
+                                            "set": 1
+                                        }
+                                    ],
+                                    "in": [
+                                        {
+                                            "order": 1,
+                                            "rele": "1",
+                                            "set": 1
+                                        },
+                                        {
+                                            "order": 7,
+                                            "rele": "4",
+                                            "set": 1
+                                        }
+                                    ],
+                                    "out": [
+                                        {
+                                            "order": 3,
+                                            "rele": "2",
+                                            "set": 1
+                                        },
+                                        {
+                                            "order": 8,
+                                            "rele": "4",
+                                            "set": 1
+                                        }
+                                    ],
+                                    "tare": [
+                                        {
+                                            "order": 3,
+                                            "rele": "2",
+                                            "set": 1
+                                        },
+                                        {
+                                            "order": 8,
+                                            "rele": "4",
+                                            "set": 1
+                                        }
+                                    ]
                                 }
                             }
                         },
                         "maintaine_session_realtime_after_command": true,
                         "max_theshold": null,
-                        "max_weight": 60000,
-                        "min_weight": 200,
+                        "max_weight": 80000,
+                        "min_weight": 1000,
                         "name": "P1",
-                        "need_take_of_weight_before_weighing": false,
+                        "need_take_of_weight_before_weighing": true,
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {},
+                        "rele": {
+                            "1": 0,
+                            "2": 0,
+                            "3": 0,
+                            "4": 0
+                        },
                         "run": true,
                         "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
                         "terminal": "egt-af03-rext"
                     }
                 },
-                "time_between_actions": 0.3
+                "time_between_actions": 0.4
             }
         }
     },
