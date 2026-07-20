@@ -1,7 +1,7 @@
 {
     "app_api": {
         "default_type_subject": "SUPPLIER",
-        "delete_pending_accesses_at_midnight": false,
+        "delete_pending_accesses_at_midnight": true,
         "mode": "AUTOMATIC",
         "panel": {
             "config": {},
@@ -24,7 +24,7 @@
         "report_in": "weight_in.json",
         "report_out": "weight_out.json",
         "report_tare": "weight_tare.json",
-        "return_pdf_copy_after_weighing": true,
+        "return_pdf_copy_after_weighing": false,
         "show_export_totals": true,
         "siren": {
             "config": {},

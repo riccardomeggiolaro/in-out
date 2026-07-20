@@ -319,18 +319,25 @@ class Dgt1(Terminal):
 					else:
 						self.diagnostic.status = 201
 				elif self.modope in ["OPENRELE", "CLOSERELE"]:
-					if response in skip_response_messages:
-						pass
-					elif length_response == 2 and response == "OK":
-						self.diagnostic.status = 200
+					# if response in skip_response_messages:
+					# 	pass
+					# elif length_response == 2 and response == "OK":
+					# 	self.diagnostic.status = 200
+					# 	key, value = self.port_rele
+					# 	if self.modope == "OPENRELE":
+					# 		self.port_rele = (key, 1)
+					# 	elif self.modope == "CLOSERELE":
+					# 		self.port_rele = (key, 0)
+					# # Se formato stringa non valido setto ok_value a None
+					# else:
+					# 	self.diagnostic.status = 201
+					self.diagnostic.status = 200
+					if self.modope == "OPENRELE":
 						key, value = self.port_rele
-						if self.modope == "OPENRELE":
-							self.port_rele = (key, 1)
-						elif self.modope == "CLOSERELE":
-							self.port_rele = (key, 0)
-					# Se formato stringa non valido setto ok_value a None
-					else:
-						self.diagnostic.status = 201
+						self.port_rele = (key, 1)
+					elif self.modope == "CLOSERELE":
+						key,value = self.port_rele
+						self.port_rele = (key, 0)
 					callCallback(self.callback_rele)
 					self.port_rele = None
 					if self.rele_queue:
