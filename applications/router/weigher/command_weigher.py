@@ -320,8 +320,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		error_message = None
 		if take_of_weight_on_startup is True:
 			error_message = "Scaricare la pesa dopo l'avvio del programma"
-		if take_of_weight_before_weighing is True:
-			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
+		# if take_of_weight_before_weighing is True:
+		# 	error_message = "Scaricare la pesa prima di eseguire nuova pesata"
 		if current_id:
 			access = get_access_by_id(current_id)
 		if access and len(access.in_out) > 0 and weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["weight1"] is not None:
@@ -370,8 +370,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		access = None
 		if take_of_weight_on_startup is True:
 			error_message = "Scaricare la pesa dopo l'avvio del programma"
-		elif take_of_weight_before_weighing is True:
-			error_message = "Scaricare la pesa prima di eseguire nuova pesata"
+		# elif take_of_weight_before_weighing is True:
+		# 	error_message = "Scaricare la pesa prima di eseguire nuova pesata"
 		elif net_weight != "" and float(net_weight) < 0 and lb_config.g_config["app_api"]["use_preset_weight"] is False:
 			error_message = "Il peso netto non può essere negativo."
 		else:
