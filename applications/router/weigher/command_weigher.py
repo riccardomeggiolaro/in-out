@@ -344,7 +344,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				instance_name=instance.instance_name, 
 				weigher_name=instance.weigher_name, 
 				modope="WEIGHING", 
-				data_assigned=data_assigned
+				data_assigned=data_assigned,
+				skip_take_of_weight_check=True
 			)
 		if error_message and access.hidden is True:
 			await self.deleteAccess(request=None, id=current_id)
@@ -407,7 +408,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					instance_name=instance.instance_name, 
 					weigher_name=instance.weigher_name, 
 					modope="WEIGHING", 
-					data_assigned=data_assigned)
+					data_assigned=data_assigned,
+					skip_take_of_weight_check=True)
 			if error_message and just_created:
 				await self.deleteAccess(request=None, id=idAccess)
 		return {

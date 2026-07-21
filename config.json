@@ -93,9 +93,9 @@
             "0": {
                 "auto_close_connection": false,
                 "connection": {
-                    "baudrate": 9600,
-                    "serial_port_name": "/dev/ttyS0",
-                    "timeout": 3.0
+                    "ip": "10.0.5.90",
+                    "port": 23,
+                    "timeout": 1.0
                 },
                 "nodes": {
                     "P1": {
@@ -140,23 +140,7 @@
                                 }
                             },
                             "weighing": {
-                                "cams": [
-                                    {
-                                        "active": true,
-                                        "live": "None",
-                                        "picture": "http://admin:Baronpesi2026@192.168.246.104/ISAPI/Streaming/channels/1/picture"
-                                    },
-                                    {
-                                        "active": true,
-                                        "live": "None",
-                                        "picture": "http://admin:Baronpesi2026@192.168.246.105/ISAPI/Streaming/channels/1/picture"
-                                    },
-                                    {
-                                        "active": true,
-                                        "live": "None",
-                                        "picture": "http://admin:Baronpesi2026@192.168.246.106/ISAPI/Streaming/channels/1/picture"
-                                    }
-                                ],
+                                "cams": [],
                                 "csv": {
                                     "generic": false,
                                     "in": false,
@@ -245,13 +229,13 @@
                         "port_rele": null,
                         "printer_name": null,
                         "rele": {
-                            "1": 0,
+                            "1": 1,
                             "2": 0,
                             "3": 0,
-                            "4": 0
+                            "4": 1
                         },
                         "run": true,
-                        "take_of_weight_before_weighing": false,
+                        "take_of_weight_before_weighing": true,
                         "take_of_weight_on_startup": false,
                         "terminal": "egt-af03-rext"
                     }

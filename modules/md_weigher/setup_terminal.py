@@ -283,7 +283,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 			self.callback_code_identify = lambda: cb_code_identify(self.self_config.name, weigher_name, self.code_identify)
 
 	# setta il modope_to_execute
-	def setModope(self, mod: str, presettare: Union[int, float] = 0, data_assigned: Any = None, port_rele: tuple = None):
+	def setModope(self, mod: str, presettare: Union[int, float] = 0, data_assigned: Any = None, port_rele: tuple = None, skip_take_of_weight_check: bool = False):
 		if mod in self.commands:
 			self.modope_to_execute = mod
 			return 100, None
@@ -351,7 +351,7 @@ class __SetupWeigher(__SetupWeigherConnection):
 						if self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status == "ST" and int(self.pesa_real_time.gross_weight) >= self.min_weight and int(self.pesa_real_time.gross_weight) <= self.max_weight:
 							if self.take_of_weight_on_startup is True:
 								return 500,	"Scaricare la pesa dopo l'avvio del programma"
-							if self.take_of_weight_before_weighing is True:
+							if self.take_of_weight_before_weighing is True and not skip_take_of_weight_check:
 								return 500,	"Scaricare la pesa prima di eseguire nuova pesata"
 							self.weight.data_assigned = data_assigned
 						elif self.pesa_real_time.gross_weight != "" and self.pesa_real_time.status != "ST":
