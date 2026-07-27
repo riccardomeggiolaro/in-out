@@ -105,7 +105,7 @@ class Functions:
 			"need_to_confirm": False
 		}
 		for key, value in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].items():
-			if isinstance(value, object) and value is not None:
+			if isinstance(value, dict) and value is not None:
 				if "id" in value and value["id"] is not None:
 					unlock_record_by_attributes(key, value["id"], None, weigher_name)
 		weighers_data[instance_name][weigher_name]["data"] = Data(**{}).dict()
@@ -113,7 +113,7 @@ class Functions:
 
 	def deleteDataInExecution(self, instance_name: str, weigher_name: str):
 		for key, value in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].items():
-			if isinstance(value, object) and value is not None:
+			if isinstance(value, dict) and value is not None:
 				if "id" in value and value["id"] is not None:
 					unlock_record_by_attributes(key, value["id"], None, weigher_name)
 		# Per ogni chiave dei dati correnti
