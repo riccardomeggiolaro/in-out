@@ -1,0 +1,98 @@
+================================================
+  PenMount Xorg Driver for Debian 10 / 11 / 12
+================================================
+
+---------------------------------------------------------------------------
+Supported Versions
+---------------------------------------------------------------------------
+Distribution   : Debian 10 / 11 / 12
+X.Org X Server : 1.20 / 1.21
+XInput         : 24.1 / 24.4
+RandR          : 1.5
+GTK+           : 2.24.32 / 3.24.5
+Driver         : 4.7.7.R24
+Architecture   : i686 / x86_64 / armhf / aarch64
+
+---------------------------------------------------------------------------
+PenMount Support
+---------------------------------------------------------------------------
+  - PenMount 5000 series (USB, low speed)
+  - PemMount 6000 series (USB, full speed)
+  - PemMount P2   series (USB, full speed)
+  - PemMount K1   series (USB, full speed)
+  - PemMount 9000 series (Serial, 19200/9600 bps)
+  - PemMount 6000 series (Serial, 19200/9600 bps)
+  - PemMount P2   series (Serial, 38400 bps)
+
+---------------------------------------------------------------------------
+File Description
+---------------------------------------------------------------------------
+  gCal             - PenMount calibration utility (without UI)
+                     e.g. gCal <0|4|9|16|25> <config_file>
+                     e.g. gCal 4
+                          (config file is saved in /etc/penmount.dat)
+                     e.g. gCal 4 /tmp/penmount.dat
+                          (config file is assigned in /tmp/penmount.dat)
+  gDraw            - PenMount drawing test
+                     e.g. gDraw
+                          gDraw cross
+                          gDraw point
+                          gDraw -h, see the details
+  install.sh       - Install script
+  gPen             - PenMount utility in GNOME tray
+                     Use penmount to perform calibration and another settings.
+  pm-gcalib        - (GTK3) Supports multiple device calibration and monitor mapping.
+  pm-wcalib        - (GTK3) Supports calibration in Wayland, requires system restart.
+  penmount*.png    - An icon files.
+  penmount.dat     - Default calibration data file
+                     It will be created after calibration.
+  penmount.desktop - GNOME menu item entry
+  penmount_drv.so  - PenMount XInput Module
+  penmount.png     - An icon for GNOME menu item
+  pm-setup         - PenMount setup utility. It can configure the PenMount
+                     driver and X configuration file (/etc/X11/xorg.conf)
+  penmount.ini     - Default settings for PenMount XInput Module
+
+---------------------------------------------------------------------------
+Quick Install
+---------------------------------------------------------------------------
+  1) Open terminal
+
+     [Activities] -> [Show Applications] -> All -> Terminal
+
+  2) Change directory to where the device driver is extracted to
+
+     $ cd pmlinux-Debian9
+
+  3) Change the settings in PenMount.ini or just use the default configurations.
+
+  4) Run install script with root permission
+     $ sudo ./install.sh
+
+  5) Restart X window system to apply changes
+
+---------------------------------------------------------------------------
+Calibration
+---------------------------------------------------------------------------
+
+  1) Start the PenMount Utility.
+
+     In [Activities] -> [Show Applications] -> All -> PenMount Utility
+
+     The PenMount utility will be launched.
+
+  2) Select calibrate type and press the 'Calibrate' button.
+
+  3) Follow the instuctions on screen and finish calibration.
+
+  * gCal is the calibration utility can be run directly in terminal.
+    gCal [4|9|16|25] - advanced calibration (4 points, 9 points...)
+
+---------------------------------------------------------------------------
+Application Notes
+---------------------------------------------------------------------------
+(1) Currently the PenMount device driver does not support wayland yet.
+(2) For Using pinch gesture in google chrome, please switch the operation mode to "touch" mode using the PenMount Utility.
+---------------------------------------------------------------------------
+PenMount Touch Solutions
+Nov 21, 2024

@@ -1,0 +1,3 @@
+backend/pcs-3.6.*.x86_64.rpm
+backend/tmt-cups-backend-1.1.*.x86_64.rpm
+filter/tmt-cups-1.1.*.x86_64.rpm

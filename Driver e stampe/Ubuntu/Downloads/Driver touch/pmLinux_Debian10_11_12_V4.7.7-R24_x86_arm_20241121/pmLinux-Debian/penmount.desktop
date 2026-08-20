@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=PenMount Utility
+Name[zh_CN]=PenMount 触摸屏设定
+Name[zh_TW]=PenMount 觸控面板設定
+Comment=PenMount Utility
+Exec=/usr/sbin/gPen-wrapper
+Icon=penmount
+Terminal=false
+Type=Application
+Categories=GTK;System;Settings;HardwareSettings;

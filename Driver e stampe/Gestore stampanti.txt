@@ -1,0 +1,8 @@
+Su Debian 12, il sistema di stampa predefinito è CUPS (Common Unix Printing System). Se l'interfaccia grafica per la gestione delle stampanti non è presente o non funziona, è probabile che manchino alcuni pacchetti fondamentali.
+Ecco come risolvere il problema:
+1. Installare i pacchetti necessari
+Apri il terminale e installa i pacchetti necessari per la gestione delle stampanti e per l'interfaccia grafica (system-config-printer):
+
+bash sudo apt update
+sudo apt install cups system-config-printer  (si installa pacchetto tmt-cups ,l'interfaccia cups gestore stampanti accessibile con http://localhost:631)
+Poi quando si installa la stampante (per la TM-T88VII) si usa driver .ppd. 

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=PenMount Utility
+Comment=PenMount Utility
+Exec=/usr/sbin/gPen-wrapper
+Icon=/usr/share/penmount/penmount.png
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Settings;HardwareSettings;

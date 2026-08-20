@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable system wakeup with touchscreen
+
+[Service]
+Type=oneshot
+ExecStart="/etc/penmount/enable-wakeup-usb.sh"
+
+[Install]
+WantedBy=multi-user.target

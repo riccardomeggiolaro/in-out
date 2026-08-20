@@ -1,0 +1,4 @@
+KERNEL=="hidraw*", ATTRS{idVendor}=="14e1", MODE="0666"
+KERNEL=="hidraw*", ATTRS{idVendor}=="222a", ATTRS{idProduct}=="14e1", MODE="0666"
+SUBSYSTEM=="input", ENV{ID_VENDOR_ID}=="14e1", MODE="0666"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="14e1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="enable-wakeup.service"

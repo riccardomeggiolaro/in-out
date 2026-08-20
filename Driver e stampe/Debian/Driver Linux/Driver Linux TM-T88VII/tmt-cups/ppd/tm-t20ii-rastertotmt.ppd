@@ -1,0 +1,190 @@
+*PPD-Adobe: "4.3"
+*% Copyright (C) 2010-2013 Seiko Epson Corporation. All rights reserved.
+*%
+*% PPD file for TM/BA Series Thermal Printer Driver.
+
+*FormatVersion: "4.3"
+*FileVersion: "1.0"
+*LanguageVersion: English
+*LanguageEncoding: ISOLatin1
+*PCFileName: "TM-T20II.PPD"
+*Manufacturer: "EPSON"
+*Product: "(ThermalPrinter)"
+*ModelName:"EPSON TM-T20II"
+*ShortNickName:"TM-T20II"
+*NickName: "EPSON TM-T20II (rastertotmt)"
+*PSVersion: "(3010.000) 0"
+*LanguageLevel: "3"
+*ColorDevice: False
+*DefaultColorSpace: Gray
+*FileSystem: False
+*Throughput: "1"
+*LandscapeOrientation: Plus90
+*VariablePaperSize: True
+*TTRasterizer: Type42
+*cupsVersion: 1.2
+*cupsManualCopies: True
+*cupsModelNumber: 1
+*cupsFilter: "application/vnd.cups-raster 0 rastertotmt"
+
+*OpenGroup: General/General
+
+*%Page size settings.
+*OpenUI *PageSize/Media Size: PickOne
+*OrderDependency: 11 AnySetup *PageSize
+*DefaultPageSize:RP80x297
+*PageSize RP80x297/Roll paper 80 x 297 mm: "<</PageSize[204 841.8]/ImagingBBox null>>setpagedevice"
+*PageSize RP58x297/Roll paper 58 x 297 mm: "<</PageSize[141.7 841.8]/ImagingBBox null>>setpagedevice"
+*CloseUI: *PageSize
+
+*OpenUI *PageRegion: PickOne
+*OrderDependency: 11 AnySetup *PageRegion
+*DefaultPageRegion:RP80x297
+*PageRegion RP80x297/Roll paper 80 x 297 mm: "<</PageSize[204 841.8]/ImagingBBox null>>setpagedevice"
+*PageRegion RP58x297/Roll paper 58 x 297 mm: "<</PageSize[141.7 841.8]/ImagingBBox null>>setpagedevice"
+*CloseUI: *PageRegion
+
+*DefaultImageableArea: RP80x297
+*ImageableArea RP80x297/Roll paper 80 x 297 mm: "0 0 204 841.8"
+*ImageableArea RP58x297/Roll paper 58 x 297 mm: "0 0 141.7 841.8"
+
+*DefaultPaperDimension: RP80x297
+*PaperDimension RP80x297/Roll paper 80 x 297 mm: "204 841.8"
+*PaperDimension RP58x297/Roll paper 58 x 297 mm: "141.7 841.8"
+
+*%Custom page size settings.
+*MaxMediaWidth: "211.1"
+*MaxMediaHeight: "5669.2"
+*NonUIOrderDependency: 100 AnySetup *CustomPageSize
+*CustomPageSize True: "pop pop pop <</PageSize [ 5 -2 roll ]/ImagingBBox null>>setpagedevice"
+*ParamCustomPageSize Width: 1 points 72 211.1
+*ParamCustomPageSize Height: 2 points 72 5669.2
+*ParamCustomPageSize WidthOffset:  3 points 0 0
+*ParamCustomPageSize HeightOffset: 4 points 0 0
+*ParamCustomPageSize Orientation:  5 int 0 0
+
+*%Resolution settings.
+*OpenUI *Resolution/Resolution: PickOne
+*OrderDependency: 10 AnySetup *Resolution
+*DefaultResolution: 203x203dpi
+*Resolution 203x203dpi/203 x 203 dpi: "<</HWResolution[203 203]/cupsRowCount 24>>setpagedevice"
+*CloseUI: *Resolution
+
+*%Head speed settings.
+*TmtSpeedValue 1: "13"
+*TmtSpeedValue 2: "9"
+*TmtSpeedValue 3: "5"
+*TmtSpeedValue 4: "2"
+
+*OpenUI *TmtSpeed/Printing Speed: PickOne
+*OrderDependency: 10 AnySetup *TmtSpeed
+*DefaultTmtSpeed: Auto
+*TmtSpeed Auto/Use the printer settings : ""
+*TmtSpeed 1/1st (Fast): ""
+*TmtSpeed 2/2nd: ""
+*TmtSpeed 3/3rd: ""
+*TmtSpeed 4/4th (Slow): ""
+*CloseUI: *TmtSpeed
+
+*%Exit feed direction settings.
+*TmtReverseFeedDirection: False
+
+*%Paper reduction settings.
+*OpenUI *TmtPaperReduction/Paper Reduction: PickOne
+*OrderDependency: 11 AnySetup *TmtPaperReduction
+*DefaultTmtPaperReduction: Bottom
+*TmtPaperReduction Off/None: ""
+*TmtPaperReduction Top/Top margin: ""
+*TmtPaperReduction Bottom/Bottom margin: ""
+*TmtPaperReduction Both/Top & Bottom margins: ""
+*CloseUI: *TmtPaperReduction
+
+*%Paper source settings.
+*OpenUI *TmtPaperSource/Paper Source: PickOne
+*OrderDependency: 11 AnySetup *TmtPaperSource
+*DefaultTmtPaperSource: DocFeedCut
+*TmtPaperSource DocFeedCut/Document [Feed, Cut]: ""
+*TmtPaperSource DocFeedNoCut/Document [Feed, NoCut]: ""
+*TmtPaperSource DocNoFeedCut/Document [NoFeed, Cut]: ""
+*TmtPaperSource DocNoFeedNoCut/Document [NoFeed, NoCut]: ""
+*TmtPaperSource PageFeedCut/Page [Feed, Cut]: ""
+*TmtPaperSource PageFeedNoCut/Page [Feed, NoCut]: ""
+*TmtPaperSource PageNoFeedCut/Page [NoFeed, Cut]: ""
+*CloseUI: *TmtPaperSource
+
+*CloseGroup: General
+
+*OpenGroup: BuzzerControl/Buzzer Control
+
+*%Buzzer settings.
+*OpenUI *TmtBuzzerControl/Buzzer: PickOne
+*OrderDependency: 11 AnySetup *TmtBuzzerControl
+*DefaultTmtBuzzerControl: Off
+*TmtBuzzerControl Off/Not used: ""
+*TmtBuzzerControl Before/Sounds before printing: ""
+*TmtBuzzerControl After/Sounds after printing: ""
+*CloseUI: *TmtBuzzerControl
+
+*%Sound pattern settings.
+*OpenUI *TmtSoundPattern/Sound Pattern: PickOne
+*OrderDependency: 11 AnySetup *TmtSoundPattern
+*DefaultTmtSoundPattern: A
+*TmtSoundPattern A/Option buzzer (Pattern A): ""
+*TmtSoundPattern B/Option buzzer (Pattern B): ""
+*TmtSoundPattern C/Option buzzer (Pattern C): ""
+*TmtSoundPattern D/Option buzzer (Pattern D): ""
+*TmtSoundPattern E/Option buzzer (Pattern E): ""
+*CloseUI: *TmtSoundPattern
+
+*%Buzzer repeat settings.
+*OpenUI *TmtBuzzerRepeat/Buzzer Repeat: PickOne
+*OrderDependency: 11 AnySetup *TmtBuzzerRepeat
+*DefaultTmtBuzzerRepeat: 1
+*TmtBuzzerRepeat 1/1: ""
+*TmtBuzzerRepeat 2/2: ""
+*TmtBuzzerRepeat 3/3: ""
+*TmtBuzzerRepeat 5/5: ""
+*CloseUI: *TmtBuzzerRepeat
+
+*CloseGroup: BuzzerControl
+
+*OpenGroup: CashDrawerControl/Cash Drawer Control
+
+*%Drawer settings.
+*OpenUI *TmtDrawer1/Cash Drawer #1: PickOne
+*OrderDependency: 11 AnySetup *TmtDrawer1
+*DefaultTmtDrawer1: Off
+*TmtDrawer1 Off/Does not open: ""
+*TmtDrawer1 Before/Open before printing: ""
+*TmtDrawer1 After/Open after printing: ""
+*CloseUI: *TmtDrawer1
+
+*OpenUI *TmtDrawer2/Cash Drawer #2: PickOne
+*OrderDependency: 11 AnySetup *TmtDrawer2
+*DefaultTmtDrawer2: Off
+*TmtDrawer2 Off/Does not open: ""
+*TmtDrawer2 Before/Open before printing: ""
+*TmtDrawer2 After/Open after printing: ""
+*CloseUI: *TmtDrawer2
+
+*CloseGroup: CashDrawerControl
+
+*%Drawer pulse settings.
+*TmtDrawer1Pulse On: 10
+*TmtDrawer1Pulse Off: 100
+*TmtDrawer2Pulse On: 10
+*TmtDrawer2Pulse Off: 100
+
+*%Pitch of feed settings.
+*TmtFeedPitch: 406.4
+
+*%Used command set version.
+*TmtCommandSetVersion OutputRaster: 2
+
+*%Line number of band.
+*TmtBandLines: 256
+
+*%Message defines.
+*TmtMessage ParameterError: "Invalid parameter."
+
+*% End

@@ -1,0 +1,10 @@
+**** metterlo su cartella home così si evita di andare su directory diverse ***
+
+Per installare o eseguire un file con estensione .sh su Ubuntu, devi usare il Terminale e renderlo eseguibile.
+Ecco i passaggi rapidi:Apri il Terminale (scorciatoia da tastiera: Ctrl + Alt + T).S
+posta il cursore nella cartella in cui si trova il file usando il comando cd. 
+Ad esempio, se è nella cartella Scaricati, digita:
+cd ~/Scaricati
+Rendi il file eseguibile digitando:
+chmod +x nomefile.sh (sostituisci "nomefile.sh" con il nome reale del tuo file).
+Esegui lo script inserendo il comando:./nomefile.sh(Se il programma richiede privilegi di amministratore, aggiungi sudo all'inizio: sudo ./nomefile.sh).

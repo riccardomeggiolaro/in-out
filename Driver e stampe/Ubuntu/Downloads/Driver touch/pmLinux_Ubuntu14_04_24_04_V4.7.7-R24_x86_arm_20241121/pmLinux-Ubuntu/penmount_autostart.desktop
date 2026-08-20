@@ -1,0 +1,10 @@
+
+[Desktop Entry]
+Type=Application
+Name=PenMount
+Exec=/usr/sbin/gPen-wrapper -t
+Icon=penmount
+Comment=PemMount Utility
+Name[en_US]=PenMount
+Comment[en_US]=PemMount Utility
+X-GNOME-Autostart-enabled=true

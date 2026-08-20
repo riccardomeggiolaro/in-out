@@ -1,0 +1,976 @@
+TM/BA Series Thermal Printer Driver for Linux
+Driver Manual
+
+
+Contents
+1. License agreement
+2. Product descriptions
+3. File configuration
+4. Operational environment
+5. How to Install
+6. How to Set
+7. Port settings
+8. Transmission function for a user-defined file
+9. Multi-tone conversion tool
+10. How to Uninstall
+11. Notes and restrictions
+12. Support information
+13. Modification from the old version
+
+
+---------------------------------------------------------------------
+1. License agreement
+---------------------------------------------------------------------
+
+This software is distributed under a non-free proprietary license.
+Refer to the attached EULA.en.txt for the license details.
+
+Copyright of all source code composing binary files of this software 
+is held by SEIKO EPSON CORPORATION, and binary files are distributed 
+under the SEIKO EPSON CORPORATION SOFTWARE LICENSE AGREEMENT (refer 
+to EULA.en.txt).
+
+
+---------------------------------------------------------------------
+2. Product descriptions
+---------------------------------------------------------------------
+
+This software is a printer driver for printing on a TM/BA series 
+thermal printer from Linux using CUPS.
+
+  Features:
+  - A raster type printer driver for TM/BA series thermal printers.
+  - The driver can instantly print out images, texts, and drawings
+    displayed by an application.
+  - Various printer controls on paper cut timing, cash drawers,
+    printing speed, blank line saving, inverted printing, etc.
+
+
+2.1. Supported models
+
+  This software supports TM/BA series thermal printers.
+  Available printer models:
+
+  - TM-T20II
+
+
+2.2. Supported interface
+
+  - USB
+  - Serial
+  - Parallel
+  - Ethernet
+
+
+---------------------------------------------------------------------
+3. File configuration
+---------------------------------------------------------------------
+
+The package (tmt-cups-1.4.1.0.tar.gz) includes the following.
+
+tmt-cups                    <- Top directory
+|-- EULA.en.txt                 <- End User License Agreement
+|-- install.sh                  <- Install script
+|-- uninstall.sh                <- Uninstall script
+|-- manual                  <- Manual directory
+|   |-- TmtDriverManual.en.txt      <- Printer Driver Manual
+|   `-- TM-T20II_Manual.en.txt      <- TM-T20II Model Manual
+|-- filter                  <- Filter package directory
+|   |-- tmt-cups_1.1.0-1_i386.deb       <- tmt-cups filter deb package (32bit)
+|   |-- tmt-cups_1.1.0-1_amd64.deb      <- tmt-cups filter deb package (64bit)
+|   |-- tmt-cups-1.1.0-1.i586.rpm       <- tmt-cups filter rpm package (32bit)
+|   `-- tmt-cups-1.1.0-1.x86_64.rpm     <- tmt-cups filter rpm package (64bit)
+|-- backend                 <- Backend package directory
+|   |-- pcs-3.6.0.0-1.i386.deb                  <- Communication module deb package (32bit)
+|   |-- pcs-3.6.0.0-1.amd64.deb                 <- Communication module deb package (64bit)
+|   |-- pcs-3.6.0.0-1.i586.rpm                  <- Communication module rpm package (32bit)
+|   |-- pcs-3.6.0.0-1.x86_64.rpm                <- Communication module rpm package (64bit)
+|   |-- tmt-cups-backend-1.1.0.0-2.i386.deb     <- tmt-cups backend deb package (32bit)
+|   |-- tmt-cups-backend-1.1.0.0-2.amd64.deb    <- tmt-cups backend deb package (64bit)
+|   |-- tmt-cups-backend-1.1.0.0-2.i586.rpm     <- tmt-cups backend rpm package (32bit)
+|   `-- tmt-cups-backend-1.1.0.0-2.x86_64.rpm   <- tmt-cups backend rpm package (64bit)
+`-- ppd                     <- PPD file directory
+    `-- tm-t20ii-rastertotmt.ppd          <- PPD file for TM-T20II
+
+The rpm package for openSUSE and deb package for Ubuntu are available for
+each package. In addition, these packages have package for Intel x86(32bit)
+and package for Intel x64(64bit) for each architecture.
+
+
+---------------------------------------------------------------------
+4. Operational environment
+---------------------------------------------------------------------
+
+This software supports the following environments.
+Operations in an unsupported environment are not guaranteed.
+
+* Operating System
+  - openSUSE 11.1
+  - Ubuntu 9.04
+
+* Hardware:
+  - Intel x86(32bit) architecture.
+  - Intel x86_64(64bit) architecture.
+
+* Related software
+  - CUPS Ver.1.1.23 or later
+      <http://www.cups.org/>
+
+  - libusb-1.0.0 or later
+      <http://www.libusb.org/>
+
+* Operations have been confirmed in the following environments.
+
+  - openSUSE 11.1 environment
+     - libusb-1_0-0-1.0.2-2.2
+     - cups-1.3.9-7.1
+
+  - Ubuntu 9.04 environment
+     - libusb-1.0-0-2:1.0.0-1
+     - cups-1.3.9-17ubuntu3.4
+
+* You can check information on the above packages for your 
+  environment as follows.
+
+  - openSUSE 11.1 environment
+    How to check libusb-1_0-0
+      1. Checking names of the installed packages.
+       $ rpm -qa | grep libusb-1_0-0
+       libusb-1_0-0-1.0.2-2.2      <- Displayed details
+
+      2. Checking details of the package displayed by the above
+         command.
+       $ rpm -qi libusb-1_0-0-1.0.2-2.2
+
+    How to check cups
+      1. Checking names of the installed packages.
+       $ rpm -qa | grep cups
+       ...
+       cups-1.3.9-7.1              <- Displayed details
+       ....
+
+      2. Checking details of the package displayed by the above
+         command.
+       $ rpm -qi cups-1.3.9-7.1
+
+  - Ubuntu 9.04 environment
+    How to check libusb-1.0-0
+      $ dpkg-query -l libusb-1.0-0
+
+    How to check cups
+      $ dpkg-query -l cups
+
+
+---------------------------------------------------------------------
+5. How to Install
+---------------------------------------------------------------------
+
+
+5.1. Install the package which is required in your environment.
+  
+  * Check to see if you are connected to the Internet before obtaining 
+    the required package.
+
+    - openSUSE 11.1 environment
+      1. Download the package for libusb-1_0-0.
+
+         You can download the package for openSUSE from the 
+         following site at the time of writing, January 2013. 
+
+         - x86 (32-bit) architecture
+         <http://download.opensuse.org/distribution/11.4/repo/oss/suse/i586/libusb-1_0-0-1.0.8-4.1.i586.rpm>
+
+         - x86_64 (64-bit) architecture
+         <http://download.opensuse.org/distribution/11.4/repo/oss/suse/x86_64/libusb-1_0-0-1.0.8-4.1.x86_64.rpm>
+
+      2. Install the downloaded package.
+
+         Example) x86 (32-bit) architecture
+           # rpm -i libusb-1_0-0-1.0.8-4.1.i586.rpm
+
+         Note)
+           ! You need root privileges for the installation.
+
+    - Ubuntu 9.04 environment
+      1. Use the following command to install libusb-1.0-0.
+         # apt-get install libusb-1.0-0=2:1.0.0-1
+
+      2. Use the following command to update the CUPS package.
+         # apt-get install cups
+
+      Note)
+        ! You need root privileges for the installation.
+        ! If the necessary package is not installed by the 
+          above procedure, run the following command and reinstall 
+          the package.
+          # apt-get update
+
+
+5.2. Installing driver
+
+  * Run install.sh.
+
+    Run install.sh by either clicking the install.sh icon. Or,
+    enter to the directory where the installation package has been expanded,
+    then run install.sh by typing the following in the command line prompt.
+    # ./install.sh
+
+  Note)
+    ! You need root privileges for the installation.
+      If you do not have root privileges, install.sh will execute
+      the sudo command. Type the password.
+    ! Switch the printer off before installing the driver.
+
+  * If you have a previous version of TM/BA Series Printer Driver for Linux installed, 
+    you must uninstall the previous version first. When previous version found, 
+    detailed information and the message asking if you wish to uninstall 
+    will be shown.
+    If no problem, enter "y" and press the Enter key.
+
+    Message example) 
+    Incompatible version of TM/BA series printer driver found!
+    Before the installation, package:"tmt-cups-1.3.x.x" must be uninstalled.
+      Packages to be uninstalled:
+        tmt-cups-1.0.3-1
+        epson-cups-escpos-1.0.12.0-1
+        ep-escpos-2.3.2.90-1
+        ep-core-2.3.2.90-1
+        ep-client-2.3.2.90-1
+    
+    Uninstall the incompatible printer driver: tmt-cups-1.3.x.x  [y/n]? y
+    ...(Omitted)
+
+    - After all uninstallation is finished, if any printer is using the 
+      uninstalled driver, the message asking if you wish to delete the 
+      printers will be shown.
+      If no problem, enter "y" and press the Enter key.
+      (If you don't delete the printers, they will remain in error status.)
+      (When no printer is using the uninstalled driver, the confirmation 
+       will be skipped.)
+
+      Message example) 
+      Delete printers that use the driver you have uninstalled ahead [y/n]? y
+      Deleting printer: TM-T88IV
+
+  * After determining the environment, information about the package to be 
+    installed and the distribution will be displayed. 
+    If the information is correct, enter "y" and press the Enter key.
+
+    Example) Message for openSUSE 11.1 x86(32bit) architecture
+    Install tmt-cups-1.4.1.0 into openSUSE 11.1 x86(32bit) [y/n]? 
+
+  * If the displayed distribution is not the one you are installing,
+    enter "n" and press the Enter key. The distribution selection 
+    screen is displayed. Enter a number between 1 and 4, and press 
+    the Enter key.
+    Enter "0" and press the Enter key to cancel the installation.
+
+    Please select your distribution.
+    1.Ubuntu 9.04 x86(32bit)
+    2.Ubuntu 9.04 x86_64(64bit)
+    3.openSUSE 11.1 x86(32bit)
+    4.openSUSE 11.1 x86_64(64bit)
+    Select number [0(cancel)/1/2/3/4]?
+
+  * Installation will start as you select the distribution
+
+
+---------------------------------------------------------------------
+6. How to Set
+---------------------------------------------------------------------
+
+  * Device port setting
+
+    You need to set a port when not using a USB port.
+    Please refer to "7. Port Settings" for details.
+
+  * Registering the printer to CUPS
+
+    Turn the printer on before registering the printer to CUPS.
+
+    Open CUPS WebAdmin <http://localhost:631/> on a web browser 
+    to register the printer to CUPS.
+
+    Refer to CUPS information using the following URLs.
+          <http://localhost:631/help/>
+          <http://www.cups.org/>
+
+    - Select the [Home] tab and click "Add Printer."
+
+    - The "Add New Printer" screen appears. Enter the Printer Name,
+      Location, and Description, then click "Continue."
+
+    - Select "EPSON TM/BA Printer" in the Device selection screen,
+      then click "Continue."
+
+      Example)
+      - In case of USB TM-T20II
+        "EPSON TM/BA Printer (USB(ESDPRT001) TM-T20II)"
+      - In case of Parallel
+        "EPSON TM/BA Printer (Parallel(/dev/parport0) TM-T20II)"
+      - In case of Serial
+        "EPSON TM/BA Printer (Serial(/dev/ttyS0) TM-T20II)"
+      - In case of Ethernet
+        "EPSON TM/BA Printer (Ethernet(192.168.0.10) TM-T20II)"
+
+    - Select the PPD file directly in the Model/Driver selection 
+      screen.
+      The PPD file is stored in the ppd directory in this package.
+      Select the PPD file corresponding the registering printer 
+      model, then click "Add Printer."
+
+    - The "Set Printer Options" screen appears. 
+      Confirm and set the printer options.
+      Refer to the printer model manual for details.
+
+      Example) For TM-T20II
+        TM-T20II_Manual.en.txt
+
+    Note)
+    ! Cancel the automatic recognition screen if it is displayed by 
+      the printer setting tool included in the distribution.
+
+
+------------------------------------------------------------------------
+7. Port settings
+------------------------------------------------------------------------
+
+Port setting is required if port other than USB is used. 
+Please execute one of the following port setting tools depending on the 
+situation:
+  - /usr/sbin/tmportconfig  Menu based port setting tool
+  - /usr/sbin/tmpcsconfig   Command line based port setting tool
+For USB, the port will be added automatically by PnP function when the 
+device is connected while during online. So usually port setting isn't 
+needed.
+
+Note)
+  ! You need root privileges for port settings.
+  ! Turn the printer off while setting the port.
+
+
+7.1. In case of adding port
+
+
+7.1.1. Add new port: Menu based setting
+
+Execute tmportconfig as root.
+  # tmportconfig
+
+> TM/BA Printer Port Configuration Tool
+> 
+> Please choose one of the following options:
+> ...
+  Input the number value of "Add new port", press Enter key.
+
+> Add New Port
+>
+> Please choose one of the following device types:
+> ...
+  Input the value of "EPSON TM/BA Printer",
+  then press the Enter key.
+    
+> Communications Type
+>
+> Please choose one of the following port types:
+> ...
+  Input the value that corresponds to the port's interface type,
+  then press the Enter key.
+
+  - Serial Port
+> Serial Port Name
+> 
+> Please choose one of the following port names:
+> ...
+  Select the serial port to be used.
+
+> Baud Rate
+  Select on of 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 bps.
+
+> Parity
+  Select one from None, Odd, Even.
+
+> Stop Bits
+  Select one from 1 bit, 2 or more bits.
+
+> Flow Control
+  Select either Hardware or Xon/Xoff
+
+  - Parallel Port
+> Parallel Port Name
+> 
+> Please choose one of the available parallel ports:
+> ...
+  Select the parallel port to be used.
+
+  - Ethernet Port
+> Ethernet Port Name
+> 
+> Please input an IP address: (ex 192.168.0.10)
+  Input IP address then press the Enter key.
+
+> Do you want to save the changes you have made (Y or N)
+  Input Y then press the Enter key.
+
+
+7.1.2. Add new port: Command line based setting
+
+Execute tmpcsconfig with add option as root.
+
+Example)
+  # tmpcsconfig add serial /dev/ttyS0
+> New port added successfully:
+> PortName     : ESDPRT002
+>   PortType   : Serial(1)
+>   Name       : /dev/ttyS0
+>   DeviceType : PCS_PARAM_DEVICE_TYPE_TM(0)
+>   Initializing with default setting for Serial...
+>   Initial setting done successfully.
+> To check the port settings, please use enum ESDPRT002 option.
+
+  # tmpcsconfig add parallel /dev/parport0
+> ...
+
+  # tmpcsconfig add ethernet 192.168.192.100
+> ...
+
+
+7.2. In case of viewing port settings
+
+You can use exclusively tmpcsconfig for viewing port settings.
+(You can't view detailed port settings with tmportconfig.)
+
+
+7.2.1. List all ports for PCS(Port Communication Service)
+
+Please execute tmpcsconfig with enum option.
+
+Example)
+  # tmpcsconfig enum
+> PortName  :  PortType,  Port,  ModelName
+> ------------------------------------------------------------------------------
+> ESDPRT001 :  PortType=USB,  Port=\\?\USB#VID_04b8&PID_0202#?,  ModelName=TM-T20II
+> ESDPRT002 :  PortType=Serial,  Port=/dev/ttyS0,  ModelName=n/a
+> ESDPRT003 :  PortType=Parallel,  Port=/dev/parport0,  ModelName=n/a
+> ESDPRT004 :  PortType=Ethernet,  Port=192.168.192.100,  ModelName=n/a
+
+
+7.2.2. View each port setting
+
+Please execute tmpcsconfig with enum <portname> option.
+By turning on the printer before the command execution, you can get basic information 
+("ModelName", "DeviceID").
+
+Example)
+  # tmpcsconfig enum ESDPRT002
+> PortName      : ESDPRT002
+>   PortType    : Serial(1)
+>   Name        : /dev/ttyS0
+>   ModelName   : TM-T20II
+>   DeviceType  : PCS_PARAM_DEVICE_TYPE_TM
+>   DeviceID    : 99(0x63)
+>   Baudrate    : 38400
+>   Databit     : 8
+>   Parity      : None
+>   Stopbits    : 1
+>   Handshake   : AUTO
+>   SendTimeout : 3000
+
+  # tmpcsconfig e 4
+> PortName      : ESDPRT004
+>   PortType    : Ethernet(4)
+>   Name        : 192.168.192.100
+>   ModelName   : TM-T20II
+>   DeviceType  : PCS_PARAM_DEVICE_TYPE_TM
+>   DeviceID    : 99(0x63)
+>   MonitorInterval           : 3000
+>   MonitorTimeout            : 500
+>   WiredPowerOffCount        : 1
+>   WiredPowerOfflineCount    : 0
+>   WirelessPowerOffCount     : 3
+>   WirelessPowerOfflineCount : 1
+>   PowerOffMonitorTimeout    : 1000
+>   PowerOffMonitorCount      : 3
+>   PowerOffMonitorInterval   : 1000
+>   SendTimeout : 3000
+
+
+7.3. In case of changing port settings
+
+
+7.3.1. Configure existing port: Menu based setting
+
+Execute tmportconfig as root.
+  # tmportconfig
+
+> TM/BA Printer Port Configuration Tool
+> 
+> Please choose one of the following options:
+> ...
+  Input the number value of "Configure existing port" then press the Enter key.
+
+> Configure Existing Port
+> 
+> Please choose one of the existing ports:
+> ...
+  Input the number value of the port setting to be changed then 
+  press the Enter key.
+
+  - Serial Port
+> Serial Port Name
+> 
+> Please choose one of the following port names:
+> ...
+  Select the serial port to be used.
+
+> Baud Rate
+  Select one from 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 bps.
+
+> Parity
+  Select one from None, Odd, Even.
+
+> Stop Bits
+  Select one from 1 bit, 2 or more bits.
+
+> Flow Control
+  Select either Hardware or Xon/Xoff
+
+  - Parallel Port
+> Parallel Port Name
+> 
+> Please choose one of the available parallel ports:
+> ...
+  Select the parallel port to be used.
+
+  - Ethernet Port
+> Ethernet Port Name
+> 
+> Please input an IP address: (ex 192.168.0.10)
+  Input IP address then press the Enter key.
+
+> Do you want to save the changes you have made (Y or N)
+  Input Y then press the Enter key.
+
+
+7.3.2. Configure existing port: Command line based setting
+
+Please execute tmpcsconfig with set option.
+
+Example)
+  # tmpcsconfig set ESDPRT002 baudrate 115200
+> SetPortConfigNumber done successfully for
+>   PortName=ESDPRT002, ControlID=Baudrate, Data=115200
+
+  # tmpcsconfig set ESDPRT002 stopbits 1
+> ...
+
+  # tmpcsconfig set ESDPRT002 parity even
+> ...
+
+  (using shortened keywords)
+  # tmpcsconfig s 2 h x
+> SetPortConfigNumber done successfully for
+>   PortName=ESDPRT002, ControlID=Handshake, Data=XON/XOFF
+
+  # tmpcsconfig s 4 mi 10000
+> SetPortConfigNumber done successfully for
+>   PortName=ESDPRT004, ControlID=MonitorInterval(MI), Data=10000
+
+When you want to check the settings, please use enum option for the port.
+
+
+7.4. In case of deleting the port
+
+
+7.4.1. Delete existing port: Menu based setting
+
+Execute tmportconfig as root.
+  # tmportconfig
+
+> TM/BA Printer Port Configuration Tool
+> 
+> Please choose one of the following options:
+> ...
+  Input the number value of "Delete existing port" then press the Enter key.
+
+> Delete Existing Port
+> 
+> Please choose one of the existing ports:
+> ...
+  Input the number value of the port to be deleted then press the Enter key.
+
+> Do you want to save the changes you have made (Y or N)
+  Input Y then press the Enter key.
+
+
+7.4.2. Delete existing port: Command line based setting
+
+Please execute tmpcsconfig with delete option.
+Example)
+  # tmpcsconfig delete ESDPRT001
+> PortName: ESDPRT001 deleted successfully.
+
+
+7.5. Option specification tips for tmpcsconfig
+
+Keywords can be shortened, for example:
+  {add -> a, enumerate -> e, set -> s, delete -> d},
+  {ESDPRT001 -> 1 or 001, ESDPRT002 -> 2 or 002, ...},
+  {baudrate -> b, stopbits -> st, parity -> p, ...},
+  {MonitorInterval -> mi, MonitorTimeout -> mt, ...}, and so on.
+Example)
+  # tmpcsconfig s 2 p e
+  is equivalent to
+  # tmpcsconfig set ESDPRT002 parity even
+
+When you want to know about shortened keywords, please input ? 
+instead of correct keyword.
+Please take care of the number of options to be specified, or
+only error messages will be shown.
+
+Example)
+  # tmpcsconfig s 2 ? ?
+> ...
+> Invalid parameter for set option: ?
+>   Shortened keywords available:
+>   [Serial port setting]
+>     b for Baudrate
+>     d for Databit
+>     p for Parity
+>     st for Stopbits
+>     h for Handshake
+>     se for SendTimeout
+> ...
+
+  # tmpcsconfig s 2 p ?
+> ...
+> Invalid parameter for setting parity option: ?
+>   Shortened keywords available:
+>     n for None
+>     o for Odd
+>     e for Even
+> ...
+
+
+---------------------------------------------------------------------
+8. Transmission function for a user-defined file
+---------------------------------------------------------------------
+
+
+8.1. Overview
+
+    An ESC/POS command file created by a user is called a 
+    user-definition file. Placing a user-defined file at the 
+    designated location enables the user to transmit command data in 
+    the file to the printer at a fixed timing for each page or job.
+
+
+8.2. Transmission timing and naming conventions for the user-defined 
+     file
+
+    File storage folder: /var/lib/tmt-cups/
+    
+    Naming convention            | Transmission timing
+---------------------------------+-----------------------------------
+    {printer_name}_StartJob.prn  | When starting to print (after 
+                                 | initializing the printer)
+    {printer_name}_EndJob.prn    | After printing (before cutting the 
+                                 | document)
+    {printer_name}_StartPage.prn | When starting to print each page
+                                 | (after initializing the page)
+    {printer_name}_EndPage.prn   | After printing a page (before 
+                                 | cutting the page)
+
+    The printer_name indicates the registered printer name to CUPS.
+
+    Example) When the registered printer name is tmtprinter and you
+             want to output a logo at the beginning, register the
+             following file.
+
+             /var/lib/tmt-cups/tmtprinter_StartJob.prn
+
+    Note)
+    ! You need root privilege to store the user-defined file in 
+      /var/lib/tmt-cups/.
+    ! Grant the appropriate permissions to the user-defined file 
+      according to its function. Transmission is not carried out if 
+      the printing user does not have read permission to the 
+      user-defined file.
+    ! The printer may malfunction if the user-defined file contains 
+      any graphic commands whose pattern matches real-time commands.
+    ! If a user-defined file is stored in any of the subordinate 
+      directories, uninstallation of this package does not delete the
+      directory which contains the file. 
+
+
+8.3. Printing text data
+
+    You can print the text data if the user-defined file under 
+    /var/lib/ contains text data.
+
+    Example) When tmtprinter_StartJob.prn contains the following
+             line of text data.
+    ======
+    Welcome!
+
+    ======
+    The above text is printed each time you print from tmtprinter 
+    at the top of the print job.
+
+
+    Note)
+    ! The text data may not be printed correctly if the specified 
+      character code is other than ASCII.
+    ! Use <LF>(0x0A) for a line feed.
+      Printing operations are not guaranteed if <CR>(0x0D) is used.
+    ! The text data may not be printed correctly if a line feed <LF> 
+      is not present at the end of a line.
+    ! Don't include paper handling commands such as <FF>(0x0C), or
+      the printer may malfunction.
+    ! The printing result is not guaranteed if the user-defined file 
+      is edited or deleted while printing.
+      Do not change the user-defined file until printing is complete. 
+
+
+---------------------------------------------------------------------
+9. Multi-tone conversion tool
+---------------------------------------------------------------------
+
+
+9.1 Overview
+
+    This tool converts an image file into ESC/POS command data.
+    You can use this tool to print multi-tone graphic data in 
+    a TM/BA series thermal printer with the ability of printing 
+    multi-tone graphic data.
+    Also, you can print a logo by registering the converted
+    command data file in the folder where user-defined files are 
+    stored.
+
+
+9.2 Installation destination and the command name
+
+    /usr/bin/tmbmptobin
+
+
+9.3 Tool options
+
+    Syntax: tmbmptobin [option] input_BMP_file   output_BIN_file
+
+    Options (default settings are in [])
+        [-16s], -2s                 Multi-tone, Monochrome
+        -left, -center, -right      Printing position
+        -b65 to [-b100] to -b135    Brightness (in 5 units)
+        -r180                       Rotation by 180 degrees
+        
+  Note)
+    ! Multi-tone option can be used only for the TM/BA series thermal 
+      printers that can print multi-tone graphic data. (Ex: TM-T88V)
+    ! The tool supports Windows BMP files only.
+      Uncompressed 1-bit, 4-bit, 8-bit, and 24-bit BMP files are 
+      supported.
+    ! Take care that the image size does not exceed the maximum printable 
+      width of the printer.
+      The image is not printed if it exceeds the maximum printable width.
+      Ex) When using 80mm paper, resolution 180dpi: 510 pixels or less
+
+
+9.4 Logo registration
+
+    You can insert a log in the print page by registering a binary 
+    file, which has been created by converting an image file into 
+    command data, into the folder where user-defined files are 
+    stored.
+    See "8. Transmission function for a user-defined file" for 
+    details.
+
+
+9.5 Coupon file printing
+
+    The following prints an image file such as a coupon promptly. 
+
+    Example) When the registered printer name is tmtprinter.
+    ======
+    # tmbmptobin  imagedata.bmp  /var/lib/tmt-cups/tmtprinter_StartJob.prn
+    # echo "" | lpr -P tmtprinter
+    =====
+
+  Note)
+    ! The above overwrites tmtprinter_StartDocStartJob.prn if the 
+      file is already registered.
+
+
+---------------------------------------------------------------------
+10. How to Uninstall
+---------------------------------------------------------------------
+
+The following describes how to uninstall this software.
+
+  - Change directory where the installation package expanded,
+    and execute uninstall.sh shell script.
+    # ./uninstall.sh
+
+  Note)
+    ! You need root privilege to uninstall the software.
+    ! The /var/lib/tmt-cups directory is not deleted if there are any
+      user data under this directory.
+    ! Printers that use this driver can be detected and deleted.
+
+
+---------------------------------------------------------------------
+11. Notes and restrictions
+---------------------------------------------------------------------
+
+* USB Plug and Play function may fail on specific situation.
+
+  If USB device port isn't added automatically, please reboot the PC.
+
+
+* Printing may fail if the printer is registered by the distribution
+  proprietary printer management tool.
+
+  Register the printer using CUPS WebAdmin.
+
+
+* Printing does not immediately stop after cancelling a job.
+
+  Jobs which the printer has once started printing cannot be canceled
+  immediately.
+
+
+* By improper operation, there is a possibility that garbled characters 
+  may be printed after turning on the power.
+
+  Do not turn the printer off or remove the communication cable 
+  while printing. 
+
+
+* Printing may not restart if the printer enters a suspension or 
+  hibernation state while printing or waiting for a print job.
+
+  Do not allow the printer to enter the suspension or hibernation 
+  state. 
+
+
+* The horizontal lines may appear on the printed paper.
+
+
+---------------------------------------------------------------------
+12. Support information
+---------------------------------------------------------------------
+
+* Europe, Middle East, Africa, Asia, Oceania
+  http://www.epson-pos.com/
+  From this web site, you can download the latest printer driver.
+
+
+* North America, Latin America
+  http://www.pos.epson.com/
+  If you are a customer from North, Central or South America, please 
+  visit the Epson America Inc. site.
+
+
+---------------------------------------------------------------------
+9. Modification from the old version
+---------------------------------------------------------------------
+
+* Ver. 1.4.1.0
+
+  - The following printer is supported:
+    - TM-T20II
+
+
+* Ver. 1.4.0.0
+
+  - The following printer is supported:
+    - TM-T82II
+  - Manuals have been reorganized into driver manual and model manuals.
+  - Uninstallation script provided.
+  - Comminication module has been changed to PCS(Port Comminication 
+    Service).
+  - Added the feature to the install.sh:
+    - Auto-detection and uninstallation of incompatible old version
+    - Deletion of the printers that use old version driver
+  - Several files have been renamed according to the naming rules.
+    - Backend   : epsontm -> tmbaprn
+    - Tools     : EPPortConfig -> tmportconfig, 
+                  tmcupsbmptobin -> tmbmptobin
+    - PPD files : "epson-" removed
+  - Command line port setting tool, tmpcsconfig provided.
+
+
+* Ver. 1.3.2.0
+
+  - TM-T20 with ethernet connection is supported.
+  - The following problem has been solved:
+    - When the PageRegion is different from the PageSize, the printing
+      may not start.
+
+
+* Ver. 1.2.1.0
+
+  - The following problems have been solved:
+    - Memory leak problem found in closing printer with a USB interface.
+    - Printers may not work when using a TM series thermal printer and 
+      dot printer from a single PC depending on the installation order.
+    - When you continue printing for a long time with a printer connected 
+      with ethernet, it may stop printing.
+
+
+* Ver. 1.2.0.0
+
+  - the following printer is supported:
+    - BA-T500
+    - TM-T88IV
+  - The following problems have been solved:
+    - When jobs that stored after the printer stops are released, the
+      printing may stop.
+    - When the cover of the printer connected with serial is opened 
+      and closed during printing for the paper change etc, garbage 
+      characters will be printed.
+    - Printing may not done correctly after replacing the printer.
+    - When printing is executed before the power of printer connected
+      with ethernet turns on, it will not start printing after the 
+      power of the printer turns on.
+  - The cancel selection item was added to the driver installer.
+
+
+* Ver. 1.1.0.0
+
+  - How to print text code using the user defined file is described on
+    the printer driver manual.
+  - TM-T20 with serial connection is supported.
+  - BA-T500II with serial, parallel and ethernet connection is
+    supported.
+  - The following problem has been solved:
+    - When the IP address of the PC is not configured, EPPortConfig
+      will stop operating.
+
+
+* Ver. 1.0.1.0
+
+  - the following printer is supported:
+    - BA-T500II
+
+
+* Ver. 1.0.0.0
+
+  - New release.
+
+
+---------------------------------------------------------------------
+Copyright (C) Seiko Epson Corporation 2010-2013. All rights reserved.
+
+Linux is the registered trademark or trademark of Linus Torvalds in 
+the U.S. and other countries.
+
+CUPS and the CUPS logo are trademarks of Apple Inc. registered in 
+the U.S. and other countries.
+
+"Novell" and "openSUSE" are trademarks of Novell, Inc., which founded, 
+sponsors, and is designated by, The openSUSE Project. 
+
+Ubuntu and Canonical are registered trademarks of Canonical Ltd.
+
+Other product names in this document are trademarks or registered
+trademarks of respective companies.

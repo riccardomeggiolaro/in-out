@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<deviceinfo version="0.2">
+  <device>
+    <match key="info.product" contains="PenMount">
+          <match key="input.device" contains="event">
+             <merge key="input.x11_driver"               type="string">penmount</merge>
+             <merge key="input.x11_options.Protocol"     type="string">PM6000USB</merge>
+             <merge key="input.x11_options.Monitor"      type="string">default</merge>
+             <merge key="input.x11_options.BaudRate"     type="string">19200</merge>
+             <merge key="input.x11_options.ADBit"        type="string">10</merge>
+             <merge key="input.x11_options.ConfigFile"   type="string">/etc/penmount/penmount.dat</merge>
+             <merge key="input.x11_options.JitterFilter" type="string">8</merge>
+             <merge key="input.x11_options.UseEEPROM"    type="string">1</merge>
+             <merge key="input.x11_options.DebugLevel"   type="string">0</merge>
+          </match>
+    </match>
+  </device>
+</deviceinfo>

@@ -1,0 +1,108 @@
+================================================
+  PenMount for Ubuntu Linux 14.04 - 24.04
+================================================
+
+---------------------------------------------------------------------------
+Supported Versions
+---------------------------------------------------------------------------
+Distribution   : Ubuntu 14.04 / 16.04 / 18.04 / 20.04 / 22.04 / 24.04 LTS
+X.Org X Server : 1.15 ~ 1.21
+XInput         : 20.0 / 21.0 / 22.1 / 24.1 / 24.4
+RandR          : 1.4
+GTK+           : 2.24 / 3
+PenMount Driver: 4.7.7.R24
+Architecture   : i686 / x86_64 / aarch64
+
+
+---------------------------------------------------------------------------
+PenMount Support
+---------------------------------------------------------------------------
+  - PenMount 5000 series (USB, PID: 0x5000, 0x9998)
+  - PemMount 6000 series (USB, PID: 0x6000, 0x6005)
+  - PemMount PCI series  (USB, PID: 0x3502) : works on kernel 2.6 and later
+  - PemMount PCI series  (USB, PID: 0x3500) : works on kernel 3.0 and later
+  - PemMount PCI series  (USB, PID: 0x3508) : works on kernel 3.4 and later
+  - PemMount 9000 series (Serial, 19200/9600 bps)
+  - PemMount 6000 series (Serial, 19200/9600 bps)
+  - PemMount PCI  series (Serial, 38400 bps)
+
+---------------------------------------------------------------------------
+File Description
+---------------------------------------------------------------------------
+  gCal             - PenMount calibration utility (without UI)
+                     e.g. gCal <0|4|9|16|25> <config_file>
+                     e.g. gCal 4
+                          (config file is saved in /etc/penmount.dat)
+                     e.g. gCal 4 /tmp/penmount.dat
+                          (config file is assigned in /tmp/penmount.dat)
+  gDraw            - PenMount drawing test
+                     e.g. gDraw
+                          gDraw cross
+                          gDraw point
+                          gDraw -h, see the details
+  install.sh       - Install script
+  gPen             - PenMount utility in GNOME tray
+                     Use penmount to perform calibration and another settings.
+  pm-gcalib        - (GTK3) Supports multiple device calibration and monitor mapping.
+  pm-wcalib        - (GTK3) Supports calibration in Wayland, requires system restart.
+  penmount*.png    - An icon files.
+  penmount.dat     - Default calibration data file
+                     It will be created after calibration.
+  penmount.desktop - GNOME menu item entry
+  penmount_drv.so  - PenMount XInput Module
+  penmount.png     - An icon for GNOME menu item
+  pm-setup         - PenMount setup utility. It can configure the PenMount
+                     driver and X configuration file (/etc/X11/xorg.conf)
+  penmount.ini     - Default settings for PenMount XInput Module
+
+---------------------------------------------------------------------------
+Quick Install
+---------------------------------------------------------------------------
+  1) Login as user in Ubuntu login prompt
+  2) Open terminal
+
+     [Dash Home] -> Applications -> Accessories -> Terminal
+
+  3) Change directory to where the device driver is extracted to
+
+     $ cd pmlinux-Ubuntu
+
+  4) Change the settings in PenMount.ini or just use the default configurations.
+
+  5) Run install script with root permission
+     $ sudo ./install.sh
+
+  6) Restart X window system to apply changes
+
+---------------------------------------------------------------------------
+Calibration
+---------------------------------------------------------------------------
+
+  1) Start the PenMount Utility.
+     In [Dash Home] -> Applications -> Customization -> PenMount Utility
+     The PenMount utility will be launched.
+
+  2) Select calibrate type and press the 'Calibrate' button.
+
+  3) Follow the instuctions on screen and finish calibration.
+
+  * gCal is the calibration utility can be run directly in terminal.
+    gCal [4|9|16|25] - advanced calibration (4 points, 9 points...)
+
+---------------------------------------------------------------------------
+Application Notes
+---------------------------------------------------------------------------
+1. Enable pc speaker in kernel
+The PenMount touch beep function depends on the pcspkr module. 
+In Ubuntu 12.04, this module is not loaded by default, so there won't be any beep sound.
+To enable touch beep sound, modify /etc/modprobe.d/blacklist.conf, and remark the following line :
+
+blacklist pcspkr
+
+2. For using the "onboard" (on screen keyboard) utility, please switch specify "TouchMode=Mouse" in penmount.ini.
+
+3. Once "TouchMode=Mouse" is specified in penmount.ini, there will be no "Touch" option in PenMount Utility.
+
+---------------------------------------------------------------------------
+PenMount Touch Solutions
+Nov 21, 2024
