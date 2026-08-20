@@ -1,8 +1,8 @@
 {
     "app_api": {
         "default_type_subject": "SUPPLIER",
-        "delete_pending_accesses_at_midnight": true,
-        "mode": "AUTOMATIC",
+        "delete_pending_accesses_at_midnight": false,
+        "mode": "MANUALLY",
         "panel": {
             "config": {},
             "connection": {
@@ -86,7 +86,7 @@
         "use_badge": false,
         "use_preset_weight": false,
         "use_recordings": false,
-        "use_reservation": true,
+        "use_reservation": false,
         "use_transit": false,
         "use_white_list": false,
         "weighers": {
@@ -106,37 +106,10 @@
                         "events": {
                             "realtime": {
                                 "over_min": {
-                                    "set_rele": [
-                                        {
-                                            "order": 4,
-                                            "rele": "3",
-                                            "set": 0
-                                        },
-                                        {
-                                            "order": 6,
-                                            "rele": "4",
-                                            "set": 0
-                                        }
-                                    ]
+                                    "set_rele": []
                                 },
                                 "under_min": {
-                                    "set_rele": [
-                                        {
-                                            "order": 0,
-                                            "rele": "1",
-                                            "set": 0
-                                        },
-                                        {
-                                            "order": 2,
-                                            "rele": "2",
-                                            "set": 0
-                                        },
-                                        {
-                                            "order": 5,
-                                            "rele": "4",
-                                            "set": 1
-                                        }
-                                    ]
+                                    "set_rele": []
                                 }
                             },
                             "weighing": {
@@ -166,54 +139,10 @@
                                     "tare": false
                                 },
                                 "set_rele": {
-                                    "generic": [
-                                        {
-                                            "order": 1,
-                                            "rele": "1",
-                                            "set": 1
-                                        },
-                                        {
-                                            "order": 7,
-                                            "rele": "4",
-                                            "set": 1
-                                        }
-                                    ],
-                                    "in": [
-                                        {
-                                            "order": 1,
-                                            "rele": "1",
-                                            "set": 1
-                                        },
-                                        {
-                                            "order": 7,
-                                            "rele": "4",
-                                            "set": 1
-                                        }
-                                    ],
-                                    "out": [
-                                        {
-                                            "order": 3,
-                                            "rele": "2",
-                                            "set": 1
-                                        },
-                                        {
-                                            "order": 8,
-                                            "rele": "4",
-                                            "set": 1
-                                        }
-                                    ],
-                                    "tare": [
-                                        {
-                                            "order": 3,
-                                            "rele": "2",
-                                            "set": 1
-                                        },
-                                        {
-                                            "order": 8,
-                                            "rele": "4",
-                                            "set": 1
-                                        }
-                                    ]
+                                    "generic": [],
+                                    "in": [],
+                                    "out": [],
+                                    "tare": []
                                 }
                             }
                         },
@@ -222,20 +151,15 @@
                         "max_weight": 80000,
                         "min_weight": 1000,
                         "name": "P1",
-                        "need_take_of_weight_before_weighing": true,
+                        "need_take_of_weight_before_weighing": false,
                         "need_take_of_weight_on_startup": false,
                         "node": null,
                         "number_of_prints": 1,
                         "port_rele": null,
                         "printer_name": null,
-                        "rele": {
-                            "1": 0,
-                            "2": 0,
-                            "3": 0,
-                            "4": 0
-                        },
+                        "rele": {},
                         "run": true,
-                        "take_of_weight_before_weighing": true,
+                        "take_of_weight_before_weighing": false,
                         "take_of_weight_on_startup": false,
                         "terminal": "egt-af03-rext"
                     }

@@ -105,6 +105,19 @@ echo "Abilitazione dell'accesso remoto a CUPS..."
 sudo cupsctl --remote-admin --remote-any --share-printers
 sudo systemctl restart cups
 
+# Installa e abilita Cockpit se non è presente
+if ! is_installed cockpit; then
+    print_info "Cockpit non è installato, installazione in corso..."
+    apt install -y cockpit
+    print_info "Cockpit installato con successo"
+else
+    print_info "Cockpit è già installato"
+fi
+
+print_info "Abilitazione e avvio del socket Cockpit..."
+systemctl enable --now cockpit.socket
+print_info "Cockpit è attivo"
+
 # Crea la directory di installazione /opt/in-out e copia i file
 if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
     echo "Creazione directory di installazione $INSTALL_DIR..."
