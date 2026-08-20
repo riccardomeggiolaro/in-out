@@ -293,6 +293,19 @@ else
     echo "ATTENZIONE: Cartella VKP80III_CUPSDrv-PKG non trovata in $INSTALL_DIR!"
 fi
 
+# Copia la cartella "Driver e stampe" in /home/baronpesi/Scaricati
+DRIVER_SRC="$SOURCE_DIR/Driver e stampe"
+DRIVER_DEST="/home/baronpesi/Scaricati/Driver e stampe"
+if [ -d "$DRIVER_SRC" ]; then
+    echo "Copia della cartella 'Driver e stampe' in /home/baronpesi/Scaricati..."
+    mkdir -p "/home/baronpesi/Scaricati"
+    cp -r "$DRIVER_SRC" "/home/baronpesi/Scaricati/"
+    chown -R baronpesi:baronpesi "/home/baronpesi/Scaricati/Driver e stampe"
+    echo "Cartella 'Driver e stampe' copiata con successo."
+else
+    echo "ATTENZIONE: Cartella 'Driver e stampe' non trovata in $SOURCE_DIR"
+fi
+
 # Crea il servizio systemd se non esiste
 if [ ! -f /etc/systemd/system/in-out.service ]; then
     START="$INSTALL_DIR/start.sh"
