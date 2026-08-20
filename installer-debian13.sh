@@ -314,6 +314,7 @@ ufw allow 80/tcp comment 'HTTP'
 ufw allow 443/tcp comment 'HTTPS'
 ufw allow 22/tcp comment 'SSH'
 ufw allow 631/tcp comment 'CUPS'
+sudo ufw allow 9090/tcp
 
 # Abilita ufw se non è già attivo
 if ! ufw status | grep -q "Status: active"; then
