@@ -92,6 +92,7 @@ class GenericRouter:
         self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/restart', self.restartSoftware, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/export-config-doc', self.exportConfigDoc, dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/whoami', self.getWhoAmI, dependencies=[Depends(is_super_admin)])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -601,3 +602,9 @@ class GenericRouter:
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore nella generazione dell'export: {str(e)}")
+        
+    async def getWhoAmI(self):
+        """Restituisce informazioni sull'utente corrente (super admin)"""
+        return {
+            "program_name": lb_config.g_config["name"]
+        }
