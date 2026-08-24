@@ -173,7 +173,7 @@ def init():
 
 	app.include_router(rfid_router.router, prefix="/api/rfid", tags=["rfid"])
 
-	app.include_router(whoami_router.router, prefix="/api/whoami", tags=["whoami"])
+	app.include_router(whoami_router.router, tags=["whoami"])
 
 	app.mount("/static/content", StaticFiles(directory=path_content), name="content")
 
