@@ -17,6 +17,7 @@ from applications.router.tunnel_connections import TunnelConnectionsRouter
 from applications.router.open_to_customer import OpenToCustomerRouter
 from applications.router.sync_folder import SyncFolderRouter
 from applications.router.rfid.router import RfidRouter
+from applications.router.whoami import WhoAmIRouter
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
@@ -146,6 +147,7 @@ def init():
 	open_to_customer = OpenToCustomerRouter()
 	sync_folder_router = SyncFolderRouter()
 	rfid_router = RfidRouter()
+	whoami_router = WhoAmIRouter()
 
 	# Avvia il thread di pulizia mezzanotte per eliminare accessi pendenti non prenotati
 	_midnight_cleanup_stop_event.clear()
@@ -170,6 +172,8 @@ def init():
 	app.include_router(sync_folder_router.router, prefix="/api/sync-folder", tags=["sync folder"])
 
 	app.include_router(rfid_router.router, prefix="/api/rfid", tags=["rfid"])
+
+	app.include_router(whoami_router.router, prefix="/api/whoami", tags=["whoami"])
 
 	app.mount("/static/content", StaticFiles(directory=path_content), name="content")
 
