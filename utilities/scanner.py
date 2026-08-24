@@ -694,7 +694,7 @@ class InOutScanner(tk.Tk):
             )
 
     # --------------------------------------------------------
-    # APRI /WHOAMI
+    # APRI
     # --------------------------------------------------------
 
     def open_selected(self, event=None):
@@ -709,7 +709,7 @@ class InOutScanner(tk.Tk):
         )
 
         webbrowser.open(
-            f"http://{ip}/whoami"
+            f"http://{ip}"
         )
 
 
