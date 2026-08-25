@@ -13,6 +13,7 @@
             "enabled": false,
             "type": "disabled"
         },
+        "path_backup": "/var/opt/in-out/backup",
         "path_content": "static/content",
         "path_csv": "/var/opt/in-out/csv",
         "path_database": "/var/opt/in-out/database.db",

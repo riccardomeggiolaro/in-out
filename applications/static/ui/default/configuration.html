@@ -706,6 +706,13 @@
                     <button onclick="exportConfigDoc()" class="btn-secondary">Scarica Configurazione</button>
                     <br>
                     <br>
+                    <label>Importa configurazione (config.json): </label>
+                    <input type="file" id="importConfigInput" accept=".json" style="display:none" onchange="importConfig(this)">
+                    <button onclick="document.getElementById('importConfigInput').click()" class="btn-secondary">Importa Configurazione</button>
+                    &nbsp;
+                    <button onclick="openBackupsModal()" class="btn-secondary">Gestisci Backup</button>
+                    <br>
+                    <br>
                 </div>
                 <br>
             </div>
@@ -1303,6 +1310,20 @@
             <div class="container-buttons right">
                 <button type="button" onclick="closeConfirmDeleteModal()">Annulla</button>
                 <button type="button" class="red-button" onclick="confirmDeleteInstance()">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal gestione backup config.json -->
+    <div id="config-backups-modal" class="modal">
+        <div class="modal-content">
+            <h3>Backup Configurazione</h3>
+            <p style="color:#555; margin-bottom:12px;">Seleziona un backup da ripristinare. Prima del ripristino viene creato automaticamente un nuovo backup del config attuale.</p>
+            <div id="config-backups-list" style="max-height:320px; overflow-y:auto; margin-bottom:16px;">
+                <p id="config-backups-loading" style="color:#888;">Caricamento...</p>
+            </div>
+            <div class="container-buttons right">
+                <button type="button" class="cancel-btn" onclick="closeBackupsModal()">Chiudi</button>
             </div>
         </div>
     </div>
@@ -4138,6 +4159,98 @@
                 .catch(err => {
                     showSnackbar("snackbar", err.message || "Errore durante l'export", 'rgb(255, 208, 208)', 'black');
                 });
+        }
+
+        function importConfig(input) {
+            const file = input.files[0];
+            input.value = '';
+            if (!file) return;
+
+            if (!confirm(`Stai per sostituire la configurazione corrente con "${file.name}".\nVerrà creato un backup automatico.\nContinuare?`)) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showSnackbar("snackbar", "Importazione in corso...", 'rgb(255, 255, 208)', 'black');
+
+            fetch('/api/generic/import-config', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok) throw new Error(data.detail || "Errore durante l'importazione");
+                showSnackbar("snackbar", data.message || "Configurazione importata con successo", 'rgb(208, 255, 208)', 'black');
+            })
+            .catch(err => {
+                showSnackbar("snackbar", err.message || "Errore durante l'importazione", 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        function openBackupsModal() {
+            const modal = document.getElementById('config-backups-modal');
+            modal.style.display = 'flex';
+            modal.onclick = (e) => { if (e.target === modal) closeBackupsModal(); };
+            loadConfigBackups();
+        }
+
+        function closeBackupsModal() {
+            document.getElementById('config-backups-modal').style.display = 'none';
+        }
+
+        function loadConfigBackups() {
+            const list = document.getElementById('config-backups-list');
+            const loading = document.getElementById('config-backups-loading');
+            list.innerHTML = '<p id="config-backups-loading" style="color:#888;">Caricamento...</p>';
+
+            fetch('/api/generic/list-config-backups')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.backups || data.backups.length === 0) {
+                        list.innerHTML = '<p style="color:#888;">Nessun backup disponibile.</p>';
+                        return;
+                    }
+                    list.innerHTML = '';
+                    data.backups.forEach(b => {
+                        const sizeKb = (b.size / 1024).toFixed(1);
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:8px 6px; border-bottom:1px solid #eee;';
+                        row.innerHTML = `
+                            <span style="font-size:14px;">
+                                <strong>${b.label}</strong>
+                                <span style="color:#999; font-size:12px; margin-left:8px;">${sizeKb} KB</span>
+                            </span>
+                            <button onclick="restoreConfigBackup('${b.filename}')" style="background-color:#2196F3; color:white; padding:4px 12px; font-size:13px;">Ripristina</button>
+                        `;
+                        list.appendChild(row);
+                    });
+                })
+                .catch(() => {
+                    list.innerHTML = '<p style="color:red;">Errore nel caricamento dei backup.</p>';
+                });
+        }
+
+        function restoreConfigBackup(filename) {
+            if (!confirm(`Ripristinare il backup "${filename}"?\nIl config attuale verrà salvato come nuovo backup.\nRiavviare il software dopo il ripristino.`)) return;
+
+            showSnackbar("snackbar", "Ripristino in corso...", 'rgb(255, 255, 208)', 'black');
+
+            fetch('/api/generic/restore-config-backup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename })
+            })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok) throw new Error(data.detail || 'Errore durante il ripristino');
+                showSnackbar("snackbar", data.message || 'Backup ripristinato con successo', 'rgb(208, 255, 208)', 'black');
+                closeBackupsModal();
+                // Ricarica la lista dopo un attimo (il backup corrente ora è nell'elenco)
+                setTimeout(loadConfigBackups, 300);
+            })
+            .catch(err => {
+                showSnackbar("snackbar", err.message || 'Errore durante il ripristino', 'rgb(255, 208, 208)', 'black');
+            });
         }
 
         function openTemplateEditor(type) {

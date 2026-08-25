@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request
 from applications.middleware.super_admin import is_super_admin
 from fastapi.responses import StreamingResponse
 import libs.lb_system as lb_system
@@ -92,6 +92,9 @@ class GenericRouter:
         self.router.add_api_route('/report/{report}', self.saveReportTemplate, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/restart', self.restartSoftware, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/export-config-doc', self.exportConfigDoc, dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/import-config', self.importConfig, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/list-config-backups', self.listConfigBackups, dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/restore-config-backup', self.restoreConfigBackup, methods=['POST'], dependencies=[Depends(is_super_admin)])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -601,3 +604,116 @@ class GenericRouter:
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore nella generazione dell'export: {str(e)}")
+
+    async def importConfig(self, file: UploadFile = File(...)):
+        """Sostituisce il config.json corrente con quello caricato dall'utente."""
+        if not file.filename.lower().endswith('.json'):
+            raise HTTPException(status_code=400, detail="Il file deve essere un .json")
+
+        try:
+            content = await file.read()
+
+            # Verifica che sia un JSON valido
+            try:
+                json.loads(content)
+            except json.JSONDecodeError as e:
+                raise HTTPException(status_code=400, detail=f"File JSON non valido: {str(e)}")
+
+            config_path = os.path.join(lb_config.config_path, "config.json")
+            backup_dir = lb_config.g_config['app_api']['path_backup']
+            os.makedirs(backup_dir, exist_ok=True)
+
+            # Backup con timestamp del config attuale prima di sovrascrivere
+            if os.path.exists(config_path):
+                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                backup_path = os.path.join(backup_dir, f"config.json.bak.{timestamp}")
+                shutil.copy2(config_path, backup_path)
+
+            async with aiofiles.open(config_path, "wb") as f:
+                await f.write(content)
+
+            return {"message": "Configurazione importata con successo. Riavviare il software per applicare le modifiche."}
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore durante l'importazione: {str(e)}")
+
+    async def listConfigBackups(self):
+        """Restituisce la lista dei backup disponibili di config.json, ordinati dal più recente."""
+        try:
+            backup_dir = lb_config.g_config['app_api']['path_backup']
+            prefix = "config.json.bak."
+
+            backups = []
+            for fname in os.listdir(backup_dir):
+                if fname.startswith(prefix):
+                    suffix = fname[len(prefix):]
+                    full_path = os.path.join(backup_dir, fname)
+                    stat = os.stat(full_path)
+                    # Prova a parsare il timestamp dal nome
+                    try:
+                        dt = time.strptime(suffix, "%Y%m%d_%H%M%S")
+                        label = time.strftime("%d/%m/%Y %H:%M:%S", dt)
+                    except Exception:
+                        label = suffix
+                    backups.append({
+                        "filename": fname,
+                        "label": label,
+                        "size": stat.st_size,
+                        "mtime": stat.st_mtime,
+                    })
+
+            backups.sort(key=lambda x: x["mtime"], reverse=True)
+            return {"backups": backups}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore nel recupero dei backup: {str(e)}")
+
+    async def restoreConfigBackup(self, request: Request):
+        """Ripristina un backup specifico di config.json."""
+        try:
+            body = await request.json()
+            filename = body.get("filename", "")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Body JSON non valido")
+
+        if not filename or not filename.startswith("config.json.bak."):
+            raise HTTPException(status_code=400, detail="Nome file backup non valido")
+
+        # Sicurezza: nessun path traversal
+        if "/" in filename or "\\" in filename or ".." in filename:
+            raise HTTPException(status_code=400, detail="Nome file non valido")
+
+        try:
+            config_path = os.path.join(lb_config.config_path, "config.json")
+            backup_dir = lb_config.g_config['app_api']['path_backup']
+            backup_path = os.path.join(backup_dir, filename)
+
+            if not os.path.exists(backup_path):
+                raise HTTPException(status_code=404, detail="File backup non trovato")
+
+            shutil.copy2(backup_path, config_path)
+
+            # Elimina i backup creati dopo quello ripristinato
+            prefix = "config.json.bak."
+            restored_suffix = filename[len(prefix):]
+            try:
+                restored_dt = time.mktime(time.strptime(restored_suffix, "%Y%m%d_%H%M%S"))
+                deleted = []
+                for fname in os.listdir(backup_dir):
+                    if fname.startswith(prefix) and fname != filename:
+                        suffix = fname[len(prefix):]
+                        try:
+                            dt = time.mktime(time.strptime(suffix, "%Y%m%d_%H%M%S"))
+                            if dt > restored_dt:
+                                os.remove(os.path.join(backup_dir, fname))
+                                deleted.append(fname)
+                        except Exception:
+                            pass
+            except Exception:
+                deleted = []
+
+            return {"message": f"Backup '{filename}' ripristinato con successo. Riavviare il software per applicare le modifiche.", "deleted_backups": deleted}
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore nel ripristino del backup: {str(e)}")
