@@ -176,7 +176,6 @@ if __name__ == "__main__":
 	if lb_config.g_enabled:  # Se l'applicazione e' abilitata
 
 		mainprg()  # Avvia il programma principale
-
 	lb_log.info("exitpoint.")
 
 	print("")

@@ -21,6 +21,8 @@ def saveconfig():
 		with open(config_path + "config.json", "w", encoding="utf-8") as config:
 			# Scrive il contenuto JSON delle configurazioni nelle variabili globali g_config nel file.
 			config.write(json.dumps(g_config, indent=4, sort_keys=True))
+		# Aggiorna il timestamp dopo il salvataggio per evitare falsi rilevamenti di modifica.
+		g_config_ts = os.stat(config_path + "config.json").st_mtime
 	except Exception as e:
 		# Registra un messaggio di errore se si verifica un problema durante il salvataggio del file di configurazione.
 		lb_log.error("error saving : config.json - " + str(e))
@@ -95,7 +97,7 @@ def readconfig():
 # Questa funzione controlla periodicamente la presenza e la modifica del file di configurazione,
 # e chiama la funzione readconfig() per aggiornare le configurazioni se necessario.
 def mainprg():
-	global g_enabled, g_config_ts, config_path  # Utilizza le variabili globali per abilitare il ciclo principale, il timestamp della configurazione e il percorso di lavoro.
+	global g_enabled, g_config_ts, config_path, g_restart  # Utilizza le variabili globali per abilitare il ciclo principale, il timestamp della configurazione e il percorso di lavoro.
 	
 	secwait = 5  # Intervallo di attesa in secondi tra i controlli del file di configurazione.
 
@@ -107,6 +109,10 @@ def mainprg():
 			if not os.stat(config_path + "config.json").st_mtime == g_config_ts:
 				# Se il file di configurazione è stato modificato, chiama la funzione readconfig() per aggiornare le configurazioni.
 				readconfig()
+				# Riavvia il processo corrente per applicare le nuove configurazioni.
+				lb_log.info("config changed: restarting...")
+				time.sleep(1)
+				os.execv(sys.executable, [sys.executable] + sys.argv)
 		# Se il file di configurazione principale non esiste ma è presente un file di backup della configurazione.
 		elif os.path.exists(config_path + "config.backup"):
 			# Carica le configurazioni dal file di backup.
