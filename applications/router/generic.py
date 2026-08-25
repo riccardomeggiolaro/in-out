@@ -95,6 +95,8 @@ class GenericRouter:
         self.router.add_api_route('/import-config', self.importConfig, methods=['POST'], dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/list-config-backups', self.listConfigBackups, dependencies=[Depends(is_super_admin)])
         self.router.add_api_route('/restore-config-backup', self.restoreConfigBackup, methods=['POST'], dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/list-report-backups', self.listReportBackups, dependencies=[Depends(is_super_admin)])
+        self.router.add_api_route('/restore-report-backup', self.restoreReportBackup, methods=['POST'], dependencies=[Depends(is_super_admin)])
 
     async def getSerialPorts(self):
         """Restituisce una lista delle porte seriali disponibili e il tempo impiegato per ottenerla."""
@@ -204,7 +206,16 @@ class GenericRouter:
             await asyncio.to_thread(json.loads, json_content)
             stats["validation_time"] = time.time() - phase_start
 
-            # Fase 4: Scrittura streaming ad alta velocità
+            # Fase 4: Backup del report esistente prima di sovrascrivere
+            backup_dir = lb_config.g_config['app_api']['path_backup']
+            await asyncio.to_thread(os.makedirs, backup_dir, exist_ok=True)
+            if await asyncio.to_thread(os.path.exists, full_path):
+                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                backup_filename = f"{report_file}.bak.{timestamp}"
+                backup_path = os.path.join(backup_dir, backup_filename)
+                await asyncio.to_thread(shutil.copy2, full_path, backup_path)
+
+            # Fase 5: Scrittura streaming ad alta velocità
             phase_start = time.time()
             
             json_bytes = json_content.encode('utf-8')
@@ -219,7 +230,7 @@ class GenericRouter:
                 
             stats["write_time"] = time.time() - phase_start
 
-            # Fase 5: Verifica finale
+            # Fase 6: Verifica finale
             phase_start = time.time()
             
             def verify():
@@ -717,3 +728,107 @@ class GenericRouter:
             raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore nel ripristino del backup: {str(e)}")
+
+    async def listReportBackups(self):
+        """Restituisce la lista dei backup disponibili per tutti i report, ordinati dal più recente."""
+        valid_reports = ["report_in", "report_out", "report_tare", "report_generic"]
+        try:
+            backup_dir = lb_config.g_config['app_api']['path_backup']
+
+            # Raccoglie i suffissi attesi (es. "weight_in.json.bak.")
+            report_prefixes = {}
+            for report_key in valid_reports:
+                report_file = lb_config.g_config["app_api"].get(report_key)
+                if report_file:
+                    report_prefixes[f"{report_file}.bak."] = report_key
+
+            backups = []
+            if os.path.isdir(backup_dir):
+                for fname in os.listdir(backup_dir):
+                    for prefix, report_key in report_prefixes.items():
+                        if fname.startswith(prefix):
+                            suffix = fname[len(prefix):]
+                            full_path = os.path.join(backup_dir, fname)
+                            stat = os.stat(full_path)
+                            try:
+                                dt = time.strptime(suffix, "%Y%m%d_%H%M%S")
+                                label = time.strftime("%d/%m/%Y %H:%M:%S", dt)
+                            except Exception:
+                                label = suffix
+                            backups.append({
+                                "filename": fname,
+                                "report": report_key,
+                                "label": label,
+                                "size": stat.st_size,
+                                "mtime": stat.st_mtime,
+                            })
+                            break
+
+            backups.sort(key=lambda x: x["mtime"], reverse=True)
+            return {"backups": backups}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore nel recupero dei backup report: {str(e)}")
+
+    async def restoreReportBackup(self, request: Request):
+        """Ripristina un backup specifico di un report template."""
+        valid_reports = ["report_in", "report_out", "report_tare", "report_generic"]
+        try:
+            body = await request.json()
+            filename = body.get("filename", "")
+            report_key = body.get("report", "")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Body JSON non valido")
+
+        if not filename or not report_key:
+            raise HTTPException(status_code=400, detail="Parametri 'filename' e 'report' obbligatori")
+
+        if report_key not in valid_reports:
+            raise HTTPException(status_code=400, detail="Tipo di report non valido")
+
+        # Sicurezza: nessun path traversal
+        if "/" in filename or "\\" in filename or ".." in filename:
+            raise HTTPException(status_code=400, detail="Nome file non valido")
+
+        report_file = lb_config.g_config["app_api"].get(report_key)
+        if not report_file:
+            raise HTTPException(status_code=400, detail="Report non configurato")
+
+        expected_prefix = f"{report_file}.bak."
+        if not filename.startswith(expected_prefix):
+            raise HTTPException(status_code=400, detail="Nome file backup non coerente con il report indicato")
+
+        try:
+            backup_dir = lb_config.g_config['app_api']['path_backup']
+            backup_path = os.path.join(backup_dir, filename)
+
+            if not os.path.exists(backup_path):
+                raise HTTPException(status_code=404, detail="File backup non trovato")
+
+            report_dir = Path(__file__).cwd() / "applications" / lb_config.g_config["app_api"]["path_content"] / "report"
+            dest_path = os.path.join(report_dir, report_file)
+
+            shutil.copy2(backup_path, dest_path)
+
+            # Elimina i backup di questo report creati dopo quello ripristinato
+            restored_suffix = filename[len(expected_prefix):]
+            try:
+                restored_dt = time.mktime(time.strptime(restored_suffix, "%Y%m%d_%H%M%S"))
+                deleted = []
+                for fname in os.listdir(backup_dir):
+                    if fname.startswith(expected_prefix) and fname != filename:
+                        suffix = fname[len(expected_prefix):]
+                        try:
+                            dt = time.mktime(time.strptime(suffix, "%Y%m%d_%H%M%S"))
+                            if dt > restored_dt:
+                                os.remove(os.path.join(backup_dir, fname))
+                                deleted.append(fname)
+                        except Exception:
+                            pass
+            except Exception:
+                deleted = []
+
+            return {"message": f"Backup '{filename}' ripristinato con successo.", "deleted_backups": deleted}
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore nel ripristino del backup report: {str(e)}")

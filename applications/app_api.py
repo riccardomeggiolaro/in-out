@@ -28,6 +28,7 @@ from libs.lb_utils import base_path
 from modules.md_database.functions.delete_pending_non_reservation_accesses import delete_pending_non_reservation_accesses
 from applications.router.anagrafic.manager_anagrafics import manager_anagrafics
 import asyncio
+from applications.utils.utils_backup import backup_database
 # ==============================================================
 
 name_app = "app_api"
@@ -52,6 +53,12 @@ def _midnight_cleanup_loop():
 		# Attendi fino a mezzanotte o fino a quando il thread viene fermato
 		if _midnight_cleanup_stop_event.wait(timeout=seconds_until_midnight):
 			break  # Lo stop event è stato settato, esci dal loop
+
+		# Backup giornaliero del database: sovrascrive sempre il backup precedente
+		backup_database(
+			db_path=lb_config.g_config.get("app_api", {}).get("path_database", ""),
+			backup_dir=lb_config.g_config.get("app_api", {}).get("path_backup", ""),
+		)
 
 		# Controlla se la funzionalità è abilitata nella configurazione
 		if not lb_config.g_config.get("app_api", {}).get("delete_pending_accesses_at_midnight", False):

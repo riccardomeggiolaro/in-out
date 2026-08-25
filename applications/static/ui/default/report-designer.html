@@ -643,6 +643,7 @@
                 <button class="btn btn-primary" onclick="previewReport()">👁️ Anteprima</button>
                 <button class="btn btn-primary" onclick="showCode()" style="display: none;">📝 Mostra Codice</button>
                 <button class="btn btn-primary" onclick="saveProject('{{ report }}')">💾 Salva</button>
+                <button class="btn btn-primary" onclick="openBackupModal('{{ report }}')">🗂️ Backup</button>
                 <button class="btn btn-primary" onclick="downloadProjectLocal()">📥 Download</button>
                 <button class="btn btn-primary" onclick="importProject()">📥 Importa</button>
             </div>
@@ -782,6 +783,22 @@
             <div class="code-output" id="codeOutput"></div>
             <div class="modal-buttons">
                 <button class="copy-btn" onclick="copyCode()">📋 Copia Codice</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Backup Report -->
+    <div id="backupModal" class="modal" onclick="closeBackupModal()">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>🗂️ Backup Report</h2>
+                <span class="close-modal" onclick="closeBackupModal()">&times;</span>
+            </div>
+            <p style="color: #666; margin-bottom: 16px; font-size: 13px;">
+                Ogni salvataggio crea automaticamente un backup. Seleziona una versione precedente da ripristinare.
+            </p>
+            <div id="backupList" style="min-height: 60px;">
+                <p style="color: #aaa; text-align: center; padding: 20px 0;">Caricamento backup...</p>
             </div>
         </div>
     </div>
@@ -3391,6 +3408,95 @@ ${pageClone.innerHTML}
                 alert('Errore nel caricamento del template default');
             });
         }
+
+        // ===== GESTIONE BACKUP REPORT =====
+
+        async function openBackupModal(report) {
+            document.getElementById('backupModal').style.display = 'block';
+            const listEl = document.getElementById('backupList');
+            listEl.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px 0;">Caricamento backup...</p>';
+
+            try {
+                const res = await fetch('/api/generic/list-report-backups');
+                if (!res.ok) throw new Error('Errore nel caricamento');
+                const data = await res.json();
+
+                // Filtra solo i backup del report corrente
+                const backups = (data.backups || []).filter(b => b.report === report);
+
+                if (backups.length === 0) {
+                    listEl.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px 0;">Nessun backup disponibile per questo report.</p>';
+                    return;
+                }
+
+                const table = document.createElement('table');
+                table.style.cssText = 'width:100%; border-collapse:collapse; font-size:13px;';
+                table.innerHTML = `
+                    <thead>
+                        <tr style="background:#f0f4ff; color:#444;">
+                            <th style="padding:8px 10px; text-align:left; border-bottom:2px solid #dee2e6;">Data e ora</th>
+                            <th style="padding:8px 10px; text-align:right; border-bottom:2px solid #dee2e6;">Dimensione</th>
+                            <th style="padding:8px 10px; border-bottom:2px solid #dee2e6;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="backupTableBody"></tbody>
+                `;
+
+                const tbody = table.querySelector('#backupTableBody');
+                backups.forEach((bak, idx) => {
+                    const sizeKb = (bak.size / 1024).toFixed(1);
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid #f0f0f0';
+                    tr.innerHTML = `
+                        <td style="padding:8px 10px; color:#333;">${bak.label}</td>
+                        <td style="padding:8px 10px; text-align:right; color:#888;">${sizeKb} KB</td>
+                        <td style="padding:8px 10px; text-align:right;">
+                            <button class="btn btn-primary btn-small"
+                                onclick="restoreReportBackup('${bak.filename}', '${bak.report}')"
+                                style="background:#1362b8; color:white; font-size:12px; padding:5px 12px; border-radius:6px; border:none; cursor:pointer;">
+                                ↩️ Ripristina
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                listEl.innerHTML = '';
+                listEl.appendChild(table);
+
+            } catch (err) {
+                listEl.innerHTML = `<p style="color:#e74c3c; text-align:center; padding:20px 0;">Errore nel caricamento dei backup: ${err.message}</p>`;
+            }
+        }
+
+        function closeBackupModal() {
+            document.getElementById('backupModal').style.display = 'none';
+        }
+
+        async function restoreReportBackup(filename, report) {
+            if (!confirm(`Ripristinare il backup "${filename}"?\nIl report attuale verrà sovrascritto (un nuovo backup verrà creato prima del ripristino).`)) return;
+
+            try {
+                const res = await fetch('/api/generic/restore-report-backup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename, report })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Errore nel ripristino');
+
+                closeBackupModal();
+                showNotification('✅ Backup ripristinato con successo! Ricarica la pagina per vedere le modifiche.');
+
+                // Ricarica il report ripristinato nel designer
+                loadDefaultTemplate('{{ default_report_template }}', false);
+
+            } catch (err) {
+                showNotification(`❌ Errore nel ripristino: ${err.message}`, true);
+            }
+        }
+
     </script>
 </body>
 </html>
