@@ -492,9 +492,20 @@ def scan_local_dir(local_dir, sub_paths=None):
 def mount_remote(ip, domain, share_name, username, password, local_dir, mount_point):
 	umount_remote(mount_point)
 	if is_linux():
-		params = f'username={username},password={password}'
+		# Build params only if credentials are provided
+		params_list = []
+		if username:
+			params_list.append(f'username={username}')
+		if password:
+			params_list.append(f'password={password}')
 		if domain:
-			params = params + f",domain={domain}"
+			params_list.append(f'domain={domain}')
+
+		# If no credentials, use guest access
+		if not params_list:
+			params_list.append('guest')
+
+		params = ','.join(params_list)
 		cmd = [
 			'mount', '-t', 'cifs', f'//{ip}/{share_name}', mount_point,
 			'-o', params
@@ -504,10 +515,16 @@ def mount_remote(ip, domain, share_name, username, password, local_dir, mount_po
 		except Exception as e:
 			pass
 	elif is_windows():
-		cmd = [
-			'net', 'use', mount_point, f'\\\\{ip}\\{share_name}',
-			f'/user:{username}', password
-		]
+		if username and password:
+			cmd = [
+				'net', 'use', mount_point, f'\\\\{ip}\\{share_name}',
+				f'/user:{username}', password
+			]
+		else:
+			# Mount without credentials for public shares
+			cmd = [
+				'net', 'use', mount_point, f'\\\\{ip}\\{share_name}'
+			]
 	try:
 		subprocess.check_call(cmd)
 		# Verify mount is not empty
