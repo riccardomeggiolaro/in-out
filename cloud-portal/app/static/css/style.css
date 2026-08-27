@@ -1,0 +1,91 @@
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7;
+    color: #1c2430;
+}
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #14213d;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+}
+.brand { font-weight: 700; font-size: 1.1rem; }
+.brand span { font-weight: 400; opacity: 0.8; }
+.nav { display: flex; gap: 1rem; align-items: center; }
+.nav a, .nav button {
+    color: #fff;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+.nav a:hover, .nav button:hover { text-decoration: underline; }
+.content { padding: 1.5rem 2rem; max-width: 1200px; margin: 0 auto; }
+
+.login-box {
+    max-width: 340px;
+    margin: 4rem auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.login-box form { display: flex; flex-direction: column; gap: 1rem; }
+.login-box label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; }
+
+input, select, button {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid #cbd2d9;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+button {
+    background: #14213d;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+button:hover { background: #23315c; }
+
+.error { color: #c0392b; }
+.hidden { display: none !important; }
+
+.filters, .inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #eaecef;
+    font-size: 0.9rem;
+}
+th { background: #eef1f6; }
+
+.table-wrap { overflow-x: auto; margin-bottom: 1rem; }
+
+.pagination { display: flex; gap: 1rem; align-items: center; }
+
+.api-key-banner {
+    background: #fff8e1;
+    border: 1px solid #f0d878;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-family: monospace;
+}

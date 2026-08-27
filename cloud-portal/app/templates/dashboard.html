@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Pesate - BARON Cloud Portal{% endblock %}
+{% block content %}
+<h1>Pesate</h1>
+
+<form id="filters" class="filters">
+    <input type="text" name="plate" placeholder="Targa">
+    <input type="text" name="subject_name" placeholder="Cliente/Fornitore">
+    <input type="text" name="material" placeholder="Materiale">
+    <select name="status">
+        <option value="">Tutti gli stati</option>
+        <option value="WAITING">In attesa</option>
+        <option value="ENTERED">Entrato</option>
+        <option value="CLOSED">Chiuso</option>
+    </select>
+    <label>Da <input type="date" name="from_date"></label>
+    <label>A <input type="date" name="to_date"></label>
+    <select name="site_id" id="site-filter" class="hidden"></select>
+    <button type="submit">Filtra</button>
+</form>
+
+<div class="table-wrap">
+<table id="weighings-table">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th class="site-col hidden">Sito</th>
+            <th>Targa</th>
+            <th>Soggetto</th>
+            <th>Materiale</th>
+            <th>Peso 1</th>
+            <th>Peso 2</th>
+            <th>Netto</th>
+            <th>Stato</th>
+        </tr>
+    </thead>
+    <tbody id="weighings-body"></tbody>
+</table>
+</div>
+
+<div class="pagination">
+    <button id="prev-page">&laquo; Precedente</button>
+    <span id="page-info"></span>
+    <button id="next-page">Successiva &raquo;</button>
+</div>
+
+<script src="/static/js/dashboard.js" defer></script>
+{% endblock %}
