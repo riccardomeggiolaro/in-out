@@ -325,6 +325,24 @@ class EgtAf03(Terminal):
 						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
 							self.take_of_weight_on_startup = False
 							self.take_of_weight_before_weighing = False
+					elif length_split_response == 6 and length_response == 50:
+						gw = (re.sub('[KkGg\x00\n]', '', split_response[2]).lstrip())
+						t = (re.sub('[PTKkGg\x00\n]', '', split_response[3])).lstrip()
+						tare_without_pt = (re.sub('[PT]', '', t).lstrip())
+						nw = str(int(gw) - int(tare_without_pt))
+						unite_measure = split_response[2][-2:]
+						self.pesa_real_time.status = split_response[0]
+						self.pesa_real_time.type = "GS" if t == "0" else "NT"
+						self.pesa_real_time.net_weight = nw
+						self.pesa_real_time.gross_weight = gw
+						self.pesa_real_time.tare = t
+						self.pesa_real_time.unite_measure = unite_measure
+						self.pesa_real_time.photocells = True if split_response[5].lstrip() == "1" else False
+						self.code_identify = split_response[4].lstrip()
+						self.diagnostic.status = 200
+						if float(self.pesa_real_time.gross_weight) <= self.min_weight:
+							self.take_of_weight_on_startup = False
+							self.take_of_weight_before_weighing = False
 					# Se formato stringa del peso in tempo reale non corretto, manda a video errore
 					else:
 						self.code_identify = ""
@@ -464,6 +482,7 @@ class EgtAf03(Terminal):
 			self.pesa_real_time.gross_weight = ""
 			self.pesa_real_time.tare = ""
 			self.pesa_real_time.unite_measure = ""
+			self.pesa_real_time.photocells = False
 			self.weight.weight_executed.net_weight = ""
 			self.weight.weight_executed.gross_weight = ""
 			self.weight.weight_executed.tare.value = ""

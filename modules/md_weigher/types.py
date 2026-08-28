@@ -15,6 +15,7 @@ class Realtime(BaseModel):
 	unite_measure: str
 	potential_net_weight: Optional[Union[int, float]] = None
 	over_max_theshold: Optional[bool] = False
+	photocells: Optional[bool] = False
 	
 class Diagnostic(CustomBaseModel):
 	status: int

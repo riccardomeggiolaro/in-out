@@ -186,7 +186,9 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		status_modope, command_executed, error_message = 500, False, ""
 		access_id = None
 		in_out_id = None
-		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		pesa_real_time = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		tare = pesa_real_time.tare
+		photocells = pesa_real_time.photocells
 		if weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["id"]:
 			error_message = "Deselezionare l'id per effettuare la pesata di prova."
 		elif weight is not None:
@@ -278,6 +280,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				command_executed = True
 		elif tare != "0":
 			error_message = "Eliminare la tara per effettuare la pesata generica."
+		elif photocells == True:
+			error_message = "Il mezzo non è correttamente posizionato sulla pesa."
 		else:
 			# MODALITA' NORMALE: esegue il PID sulla pesa fisica
 			access = await self.addAccess(request=None, body=AddAccessDTO(**{
@@ -309,7 +313,9 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 
 	async def Weight1(self, request: Request, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = 500, False, ""
-		tare = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name).tare
+		pesa_real_time = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+		tare = pesa_real_time.tare
+		photocells = pesa_real_time.photocells
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
 		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
@@ -338,6 +344,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			current_id = access.id
 		if tare != "0":
 			error_message = "Eliminare la tara per effettuare l'entrata del mezzo."
+		if photocells == True:
+			error_message = "Il mezzo non è correttamente posizionato sulla pesa."
 		if not error_message:
 			data_assigned = DataAssignedDTO(**{"accessId": current_id, "userId": request.state.user.id})
 			status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(
@@ -364,6 +372,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		pesa_real_time = md_weigher.module_weigher.getRealtime(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 		net_weight = pesa_real_time.net_weight
 		tare = pesa_real_time.tare
+		photocells = pesa_real_time.photocells
 		weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
 		take_of_weight_on_startup = weigher["take_of_weight_on_startup"]
 		take_of_weight_before_weighing = weigher["take_of_weight_before_weighing"]
@@ -375,6 +384,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		# 	error_message = "Scaricare la pesa prima di eseguire nuova pesata"
 		elif net_weight != "" and float(net_weight) < 0 and lb_config.g_config["app_api"]["use_preset_weight"] is False:
 			error_message = "Il peso netto non può essere negativo."
+		elif photocells == True:
+			error_message = "Il mezzo non è correttamente posizionato sulla pesa."
 		else:
 			if idAccess:
 				access = get_access_by_id(idAccess)
