@@ -352,6 +352,9 @@ class Dgt1(Terminal):
 					self.code_identify = ""
 			# elif self.diagnostic.status in [305, 201]:
 			# 	self.initialize_content()
+			self.log = response
+			callCallback(self.callback_log)
+			self.log = ""
 		except TimeoutError as e:
 			error = e
 			self.diagnostic.vl = ""
@@ -376,6 +379,7 @@ class Dgt1(Terminal):
 			self.ok_value = ""
 			self.port_rele = None
 			self.diagnostic.status = 301
+			self.log = ""
 			if self.modope == "WEIGHING":
 				self.weight.status = self.diagnostic.status
 				callCallback(self.callback_weighing)
@@ -392,12 +396,15 @@ class Dgt1(Terminal):
 				self.port_rele = self.diagnostic.status
 				callCallback(self.callback_rele)
 				self.port_rele = None
+			callCallback(callback_log)
 			error = "Not connection set"
 			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except BrokenPipeError as e:
 			error = "Node not receivable"
+			self.log = ""
 			self.diagnostic.status = 305
 			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
+			callCallback(callback_log)
 		except Exception as e:
 			error = str(e)
 			lb_log.weighing_error(e)
@@ -420,6 +427,7 @@ class Dgt1(Terminal):
 			self.weight.data_assigned = None
 			self.ok_value = ""
 			self.port_rele = None
+			self.log = ""
 			if self.modope == "WEIGHING":
 				self.weight.status = self.diagnostic.status
 				callCallback(self.callback_weighing)
@@ -437,4 +445,5 @@ class Dgt1(Terminal):
 				callCallback(self.callback_rele)
 				self.port_rele = None
 			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
+			callCallback(callback_log)
 		return self.diagnostic.status, self.modope, response, error

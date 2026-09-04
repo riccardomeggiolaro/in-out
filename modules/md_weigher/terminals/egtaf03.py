@@ -472,6 +472,9 @@ class EgtAf03(Terminal):
 						self.diagnostic.status = 201
 			# elif self.diagnostic.status in [305, 201]:
 			# 	self.initialize_content()
+			self.log = response
+			callCallback(self.callback_log)
+			self.log = ""
 		except TimeoutError as e:
 			error = e
 			self.diagnostic.vl = ""
@@ -497,6 +500,7 @@ class EgtAf03(Terminal):
 			self.ok_value = ""
 			self.port_rele = None
 			self.diagnostic.status = 301
+			self.log = ""
 			if self.modope == "WEIGHING":
 				self.weight.weight_executed.status = self.diagnostic.status
 				callCallback(self.callback_weighing)
@@ -509,11 +513,14 @@ class EgtAf03(Terminal):
 				self.pesa_real_time.status = self.diagnostic.status
 				callCallback(self.callback_realtime) # chiamo callback
 				self.pesa_real_time.status = ""
+			callCallback(self.callback_log)
 			error = "Not connection set"
 			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except BrokenPipeError as e:
 			error = "Node not receivable"
+			self.log = ""
 			self.diagnostic.status = 305
+			callCallback(self.callback_log)
 			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		except Exception as e:
 			error = str(e)
@@ -537,6 +544,7 @@ class EgtAf03(Terminal):
 			self.weight.data_assigned = None
 			self.ok_value = ""
 			self.port_rele = None
+			self.log = ""
 			if self.modope == "WEIGHING":
 				self.weight.weight_executed.status = self.diagnostic.status
 				callCallback(self.callback_weighing)
@@ -553,5 +561,6 @@ class EgtAf03(Terminal):
 				self.port_rele = self.diagnostic.status
 				callCallback(self.callback_rele)
 				self.port_rele = None
+			callCallback(self.callback_log)
 			self.setModope("OK") if self.always_execute_realtime_in_undeground is False else self.setModope("REALTIME")
 		return self.diagnostic.status, self.modope, response, error

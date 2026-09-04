@@ -211,6 +211,10 @@ def init():
 	@app.get("/card-registry", response_class=HTMLResponse)
 	async def CardRegistry(request: Request):
 		return templates.TemplateResponse("card-registry.html", {"request": request})
+
+	@app.get("/log", response_class=HTMLResponse)
+	async def Log(request: Request):
+		return templates.TemplateResponse("log.html", {"request": request})
  
 	@app.get('/report-designer/entrata', response_class=HTMLResponse)
 	async def report_designer(request: Request):

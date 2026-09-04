@@ -50,6 +50,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 
 		self.router_action_weigher.add_api_websocket_route('/realtime', self.websocket_endpoint_realtime)
 		self.router_action_weigher.add_api_websocket_route('/diagnostic', self.websocket_endpoint_diagnostic)
+		self.router_action_weigher.add_api_websocket_route('/log', self.websocket_endpoint_log)
 
 	async def StartRealtime(self, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
 		status_modope, command_executed, error_message = md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="REALTIME")
@@ -621,6 +622,45 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 				await self.StopAllCommand(instance=instance)
 				md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope=modope_on_close)
 				break
+			await asyncio.sleep(1)
+
+		disconnect_task.cancel()
+
+	async def websocket_endpoint_log(self, websocket: WebSocket, instance: InstanceNameWeigherDTO = Depends(get_query_params_name_node)):
+		await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_log.connect(websocket)
+
+		async def handle_disconnect():
+			try:
+				while True:
+					await websocket.receive_text()
+			except:
+				weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_log.disconnect(websocket)
+
+		disconnect_task = asyncio.create_task(handle_disconnect())
+
+		while instance.instance_name in weighers_data and instance.weigher_name in weighers_data[instance.instance_name]:
+			weigher = md_weigher.module_weigher.getInstanceWeigher(instance_name=instance.instance_name, weigher_name=instance.weigher_name)[instance.instance_name]
+			status = weigher["status"]
+			if websocket not in weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_log.active_connections:
+				break
+			connecting = md_weigher.module_weigher.getInstanceConnecting(instance_name=instance.instance_name)
+			if connecting:
+				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_log.broadcast({
+					"status": "Connessione in corso..."
+				})
+			elif status != 200:
+				message = "Errore di connessione"
+				if status in [305, 201]:
+					message = "Errore di ricezione"
+				elif status == 301:
+					message = "Connessione non settata"
+				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_log.broadcast({
+					"status": message
+				})
+			else:
+				await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_log.broadcast({
+					"status": "ok"
+				})
 			await asyncio.sleep(1)
 
 		disconnect_task.cancel()

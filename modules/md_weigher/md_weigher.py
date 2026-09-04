@@ -62,7 +62,8 @@ class WeigherModule:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
+    	cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None):
 		for name, instance in self.instances.items():
 			instance.setActionAllWeigher(
 				cb_realtime=cb_realtime, 
@@ -72,7 +73,8 @@ class WeigherModule:
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
 				cb_rele=cb_rele,
-				cb_code_identify=cb_code_identify
+				cb_code_identify=cb_code_identify,
+				cb_log=cb_log
 			)
    
 	def setApplicationCallback(
@@ -85,6 +87,7 @@ class WeigherModule:
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
     	cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None,
 		cb_has_connections: Callable[[], bool] = None):
 		for name, instance in self.instances.items():
 			instance.cb_has_connections = cb_has_connections
@@ -96,7 +99,8 @@ class WeigherModule:
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
 				cb_rele=cb_rele,
-				cb_code_identify=cb_code_identify
+				cb_code_identify=cb_code_identify,
+				cb_log=cb_log
 			)
 
 	def getInstanceConnecting(self, instance_name):
@@ -157,7 +161,8 @@ class WeigherModule:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
+    	cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None):
 		details = []
 		if setup.name in self.getAllInstanceWeigher(instance_name=instance_name):
 			details.append({"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}})
@@ -174,7 +179,8 @@ class WeigherModule:
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
 			cb_rele=cb_rele,
-			cb_code_identify=cb_code_identify
+			cb_code_identify=cb_code_identify,
+			cb_log=cb_log
 		)
 		return {
 			setup.name: weigher_created
@@ -192,7 +198,8 @@ class WeigherModule:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
+    	cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None):
 		details = []
 		if any(weigher_name != setup.name and setup.name == name for name in self.getAllInstanceWeigher(instance_name=instance_name)):
 			details.append({"type": "value_error", "loc": ["", "name"], "msg": "Nome già esistente", "input": setup.name, "ctx": {"error":{}}})
@@ -210,7 +217,8 @@ class WeigherModule:
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
 			cb_rele=cb_rele,
-			cb_code_identify=cb_code_identify
+			cb_code_identify=cb_code_identify,
+			cb_log=cb_log
 		)
 		return {
 			weigher_name: weigher_set
@@ -262,7 +270,8 @@ class WeigherInstance:
 	   	cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
 		cb_rele: Callable[[str], any] = None,
-		cb_code_identify: Callable[[str], any] = None
+		cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None
 		):
 		self.m_enabled = True
 		self.name = name
@@ -305,7 +314,8 @@ class WeigherInstance:
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
 			cb_rele=cb_rele,
-			cb_code_identify=cb_code_identify
+			cb_code_identify=cb_code_identify,
+			cb_log=cb_log
 		)
 		self.thread = createThread(self.start)
 		startThread(self.thread)
@@ -562,7 +572,8 @@ class WeigherInstance:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
 		cb_rele: Callable[[str], any] = None,
-  		cb_code_identify: Callable[[str], any] = None):
+  		cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None):
 		n = terminalsClasses[setup.terminal](
 			self_config=self, 
 			max_weight=setup.max_weight, 
@@ -591,7 +602,8 @@ class WeigherInstance:
 			cb_tare_ptare_zero=cb_tare_ptare_zero,
 			cb_action_in_execution=cb_action_in_execution,
 			cb_rele=cb_rele,
-			cb_code_identify=cb_code_identify
+			cb_code_identify=cb_code_identify,
+			cb_log=cb_log
         )
 		return self.nodes[setup.name].getSetup()
 
@@ -606,7 +618,8 @@ class WeigherInstance:
 		cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
+    	cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None):
 		result = self.nodes[name].setSetup(setup)
 		result["name"] = setup.name if setup.name != "undefined" else name
 		terminal = result["terminal"]
@@ -624,7 +637,8 @@ class WeigherInstance:
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
 				cb_rele=cb_rele,
-				cb_code_identify=cb_code_identify
+				cb_code_identify=cb_code_identify,
+				cb_log=cb_log
 			)
 		if setup.terminal != terminal:
 			weigher_to_change = SetupWeigherDTO(**result)
@@ -638,7 +652,8 @@ class WeigherInstance:
 				cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
 				cb_rele=cb_rele,
-				cb_code_identify=cb_code_identify
+				cb_code_identify=cb_code_identify,
+				cb_log=cb_log
 	        )
 		return result
 
@@ -700,7 +715,8 @@ class WeigherInstance:
         cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
 		cb_rele: Callable[[str], any] = None,
-		cb_code_identify: Callable[[str], any] = None
+		cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None
     	):
 		for name, weigher in self.nodes.items():
 			if name == weigher_name:
@@ -713,7 +729,8 @@ class WeigherInstance:
 					cb_tare_ptare_zero=cb_tare_ptare_zero,
 					cb_action_in_execution=cb_action_in_execution,
 					cb_rele=cb_rele,
-					cb_code_identify=cb_code_identify
+					cb_code_identify=cb_code_identify,
+					cb_log=cb_log
 				)
 
 	def setActionAllWeigher(
@@ -725,7 +742,8 @@ class WeigherInstance:
        	cb_tare_ptare_zero: Callable[[str], any] = None,
 		cb_action_in_execution: Callable[[str], any] = None,
   		cb_rele: Callable[[str], any] = None,
-    	cb_code_identify: Callable[[str], any] = None):
+    	cb_code_identify: Callable[[str], any] = None,
+		cb_log: Callable[[str], any] = None):
 		for name, weigher in self.nodes.items():
 			weigher.setAction(
 				weigher_name=name,
@@ -736,7 +754,8 @@ class WeigherInstance:
              	cb_tare_ptare_zero=cb_tare_ptare_zero,
 				cb_action_in_execution=cb_action_in_execution,
                 cb_rele=cb_rele,
-                cb_code_identify=cb_code_identify
+                cb_code_identify=cb_code_identify,
+				cb_log=cb_log
     		)
    
 	def canStartWeighing(self, weigher_name: str):

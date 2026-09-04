@@ -14,6 +14,7 @@ class NodeConnectionManager:
 	def __init__(self):
 		self.manager_realtime = ConnectionManager()
 		self.manager_diagnostic = ConnectionManager()
+		self.manager_log = ConnectionManager()
 
 def get_query_params_name(params: InstanceNameDTO = Depends()):
 	if params.instance_name not in md_weigher.module_weigher.getAllInstance():

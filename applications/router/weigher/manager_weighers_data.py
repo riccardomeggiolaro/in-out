@@ -15,4 +15,6 @@ def has_active_connections(instance_name: str) -> bool:
             return True
         if (sockets.manager_diagnostic and len(sockets.manager_diagnostic.active_connections) > 0):
             return True
+        if (sockets.manager_log and len(sockets.manager_log.active_connections) > 0):
+            return True
     return False

@@ -50,6 +50,7 @@ class Functions:
 			cb_action_in_execution=self.Callback_ActionInExecution,
 			cb_rele=self.Callback_Rele,
 			cb_code_identify=self.Callback_WeighingByIdentify,
+			cb_log=self.Callback_Log,
 			cb_has_connections=_connection_needed
 		)
 

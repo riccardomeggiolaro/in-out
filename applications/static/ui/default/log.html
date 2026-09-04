@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log</title>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+
+        body {
+            background: #0f1117;
+            color: #e2e8f0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 { font-size: 1.3rem; font-weight: 600; }
+
+        .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        /* ── Barra selezione pesa ── */
+        .params-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #1e293b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        .params-bar label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+
+        .params-bar select {
+            padding: 5px 10px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            border-radius: 5px;
+            color: #e2e8f0;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+        .params-bar select:focus { border-color: #3b82f6; }
+        .params-bar select option { background: #0f1117; }
+
+        /* ── Badge stato ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+        .badge-dot { width: 7px; height: 7px; border-radius: 50%; }
+        .badge.connected    { background: #14532d; color: #4ade80; }
+        .badge.connected    .badge-dot { background: #4ade80; animation: pulse 1.5s infinite; }
+        .badge.disconnected { background: #3f1515; color: #f87171; }
+        .badge.disconnected .badge-dot { background: #f87171; }
+        .badge.connecting   { background: #1e3a5f; color: #60a5fa; }
+        .badge.connecting   .badge-dot { background: #60a5fa; animation: pulse 0.8s infinite; }
+
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ── Bottoni ── */
+        button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.15s, opacity 0.15s;
+        }
+        .btn-connect    { background: #1d4ed8; color: #fff; }
+        .btn-connect:hover { background: #1e40af; }
+        .btn-clear      { background: #1e293b; color: #94a3b8; }
+        .btn-clear:hover { background: #293548; }
+        .btn-scroll     { background: #1e293b; color: #94a3b8; }
+        .btn-scroll.active { background: #1d4ed8; color: #fff; }
+        .btn-scroll:hover  { opacity: 0.85; }
+        .btn-disconnect { background: #7f1d1d; color: #fca5a5; }
+        .btn-disconnect:hover { background: #991b1b; }
+
+        /* ── Log container ── */
+        #logContainer {
+            flex: 1;
+            min-height: 0;
+            background: #0a0c14;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            overflow-y: auto;
+            padding: 12px 16px;
+        }
+
+        .log-line {
+            display: block;
+            font-family: 'Courier New', 'Lucida Console', monospace;
+            font-size: 12.5px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+            padding: 1px 0;
+            animation: fadeIn 0.07s ease;
+        }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+        .log-line.info    { color: #86efac; }
+        .log-line.warning { color: #fde047; }
+        .log-line.error   { color: #f87171; background: rgba(248,113,113,0.06); border-radius: 3px; }
+        .log-line.debug   { color: #7dd3fc; }
+        .log-line.generic { color: #cbd5e1; }
+
+        /* ── Footer ── */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #475569;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .footer strong { color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Log in tempo reale</h1>
+        <div class="controls">
+            <div id="statusBadge" class="badge disconnected">
+                <div class="badge-dot"></div>
+                <span id="statusText">Non connesso</span>
+            </div>
+            <button class="btn-scroll active" id="btnScroll" onclick="toggleScroll()">&#8595; Auto-scroll</button>
+            <button class="btn-clear" onclick="clearLog()">Pulisci</button>
+            <button class="btn-disconnect" id="btnDisconnect" onclick="disconnect()" style="display:none">Disconnetti</button>
+        </div>
+    </div>
+
+    <!-- Selezione pesa -->
+    <div class="params-bar">
+        <label>Pesa</label>
+        <select id="weigherSelect">
+            <option value="">-- caricamento... --</option>
+        </select>
+        <button class="btn-connect" onclick="connect()">Connetti</button>
+    </div>
+
+    <div id="logContainer"></div>
+
+    <div class="footer">
+        <div>Righe totali: <strong id="totalCount">0</strong></div>
+        <div>Ultimo aggiornamento: <strong id="lastUpdate">--</strong></div>
+    </div>
+
+<script>
+    const MAX_LINES = 500;
+
+    let ws        = null;
+    let autoScroll = true;
+    let totalLines = 0;
+    let weigherOk  = false;
+    const lineBuffer = [];
+
+    const logContainer  = document.getElementById('logContainer');
+    const statusBadge   = document.getElementById('statusBadge');
+    const statusText    = document.getElementById('statusText');
+    const btnDisconnect = document.getElementById('btnDisconnect');
+    const btnScroll     = document.getElementById('btnScroll');
+    const totalCountEl  = document.getElementById('totalCount');
+    const lastUpdateEl  = document.getElementById('lastUpdate');
+    const weigherSelect = document.getElementById('weigherSelect');
+
+    // ── Carica le pese disponibili dall'API ───────────────────
+    async function loadWeighers() {
+        try {
+            const token = localStorage.getItem('token');
+            const res  = await fetch('/api/config-weigher/all/instance', {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+            if (!res.ok) {
+                weigherSelect.innerHTML = '<option value="">Errore autenticazione</option>';
+                return;
+            }
+            const data = await res.json();
+            // data = { "0": { nodes: { "P1": {...}, "P2": {...} }, ... }, ... }
+            const options = [];
+            for (const [instanceName, instance] of Object.entries(data)) {
+                const nodes = instance.nodes || {};
+                for (const weigherName of Object.keys(nodes)) {
+                    options.push({ instanceName, weigherName });
+                }
+            }
+            weigherSelect.innerHTML = '';
+            if (options.length === 0) {
+                weigherSelect.innerHTML = '<option value="">Nessuna pesa configurata</option>';
+                return;
+            }
+            for (const { instanceName, weigherName } of options) {
+                const opt = document.createElement('option');
+                opt.value = JSON.stringify({ instanceName, weigherName });
+                opt.textContent = options.length === 1 ? weigherName : `${instanceName} / ${weigherName}`;
+                weigherSelect.appendChild(opt);
+            }
+            // Pre-seleziona dai query params se presenti
+            const urlParams    = new URLSearchParams(location.search);
+            const urlInstance  = urlParams.get('instance_name');
+            const urlWeigher   = urlParams.get('weigher_name');
+            if (urlInstance && urlWeigher) {
+                for (const opt of weigherSelect.options) {
+                    const v = JSON.parse(opt.value);
+                    if (v.instanceName === urlInstance && v.weigherName === urlWeigher) {
+                        opt.selected = true;
+                        break;
+                    }
+                }
+                connect();
+            }
+        } catch (e) {
+            weigherSelect.innerHTML = '<option value="">Errore caricamento pese</option>';
+        }
+    }
+
+    // ── Classificazione riga ──────────────────────────────────
+    function classifyLine(text) {
+        const t = text.toLowerCase();
+        if (t.includes('error') || t.includes('err!') || t.startsWith('e ')) return 'error';
+        if (t.includes('warn')  || t.startsWith('w ')) return 'warning';
+        if (t.includes('info')  || t.startsWith('i ')) return 'info';
+        if (t.includes('debug')) return 'debug';
+        return 'generic';
+    }
+
+    // ── Aggiunge una riga ─────────────────────────────────────
+    function addLine(text) {
+        if (!text) return;
+        const span = document.createElement('span');
+        span.className = 'log-line ' + classifyLine(text);
+        span.textContent = text;
+
+        lineBuffer.push(span);
+        logContainer.appendChild(span);
+
+        if (lineBuffer.length > MAX_LINES) {
+            logContainer.removeChild(lineBuffer.shift());
+        }
+
+        totalLines++;
+        totalCountEl.textContent = totalLines;
+        if (autoScroll) scrollToBottom();
+        lastUpdateEl.textContent = new Date().toLocaleTimeString();
+    }
+
+    // ── Auto-scroll ───────────────────────────────────────────
+    let isScrollingProgrammatically = false;
+
+    function scrollToBottom() {
+        isScrollingProgrammatically = true;
+        logContainer.scrollTop = logContainer.scrollHeight;
+        requestAnimationFrame(() => { isScrollingProgrammatically = false; });
+    }
+
+    function toggleScroll() {
+        autoScroll = !autoScroll;
+        btnScroll.classList.toggle('active', autoScroll);
+        if (autoScroll) scrollToBottom();
+    }
+
+    logContainer.addEventListener('scroll', () => {
+        if (isScrollingProgrammatically) return;
+        const atBottom = logContainer.scrollHeight - logContainer.scrollTop - logContainer.clientHeight < 40;
+        if (!atBottom && autoScroll) {
+            autoScroll = false;
+            btnScroll.classList.remove('active');
+        }
+    });
+
+    // ── Pulisci ───────────────────────────────────────────────
+    function clearLog() {
+        logContainer.innerHTML = '';
+        lineBuffer.length = 0;
+        totalLines = 0;
+        totalCountEl.textContent = 0;
+    }
+
+    // ── Status badge ──────────────────────────────────────────
+    function setStatus(state, label) {
+        statusBadge.className = 'badge ' + state;
+        statusText.textContent = label;
+        btnDisconnect.style.display = (state === 'connected' || state === 'connecting') ? '' : 'none';
+    }
+
+    // ── Connessione ───────────────────────────────────────────
+    function connect() {
+        const selected = weigherSelect.value;
+        if (!selected) return;
+
+        const { instanceName, weigherName } = JSON.parse(selected);
+        if (ws) { ws.close(); ws = null; }
+
+        weigherOk = false;
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url   = `${proto}//${location.host}/api/command-weigher/log?instance_name=${encodeURIComponent(instanceName)}&weigher_name=${encodeURIComponent(weigherName)}`;
+
+        setStatus('connecting', 'Connessione...');
+        ws = new WebSocket(url);
+
+        ws.addEventListener('open', () => setStatus('connecting', 'Connessione in corso...'));
+
+        ws.addEventListener('message', (event) => {
+            let msg;
+            try { msg = JSON.parse(event.data); } catch { addLine(event.data); return; }
+
+            if (msg.status !== undefined) {
+                const s = msg.status;
+                if (s === 'ok') {
+                    weigherOk = true;
+                    setStatus('connected', 'Connesso');
+                } else if (s === 'Connessione in corso...') {
+                    weigherOk = false;
+                    setStatus('connecting', s);
+                } else if (s === 'Errore di ricezione') {
+                    weigherOk = false;
+                    setStatus('connecting', s);
+                } else {
+                    weigherOk = false;
+                    setStatus('disconnected', s);
+                }
+            } else if (msg.log !== undefined) {
+                addLine(msg.log);
+            }
+        });
+
+        ws.addEventListener('close', () => {
+            setStatus('disconnected', 'Disconnesso');
+            weigherOk = false;
+            ws = null;
+        });
+
+        ws.addEventListener('error', () => {
+            setStatus('disconnected', 'Errore connessione');
+            weigherOk = false;
+            ws = null;
+        });
+    }
+
+    function disconnect() {
+        if (ws) { ws.close(); ws = null; }
+        weigherOk = false;
+        setStatus('disconnected', 'Disconnesso');
+    }
+
+    // Avvio
+    loadWeighers();
+</script>
+</body>
+</html>

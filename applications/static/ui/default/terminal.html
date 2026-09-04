@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminale</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #00d4ff;
+            font-size: 1.1em;
+        }
+
+        /* ── Input comando ── */
+        .cmd-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        #cmdInput {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #0f0f23;
+            color: #eee;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #cmdInput:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        #cmdInput::placeholder {
+            color: #555;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+
+        .btn-run {
+            background: #00d4ff;
+            color: #000;
+        }
+
+        .btn-run:hover:not(:disabled) {
+            background: #00b8e6;
+        }
+
+        .btn-run:disabled {
+            background: #2a5a66;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .btn-stop {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            background: #e03040;
+        }
+
+        .btn-stop:disabled {
+            background: #5a2028;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .btn-clear {
+            background: #2f3542;
+            color: #aaa;
+        }
+
+        .btn-clear:hover {
+            background: #3d4452;
+        }
+
+        /* ── Status badge ── */
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+
+        .status.idle     { background: #2f3542; color: #aaa; }
+        .status.running  { background: #ffa502; color: #000; }
+        .status.done     { background: #2ed573; color: #000; }
+        .status.error    { background: #ff4757; color: #fff; }
+
+        /* ── Output terminale ── */
+        #terminal {
+            background: #0a0a18;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 16px;
+            height: 520px;
+            overflow-y: auto;
+            font-family: 'Courier New', 'Lucida Console', monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            /* Scroll veloce, senza animazioni */
+            scroll-behavior: auto;
+        }
+
+        .line {
+            display: block;
+            white-space: pre-wrap;
+            word-break: break-all;
+            padding: 1px 0;
+            animation: fadeIn 0.08s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(2px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .line.cmd    { color: #00d4ff; margin-bottom: 4px; }
+        .line.stdout { color: #c8ffc8; }
+        .line.info   { color: #747d8c; font-style: italic; }
+        .line.error  { color: #ff6b81; background: rgba(255,75,87,0.08); border-radius: 3px; padding: 1px 4px; }
+        .line.exit-ok  { color: #2ed573; margin-top: 4px; font-style: italic; }
+        .line.exit-err { color: #ff4757; margin-top: 4px; font-style: italic; }
+
+        /* ── Footer stats ── */
+        .footer {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 12px;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .footer span { color: #777; }
+        .footer strong { color: #00d4ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1>Terminale <span id="statusBadge" class="status idle">IDLE</span></h1>
+
+        <!-- Comando -->
+        <div class="section">
+            <h2>Esegui comando</h2>
+            <div class="cmd-row">
+                <input
+                    type="text"
+                    id="cmdInput"
+                    placeholder="es: ping -c 5 8.8.8.8  oppure  ls -la /var"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <button class="btn-run" id="btnRun"  onclick="runCommand()">Esegui</button>
+                <button class="btn-stop" id="btnStop" onclick="stopCommand()" disabled>Stop</button>
+            </div>
+        </div>
+
+        <!-- Output -->
+        <div class="section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h2 style="margin:0;">Output (ultimi 30 messaggi)</h2>
+                <button class="btn-clear" onclick="clearTerminal()">Pulisci</button>
+            </div>
+            <div id="terminal"></div>
+            <div class="footer">
+                <div>Righe totali ricevute: <strong id="totalLines">0</strong></div>
+                <div>Righe visualizzate: <strong id="visibleLines">0</strong></div>
+                <div>Ultimo aggiornamento: <strong id="lastUpdate">--:--:--</strong></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ── Costanti ───────────────────────────────────────────────
+        const MAX_VISIBLE_LINES = 30;
+
+        // ── Stato ─────────────────────────────────────────────────
+        let ws         = null;
+        let totalLines = 0;
+        let lineBuffer = [];   // Contiene le righe attualmente visibili (max MAX_VISIBLE_LINES)
+
+        // ── Riferimenti DOM ───────────────────────────────────────
+        const terminal     = document.getElementById('terminal');
+        const cmdInput     = document.getElementById('cmdInput');
+        const btnRun       = document.getElementById('btnRun');
+        const btnStop      = document.getElementById('btnStop');
+        const statusBadge  = document.getElementById('statusBadge');
+        const totalLinesEl = document.getElementById('totalLines');
+        const visibleEl    = document.getElementById('visibleLines');
+        const lastUpdateEl = document.getElementById('lastUpdate');
+
+        // ── Avvio con Enter ───────────────────────────────────────
+        cmdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') runCommand();
+        });
+
+        // ── Funzioni UI ───────────────────────────────────────────
+
+        function setStatus(s) {
+            statusBadge.className = 'status ' + s;
+            const labels = { idle: 'IDLE', running: 'IN ESECUZIONE', done: 'COMPLETATO', error: 'ERRORE' };
+            statusBadge.textContent = labels[s] || s.toUpperCase();
+        }
+
+        /**
+         * Aggiunge una riga al buffer circolare e ridisegna solo la
+         * riga aggiunta (o rimuove la prima se il buffer è pieno).
+         */
+        function addLine(text, cssClass) {
+            const span = document.createElement('span');
+            span.className = 'line ' + cssClass;
+            span.textContent = text;
+
+            lineBuffer.push(span);
+            terminal.appendChild(span);
+
+            // Mantieni solo gli ultimi MAX_VISIBLE_LINES elementi
+            if (lineBuffer.length > MAX_VISIBLE_LINES) {
+                const removed = lineBuffer.shift();
+                terminal.removeChild(removed);
+            }
+
+            totalLines++;
+            totalLinesEl.textContent = totalLines;
+            visibleEl.textContent    = lineBuffer.length;
+            lastUpdateEl.textContent = new Date().toLocaleTimeString();
+
+            // Scroll automatico in fondo
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function clearTerminal() {
+            terminal.innerHTML = '';
+            lineBuffer  = [];
+            totalLines  = 0;
+            totalLinesEl.textContent = '0';
+            visibleEl.textContent    = '0';
+        }
+
+        function setRunning(running) {
+            btnRun.disabled  = running;
+            btnStop.disabled = !running;
+            cmdInput.disabled = running;
+        }
+
+        // ── Connessione WebSocket ─────────────────────────────────
+
+        function runCommand() {
+            const cmd = cmdInput.value.trim();
+            if (!cmd) { cmdInput.focus(); return; }
+
+            // Chiudi eventuale WS precedente
+            if (ws) { ws.close(); ws = null; }
+
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const url   = `${proto}//${window.location.host}/ws/terminal`;
+
+            setRunning(true);
+            setStatus('running');
+
+            ws = new WebSocket(url);
+
+            ws.addEventListener('open', () => {
+                ws.send(cmd);  // Invia il comando al server
+            });
+
+            ws.addEventListener('message', (event) => {
+                let msg;
+                try { msg = JSON.parse(event.data); }
+                catch { addLine(event.data, 'stdout'); return; }
+
+                switch (msg.type) {
+                    case 'info':
+                        addLine(msg.line, 'cmd');
+                        break;
+                    case 'stdout':
+                        addLine(msg.line, 'stdout');
+                        break;
+                    case 'error':
+                        addLine(msg.line, 'error');
+                        break;
+                    case 'exit':
+                        const exitClass = (msg.code === 0) ? 'exit-ok' : 'exit-err';
+                        addLine(msg.line, exitClass);
+                        setRunning(false);
+                        setStatus(msg.code === 0 ? 'done' : 'error');
+                        ws = null;
+                        break;
+                }
+            });
+
+            ws.addEventListener('error', () => {
+                addLine('Errore di connessione WebSocket.', 'error');
+                setRunning(false);
+                setStatus('error');
+                ws = null;
+            });
+
+            ws.addEventListener('close', (e) => {
+                // Se chiuso prima di ricevere "exit" (es. stop manuale)
+                if (btnStop.disabled === false) {
+                    addLine(`[Connessione chiusa — codice ${e.code}]`, 'info');
+                    setRunning(false);
+                    setStatus('idle');
+                    ws = null;
+                }
+            });
+        }
+
+        function stopCommand() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            addLine('[Interrotto dall\'utente]', 'info');
+            setRunning(false);
+            setStatus('idle');
+        }
+    </script>
+</body>
+</html>
