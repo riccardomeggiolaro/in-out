@@ -8,6 +8,7 @@ from modules.md_database.interfaces.operator import OperatorDTO
 from modules.md_database.md_database import TypeAccess
 from typing import Union, Optional, List
 from datetime import datetime
+import libs.lb_config as lb_config
 
 class DataAssignedDTO(BaseModel):
     accessId: int
@@ -26,6 +27,11 @@ class DataInExecution(BaseModel):
 	operator: OperatorDTO = OperatorDTO(**{})
 	note: Optional[str] = None
 	document_reference: Optional[str] = None
+
+	def __init__(self, **data):
+		if "typeSubject" not in data or data["typeSubject"] is None:
+			data["typeSubject"] = lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER")
+		super().__init__(**data)
 
 class IdSelected(BaseModel):
 	id: Optional[int] = None

@@ -124,7 +124,7 @@
                                 "printer": {
                                     "generic": null,
                                     "in": null,
-                                    "out": "TMT88VII",
+                                    "out": null,
                                     "tare": null
                                 },
                                 "prints": {

@@ -202,11 +202,11 @@ class DataRouter(CallbackWeigher):
 				# Non-manual access: update data_in_execution in memory
 				access = get_access_by_id(id_selected)
 				die = weighers_data[instance.instance_name][instance.weigher_name]["data"]["data_in_execution"]
+				if data_dto.data_in_execution.typeSubject:
+					die["typeSubject"] = data_dto.data_in_execution.typeSubject
 				if data_dto.data_in_execution.subject.id or data_dto.data_in_execution.subject.social_reason:
 					die["subject"]["id"] = data_dto.data_in_execution.subject.id
 					die["subject"]["social_reason"] = data_dto.data_in_execution.subject.social_reason
-					if data_dto.data_in_execution.typeSubject:
-						die["typeSubject"] = data_dto.data_in_execution.typeSubject
 				if data_dto.data_in_execution.vector.id or data_dto.data_in_execution.vector.social_reason:
 					die["vector"]["id"] = data_dto.data_in_execution.vector.id
 					die["vector"]["social_reason"] = data_dto.data_in_execution.vector.social_reason
@@ -255,12 +255,16 @@ class DataRouter(CallbackWeigher):
 					io_data["subject"] = {"id": lio.subject.id, "social_reason": lio.subject.social_reason, "telephone": lio.subject.telephone, "cfpiva": lio.subject.cfpiva} if lio.idSubject and lio.subject else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
 					io_data["vector"] = {"id": lio.vector.id, "social_reason": lio.vector.social_reason, "telephone": lio.vector.telephone, "cfpiva": lio.vector.cfpiva} if lio.idVector and lio.vector else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
 					io_data["driver"] = {"id": lio.driver.id, "social_reason": lio.driver.social_reason, "telephone": lio.driver.telephone} if lio.idDriver and lio.driver else {"id": None, "social_reason": None, "telephone": None}
+					if lio.typeSubject:
+						io_data["typeSubject"] = lio.typeSubject.name if hasattr(lio.typeSubject, 'name') else lio.typeSubject
 					io_data_from_in_out = True
 				if not refreshed:
 					io_data["material"] = {"id": updated_access.material.id, "description": updated_access.material.description} if updated_access.idMaterial and updated_access.material else {"id": None, "description": None}
 					io_data["subject"] = {"id": updated_access.subject.id, "social_reason": updated_access.subject.social_reason, "telephone": updated_access.subject.telephone, "cfpiva": updated_access.subject.cfpiva} if updated_access.idSubject and updated_access.subject else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
 					io_data["vector"] = {"id": updated_access.vector.id, "social_reason": updated_access.vector.social_reason, "telephone": updated_access.vector.telephone, "cfpiva": updated_access.vector.cfpiva} if updated_access.idVector and updated_access.vector else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
 					io_data["driver"] = {"id": updated_access.driver.id, "social_reason": updated_access.driver.social_reason, "telephone": updated_access.driver.telephone} if updated_access.idDriver and updated_access.driver else {"id": None, "social_reason": None, "telephone": None}
+					if updated_access.typeSubject:
+						io_data["typeSubject"] = updated_access.typeSubject.name if hasattr(updated_access.typeSubject, 'name') else updated_access.typeSubject
 			if data_dto.id_selected.id != -1:
 				data = json.dumps({"id": id_selected})
 				await self.broadcastUpdateAnagrafic("access", {"access": data})
