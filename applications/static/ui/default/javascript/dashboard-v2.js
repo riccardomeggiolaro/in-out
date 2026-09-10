@@ -1192,7 +1192,7 @@ function processRealtimeObject(obj) {
 
         if (selectedIdWeight !== null && selectedIdWeight["id"] !== obj.id_selected.id) {
             if (selectedIdWeight["id"] !== null) {
-                const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight}"]`);
+                const previouslySelected = document.querySelector(`li[data-id="${selectedIdWeight["id"]}"]`);
                 if (previouslySelected) previouslySelected.classList.remove('selected');
             }
             selectedIdWeight = obj.id_selected;
@@ -1205,7 +1205,7 @@ function processRealtimeObject(obj) {
             }
 
             if (selectedIdWeight["id"] !== null) {
-                const newlySelected = document.querySelector(`li[data-id="${["selectedIdWeight['id']"]}"]`);
+                const newlySelected = document.querySelector(`li[data-id="${selectedIdWeight["id"]}"]`);
                 if (newlySelected) newlySelected.classList.add('selected');
             }
         } else {
