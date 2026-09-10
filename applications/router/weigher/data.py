@@ -238,34 +238,36 @@ class DataRouter(CallbackWeigher):
 				await self.broadcastUpdateAnagrafic("access", {"access": broadcast_data})
 				data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
 				return data
-			body = SetAccessDTO(**data_dto.data_in_execution.dict())
-			access = get_access_by_id(id_selected)
-			idInOut = None
-			if access and len(access.in_out) > 0:
-				idInOut = access.in_out[-1].id
-			updated = update_access(id_selected, body, idInOut)
-			# Refresh io_data from the updated access/in_out after save
-			updated_access = get_access_by_id(id_selected)
-			if updated_access:
-				refreshed = False
-				if len(updated_access.in_out) > 0 and updated_access.in_out[-1].net_weight is None:
-					refreshed = True
-					lio = updated_access.in_out[-1]
-					io_data["material"] = {"id": lio.material.id, "description": lio.material.description} if lio.idMaterial and lio.material else {"id": None, "description": None}
-					io_data["subject"] = {"id": lio.subject.id, "social_reason": lio.subject.social_reason, "telephone": lio.subject.telephone, "cfpiva": lio.subject.cfpiva} if lio.idSubject and lio.subject else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
-					io_data["vector"] = {"id": lio.vector.id, "social_reason": lio.vector.social_reason, "telephone": lio.vector.telephone, "cfpiva": lio.vector.cfpiva} if lio.idVector and lio.vector else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
-					io_data["driver"] = {"id": lio.driver.id, "social_reason": lio.driver.social_reason, "telephone": lio.driver.telephone} if lio.idDriver and lio.driver else {"id": None, "social_reason": None, "telephone": None}
-					if lio.typeSubject:
-						io_data["typeSubject"] = lio.typeSubject.name if hasattr(lio.typeSubject, 'name') else lio.typeSubject
-					io_data_from_in_out = True
-				if not refreshed:
-					io_data["material"] = {"id": updated_access.material.id, "description": updated_access.material.description} if updated_access.idMaterial and updated_access.material else {"id": None, "description": None}
-					io_data["subject"] = {"id": updated_access.subject.id, "social_reason": updated_access.subject.social_reason, "telephone": updated_access.subject.telephone, "cfpiva": updated_access.subject.cfpiva} if updated_access.idSubject and updated_access.subject else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
-					io_data["vector"] = {"id": updated_access.vector.id, "social_reason": updated_access.vector.social_reason, "telephone": updated_access.vector.telephone, "cfpiva": updated_access.vector.cfpiva} if updated_access.idVector and updated_access.vector else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
-					io_data["driver"] = {"id": updated_access.driver.id, "social_reason": updated_access.driver.social_reason, "telephone": updated_access.driver.telephone} if updated_access.idDriver and updated_access.driver else {"id": None, "social_reason": None, "telephone": None}
-					if updated_access.typeSubject:
-						io_data["typeSubject"] = updated_access.typeSubject.name if hasattr(updated_access.typeSubject, 'name') else updated_access.typeSubject
 			if data_dto.id_selected.id != -1:
+				# Skip saving data_in_execution when the request is only deselecting (-1):
+				# there is nothing to persist on the access being deselected.
+				body = SetAccessDTO(**data_dto.data_in_execution.dict())
+				access = get_access_by_id(id_selected)
+				idInOut = None
+				if access and len(access.in_out) > 0:
+					idInOut = access.in_out[-1].id
+				updated = update_access(id_selected, body, idInOut)
+				# Refresh io_data from the updated access/in_out after save
+				updated_access = get_access_by_id(id_selected)
+				if updated_access:
+					refreshed = False
+					if len(updated_access.in_out) > 0 and updated_access.in_out[-1].net_weight is None:
+						refreshed = True
+						lio = updated_access.in_out[-1]
+						io_data["material"] = {"id": lio.material.id, "description": lio.material.description} if lio.idMaterial and lio.material else {"id": None, "description": None}
+						io_data["subject"] = {"id": lio.subject.id, "social_reason": lio.subject.social_reason, "telephone": lio.subject.telephone, "cfpiva": lio.subject.cfpiva} if lio.idSubject and lio.subject else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
+						io_data["vector"] = {"id": lio.vector.id, "social_reason": lio.vector.social_reason, "telephone": lio.vector.telephone, "cfpiva": lio.vector.cfpiva} if lio.idVector and lio.vector else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
+						io_data["driver"] = {"id": lio.driver.id, "social_reason": lio.driver.social_reason, "telephone": lio.driver.telephone} if lio.idDriver and lio.driver else {"id": None, "social_reason": None, "telephone": None}
+						if lio.typeSubject:
+							io_data["typeSubject"] = lio.typeSubject.name if hasattr(lio.typeSubject, 'name') else lio.typeSubject
+						io_data_from_in_out = True
+					if not refreshed:
+						io_data["material"] = {"id": updated_access.material.id, "description": updated_access.material.description} if updated_access.idMaterial and updated_access.material else {"id": None, "description": None}
+						io_data["subject"] = {"id": updated_access.subject.id, "social_reason": updated_access.subject.social_reason, "telephone": updated_access.subject.telephone, "cfpiva": updated_access.subject.cfpiva} if updated_access.idSubject and updated_access.subject else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
+						io_data["vector"] = {"id": updated_access.vector.id, "social_reason": updated_access.vector.social_reason, "telephone": updated_access.vector.telephone, "cfpiva": updated_access.vector.cfpiva} if updated_access.idVector and updated_access.vector else {"id": None, "social_reason": None, "telephone": None, "cfpiva": None}
+						io_data["driver"] = {"id": updated_access.driver.id, "social_reason": updated_access.driver.social_reason, "telephone": updated_access.driver.telephone} if updated_access.idDriver and updated_access.driver else {"id": None, "social_reason": None, "telephone": None}
+						if updated_access.typeSubject:
+							io_data["typeSubject"] = updated_access.typeSubject.name if hasattr(updated_access.typeSubject, 'name') else updated_access.typeSubject
 				data = json.dumps({"id": id_selected})
 				await self.broadcastUpdateAnagrafic("access", {"access": data})
 		if data_dto.id_selected.id:
