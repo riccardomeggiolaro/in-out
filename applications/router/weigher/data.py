@@ -247,8 +247,12 @@ class DataRouter(CallbackWeigher):
 				if access and len(access.in_out) > 0:
 					idInOut = access.in_out[-1].id
 				updated = update_access(id_selected, body, idInOut)
-				# Refresh io_data from the updated access/in_out after save
-				updated_access = get_access_by_id(id_selected)
+				# Refresh io_data from the updated access/in_out only when we are still
+				# working on the same access: if the request is switching to a different
+				# id_selected, io_data was already populated above from the newly selected
+				# access and must not be overwritten with the previous one's data (this was
+				# causing subject/vector/material to stick to the previously selected access).
+				updated_access = get_access_by_id(id_selected) if data_dto.id_selected.id == id_selected else None
 				if updated_access:
 					refreshed = False
 					if len(updated_access.in_out) > 0 and updated_access.in_out[-1].net_weight is None:
