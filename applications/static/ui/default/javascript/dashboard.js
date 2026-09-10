@@ -324,11 +324,17 @@ async function populateListIn() {
             const lastInOut = item.in_out.length > 0 ? item.in_out.find(io => io.is_last) || item.in_out[item.in_out.length - 1] : null;
             const lastInOutOpen = lastInOut && lastInOut.net_weight == null;
             let subjectName = null;
+            let vectorName = null;
             let materialDesc = null;
             if (lastInOutOpen && lastInOut.subject && lastInOut.subject.social_reason) {
                 subjectName = lastInOut.subject.social_reason;
             } else if (item.subject && item.subject.social_reason) {
                 subjectName = item.subject.social_reason;
+            }
+            if (lastInOutOpen && lastInOut.vector && lastInOut.vector.social_reason) {
+                vectorName = lastInOut.vector.social_reason;
+            } else if (item.vector && item.vector.social_reason) {
+                vectorName = item.vector.social_reason;
             }
             if (lastInOutOpen && lastInOut.material && lastInOut.material.description) {
                 materialDesc = lastInOut.material.description;
@@ -336,7 +342,9 @@ async function populateListIn() {
                 materialDesc = item.material.description;
             }
             if (subjectName) additionalInfo.push(subjectName);
+            if (vectorName) additionalInfo.push(vectorName);
             if (materialDesc) additionalInfo.push(materialDesc);
+            additionalInfo = additionalInfo.slice(0, 2);
             if (additionalInfo.length > 0) {
                 content += `<br><small style="font-size: 0.85em;">${additionalInfo.join(' - ')}</small>`;
             }
