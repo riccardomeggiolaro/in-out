@@ -967,7 +967,7 @@ function deleteLastWeighing(idAccess, plate, pid) {
                             <b>NETTO: </b> <u>${weighing.net_weight !== null ? weighing.net_weight : ''} kg</u>.
                             <b>MATERIALE: </B> <u>${weighing.material ? weighing.material.description : ''}</u>`;
 
-                if (!weighing.weight2 && report.in || weighing.weight2 && report.out) content += `<button onclick="exportReportWeighing(${weighing.id})">📄</button>`;
+                if (!weighing.weight2 && report.in || weighing.weight2 && report.out || report.generic) content += `<button onclick="exportReportWeighing(${weighing.id})">📄</button>`;
 
                 if (dataUser.level > 1) {
                     if (lengthWeighings === item.in_out.length && item.is_latest_for_vehicle !== false && item.is_latest_for_badge !== false) {
