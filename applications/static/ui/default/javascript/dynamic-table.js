@@ -906,14 +906,15 @@ function editRow(item) {
         }
         const plateInput = editPopup.querySelector('#vehicle\\.plate');
         if (plateInput) {
-            const hasWeighings = item.in_out && item.in_out.length > 0;
+            // La targa è modificabile solo per gli accessi manuali
+            const canEditPlate = item.type === "Manuale" || item.type === "MANUALLY";
             const vehicleDiv = plateInput.closest('.item-25')?.parentElement;
             if (vehicleDiv) {
-                vehicleDiv.style.display = hasWeighings ? 'none' : '';
+                vehicleDiv.style.display = canEditPlate ? '' : 'none';
                 const h4 = vehicleDiv.previousElementSibling;
-                if (h4 && h4.tagName === 'H4') h4.style.display = hasWeighings ? 'none' : '';
+                if (h4 && h4.tagName === 'H4') h4.style.display = canEditPlate ? '' : 'none';
                 const hr = vehicleDiv.nextElementSibling;
-                if (hr && hr.tagName === 'HR') hr.style.display = hasWeighings ? 'none' : '';
+                if (hr && hr.tagName === 'HR') hr.style.display = canEditPlate ? '' : 'none';
             }
         }
         triggerEventsForAll('.id');
