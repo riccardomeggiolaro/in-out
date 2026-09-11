@@ -36,7 +36,8 @@ let requestIdCounter = 0;
 let buffer = "";
 let report = {
     in: false,
-    out: false
+    out: false,
+    generic: false
 }
 let customQueryParams = "";
 let lastExportQueryParams = "";
@@ -75,6 +76,7 @@ async function configuration() {
                 Object.keys(instance.nodes).forEach(weigher => {
                     report.in = instance.nodes[weigher].events.weighing.report.in;
                     report.out = instance.nodes[weigher].events.weighing.report.out;
+                    report.generic = instance.nodes[weigher].events.weighing.report.generic;
                 });
                 if (config.panel.enabled) document.querySelectorAll(".li-panel-mode").forEach(li => li.style.display = "none");
                 if (!res.use_badge) {
@@ -467,7 +469,7 @@ function createRow(table, columns, item, idInout) {
             startTimer(row, index, lastWeighingDate || item.date_created);
         }
     } else if (itemName === "access" && idInout) {
-        if (!item.weight2 && report.in || item.weight2 && report.out) {
+        if (!item.weight2 && report.in || item.weight2 && report.out || report.generic) {
             pdfButton = document.createElement("button");
             pdfButton.style.visibility = 'hidden';
             pdfButton.textContent = "📄";
