@@ -78,16 +78,21 @@ def add_access(data: AddAccessDTO, status: Optional[AccessStatus] = None):
             vehicle = None
             if not data.vehicle.id:
                 add_vehicle = {
-                    "plate": data.vehicle.plate if data.vehicle.plate != "" else None,
+                    "plate": data.vehicle.plate.strip() if data.vehicle.plate and data.vehicle.plate.strip() != "" else None,
                     "description": data.vehicle.description if data.vehicle.description != "" else None,
                     "tare": data.vehicle.tare if data.vehicle.tare and data.vehicle.tare > 0 else None
                 }
                 if has_non_none_value(add_vehicle):
-                    data_to_check = data.vehicle.dict()
-                    vehicle = current_model(**add_vehicle)
-                    session.add(vehicle)
-                    session.flush()
-                    add_access["idVehicle"] = vehicle.id
+                    # Riusa il veicolo esistente con la stessa targa invece di crearne uno duplicato
+                    existing_vehicle = session.query(Vehicle).filter(Vehicle.plate == add_vehicle["plate"]).first() if add_vehicle["plate"] else None
+                    if existing_vehicle:
+                        add_access["idVehicle"] = existing_vehicle.id
+                    else:
+                        data_to_check = data.vehicle.dict()
+                        vehicle = current_model(**add_vehicle)
+                        session.add(vehicle)
+                        session.flush()
+                        add_access["idVehicle"] = vehicle.id
 
             current_model = Material
             if not data.material.id:
