@@ -445,7 +445,8 @@ function createRow(table, columns, item, idInout) {
             startTimer(row, index, item.date_created);
         }
     } else if (itemName === "access" && idInout) {
-        if (item.type === "Test" ? report.generic : (!item.weight2 && report.in || item.weight2 && report.out)) {
+        const accessType = (item.access && item.access.type) || item.type;
+        if (accessType === "Test" ? report.generic : (!item.weight2 && report.in || item.weight2 && report.out)) {
             pdfButton = document.createElement("button");
             pdfButton.style.visibility = 'hidden';
             pdfButton.textContent = "📄";
