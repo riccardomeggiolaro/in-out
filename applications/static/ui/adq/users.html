@@ -275,6 +275,8 @@
     <div id="edit-popup" class="modal-content popup">
         <h3>Modifica utente:</h3>
         <form id="edit" class="content" oninput="document.querySelector('#edit-popup .save-btn').disabled = !this.checkValidity()">
+            Username:<br>
+            <input type="text" id="edit-username" name="username" autocomplete="off" required>
             Descrizione:<br>
             <input type="text" id="edit-description" name="description" autocomplete="off">
             <label for="edit-level">Livello:</label>
@@ -362,6 +364,7 @@
 
         function editRow(id, username, description, level) {
             currentId = id;
+            document.getElementById('edit-username').value = username || '';
             document.getElementById('edit-description').value = description || '';
             const editLevel = document.getElementById('edit-level');
             if (editLevel) {
@@ -532,7 +535,8 @@
                     closePopups(['edit-popup']);
                     showSnackbar("snackbar", 'Utente modificato correttamente', 'rgb(208, 255, 208)', 'black');
                 } else {
-                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');
+                    const message = res.data.detail?.[0]?.msg?.replace("Value error, ", "") || res.data.detail;
+                    showSnackbar("snackbar", message || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');
                 }
             });
         }
@@ -556,7 +560,8 @@
                     closePopups(['password-popup']);
                     showSnackbar("snackbar", 'Password modificata correttamente', 'rgb(208, 255, 208)', 'black');
                 } else {
-                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');
+                    const message = res.data.detail?.[0]?.msg?.replace("Value error, ", "") || res.data.detail;
+                    showSnackbar("snackbar", message || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');
                 }
             });
         }
@@ -573,7 +578,8 @@
                     closePopups(["delete-popup"]);
                     showSnackbar("snackbar", 'Utente eliminato correttamente', 'rgb(208, 255, 208)', 'black');
                 } else {
-                    showSnackbar("snackbar", res.data.detail[0].msg || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
+                    const message = res.data.detail?.[0]?.msg?.replace("Value error, ", "") || res.data.detail;
+                    showSnackbar("snackbar", message || res.error || 'Errore', 'rgb(255, 208, 208)', 'black');           
                 }
             })
         }
