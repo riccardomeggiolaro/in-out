@@ -37,6 +37,7 @@ class LoginDTO(BaseModel):
 		return hash_password(v)
 
 class SetUserDTO(BaseModel):
+	username: Optional[str] = None
 	password: Optional[str] = None
 	description: Optional[str] = None
 	level: Optional[int] = None
