@@ -1,5 +1,5 @@
 from modules.md_database.md_database import table_models, SessionLocal
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from modules.md_database.functions.lock_record import lock_record
 from modules.md_database.functions.unlock_record_by_id import unlock_record_by_id
 
@@ -14,11 +14,13 @@ def delete_data(table_name, record_id):
         # Crea una sessione
         with SessionLocal() as session:
             try:
-                # Option 1: Eager loading - load all relationships up front
-                # This way relationships are already loaded before the session closes
-                record = session.query(model).options(
-                    joinedload('*')  # Load all direct relationships
-                ).filter_by(id=record_id).one_or_none()
+                # Eager load only the direct relationships (one level), not recursively:
+                # a recursive wildcard joinedload('*') would follow every back_populates
+                # relationship transitively and can exceed SQLite's 64-table join limit.
+                query = session.query(model)
+                for rel_name, rel_obj in model.__mapper__.relationships.items():
+                    query = query.options(selectinload(getattr(model, rel_name)))
+                record = query.filter_by(id=record_id).one_or_none()
                 
                 if record is None:
                     raise ValueError(f"Record con ID {record_id} non trovato nella tabella '{table_name}'.")
