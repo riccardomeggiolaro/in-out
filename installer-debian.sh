@@ -107,16 +107,16 @@ sudo systemctl restart cups
 
 # Installa e abilita Cockpit se non è presente
 if ! is_installed cockpit; then
-    print_info "Cockpit non è installato, installazione in corso..."
+    echo "Cockpit non è installato, installazione in corso..."
     apt install -y cockpit
-    print_info "Cockpit installato con successo"
+    echo "Cockpit installato con successo"
 else
-    print_info "Cockpit è già installato"
+    echo "Cockpit è già installato"
 fi
 
-print_info "Abilitazione e avvio del socket Cockpit..."
+echo "Abilitazione e avvio del socket Cockpit..."
 systemctl enable --now cockpit.socket
-print_info "Cockpit è attivo"
+echo "Cockpit è attivo"
 
 # Crea la directory di installazione /opt/in-out e copia i file
 if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
