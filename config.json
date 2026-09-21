@@ -65,6 +65,9 @@
             "vehicle": false
         },
         "totem_enabled": false,
+        "updating": {
+            "domain": ""
+        },
         "use_anagrafic": {
             "document_reference": true,
             "driver": true,
