@@ -25,7 +25,7 @@ from modules.md_database.functions.get_in_out_by_id import get_in_out_by_id
 from modules.md_database.functions.safe_get_attr import safe_get_attr
 from applications.utils.utils import get_query_params
 from applications.utils.utils_weigher import get_query_params_name_node, InstanceNameWeigherDTO
-from applications.utils.utils_report import find_file_in_directory
+from applications.utils.utils_report import find_file_in_directory, compute_grouped_totals, write_xlsx_totals_section, build_pdf_totals_flowables
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
 from applications.router.weigher.manager_weighers_data import broadcastMessageWebSocket
@@ -200,17 +200,20 @@ class WeighingTerminalRouter(WebSocket):
                 
                 weighing_terminal_list.append(row)
 
-            # Calcola totali per materiale
+            # Calcola totali per materiale, cliente, fornitore e targa
             show_export_totals = lb_config.g_config["app_api"].get("show_export_totals", True)
-            material_totals = {}
-            if load_material and show_export_totals:
-                for weighing in data:
-                    material_name = weighing.material if weighing.material else "Non specificato"
-                    net = weighing.net_weight if weighing.net_weight is not None else 0
-                    if material_name in material_totals:
-                        material_totals[material_name] += net
-                    else:
-                        material_totals[material_name] = net
+            material_totals = compute_grouped_totals(
+                data, key_fn=lambda w: w.material, value_fn=lambda w: w.net_weight,
+            ) if load_material and show_export_totals else []
+            customer_totals = compute_grouped_totals(
+                data, key_fn=lambda w: w.customer, value_fn=lambda w: w.net_weight,
+            ) if load_subject and show_export_totals else []
+            supplier_totals = compute_grouped_totals(
+                data, key_fn=lambda w: w.supplier, value_fn=lambda w: w.net_weight,
+            ) if load_subject and show_export_totals else []
+            plate_totals = compute_grouped_totals(
+                data, key_fn=lambda w: w.plate, value_fn=lambda w: w.net_weight,
+            ) if load_vehicle and show_export_totals else []
 
             # Crea DataFrame e esporta
             df = pd.DataFrame(weighing_terminal_list)
@@ -218,21 +221,15 @@ class WeighingTerminalRouter(WebSocket):
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                 df.to_excel(writer, sheet_name="Pesate", index=False)
 
-                if load_material and show_export_totals and material_totals:
+                if show_export_totals and (material_totals or customer_totals or supplier_totals or plate_totals):
                     workbook = writer.book
                     worksheet = writer.sheets["Pesate"]
-                    bold_format = workbook.add_format({'bold': True})
 
                     start_row = len(weighing_terminal_list) + 2
-                    worksheet.write(start_row, 0, "Totali per materiale", bold_format)
-                    start_row += 1
-                    worksheet.write(start_row, 0, "Materiale", bold_format)
-                    worksheet.write(start_row, 1, "Netto (kg)", bold_format)
-                    start_row += 1
-                    for material_name, total_kg in sorted(material_totals.items(), key=lambda x: (x[0] == "Non specificato", x[0])):
-                        worksheet.write(start_row, 0, material_name)
-                        worksheet.write(start_row, 1, total_kg)
-                        start_row += 1
+                    start_row = write_xlsx_totals_section(worksheet, workbook, start_row, "Totali per materiale", "Materiale", "Netto (kg)", material_totals)
+                    start_row = write_xlsx_totals_section(worksheet, workbook, start_row, "Totali per cliente", "Cliente", "Netto (kg)", customer_totals)
+                    start_row = write_xlsx_totals_section(worksheet, workbook, start_row, "Totali per fornitore", "Fornitore", "Netto (kg)", supplier_totals)
+                    start_row = write_xlsx_totals_section(worksheet, workbook, start_row, "Totali per targa", "Targa", "Netto (kg)", plate_totals)
 
             output.seek(0)
             return StreamingResponse(
@@ -438,40 +435,26 @@ class WeighingTerminalRouter(WebSocket):
             t.setStyle(table_style)
             story.append(t)
 
-            # Aggiungi totali per materiale
+            # Aggiungi totali per materiale, cliente, fornitore e targa
             show_export_totals = lb_config.g_config["app_api"].get("show_export_totals", True)
-            if load_material and show_export_totals:
-                material_totals = {}
-                for weighing in data:
-                    material_name = weighing.material if weighing.material else "Non specificato"
-                    net = weighing.net_weight if weighing.net_weight is not None else 0
-                    if material_name in material_totals:
-                        material_totals[material_name] += net
-                    else:
-                        material_totals[material_name] = net
+            if show_export_totals:
+                material_totals = compute_grouped_totals(
+                    data, key_fn=lambda w: w.material, value_fn=lambda w: w.net_weight,
+                ) if load_material else []
+                customer_totals = compute_grouped_totals(
+                    data, key_fn=lambda w: w.customer, value_fn=lambda w: w.net_weight,
+                ) if load_subject else []
+                supplier_totals = compute_grouped_totals(
+                    data, key_fn=lambda w: w.supplier, value_fn=lambda w: w.net_weight,
+                ) if load_subject else []
+                plate_totals = compute_grouped_totals(
+                    data, key_fn=lambda w: w.plate, value_fn=lambda w: w.net_weight,
+                ) if load_vehicle else []
 
-                if material_totals:
-                    story.append(Spacer(1, 0.3*inch))
-                    story.append(Paragraph("Totali per materiale", styles['Heading3']))
-                    story.append(Spacer(1, 0.1*inch))
-
-                    totals_data = [['Materiale', 'Netto (kg)']]
-                    for material_name, total_kg in sorted(material_totals.items(), key=lambda x: (x[0] == "Non specificato", x[0])):
-                        totals_data.append([material_name, str(total_kg)])
-
-                    totals_table = Table(totals_data, colWidths=[200, 100])
-                    totals_table.setStyle(TableStyle([
-                        ('BACKGROUND', (0, 0), (-1, 0), header_color),
-                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                        ('TOPPADDING', (0, 0), (-1, -1), 4),
-                        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ]))
-                    story.append(totals_table)
+                story.extend(build_pdf_totals_flowables(styles, "Totali per materiale", "Materiale", "Netto (kg)", material_totals, header_color, common_font_size))
+                story.extend(build_pdf_totals_flowables(styles, "Totali per cliente", "Cliente", "Netto (kg)", customer_totals, header_color, common_font_size))
+                story.extend(build_pdf_totals_flowables(styles, "Totali per fornitore", "Fornitore", "Netto (kg)", supplier_totals, header_color, common_font_size))
+                story.extend(build_pdf_totals_flowables(styles, "Totali per targa", "Targa", "Netto (kg)", plate_totals, header_color, common_font_size))
 
             # Build PDF
             doc.build(story)

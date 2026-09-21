@@ -10,6 +10,9 @@ from modules.md_database.interfaces.material import MaterialDataDTO
 from modules.md_database.interfaces.operator import OperatorDataDTO
 import json
 from applications.utils.utils import image_to_base64_data_uri
+from reportlab.lib import colors as reportlab_colors
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.units import inch
 
 def get_data_variables(in_out, is_generic=False):
     report_in = lb_config.g_config["app_api"]["report_in"]
@@ -185,3 +188,48 @@ def find_file_in_directory(directory, filename):
             with open(file_path, 'rb') as f:
                 return f.read()  # Restituisce i byte del file
     return None
+
+def compute_grouped_totals(items, key_fn, value_fn, default_label="Non specificato"):
+    totals = {}
+    for item in items:
+        label = key_fn(item) or default_label
+        value = value_fn(item) or 0
+        totals[label] = totals.get(label, 0) + value
+    return sorted(totals.items(), key=lambda x: (x[0] == default_label, x[0]))
+
+def write_xlsx_totals_section(worksheet, workbook, start_row, title, label_header, value_header, totals):
+    if not totals:
+        return start_row
+    bold_format = workbook.add_format({'bold': True})
+    worksheet.write(start_row, 0, title, bold_format)
+    start_row += 1
+    worksheet.write(start_row, 0, label_header, bold_format)
+    worksheet.write(start_row, 1, value_header, bold_format)
+    start_row += 1
+    for label, total in totals:
+        worksheet.write(start_row, 0, label)
+        worksheet.write(start_row, 1, total)
+        start_row += 1
+    return start_row + 1
+
+def build_pdf_totals_flowables(styles, title, label_header, value_header, totals, header_color, common_font_size, col_widths=(200, 100)):
+    if not totals:
+        return []
+    flowables = [Spacer(1, 0.3 * inch), Paragraph(title, styles['Heading3']), Spacer(1, 0.1 * inch)]
+    totals_data = [[label_header, value_header]]
+    for label, total in totals:
+        totals_data.append([label, str(total)])
+    totals_table = Table(totals_data, colWidths=list(col_widths))
+    totals_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), header_color),
+        ('TEXTCOLOR', (0, 0), (-1, 0), reportlab_colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), common_font_size),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('GRID', (0, 0), (-1, -1), 0.5, reportlab_colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    flowables.append(totals_table)
+    return flowables
