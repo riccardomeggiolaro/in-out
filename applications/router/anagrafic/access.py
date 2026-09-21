@@ -24,7 +24,7 @@ from modules.md_database.functions.get_in_out_by_id import get_in_out_by_id
 from modules.md_database.functions.safe_get_attr import safe_get_attr
 from applications.utils.utils import get_query_params
 from applications.utils.utils_weigher import get_query_params_name_node, InstanceNameWeigherDTO
-from applications.utils.utils_report import find_file_in_directory, compute_grouped_totals, write_xlsx_totals_section, build_pdf_totals_flowables
+from applications.utils.utils_report import find_file_in_directory, compute_grouped_totals, write_xlsx_totals_section, build_pdf_totals_flowables, resolve_in_out_subject, resolve_in_out_vector, resolve_in_out_type_subject
 from applications.router.anagrafic.web_sockets import WebSocket
 from applications.router.anagrafic.panel_siren.router import PanelSirenRouter
 from applications.router.weigher.manager_weighers_data import broadcastMessageWebSocket
@@ -372,13 +372,15 @@ class AccessRouter(PanelSirenRouter):
                 
                 if load_vehicle:
                     row["Targa"] = inout.access.vehicle.plate if inout.access.vehicle else None
-                
+
                 if load_subject:
-                    row["Cliente/Fornitore"] = inout.access.subject.social_reason if inout.access.subject else None
-                
+                    subject = resolve_in_out_subject(inout)
+                    row["Cliente/Fornitore"] = subject.social_reason if subject else None
+
                 if load_vector:
-                    row["Vettore"] = inout.access.vector.social_reason if inout.access.vector else None
-                
+                    vector = resolve_in_out_vector(inout)
+                    row["Vettore"] = vector.social_reason if vector else None
+
                 if load_material:
                     row["Materiale"] = inout.material.description if inout.material else None
 
@@ -424,13 +426,13 @@ class AccessRouter(PanelSirenRouter):
                 value_fn=lambda inout: inout.net_weight,
             ) if load_material and show_export_totals else []
             customer_totals = compute_grouped_totals(
-                [inout for inout in data if inout.access and inout.access.typeSubject == TypeSubjectEnum.CUSTOMER],
-                key_fn=lambda inout: inout.access.subject.social_reason if inout.access.subject else None,
+                [inout for inout in data if resolve_in_out_type_subject(inout) == TypeSubjectEnum.CUSTOMER],
+                key_fn=lambda inout: resolve_in_out_subject(inout).social_reason if resolve_in_out_subject(inout) else None,
                 value_fn=lambda inout: inout.net_weight,
             ) if load_subject and show_export_totals else []
             supplier_totals = compute_grouped_totals(
-                [inout for inout in data if inout.access and inout.access.typeSubject == TypeSubjectEnum.SUPPLIER],
-                key_fn=lambda inout: inout.access.subject.social_reason if inout.access.subject else None,
+                [inout for inout in data if resolve_in_out_type_subject(inout) == TypeSubjectEnum.SUPPLIER],
+                key_fn=lambda inout: resolve_in_out_subject(inout).social_reason if resolve_in_out_subject(inout) else None,
                 value_fn=lambda inout: inout.net_weight,
             ) if load_subject and show_export_totals else []
             plate_totals = compute_grouped_totals(
@@ -663,11 +665,13 @@ class AccessRouter(PanelSirenRouter):
                     row.append(str(inout.access.vehicle.plate if inout.access.vehicle else '')[:6])
                 
                 if load_subject:
-                    row.append(str(inout.access.subject.social_reason if inout.access.subject else '')[:18])
-                
+                    subject = resolve_in_out_subject(inout)
+                    row.append(str(subject.social_reason if subject else '')[:18])
+
                 if load_vector:
-                    row.append(str(inout.access.vector.social_reason if inout.access.vector else '')[:18])
-                
+                    vector = resolve_in_out_vector(inout)
+                    row.append(str(vector.social_reason if vector else '')[:18])
+
                 if load_material:
                     row.append(str(inout.material.description if inout.material else '')[:12])
 
@@ -723,13 +727,13 @@ class AccessRouter(PanelSirenRouter):
                     value_fn=lambda inout: inout.net_weight,
                 ) if load_material else []
                 customer_totals = compute_grouped_totals(
-                    [inout for inout in data if inout.access and inout.access.typeSubject == TypeSubjectEnum.CUSTOMER],
-                    key_fn=lambda inout: inout.access.subject.social_reason if inout.access.subject else None,
+                    [inout for inout in data if resolve_in_out_type_subject(inout) == TypeSubjectEnum.CUSTOMER],
+                    key_fn=lambda inout: resolve_in_out_subject(inout).social_reason if resolve_in_out_subject(inout) else None,
                     value_fn=lambda inout: inout.net_weight,
                 ) if load_subject else []
                 supplier_totals = compute_grouped_totals(
-                    [inout for inout in data if inout.access and inout.access.typeSubject == TypeSubjectEnum.SUPPLIER],
-                    key_fn=lambda inout: inout.access.subject.social_reason if inout.access.subject else None,
+                    [inout for inout in data if resolve_in_out_type_subject(inout) == TypeSubjectEnum.SUPPLIER],
+                    key_fn=lambda inout: resolve_in_out_subject(inout).social_reason if resolve_in_out_subject(inout) else None,
                     value_fn=lambda inout: inout.net_weight,
                 ) if load_subject else []
                 plate_totals = compute_grouped_totals(
