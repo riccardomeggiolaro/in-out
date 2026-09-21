@@ -26,7 +26,6 @@ from applications.middleware.no_cache import NoCacheMiddleware
 import applications.utils.utils as utils
 from libs.lb_utils import base_path
 from modules.md_database.functions.delete_pending_non_reservation_accesses import delete_pending_non_reservation_accesses
-import modules.md_updating.md_updating as md_updating
 from applications.router.anagrafic.manager_anagrafics import manager_anagrafics
 import asyncio
 from applications.utils.utils_backup import backup_database
@@ -156,11 +155,6 @@ def init():
 	sync_folder_router = SyncFolderRouter()
 	rfid_router = RfidRouter()
 	whoami_router = WhoAmIRouter()
-
-	# Passa al modulo md_updating il dominio configurato per le chiamate periodiche
-	updating_domain = lb_config.g_config.get("app_api", {}).get("updating", {}).get("domain")
-	if updating_domain:
-		md_updating.set_domain(updating_domain)
 
 	# Avvia il thread di pulizia mezzanotte per eliminare accessi pendenti non prenotati
 	_midnight_cleanup_stop_event.clear()
