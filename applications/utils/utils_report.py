@@ -189,6 +189,15 @@ def find_file_in_directory(directory, filename):
                 return f.read()  # Restituisce i byte del file
     return None
 
+def resolve_in_out_subject(in_out):
+    return in_out.subject if in_out.subject else (in_out.access.subject if in_out.access else None)
+
+def resolve_in_out_vector(in_out):
+    return in_out.vector if in_out.vector else (in_out.access.vector if in_out.access else None)
+
+def resolve_in_out_type_subject(in_out):
+    return in_out.typeSubject if in_out.typeSubject else (in_out.access.typeSubject if in_out.access else None)
+
 def compute_grouped_totals(items, key_fn, value_fn, default_label="Non specificato"):
     totals = {}
     for item in items:
