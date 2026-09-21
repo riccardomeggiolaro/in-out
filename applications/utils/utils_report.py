@@ -190,13 +190,15 @@ def find_file_in_directory(directory, filename):
     return None
 
 def resolve_in_out_subject(in_out):
-    return in_out.subject if in_out.subject else (in_out.access.subject if in_out.access else None)
+    # Il soggetto va preso dalla pesata (in_out), mai dall'accesso: l'accesso può
+    # derivare da una prenotazione e portare un soggetto diverso da quello pesato.
+    return in_out.subject
 
 def resolve_in_out_vector(in_out):
-    return in_out.vector if in_out.vector else (in_out.access.vector if in_out.access else None)
+    return in_out.vector
 
 def resolve_in_out_type_subject(in_out):
-    return in_out.typeSubject if in_out.typeSubject else (in_out.access.typeSubject if in_out.access else None)
+    return in_out.typeSubject
 
 def compute_grouped_totals(items, key_fn, value_fn, default_label="Non specificato"):
     totals = {}
