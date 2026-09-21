@@ -617,31 +617,59 @@ class GenericRouter:
             raise HTTPException(status_code=500, detail=f"Errore nella generazione dell'export: {str(e)}")
 
     async def importConfig(self, file: UploadFile = File(...)):
-        """Sostituisce il config.json corrente con quello caricato dall'utente."""
-        if not file.filename.lower().endswith('.json'):
-            raise HTTPException(status_code=400, detail="Il file deve essere un .json")
+        """Sostituisce il config.json (e gli eventuali report) correnti con quelli contenuti
+        nell'archivio ZIP caricato dall'utente (lo stesso formato generato da /export-config-doc)."""
+        if not file.filename.lower().endswith('.zip'):
+            raise HTTPException(status_code=400, detail="Il file deve essere un .zip")
 
         try:
             content = await file.read()
 
-            # Verifica che sia un JSON valido
             try:
-                json.loads(content)
+                zip_file = zipfile.ZipFile(BytesIO(content))
+            except zipfile.BadZipFile:
+                raise HTTPException(status_code=400, detail="Il file ZIP non è valido")
+
+            if "config.json" not in zip_file.namelist():
+                raise HTTPException(status_code=400, detail="Lo ZIP non contiene un file config.json")
+
+            config_content = zip_file.read("config.json")
+            try:
+                json.loads(config_content)
             except json.JSONDecodeError as e:
-                raise HTTPException(status_code=400, detail=f"File JSON non valido: {str(e)}")
+                raise HTTPException(status_code=400, detail=f"config.json contenuto nello ZIP non valido: {str(e)}")
 
             config_path = os.path.join(lb_config.config_path, "config.json")
             backup_dir = lb_config.g_config['app_api']['path_backup']
             os.makedirs(backup_dir, exist_ok=True)
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
 
             # Backup con timestamp del config attuale prima di sovrascrivere
             if os.path.exists(config_path):
-                timestamp = time.strftime("%Y%m%d_%H%M%S")
                 backup_path = os.path.join(backup_dir, f"config.json.bak.{timestamp}")
                 shutil.copy2(config_path, backup_path)
 
             async with aiofiles.open(config_path, "wb") as f:
-                await f.write(content)
+                await f.write(config_content)
+
+            # Estrae ed importa anche i report contenuti nello ZIP (cartella "report/")
+            app = lb_config.g_config.get("app_api", {})
+            reports_dir = Path(__file__).cwd() / "applications" / app.get("path_content", "") / "report"
+            reports_dir.mkdir(parents=True, exist_ok=True)
+
+            for name in zip_file.namelist():
+                if not name.startswith("report/") or name.endswith("/"):
+                    continue
+                report_filename = os.path.basename(name)
+                if not report_filename:
+                    continue
+                report_path = reports_dir / report_filename
+
+                if report_path.exists():
+                    backup_report_path = os.path.join(backup_dir, f"{report_filename}.bak.{timestamp}")
+                    shutil.copy2(report_path, backup_report_path)
+
+                report_path.write_bytes(zip_file.read(name))
 
             return {"message": "Configurazione importata con successo. Riavviare il software per applicare le modifiche."}
         except HTTPException:
