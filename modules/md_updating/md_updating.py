@@ -1,6 +1,10 @@
 # ==== LIBRERIE DA IMPORTARE ===================================
 import threading
 import requests
+import os
+import json
+from datetime import datetime
+from sqlalchemy.orm import joinedload
 import libs.lb_log as lb_log
 import libs.lb_config as lb_config
 # ==============================================================
@@ -8,6 +12,8 @@ import libs.lb_config as lb_config
 name_module = "md_updating"
 
 CALL_INTERVAL_SECONDS = 5 * 60  # 5 minuti
+MAX_WEIGHINGS_PER_CALL = 100  # tetto per singola chiamata: se sono di piu' vengono fatte piu' chiamate sequenziali
+STATE_FILE_NAME = "md_updating_state.json"
 
 def init():
 	global module_updating
@@ -53,11 +59,128 @@ class ModuleUpdating:
 	def _call_domain(self):
 		if not self.domain:
 			return
+		# Invia le pesate a blocchi di MAX_WEIGHINGS_PER_CALL con chiamate sequenziali.
+		# Si ferma al primo errore: il blocco non riuscito verra' ritentato al giro successivo
+		# ripartendo dall'ultimo id inviato con successo.
+		while lb_config.g_enabled and not self._stop_event.is_set():
+			state = self._load_state()
+			last_id = int(state.get("last_sent_weighing_id", 0))
+			try:
+				weighings = self._get_unsent_weighings(last_id)
+			except Exception as e:
+				lb_log.error(f"[md_updating] errore leggendo le pesate da inviare: {e}")
+				return
+			state["last_attempt_at"] = datetime.now().isoformat()
+			try:
+				response = requests.post(self.domain, json={"weighings": weighings}, timeout=30)
+				response.raise_for_status()
+			except Exception as e:
+				lb_log.error(f"[md_updating] errore chiamando {self.domain} con {len(weighings)} pesate (da id {last_id + 1}): {e}")
+				state["last_error"] = str(e)
+				state["last_failed_from_id"] = last_id + 1
+				self._save_state(state)
+				return
+			lb_log.info(f"[md_updating] chiamata a {self.domain} con {len(weighings)} pesate -> status {response.status_code}")
+			if weighings:
+				state["last_sent_weighing_id"] = weighings[-1]["id"]
+			state["last_success_at"] = state["last_attempt_at"]
+			state["last_error"] = None
+			state["last_failed_from_id"] = None
+			self._save_state(state)
+			if len(weighings) < MAX_WEIGHINGS_PER_CALL:
+				return
+
+	# ==== STATO INVII ============================================
+
+	def _state_file_path(self):
+		path_database = lb_config.g_config["app_api"]["path_database"]
+		return os.path.join(os.path.dirname(os.path.abspath(path_database)), STATE_FILE_NAME)
+
+	def _load_state(self):
 		try:
-			response = requests.get(self.domain, timeout=5)
-			lb_log.info(f"[md_updating] chiamata a {self.domain} -> status {response.status_code}")
-		except Exception as e:
-			lb_log.error(f"[md_updating] errore chiamando {self.domain}: {e}")
+			with open(self._state_file_path(), "r") as f:
+				return json.load(f)
+		except Exception:
+			return {"last_sent_weighing_id": 0}
+
+	def _save_state(self, state):
+		# Scrittura atomica per non corrompere lo stato in caso di spegnimento improvviso
+		path = self._state_file_path()
+		tmp_path = path + ".tmp"
+		with open(tmp_path, "w") as f:
+			json.dump(state, f, indent=2)
+		os.replace(tmp_path, path)
+
+	# ==== PESATE NON ANCORA INVIATE ==============================
+
+	def _get_unsent_weighings(self, last_id):
+		from modules.md_database.md_database import SessionLocal, Weighing, InOut, Access
+
+		session = SessionLocal()
+		try:
+			weighings = (
+				session.query(Weighing)
+				.options(joinedload(Weighing.operator))
+				.filter(Weighing.id > last_id)
+				.order_by(Weighing.id.asc())
+				.limit(MAX_WEIGHINGS_PER_CALL)
+				.all()
+			)
+			result = []
+			for w in weighings:
+				in_out = (
+					session.query(InOut)
+					.options(
+						joinedload(InOut.access).joinedload(Access.vehicle),
+						joinedload(InOut.subject),
+						joinedload(InOut.vector),
+						joinedload(InOut.driver),
+						joinedload(InOut.material),
+						joinedload(InOut.weight1),
+						joinedload(InOut.weight2),
+					)
+					.filter((InOut.idWeight1 == w.id) | (InOut.idWeight2 == w.id))
+					.first()
+				)
+				result.append(self._serialize_weighing(w, in_out))
+			return result
+		finally:
+			session.close()
+
+	def _serialize_weighing(self, w, in_out):
+		data = {
+			"id": w.id,
+			"date": w.date.isoformat() if w.date else None,
+			"weigher": w.weigher,
+			"weigher_serial_number": w.weigher_serial_number,
+			"pid": w.pid,
+			"weight": w.weight,
+			"tare": w.tare,
+			"is_preset_tare": w.is_preset_tare,
+			"is_preset_weight": w.is_preset_weight,
+			"operator": w.operator.description if w.operator else None,
+			"in_out": None,
+		}
+		if in_out:
+			access = in_out.access
+			data["in_out"] = {
+				"id": in_out.id,
+				"idAccess": in_out.idAccess,
+				"type_subject": in_out.typeSubject.value if in_out.typeSubject else None,
+				"subject": in_out.subject.social_reason if in_out.subject else None,
+				"vector": in_out.vector.social_reason if in_out.vector else None,
+				"driver": in_out.driver.social_reason if in_out.driver else None,
+				"plate": access.vehicle.plate if access and access.vehicle else None,
+				"material": in_out.material.description if in_out.material else None,
+				"weight1_pid": in_out.weight1.pid if in_out.weight1 else None,
+				"weight1": in_out.weight1.weight if in_out.weight1 else None,
+				"weight2_pid": in_out.weight2.pid if in_out.weight2 else None,
+				"weight2": in_out.weight2.weight if in_out.weight2 else None,
+				"net_weight": in_out.net_weight,
+				"note": in_out.note,
+				"document_reference": in_out.document_reference,
+			}
+		return data
 
 	def stop(self):
 		self._stop_event.set()
