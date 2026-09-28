@@ -12,7 +12,7 @@ import libs.lb_config as lb_config
 name_module = "md_updating"
 
 CALL_INTERVAL_SECONDS = 5 * 60  # 5 minuti
-MAX_WEIGHINGS_PER_CALL = 500  # le pesate eccedenti vengono inviate al giro successivo
+MAX_WEIGHINGS_PER_CALL = 100  # tetto per singola chiamata: se sono di piu' vengono fatte piu' chiamate sequenziali
 STATE_FILE_NAME = "md_updating_state.json"
 
 def init():
@@ -59,36 +59,63 @@ class ModuleUpdating:
 	def _call_domain(self):
 		if not self.domain:
 			return
-		try:
-			weighings = self._get_unsent_weighings()
-			response = requests.post(self.domain, json={"weighings": weighings}, timeout=30)
+		# Invia le pesate a blocchi di MAX_WEIGHINGS_PER_CALL con chiamate sequenziali.
+		# Si ferma al primo errore: il blocco non riuscito verra' ritentato al giro successivo
+		# ripartendo dall'ultimo id inviato con successo.
+		while lb_config.g_enabled and not self._stop_event.is_set():
+			state = self._load_state()
+			last_id = int(state.get("last_sent_weighing_id", 0))
+			try:
+				weighings = self._get_unsent_weighings(last_id)
+			except Exception as e:
+				lb_log.error(f"[md_updating] errore leggendo le pesate da inviare: {e}")
+				return
+			state["last_attempt_at"] = datetime.now().isoformat()
+			try:
+				response = requests.post(self.domain, json={"weighings": weighings}, timeout=30)
+				response.raise_for_status()
+			except Exception as e:
+				lb_log.error(f"[md_updating] errore chiamando {self.domain} con {len(weighings)} pesate (da id {last_id + 1}): {e}")
+				state["last_error"] = str(e)
+				state["last_failed_from_id"] = last_id + 1
+				self._save_state(state)
+				return
 			lb_log.info(f"[md_updating] chiamata a {self.domain} con {len(weighings)} pesate -> status {response.status_code}")
-			if weighings and response.ok:
-				self._save_last_sent_id(weighings[-1]["id"])
-		except Exception as e:
-			lb_log.error(f"[md_updating] errore chiamando {self.domain}: {e}")
+			if weighings:
+				state["last_sent_weighing_id"] = weighings[-1]["id"]
+			state["last_success_at"] = state["last_attempt_at"]
+			state["last_error"] = None
+			state["last_failed_from_id"] = None
+			self._save_state(state)
+			if len(weighings) < MAX_WEIGHINGS_PER_CALL:
+				return
 
-	# ==== PESATE NON ANCORA INVIATE ==============================
+	# ==== STATO INVII ============================================
 
 	def _state_file_path(self):
 		path_database = lb_config.g_config["app_api"]["path_database"]
 		return os.path.join(os.path.dirname(os.path.abspath(path_database)), STATE_FILE_NAME)
 
-	def _load_last_sent_id(self):
+	def _load_state(self):
 		try:
 			with open(self._state_file_path(), "r") as f:
-				return int(json.load(f).get("last_sent_weighing_id", 0))
+				return json.load(f)
 		except Exception:
-			return 0
+			return {"last_sent_weighing_id": 0}
 
-	def _save_last_sent_id(self, last_id):
-		with open(self._state_file_path(), "w") as f:
-			json.dump({"last_sent_weighing_id": last_id, "updated_at": datetime.now().isoformat()}, f)
+	def _save_state(self, state):
+		# Scrittura atomica per non corrompere lo stato in caso di spegnimento improvviso
+		path = self._state_file_path()
+		tmp_path = path + ".tmp"
+		with open(tmp_path, "w") as f:
+			json.dump(state, f, indent=2)
+		os.replace(tmp_path, path)
 
-	def _get_unsent_weighings(self):
+	# ==== PESATE NON ANCORA INVIATE ==============================
+
+	def _get_unsent_weighings(self, last_id):
 		from modules.md_database.md_database import SessionLocal, Weighing, InOut, Access
 
-		last_id = self._load_last_sent_id()
 		session = SessionLocal()
 		try:
 			weighings = (
