@@ -2,9 +2,7 @@
 import threading
 import requests
 import os
-import io
 import json
-import zipfile
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 import libs.lb_log as lb_log
@@ -63,10 +61,7 @@ class ModuleUpdating:
 			return
 		try:
 			weighings = self._get_unsent_weighings()
-			files = None
-			if weighings:
-				files = {"file": ("weighings.zip", self._build_zip(weighings), "application/zip")}
-			response = requests.post(self.domain, files=files, timeout=30)
+			response = requests.post(self.domain, json={"weighings": weighings}, timeout=30)
 			lb_log.info(f"[md_updating] chiamata a {self.domain} con {len(weighings)} pesate -> status {response.status_code}")
 			if weighings and response.ok:
 				self._save_last_sent_id(weighings[-1]["id"])
@@ -159,13 +154,6 @@ class ModuleUpdating:
 				"document_reference": in_out.document_reference,
 			}
 		return data
-
-	def _build_zip(self, weighings):
-		buffer = io.BytesIO()
-		with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-			zf.writestr("weighings.json", json.dumps(weighings, ensure_ascii=False, indent=2))
-		buffer.seek(0)
-		return buffer
 
 	def stop(self):
 		self._stop_event.set()
