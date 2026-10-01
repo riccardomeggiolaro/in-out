@@ -18,6 +18,7 @@ from applications.router.open_to_customer import OpenToCustomerRouter
 from applications.router.sync_folder import SyncFolderRouter
 from applications.router.rfid.router import RfidRouter
 from applications.router.whoami import WhoAmIRouter
+from applications.router.database_viewer import DatabaseViewerRouter
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
@@ -156,6 +157,7 @@ def init():
 	sync_folder_router = SyncFolderRouter()
 	rfid_router = RfidRouter()
 	whoami_router = WhoAmIRouter()
+	database_viewer_router = DatabaseViewerRouter()
 
 	# Passa al modulo md_updating il dominio configurato per le chiamate periodiche
 	updating_domain = lb_config.g_config.get("app_api", {}).get("updating", {}).get("domain")
@@ -187,6 +189,8 @@ def init():
 	app.include_router(rfid_router.router, prefix="/api/rfid", tags=["rfid"])
 
 	app.include_router(whoami_router.router, tags=["whoami"])
+
+	app.include_router(database_viewer_router.router, prefix="/api/database", tags=["database viewer"])
 
 	app.mount("/static/content", StaticFiles(directory=path_content), name="content")
 
