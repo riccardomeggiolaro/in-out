@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database</title>
+    <link rel="icon" href="/static/content/baronpesi_favicon.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+
+        body {
+            background: #0f1117;
+            color: #e2e8f0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+        }
+
+        /* ── Header ── */
+        .header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 1.3rem; font-weight: 600; }
+        .header .path { font-size: 12px; color: #64748b; font-family: ui-monospace, monospace; }
+        .badge-ro { font-size: 11px; padding: 3px 8px; border-radius: 10px; background: #14532d; color: #86efac; }
+
+        .layout { flex: 1; display: flex; gap: 12px; min-height: 0; }
+
+        /* ── Lista tabelle ── */
+        .sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: #1e293b;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .sidebar input {
+            margin: 10px;
+            padding: 6px 10px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            border-radius: 5px;
+            color: #e2e8f0;
+            font-size: 13px;
+            outline: none;
+        }
+        .sidebar input:focus { border-color: #3b82f6; }
+        .table-list { list-style: none; overflow-y: auto; flex: 1; padding: 0 6px 6px; }
+        .table-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .table-list li:hover { background: #293548; }
+        .table-list li.active { background: #1d4ed8; color: #fff; }
+        .table-list li .count { color: #94a3b8; font-size: 12px; }
+        .table-list li.active .count { color: #dbeafe; }
+        .table-list li .view { font-size: 10px; color: #fbbf24; margin-left: 4px; }
+
+        /* ── Pannello principale ── */
+        .main { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; }
+
+        .tabs { display: flex; gap: 6px; }
+        button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #1e293b;
+            color: #94a3b8;
+        }
+        button:hover { background: #293548; }
+        button.active, .btn-primary { background: #1d4ed8; color: #fff; }
+        button:disabled { opacity: 0.4; cursor: default; }
+
+        .panel {
+            flex: 1;
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;
+        }
+        .hidden { display: none !important; }
+
+        .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: #94a3b8; }
+        .toolbar select {
+            padding: 5px 8px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            border-radius: 5px;
+            color: #e2e8f0;
+            font-size: 13px;
+        }
+
+        .table-wrap { flex: 1; overflow: auto; border: 1px solid #334155; border-radius: 6px; min-height: 0; }
+        table { border-collapse: collapse; font-size: 12px; width: max-content; min-width: 100%; }
+        th, td { padding: 5px 10px; border-bottom: 1px solid #293548; text-align: left; white-space: nowrap; max-width: 400px; overflow: hidden; text-overflow: ellipsis; }
+        th { position: sticky; top: 0; background: #0f1117; color: #cbd5e1; cursor: pointer; user-select: none; }
+        th:hover { color: #fff; }
+        tr:hover td { background: #172033; }
+        td.null { color: #64748b; font-style: italic; }
+        td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+        h3 { font-size: 13px; color: #94a3b8; font-weight: 600; margin-top: 6px; }
+        .schema { overflow: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .schema table { width: 100%; }
+        .schema th { cursor: default; }
+        pre {
+            background: #0f1117;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+            font-family: ui-monospace, monospace;
+            white-space: pre-wrap;
+            color: #cbd5e1;
+        }
+        .tag { font-size: 10px; padding: 1px 6px; border-radius: 8px; background: #334155; color: #e2e8f0; margin-right: 4px; }
+        .tag.pk { background: #713f12; color: #fde68a; }
+        .tag.uq { background: #1e3a8a; color: #bfdbfe; }
+
+        textarea {
+            width: 100%;
+            min-height: 110px;
+            resize: vertical;
+            padding: 10px;
+            background: #0f1117;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-family: ui-monospace, monospace;
+            outline: none;
+        }
+        textarea:focus { border-color: #3b82f6; }
+
+        .error { color: #fca5a5; font-size: 13px; }
+        .empty { color: #64748b; font-size: 13px; padding: 20px; text-align: center; }
+
+        @media (max-width: 760px) {
+            body { height: auto; overflow: auto; }
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; max-height: 220px; }
+            .panel { min-height: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Database <span class="badge-ro">sola lettura</span></h1>
+            <div class="path" id="db-path"></div>
+        </div>
+        <button onclick="loadTables()">Aggiorna</button>
+    </div>
+
+    <div class="layout">
+        <div class="sidebar">
+            <input type="search" id="filter" placeholder="Cerca tabella..." oninput="renderTableList()">
+            <ul class="table-list" id="table-list"></ul>
+        </div>
+
+        <div class="main">
+            <div class="tabs">
+                <button id="tab-data" class="active" onclick="showTab('data')">Dati</button>
+                <button id="tab-schema" onclick="showTab('schema')">Struttura</button>
+                <button id="tab-sql" onclick="showTab('sql')">SQL</button>
+            </div>
+
+            <div class="panel" id="panel-data">
+                <div class="toolbar">
+                    <span id="data-info">Seleziona una tabella</span>
+                    <span style="flex:1"></span>
+                    <label>Righe
+                        <select id="page-size" onchange="currentOffset = 0; loadRows()">
+                            <option>50</option>
+                            <option selected>100</option>
+                            <option>500</option>
+                            <option>1000</option>
+                        </select>
+                    </label>
+                    <button id="btn-prev" onclick="changePage(-1)" disabled>&larr;</button>
+                    <button id="btn-next" onclick="changePage(1)" disabled>&rarr;</button>
+                </div>
+                <div class="table-wrap" id="data-table"></div>
+            </div>
+
+            <div class="panel hidden" id="panel-schema">
+                <div class="schema" id="schema"><div class="empty">Seleziona una tabella</div></div>
+            </div>
+
+            <div class="panel hidden" id="panel-sql">
+                <textarea id="sql" placeholder="SELECT * FROM weighing ORDER BY id DESC LIMIT 50" spellcheck="false"></textarea>
+                <div class="toolbar">
+                    <button class="btn-primary" onclick="runQuery()">Esegui (Ctrl+Invio)</button>
+                    <span id="sql-info">Sono permesse solo query di lettura</span>
+                </div>
+                <div class="table-wrap" id="sql-result"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let tables = [];
+    let currentTable = null;
+    let currentOffset = 0;
+    let currentTotal = 0;
+    let orderColumn = null;
+    let orderDesc = false;
+
+    async function api(url, options = {}) {
+        const token = localStorage.getItem('token');
+        const res = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+        });
+        if (res.status === 401) {
+            const body = await res.json().catch(() => ({}));
+            if (!token || ['Invalid token', 'Token expired', 'Authentication required'].includes(body.detail)) {
+                window.location.href = '/login';
+            }
+            throw new Error(body.detail || 'Non autorizzato');
+        }
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            throw new Error(typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail || body));
+        }
+        return body;
+    }
+
+    function esc(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function renderGrid(container, columns, rows, sortable) {
+        if (!columns.length) {
+            container.innerHTML = '<div class="empty">Nessun risultato</div>';
+            return;
+        }
+        const head = columns.map(c => {
+            let arrow = '';
+            if (sortable && c === orderColumn) arrow = orderDesc ? ' ▼' : ' ▲';
+            return `<th ${sortable ? `data-col="${esc(c)}"` : ''}>${esc(c)}${arrow}</th>`;
+        }).join('');
+        const body = rows.map(r => '<tr>' + r.map(v => {
+            if (v === null) return '<td class="null">NULL</td>';
+            const cls = typeof v === 'number' ? ' class="num"' : '';
+            return `<td${cls} title="${esc(v)}">${esc(v)}</td>`;
+        }).join('') + '</tr>').join('');
+        container.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`
+            + (rows.length ? '' : '<div class="empty">Tabella vuota</div>');
+        if (sortable) {
+            container.querySelectorAll('th[data-col]').forEach(th => th.addEventListener('click', () => {
+                const col = th.dataset.col;
+                orderDesc = orderColumn === col ? !orderDesc : false;
+                orderColumn = col;
+                currentOffset = 0;
+                loadRows();
+            }));
+        }
+    }
+
+    function renderError(container, err) {
+        container.innerHTML = `<div class="empty error">${esc(err.message)}</div>`;
+    }
+
+    async function loadTables() {
+        const list = document.getElementById('table-list');
+        try {
+            const data = await api('/api/database/tables');
+            tables = data.tables;
+            document.getElementById('db-path').textContent = data.path;
+            renderTableList();
+            if (currentTable) selectTable(currentTable, false);
+        } catch (err) {
+            list.innerHTML = `<li class="error">${esc(err.message)}</li>`;
+        }
+    }
+
+    function renderTableList() {
+        const filter = document.getElementById('filter').value.toLowerCase();
+        const list = document.getElementById('table-list');
+        list.innerHTML = '';
+        tables.filter(t => t.name.toLowerCase().includes(filter)).forEach(t => {
+            const li = document.createElement('li');
+            if (t.name === currentTable) li.classList.add('active');
+            li.innerHTML = `<span>${esc(t.name)}${t.type === 'view' ? '<span class="view">VIEW</span>' : ''}</span>`
+                + `<span class="count">${t.rows ?? '?'}</span>`;
+            li.addEventListener('click', () => selectTable(t.name, true));
+            list.appendChild(li);
+        });
+    }
+
+    function selectTable(name, reset) {
+        currentTable = name;
+        if (reset) {
+            currentOffset = 0;
+            orderColumn = null;
+            orderDesc = false;
+        }
+        renderTableList();
+        loadRows();
+        loadSchema();
+    }
+
+    async function loadRows() {
+        if (!currentTable) return;
+        const container = document.getElementById('data-table');
+        const limit = parseInt(document.getElementById('page-size').value, 10);
+        const params = new URLSearchParams({ limit, offset: currentOffset });
+        if (orderColumn) {
+            params.set('order', orderColumn);
+            params.set('desc', orderDesc);
+        }
+        try {
+            const data = await api(`/api/database/tables/${encodeURIComponent(currentTable)}/rows?${params}`);
+            currentTotal = data.total;
+            renderGrid(container, data.columns, data.rows, true);
+            const from = data.total ? data.offset + 1 : 0;
+            const to = data.offset + data.rows.length;
+            document.getElementById('data-info').textContent = `${currentTable}: righe ${from}–${to} di ${data.total}`;
+            document.getElementById('btn-prev').disabled = data.offset === 0;
+            document.getElementById('btn-next').disabled = to >= data.total;
+        } catch (err) {
+            renderError(container, err);
+        }
+    }
+
+    function changePage(direction) {
+        const limit = parseInt(document.getElementById('page-size').value, 10);
+        currentOffset = Math.max(0, currentOffset + direction * limit);
+        loadRows();
+    }
+
+    async function loadSchema() {
+        const container = document.getElementById('schema');
+        try {
+            const s = await api(`/api/database/tables/${encodeURIComponent(currentTable)}`);
+            const cols = s.columns.map(c => `<tr>
+                <td>${esc(c.name)}</td>
+                <td>${esc(c.type || '')}</td>
+                <td>${c.pk ? '<span class="tag pk">PK</span>' : ''}${c.notnull ? '<span class="tag">NOT NULL</span>' : ''}</td>
+                <td class="${c.default === null ? 'null' : ''}">${c.default === null ? '' : esc(c.default)}</td>
+            </tr>`).join('');
+            const idx = s.indexes.length ? s.indexes.map(i => `<tr>
+                <td>${esc(i.name)}</td>
+                <td>${esc(i.columns.join(', '))}</td>
+                <td>${i.unique ? '<span class="tag uq">UNIQUE</span>' : ''}</td>
+            </tr>`).join('') : '<tr><td colspan="3" class="null">Nessun indice</td></tr>';
+            const fks = s.foreign_keys.length ? s.foreign_keys.map(f => `<tr>
+                <td>${esc(f.column)}</td>
+                <td>${esc(f.table)}.${esc(f.to ?? 'id')}</td>
+            </tr>`).join('') : '<tr><td colspan="2" class="null">Nessuna chiave esterna</td></tr>';
+            container.innerHTML = `
+                <h3>Colonne</h3>
+                <table><thead><tr><th>Nome</th><th>Tipo</th><th>Vincoli</th><th>Default</th></tr></thead><tbody>${cols}</tbody></table>
+                <h3>Indici</h3>
+                <table><thead><tr><th>Nome</th><th>Colonne</th><th></th></tr></thead><tbody>${idx}</tbody></table>
+                <h3>Chiavi esterne</h3>
+                <table><thead><tr><th>Colonna</th><th>Riferimento</th></tr></thead><tbody>${fks}</tbody></table>
+                <h3>SQL</h3>
+                <pre>${esc(s.sql || '')}</pre>`;
+        } catch (err) {
+            renderError(container, err);
+        }
+    }
+
+    async function runQuery() {
+        const sql = document.getElementById('sql').value.trim();
+        if (!sql) return;
+        const container = document.getElementById('sql-result');
+        const info = document.getElementById('sql-info');
+        info.textContent = 'Esecuzione...';
+        info.classList.remove('error');
+        try {
+            const data = await api('/api/database/query', { method: 'POST', body: JSON.stringify({ sql, limit: 1000 }) });
+            renderGrid(container, data.columns, data.rows, false);
+            info.textContent = `${data.rows.length} righe${data.truncated ? ' (risultato troncato a 1000)' : ''}`;
+        } catch (err) {
+            container.innerHTML = '';
+            info.textContent = err.message;
+            info.classList.add('error');
+        }
+    }
+
+    function showTab(name) {
+        ['data', 'schema', 'sql'].forEach(t => {
+            document.getElementById(`tab-${t}`).classList.toggle('active', t === name);
+            document.getElementById(`panel-${t}`).classList.toggle('hidden', t !== name);
+        });
+    }
+
+    document.getElementById('sql').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            runQuery();
+        }
+    });
+
+    loadTables();
+</script>
+</body>
+</html>
