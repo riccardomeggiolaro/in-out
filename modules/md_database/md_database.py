@@ -505,35 +505,65 @@ def migrate_weighing_pid_constraint():
                         has_old_unique_pid = True
                         break
 
-            if not has_old_unique_pid:
-                return  # Già migrato o vincolo non presente
+            old_columns = [row[1] for row in conn.execute(text("PRAGMA table_info('weighing')")).fetchall()]
 
-            lb_log.info("Migrazione vincolo weighing.pid: da UNIQUE(pid) a UNIQUE(pid, weigher_serial_number)")
+        if not has_old_unique_pid:
+            # Già migrato o vincolo non presente: rimuove eventuali residui di tentativi falliti
+            with engine.connect() as conn:
+                conn.execute(text("DROP TABLE IF EXISTS weighing_new"))
+                conn.commit()
+            return
 
-            # Ricrea la tabella con il nuovo vincolo
-            conn.execute(text("""
-                CREATE TABLE weighing_new (
-                    id INTEGER PRIMARY KEY,
-                    date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    weigher TEXT,
-                    weigher_serial_number TEXT,
-                    pid TEXT,
-                    is_preset_tare INTEGER,
-                    is_preset_weight INTEGER,
-                    tare INTEGER,
-                    weight INTEGER,
-                    log TEXT,
-                    idUser INTEGER REFERENCES user(id),
-                    idOperator INTEGER REFERENCES operator(id),
-                    UNIQUE(pid, weigher_serial_number)
-                )
-            """))
-            conn.execute(text("INSERT INTO weighing_new SELECT * FROM weighing"))
-            conn.execute(text("DROP TABLE weighing"))
-            conn.execute(text("ALTER TABLE weighing_new RENAME TO weighing"))
-            conn.execute(text("CREATE INDEX ix_weighing_pid ON weighing(pid)"))
-            conn.commit()
-            lb_log.info("Migrazione vincolo weighing.pid completata con successo")
+        lb_log.info("Migrazione vincolo weighing.pid: da UNIQUE(pid) a UNIQUE(pid, weigher_serial_number)")
+
+        new_columns = [
+            'id', 'date', 'weigher', 'weigher_serial_number', 'pid', 'is_preset_tare',
+            'is_preset_weight', 'tare', 'weight', 'log', 'idUser', 'idOperator',
+        ]
+        # Copia per nome solo le colonne presenti in entrambe le tabelle (l'ordine può differire)
+        common_columns = ", ".join(f'"{c}"' for c in new_columns if c in old_columns)
+
+        # Il driver sqlite3 esegue i DDL fuori transazione: si usa una transazione esplicita
+        # così che un errore non lasci residui (es. weighing_new) nel database
+        raw = engine.raw_connection()
+        try:
+            dbapi_conn = raw.driver_connection
+            dbapi_conn.isolation_level = None
+            cursor = dbapi_conn.cursor()
+            cursor.execute("BEGIN")
+            try:
+                cursor.execute("DROP TABLE IF EXISTS weighing_new")
+                cursor.execute("""
+                    CREATE TABLE weighing_new (
+                        id INTEGER PRIMARY KEY,
+                        date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        weigher TEXT,
+                        weigher_serial_number TEXT,
+                        pid TEXT,
+                        is_preset_tare INTEGER,
+                        is_preset_weight INTEGER,
+                        tare INTEGER,
+                        weight INTEGER,
+                        log TEXT,
+                        idUser INTEGER REFERENCES user(id),
+                        idOperator INTEGER REFERENCES operator(id),
+                        UNIQUE(pid, weigher_serial_number)
+                    )
+                """)
+                cursor.execute(f"INSERT INTO weighing_new ({common_columns}) SELECT {common_columns} FROM weighing")
+                cursor.execute("DROP TABLE weighing")
+                cursor.execute("ALTER TABLE weighing_new RENAME TO weighing")
+                cursor.execute("CREATE INDEX IF NOT EXISTS ix_weighing_pid ON weighing(pid)")
+                cursor.execute("COMMIT")
+            except Exception:
+                cursor.execute("ROLLBACK")
+                raise
+            finally:
+                cursor.close()
+                dbapi_conn.isolation_level = ""
+        finally:
+            raw.close()
+        lb_log.info("Migrazione vincolo weighing.pid completata con successo")
     except Exception as e:
         lb_log.error(f"Errore durante la migrazione del vincolo weighing.pid: {e}")
 
