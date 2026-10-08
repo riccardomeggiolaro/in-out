@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket, HTTPException
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.encoders import jsonable_encoder
 from applications.router.anagrafic.material import MaterialRouter
 from applications.router.anagrafic.subject import SubjectRouter
@@ -125,6 +125,11 @@ class AnagraficRouter:
 				# Timeout scaduto, continua ad aspettare nuovi messaggi
 				# lb_log.warning(f"Timeout while waiting for message from {websocket_identifier}")
 				continue
+
+			except WebSocketDisconnect:
+				# Il client ha chiuso la connessione (es. 1001 cambio pagina): chiusura normale
+				manager_anagrafics[anagrafic].disconnect(websocket)
+				break
 
 			except json.JSONDecodeError as e:
 				# Messaggio non valido ricevuto
