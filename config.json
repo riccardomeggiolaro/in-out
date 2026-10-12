@@ -121,7 +121,7 @@
                                     {
                                         "active": true,
                                         "live": "None",
-                                        "picture": "http://admin:Baronpesi318101%4026@10.0.5.175/ISAPI/Streaming/channels/101/picture"
+                                        "picture": "http://admin:Baronpesi318101@10.0.5.175/ISAPI/Streaming/channels/101/picture"
                                     }
                                 ],
                                 "csv": {
@@ -133,7 +133,7 @@
                                 "printer": {
                                     "generic": null,
                                     "in": null,
-                                    "out": null,
+                                    "out": "Canon_iR-ADV_C5235_5240_UFR_II",
                                     "tare": null
                                 },
                                 "prints": {
