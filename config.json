@@ -117,7 +117,13 @@
                                 }
                             },
                             "weighing": {
-                                "cams": [],
+                                "cams": [
+                                    {
+                                        "active": true,
+                                        "live": "None",
+                                        "picture": "http://admin:Baronpesi318101%4026@10.0.5.175/ISAPI/Streaming/channels/101/picture"
+                                    }
+                                ],
                                 "csv": {
                                     "generic": false,
                                     "in": false,

@@ -123,6 +123,8 @@ class CallbackWeigher(Functions, WebSocket):
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di pesata
 	def Callback_Weighing(self, instance_name: str, weigher_name: str, last_pesata: Weight):
+		if last_pesata.data_assigned is None:
+			return
 		access = get_access_by_id(last_pesata.data_assigned.accessId)
 		user = get_data_by_id("user", last_pesata.data_assigned.userId)
 		# lb_log.warning(last_pesata.data_assigned.userId)
@@ -323,7 +325,9 @@ class CallbackWeigher(Functions, WebSocket):
 							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
 							i = i + 1
 				# Ricarica last_in_out con le foto appena salvate
-				last_in_out = get_access_by_id(last_pesata.data_assigned.accessId).in_out[-1]
+				refreshed_access = get_access_by_id(last_pesata.data_assigned.accessId)
+				if refreshed_access and refreshed_access.in_out:
+					last_in_out = refreshed_access.in_out[-1]
 			############################
 			name_file, variables, report = get_data_variables(last_in_out, is_generic=is_test)
 			remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
