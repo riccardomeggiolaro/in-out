@@ -29,11 +29,13 @@ def get_access_by_id(access_id: int) -> Dict[str, Union[bool, str, dict]]:
                 selectinload(Access.card_registry),
                 selectinload(Access.in_out).selectinload(InOut.weight1).options(
                     selectinload(Weighing.user),
-                    selectinload(Weighing.operator)
+                    selectinload(Weighing.operator),
+                    selectinload(Weighing.weighing_pictures)
                 ),
                 selectinload(Access.in_out).selectinload(InOut.weight2).options(
                     selectinload(Weighing.user),
-                    selectinload(Weighing.operator)
+                    selectinload(Weighing.operator),
+                    selectinload(Weighing.weighing_pictures)
                 ),
                 selectinload(Access.in_out).selectinload(InOut.material),
                 selectinload(Access.in_out).selectinload(InOut.subject),
