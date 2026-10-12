@@ -306,6 +306,25 @@ class CallbackWeigher(Functions, WebSocket):
 			path_pdf = lb_config.g_config['app_api']['path_pdf']
 			if not path_pdf.startswith("/"):
 				path_pdf = f"{base_path}/{path_pdf}"
+			############################
+			# SCATTA LE FOTO PRIMA DI GENERARE IL REPORT
+			if weighing_stored_db:
+				i = 1
+				sub_folder_path = structure_folder_rule()
+				path_img = f"{lb_config.g_config['app_api']['path_img']}{sub_folder_path}"
+				if not path_img.startswith("/"):
+					path_img = f"{base_path}/{path_img}"
+				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
+					if cam["active"]:
+						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
+						if image_captured_details["image"]:
+							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
+							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
+							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
+							i = i + 1
+				# Ricarica last_in_out con le foto appena salvate
+				last_in_out = get_access_by_id(last_pesata.data_assigned.accessId).in_out[-1]
+			############################
 			name_file, variables, report = get_data_variables(last_in_out, is_generic=is_test)
 			remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
 			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
@@ -339,19 +358,6 @@ class CallbackWeigher(Functions, WebSocket):
 					save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv)
 			# APRE E CHIUDE I RELE'
 			if weighing_stored_db:
-				i = 1
-				sub_folder_path = structure_folder_rule()
-				path_img = f"{lb_config.g_config['app_api']['path_img']}{sub_folder_path}"
-				if not path_img.startswith("/"):
-					path_img = f"{base_path}/{path_img}"
-				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
-					if cam["active"]:
-						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
-						if image_captured_details["image"]:
-							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
-							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
-							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
-							i = i + 1
 				time_between_actions = lb_config.g_config["app_api"]["weighers"][instance_name]["time_between_actions"]
 				if event_type in ("in", "out"):
 					self.switch_to_call_instance_weigher[instance_name][weigher_name] = event_type
