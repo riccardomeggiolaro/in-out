@@ -310,69 +310,75 @@ class CallbackWeigher(Functions, WebSocket):
 				path_pdf = f"{base_path}/{path_pdf}"
 			############################
 			# SCATTA LE FOTO PRIMA DI GENERARE IL REPORT
-			if weighing_stored_db:
-				i = 1
-				sub_folder_path = structure_folder_rule()
-				path_img = f"{lb_config.g_config['app_api']['path_img']}{sub_folder_path}"
-				if not path_img.startswith("/"):
-					path_img = f"{base_path}/{path_img}"
-				for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
-					if cam["active"]:
-						image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
-						if image_captured_details["image"]:
-							file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
-							save_bytes_to_file(image_captured_details["image"], file_name, path_img)
-							add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
-							i = i + 1
-				# Ricarica last_in_out con le foto appena salvate
-				refreshed_access = get_access_by_id(last_pesata.data_assigned.accessId)
-				if refreshed_access and refreshed_access.in_out:
-					last_in_out = refreshed_access.in_out[-1]
-			############################
-			name_file, variables, report = get_data_variables(last_in_out, is_generic=is_test)
-			remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
-			# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
-			if generate_report and report:
-				html = generate_html_report(reports_dir, report, v=variables.dict())
-				pdf = printer.generate_pdf_from_html(html_content=html)
-				if pdf:
-					job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
-					# SALVA COPIA PDF
-					if path_pdf and remote_folder:
-						save_file_dir(path_pdf, name_file, pdf)
-			if is_test:
-				generate_csv = weighing_config.get("csv", {}).get("generic", False)
-			else:
-				csv_in = weighing_config["csv"]["in"]
-				csv_out = weighing_config["csv"]["out"]
-				csv_tare = weighing_config["csv"].get("tare", csv_out)
-				if tare > 0:
-					generate_csv = csv_tare
-				elif last_in_out.idWeight2:
-					generate_csv = csv_out
+			try:
+				if weighing_stored_db:
+					i = 1
+					sub_folder_path = structure_folder_rule()
+					path_img = f"{lb_config.g_config['app_api']['path_img']}{sub_folder_path}"
+					if not path_img.startswith("/"):
+						path_img = f"{base_path}/{path_img}"
+					for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
+						if cam["active"]:
+							image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
+							if image_captured_details["image"]:
+								file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
+								save_bytes_to_file(image_captured_details["image"], file_name, path_img)
+								add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
+								i = i + 1
+					# Ricarica last_in_out con le foto appena salvate
+					# Usa access.id (intero) perché last_pesata.data_assigned.accessId
+					# è già stato sovrascritto con la stringa JSON in precedenza
+					refreshed_access = get_access_by_id(access.id)
+					if refreshed_access and refreshed_access.in_out:
+						last_in_out = refreshed_access.in_out[-1]
+						last_in_out.access = refreshed_access
+				############################
+				name_file, variables, report = get_data_variables(last_in_out, is_generic=is_test)
+				remote_folder = lb_config.g_config["app_api"]["sync_folder"]["remote_folder"]
+				# MANDA IN STAMPA I DATI RELATIVI ALLA PESATA
+				if generate_report and report:
+					html = generate_html_report(reports_dir, report, v=variables.dict())
+					pdf = printer.generate_pdf_from_html(html_content=html)
+					if pdf:
+						job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
+						# SALVA COPIA PDF
+						if path_pdf and remote_folder:
+							save_file_dir(path_pdf, name_file, pdf)
+				if is_test:
+					generate_csv = weighing_config.get("csv", {}).get("generic", False)
 				else:
-					generate_csv = csv_in
-			path_csv = lb_config.g_config['app_api']['path_csv']
-			if not path_csv.startswith("/"):
-				path_csv = f"{base_path}/{path_csv}"
-			if generate_csv and path_csv:
-				# SALVA I DATI DELLA PESATA IN UN FILE CSV
-				csv = generate_csv_report(variables)
-				if csv:
-					save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv)
-			# APRE E CHIUDE I RELE'
-			if weighing_stored_db:
-				time_between_actions = lb_config.g_config["app_api"]["weighers"][instance_name]["time_between_actions"]
-				if event_type in ("in", "out"):
-					self.switch_to_call_instance_weigher[instance_name][weigher_name] = event_type
-					self.relay_index_tracker[instance_name][weigher_name] = 0
-				else:
-					for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"].get("set_rele", {}).get(event_type, []):
-						modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
-						rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"].get(rele["rele"], 0)
-						r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
-						lb_log.info(f"Settaggio relè {rele['rele']} in modalità {modope} con stato {rele_status} per evento {event_type}: {r}")
-						time.sleep(time_between_actions)
+					csv_in = weighing_config["csv"]["in"]
+					csv_out = weighing_config["csv"]["out"]
+					csv_tare = weighing_config["csv"].get("tare", csv_out)
+					if tare > 0:
+						generate_csv = csv_tare
+					elif last_in_out.idWeight2:
+						generate_csv = csv_out
+					else:
+						generate_csv = csv_in
+				path_csv = lb_config.g_config['app_api']['path_csv']
+				if not path_csv.startswith("/"):
+					path_csv = f"{base_path}/{path_csv}"
+				if generate_csv and path_csv:
+					# SALVA I DATI DELLA PESATA IN UN FILE CSV
+					csv = generate_csv_report(variables)
+					if csv:
+						save_file_dir(path_csv, name_file.replace(".pdf", ".csv"), csv)
+				# APRE E CHIUDE I RELE'
+				if weighing_stored_db:
+					time_between_actions = lb_config.g_config["app_api"]["weighers"][instance_name]["time_between_actions"]
+					if event_type in ("in", "out"):
+						self.switch_to_call_instance_weigher[instance_name][weigher_name] = event_type
+						self.relay_index_tracker[instance_name][weigher_name] = 0
+					else:
+						for rele in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"].get("set_rele", {}).get(event_type, []):
+							modope = "CLOSERELE" if rele["set"] == 0 else "OPENRELE"
+							rele_status = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["rele"].get(rele["rele"], 0)
+							r = md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope=modope, port_rele=(rele["rele"], rele_status))
+							lb_log.info(f"Settaggio relè {rele['rele']} in modalità {modope} con stato {rele_status} per evento {event_type}: {r}")
+							time.sleep(time_between_actions)
+			except Exception as _e:
+				lb_log.weighing_error(f"Errore in foto/report/rele: {_e}")
 		elif not last_pesata.weight_executed.executed:
 			if last_pesata.data_assigned.accessId and access.hidden is True:
 				# SE LA PESATA NON E' STATA ESEGUITA CORRETTAMENTE ELIMINA L'ACCESSO
