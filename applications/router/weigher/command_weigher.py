@@ -394,11 +394,7 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			if access:
 				if access.mode == AccessMode.TRANSIT:
 					error_message = "L'accesso è abilitato per il solo transito sulla pesa."
-				if len(access.in_out) == 0 and access.number_in_out is not None and tare != "0":
-					error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
-				if len(access.in_out) > 0 and access.number_in_out is not None and access.in_out[-1].idWeight1 and access.in_out[-1].idWeight2 and tare != "0":
-					error_message = "Rimuovere la tara per effettuare l'uscita del mezzo tramite id."
-				elif len(access.in_out) == 0 and tare == "0":
+				if len(access.in_out) == 0 and tare == "0":
 					error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
 				if len(access.in_out) > 0 and weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["weight1"] is None and tare == "0":
 					error_message = "E' necessario effettuare l'entrata del mezzo"

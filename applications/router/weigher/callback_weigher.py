@@ -511,13 +511,10 @@ class CallbackWeigher(Functions, WebSocket):
 						await self.DeleteData(instance=instance)
 						try:
 							is_transit = access.get("mode") == AccessMode.TRANSIT
-							if access["type"].name == TypeAccess.RESERVATION.name and access["number_in_out"] is not None and realtime.tare != "0" and not is_transit:
-								error_message = "Non è possibile effettuare pesate con tara negli accessi multipli."
-							else:
-								data_dto = DataDTO(**{"id_selected": {"id": access["id"]}})
-								set_preset_tare_if_exists = not is_transit
-								need_to_confirm = True if mode == "SEMIAUTOMATIC" and set_preset_tare_if_exists else False
-								await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm, set_preset_tare_if_exists=set_preset_tare_if_exists)
+							data_dto = DataDTO(**{"id_selected": {"id": access["id"]}})
+							set_preset_tare_if_exists = not is_transit
+							need_to_confirm = True if mode == "SEMIAUTOMATIC" and set_preset_tare_if_exists else False
+							await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm, set_preset_tare_if_exists=set_preset_tare_if_exists)
 						except Exception as e:
 							error_message = e.detail
 					if not error_message:
