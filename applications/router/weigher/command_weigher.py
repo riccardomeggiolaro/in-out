@@ -175,6 +175,16 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 			pdf = printer.generate_pdf_from_html(html_content=html)
 			if generate_report:
 				job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
+				# AVVISA I CLIENT (ES. VISTA 3D) DEL REPORT GENERATO E INVIATO ALLA STAMPANTE
+				await self.broadcastRealtimeAsync(instance.instance_name, instance.weigher_name, {
+					"weighing_report": {
+						"printer_name": printer_name,
+						"event_type": event_type,
+						"in_out_id": last_in_out.id,
+						"name_file": name_file,
+						"printed": bool(job_id),
+					}
+				})
 			# SALVA COPIA PDF
 			if path_pdf and pdf:
 				save_file_dir(path_pdf, name_file, pdf)
@@ -265,6 +275,16 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					pdf = printer.generate_pdf_from_html(html_content=html)
 					if pdf:
 						job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
+						# AVVISA I CLIENT (ES. VISTA 3D) DEL REPORT GENERATO E INVIATO ALLA STAMPANTE
+						await self.broadcastRealtimeAsync(instance.instance_name, instance.weigher_name, {
+							"weighing_report": {
+								"printer_name": printer_name,
+								"event_type": "generic",
+								"in_out_id": last_in_out.id,
+								"name_file": name_file,
+								"printed": bool(job_id),
+							}
+						})
 						# SALVA COPIA PDF
 						if path_pdf:
 							save_file_dir(path_pdf, name_file, pdf)

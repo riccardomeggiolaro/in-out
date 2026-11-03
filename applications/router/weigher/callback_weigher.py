@@ -418,6 +418,13 @@ class CallbackWeigher(Functions, WebSocket):
 		except Exception as e:
 			lb_log.warning(f"Broadcast realtime non riuscito: {e}")
 
+	async def broadcastRealtimeAsync(self, instance_name: str, weigher_name: str, message: dict):
+		# Come broadcastRealtimeSafe, ma da usare dentro funzioni async (event loop già attivo)
+		try:
+			await weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(message)
+		except Exception as e:
+			lb_log.warning(f"Broadcast realtime non riuscito: {e}")
+
 	def Fallback_Weighing(self, instance_name: str, weigher_name: str, data_assigned: DataAssignedDTO):
 		# asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
 		# asyncio.run(self.WeighingByIdentify(request=None, identify_dto=IdentifyDTO(identify=last_pesata.data_assigned.identify_code), instance=InstanceNameWeigherDTO(instance_name=instance_name, weigher_name=weigher_name)))
