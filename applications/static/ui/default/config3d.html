@@ -223,6 +223,11 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+    #reset-positions {
+      font: 600 11px system-ui; color: #2255cc; background: #fff; cursor: pointer;
+      border: 1px solid rgba(60,100,200,0.3); border-radius: 6px; padding: 5px 10px;
+    }
+    #reset-positions:hover { background: rgba(30,80,220,0.08); }
     .panel-empty { font-size: 11px; color: #99aacc; margin-bottom: 6px; }
     #load-error { color: #b02020; font-size: 13px; margin-top: 10px; max-width: 420px; text-align: center; }
   </style>
@@ -241,6 +246,7 @@
   <div class="logo">⚖ IN/OUT</div>
   <div class="version" id="topbar-version">Configurazione Hardware</div>
   <div class="hint">🖱 Ruota · Scroll zoom · <b>Trascina oggetto per spostarlo</b> · Click per dettagli</div>
+  <button id="reset-positions" title="Rimette tutti gli oggetti nella disposizione iniziale">↺ Posizioni iniziali</button>
 </div>
 
 <!-- SIDEBAR TOGGLE -->
@@ -1278,23 +1284,78 @@ function renderSidebar(model) {
 ───────────────────────────────────────────────────────────── */
 const trucks = [];
 
+/* ─────────────────────────────────────────────────────────────
+   POSIZIONI SALVATE NEL BROWSER
+   Le posizioni degli oggetti trascinati sono salvate in localStorage
+   (solo in questo browser), così al refresh restano dove sono state messe.
+───────────────────────────────────────────────────────────── */
+const POSITIONS_KEY = 'inout.config3d.positions.v1';
+const savableGroups = []; // gruppi con userData.saveKey
+
+function loadSavedPositions() {
+  try { return JSON.parse(localStorage.getItem(POSITIONS_KEY)) || {}; }
+  catch (_) { return {}; }
+}
+function savePosition(group) {
+  const key = group.userData.saveKey;
+  if (!key) return;
+  try {
+    const all = loadSavedPositions();
+    all[key] = { x: +group.position.x.toFixed(3), z: +group.position.z.toFixed(3) };
+    localStorage.setItem(POSITIONS_KEY, JSON.stringify(all));
+  } catch (_) {}
+}
+function makeSavable(group, key) {
+  group.userData.saveKey = key;
+  group.userData.defaultPos = { x: group.position.x, z: group.position.z };
+  savableGroups.push(group);
+}
+function applySavedPositions() {
+  const saved = loadSavedPositions();
+  for (const g of savableGroups) {
+    const p = saved[g.userData.saveKey];
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.z)) {
+      g.position.x = p.x;
+      g.position.z = p.z;
+    }
+  }
+  placeAllTrucks();
+}
+function resetPositions() {
+  try { localStorage.removeItem(POSITIONS_KEY); } catch (_) {}
+  for (const g of savableGroups) {
+    g.position.x = g.userData.defaultPos.x;
+    g.position.z = g.userData.defaultPos.z;
+  }
+  placeAllTrucks();
+}
+// I camion seguono la loro pesa: li riposiziono dopo aver spostato le pese
+function placeAllTrucks() {
+  for (const tr of trucks) placeTruckAt(tr, truckOffset(tr));
+}
+document.getElementById('reset-positions').addEventListener('click', resetPositions);
+
 function buildScene(model) {
   const n = model.weighers.length;
   const SPACING = 18; // spazio per camion in attesa a destra e in uscita a sinistra
 
   const serverGroup = buildServer(model);
+  makeSavable(serverGroup, 'server');
 
   // Pese in fila, centrate sull'asse del server
   model.weighers.forEach((w, i) => {
     const x = (i - (n - 1) / 2) * SPACING;
     const z = 2;
     const pesaGroup = buildPesa(w, { x, z });
+    const wKey = `${w.instanceName}/${w.nodeName}`;
+    makeSavable(pesaGroup, `pesa:${wKey}`);
     makeDynamicBeam(serverGroup, 1.5, pesaGroup, 0.6, 0x3366cc); // Server → Pesa
 
     // Relè dietro la pesa, uno per ogni relè configurato
     const m = w.relays.length;
     w.relays.forEach((relay, j) => {
       const rg = buildRelay(w, relay, { x: x + (j - (m - 1) / 2) * 2.2, z: z - 4.8 });
+      makeSavable(rg, `rele:${wKey}/${relay.name}`);
       makeDynamicBeam(pesaGroup, 0.5, rg, 1.0, 0xaa2222);           // Pesa → Relè
     });
 
@@ -1302,6 +1363,7 @@ function buildScene(model) {
     w.cams.forEach((cam, k) => {
       const camObj = buildCam(w, cam, w.rawCams[k], { x: x + 3.2 + k * 1.3, z: z + 1.5 });
       w.camObjects[k] = camObj;
+      makeSavable(camObj.group, `cam:${wKey}/${k}`);
       makeDynamicBeam(serverGroup, 1.5, camObj.group, 3.2, 0x7722bb);         // Server → Camera
       makeDashedLink(camObj.group, 3.0, pesaGroup, 0.3, 0x7722bb);           // Camera ┄ Pesa (inquadratura)
     });
@@ -1315,6 +1377,7 @@ function buildScene(model) {
   let k = 0;
   for (const [name, uses] of model.printers) {
     const pg = buildPrinter(name, uses, { x: 3.5 + k * 2.6, z: -10 });
+    makeSavable(pg, `stampante:${name}`);
     makeDynamicBeam(serverGroup, 1.5, pg, 0.9, 0xcc8800);           // Server → Stampante
     k++;
   }
@@ -1328,6 +1391,7 @@ function buildScene(model) {
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
+  applySavedPositions();
   const extra = Math.max(0, n - 1) * 4;
   camera.position.set(12 + extra, 10 + extra * 0.6, 16 + extra);
 }
@@ -1443,6 +1507,7 @@ window.addEventListener('mousemove', e => {
 window.addEventListener('mouseup', e => {
   if (!dragging) return;
   const wasBriefClick = !hasDragged && (performance.now() - dragStartTime) < 250;
+  if (hasDragged) savePosition(dragging);
   dragging = null;
   controls.enabled = true;
   document.body.style.cursor = 'default';
