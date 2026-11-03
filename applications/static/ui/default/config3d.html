@@ -873,7 +873,8 @@ function buildRelay(w, relay, pos) {
   clickable.forEach(m => registerObject(m, group, detail));
 
   const label = makeLabel(`Relè ${relay.name}`, '#882222');
-  label.position.set(ARM_DIR * 0.4, 2.45, 0);
+  // sopra la testa del semaforo, abbastanza in alto da non coprirlo
+  label.position.set(-ARM_DIR * 0.55, 2.95, 0);
   group.add(label);
 
   relay.visual = { pivot, redLamp, greenLamp };
