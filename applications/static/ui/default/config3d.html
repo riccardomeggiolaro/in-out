@@ -696,9 +696,11 @@ function buildPrinter(name, uses, pos) {
 const relayObjects = [];
 const BARRIER_UP_ANGLE = Math.PI / 2 * 0.95;
 const ARM_LENGTH = 2.4;
-// Direzione del braccio sull'asse X: -1 = verso sinistra (vista di default),
-// parallelo al lato lungo della pesa, così messo davanti sbarra il camion
+// Direzione del braccio nel sistema locale della sbarra (-1 = verso -X locale)
 const ARM_DIR = -1;
+// Rotazione dell'intera sbarra: con PI/2 il braccio punta verso +Z del mondo,
+// cioè in diagonale verso il basso nella vista di default
+const BARRIER_YAW = Math.PI / 2;
 
 function buildRelay(w, relay, pos) {
   const group = new THREE.Group();
@@ -753,6 +755,7 @@ function buildRelay(w, relay, pos) {
   group.add(greenLamp);
 
   group.position.set(pos.x, 0, pos.z);
+  group.rotation.y = BARRIER_YAW;
   scene.add(group);
   glowRing(group, new THREE.Vector3(ARM_DIR * 0.6, 0.01, 0), 0xaa2222, 1.5);
 
@@ -1025,7 +1028,7 @@ function buildScene(model) {
     // Relè dietro la pesa, uno per ogni relè configurato
     const m = w.relays.length;
     w.relays.forEach((relay, j) => {
-      const rg = buildRelay(w, relay, { x: x + 0.6 + (j - (m - 1) / 2) * 3.4, z: z - 3.6 });
+      const rg = buildRelay(w, relay, { x: x + (j - (m - 1) / 2) * 2.2, z: z - 4.8 });
       makeDynamicBeam(pesaGroup, 0.5, rg, 1.0, 0xaa2222);           // Pesa → Relè
     });
 
