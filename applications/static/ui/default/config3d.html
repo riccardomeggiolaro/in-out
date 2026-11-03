@@ -961,7 +961,8 @@ const cameraObjects = [];
 const FLASH_DURATION = 0.9;
 
 function showCameraShot(camObj, pathName) {
-  camObj.flashStart = t;
+  // il flash parte già con weighing_flash; lo rilancio solo se non è in corso
+  if (t - camObj.flashStart > FLASH_DURATION) camObj.flashStart = t;
   const src = '/images' + (pathName.startsWith('/') ? '' : '/') + pathName;
 
   if (!camObj.photo) {
@@ -1001,8 +1002,16 @@ const clickActions = new Map();
 const TRUCK_COLORS = [0x4466aa, 0xaa6644, 0x44aa77, 0x8855aa, 0xaa9933, 0x337799];
 const TRUCK_Y_GROUND = 0.78;
 const TRUCK_Y_SCALE  = 0.78 + 0.14;
-const SCALE_OFFSET   = { x: 0, z: 0   }; // centro pesa
-const WAITING_OFFSET = { x: 0, z: 4.5 }; // zona attesa davanti alla pesa
+// Il camion percorre la pesa lungo X: aspetta a destra, sale al centro,
+// esce a sinistra e poi ricompare in attesa a destra (nuovo camion).
+// La cabina è verso -X, quindi va avanti di muso.
+const SCALE_OFFSET   = { x: 0,    z: 0 }; // centro pesa
+const WAITING_OFFSET = { x: 6.5,  z: 0 }; // attesa a destra della pesa
+const EXIT_OFFSET    = { x: -6.5, z: 0 }; // uscita a sinistra della pesa
+const TRUCK_FADE_DIST = 1.5;              // distanza dall'uscita in cui il camion svanisce
+const TRUCK_SPEED = 4;                    // unità al secondo
+const TRUCK_MIN_SPEED = 0.6;              // velocità minima in frenata
+const TRUCK_APPEAR_TIME = 0.8;            // secondi per ricomparire in attesa
 
 function makeTruck(color) {
   const g = new THREE.Group();
@@ -1040,14 +1049,44 @@ function buildTruck(w, pesaGroup, idx) {
   label.position.set(0, 1.1, 0);
   group.add(label);
 
-  return { w, group, pesaGroup, labelDiv: div, gross: 0, isOnScale: false };
+  // state: 'waiting' | 'onScale' | 'exiting' | 'arriving'
+  return { w, group, pesaGroup, labelDiv: div, gross: 0, state: 'waiting', isOnScale: false, appear: 1 };
 }
 
-function truckOffset(truck) { return truck.isOnScale ? SCALE_OFFSET : WAITING_OFFSET; }
+function truckOffset(truck) {
+  if (truck.state === 'onScale') return SCALE_OFFSET;
+  if (truck.state === 'exiting') return EXIT_OFFSET;
+  return WAITING_OFFSET;
+}
+
+// Aggiorna lo stato del camion in base al peso letto
+function setTruckWeight(truck, gross) {
+  truck.gross = gross;
+  if (gross > 0) {
+    if (truck.state === 'exiting') {
+      // arriva un nuovo peso mentre il camion sta uscendo: ne entra subito un altro da destra
+      placeTruckAt(truck, WAITING_OFFSET);
+      truck.appear = 1;
+    }
+    truck.state = 'onScale';
+  } else if (truck.state === 'onScale') {
+    truck.state = 'exiting';
+  }
+  truck.isOnScale = truck.state === 'onScale';
+}
+
+function placeTruckAt(truck, off) {
+  truck.group.position.x = truck.pesaGroup.position.x + off.x;
+  truck.group.position.z = truck.pesaGroup.position.z + off.z;
+  truck.group.position.y = TRUCK_Y_GROUND;
+}
 
 /* ─────────────────────────────────────────────────────────────
    WEBSOCKET – PESO REALTIME + STATO RELÈ
 ───────────────────────────────────────────────────────────── */
+// Stati del realtime mandati dai terminali mentre è in corso la diagnostica
+const DIAGNOSTIC_STATUSES = ['D', 'diagnostic in progress'];
+
 function connectWeigherWS(truck) {
   const { w } = truck;
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -1074,6 +1113,11 @@ function connectWeigherWS(truck) {
         }
       }
 
+      // Log diagnostico degli eventi di pesata (visibile con F12 → Console)
+      if (data.weighing_report || data.weighing_picture || data.weighing_flash) {
+        console.info(`[3D] ${w.nodeName}`, data);
+      }
+
       // Report generato e inviato alla stampante
       if (data.weighing_report) { addReportSheet(w, data.weighing_report); return; }
       // Solo flash (pesata senza foto, es. dalla dashboard)
@@ -1081,6 +1125,7 @@ function connectWeigherWS(truck) {
         for (const idx of (data.weighing_flash.cam_indexes || [])) {
           const camObj = w.camObjects[idx];
           if (camObj) camObj.flashStart = t;
+          else console.warn(`[3D] ${w.nodeName}: fotocamera ${idx} non presente nella scena`);
         }
         return;
       }
@@ -1092,21 +1137,34 @@ function connectWeigherWS(truck) {
       }
 
       if (!('gross_weight' in data)) return;
+
+      // Diagnostica in corso: il terminale non manda il peso (lordo vuoto).
+      // Il camion resta dov'è, si aggiorna solo l'etichetta.
+      if (DIAGNOSTIC_STATUSES.includes(data.status)) {
+        const last = truck.gross > 0 ? `${truck.gross.toLocaleString('it')} kg` : '--- kg';
+        truck.labelDiv.textContent = `⚖ ${last} · diagnostica`;
+        return;
+      }
+
       const raw = data.gross_weight;
       const kg = (raw && raw !== '--') ? parseFloat(raw) : 0;
-      truck.gross = isNaN(kg) ? 0 : kg;
-      truck.isOnScale = truck.gross > 0;
+      setTruckWeight(truck, isNaN(kg) ? 0 : kg);
       truck.labelDiv.textContent = truck.gross > 0
         ? `⚖ ${truck.gross.toLocaleString('it')} kg`
         : '⚖ --- kg';
     };
 
     ws.onopen = () => {
+      console.info(`[3D] ${w.nodeName}: websocket realtime connesso`);
       ping = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
       }, 20000);
     };
-    ws.onclose = () => { clearInterval(ping); setTimeout(connect, 3000); };
+    ws.onclose = () => {
+      console.warn(`[3D] ${w.nodeName}: websocket realtime chiuso, riconnessione tra 3 s`);
+      clearInterval(ping);
+      setTimeout(connect, 3000);
+    };
     ws.onerror = () => ws.close();
   }
   connect();
@@ -1188,7 +1246,7 @@ const trucks = [];
 
 function buildScene(model) {
   const n = model.weighers.length;
-  const SPACING = 11;
+  const SPACING = 18; // spazio per camion in attesa a destra e in uscita a sinistra
 
   const serverGroup = buildServer(model);
 
@@ -1391,9 +1449,12 @@ window.addEventListener('resize', () => {
    ANIMATION LOOP
 ───────────────────────────────────────────────────────────── */
 let t = 0;
+const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  t += 0.016;
+  // tempo reale (in secondi), così le animazioni hanno la stessa durata con qualsiasi frame rate
+  const dt = Math.min(clock.getDelta(), 0.1);
+  t += dt;
   controls.update();
 
   pulses.forEach(({ mesh }, i) => {
@@ -1409,9 +1470,10 @@ function animate() {
   // Sbarre dei relè: movimento graduale verso la posizione target
   // Fogli dei report: escono dalla stampante e restano sospesi sopra
   for (const sh of sheetAnims) {
-    sh.mesh.position.y += (sh.targetY + 0.03 * Math.sin((t - sh.born) * 2) - sh.mesh.position.y) * 0.06;
-    sh.mesh.position.x += (sh.targetX - sh.mesh.position.x) * 0.06;
-    sh.mesh.position.z += (0.2 - sh.mesh.position.z) * 0.05;
+    const k = 1 - Math.exp(-3.5 * dt);
+    sh.mesh.position.y += (sh.targetY + 0.03 * Math.sin((t - sh.born) * 2) - sh.mesh.position.y) * k;
+    sh.mesh.position.x += (sh.targetX - sh.mesh.position.x) * k;
+    sh.mesh.position.z += (0.2 - sh.mesh.position.z) * k;
   }
 
   // Flash delle fotocamere
@@ -1432,24 +1494,45 @@ function animate() {
 
   for (const r of relayObjects) {
     const v = r.visual;
-    v.pivot.rotation.z += (v.targetAngle - v.pivot.rotation.z) * 0.08;
+    v.pivot.rotation.z += (v.targetAngle - v.pivot.rotation.z) * (1 - Math.exp(-5 * dt));
   }
 
   for (const l of blinkingLeds) {
     l.mesh.material.color.setHex(Math.sin(t * l.speed) > l.threshold ? l.on : l.off);
   }
 
-  // Ogni camion va verso la propria pesa (sopra se c'è peso, davanti se in attesa)
-  const lerpSpeed = 0.04;
+  // Camion: entra da destra, si ferma sulla pesa, esce a sinistra
   for (const tr of trucks) {
     const off = truckOffset(tr);
     const tx = tr.pesaGroup.position.x + off.x;
     const tz = tr.pesaGroup.position.z + off.z;
-    const ty = tr.isOnScale ? TRUCK_Y_SCALE : TRUCK_Y_GROUND;
-    tr.group.position.x += (tx - tr.group.position.x) * lerpSpeed;
-    tr.group.position.z += (tz - tr.group.position.z) * lerpSpeed;
-    tr.group.position.y += (ty - tr.group.position.y) * lerpSpeed;
-    if (!tr.isOnScale) tr.group.position.y += 0.02 * Math.sin(t * 0.9);
+    const ty = tr.state === 'onScale' ? TRUCK_Y_SCALE : TRUCK_Y_GROUND;
+    const dx = tx - tr.group.position.x;
+    // velocità quasi costante (unità al secondo), rallenta solo vicino all'arrivo
+    const speed = Math.max(TRUCK_MIN_SPEED, Math.min(TRUCK_SPEED, Math.abs(dx) * 2.5));
+    tr.group.position.x += Math.sign(dx) * Math.min(Math.abs(dx), speed * dt);
+    const ease = 1 - Math.exp(-5 * dt);
+    tr.group.position.z += (tz - tr.group.position.z) * ease;
+    tr.group.position.y += (ty - tr.group.position.y) * ease;
+
+    if (tr.state === 'exiting') {
+      // svanisce avvicinandosi all'uscita, poi ricompare in attesa a destra
+      const dist = Math.abs(dx);
+      tr.appear = Math.min(1, dist / TRUCK_FADE_DIST);
+      if (dist < 0.05) {
+        placeTruckAt(tr, WAITING_OFFSET);
+        tr.state = 'arriving';
+        tr.appear = 0;
+      }
+    } else if (tr.state === 'arriving') {
+      tr.appear = Math.min(1, tr.appear + dt / TRUCK_APPEAR_TIME);
+      if (tr.appear >= 1) tr.state = 'waiting';
+    } else {
+      tr.appear = 1;
+    }
+    tr.group.scale.setScalar(Math.max(0.001, tr.appear));
+    tr.labelDiv.style.opacity = String(tr.appear);
+    if (tr.state !== 'onScale') tr.group.position.y += 0.02 * Math.sin(t * 0.9);
   }
 
   renderer.render(scene, camera);
