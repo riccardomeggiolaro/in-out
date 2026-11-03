@@ -1,1 +1,1 @@
-PUBLIC_ENDPOINTS = ["/api/auth/login", "/api/command-weigher/weighing/auto"]
+PUBLIC_ENDPOINTS = ["/api/auth/login", "/api/command-weigher/weighing/auto", "/api/camera-simulator/picture"]
