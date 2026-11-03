@@ -941,7 +941,15 @@ function buildCam(w, cam, raw, pos) {
   const flash = new THREE.PointLight(0xffffff, 0, 8);
   flash.position.set(0, 0, 0.7);
   group.add(flash);
-  const camObj = { group, glass, flash, flashStart: -10, photo: null, baseColor: glass.material.color.getHex() };
+  // Lampo visibile davanti all'obiettivo: si allarga e svanisce
+  const flashGlow = new THREE.Mesh(
+    new THREE.SphereGeometry(0.25, 20, 20),
+    new THREE.MeshBasicMaterial({ color: 0xffd23a, transparent: true, opacity: 0, depthWrite: false })
+  );
+  flashGlow.position.set(0, 0, 0.6);
+  flashGlow.visible = false;
+  group.add(flashGlow);
+  const camObj = { group, glass, flash, flashGlow, flashStart: -10, photo: null, baseColor: glass.material.color.getHex() };
   cameraObjects.push(camObj);
   return camObj;
 }
@@ -950,7 +958,7 @@ function buildCam(w, cam, raw, pos) {
    Arriva { weighing_picture: { cam_index, path_name } }: flash sulla fotocamera
    e miniatura della foto sopra di essa (click → foto a schermo intero). */
 const cameraObjects = [];
-const FLASH_DURATION = 0.6;
+const FLASH_DURATION = 0.9;
 
 function showCameraShot(camObj, pathName) {
   camObj.flashStart = t;
@@ -1068,6 +1076,14 @@ function connectWeigherWS(truck) {
 
       // Report generato e inviato alla stampante
       if (data.weighing_report) { addReportSheet(w, data.weighing_report); return; }
+      // Solo flash (pesata senza foto, es. dalla dashboard)
+      if (data.weighing_flash) {
+        for (const idx of (data.weighing_flash.cam_indexes || [])) {
+          const camObj = w.camObjects[idx];
+          if (camObj) camObj.flashStart = t;
+        }
+        return;
+      }
       // Foto scattata da una fotocamera della pesa
       if (data.weighing_picture) {
         const camObj = w.camObjects[data.weighing_picture.cam_index];
@@ -1402,11 +1418,15 @@ function animate() {
   for (const c of cameraObjects) {
     const k = (t - c.flashStart) / FLASH_DURATION;
     if (k >= 0 && k < 1) {
-      c.flash.intensity = 40 * (1 - k);
+      c.flash.intensity = 60 * (1 - k);
       c.glass.material.color.setHex(0xffffff);
+      c.flashGlow.visible = true;
+      c.flashGlow.scale.setScalar(1.5 + 4 * k);
+      c.flashGlow.material.opacity = 0.95 * (1 - k);
     } else if (c.flash.intensity !== 0) {
       c.flash.intensity = 0;
       c.glass.material.color.setHex(c.baseColor);
+      c.flashGlow.visible = false;
     }
   }
 
