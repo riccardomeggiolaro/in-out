@@ -1,0 +1,12 @@
+#	Colonna	Significato
+1	FEMRA0	Anno del carico
+2	FEE8A0	Progressivo
+3	FEA335	Targa motrice
+4	FEHCTY	Targa rimorchio
+5	FEHBTY	Nome
+6	FEJSUS	Carico/Scarico
+7	FEG1TY	Note merce
+8	FERSCC	Limite peso
+9	FER5TS	Flag stampa peso
+10	FERSTS	Tipo automezzo
+11	FER3CC	Tara mezzo

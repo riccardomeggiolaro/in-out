@@ -1357,9 +1357,17 @@ async function inWeighing(close=true) {
 }
 
 async function handlePesata() {
-    if (data_weight_realtime.over_max_theshold) {
+    const vehicleMaxThreshold = dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.max_threshold;
+    const grossWeight = Number(data_weight_realtime.gross_weight);
+    const overVehicleThreshold = vehicleMaxThreshold && grossWeight > vehicleMaxThreshold;
+    if (data_weight_realtime.over_max_theshold || overVehicleThreshold) {
         confirmWeighing = inWeighing;
-        document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
+        if (overVehicleThreshold) {
+            const plate = dataInExecution.vehicle.plate || '';
+            document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima del veicolo <strong>${plate}</strong> di <strong>${vehicleMaxThreshold} kg</strong> superata, procedere con la pesatura?`;
+        } else {
+            document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
+        }
         openPopup('confirmPopup');
     } else await inWeighing();
 }
@@ -1396,9 +1404,17 @@ async function outWeighing(close=true) {
 }
 
 async function handlePesata2() {
-    if (data_weight_realtime.over_max_theshold) {
+    const vehicleMaxThreshold = dataInExecution && dataInExecution.vehicle && dataInExecution.vehicle.max_threshold;
+    const grossWeight = Number(data_weight_realtime.gross_weight);
+    const overVehicleThreshold = vehicleMaxThreshold && grossWeight > vehicleMaxThreshold;
+    if (data_weight_realtime.over_max_theshold || overVehicleThreshold) {
         confirmWeighing = outWeighing;
-        document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
+        if (overVehicleThreshold) {
+            const plate = dataInExecution.vehicle.plate || '';
+            document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima del veicolo <strong>${plate}</strong> di <strong>${vehicleMaxThreshold} kg</strong> superata, procedere con la pesatura?`;
+        } else {
+            document.getElementById("over_max_theshold_description").innerHTML = `Soglia massima di <strong>${maxThesholdValue} kg</strong> superata, procedere con la pesatura?`;
+        }
         openPopup('confirmPopup');
     } else await outWeighing();
 }

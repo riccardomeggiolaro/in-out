@@ -88,11 +88,15 @@ def update_access(id: int, data: SetAccessDTO, idInOut: int = None):
                     access.idDriver = data.driver.id
 
             if not idInOut and access.type != TypeAccess.MANUALLY:
+                # Permetti la modifica della targa anche per le prenotazioni senza pesate
+                has_weighings = len(access.in_out) > 0
                 current_plate = access.vehicle.plate.upper() if access.vehicle and access.vehicle.plate else None
                 if data.vehicle.id not in [None, -1] and data.vehicle.id != access.idVehicle:
-                    raise ValueError("Puoi modificare la targa solo per gli accessi manuali")
+                    if has_weighings:
+                        raise ValueError("Non puoi modificare la targa di una prenotazione che ha già effettuato delle pesate")
                 if data.vehicle.id in [None, -1] and data.vehicle.plate and data.vehicle.plate.upper() != (current_plate or ''):
-                    raise ValueError("Puoi modificare la targa solo per gli accessi manuali")
+                    if has_weighings:
+                        raise ValueError("Non puoi modificare la targa di una prenotazione che ha già effettuato delle pesate")
 
             current_reservation_vehicle = access.idVehicle
 

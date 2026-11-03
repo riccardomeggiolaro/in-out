@@ -11,6 +11,7 @@ from modules.md_database.functions.unlock_record_by_attributes import unlock_rec
 from modules.md_database.functions.lock_record import lock_record
 from applications.router.weigher.types import DataInExecution
 from applications.utils.utils import just_locked_message
+from modules.md_database.functions.get_data_by_id import get_data_by_id
 
 def _connection_needed(instance_name: str) -> bool:
 	return has_active_connections(instance_name)
@@ -87,6 +88,14 @@ class Functions:
 						if success is False:
 							message = just_locked_message("SELECT", key, locked_record.user.username if locked_record.user else None, locked_record.weigher_name)
 							raise HTTPException(status_code=400, detail=message)
+						# Se stiamo impostando un'anagrafica per ID, recupera tutti i dati aggiornati dal DB
+						db_record = get_data_by_id(key, value.id)
+						if db_record:
+							for sub_key in weighers_data[instance_name][weigher_name]["data"]["data_in_execution"][key]:
+								if sub_key in db_record:
+									weighers_data[instance_name][weigher_name]["data"]["data_in_execution"][key][sub_key] = db_record[sub_key]
+							self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
+							continue
 				for sub_key, sub_value in vars(value).items():
 					if sub_value is not None or is_allow_none:
 						# Se il valore è un tipo primitivo, aggiorna il nuovo valore

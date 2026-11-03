@@ -70,6 +70,7 @@ class Vehicle(Base):
     plate = Column(String(collation="NOCASE"), index=True, unique=True)
     description = Column(String, nullable=True)
     tare = Column(Integer, nullable=True)
+    max_threshold = Column(Integer, nullable=True)
     date_created = Column(DateTime, server_default=func.now(), default=datetime.now)
 
     accesses = relationship("Access", back_populates="vehicle", cascade="all, delete")

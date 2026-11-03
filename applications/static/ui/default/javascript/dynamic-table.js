@@ -906,8 +906,10 @@ function editRow(item) {
         }
         const plateInput = editPopup.querySelector('#vehicle\\.plate');
         if (plateInput) {
-            // La targa è modificabile solo per gli accessi manuali
-            const canEditPlate = item.type === "Manuale" || item.type === "MANUALLY";
+            // La targa è modificabile per gli accessi manuali o per le prenotazioni senza pesate
+            const hasWeighings = item.in_out && item.in_out.length > 0;
+            const canEditPlate = item.type === "Manuale" || item.type === "MANUALLY" ||
+                ((item.type === "Prenotazione" || item.type === "RESERVATION") && !hasWeighings);
             const vehicleDiv = plateInput.closest('.item-25')?.parentElement;
             if (vehicleDiv) {
                 vehicleDiv.style.display = canEditPlate ? '' : 'none';

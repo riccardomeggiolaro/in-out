@@ -8,6 +8,7 @@ class Vehicle(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: Optional[Union[int, float]] = None
+	max_threshold: Optional[int] = None
 	date_created: Optional[datetime] = None
 	reservations: List[any] = []
 	id: Optional[int] = None
@@ -20,6 +21,7 @@ class VehicleDataDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: Optional[Union[int, float]] = None
+	max_threshold: Optional[int] = None
 	id: Optional[int] = None
  
 	@validator('tare', pre=True, always=True)
@@ -39,6 +41,7 @@ class VehicleDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: Optional[Union[int, float]] = None
+	max_threshold: Optional[int] = None
 	id: Optional[int] = None
 
 	@validator('tare', pre=True, always=True)
@@ -57,6 +60,7 @@ class VehicleDTO(BaseModel):
 				values['description'] = data.get('description')
 				values['plate'] = data.get('plate')
 				values['tare'] = data.get('tare')
+				values['max_threshold'] = data.get('max_threshold')
 		return v
 
 	class Config:
@@ -67,6 +71,7 @@ class AddVehicleDTO(BaseModel):
 	plate: str
 	description: Optional[str] = None
 	tare: Optional[int] = None
+	max_threshold: Optional[int] = None
 
 	@validator('tare', pre=True, always=True)
 	def check_plate(cls, v):
@@ -85,6 +90,7 @@ class SetVehicleDTO(BaseModel):
 	plate: Optional[str] = None
 	description: Optional[str] = None
 	tare: int = None
+	max_threshold: Optional[int] = None
 
 	@validator('tare', pre=True, always=True)
 	def check_plate(cls, v):
@@ -104,3 +110,4 @@ class FilterVehicleDTO(BaseModel):
     plate: Optional[str] = None
     description: Optional[str] = None
     tare: Optional[Union[int, float]] = None
+    max_threshold: Optional[int] = None

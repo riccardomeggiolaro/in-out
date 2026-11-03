@@ -200,6 +200,8 @@
                                 document.querySelector('#add-popup #vehicle\\.description').value = '';
                                 document.querySelector('#add-popup #vehicle\\.tare').disabled = false;
                                 document.querySelector('#add-popup #vehicle\\.tare').value = '';
+                                document.querySelector('#add-popup #vehicle\\.max_threshold').disabled = false;
+                                document.querySelector('#add-popup #vehicle\\.max_threshold').value = '';
                             }
                         "
                         onfocus="
@@ -215,8 +217,12 @@
                     <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
                 </div>
 
-                <div class="item">
+                <div class="item-25">
                     <input placeholder="Tara (kg)" id="vehicle.tare" name="vehicle.tare" type="number" min="1" autocomplete="new-password">
+                </div>
+
+                <div class="item-25">
+                    <input placeholder="Soglia massima (kg)" id="vehicle.max_threshold" name="vehicle.max_threshold" type="number" min="0" autocomplete="new-password">
                 </div>
             </div>
 
@@ -423,6 +429,7 @@
                             if (this.value != '') {
                                 document.querySelector('#edit-popup #vehicle\\.description').disabled = true;
                                 document.querySelector('#edit-popup #vehicle\\.tare').disabled = true;
+                                document.querySelector('#edit-popup #vehicle\\.max_threshold').disabled = true;
                             }
                         ">
                     <input placeholder="Targa" id="vehicle.plate" name="vehicle.plate" type="text" autocomplete="new-password"
@@ -436,6 +443,8 @@
                                 document.querySelector('#edit-popup #vehicle\\.description').value = '';
                                 document.querySelector('#edit-popup #vehicle\\.tare').disabled = false;
                                 document.querySelector('#edit-popup #vehicle\\.tare').value = '';
+                                document.querySelector('#edit-popup #vehicle\\.max_threshold').disabled = false;
+                                document.querySelector('#edit-popup #vehicle\\.max_threshold').value = '';
                             }
                         "
                         onfocus="
@@ -451,8 +460,12 @@
                     <input placeholder="Descrizione" id="vehicle.description" name="vehicle.description" type="text" autocomplete="new-password">
                 </div>
 
-                <div class="item">
+                <div class="item-25">
                     <input placeholder="Tara (kg)" id="vehicle.tare" name="vehicle.tare" type="number" min="1" autocomplete="new-password">
+                </div>
+
+                <div class="item-25">
+                    <input placeholder="Soglia massima (kg)" id="vehicle.max_threshold" name="vehicle.max_threshold" type="number" min="0" autocomplete="new-password">
                 </div>
             </div>
 
@@ -1277,6 +1290,8 @@
                                 document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                                 document.querySelector(`${popup} #vehicle\\.tare`).value = item.tare;
                                 document.querySelector(`${popup} #vehicle\\.tare`).disabled = true;
+                                document.querySelector(`${popup} #vehicle\\.max_threshold`).value = item.max_threshold;
+                                document.querySelector(`${popup} #vehicle\\.max_threshold`).disabled = true;
                                 document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                             }
                         } else if (anagrafic === 'material') {
@@ -1345,6 +1360,8 @@
                             document.querySelector(`${popup} #vehicle\\.description`).disabled = true;
                             document.querySelector(`${popup} #vehicle\\.tare`).value = item.tare;
                             document.querySelector(`${popup} #vehicle\\.tare`).disabled = true;
+                            document.querySelector(`${popup} #vehicle\\.max_threshold`).value = item.max_threshold;
+                            document.querySelector(`${popup} #vehicle\\.max_threshold`).disabled = true;
                             document.querySelector(`${popup} .save-btn`).disabled = !document.querySelector(`${popup} form`).checkValidity();
                         }
                     } else if (anagrafic === 'card-registry' && document.querySelector(`${popup} #idCardRegistry`).value != item.id) {

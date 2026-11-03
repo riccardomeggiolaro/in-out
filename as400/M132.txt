@@ -1,0 +1,91 @@
+Corà Domenico & Figli Spa                DOCUMENT_FILE                        Op: MAURIZIO   QPADEV0074 26/10/26 10:20:02 Page:    1
+
+File   : CARARRP    CAAR Carichi in arrivo    File fisico
+Library: LIBDAT     Type: *PHYSICAL   Created: 25/03/06 12:40:21
+
+Format:  §FECPNF    CAAR Carichi in arrivo
+Level :  3AF2152D2756D  Record length:   613
+.----------------------------------------------------------------------------------------------------------------------------------.
+! Field    !Type!Decimal!Field !                                               !    Position  !Ref        Ref        Ref       !Edt!
+! Name     !/Use! Length!Length!Text                                           !   Start!End  !Field      File       Format    !Cde!
+!----------!----!-------!------!-----------------------------------------------!--------!-----!--------------------------------!---!
+!FEMRA0    !S B !   2.0 !    2 !CAAR Anno Prog                                 !       1!    2!          !          !          ! 3 !
+!FEE8A0    !P B !   7.0 !    4 !CAAR Progressivo                               !       3!    6!          !          !          ! 3 !
+!FEADCE    !A B !       !    2 !Filiale competenza                             !       7!    8!          !          !          !   !
+!FECONB    !P B !   5.0 !    3 !OFT n°contratto                                !       9!   11!          !          !          ! 3 !
+!FECPNB    !P B !   3.0 !    2 !OFD CDE riga                                   !      12!   13!          !          !          ! 3 !
+!FEDKNB    !P B !   5.0 !    3 !OFD CDE Protocollo                             !      14!   16!          !          !          ! 3 !
+!FEKANB    !S B !   2.0 !    2 !OFD CDE riga protocollo                        !      17!   18!          !          !          ! 3 !
+!FEGKA0    !S B !   2.0 !    2 !COVI Anno                                      !      19!   20!          !          !          ! 3 !
+!FEEDA0    !P B !   7.0 !    4 !COVI Progressivo                               !      21!   24!          !          !          ! 3 !
+!FEDMCD    !A B !       !    2 !VETT CDE Vettore                               !      25!   26!          !          !          !   !
+!FEPYCD    !A B !       !    2 !TRAS CDE Trasportatore                         !      27!   28!          !          !          !   !
+!FEFSCD    !A B !       !    2 !ANA CDE tipo anagrafica                        !      29!   30!          !          !          !   !
+!FEDWCD    !A B !       !    2 !FIL CDE Filiale                                !      31!   32!          !          !          !   !
+!FEJ7US    !A B !       !    6 !CAAR Codice Anagrafico                         !      33!   38!          !          !          !   !
+!FEHBTY    !A B !       !   70 !CAAR Nome                                      !      39!  108!          !          !          !   !
+!FERRTS    !A B !       !    1 !CAAR FLG Lingua                                !     109!  109!          !          !          !   !
+!FENPTY    !A B !       !   20 !CAAR Cellulare Autista                         !     110!  129!          !          !          !   !
+!FENQTY    !A B !       !   50 !CARR Mail Autista                              !     130!  179!          !          !          !   !
+!FEMTA0    !S B !   2.0 !    2 !CAAR Anno In                                   !     180!  181!          !          !          ! 3 !
+!FEFDA0    !B B !   2.0 !    2 !CAAR Settimana                                 !     182!  183!          !          !          ! 3 !
+!FEOMDT    !P B !   7.0 !    4 !CAAR Data arrivo                               !     184!  187!          !          !          !   !
+!FEBKTM    !P B !   6.0 !    4 !CAAR Ora arrivo                                !     188!  191!          !          !          !   !
+!FEONDT    !P B !   7.0 !    4 !CAAR Data ingresso                             !     192!  195!          !          !          !   !
+!FEBZTM    !P B !   6.0 !    4 !CAAR Ora Ingresso                              !     196!  199!          !          !          !   !
+!FEB5TM    !P B !   6.0 !    4 !CAAR Ora Inizio Car/Scar                       !     200!  203!          !          !          !   !
+!FEGUTS    !A B !       !    1 !CAAR Flg ingresso                              !     204!  204!          !          !          !   !
+!FER7DT    !P B !   7.0 !    4 !CAAR Data Uscita                               !     205!  208!          !          !          !   !
+!FEB6TM    !P B !   6.0 !    4 !CAAR Ora Fine Car/Scar                         !     209!  212!          !          !          !   !
+!FEB0TM    !P B !   6.0 !    4 !CAAR Ora Uscita                                !     213!  216!          !          !          !   !
+!FERKTS    !A B !       !    1 !CAAR Flg Uscita                                !     217!  217!          !          !          !   !
+!FEMUA0    !S B !   2.0 !    2 !CAAR Ore da scartare                           !     218!  219!          !          !          ! 3 !
+!FENIA0    !P B !   4.0 !    3 !CAAR Min. Permanenza                           !     220!  222!          !          !          ! 3 !
+!FEJSUS    !A B !       !    1 !CAAR Carico/Scarico                            !     223!  223!          !          !          !   !
+!FEP8CC    !P B !   7.2 !    4 !CAAR Peso Entrata                              !     224!  227!          !          !          ! C !
+!FEP9CC    !P B !   7.2 !    4 !CAAR Peso Uscita                               !     228!  231!          !          !          ! C !
+!FEQACC    !P B !   7.2 !    4 !CAAR Peso Merce                                !     232!  235!          !          !          ! C !
+!FERSCC    !P B !   7.2 !    4 !CAAR Limite Peso                               !     236!  239!          !          !          ! C !
+!FER3CC    !P B !   7.2 !    4 !CAAR Tara Mezzo                                !     240!  243!          !          !          ! C !
+!FER4CC    !P B !   7.2 !    4 !CAAR Peso Max Marce                            !     244!  247!          !          !          ! C !
+!FEA336    !A B !       !   10 !CAAR Utente                                    !     248!  257!          !          !          !   !
+!FEGZTY    !A B !       !   60 !CAAR Indicazione 1                             !     258!  317!          !          !          !   !
+!FEG0TY    !A B !       !   60 !CAAR Indicazione 2                             !     318!  377!          !          !          !   !
+!FEG1TY    !A B !       !   60 !CAAR Note Merce                                !     378!  437!          !          !          !   !
+!FEA335    !A B !       !   12 !CAAR Targa Motrice                             !     438!  449!          !          !          !   !
+!FEHCTY    !A B !       !   12 !CAAR Targa Rimorchio                           !     450!  461!          !          !          !   !
+!FERSTS    !A B !       !    2 !CAAR Tipo Automezzo                            !     462!  463!          !          !          !   !
+!FEI7US    !A B !       !    4 !TBCAP Capannone                                !     464!  467!          !          !          !   !
+!FEKQCC    !P B !   9.2 !    5 !CAAR Importo                                   !     468!  472!          !          !          ! C !
+!FEA6VN    !A B !       !   10 !PAS CDE Password                               !     473!  482!          !          !          !   !
+!FENRTY    !A B !       !   20 !CAAR Interno                                   !     483!  502!          !          !          !   !
+!FESIDT    !P B !   7.0 !    4 !CAAR Data Ut Prenota                           !     503!  506!          !          !          !   !
+!FEB9TM    !P B !   6.0 !    4 !CAAR Ora Ut Prenota                            !     507!  510!          !          !          !   !
+!FESGTS    !A B !       !    1 !CAAR Avv. Ut Prenota                           !     511!  511!          !          !          !   !
+!FEGVTS    !A B !       !    1 !CAAR Flg Chiuso                                !     512!  512!          !          !          !   !
+!FEGWTS    !A B !       !    1 !CAAR Flg Prenotazione                          !     513!  513!          !          !          !   !
+!FENJA0    !P B !   3.0 !    2 !CAAR GG Validità                               !     514!  515!          !          !          ! 3 !
+!FER3TS    !A B !       !    1 !CAAR Flg Confermato Web                        !     516!  516!          !          !          !   !
+!FER4TS    !A B !       !    1 !CAAR Dogana                                    !     517!  517!          !          !          !   !
+!FEVYTS    !A B !       !    1 !CAAR Variata Tara                              !     518!  518!          !          !          !   !
+!FER5TS    !A B !       !    1 !CAAR Flg Stampa Peso                           !     519!  519!          !          !          !   !
+!FET8DT    !P B !   7.0 !    4 !CAAR Data Validità Doc                         !     520!  523!          !          !          !   !
+!FENSTY    !A B !       !   30 !CAAR Codice Accesso                            !     524!  553!          !          !          !   !
+!FEL5US    !A B !       !    2 !TB Codice Ritardo                              !     554!  555!          !          !          !   !
+!FEVZTS    !A B !       !    1 !CAAR Entrata Spostata                          !     556!  556!          !          !          !   !
+!FEOUTY    !A B !       !   25 !CAAR Motivo Spostamento                        !     557!  581!          !          !          !   !
+!FEV0TS    !A B !       !    1 !CAAR Flag 1                                    !     582!  582!          !          !          !   !
+!FEFMCD    !A B !       !    3 !NAZ CDE Nazione                                !     583!  585!          !          !          !   !
+!FECNTX    !A B !       !   10 !Utente        PGM                              !     586!  595!          !          !          !   !
+!FEJ3DT    !P B !   7.0 !    4 !Data lavoro   PGM                              !     596!  599!          !          !          !   !
+!FEAXTM    !P B !   6.0 !    4 !Ora lavoro    PGM                              !     600!  603!          !          !          !   !
+!FECOTX    !A B !       !   10 !Programma     PGM                              !     604!  613!          !          !          !   !
+----------------------------------------------------------------------------------------------------------------------------------'
+
+
+
+
+
+
+
+
