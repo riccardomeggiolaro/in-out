@@ -689,49 +689,108 @@ function buildPrinter(name, uses, pos) {
   return group;
 }
 
+// Relè rappresentato come sbarra + semaforo:
+//   stato 1 (aperto)  → sbarra alzata, luce verde
+//   stato 0 (chiuso)  → sbarra abbassata, luce rossa
+//   stato sconosciuto → sbarra abbassata, luce gialla
+const relayObjects = [];
+const BARRIER_UP_ANGLE = Math.PI / 2 * 0.95;
+const ARM_LENGTH = 2.4;
+
 function buildRelay(w, relay, pos) {
   const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.5), mat(0x883333, 0x000000, 0.5, 0.6));
-  body.castShadow = true;
-  group.add(body);
-  for (let i = 0; i < 6; i++) {
-    const term = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.08), mat(0xaa9900, 0x000000, 0.5, 0.8));
-    term.position.set(-0.3 + i * 0.12, 0.5, 0.0);
-    group.add(term);
+  const clickable = [];
+
+  // Colonnina della sbarra (contiene il motore)
+  const post = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.0, 0.4), mat(0xdddddd, 0x000000, 0.5, 0.4));
+  post.position.set(0, 0.5, 0);
+  post.castShadow = true;
+  group.add(post);
+  clickable.push(post);
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, 0.44), mat(0xcc2222, 0x000000, 0.5, 0.3));
+  cap.position.set(0, 1.04, 0);
+  group.add(cap);
+
+  // Braccio a strisce bianche/rosse, ruota attorno al perno sulla colonnina
+  const pivot = new THREE.Group();
+  pivot.position.set(0.2, 0.85, 0);
+  group.add(pivot);
+  const SEGMENTS = 6;
+  const segLen = ARM_LENGTH / SEGMENTS;
+  for (let i = 0; i < SEGMENTS; i++) {
+    const seg = new THREE.Mesh(
+      new THREE.BoxGeometry(segLen, 0.1, 0.08),
+      mat(i % 2 === 0 ? 0xdd2222 : 0xf4f4f4, 0x000000, 0.5, 0.2)
+    );
+    seg.position.set(segLen / 2 + i * segLen, 0, 0);
+    seg.castShadow = true;
+    pivot.add(seg);
+    clickable.push(seg);
   }
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0x552222 }));
-  led.position.set(0.3, 0.3, 0.26);
-  group.add(led);
-  relay.led = led;
-  updateRelayLed(relay);
-  group.position.set(pos.x, 0.55, pos.z);
+  // Appoggio a fine corsa
+  const rest = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, 0.12), mat(0x888888, 0x000000, 0.6, 0.5));
+  rest.position.set(0.2 + ARM_LENGTH - 0.1, 0.4, 0);
+  group.add(rest);
+
+  // Semaforo: palo + testa con luce rossa (sopra) e verde (sotto)
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 10), mat(0x555555, 0x000000, 0.5, 0.7));
+  pole.position.set(-0.55, 0.8, 0);
+  group.add(pole);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.66, 0.26), mat(0x222222, 0x000000, 0.6, 0.4));
+  head.position.set(-0.55, 1.85, 0);
+  head.castShadow = true;
+  group.add(head);
+  clickable.push(head);
+  const lampGeo = new THREE.SphereGeometry(0.1, 14, 14);
+  const redLamp = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x441111 }));
+  redLamp.position.set(-0.55, 2.0, 0.13);
+  group.add(redLamp);
+  const greenLamp = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x114411 }));
+  greenLamp.position.set(-0.55, 1.7, 0.13);
+  group.add(greenLamp);
+
+  group.position.set(pos.x, 0, pos.z);
   scene.add(group);
-  glowRing(group, new THREE.Vector3(0, -0.54, 0), 0xaa2222, 0.7);
-  registerObject(body, group, {
-    title: `🔌 Relè ${relay.name} · Pesa ${w.nodeName}`,
+  glowRing(group, new THREE.Vector3(0.6, 0.01, 0), 0xaa2222, 1.5);
+
+  const detail = {
+    title: `🚧 Relè ${relay.name} · Pesa ${w.nodeName}`,
     // calcolate al click, così lo stato è sempre quello aggiornato
     rows: () => [
       ['Pesa', `${w.nodeName} (istanza #${w.instanceName})`],
       ['Stato corrente', relayStatusText(relay.status)],
       ...(relay.events.length
-        ? relay.events.map(e => [e.label, e.set == null ? 'attiva' : (Number(e.set) === 1 ? 'APRI (ON)' : 'CHIUDI (OFF)')])
+        ? relay.events.map(e => [e.label, e.set == null ? 'attiva' : (Number(e.set) === 1 ? 'ALZA (verde)' : 'ABBASSA (rosso)')])
         : [['Eventi', 'nessun evento associato']]),
     ]
-  });
-  pulseSphere(group, new THREE.Vector3(0, 0.75, 0), 0xcc3333);
+  };
+  clickable.forEach(m => registerObject(m, group, detail));
+
   const label = makeLabel(`Relè ${relay.name} · ${w.nodeName}`, '#882222');
-  label.position.set(0, 1.0, 0);
+  label.position.set(0.4, 2.45, 0);
   group.add(label);
+
+  relay.visual = { pivot, redLamp, greenLamp };
+  relayObjects.push(relay);
+  updateRelayVisual(relay, true);
   return group;
 }
 
+function relayIsOpen(status) { return status != null && Number(status) === 1; }
 function relayStatusText(status) {
   if (status == null) return 'sconosciuto';
-  return Number(status) === 1 ? 'ON' : 'OFF';
+  return relayIsOpen(status) ? 'ALZATA (verde)' : 'ABBASSATA (rosso)';
 }
-function updateRelayLed(relay) {
-  if (!relay.led) return;
-  relay.led.material.color.setHex(relay.status == null ? 0x775555 : (Number(relay.status) === 1 ? 0xff3333 : 0x552222));
+// Aggiorna i colori del semaforo; l'angolo della sbarra viene animato nel loop
+function updateRelayVisual(relay, immediate = false) {
+  const v = relay.visual;
+  if (!v) return;
+  const open = relayIsOpen(relay.status);
+  const unknown = relay.status == null;
+  v.redLamp.material.color.setHex(open ? 0x441111 : (unknown ? 0xffbb00 : 0xff2222));
+  v.greenLamp.material.color.setHex(open ? 0x22ff55 : 0x114411);
+  v.targetAngle = open ? BARRIER_UP_ANGLE : 0;
+  if (immediate) v.pivot.rotation.z = v.targetAngle;
 }
 
 function buildCam(w, cam, raw, pos) {
@@ -845,7 +904,7 @@ function connectWeigherWS(truck) {
         const relay = relayByName.get(key);
         if (relay && (value === 0 || value === 1)) {
           relay.status = value;
-          updateRelayLed(relay);
+          updateRelayVisual(relay);
           const el = document.querySelector(`[data-relay="${CSS.escape(w.instanceName + '/' + w.nodeName + '/' + key)}"]`);
           if (el) el.innerHTML = relayBadge(relay.status).html;
         }
@@ -877,7 +936,7 @@ function connectWeigherWS(truck) {
 ───────────────────────────────────────────────────────────── */
 function relayBadge(status) {
   if (status == null) return badge('—', 'blue');
-  return Number(status) === 1 ? badge('ON', 'red') : badge('OFF', 'green');
+  return relayIsOpen(status) ? badge('ALZATA', 'green') : badge('ABBASSATA', 'red');
 }
 function rowHtml(label, value, attrs = '') {
   return `<div class="info-row"><span class="info-label">${esc(label)}</span><span class="info-value"${attrs}>${cell(value)}</span></div>`;
@@ -962,8 +1021,8 @@ function buildScene(model) {
     // Relè dietro la pesa, uno per ogni relè configurato
     const m = w.relays.length;
     w.relays.forEach((relay, j) => {
-      const rg = buildRelay(w, relay, { x: x + (j - (m - 1) / 2) * 1.4, z: z - 3.2 });
-      makeDynamicBeam(pesaGroup, 0.5, rg, 0.8, 0xaa2222);           // Pesa → Relè
+      const rg = buildRelay(w, relay, { x: x - 0.6 + (j - (m - 1) / 2) * 3.4, z: z - 3.6 });
+      makeDynamicBeam(pesaGroup, 0.5, rg, 1.0, 0xaa2222);           // Pesa → Relè
     });
 
     // Fotocamere sopra/di lato alla pesa
@@ -1152,6 +1211,12 @@ function animate() {
     b.beamMesh.material.opacity = 0.35 + 0.2 * Math.sin(t * 1.8 + idx * 0.7);
   });
   updateDynamicBeams();
+
+  // Sbarre dei relè: movimento graduale verso la posizione target
+  for (const r of relayObjects) {
+    const v = r.visual;
+    v.pivot.rotation.z += (v.targetAngle - v.pivot.rotation.z) * 0.08;
+  }
 
   for (const l of blinkingLeds) {
     l.mesh.material.color.setHex(Math.sin(t * l.speed) > l.threshold ? l.on : l.off);
