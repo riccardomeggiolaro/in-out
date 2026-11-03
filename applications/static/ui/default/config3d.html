@@ -216,6 +216,15 @@
       margin-bottom: 14px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .panel-section h4 {
+      font-size: 10px;
+      color: #556677;
+      margin: 10px 0 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .panel-empty { font-size: 11px; color: #99aacc; margin-bottom: 6px; }
+    #load-error { color: #b02020; font-size: 13px; margin-top: 10px; max-width: 420px; text-align: center; }
   </style>
 </head>
 <body>
@@ -224,85 +233,21 @@
 <div id="loading">
   <div class="spinner"></div>
   <div style="color:#2255cc;font-size:13px;">Caricamento scena 3D…</div>
+  <div id="load-error"></div>
 </div>
 
 <!-- TOP BAR -->
 <div id="topbar">
   <div class="logo">⚖ IN/OUT</div>
-  <div class="version">v3.0.5 · Configurazione Hardware</div>
+  <div class="version" id="topbar-version">Configurazione Hardware</div>
   <div class="hint">🖱 Ruota · Scroll zoom · <b>Trascina oggetto per spostarlo</b> · Click per dettagli</div>
 </div>
 
 <!-- SIDEBAR TOGGLE -->
 <div id="sidebar-toggle" title="Nascondi/Mostra pannello">◀</div>
 
-<!-- SIDE PANEL -->
-<div id="sidebar">
-
-  <!-- ISTANZA 0 -->
-  <div class="panel-section">
-    <h3>⚙ Istanza Pesatrice #0</h3>
-    <div class="info-row"><span class="info-label">Connessione</span><span class="info-value">TCP</span></div>
-    <div class="info-row"><span class="info-label">IP</span><span class="info-value">10.0.5.90 : 23</span></div>
-    <div class="info-row"><span class="info-label">Timeout</span><span class="info-value">3.0 s</span></div>
-    <div class="info-row"><span class="info-label">Intervallo azioni</span><span class="info-value">0.4 s</span></div>
-    <div class="info-row"><span class="info-label">Auto-chiusura conn.</span><span class="info-value"><span class="badge orange">NO</span></span></div>
-  </div>
-
-  <!-- NODO P1 -->
-  <div class="panel-section">
-    <h3>⚖ Nodo · P1</h3>
-    <div class="info-row"><span class="info-label">Terminale</span><span class="info-value">egt-af03-rext</span></div>
-    <div class="info-row"><span class="info-label">Stato</span><span class="info-value"><span class="badge green">ATTIVO</span></span></div>
-    <div class="info-row"><span class="info-label">Peso max</span><span class="info-value">80 000 kg</span></div>
-    <div class="info-row"><span class="info-label">Peso min</span><span class="info-value">500 kg</span></div>
-    <div class="info-row"><span class="info-label">Divisione</span><span class="info-value">20 kg</span></div>
-    <div class="info-row"><span class="info-label">Nodo hardware</span><span class="info-value">—</span></div>
-    <div class="info-row"><span class="info-label">Trasmissione continua</span><span class="info-value"><span class="badge orange">NO</span></span></div>
-  </div>
-
-  <!-- STAMPANTE -->
-  <div class="panel-section">
-    <h3>🖨 Stampante</h3>
-    <div class="info-row"><span class="info-label">Uscita (OUT)</span><span class="info-value">Canon iR-ADV C5235/5240 UFR II</span></div>
-    <div class="info-row"><span class="info-label">Entrata (IN)</span><span class="info-value"><span class="badge orange">—</span></span></div>
-    <div class="info-row"><span class="info-label">Tara</span><span class="info-value"><span class="badge orange">—</span></span></div>
-    <div class="info-row"><span class="info-label">Generica</span><span class="info-value"><span class="badge orange">—</span></span></div>
-    <div class="info-row"><span class="info-label">N° copie OUT</span><span class="info-value">1</span></div>
-    <div class="info-row"><span class="info-label">Report PDF OUT</span><span class="info-value"><span class="badge green">SÌ</span></span></div>
-  </div>
-
-  <!-- RELE -->
-  <div class="panel-section">
-    <h3>🔌 Relè</h3>
-    <div class="info-row"><span class="info-label">Porta relè</span><span class="info-value">—</span></div>
-    <div class="info-row"><span class="info-label">Evento over_min</span><span class="info-value"><span class="badge orange">nessuno</span></span></div>
-    <div class="info-row"><span class="info-label">Evento under_min</span><span class="info-value"><span class="badge orange">nessuno</span></span></div>
-    <div class="info-row"><span class="info-label">Evento pesata IN</span><span class="info-value"><span class="badge orange">nessuno</span></span></div>
-    <div class="info-row"><span class="info-label">Evento pesata OUT</span><span class="info-value"><span class="badge orange">nessuno</span></span></div>
-  </div>
-
-  <!-- CAMERA -->
-  <div class="panel-section">
-    <h3>📷 Fotocamera</h3>
-    <div class="info-row"><span class="info-label">Stato</span><span class="info-value"><span class="badge green">ATTIVA</span></span></div>
-    <div class="info-row"><span class="info-label">IP</span><span class="info-value">10.0.5.175</span></div>
-    <div class="info-row"><span class="info-label">Canale</span><span class="info-value">101 (ISAPI)</span></div>
-    <div class="info-row"><span class="info-label">Live</span><span class="info-value"><span class="badge orange">—</span></span></div>
-  </div>
-
-  <!-- SERVER -->
-  <div class="panel-section">
-    <h3>🌐 Server</h3>
-    <div class="info-row"><span class="info-label">IP host</span><span class="info-value" id="server-host-ip">—</span></div>
-    <div class="info-row"><span class="info-label">Porta API</span><span class="info-value">80</span></div>
-    <div class="info-row"><span class="info-label">Modalità</span><span class="info-value">MANUALLY</span></div>
-    <div class="info-row"><span class="info-label">DB</span><span class="info-value">/var/opt/in-out/database.db</span></div>
-    <div class="info-row"><span class="info-label">Badge RFID</span><span class="info-value"><span class="badge green">SÌ</span></span></div>
-    <div class="info-row"><span class="info-label">Prenotazioni</span><span class="info-value"><span class="badge green">SÌ</span></span></div>
-  </div>
-
-</div>
+<!-- SIDE PANEL (generato dalla configurazione) -->
+<div id="sidebar"></div>
 
 <!-- DETAIL POPUP -->
 <div id="detail-panel">
@@ -315,7 +260,7 @@
 <div id="legend">
   <h4>Legenda</h4>
   <div class="leg-row"><div class="leg-dot" style="background:#2266dd"></div> Server</div>
-  <div class="leg-row"><div class="leg-dot" style="background:#22aa55"></div> Pesa P1</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#22aa55"></div> Pesa</div>
   <div class="leg-row"><div class="leg-dot" style="background:#dd8800"></div> Stampante</div>
   <div class="leg-row"><div class="leg-dot" style="background:#cc3333"></div> Relè</div>
   <div class="leg-row"><div class="leg-dot" style="background:#8844cc"></div> Fotocamera</div>
@@ -339,39 +284,133 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 /* ─────────────────────────────────────────────────────────────
-   CONFIG DATA (from config.json)
+   UTILITY
 ───────────────────────────────────────────────────────────── */
-const CONFIG = {
-  instance: {
-    id: '0',
-    ip: '10.0.5.90',
-    port: 23,
-    timeout: 3.0,
-    timeBetweenActions: 0.4,
-    autoCloseConnection: false,
-  },
-  nodes: {
-    P1: {
-      terminal: 'egt-af03-rext',
-      maxWeight: 80000,
-      minWeight: 500,
-      division: 20,
-      run: true,
-      printers: { out: 'Canon_iR-ADV_C5235_5240_UFR_II', in: null, tare: null, generic: null },
-      prints: { out: 1, in: 1, tare: 1, generic: 1 },
-      report: { out: true, in: false, tare: false, generic: false },
-      rele: { port: null, events: { over_min: [], under_min: [], weighing_in: [], weighing_out: [] } },
-      cam: { active: true, ip: '10.0.5.175', channel: 101, live: null }
-    }
-  },
-  server: { port: 80, mode: 'MANUALLY', useBadge: true, useReservation: true },
-};
+function esc(v) {
+  return String(v ?? '—').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+// Un valore può essere testo semplice (escapato) oppure { html } già pronto
+function cell(v) { return (v && typeof v === 'object' && 'html' in v) ? v.html : esc(v); }
+function badge(text, color) { return { html: `<span class="badge ${color}">${esc(text)}</span>` }; }
+function yesNo(v) { return v ? badge('SÌ', 'green') : badge('NO', 'orange'); }
+function prettyPrinter(name) { return name ? String(name).replace(/_/g, ' ') : null; }
 
-// IP / host della macchina che ospita il software (quella che serve questa pagina)
-const SERVER_HOST = location.hostname || '127.0.0.1';
-const SERVER_HTTP_PORT = location.port || (location.protocol === 'https:' ? 443 : 80);
-const SERVER_ADDR = SERVER_HOST + ':' + SERVER_HTTP_PORT;
-document.getElementById('server-host-ip').textContent = SERVER_ADDR;
+const WEIGHING_TYPES = { in: 'Entrata (IN)', out: 'Uscita (OUT)', generic: 'Generica', tare: 'Tara' };
+const REALTIME_EVENTS = { over_min: 'Sopra peso minimo', under_min: 'Sotto peso minimo' };
+
+// Elemento di una lista set_rele → { rele, set }
+function parseSetRele(item) {
+  if (item == null) return null;
+  if (typeof item !== 'object') return { rele: String(item), set: null };
+  const r = item.rele;
+  const name = (r && typeof r === 'object') ? (r.name ?? r.rele) : r;
+  if (name == null) return null;
+  const set = item.set ?? (r && typeof r === 'object' ? r.status : undefined) ?? item.status ?? null;
+  return { rele: String(name), set };
+}
+
+// Info fotocamera dall'URL (le credenziali NON vengono mai mostrate)
+function parseCam(cam) {
+  const out = { active: !!cam?.active, host: null, port: null, path: null, live: null };
+  const live = cam?.live;
+  out.live = (live && live !== 'None') ? live : null;
+  try {
+    const u = new URL(cam?.picture);
+    out.host = u.hostname;
+    out.port = u.port || null;
+    out.path = u.pathname;
+  } catch (_) {}
+  return out;
+}
+function stripCredentials(url) {
+  try { const u = new URL(url); u.username = ''; u.password = ''; return u.toString(); }
+  catch (_) { return url; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CARICAMENTO CONFIGURAZIONE
+───────────────────────────────────────────────────────────── */
+async function loadConfiguration() {
+  const res = await fetch('/api/config-weigher/configuration');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// Normalizza config.json in un modello comodo per la scena
+function buildModel(cfg) {
+  const host = location.hostname || '127.0.0.1';
+  const httpPort = location.port || (location.protocol === 'https:' ? 443 : 80);
+  const model = {
+    version: cfg.ver ?? null,
+    server: {
+      host, httpPort, addr: host + ':' + httpPort,
+      port: cfg.port, mode: cfg.mode,
+      useBadge: !!cfg.use_badge, useReservation: !!cfg.use_reservation,
+      database: cfg.path_database,
+    },
+    weighers: [],
+    printers: new Map(), // nome → [{ weigher, type, copies, report }]
+  };
+
+  for (const [instanceName, inst] of Object.entries(cfg.weighers || {})) {
+    const conn = inst.connection || {};
+    let connection;
+    if (conn.ip) connection = { kind: 'TCP', addr: `${conn.ip}:${conn.port}`, ip: conn.ip, port: conn.port, timeout: conn.timeout };
+    else if (conn.serial_port_name) connection = { kind: 'Seriale', addr: `${conn.serial_port_name} @ ${conn.baudrate ?? '?'}`, timeout: conn.timeout };
+    else connection = { kind: '—', addr: 'non configurata', timeout: conn.timeout };
+
+    for (const [nodeName, node] of Object.entries(inst.nodes || {})) {
+      const weighing = node.events?.weighing || {};
+      const realtime = node.events?.realtime || {};
+
+      // ── Relè: quelli presenti in node.rele + quelli usati negli eventi ──
+      const relays = new Map();
+      const getRelay = (name) => {
+        if (!relays.has(name)) relays.set(name, { name, status: null, events: [] });
+        return relays.get(name);
+      };
+      for (const [name, status] of Object.entries(node.rele || {})) getRelay(String(name)).status = status;
+      for (const [ev, label] of Object.entries(REALTIME_EVENTS)) {
+        for (const item of (realtime[ev]?.set_rele || [])) {
+          const p = parseSetRele(item);
+          if (p) getRelay(p.rele).events.push({ label, set: p.set });
+        }
+      }
+      for (const [type, label] of Object.entries(WEIGHING_TYPES)) {
+        for (const item of (weighing.set_rele?.[type] || [])) {
+          const p = parseSetRele(item);
+          if (p) getRelay(p.rele).events.push({ label: 'Pesata ' + label, set: p.set });
+        }
+      }
+
+      const w = {
+        instanceName, nodeName, connection,
+        timeBetweenActions: inst.time_between_actions,
+        autoCloseConnection: !!inst.auto_close_connection,
+        terminal: node.terminal,
+        run: node.run !== false,
+        maxWeight: node.max_weight, minWeight: node.min_weight, division: node.division,
+        continuousTransmission: !!node.continuous_transmission,
+        portRele: node.port_rele,
+        relays: [...relays.values()].sort((a, b) => a.name.localeCompare(b.name, 'it', { numeric: true })),
+        cams: (weighing.cams || []).map(parseCam),
+        rawCams: weighing.cams || [],
+        printers: [],
+      };
+
+      for (const [type, label] of Object.entries(WEIGHING_TYPES)) {
+        const name = weighing.printer?.[type];
+        if (!name) continue;
+        const use = { weigher: w, type, label, copies: weighing.prints?.[type], report: !!weighing.report?.[type] };
+        w.printers.push({ name, ...use });
+        if (!model.printers.has(name)) model.printers.set(name, []);
+        model.printers.get(name).push(use);
+      }
+      model.weighers.push(w);
+    }
+  }
+  return model;
+}
 
 /* ─────────────────────────────────────────────────────────────
    SCENE SETUP
@@ -394,16 +433,16 @@ container.appendChild(labelRenderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xdde8f5);
-scene.fog = new THREE.FogExp2(0xdde8f5, 0.022);
+scene.fog = new THREE.FogExp2(0xdde8f5, 0.018);
 
-const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(12, 9, 14);
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 300);
+camera.position.set(12, 10, 16);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minDistance = 4;
-controls.maxDistance = 40;
+controls.maxDistance = 70;
 controls.maxPolarAngle = Math.PI * 0.88;
 
 /* ─────────────────────────────────────────────────────────────
@@ -416,29 +455,14 @@ dirLight.position.set(10, 20, 10);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.set(2048, 2048);
 dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 60;
-dirLight.shadow.camera.left = dirLight.shadow.camera.bottom = -20;
-dirLight.shadow.camera.right = dirLight.shadow.camera.top = 20;
+dirLight.shadow.camera.far = 80;
+dirLight.shadow.camera.left = dirLight.shadow.camera.bottom = -30;
+dirLight.shadow.camera.right = dirLight.shadow.camera.top = 30;
 scene.add(dirLight);
 
 const fillLight = new THREE.DirectionalLight(0xd0e8ff, 1.2);
 fillLight.position.set(-8, 6, -5);
 scene.add(fillLight);
-
-/* ─────────────────────────────────────────────────────────────
-   FLOOR
-───────────────────────────────────────────────────────────── */
-const gridHelper = new THREE.GridHelper(40, 40, 0xaabbd0, 0xc8d8e8);
-gridHelper.position.y = -0.01;
-scene.add(gridHelper);
-
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(60, 60),
-  new THREE.MeshLambertMaterial({ color: 0xe0eaf5 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
 
 /* ─────────────────────────────────────────────────────────────
    HELPERS
@@ -460,7 +484,6 @@ function mat(color, emissive = 0x000000, roughness = 0.45, metalness = 0.5) {
   return new THREE.MeshStandardMaterial({ color, emissive, roughness, metalness });
 }
 
-// ── glowRing: aggiunto al group, posizione locale ──
 function glowRing(group, localPos, color, radius = 1.2) {
   const geo = new THREE.TorusGeometry(radius, 0.04, 8, 64);
   const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.4 }));
@@ -470,7 +493,6 @@ function glowRing(group, localPos, color, radius = 1.2) {
   return mesh;
 }
 
-// ── pulseSphere: aggiunta al group, posizione locale ──
 const pulses = [];
 function pulseSphere(group, localPos, color) {
   const geo = new THREE.SphereGeometry(0.14, 12, 12);
@@ -482,24 +504,16 @@ function pulseSphere(group, localPos, color) {
 }
 
 // ── beams dinamici: ricalcolati ogni frame ──
-// Ogni beam conosce: fromGroup, fromLocalY, toGroup, toLocalY, colore
-// Il cilindro/freccia vengono aggiornati nel loop di animazione
 const dynamicBeams = [];
-
 function makeDynamicBeam(fromGroup, fromOffsetY, toGroup, toOffsetY, color) {
   const mat3 = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.5 });
   const beamMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 6), mat3);
   scene.add(beamMesh);
-
-  // ArrowHelper riposizionabile: lo creiamo con dati dummy e aggiorniamo ogni frame
-  const arrowDir  = new THREE.Vector3(0, 1, 0);
-  const arrowMesh = new THREE.ArrowHelper(arrowDir, new THREE.Vector3(), 1, color, 0.22, 0.12);
+  const arrowMesh = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(), 1, color, 0.22, 0.12);
   scene.add(arrowMesh);
-
-  dynamicBeams.push({ beamMesh, arrowMesh, fromGroup, fromOffsetY, toGroup, toOffsetY, color });
+  dynamicBeams.push({ beamMesh, arrowMesh, fromGroup, fromOffsetY, toGroup, toOffsetY });
 }
 
-// vettori temporanei riusati nel loop (evita alloc)
 const _from = new THREE.Vector3();
 const _to   = new THREE.Vector3();
 const _dir  = new THREE.Vector3();
@@ -510,300 +524,263 @@ function updateDynamicBeams() {
   for (const b of dynamicBeams) {
     b.fromGroup.getWorldPosition(_from); _from.y = b.fromOffsetY;
     b.toGroup.getWorldPosition(_to);     _to.y   = b.toOffsetY;
-
     _dir.subVectors(_to, _from);
     const len = _dir.length();
     if (len < 0.001) continue;
     _dir.normalize();
     _mid.addVectors(_from, _to).multiplyScalar(0.5);
-
-    // aggiorna cilindro
     b.beamMesh.position.copy(_mid);
     b.beamMesh.scale.y = len;
     b.beamMesh.quaternion.setFromUnitVectors(_up, _dir);
-
-    // aggiorna freccia (metà percorso, punta verso destinazione)
     b.arrowMesh.position.copy(_mid);
     b.arrowMesh.setDirection(_dir);
     b.arrowMesh.setLength(len * 0.35, 0.22, 0.12);
   }
 }
 
+// mesh cliccabile/trascinabile → { group, detail }
+const meshToGroup = new Map();
 const interactiveObjects = [];
-function registerInteractive(mesh, data) {
-  mesh.userData = data;
+function registerObject(mesh, group, detail) {
+  mesh.userData = detail;
+  meshToGroup.set(mesh, group);
   interactiveObjects.push(mesh);
 }
 
+const blinkingLeds = []; // { mesh, on, off, speed }
+
 /* ─────────────────────────────────────────────────────────────
-   OBJECTS
+   COSTRUTTORI OGGETTI 3D
 ───────────────────────────────────────────────────────────── */
-
-// ── 1. SERVER BOX ────────────────────────────────────────────
-const serverGroup = new THREE.Group();
-const serverBody = new THREE.Mesh(
-  new THREE.BoxGeometry(1.8, 2.6, 1.0),
-  mat(0x3a5a8a, 0x000000, 0.4, 0.8)
-);
-serverBody.castShadow = true;
-serverGroup.add(serverBody);
-for (let i = 0; i < 5; i++) {
-  const strip = new THREE.Mesh(
-    new THREE.BoxGeometry(1.6, 0.12, 0.05),
-    mat(0x5577aa, 0x000000, 0.6, 0.4)
-  );
-  strip.position.set(0, -1.0 + i * 0.48, 0.53);
-  serverGroup.add(strip);
+function buildServer(model) {
+  const s = model.server;
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.6, 1.0), mat(0x3a5a8a, 0x000000, 0.4, 0.8));
+  body.castShadow = true;
+  group.add(body);
+  for (let i = 0; i < 5; i++) {
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 0.02), new THREE.MeshBasicMaterial({ color: 0x5577bb }));
+    strip.position.set(0, -1.0 + i * 0.48, 0.53);
+    group.add(strip);
+  }
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00ee66 }));
+  led.position.set(0.7, 0.8, 0.53);
+  group.add(led);
+  blinkingLeds.push({ mesh: led, on: 0x00ee66, off: 0x007733, speed: 4, threshold: 0.6 });
+  group.position.set(0, 1.3, -7);
+  scene.add(group);
+  glowRing(group, new THREE.Vector3(0, -1.29, 0), 0x3366cc, 1.4);
+  registerObject(body, group, {
+    title: '🖥 Server',
+    rows: [
+      ['IP host', s.host],
+      ['Porta HTTP', s.httpPort],
+      ['Modalità', s.mode ?? '—'],
+      ['Database', s.database ?? '—'],
+      ['Badge RFID', s.useBadge ? 'SÌ' : 'NO'],
+      ['Prenotazioni', s.useReservation ? 'SÌ' : 'NO'],
+      ['Pese configurate', model.weighers.length],
+    ]
+  });
+  pulseSphere(group, new THREE.Vector3(0, 1.4, 0), 0x2266dd);
+  const label = makeLabel('Server  ' + s.addr, '#1a3a8a');
+  label.position.set(0, 1.7, 0);
+  group.add(label);
+  return group;
 }
-const led = new THREE.Mesh(
-  new THREE.BoxGeometry(0.08, 0.08, 0.06),
-  new THREE.MeshBasicMaterial({ color: 0x00ee66 })
-);
-led.position.set(0.7, 0.8, 0.53);
-serverGroup.add(led);
-serverGroup.position.set(0, 1.3, 0);
-scene.add(serverGroup);
-glowRing(serverGroup, new THREE.Vector3(0, -1.29, 0), 0x3366cc, 1.4);
-registerInteractive(serverBody, {
-  title: '🖥 Server / Istanza #0',
-  rows: [
-    ['IP host', SERVER_HOST],
-    ['Porta HTTP', SERVER_HTTP_PORT],
-    ['Modalità', CONFIG.server.mode],
-    ['Badge RFID', 'SÌ'],
-    ['Prenotazioni', 'SÌ'],
-  ]
-});
-pulseSphere(serverGroup, new THREE.Vector3(0, 1.4, 0), 0x2266dd);
-const lServer = makeLabel('Server  ' + SERVER_ADDR, '#1a3a8a');
-lServer.position.set(0, 1.7, 0);
-serverGroup.add(lServer);
 
-// ── 2. PESA P1 ───────────────────────────────────────────────
-const pesaGroup = new THREE.Group();
-const platform = new THREE.Mesh(
-  new THREE.BoxGeometry(5, 0.28, 3),
-  mat(0x4a6a4a, 0x000000, 0.7, 0.4)
-);
-platform.castShadow = true;
-platform.receiveShadow = true;
-pesaGroup.add(platform);
-for (let i = -2; i <= 2; i++) {
-  const line = new THREE.Mesh(
-    new THREE.BoxGeometry(4.8, 0.03, 0.06),
-    mat(0x3a5a3a, 0x000000, 0.9, 0.1)
-  );
-  line.position.set(0, 0.155, i * 0.55);
-  pesaGroup.add(line);
+function buildPesa(w, pos) {
+  const group = new THREE.Group();
+  const platform = new THREE.Mesh(new THREE.BoxGeometry(5, 0.28, 3), mat(0x4a6a4a, 0x000000, 0.7, 0.4));
+  platform.castShadow = true;
+  platform.receiveShadow = true;
+  group.add(platform);
+  for (let i = -2; i <= 2; i++) {
+    const line = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.03, 0.06), mat(0x3a5a3a, 0x000000, 0.9, 0.1));
+    line.position.set(0, 0.155, i * 0.55);
+    group.add(line);
+  }
+  const display = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5, 0.12), mat(0x2a4a3a, 0x000000, 0.4, 0.6));
+  display.position.set(-1.8, 0.52, 0);
+  group.add(display);
+  const screen = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.3, 0.02), new THREE.MeshBasicMaterial({ color: w.run ? 0x33dd66 : 0x777777 }));
+  screen.position.set(-1.8, 0.54, 0.07);
+  group.add(screen);
+  [[-2.2,-1.2],[2.2,-1.2],[-2.2,1.2],[2.2,1.2]].forEach(([x,z]) => {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.22, 12), mat(0x556677, 0x000000, 0.4, 0.9));
+    c.position.set(x, -0.25, z);
+    c.castShadow = true;
+    group.add(c);
+  });
+  group.position.set(pos.x, 0.14, pos.z);
+  scene.add(group);
+  glowRing(group, new THREE.Vector3(0, -0.13, 0), 0x228844, 2.8);
+  registerObject(platform, group, {
+    title: `⚖ Pesa ${w.nodeName}  (${w.terminal ?? '—'})`,
+    rows: [
+      ['Istanza', '#' + w.instanceName],
+      ['Terminale', w.terminal ?? '—'],
+      ['Connessione', w.connection.kind],
+      [w.connection.kind === 'TCP' ? 'IP pesatrice' : 'Porta', w.connection.addr],
+      ['Timeout', w.connection.timeout != null ? w.connection.timeout + ' s' : '—'],
+      ['Intervallo azioni', w.timeBetweenActions != null ? w.timeBetweenActions + ' s' : '—'],
+      ['Auto-chiusura conn.', w.autoCloseConnection ? 'SÌ' : 'NO'],
+      ['Stato', w.run ? 'ATTIVO' : 'FERMO'],
+      ['Peso massimo', w.maxWeight != null ? w.maxWeight.toLocaleString('it') + ' kg' : '—'],
+      ['Peso minimo', w.minWeight != null ? w.minWeight.toLocaleString('it') + ' kg' : '—'],
+      ['Divisione', w.division != null ? w.division + ' kg' : '—'],
+      ['Trasmissione continua', w.continuousTransmission ? 'SÌ' : 'NO'],
+      ['Relè configurati', w.relays.length ? w.relays.map(r => r.name).join(', ') : 'nessuno'],
+    ]
+  });
+  pulseSphere(group, new THREE.Vector3(0, 0.56, 0), 0x22aa55);
+  const maxT = w.maxWeight != null ? ` · max ${Math.round(w.maxWeight / 1000)} t` : '';
+  const label = makeLabel(`${w.nodeName} · ${w.connection.addr}${maxT}`, '#1a6a30');
+  label.position.set(0, 0.86, 0);
+  group.add(label);
+  return group;
 }
-const display = new THREE.Mesh(
-  new THREE.BoxGeometry(1.0, 0.5, 0.12),
-  mat(0x2a4a3a, 0x000000, 0.4, 0.6)
-);
-display.position.set(-1.8, 0.52, 0);
-pesaGroup.add(display);
-const screen = new THREE.Mesh(
-  new THREE.BoxGeometry(0.78, 0.3, 0.02),
-  new THREE.MeshBasicMaterial({ color: 0x33dd66 })
-);
-screen.position.set(-1.8, 0.54, 0.07);
-pesaGroup.add(screen);
-[[-2.2,-1.2],[2.2,-1.2],[-2.2,1.2],[2.2,1.2]].forEach(([x,z]) => {
-  const cell = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.12, 0.12, 0.22, 12),
-    mat(0x556677, 0x000000, 0.4, 0.9)
-  );
-  cell.position.set(x, -0.25, z);
-  cell.castShadow = true;
-  pesaGroup.add(cell);
-});
-pesaGroup.position.set(-6, 0.14, 2);
-scene.add(pesaGroup);
-glowRing(pesaGroup, new THREE.Vector3(0, -0.13, 0), 0x228844, 2.8);
-registerInteractive(platform, {
-  title: '⚖ Pesa P1  (egt-af03-rext)',
-  rows: [
-    ['Terminale', CONFIG.nodes.P1.terminal],
-    ['IP pesatrice', CONFIG.instance.ip + ' : ' + CONFIG.instance.port],
-    ['Protocollo', 'TCP'],
-    ['Timeout', CONFIG.instance.timeout + ' s'],
-    ['Intervallo azioni', CONFIG.instance.timeBetweenActions + ' s'],
-    ['Auto-chiusura conn.', CONFIG.instance.autoCloseConnection ? 'SÌ' : 'NO'],
-    ['Stato', 'ATTIVO'],
-    ['Peso massimo', CONFIG.nodes.P1.maxWeight.toLocaleString('it') + ' kg'],
-    ['Peso minimo', CONFIG.nodes.P1.minWeight + ' kg'],
-    ['Divisione', CONFIG.nodes.P1.division + ' kg'],
-    ['Trasmissione continua', 'NO'],
-    ['Sessione realtime', 'SÌ'],
-    ['Priorità diagnostica', 'SÌ'],
-  ]
-});
-pulseSphere(pesaGroup, new THREE.Vector3(0, 0.56, 0), 0x22aa55);
-const lPesa = makeLabel('P1 · ' + CONFIG.instance.ip + ':' + CONFIG.instance.port + ' · max 80 t', '#1a6a30');
-lPesa.position.set(0, 0.86, 0);
-pesaGroup.add(lPesa);
 
-// ── 3. STAMPANTE ─────────────────────────────────────────────
-const printerGroup = new THREE.Group();
-const printerBody = new THREE.Mesh(
-  new THREE.BoxGeometry(1.8, 0.8, 1.3),
-  mat(0x555555, 0x000000, 0.6, 0.3)
-);
-printerBody.castShadow = true;
-printerGroup.add(printerBody);
-const tray = new THREE.Mesh(
-  new THREE.BoxGeometry(1.5, 0.06, 0.6),
-  mat(0x777777, 0x000000, 0.8, 0.1)
-);
-tray.position.set(0, -0.43, -0.68);
-printerGroup.add(tray);
-const outTray = new THREE.Mesh(
-  new THREE.BoxGeometry(1.5, 0.04, 0.5),
-  mat(0x777777, 0x000000, 0.8, 0.1)
-);
-outTray.position.set(0, 0.22, 0.65);
-printerGroup.add(outTray);
-const printerPanel = new THREE.Mesh(
-  new THREE.BoxGeometry(0.7, 0.2, 0.05),
-  mat(0x444444, 0x000000, 0.5, 0.4)
-);
-printerPanel.position.set(0.4, 0.3, 0.66);
-printerGroup.add(printerPanel);
-const pLed = new THREE.Mesh(
-  new THREE.SphereGeometry(0.05, 8, 8),
-  new THREE.MeshBasicMaterial({ color: 0xffaa00 })
-);
-pLed.position.set(-0.6, 0.3, 0.67);
-printerGroup.add(pLed);
-printerGroup.position.set(5, 0.82, -3);
-scene.add(printerGroup);
-glowRing(printerGroup, new THREE.Vector3(0, -0.81, 0), 0xcc7700, 1.4);
-registerInteractive(printerBody, {
-  title: '🖨 Stampante · Canon iR-ADV C5235/5240',
-  rows: [
-    ['Nome CUPS', CONFIG.nodes.P1.printers.out],
-    ['Assegnata a', 'P1 – Pesata USCITA (OUT)'],
-    ['N° copie', CONFIG.nodes.P1.prints.out],
-    ['Report PDF', 'SÌ'],
-    ['Entrata (IN)', '—'],
-    ['Tara', '—'],
-    ['Generica', '—'],
-    ['Driver', 'UFR II (Canon)'],
-  ]
-});
-pulseSphere(printerGroup, new THREE.Vector3(0, 0.58, 0), 0xdd8800);
-const lPrinter = makeLabel('Canon iR-ADV · OUT', '#884400');
-lPrinter.position.set(0, 0.88, 0);
-printerGroup.add(lPrinter);
-
-// ── 4. RELÈ ──────────────────────────────────────────────────
-const releGroup = new THREE.Group();
-const releBody = new THREE.Mesh(
-  new THREE.BoxGeometry(0.9, 1.1, 0.5),
-  mat(0x883333, 0x000000, 0.5, 0.6)
-);
-releBody.castShadow = true;
-releGroup.add(releBody);
-for (let i = 0; i < 6; i++) {
-  const term = new THREE.Mesh(
-    new THREE.BoxGeometry(0.06, 0.06, 0.08),
-    mat(0xaa9900, 0x000000, 0.5, 0.8)
-  );
-  term.position.set(-0.3 + i * 0.12, 0.5, 0.0);
-  releGroup.add(term);
+function buildPrinter(name, uses, pos) {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 1.3), mat(0x555555, 0x000000, 0.6, 0.3));
+  body.castShadow = true;
+  group.add(body);
+  const tray = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 0.6), mat(0x777777, 0x000000, 0.8, 0.1));
+  tray.position.set(0, -0.43, -0.68);
+  group.add(tray);
+  const outTray = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.04, 0.5), mat(0x777777, 0x000000, 0.8, 0.1));
+  outTray.position.set(0, 0.22, 0.65);
+  group.add(outTray);
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.05), mat(0x444444, 0x000000, 0.5, 0.4));
+  panel.position.set(0.4, 0.3, 0.66);
+  group.add(panel);
+  const pLed = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+  pLed.position.set(-0.6, 0.3, 0.67);
+  group.add(pLed);
+  group.position.set(pos.x, 0.82, pos.z);
+  scene.add(group);
+  glowRing(group, new THREE.Vector3(0, -0.81, 0), 0xcc7700, 1.4);
+  registerObject(body, group, {
+    title: '🖨 Stampante · ' + prettyPrinter(name),
+    rows: [
+      ['Nome CUPS', name],
+      ...uses.map(u => [
+        `${u.weigher.nodeName} · ${u.label}`,
+        `${u.copies ?? 1} copie · report PDF ${u.report ? 'SÌ' : 'NO'}`
+      ]),
+    ]
+  });
+  pulseSphere(group, new THREE.Vector3(0, 0.58, 0), 0xdd8800);
+  const types = [...new Set(uses.map(u => u.type.toUpperCase()))].join('/');
+  const label = makeLabel(`${prettyPrinter(name)} · ${types}`, '#884400');
+  label.position.set(0, 0.88, 0);
+  group.add(label);
+  return group;
 }
-const rLed = new THREE.Mesh(
-  new THREE.SphereGeometry(0.04, 8, 8),
-  new THREE.MeshBasicMaterial({ color: 0xff4444 })
-);
-rLed.position.set(0.3, 0.3, 0.26);
-releGroup.add(rLed);
-releGroup.position.set(-6, 0.95, -3);
-scene.add(releGroup);
-glowRing(releGroup, new THREE.Vector3(0, -0.94, 0), 0xaa2222, 0.8);
-registerInteractive(releBody, {
-  title: '🔌 Relè · Nodo P1',
-  rows: [
-    ['Porta relè', '—'],
-    ['Evento over_min', 'nessuno'],
-    ['Evento under_min', 'nessuno'],
-    ['Pesata IN', 'nessuno'],
-    ['Pesata OUT', 'nessuno'],
-    ['Stato corrente', 'Nessun relè attivo'],
-  ]
-});
-pulseSphere(releGroup, new THREE.Vector3(0, 0.65, 0), 0xcc3333);
-const lRele = makeLabel('Relè P1  (non configurato)', '#882222');
-lRele.position.set(0, 0.95, 0);
-releGroup.add(lRele);
 
-// ── 5. FOTOCAMERA ─────────────────────────────────────────────
-const camGroup = new THREE.Group();
-const camBody = new THREE.Mesh(
-  new THREE.BoxGeometry(0.5, 0.4, 0.4),
-  mat(0x222222, 0x000000, 0.5, 0.6)
-);
-camGroup.add(camBody);
-const lens = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.12, 0.14, 0.3, 20),
-  mat(0x111111, 0x000000, 0.2, 0.9)
-);
-lens.rotation.x = Math.PI / 2;
-lens.position.set(0, 0, 0.35);
-camGroup.add(lens);
-const lensGlass = new THREE.Mesh(
-  new THREE.CircleGeometry(0.1, 20),
-  new THREE.MeshBasicMaterial({ color: 0x8844cc, transparent: true, opacity: 0.85 })
-);
-lensGlass.position.set(0, 0, 0.51);
-camGroup.add(lensGlass);
-const mount = new THREE.Mesh(
-  new THREE.BoxGeometry(0.12, 0.35, 0.12),
-  mat(0x444444, 0x000000, 0.6, 0.5)
-);
-mount.position.set(0, -0.37, 0);
-camGroup.add(mount);
-camGroup.position.set(-2, 3.2, 3.5);
-camGroup.rotation.y = Math.PI * 0.15;
-scene.add(camGroup);
-glowRing(camGroup, new THREE.Vector3(0, -3.19, 0), 0x7722bb, 0.7);
-registerInteractive(camBody, {
-  title: '📷 Fotocamera IP · 10.0.5.175',
-  rows: [
-    ['Stato', 'ATTIVA'],
-    ['IP', CONFIG.nodes.P1.cam.ip],
-    ['Canale ISAPI', CONFIG.nodes.P1.cam.channel],
-    ['URL snapshot', '/ISAPI/Streaming/channels/101/picture'],
-    ['Live stream', '—'],
-    ['Autenticazione', 'HTTP Basic (admin)'],
-    ['Attivazione', 'Ad ogni pesata'],
-  ]
-});
-pulseSphere(camGroup, new THREE.Vector3(0, 0.4, 0), 0x8844cc);
-const lCam = makeLabel('📷  10.0.5.175 · ch.101', '#5522aa');
-lCam.position.set(0, 0.7, 0);
-camGroup.add(lCam);
+function buildRelay(w, relay, pos) {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.5), mat(0x883333, 0x000000, 0.5, 0.6));
+  body.castShadow = true;
+  group.add(body);
+  for (let i = 0; i < 6; i++) {
+    const term = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.08), mat(0xaa9900, 0x000000, 0.5, 0.8));
+    term.position.set(-0.3 + i * 0.12, 0.5, 0.0);
+    group.add(term);
+  }
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0x552222 }));
+  led.position.set(0.3, 0.3, 0.26);
+  group.add(led);
+  relay.led = led;
+  updateRelayLed(relay);
+  group.position.set(pos.x, 0.55, pos.z);
+  scene.add(group);
+  glowRing(group, new THREE.Vector3(0, -0.54, 0), 0xaa2222, 0.7);
+  registerObject(body, group, {
+    title: `🔌 Relè ${relay.name} · Pesa ${w.nodeName}`,
+    // calcolate al click, così lo stato è sempre quello aggiornato
+    rows: () => [
+      ['Pesa', `${w.nodeName} (istanza #${w.instanceName})`],
+      ['Stato corrente', relayStatusText(relay.status)],
+      ...(relay.events.length
+        ? relay.events.map(e => [e.label, e.set == null ? 'attiva' : (Number(e.set) === 1 ? 'APRI (ON)' : 'CHIUDI (OFF)')])
+        : [['Eventi', 'nessun evento associato']]),
+    ]
+  });
+  pulseSphere(group, new THREE.Vector3(0, 0.75, 0), 0xcc3333);
+  const label = makeLabel(`Relè ${relay.name} · ${w.nodeName}`, '#882222');
+  label.position.set(0, 1.0, 0);
+  group.add(label);
+  return group;
+}
 
-// ── 6. CAMION (sulla pesa se peso > 0) ───────────────────────
-function makeTruck(color = 0x4466aa) {
+function relayStatusText(status) {
+  if (status == null) return 'sconosciuto';
+  return Number(status) === 1 ? 'ON' : 'OFF';
+}
+function updateRelayLed(relay) {
+  if (!relay.led) return;
+  relay.led.material.color.setHex(relay.status == null ? 0x775555 : (Number(relay.status) === 1 ? 0xff3333 : 0x552222));
+}
+
+function buildCam(w, cam, raw, pos) {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.4), mat(0x222222, 0x000000, 0.5, 0.6));
+  group.add(body);
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.3, 20), mat(0x111111, 0x000000, 0.2, 0.9));
+  lens.rotation.x = Math.PI / 2;
+  lens.position.set(0, 0, 0.35);
+  group.add(lens);
+  const glass = new THREE.Mesh(new THREE.CircleGeometry(0.1, 20),
+    new THREE.MeshBasicMaterial({ color: cam.active ? 0x8844cc : 0x888888, transparent: true, opacity: 0.85 }));
+  glass.position.set(0, 0, 0.51);
+  group.add(glass);
+  const mount = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 0.12), mat(0x444444, 0x000000, 0.6, 0.5));
+  mount.position.set(0, -0.37, 0);
+  group.add(mount);
+  group.position.set(pos.x, 3.2, pos.z);
+  group.rotation.y = Math.PI * 0.15;
+  scene.add(group);
+  glowRing(group, new THREE.Vector3(0, -3.19, 0), 0x7722bb, 0.7);
+  const hostTxt = cam.host ? cam.host + (cam.port ? ':' + cam.port : '') : '—';
+  registerObject(body, group, {
+    title: `📷 Fotocamera · ${hostTxt}`,
+    rows: [
+      ['Pesa', w.nodeName],
+      ['Stato', cam.active ? 'ATTIVA' : 'DISATTIVA'],
+      ['IP', hostTxt],
+      ['URL snapshot', raw?.picture ? stripCredentials(raw.picture) : '—'],
+      ['Live stream', cam.live ? stripCredentials(cam.live) : '—'],
+      ['Attivazione', 'Ad ogni pesata'],
+    ]
+  });
+  pulseSphere(group, new THREE.Vector3(0, 0.4, 0), 0x8844cc);
+  const label = makeLabel(`📷  ${hostTxt}`, '#5522aa');
+  label.position.set(0, 0.7, 0);
+  group.add(label);
+  return group;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CAMION (uno per pesa, segue la sua pesa)
+───────────────────────────────────────────────────────────── */
+const TRUCK_COLORS = [0x4466aa, 0xaa6644, 0x44aa77, 0x8855aa, 0xaa9933, 0x337799];
+const TRUCK_Y_GROUND = 0.78;
+const TRUCK_Y_SCALE  = 0.78 + 0.14;
+const SCALE_OFFSET   = { x: 0, z: 0   }; // centro pesa
+const WAITING_OFFSET = { x: 0, z: 4.5 }; // zona attesa davanti alla pesa
+
+function makeTruck(color) {
   const g = new THREE.Group();
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(3.2, 1.0, 1.5),
-    mat(color, 0x000000, 0.6, 0.3)
-  );
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.0, 1.5), mat(color, 0x000000, 0.6, 0.3));
   body.castShadow = true;
   g.add(body);
-  const cab = new THREE.Mesh(
-    new THREE.BoxGeometry(1.0, 0.8, 1.5),
-    mat(color, 0x000000, 0.5, 0.4)
-  );
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.8, 1.5), mat(color, 0x000000, 0.5, 0.4));
   cab.position.set(-1.6, 0.35, 0);
   g.add(cab);
   [[-1.1,-1.1],[1.1,-1.1],[-1.1,1.1],[1.1,1.1]].forEach(([x,z]) => {
-    const wh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.28, 0.28, 0.22, 14),
-      mat(0x222222, 0x000000, 0.9, 0.3)
-    );
+    const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.22, 14), mat(0x222222, 0x000000, 0.9, 0.3));
     wh.rotation.x = Math.PI / 2;
     wh.position.set(x, -0.5, z);
     wh.castShadow = true;
@@ -812,223 +789,286 @@ function makeTruck(color = 0x4466aa) {
   return g;
 }
 
-// Posizioni: ON_SCALE = sopra pesa, OFF_SCALE = fuori pesa (in attesa)
-// Offset relativi alla pesa: il camion segue la pesa quando viene spostata
-const SCALE_OFFSET   = { x: 0, z: 0   }; // centro pesa P1
-const WAITING_OFFSET = { x: 0, z: 4.5 }; // zona attesa davanti alla pesa
-const WAITING_POS = { x: pesaGroup.position.x + WAITING_OFFSET.x, z: pesaGroup.position.z + WAITING_OFFSET.z };
+function buildTruck(w, pesaGroup, idx) {
+  const group = makeTruck(TRUCK_COLORS[idx % TRUCK_COLORS.length]);
+  group.position.set(pesaGroup.position.x + WAITING_OFFSET.x, TRUCK_Y_GROUND, pesaGroup.position.z + WAITING_OFFSET.z);
+  scene.add(group);
 
-const truckGroup = makeTruck(0x4466aa);
-// Y base: ruote appoggiate a terra (r=0.28, quindi centro ruota a 0.28, corpo +0.5 sopra = 0.78 dal suolo)
-const TRUCK_Y_GROUND = 0.78;
-const TRUCK_Y_SCALE  = 0.78 + 0.14; // sopra la piattaforma (h=0.28 → metà = 0.14)
+  const div = document.createElement('div');
+  div.style.cssText = `
+    color:#1a3a8a;font-size:12px;font-family:system-ui;font-weight:700;
+    background:rgba(255,255,255,0.92);padding:3px 10px;border-radius:6px;
+    white-space:nowrap;pointer-events:none;
+    border:1px solid rgba(60,100,200,0.3);
+    box-shadow:0 1px 6px rgba(0,0,60,0.12);
+  `;
+  div.textContent = `${w.nodeName} ⚖ --- kg`;
+  const label = new CSS2DObject(div);
+  label.position.set(0, 1.1, 0);
+  group.add(label);
 
-truckGroup.position.set(WAITING_POS.x, TRUCK_Y_GROUND, WAITING_POS.z);
-scene.add(truckGroup);
+  return { w, group, pesaGroup, labelDiv: div, gross: 0, isOnScale: false };
+}
 
-// Label peso in tempo reale sopra il camion
-const weightLabelDiv = document.createElement('div');
-weightLabelDiv.style.cssText = `
-  color:#1a3a8a;font-size:12px;font-family:system-ui;font-weight:700;
-  background:rgba(255,255,255,0.92);padding:3px 10px;border-radius:6px;
-  white-space:nowrap;pointer-events:none;
-  border:1px solid rgba(60,100,200,0.3);
-  box-shadow:0 1px 6px rgba(0,0,60,0.12);
-`;
-weightLabelDiv.textContent = '⚖ --- kg';
-const weightLabel3D = new CSS2DObject(weightLabelDiv);
-weightLabel3D.position.set(0, 1.1, 0);
-truckGroup.add(weightLabel3D);
-
-// Stato peso corrente per il nodo P1
-const nodeWeightState = { gross: 0, isOnScale: false, targetX: WAITING_POS.x, targetZ: WAITING_POS.z, targetY: TRUCK_Y_GROUND };
+function truckOffset(truck) { return truck.isOnScale ? SCALE_OFFSET : WAITING_OFFSET; }
 
 /* ─────────────────────────────────────────────────────────────
-   CONNECTION BEAMS (dinamici – seguono i group)
+   WEBSOCKET – PESO REALTIME + STATO RELÈ
 ───────────────────────────────────────────────────────────── */
-makeDynamicBeam(serverGroup,  1.5,  pesaGroup,    0.6,  0x3366cc); // Server → Pesa
-makeDynamicBeam(serverGroup,  1.5,  printerGroup, 0.9,  0xcc8800); // Server → Stampante
-makeDynamicBeam(pesaGroup,    0.5,  releGroup,    1.0,  0xaa2222); // Pesa → Relè
-makeDynamicBeam(pesaGroup,    0.5,  camGroup,     3.2,  0x7722bb); // Pesa → Camera
-
-/* ─────────────────────────────────────────────────────────────
-   WEBSOCKET – REALTIME WEIGHT
-───────────────────────────────────────────────────────────── */
-function connectWeigherWS(instanceName, nodeName, state) {
+function connectWeigherWS(truck) {
+  const { w } = truck;
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  const url = `${proto}://${location.host}/api/command-weigher/realtime?instance_name=${instanceName}&weigher_name=${nodeName}`;
-  let ws;
+  const url = `${proto}://${location.host}/api/command-weigher/realtime?instance_name=${encodeURIComponent(w.instanceName)}&weigher_name=${encodeURIComponent(w.nodeName)}`;
+  const relayByName = new Map(w.relays.map(r => [r.name, r]));
 
   function connect() {
-    ws = new WebSocket(url);
+    const ws = new WebSocket(url);
+    let ping = null;
 
     ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'pong') return;
-        const raw = data.gross_weight;
-        const kg = (raw && raw !== '--') ? parseFloat(raw) : 0;
-        state.gross = isNaN(kg) ? 0 : kg;
+      let data;
+      try { data = JSON.parse(event.data); } catch (_) { return; }
+      if (!data || typeof data !== 'object' || data.type === 'pong') return;
 
-        // Aggiorna label
-        weightLabelDiv.textContent = state.gross > 0
-          ? `⚖ ${state.gross.toLocaleString('it')} kg`
-          : '⚖ --- kg';
-
-        // Decide posizione target
-        if (state.gross > 0) {
-          state.targetY = TRUCK_Y_SCALE;
-          state.isOnScale = true;
-        } else {
-          state.targetY = TRUCK_Y_GROUND;
-          state.isOnScale = false;
+      // Aggiornamento stato relè: messaggio { "<nome relè>": 0|1 }
+      for (const [key, value] of Object.entries(data)) {
+        const relay = relayByName.get(key);
+        if (relay && (value === 0 || value === 1)) {
+          relay.status = value;
+          updateRelayLed(relay);
+          const el = document.querySelector(`[data-relay="${CSS.escape(w.instanceName + '/' + w.nodeName + '/' + key)}"]`);
+          if (el) el.innerHTML = relayBadge(relay.status).html;
         }
-      } catch (_) {}
+      }
+
+      if (!('gross_weight' in data)) return;
+      const raw = data.gross_weight;
+      const kg = (raw && raw !== '--') ? parseFloat(raw) : 0;
+      truck.gross = isNaN(kg) ? 0 : kg;
+      truck.isOnScale = truck.gross > 0;
+      truck.labelDiv.textContent = truck.gross > 0
+        ? `${w.nodeName} ⚖ ${truck.gross.toLocaleString('it')} kg`
+        : `${w.nodeName} ⚖ --- kg`;
     };
 
-    // ping keepalive ogni 20 s
     ws.onopen = () => {
-      const ping = setInterval(() => {
+      ping = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
-        else clearInterval(ping);
       }, 20000);
     };
-
-    ws.onclose = () => setTimeout(connect, 3000); // riconnette
+    ws.onclose = () => { clearInterval(ping); setTimeout(connect, 3000); };
     ws.onerror = () => ws.close();
   }
-
   connect();
 }
 
-// Avvia WS per P1
-connectWeigherWS('0', 'P1', nodeWeightState);
+/* ─────────────────────────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────────────────────────── */
+function relayBadge(status) {
+  if (status == null) return badge('—', 'blue');
+  return Number(status) === 1 ? badge('ON', 'red') : badge('OFF', 'green');
+}
+function rowHtml(label, value, attrs = '') {
+  return `<div class="info-row"><span class="info-label">${esc(label)}</span><span class="info-value"${attrs}>${cell(value)}</span></div>`;
+}
+
+function renderSidebar(model) {
+  const s = model.server;
+  let html = `
+    <div class="panel-section">
+      <h3>🌐 Server</h3>
+      ${rowHtml('IP host', s.addr)}
+      ${rowHtml('Modalità', s.mode ?? '—')}
+      ${rowHtml('DB', s.database ?? '—')}
+      ${rowHtml('Badge RFID', yesNo(s.useBadge))}
+      ${rowHtml('Prenotazioni', yesNo(s.useReservation))}
+    </div>`;
+
+  if (!model.weighers.length) {
+    html += `<div class="panel-section"><h3>⚖ Pese</h3><div class="panel-empty">Nessuna pesa configurata</div></div>`;
+  }
+
+  for (const w of model.weighers) {
+    html += `
+    <div class="panel-section">
+      <h3>⚖ Pesa ${esc(w.nodeName)} · istanza #${esc(w.instanceName)}</h3>
+      ${rowHtml('Terminale', w.terminal ?? '—')}
+      ${rowHtml('Stato', w.run ? badge('ATTIVO', 'green') : badge('FERMO', 'orange'))}
+      ${rowHtml('Connessione', w.connection.kind)}
+      ${rowHtml(w.connection.kind === 'TCP' ? 'IP pesatrice' : 'Porta', w.connection.addr)}
+      ${rowHtml('Timeout', w.connection.timeout != null ? w.connection.timeout + ' s' : '—')}
+      ${rowHtml('Intervallo azioni', w.timeBetweenActions != null ? w.timeBetweenActions + ' s' : '—')}
+      ${rowHtml('Auto-chiusura conn.', yesNo(w.autoCloseConnection))}
+      ${rowHtml('Peso max', w.maxWeight != null ? w.maxWeight.toLocaleString('it') + ' kg' : '—')}
+      ${rowHtml('Peso min', w.minWeight != null ? w.minWeight.toLocaleString('it') + ' kg' : '—')}
+      ${rowHtml('Divisione', w.division != null ? w.division + ' kg' : '—')}
+      ${rowHtml('Trasmissione continua', yesNo(w.continuousTransmission))}
+
+      <h4>🔌 Relè</h4>
+      ${w.relays.length
+        ? w.relays.map(r => rowHtml(
+            `Relè ${r.name}` + (r.events.length ? ` (${r.events.length} eventi)` : ''),
+            relayBadge(r.status),
+            ` data-relay="${esc(w.instanceName + '/' + w.nodeName + '/' + r.name)}"`
+          )).join('')
+        : '<div class="panel-empty">Nessun relè configurato</div>'}
+
+      <h4>🖨 Stampanti</h4>
+      ${w.printers.length
+        ? w.printers.map(p => rowHtml(p.label, `${prettyPrinter(p.name)} · ${p.copies ?? 1} cp`)).join('')
+        : '<div class="panel-empty">Nessuna stampante assegnata</div>'}
+
+      <h4>📷 Fotocamere</h4>
+      ${w.cams.length
+        ? w.cams.map((c, i) => rowHtml(
+            `Cam ${i + 1}`,
+            { html: `${esc(c.host ?? '—')} ${cell(c.active ? badge('ATTIVA', 'green') : badge('OFF', 'orange'))}` }
+          )).join('')
+        : '<div class="panel-empty">Nessuna fotocamera</div>'}
+    </div>`;
+  }
+  document.getElementById('sidebar').innerHTML = html;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COSTRUZIONE SCENA DALLA CONFIGURAZIONE
+───────────────────────────────────────────────────────────── */
+const trucks = [];
+
+function buildScene(model) {
+  const n = model.weighers.length;
+  const SPACING = 11;
+
+  const serverGroup = buildServer(model);
+
+  // Pese in fila, centrate sull'asse del server
+  model.weighers.forEach((w, i) => {
+    const x = (i - (n - 1) / 2) * SPACING;
+    const z = 2;
+    const pesaGroup = buildPesa(w, { x, z });
+    makeDynamicBeam(serverGroup, 1.5, pesaGroup, 0.6, 0x3366cc); // Server → Pesa
+
+    // Relè dietro la pesa, uno per ogni relè configurato
+    const m = w.relays.length;
+    w.relays.forEach((relay, j) => {
+      const rg = buildRelay(w, relay, { x: x + (j - (m - 1) / 2) * 1.4, z: z - 3.2 });
+      makeDynamicBeam(pesaGroup, 0.5, rg, 0.8, 0xaa2222);           // Pesa → Relè
+    });
+
+    // Fotocamere sopra/di lato alla pesa
+    w.cams.forEach((cam, k) => {
+      const cg = buildCam(w, cam, w.rawCams[k], { x: x + 3.2 + k * 1.3, z: z + 1.5 });
+      makeDynamicBeam(pesaGroup, 0.5, cg, 3.2, 0x7722bb);           // Pesa → Camera
+    });
+
+    const truck = buildTruck(w, pesaGroup, i);
+    trucks.push(truck);
+    connectWeigherWS(truck);
+  });
+
+  // Stampanti (una per nome CUPS) a destra del server
+  let k = 0;
+  for (const [name, uses] of model.printers) {
+    const pg = buildPrinter(name, uses, { x: 3.5 + k * 2.6, z: -7 });
+    makeDynamicBeam(serverGroup, 1.5, pg, 0.9, 0xcc8800);           // Server → Stampante
+    k++;
+  }
+
+  // Pavimento e camera dimensionati sul numero di pese
+  const size = Math.max(40, n * SPACING + 24);
+  const grid = new THREE.GridHelper(size, size, 0xaabbd0, 0xc8d8e8);
+  grid.position.y = -0.01;
+  scene.add(grid);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(size * 1.5, size * 1.5), new THREE.MeshLambertMaterial({ color: 0xe0eaf5 }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+  const extra = Math.max(0, n - 1) * 4;
+  camera.position.set(12 + extra, 10 + extra * 0.6, 16 + extra);
+}
 
 /* ─────────────────────────────────────────────────────────────
    DRAG-TO-MOVE + CLICK-FOR-DETAILS
-   ─────────────────────────────────────────────────────────────
-   Ogni oggetto registrato è figlio di un Group; il drag
-   sposta il Group padre sul piano XZ.
-   Un click breve (< 200 ms, < 4 px) apre il pannello dettagli.
-   Un drag disabilita OrbitControls per tutta la durata.
 ───────────────────────────────────────────────────────────── */
-const raycaster   = new THREE.Raycaster();
-const mouse       = new THREE.Vector2();
-const dragPlane   = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // piano Y=0
-const dragOffset  = new THREE.Vector3();
+const raycaster     = new THREE.Raycaster();
+const mouse         = new THREE.Vector2();
+const dragPlane     = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const dragOffset    = new THREE.Vector3();
 const dragIntersect = new THREE.Vector3();
-
-// mappa mesh → Group radice da spostare
-const meshToGroup = new Map();
-function registerDraggable(mesh, group) { meshToGroup.set(mesh, group); }
-
-// Tutti i group draggabili (server, pesa, stampante, relè, cam)
-registerDraggable(serverBody,   serverGroup);
-registerDraggable(platform,     pesaGroup);
-registerDraggable(printerBody,  printerGroup);
-registerDraggable(releBody,     releGroup);
-registerDraggable(camBody,      camGroup);
 
 const detailPanel = document.getElementById('detail-panel');
 const detailTitle = document.getElementById('detail-title');
 const detailTable = document.getElementById('detail-table');
 
 function showDetail(data) {
+  const rows = typeof data.rows === 'function' ? data.rows() : data.rows;
   detailTitle.textContent = data.title;
-  detailTable.innerHTML = data.rows.map(([k, v]) =>
-    `<tr><td>${k}</td><td>${v}</td></tr>`
-  ).join('');
+  detailTable.innerHTML = rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${cell(v)}</td></tr>`).join('');
   detailPanel.classList.add('show');
 }
-document.getElementById('detail-close').addEventListener('click', () => {
-  detailPanel.classList.remove('show');
-});
+document.getElementById('detail-close').addEventListener('click', () => detailPanel.classList.remove('show'));
 
-// ── stato drag ──
-let dragging       = null;   // Group in corso di drag
-let dragMouseDown  = null;   // {x,y} al mousedown
-let dragStartTime  = 0;
-let hasDragged     = false;
-
-// hovered highlight
+let dragging = null, dragMouseDown = null, dragStartTime = 0, hasDragged = false;
 let hovered = null;
 const origColors = new Map();
-function setEmissive(mesh, color) {
-  if (mesh?.material?.emissive) mesh.material.emissive.setHex(color);
-}
+function setEmissive(mesh, color) { if (mesh?.material?.emissive) mesh.material.emissive.setHex(color); }
 
 function ndc(e) {
-  return {
-    x: (e.clientX / window.innerWidth)  *  2 - 1,
-    y: (e.clientY / window.innerHeight) * -2 + 1,
-  };
+  return { x: (e.clientX / window.innerWidth) * 2 - 1, y: (e.clientY / window.innerHeight) * -2 + 1 };
 }
-
 function hitDraggable(e) {
   const n = ndc(e);
   mouse.set(n.x, n.y);
   raycaster.setFromCamera(mouse, camera);
-  // controlla tutti i mesh registrati come draggabili
-  const meshes = [...meshToGroup.keys()];
-  const hits = raycaster.intersectObjects(meshes, false);
+  const hits = raycaster.intersectObjects([...meshToGroup.keys()], false);
   return hits.length > 0 ? hits[0] : null;
+}
+
+// Il camion segue rigidamente la propria pesa mentre viene trascinata
+function snapTrucksOf(group) {
+  for (const tr of trucks) {
+    if (tr.pesaGroup !== group) continue;
+    const off = truckOffset(tr);
+    tr.group.position.x = group.position.x + off.x;
+    tr.group.position.z = group.position.z + off.z;
+  }
 }
 
 renderer.domElement.addEventListener('mousedown', e => {
   if (e.button !== 0) return;
-  if (e.target.closest?.('#sidebar,#detail-panel,#topbar')) return;
-
   const hit = hitDraggable(e);
   if (!hit) return;
-
   dragging      = meshToGroup.get(hit.object);
   dragMouseDown = { x: e.clientX, y: e.clientY };
   dragStartTime = performance.now();
   hasDragged    = false;
-
-  // aggiusta il piano di drag all'altezza corrente del gruppo
   dragPlane.constant = -dragging.position.y;
-
-  // calcola offset tra punto di hit e origine del group
   raycaster.ray.intersectPlane(dragPlane, dragIntersect);
   dragOffset.subVectors(dragging.position, dragIntersect);
-
   controls.enabled = false;
   document.body.style.cursor = 'grabbing';
   e.stopPropagation();
 });
 
 window.addEventListener('mousemove', e => {
-  // ── durante il drag ──
   if (dragging) {
-    const dx = e.clientX - dragMouseDown.x;
-    const dz = e.clientY - dragMouseDown.y;
-    if (Math.abs(dx) > 3 || Math.abs(dz) > 3) hasDragged = true;
-
+    if (Math.abs(e.clientX - dragMouseDown.x) > 3 || Math.abs(e.clientY - dragMouseDown.y) > 3) hasDragged = true;
     const n = ndc(e);
     mouse.set(n.x, n.y);
     raycaster.setFromCamera(mouse, camera);
     if (raycaster.ray.intersectPlane(dragPlane, dragIntersect)) {
       dragging.position.x = dragIntersect.x + dragOffset.x;
       dragging.position.z = dragIntersect.z + dragOffset.z;
-      // se si sposta la pesa, il camion la segue rigidamente
-      if (dragging === pesaGroup) {
-        const off = nodeWeightState.isOnScale ? SCALE_OFFSET : WAITING_OFFSET;
-        truckGroup.position.x = pesaGroup.position.x + off.x;
-        truckGroup.position.z = pesaGroup.position.z + off.z;
-      }
-      // Y rimane invariato (non si alza in aria)
+      snapTrucksOf(dragging);
     }
     return;
   }
 
-  // ── hover highlight (nessun drag) ──
   const n = ndc(e);
   mouse.set(n.x, n.y);
   raycaster.setFromCamera(mouse, camera);
-  const meshes = [...meshToGroup.keys(), ...interactiveObjects];
-  const hits = raycaster.intersectObjects([...new Set(meshes)], false);
-
+  const hits = raycaster.intersectObjects(interactiveObjects, false);
   if (hits.length > 0) {
     const obj = hits[0].object;
     if (hovered !== obj) {
@@ -1037,7 +1077,7 @@ window.addEventListener('mousemove', e => {
       origColors.set(obj, obj.material?.emissive?.getHex() ?? 0);
       setEmissive(obj, 0x3366cc);
     }
-    document.body.style.cursor = meshToGroup.has(obj) ? 'grab' : 'pointer';
+    document.body.style.cursor = 'grab';
   } else {
     if (hovered) { setEmissive(hovered, origColors.get(hovered) ?? 0); hovered = null; }
     document.body.style.cursor = 'default';
@@ -1046,27 +1086,19 @@ window.addEventListener('mousemove', e => {
 
 window.addEventListener('mouseup', e => {
   if (!dragging) return;
-
   const wasBriefClick = !hasDragged && (performance.now() - dragStartTime) < 250;
-
   dragging = null;
   controls.enabled = true;
   document.body.style.cursor = 'default';
-
-  // Se era un click breve mostra i dettagli
   if (wasBriefClick) {
     const hit = hitDraggable(e);
-    if (hit && hit.object.userData?.title) {
-      showDetail(hit.object.userData);
-    }
+    if (hit && hit.object.userData?.title) showDetail(hit.object.userData);
   }
 });
 
-// click su sfondo chiude il pannello
 renderer.domElement.addEventListener('click', e => {
   if (hasDragged) return;
-  const hit = hitDraggable(e);
-  if (!hit) detailPanel.classList.remove('show');
+  if (!hitDraggable(e)) detailPanel.classList.remove('show');
 });
 
 /* ─────────────────────────────────────────────────────────────
@@ -1106,42 +1138,54 @@ function animate() {
     mesh.material.opacity = 0.6 + 0.4 * Math.sin(t * 3 + i);
   });
 
-  // aggiorna opacità beams dinamici e ricalcola geometria
-  for (const b of dynamicBeams) {
-    const idx = dynamicBeams.indexOf(b);
+  dynamicBeams.forEach((b, idx) => {
     b.beamMesh.material.opacity = 0.35 + 0.2 * Math.sin(t * 1.8 + idx * 0.7);
-  }
+  });
   updateDynamicBeams();
 
-  led.material.color.setHex(Math.sin(t * 4) > 0.6 ? 0x00ee66 : 0x007733);
-  rLed.material.color.setHex(Math.sin(t * 3) > 0 ? 0xff4444 : 0x882222);
+  for (const l of blinkingLeds) {
+    l.mesh.material.color.setHex(Math.sin(t * l.speed) > l.threshold ? l.on : l.off);
+  }
 
-  // Lerp camion verso posizione target (sopra pesa o in attesa)
+  // Ogni camion va verso la propria pesa (sopra se c'è peso, davanti se in attesa)
   const lerpSpeed = 0.04;
-  const truckOff = nodeWeightState.isOnScale ? SCALE_OFFSET : WAITING_OFFSET;
-  nodeWeightState.targetX = pesaGroup.position.x + truckOff.x;
-  nodeWeightState.targetZ = pesaGroup.position.z + truckOff.z;
-  truckGroup.position.x += (nodeWeightState.targetX - truckGroup.position.x) * lerpSpeed;
-  truckGroup.position.z += (nodeWeightState.targetZ - truckGroup.position.z) * lerpSpeed;
-  truckGroup.position.y += (nodeWeightState.targetY - truckGroup.position.y) * lerpSpeed;
-
-  // Leggero dondolio solo quando è in attesa (fuori dalla pesa)
-  if (!nodeWeightState.isOnScale) {
-    truckGroup.position.y += 0.02 * Math.sin(t * 0.9);
+  for (const tr of trucks) {
+    const off = truckOffset(tr);
+    const tx = tr.pesaGroup.position.x + off.x;
+    const tz = tr.pesaGroup.position.z + off.z;
+    const ty = tr.isOnScale ? TRUCK_Y_SCALE : TRUCK_Y_GROUND;
+    tr.group.position.x += (tx - tr.group.position.x) * lerpSpeed;
+    tr.group.position.z += (tz - tr.group.position.z) * lerpSpeed;
+    tr.group.position.y += (ty - tr.group.position.y) * lerpSpeed;
+    if (!tr.isOnScale) tr.group.position.y += 0.02 * Math.sin(t * 0.9);
   }
 
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
 }
 
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.getElementById('loading').classList.add('fade');
-    setTimeout(() => document.getElementById('loading').remove(), 600);
-  }, 400);
-});
-
-animate();
+/* ─────────────────────────────────────────────────────────────
+   AVVIO
+───────────────────────────────────────────────────────────── */
+(async () => {
+  const loading = document.getElementById('loading');
+  try {
+    const cfg = await loadConfiguration();
+    const model = buildModel(cfg);
+    if (model.version) document.getElementById('topbar-version').textContent = `v${model.version} · Configurazione Hardware`;
+    renderSidebar(model);
+    buildScene(model);
+    animate();
+    setTimeout(() => {
+      loading.classList.add('fade');
+      setTimeout(() => loading.remove(), 600);
+    }, 300);
+  } catch (err) {
+    loading.querySelector('.spinner')?.remove();
+    document.getElementById('load-error').textContent =
+      'Impossibile leggere la configurazione dal server (' + err.message + ').';
+  }
+})();
 </script>
 </body>
 </html>
