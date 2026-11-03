@@ -152,6 +152,14 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 		})
 		await self.setAccess(request=None, id=access.id, body=SetAccessDTO(**{"material": body.material.dict(), "operator2": body.operator.dict()}), idInOut=in_out["id"])
 		last_in_out = get_in_out_by_id(in_out["id"])
+		# AVVISA I CLIENT (ES. VISTA 3D) DI FARE IL FLASH SULLE FOTOCAMERE ATTIVE.
+		# In questa pesata non vengono scattate né salvate foto: è solo un effetto visivo.
+		cams = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]["events"]["weighing"].get("cams", [])
+		active_cams = [i for i, cam in enumerate(cams) if cam.get("active")]
+		if active_cams:
+			await self.broadcastRealtimeAsync(instance.instance_name, instance.weigher_name, {
+				"weighing_flash": {"cam_indexes": active_cams}
+			})
 		# RECUPERA TUTTI I DATI UTILI ALLA STAMPA DEL REPORT
 		node_config = lb_config.g_config["app_api"]["weighers"][instance.instance_name]["nodes"][instance.weigher_name]
 		weighing_config = node_config["events"]["weighing"]
