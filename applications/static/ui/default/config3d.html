@@ -696,6 +696,9 @@ function buildPrinter(name, uses, pos) {
 const relayObjects = [];
 const BARRIER_UP_ANGLE = Math.PI / 2 * 0.95;
 const ARM_LENGTH = 2.4;
+// Direzione del braccio sull'asse X: -1 = verso sinistra (vista di default),
+// parallelo al lato lungo della pesa, così messo davanti sbarra il camion
+const ARM_DIR = -1;
 
 function buildRelay(w, relay, pos) {
   const group = new THREE.Group();
@@ -713,7 +716,7 @@ function buildRelay(w, relay, pos) {
 
   // Braccio a strisce bianche/rosse, ruota attorno al perno sulla colonnina
   const pivot = new THREE.Group();
-  pivot.position.set(0.2, 0.85, 0);
+  pivot.position.set(ARM_DIR * 0.2, 0.85, 0);
   group.add(pivot);
   const SEGMENTS = 6;
   const segLen = ARM_LENGTH / SEGMENTS;
@@ -722,36 +725,36 @@ function buildRelay(w, relay, pos) {
       new THREE.BoxGeometry(segLen, 0.1, 0.08),
       mat(i % 2 === 0 ? 0xdd2222 : 0xf4f4f4, 0x000000, 0.5, 0.2)
     );
-    seg.position.set(segLen / 2 + i * segLen, 0, 0);
+    seg.position.set(ARM_DIR * (segLen / 2 + i * segLen), 0, 0);
     seg.castShadow = true;
     pivot.add(seg);
     clickable.push(seg);
   }
   // Appoggio a fine corsa
   const rest = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, 0.12), mat(0x888888, 0x000000, 0.6, 0.5));
-  rest.position.set(0.2 + ARM_LENGTH - 0.1, 0.4, 0);
+  rest.position.set(ARM_DIR * (0.2 + ARM_LENGTH - 0.1), 0.4, 0);
   group.add(rest);
 
   // Semaforo: palo + testa con luce rossa (sopra) e verde (sotto)
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 10), mat(0x555555, 0x000000, 0.5, 0.7));
-  pole.position.set(-0.55, 0.8, 0);
+  pole.position.set(-ARM_DIR * 0.55, 0.8, 0);
   group.add(pole);
   const head = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.66, 0.26), mat(0x222222, 0x000000, 0.6, 0.4));
-  head.position.set(-0.55, 1.85, 0);
+  head.position.set(-ARM_DIR * 0.55, 1.85, 0);
   head.castShadow = true;
   group.add(head);
   clickable.push(head);
   const lampGeo = new THREE.SphereGeometry(0.1, 14, 14);
   const redLamp = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x441111 }));
-  redLamp.position.set(-0.55, 2.0, 0.13);
+  redLamp.position.set(-ARM_DIR * 0.55, 2.0, 0.13);
   group.add(redLamp);
   const greenLamp = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x114411 }));
-  greenLamp.position.set(-0.55, 1.7, 0.13);
+  greenLamp.position.set(-ARM_DIR * 0.55, 1.7, 0.13);
   group.add(greenLamp);
 
   group.position.set(pos.x, 0, pos.z);
   scene.add(group);
-  glowRing(group, new THREE.Vector3(0.6, 0.01, 0), 0xaa2222, 1.5);
+  glowRing(group, new THREE.Vector3(ARM_DIR * 0.6, 0.01, 0), 0xaa2222, 1.5);
 
   const detail = {
     title: `🚧 Relè ${relay.name} · Pesa ${w.nodeName}`,
@@ -767,7 +770,7 @@ function buildRelay(w, relay, pos) {
   clickable.forEach(m => registerObject(m, group, detail));
 
   const label = makeLabel(`Relè ${relay.name} · ${w.nodeName}`, '#882222');
-  label.position.set(0.4, 2.45, 0);
+  label.position.set(ARM_DIR * 0.4, 2.45, 0);
   group.add(label);
 
   relay.visual = { pivot, redLamp, greenLamp };
@@ -789,7 +792,8 @@ function updateRelayVisual(relay, immediate = false) {
   const unknown = relay.status == null;
   v.redLamp.material.color.setHex(open ? 0x441111 : (unknown ? 0xffbb00 : 0xff2222));
   v.greenLamp.material.color.setHex(open ? 0x22ff55 : 0x114411);
-  v.targetAngle = open ? BARRIER_UP_ANGLE : 0;
+  // con il braccio verso -X la rotazione per alzarlo è negativa
+  v.targetAngle = open ? ARM_DIR * BARRIER_UP_ANGLE : 0;
   if (immediate) v.pivot.rotation.z = v.targetAngle;
 }
 
@@ -1021,7 +1025,7 @@ function buildScene(model) {
     // Relè dietro la pesa, uno per ogni relè configurato
     const m = w.relays.length;
     w.relays.forEach((relay, j) => {
-      const rg = buildRelay(w, relay, { x: x - 0.6 + (j - (m - 1) / 2) * 3.4, z: z - 3.6 });
+      const rg = buildRelay(w, relay, { x: x + 0.6 + (j - (m - 1) / 2) * 3.4, z: z - 3.6 });
       makeDynamicBeam(pesaGroup, 0.5, rg, 1.0, 0xaa2222);           // Pesa → Relè
     });
 
