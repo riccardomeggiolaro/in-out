@@ -961,7 +961,8 @@ const cameraObjects = [];
 const FLASH_DURATION = 0.9;
 
 function showCameraShot(camObj, pathName) {
-  camObj.flashStart = t;
+  // il flash parte già con weighing_flash; lo rilancio solo se non è in corso
+  if (t - camObj.flashStart > FLASH_DURATION) camObj.flashStart = t;
   const src = '/images' + (pathName.startsWith('/') ? '' : '/') + pathName;
 
   if (!camObj.photo) {
@@ -1074,6 +1075,11 @@ function connectWeigherWS(truck) {
         }
       }
 
+      // Log diagnostico degli eventi di pesata (visibile con F12 → Console)
+      if (data.weighing_report || data.weighing_picture || data.weighing_flash) {
+        console.info(`[3D] ${w.nodeName}`, data);
+      }
+
       // Report generato e inviato alla stampante
       if (data.weighing_report) { addReportSheet(w, data.weighing_report); return; }
       // Solo flash (pesata senza foto, es. dalla dashboard)
@@ -1081,6 +1087,7 @@ function connectWeigherWS(truck) {
         for (const idx of (data.weighing_flash.cam_indexes || [])) {
           const camObj = w.camObjects[idx];
           if (camObj) camObj.flashStart = t;
+          else console.warn(`[3D] ${w.nodeName}: fotocamera ${idx} non presente nella scena`);
         }
         return;
       }
@@ -1102,11 +1109,16 @@ function connectWeigherWS(truck) {
     };
 
     ws.onopen = () => {
+      console.info(`[3D] ${w.nodeName}: websocket realtime connesso`);
       ping = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
       }, 20000);
     };
-    ws.onclose = () => { clearInterval(ping); setTimeout(connect, 3000); };
+    ws.onclose = () => {
+      console.warn(`[3D] ${w.nodeName}: websocket realtime chiuso, riconnessione tra 3 s`);
+      clearInterval(ping);
+      setTimeout(connect, 3000);
+    };
     ws.onerror = () => ws.close();
   }
   connect();

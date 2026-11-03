@@ -319,6 +319,11 @@ class CallbackWeigher(Functions, WebSocket):
 						path_img = f"{base_path}/{path_img}"
 					for cam_index, cam in enumerate(lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]):
 						if cam["active"]:
+							# AVVISA I CLIENT (ES. VISTA 3D) CHE LA FOTOCAMERA STA SCATTANDO (FLASH),
+							# ANCHE SE POI LO SCATTO NON DOVESSE RIUSCIRE
+							self.broadcastRealtimeSafe(instance_name, weigher_name, {
+								"weighing_flash": {"cam_indexes": [cam_index]}
+							})
 							image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 							if image_captured_details["image"]:
 								file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
