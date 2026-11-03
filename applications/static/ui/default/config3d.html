@@ -1049,6 +1049,9 @@ function truckOffset(truck) { return truck.isOnScale ? SCALE_OFFSET : WAITING_OF
 /* ─────────────────────────────────────────────────────────────
    WEBSOCKET – PESO REALTIME + STATO RELÈ
 ───────────────────────────────────────────────────────────── */
+// Stati del realtime mandati dai terminali mentre è in corso la diagnostica
+const DIAGNOSTIC_STATUSES = ['D', 'diagnostic in progress'];
+
 function connectWeigherWS(truck) {
   const { w } = truck;
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -1099,6 +1102,15 @@ function connectWeigherWS(truck) {
       }
 
       if (!('gross_weight' in data)) return;
+
+      // Diagnostica in corso: il terminale non manda il peso (lordo vuoto).
+      // Il camion resta dov'è, si aggiorna solo l'etichetta.
+      if (DIAGNOSTIC_STATUSES.includes(data.status)) {
+        const last = truck.gross > 0 ? `${truck.gross.toLocaleString('it')} kg` : '--- kg';
+        truck.labelDiv.textContent = `⚖ ${last} · diagnostica`;
+        return;
+      }
+
       const raw = data.gross_weight;
       const kg = (raw && raw !== '--') ? parseFloat(raw) : 0;
       truck.gross = isNaN(kg) ? 0 : kg;
