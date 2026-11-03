@@ -294,6 +294,7 @@
   <!-- SERVER -->
   <div class="panel-section">
     <h3>🌐 Server</h3>
+    <div class="info-row"><span class="info-label">IP host</span><span class="info-value" id="server-host-ip">—</span></div>
     <div class="info-row"><span class="info-label">Porta API</span><span class="info-value">80</span></div>
     <div class="info-row"><span class="info-label">Modalità</span><span class="info-value">MANUALLY</span></div>
     <div class="info-row"><span class="info-label">DB</span><span class="info-value">/var/opt/in-out/database.db</span></div>
@@ -365,6 +366,12 @@ const CONFIG = {
   },
   server: { port: 80, mode: 'MANUALLY', useBadge: true, useReservation: true },
 };
+
+// IP / host della macchina che ospita il software (quella che serve questa pagina)
+const SERVER_HOST = location.hostname || '127.0.0.1';
+const SERVER_HTTP_PORT = location.port || (location.protocol === 'https:' ? 443 : 80);
+const SERVER_ADDR = SERVER_HOST + ':' + SERVER_HTTP_PORT;
+document.getElementById('server-host-ip').textContent = SERVER_ADDR;
 
 /* ─────────────────────────────────────────────────────────────
    SCENE SETUP
@@ -560,19 +567,15 @@ glowRing(serverGroup, new THREE.Vector3(0, -1.29, 0), 0x3366cc, 1.4);
 registerInteractive(serverBody, {
   title: '🖥 Server / Istanza #0',
   rows: [
-    ['IP pesatrice', CONFIG.instance.ip + ' : ' + CONFIG.instance.port],
-    ['Protocollo', 'TCP'],
-    ['Timeout', CONFIG.instance.timeout + ' s'],
-    ['Intervallo azioni', CONFIG.instance.timeBetweenActions + ' s'],
-    ['Auto-chiusura conn.', 'NO'],
-    ['Porta HTTP', CONFIG.server.port],
+    ['IP host', SERVER_HOST],
+    ['Porta HTTP', SERVER_HTTP_PORT],
     ['Modalità', CONFIG.server.mode],
     ['Badge RFID', 'SÌ'],
     ['Prenotazioni', 'SÌ'],
   ]
 });
 pulseSphere(serverGroup, new THREE.Vector3(0, 1.4, 0), 0x2266dd);
-const lServer = makeLabel('Server  10.0.5.90:23', '#1a3a8a');
+const lServer = makeLabel('Server  ' + SERVER_ADDR, '#1a3a8a');
 lServer.position.set(0, 1.7, 0);
 serverGroup.add(lServer);
 
@@ -621,6 +624,11 @@ registerInteractive(platform, {
   title: '⚖ Pesa P1  (egt-af03-rext)',
   rows: [
     ['Terminale', CONFIG.nodes.P1.terminal],
+    ['IP pesatrice', CONFIG.instance.ip + ' : ' + CONFIG.instance.port],
+    ['Protocollo', 'TCP'],
+    ['Timeout', CONFIG.instance.timeout + ' s'],
+    ['Intervallo azioni', CONFIG.instance.timeBetweenActions + ' s'],
+    ['Auto-chiusura conn.', CONFIG.instance.autoCloseConnection ? 'SÌ' : 'NO'],
     ['Stato', 'ATTIVO'],
     ['Peso massimo', CONFIG.nodes.P1.maxWeight.toLocaleString('it') + ' kg'],
     ['Peso minimo', CONFIG.nodes.P1.minWeight + ' kg'],
@@ -631,7 +639,7 @@ registerInteractive(platform, {
   ]
 });
 pulseSphere(pesaGroup, new THREE.Vector3(0, 0.56, 0), 0x22aa55);
-const lPesa = makeLabel('P1 · egt-af03-rext · max 80 t', '#1a6a30');
+const lPesa = makeLabel('P1 · ' + CONFIG.instance.ip + ':' + CONFIG.instance.port + ' · max 80 t', '#1a6a30');
 lPesa.position.set(0, 0.86, 0);
 pesaGroup.add(lPesa);
 
@@ -805,8 +813,10 @@ function makeTruck(color = 0x4466aa) {
 }
 
 // Posizioni: ON_SCALE = sopra pesa, OFF_SCALE = fuori pesa (in attesa)
-const SCALE_POS   = { x: -6, z: 2  }; // centro pesa P1
-const WAITING_POS = { x: -6, z: 6.5 }; // zona attesa davanti alla pesa
+// Offset relativi alla pesa: il camion segue la pesa quando viene spostata
+const SCALE_OFFSET   = { x: 0, z: 0   }; // centro pesa P1
+const WAITING_OFFSET = { x: 0, z: 4.5 }; // zona attesa davanti alla pesa
+const WAITING_POS = { x: pesaGroup.position.x + WAITING_OFFSET.x, z: pesaGroup.position.z + WAITING_OFFSET.z };
 
 const truckGroup = makeTruck(0x4466aa);
 // Y base: ruote appoggiate a terra (r=0.28, quindi centro ruota a 0.28, corpo +0.5 sopra = 0.78 dal suolo)
@@ -867,13 +877,9 @@ function connectWeigherWS(instanceName, nodeName, state) {
 
         // Decide posizione target
         if (state.gross > 0) {
-          state.targetX = SCALE_POS.x;
-          state.targetZ = SCALE_POS.z;
           state.targetY = TRUCK_Y_SCALE;
           state.isOnScale = true;
         } else {
-          state.targetX = WAITING_POS.x;
-          state.targetZ = WAITING_POS.z;
           state.targetY = TRUCK_Y_GROUND;
           state.isOnScale = false;
         }
@@ -1005,6 +1011,12 @@ window.addEventListener('mousemove', e => {
     if (raycaster.ray.intersectPlane(dragPlane, dragIntersect)) {
       dragging.position.x = dragIntersect.x + dragOffset.x;
       dragging.position.z = dragIntersect.z + dragOffset.z;
+      // se si sposta la pesa, il camion la segue rigidamente
+      if (dragging === pesaGroup) {
+        const off = nodeWeightState.isOnScale ? SCALE_OFFSET : WAITING_OFFSET;
+        truckGroup.position.x = pesaGroup.position.x + off.x;
+        truckGroup.position.z = pesaGroup.position.z + off.z;
+      }
       // Y rimane invariato (non si alza in aria)
     }
     return;
@@ -1106,6 +1118,9 @@ function animate() {
 
   // Lerp camion verso posizione target (sopra pesa o in attesa)
   const lerpSpeed = 0.04;
+  const truckOff = nodeWeightState.isOnScale ? SCALE_OFFSET : WAITING_OFFSET;
+  nodeWeightState.targetX = pesaGroup.position.x + truckOff.x;
+  nodeWeightState.targetZ = pesaGroup.position.z + truckOff.z;
   truckGroup.position.x += (nodeWeightState.targetX - truckGroup.position.x) * lerpSpeed;
   truckGroup.position.z += (nodeWeightState.targetZ - truckGroup.position.z) * lerpSpeed;
   truckGroup.position.y += (nodeWeightState.targetY - truckGroup.position.y) * lerpSpeed;
