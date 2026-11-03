@@ -121,7 +121,7 @@
                                     {
                                         "active": true,
                                         "live": "None",
-                                        "picture": "http://127.0.0.1/api/camera-simulator/picture"
+                                        "picture": "http://10.0.5.86/api/camera-simulator/picture"
                                     }
                                 ],
                                 "csv": {
