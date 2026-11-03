@@ -331,7 +331,17 @@ function stripCredentials(url) {
    CARICAMENTO CONFIGURAZIONE
 ───────────────────────────────────────────────────────────── */
 async function loadConfiguration() {
-  const res = await fetch('/api/config-weigher/configuration');
+  let token = null;
+  try { token = localStorage.getItem('token'); } catch (_) {}
+  if (!token) { window.location.href = '/login'; throw new Error('token mancante'); }
+  const res = await fetch('/api/config-weigher/configuration', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (res.status === 401) {
+    try { localStorage.removeItem('token'); } catch (_) {}
+    window.location.href = '/login';
+    throw new Error('sessione scaduta');
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
