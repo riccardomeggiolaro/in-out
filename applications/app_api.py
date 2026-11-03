@@ -19,6 +19,7 @@ from applications.router.sync_folder import SyncFolderRouter
 from applications.router.rfid.router import RfidRouter
 from applications.router.whoami import WhoAmIRouter
 from applications.router.database_viewer import DatabaseViewerRouter
+from applications.router.camera_simulator import CameraSimulatorRouter
 from pathlib import Path
 import os
 from fastapi.templating import Jinja2Templates
@@ -158,6 +159,7 @@ def init():
 	rfid_router = RfidRouter()
 	whoami_router = WhoAmIRouter()
 	database_viewer_router = DatabaseViewerRouter()
+	camera_simulator_router = CameraSimulatorRouter()
 
 	# Passa al modulo md_updating il dominio configurato per le chiamate periodiche
 	updating_domain = lb_config.g_config.get("app_api", {}).get("updating", {}).get("domain")
@@ -191,6 +193,9 @@ def init():
 	app.include_router(whoami_router.router, tags=["whoami"])
 
 	app.include_router(database_viewer_router.router, prefix="/api/database", tags=["database viewer"])
+
+	# Fotocamera finta per i test (immagine generata a ogni chiamata)
+	app.include_router(camera_simulator_router.router, prefix="/api/camera-simulator", tags=["camera simulator"])
 
 	app.mount("/static/content", StaticFiles(directory=path_content), name="content")
 

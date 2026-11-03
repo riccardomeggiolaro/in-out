@@ -121,7 +121,7 @@
                                     {
                                         "active": true,
                                         "live": "None",
-                                        "picture": "http://admin:Baronpesi318101@10.0.5.175/ISAPI/Streaming/channels/101/picture"
+                                        "picture": "http://127.0.0.1/api/camera-simulator/picture"
                                     }
                                 ],
                                 "csv": {
