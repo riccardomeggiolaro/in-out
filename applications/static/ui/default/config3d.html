@@ -223,6 +223,20 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+    .auto-weigh { margin: 12px 0 6px; padding: 10px; border-radius: 8px; background: rgba(30,80,220,0.05); border: 1px solid rgba(30,80,220,0.15); }
+    .auto-weigh label { display: block; font-size: 10px; color: #556677; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .auto-weigh .row { display: flex; gap: 6px; }
+    .auto-weigh input { flex: 1; min-width: 0; font: 12px system-ui; padding: 6px 8px; border: 1px solid rgba(60,100,200,0.3); border-radius: 6px; text-transform: uppercase; }
+    .auto-weigh button { font: 600 11px system-ui; color: #fff; background: #2255cc; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; white-space: nowrap; }
+    .auto-weigh button:disabled { background: #99aacc; cursor: not-allowed; }
+    .auto-weigh .note { font-size: 10px; color: #c07000; margin-top: 6px; }
+    .auto-weigh .result { font-size: 11px; margin-top: 6px; word-break: break-word; }
+    .auto-weigh .result.ok { color: #1a9050; }
+    .auto-weigh .result.err { color: #b02020; }
+    #toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px; z-index: 300; display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
+    .toast { font: 600 12px system-ui; padding: 8px 14px; border-radius: 8px; background: rgba(255,255,255,0.97); box-shadow: 0 4px 18px rgba(0,0,60,0.18); border-left: 4px solid #2255cc; max-width: 560px; transition: opacity .4s; }
+    .toast.ok { border-left-color: #1a9050; }
+    .toast.err { border-left-color: #b02020; color: #8a1a1a; }
     #reset-positions {
       font: 600 11px system-ui; color: #2255cc; background: #fff; cursor: pointer;
       border: 1px solid rgba(60,100,200,0.3); border-radius: 6px; padding: 5px 10px;
@@ -271,6 +285,8 @@
   <div class="leg-row"><div class="leg-dot" style="background:#cc3333"></div> Relè</div>
   <div class="leg-row"><div class="leg-dot" style="background:#8844cc"></div> Fotocamera</div>
 </div>
+
+<div id="toasts"></div>
 
 <div id="canvas-container"></div>
 
@@ -1154,6 +1170,11 @@ function connectWeigherWS(truck) {
       }
 
       // Log diagnostico degli eventi di pesata (visibile con F12 → Console)
+      // Messaggi della pesata automatica (targa ricevuta, errori, esito)
+      if (typeof data.cam_message === 'string' && data.cam_message) {
+        showToast(`${w.nodeName}: ${data.cam_message}`, data.cam_is_error ? 'err' : 'ok');
+      }
+
       if (data.weighing_report || data.weighing_picture || data.weighing_flash) {
         console.info(`[3D] ${w.nodeName}`, data);
       }
@@ -1221,6 +1242,99 @@ function rowHtml(label, value, attrs = '') {
   return `<div class="info-row"><span class="info-label">${esc(label)}</span><span class="info-value"${attrs}>${cell(value)}</span></div>`;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   PESATA AUTOMATICA (vera, sul server)
+   Stessa chiamata che fa una fotocamera quando legge una targa:
+   POST /api/command-weigher/weighing/auto con l'identificativo (targa/badge).
+   Il server la esegue solo in modalità automatica o semiautomatica, con un
+   accesso aperto per quell'identificativo e un peso sopra il minimo.
+───────────────────────────────────────────────────────────── */
+const AUTO_MODES = ['AUTOMATIC', 'SEMIAUTOMATIC'];
+
+function autoWeighHtml(w, model) {
+  const id = `${w.instanceName}/${w.nodeName}`;
+  const allowed = AUTO_MODES.includes(String(model.server.mode || '').toUpperCase());
+  return `
+      <div class="auto-weigh" data-weigher="${esc(id)}">
+        <label>▶ Pesata automatica</label>
+        <div class="row">
+          <input type="text" placeholder="Targa o badge" maxlength="40" autocomplete="off" ${allowed ? '' : 'disabled'}>
+          <button type="button" ${allowed ? '' : 'disabled'}>Avvia</button>
+        </div>
+        ${allowed ? '' : `<div class="note">Modalità ${esc(model.server.mode ?? '—')}: la pesata automatica è disattivata sul server. Impostala su automatica o semiautomatica nella configurazione.</div>`}
+        <div class="result"></div>
+      </div>`;
+}
+
+function bindAutoWeighForms(model) {
+  for (const w of model.weighers) {
+    const box = document.querySelector(`.auto-weigh[data-weigher="${CSS.escape(w.instanceName + '/' + w.nodeName)}"]`);
+    if (!box) continue;
+    const input = box.querySelector('input');
+    const button = box.querySelector('button');
+    const result = box.querySelector('.result');
+    const run = async () => {
+      const identify = input.value.trim().toUpperCase();
+      result.className = 'result';
+      if (identify.length < 5) {
+        result.classList.add('err');
+        result.textContent = 'Inserisci una targa o un badge di almeno 5 caratteri.';
+        return;
+      }
+      button.disabled = true;
+      button.textContent = '…';
+      result.textContent = 'Pesata in corso…';
+      try {
+        const msg = await startAutomaticWeighing(w, identify);
+        result.classList.add(msg.ok ? 'ok' : 'err');
+        result.textContent = msg.text;
+        showToast(`${w.nodeName}: ${msg.text}`, msg.ok ? 'ok' : 'err');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Avvia';
+      }
+    };
+    button.addEventListener('click', run);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+  }
+}
+
+async function startAutomaticWeighing(w, identify) {
+  let token = null;
+  try { token = localStorage.getItem('token'); } catch (_) {}
+  const qs = new URLSearchParams({ instance_name: w.instanceName, weigher_name: w.nodeName });
+  if (token) qs.set('token', token); // il server legge l'utente dal parametro token, come per le fotocamere
+  try {
+    const res = await fetch(`/api/command-weigher/weighing/auto?${qs}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ identify }),
+    });
+    let body = null;
+    try { body = await res.json(); } catch (_) {}
+    if (!res.ok) {
+      const detail = body?.detail ? (typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)) : `HTTP ${res.status}`;
+      return { ok: false, text: detail };
+    }
+    const text = body?.message || 'Richiesta inviata.';
+    return { ok: !body?.is_error, text };
+  } catch (err) {
+    return { ok: false, text: 'Impossibile contattare il server: ' + err.message };
+  }
+}
+
+function showToast(text, kind = '') {
+  const box = document.getElementById('toasts');
+  // lo stesso messaggio arriva sia dalla risposta sia dal websocket: lo mostro una volta sola
+  if ([...box.children].some(c => c.textContent === text)) return;
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.textContent = text;
+  box.appendChild(el);
+  while (box.children.length > 4) box.firstChild.remove();
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 450); }, 6000);
+}
+
 function renderSidebar(model) {
   const s = model.server;
   let html = `
@@ -1253,6 +1367,8 @@ function renderSidebar(model) {
       ${rowHtml('Divisione', w.division != null ? w.division + ' kg' : '—')}
       ${rowHtml('Trasmissione continua', yesNo(w.continuousTransmission))}
 
+      ${autoWeighHtml(w, model)}
+
       <h4>🔌 Relè</h4>
       ${w.relays.length
         ? w.relays.map(r => rowHtml(
@@ -1277,6 +1393,7 @@ function renderSidebar(model) {
     </div>`;
   }
   document.getElementById('sidebar').innerHTML = html;
+  bindAutoWeighForms(model);
 }
 
 /* ─────────────────────────────────────────────────────────────
