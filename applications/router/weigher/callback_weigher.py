@@ -317,14 +317,19 @@ class CallbackWeigher(Functions, WebSocket):
 					path_img = f"{lb_config.g_config['app_api']['path_img']}{sub_folder_path}"
 					if not path_img.startswith("/"):
 						path_img = f"{base_path}/{path_img}"
-					for cam in lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]:
+					for cam_index, cam in enumerate(lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["events"]["weighing"]["cams"]):
 						if cam["active"]:
 							image_captured_details = capture_camera_image(camera_url=cam["picture"], timeout=5)
 							if image_captured_details["image"]:
 								file_name = f"{i}_{last_pesata.weight_executed.pid}.png"
 								save_bytes_to_file(image_captured_details["image"], file_name, path_img)
-								add_data("weighing_picture", {"path_name": f"{sub_folder_path}/{file_name}", "idWeighing": weighing_stored_db["id"]})
+								path_name = f"{sub_folder_path}/{file_name}"
+								add_data("weighing_picture", {"path_name": path_name, "idWeighing": weighing_stored_db["id"]})
 								i = i + 1
+								# AVVISA I CLIENT (ES. VISTA 3D) DELLO SCATTO EFFETTUATO
+								self.broadcastRealtimeSafe(instance_name, weigher_name, {
+									"weighing_picture": {"cam_index": cam_index, "path_name": path_name}
+								})
 					# Ricarica last_in_out con le foto appena salvate
 					# Usa access.id (intero) perché last_pesata.data_assigned.accessId
 					# è già stato sovrascritto con la stringa JSON in precedenza
@@ -341,6 +346,16 @@ class CallbackWeigher(Functions, WebSocket):
 					pdf = printer.generate_pdf_from_html(html_content=html)
 					if pdf:
 						job_id, message1, message2 = printer.print_pdf(pdf_bytes=pdf, printer_name=printer_name, number_of_prints=number_of_prints)
+						# AVVISA I CLIENT (ES. VISTA 3D) DEL REPORT GENERATO E INVIATO ALLA STAMPANTE
+						self.broadcastRealtimeSafe(instance_name, weigher_name, {
+							"weighing_report": {
+								"printer_name": printer_name,
+								"event_type": event_type,
+								"in_out_id": last_in_out.id,
+								"name_file": name_file,
+								"printed": bool(job_id),
+							}
+						})
 						# SALVA COPIA PDF
 						if path_pdf and remote_folder:
 							save_file_dir(path_pdf, name_file, pdf)
@@ -395,6 +410,13 @@ class CallbackWeigher(Functions, WebSocket):
 			for weigher in weighers_data[instance]:
 				weight = {"access": {}}
 				asyncio.run(weighers_data[instance][weigher]["sockets"].manager_realtime.broadcast(weight))
+
+	def broadcastRealtimeSafe(self, instance_name: str, weigher_name: str, message: dict):
+		# Invia un messaggio sul websocket realtime senza interrompere il flusso della pesata in caso di errore
+		try:
+			asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(message))
+		except Exception as e:
+			lb_log.warning(f"Broadcast realtime non riuscito: {e}")
 
 	def Fallback_Weighing(self, instance_name: str, weigher_name: str, data_assigned: DataAssignedDTO):
 		# asyncio.run(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.broadcast(weight))
