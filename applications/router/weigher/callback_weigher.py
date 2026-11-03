@@ -746,6 +746,7 @@ class CallbackWeigher(Functions, WebSocket):
 					await weighers_data[instance.instance_name][instance.weigher_name]["sockets"].manager_realtime.broadcast({"cam_message": success_message, "cam_is_error": False})
 		return {
 			"message": error_message or success_message,
+			"is_error": bool(error_message),
 			"access_id": access["id"] if access else None,
 			"identify_dto": identify_dto
 		}
