@@ -178,7 +178,7 @@ sudo ./install-debian13.sh
 
 L'installer:
 1. installa `python3-venv` e `unixodbc` se mancano;
-2. crea `.venv` nella cartella e ci installa `pyodbc` e `watchdog`;
+2. crea `.venv` nella cartella e ci installa `pyodbc`;
 3. controlla il driver ODBC IBM e la presenza di `database.db`;
 4. se manca, chiede le credenziali e crea `.env` (permessi 600, solo root);
 5. crea `as400-sync.service` e `as400-sync.timer` (ogni 5 minuti) e lancia
@@ -274,26 +274,33 @@ INFO Sincronizzazione completata: 0 inseriti, 29 aggiornati, 1 saltati
 
 ## 8. Transiti dalle pesate (`transit_watcher.py`)
 
-Secondo servizio, **`as400-transit`**, sempre attivo. Osserva la cartella dei
-CSV delle pesate di in-out (`/var/opt/in-out/csv`) e, appena in-out scrive un
-CSV, decide se creare un **transito**.
+Secondo servizio, **`as400-transit`**, sempre attivo. Controlla il database di
+in-out ogni 1,5 secondi (in sola lettura) e, per ogni pesata completata, decide
+se creare un **transito**.
 
 ```
-pesata completata → in-out scrive il CSV → transit_watcher.py
-                                              │
-                         riferimento ≠ ITA ───┤─── ITA o vuoto → niente
-                                              ▼
-                         POST /api/anagrafic/access  (mode TRANSIT)
+pesata completata → riga in_out nel database → transit_watcher.py
+                                                 │
+                            riferimento ≠ ITA ───┤─── ITA o vuoto → niente
+                                                 ▼
+                            POST /api/anagrafic/access  (mode TRANSIT)
 ```
+
+**Perché il database e non i CSV**: in-out ha un suo watcher che copia i CSV
+sulla cartella di rete e poi li cancella. Leggendo i CSV ci sarebbe una gara e
+alcuni transiti andrebbero persi. Il database invece non cambia, e il watcher
+funziona anche con la generazione dei CSV disattivata.
 
 ### Quando crea il transito
 
 | Condizione | Risultato |
 |---|---|
-| Prima pesata (manca la seconda) | ignorato |
+| Solo prima pesata (manca la seconda) | aspetta che la pesata si completi |
 | Pesata completa (seconda pesata o pesata con tara) e riferimento documento diverso da `ITA` | **transito creato** |
 | Riferimento documento `ITA` | nessun transito |
 | Riferimento documento vuoto | nessun transito |
+| Pesata di un transito (`mode` `TRANSIT`) | ignorata, altrimenti ogni transito pesato ne creerebbe un altro |
+| Pesata di test | ignorata |
 | Errore delle API (es. targa già in uso) | scritto nel log, nessun nuovo tentativo |
 
 Il confronto con `ITA` non distingue maiuscole e minuscole. Il riferimento
@@ -301,30 +308,25 @@ documento è quello che `as400.py` scrive da `FEFMCD`.
 
 ### Dati del transito
 
-Presi dal CSV della pesata: tipo soggetto, soggetto, vettore, autista, veicolo
-(targa e descrizione), materiale, note e riferimento documento. Se il CSV ha
-l'id di un'anagrafica esistente viene usato quello, altrimenti in-out la crea.
-Il transito ha `type` `RESERVATION` e `mode` `TRANSIT`.
-
-**Badge**: non è nel CSV. Il watcher lo legge dal database di in-out (in sola
-lettura, `MAIN_DB_PATH`): dalla seconda pesata (`pid`) risale alla pesata
-completa e prende il badge della prenotazione appena pesata. Il transito ha
-quindi lo stesso badge della prenotazione. Se il badge non si trova, il
-transito viene creato senza badge (lo dice il log).
+Presi dalla pesata completata (`in_out`) e dalla sua prenotazione: tipo
+soggetto, soggetto, vettore, autista, materiale, note, riferimento documento,
+**badge** e veicolo della prenotazione. Sono passati come id delle anagrafiche
+già esistenti. Il transito ha `type` `RESERVATION` e `mode` `TRANSIT`.
 
 `as400.py` ignora i transiti quando cerca la prenotazione per badge: un
 transito con lo stesso badge non viene mai aggiornato dalla sincronizzazione.
 
-### Ogni CSV una sola volta
+### Ogni pesata una sola volta
 
-I CSV già elaborati sono elencati in `transit_watcher_state.json` (cartella
-dello script). Se in-out riscrive lo stesso file, non viene creato un secondo
-transito.
+Il watcher usa come riferimento l'id della **seconda pesata**, che cresce nel
+tempo, e lo salva in `transit_watcher_state.json` (cartella dello script).
 
-- **Primo avvio**: i CSV già presenti vengono segnati come elaborati, senza
-  creare transiti per le pesate vecchie.
-- **Riavvio**: i CSV arrivati mentre il servizio era fermo vengono elaborati
-  all'avvio.
+- **Primo avvio**: parte dall'ultima pesata esistente, senza creare transiti
+  per le pesate vecchie.
+- **Riavvio**: le pesate completate mentre il servizio era fermo vengono
+  elaborate all'avvio.
+- Una pesata aperta prima e completata dopo altre viene comunque elaborata
+  quando si completa.
 
 ### Configurazione (`.env`)
 
@@ -335,10 +337,10 @@ token** (la password non viene salvata). Il token di in-out dura 100 anni.
 |---|---|
 | `IN_OUT_TOKEN` | — (obbligatoria) |
 | `IN_OUT_URL` | `http://localhost:80` |
-| `CSV_DIR` | `/var/opt/in-out/csv` |
+| `MAIN_DB_PATH` | `/var/opt/in-out/database.db` |
 | `TRANSIT_EXCLUDED_REFERENCE` | `ITA` |
+| `TRANSIT_POLL_INTERVAL` | `1.5` (secondi) |
 | `TRANSIT_STATE_PATH` | `<cartella script>/transit_watcher_state.json` |
-| `MAIN_DB_PATH` | `/var/opt/in-out/database.db` (per leggere il badge) |
 
 Per rifare il token (es. password di baronpesi cambiata e token rifiutato con
 HTTP 401): togli la riga `IN_OUT_TOKEN` dal `.env` e rilancia l'installer.
@@ -356,8 +358,8 @@ sudo systemctl restart as400-transit.service
 Esempio di log:
 
 ```
-INFO P1_10_11.csv: riferimento BGR, creo transito per AB123CD
+INFO Pesata 5 (in_out 3): riferimento DEU, creo transito per AB123CD (badge id 33)
 INFO Transito creato: id=77
-INFO P1_12_13.csv: riferimento documento 'ITA', nessun transito
-ERROR P1_17_18.csv: transito NON creato: HTTP 400: targa gia in uso
+INFO Pesata 7 (in_out 4, CD456EF): riferimento 'ITA', nessun transito
+ERROR Pesata 15: transito NON creato: HTTP 400: targa gia in uso
 ```
