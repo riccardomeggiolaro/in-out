@@ -177,11 +177,14 @@ sudo ./install-debian13.sh
 
 L'installer:
 1. installa `python3-venv` e `unixodbc` se mancano;
-2. crea `.venv` nella cartella e ci installa `pyodbc`;
+2. crea `.venv` nella cartella e ci installa `pyodbc` e `watchdog`;
 3. controlla il driver ODBC IBM e la presenza di `database.db`;
 4. se manca, chiede le credenziali e crea `.env` (permessi 600, solo root);
 5. crea `as400-sync.service` e `as400-sync.timer` (ogni 5 minuti) e lancia
-   una prima sincronizzazione di prova.
+   una prima sincronizzazione di prova;
+6. chiede la password di `baronpesi`, ottiene il token API di in-out e lo
+   salva nel `.env`;
+7. crea e avvia `as400-transit.service`, il watcher dei transiti (§8).
 
 Il servizio usa la cartella in cui si trova l'installer. **Se sposti la
 cartella, rilancia l'installer.** Per rimuovere servizio e timer:
@@ -265,3 +268,85 @@ INFO Sincronizzazione completata: 0 inseriti, 29 aggiornati, 1 saltati
 | `Database principale non trovato` | `MAIN_DB_PATH` errato o in-out non installato | Correggi `MAIN_DB_PATH` nel `.env` |
 | `database is locked` | in-out occupato a lungo | Si risolve da solo al giro successivo (5 minuti) |
 | N `saltati` nel log | Prenotazioni già `ENTERED`/`CLOSED` in in-out | Normale, nessuna azione |
+
+---
+
+## 8. Transiti dalle pesate (`transit_watcher.py`)
+
+Secondo servizio, **`as400-transit`**, sempre attivo. Osserva la cartella dei
+CSV delle pesate di in-out (`/var/opt/in-out/csv`) e, appena in-out scrive un
+CSV, decide se creare un **transito**.
+
+```
+pesata completata → in-out scrive il CSV → transit_watcher.py
+                                              │
+                         riferimento ≠ ITA ───┤─── ITA o vuoto → niente
+                                              ▼
+                         POST /api/anagrafic/access  (mode TRANSIT)
+```
+
+### Quando crea il transito
+
+| Condizione | Risultato |
+|---|---|
+| Prima pesata (manca la seconda) | ignorato |
+| Pesata completa (seconda pesata o pesata con tara) e riferimento documento diverso da `ITA` | **transito creato** |
+| Riferimento documento `ITA` | nessun transito |
+| Riferimento documento vuoto | nessun transito |
+| Errore delle API (es. targa già in uso) | scritto nel log, nessun nuovo tentativo |
+
+Il confronto con `ITA` non distingue maiuscole e minuscole. Il riferimento
+documento è quello che `as400.py` scrive da `FEFMCD`.
+
+### Dati del transito
+
+Presi dal CSV della pesata: tipo soggetto, soggetto, vettore, autista, veicolo
+(targa e descrizione), materiale, note e riferimento documento. Se il CSV ha
+l'id di un'anagrafica esistente viene usato quello, altrimenti in-out la crea.
+Il transito ha `type` `RESERVATION` e `mode` `TRANSIT`.
+
+### Ogni CSV una sola volta
+
+I CSV già elaborati sono elencati in `transit_watcher_state.json` (cartella
+dello script). Se in-out riscrive lo stesso file, non viene creato un secondo
+transito.
+
+- **Primo avvio**: i CSV già presenti vengono segnati come elaborati, senza
+  creare transiti per le pesate vecchie.
+- **Riavvio**: i CSV arrivati mentre il servizio era fermo vengono elaborati
+  all'avvio.
+
+### Configurazione (`.env`)
+
+L'installer chiede la password di `baronpesi`, fa il login e salva **solo il
+token** (la password non viene salvata). Il token di in-out dura 100 anni.
+
+| Variabile | Default |
+|---|---|
+| `IN_OUT_TOKEN` | — (obbligatoria) |
+| `IN_OUT_URL` | `http://localhost:80` |
+| `CSV_DIR` | `/var/opt/in-out/csv` |
+| `TRANSIT_EXCLUDED_REFERENCE` | `ITA` |
+| `TRANSIT_STATE_PATH` | `<cartella script>/transit_watcher_state.json` |
+
+Per rifare il token (es. password di baronpesi cambiata e token rifiutato con
+HTTP 401): togli la riga `IN_OUT_TOKEN` dal `.env` e rilancia l'installer.
+
+### Gestione
+
+```bash
+journalctl -u as400-transit.service -f
+```
+
+```bash
+sudo systemctl restart as400-transit.service
+```
+
+Esempio di log:
+
+```
+INFO P1_10_11.csv: riferimento BGR, creo transito per AB123CD
+INFO Transito creato: id=77
+INFO P1_12_13.csv: riferimento documento 'ITA', nessun transito
+ERROR P1_17_18.csv: transito NON creato: HTTP 400: targa gia in uso
+```
