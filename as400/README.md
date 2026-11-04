@@ -275,13 +275,13 @@ INFO Sincronizzazione completata: 0 inseriti, 29 aggiornati, 1 saltati
 ## 8. Transiti dalle pesate (`transit_watcher.py`)
 
 Secondo servizio, **`as400-transit`**, sempre attivo. Controlla il database di
-in-out ogni 1,5 secondi (in sola lettura) e, per ogni pesata completata, decide
-se creare un **transito**.
+in-out ogni 1,5 secondi (in sola lettura) e, per ogni pesata completata di tipo
+**Cliente** con riferimento documento diverso da `ITA`, crea un **transito**.
 
 ```
 pesata completata → riga in_out nel database → transit_watcher.py
                                                  │
-                            riferimento ≠ ITA ───┤─── ITA o vuoto → niente
+               Cliente e riferimento ≠ ITA ───┤─── altrimenti → niente
                                                  ▼
                             POST /api/anagrafic/access  (mode TRANSIT)
 ```
@@ -296,7 +296,8 @@ funziona anche con la generazione dei CSV disattivata.
 | Condizione | Risultato |
 |---|---|
 | Solo prima pesata (manca la seconda) | aspetta che la pesata si completi |
-| Pesata completa (seconda pesata o pesata con tara) e riferimento documento diverso da `ITA` | **transito creato** |
+| Pesata completa (seconda pesata o pesata con tara), di tipo **Cliente** e con riferimento documento diverso da `ITA` | **transito creato** |
+| Pesata di tipo Fornitore (o senza tipo) | nessun transito |
 | Riferimento documento `ITA` | nessun transito |
 | Riferimento documento vuoto | nessun transito |
 | Pesata di un transito (`mode` `TRANSIT`) | ignorata, altrimenti ogni transito pesato ne creerebbe un altro |

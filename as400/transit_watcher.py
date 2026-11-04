@@ -9,6 +9,7 @@ Così non c'è conflitto con il watcher di in-out che sposta i CSV sulla
 cartella di rete, e funziona anche con la generazione dei CSV disattivata.
 
 Per ogni pesata completata (riga in_out con seconda pesata) che:
+    - è di tipo Cliente (typeSubject CUSTOMER),
     - ha riferimento documento valorizzato e diverso da "ITA",
     - non appartiene a un transito né a una pesata di test,
 crea il transito con POST /api/anagrafic/access (type RESERVATION,
@@ -150,7 +151,7 @@ def build_transit(row: tuple) -> dict:
     (_, _, type_subject, id_subject, id_vector, id_driver, id_material,
      note, reference, id_card, id_vehicle, plate) = row
     return {
-        "typeSubject": type_subject if type_subject in ("CUSTOMER", "SUPPLIER") else "CUSTOMER",
+        "typeSubject": type_subject,
         "subject": {"id": id_subject},
         "vector": {"id": id_vector},
         "driver": {"id": id_driver},
@@ -197,6 +198,10 @@ def handle(row: tuple) -> None:
     id_w2, id_in_out = row[0], row[1]
     reference = (row[8] or "").strip()
     plate = row[11] or f"veicolo id {row[10]}"
+    if row[2] != "CUSTOMER":
+        log.info("Pesata %s (in_out %s, %s): tipo %s, non Cliente: nessun transito",
+                 id_w2, id_in_out, plate, row[2])
+        return
     if not reference or reference.upper() == EXCLUDED_REFERENCE:
         log.info("Pesata %s (in_out %s, %s): riferimento %r, nessun transito",
                  id_w2, id_in_out, plate, reference or None)
