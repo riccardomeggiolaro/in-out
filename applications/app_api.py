@@ -202,15 +202,6 @@ def init():
 	app.mount("/static", StaticFiles(directory=path_ui), name="static")
  
 	app.mount("/images", StaticFiles(directory=path_images), name="images")
-
-	# Nuova interfaccia (in sviluppo), separata da quella attuale: /v2/
-	path_ui_v2 = utils.base_path_applications / "static" / "ui-v2"
-	if path_ui_v2.is_dir():
-		@app.get("/v2", include_in_schema=False)
-		async def ui_v2_root():
-			return RedirectResponse(url="/v2/")
-
-		app.mount("/v2", StaticFiles(directory=path_ui_v2, html=True), name="ui-v2")
  
 	@app.get("/access", response_class=HTMLResponse)
 	async def Access(request: Request):
