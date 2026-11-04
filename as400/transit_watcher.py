@@ -1,39 +1,33 @@
 #!/usr/bin/env python3
 """
-Osserva la cartella dei CSV delle pesate di in-out e, per ogni pesata
-completa con riferimento documento diverso da "ITA", crea un TRANSITO
-tramite le API di in-out (POST /api/anagrafic/access, mode=TRANSIT).
+Crea un TRANSITO in in-out per ogni pesata completata con riferimento
+documento diverso da "ITA".
 
-Comportamento:
-- Reagisce subito alla scrittura di un CSV (inotify, tramite watchdog).
-- Considera solo le pesate complete: seconda pesata o pesata con tara.
-- Riferimento documento vuoto o "ITA" → nessun transito.
-- Ogni CSV viene elaborato una sola volta (elenco in transit_watcher_state.json).
-  Al primo avvio i CSV già presenti vengono segnati come elaborati, senza
-  creare transiti per le pesate vecchie.
-- Il badge non è nel CSV: viene letto (solo lettura) dal database di in-out,
-  risalendo dalla pesata (pid) alla prenotazione appena pesata.
+Non usa i CSV: legge (in sola lettura) il database di in-out ogni
+POLL_INTERVAL secondi e cerca le pesate completate dopo l'ultima elaborata.
+Così non c'è conflitto con il watcher di in-out che sposta i CSV sulla
+cartella di rete, e funziona anche con la generazione dei CSV disattivata.
+
+Per ogni pesata completata (riga in_out con seconda pesata) che:
+    - ha riferimento documento valorizzato e diverso da "ITA",
+    - non appartiene a un transito né a una pesata di test,
+crea il transito con POST /api/anagrafic/access (type RESERVATION,
+mode TRANSIT) con tipo soggetto, soggetto, vettore, autista, veicolo,
+materiale, note, riferimento documento e badge della pesata.
+
+- Riferimento: id della seconda pesata (weighing), che cresce nel tempo.
+  Una riga in_out nasce alla prima pesata e si completa dopo: per questo
+  non si usa l'id di in_out.
+- Al primo avvio parte dall'ultima pesata esistente: nessun transito
+  per le pesate vecchie.
 - Se la chiamata API fallisce scrive l'errore nel log e passa oltre.
-
-Formato CSV (una riga, separatore ';', generato da utils_report.generate_csv_report):
-     0 typeSubject ("Cliente"/"Fornitore")
-     1-4  soggetto: id, ragione sociale, telefono, cf/piva
-     5-8  vettore:  id, ragione sociale, telefono, cf/piva
-     9-11 autista:  id, nome, telefono
-    12-14 veicolo:  id, targa, descrizione
-    15-16 materiale: id, descrizione
-    17 note
-    18 riferimento documento
-    19-21 pesata 1: data, pid, peso
-    22-24 pesata 2: data, pid, peso
-    25 netto
 
 Variabili d'ambiente (oppure file .env nella cartella dello script):
     IN_OUT_TOKEN=...                          (obbligatoria, token API di baronpesi)
     IN_OUT_URL=http://localhost:80            (opzionale)
-    CSV_DIR=/var/opt/in-out/csv               (opzionale)
+    MAIN_DB_PATH=/var/opt/in-out/database.db  (opzionale)
     TRANSIT_EXCLUDED_REFERENCE=ITA            (opzionale)
-    MAIN_DB_PATH=/var/opt/in-out/database.db  (opzionale, per leggere il badge)
+    TRANSIT_POLL_INTERVAL=1.5                 (opzionale, secondi)
 
 Uso:
     python3 transit_watcher.py
@@ -42,9 +36,10 @@ Uso:
 import json
 import logging
 import os
+import signal
 import sqlite3
 import sys
-import threading
+import time
 import urllib.error
 import urllib.request
 from typing import Optional
@@ -76,122 +71,93 @@ _load_env_file(os.environ.get("AS400_ENV_FILE", os.path.join(SCRIPT_DIR, ".env")
 
 IN_OUT_URL = os.environ.get("IN_OUT_URL", "http://localhost:80").rstrip("/")
 IN_OUT_TOKEN = os.environ.get("IN_OUT_TOKEN", "")
-CSV_DIR = os.environ.get("CSV_DIR", "/var/opt/in-out/csv")
-EXCLUDED_REFERENCE = os.environ.get("TRANSIT_EXCLUDED_REFERENCE", "ITA").strip().upper()
 MAIN_DB_PATH = os.environ.get("MAIN_DB_PATH", "/var/opt/in-out/database.db")
+EXCLUDED_REFERENCE = os.environ.get("TRANSIT_EXCLUDED_REFERENCE", "ITA").strip().upper()
+POLL_INTERVAL = float(os.environ.get("TRANSIT_POLL_INTERVAL", "1.5"))
 STATE_PATH = os.environ.get(
     "TRANSIT_STATE_PATH", os.path.join(SCRIPT_DIR, "transit_watcher_state.json")
 )
 
-CSV_FIELDS = 26
-TYPE_SUBJECT = {"Cliente": "CUSTOMER", "Fornitore": "SUPPLIER"}
+# Pesate già elaborate da ricordare: copre il caso (raro) di due pese che
+# completano quasi insieme e scrivono nel database in ordine diverso.
+LOOKBACK = 200
 
 log = logging.getLogger("transit_watcher")
 
+# Pesate completate dopo un certo id di seconda pesata.
+# Esclusi i transiti (eviterebbe un transito per ogni transito pesato)
+# e le pesate di test.
+SQL_COMPLETED = """
+    SELECT io.idWeight2, io.id, io.typeSubject, io.idSubject, io.idVector,
+           io.idDriver, io.idMaterial, io.note, io.document_reference,
+           COALESCE(io.idCardRegistry, a.idCardRegistry), a.idVehicle,
+           v.plate
+    FROM in_out io
+    LEFT JOIN access a  ON a.id = io.idAccess
+    LEFT JOIN vehicle v ON v.id = a.idVehicle
+    WHERE io.idWeight2 IS NOT NULL
+      AND io.idWeight2 > ?
+      AND (a.mode IS NULL OR a.mode != 'TRANSIT')
+      AND (a.type IS NULL OR a.type != 'TEST')
+    ORDER BY io.idWeight2
+"""
+
 
 # ===========================================================================
-# Lettura CSV
+# Stato
 # ===========================================================================
 
-def _v(value: str) -> Optional[str]:
-    """Valore pulito: '' e 'None' (scritto da str(None)) diventano None."""
-    v = value.strip()
-    return None if v in ("", "None") else v
-
-
-def _id(value: str) -> Optional[int]:
-    v = _v(value)
+def load_state() -> Optional[tuple]:
+    """
+    (floor, done): floor = pesata di partenza (mai si elabora una pesata con
+    id <= floor), done = id delle seconde pesate già elaborate.
+    None al primo avvio.
+    """
     try:
-        return int(v) if v is not None else None
-    except ValueError:
+        with open(STATE_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict) and isinstance(data.get("done"), list):
+            return int(data.get("floor", 0)), [int(x) for x in data["done"]]
+        # formato vecchio (elenco di CSV): si riparte dall'ultima pesata
+    except FileNotFoundError:
         return None
+    except Exception:
+        log.warning("Stato illeggibile (%s): riparto dall'ultima pesata", STATE_PATH)
+    return None
 
 
-def parse_csv_line(line: str) -> Optional[list]:
-    """
-    Divide la riga in 26 campi. Le note (campo 17) possono contenere ';':
-    i primi 17 e gli ultimi 8 campi hanno posizione fissa, il resto sono note.
-    """
-    parts = line.rstrip("\r\n").split(";")
-    if len(parts) < CSV_FIELDS:
-        return None
-    head, tail = parts[:17], parts[-8:]
-    note = ";".join(parts[17:len(parts) - 8])
-    return head + [note] + tail
+def save_state(floor: int, done: list) -> None:
+    tmp = STATE_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"floor": floor, "done": done[-LOOKBACK:]}, f)
+    os.replace(tmp, STATE_PATH)
 
 
-def is_complete(fields: list) -> bool:
-    """Pesata completa: c'è la seconda pesata (anche con tara) o il netto."""
-    return _v(fields[24]) is not None or _v(fields[25]) is not None
+# ===========================================================================
+# Database e API
+# ===========================================================================
+
+def open_db() -> sqlite3.Connection:
+    return sqlite3.connect(f"file:{MAIN_DB_PATH}?mode=ro", uri=True, timeout=10)
 
 
-def find_badge(fields: list, file_name: str) -> Optional[int]:
-    """
-    id del badge (card_registry) della prenotazione appena pesata.
-    Pesata → in_out (idWeight2) → badge dell'in_out o, se vuoto, dell'accesso.
-    Se lo stesso pid esiste su più pese, preferisce quella che dà il nome al file
-    ("<pesa>_<pid...>.csv"), poi la più recente. Database in sola lettura.
-    """
-    pid = _v(fields[23])
-    if pid is None:
-        return None
-    try:
-        db = sqlite3.connect(f"file:{MAIN_DB_PATH}?mode=ro", uri=True, timeout=10)
-    except sqlite3.Error as e:
-        log.warning("%s: database non leggibile (%s), transito senza badge", file_name, e)
-        return None
-    try:
-        rows = db.execute(
-            "SELECT w.weigher, COALESCE(io.idCardRegistry, a.idCardRegistry) "
-            "FROM weighing w "
-            "JOIN in_out io ON io.idWeight2 = w.id "
-            "LEFT JOIN access a ON a.id = io.idAccess "
-            "WHERE w.pid = ? ORDER BY w.id DESC",
-            (pid,),
-        ).fetchall()
-    except sqlite3.Error as e:
-        log.warning("%s: lettura badge fallita (%s), transito senza badge", file_name, e)
-        return None
-    finally:
-        db.close()
-    for weigher, card in rows:
-        if weigher and file_name.startswith(f"{weigher}_"):
-            return card
-    return rows[0][1] if rows else None
+def last_weighing_id(db: sqlite3.Connection) -> int:
+    row = db.execute("SELECT MAX(idWeight2) FROM in_out").fetchone()
+    return row[0] or 0
 
 
-def build_transit(fields: list, id_card: Optional[int] = None) -> dict:
-    """Corpo della POST /api/anagrafic/access per il transito."""
+def build_transit(row: tuple) -> dict:
+    (_, _, type_subject, id_subject, id_vector, id_driver, id_material,
+     note, reference, id_card, id_vehicle, plate) = row
     return {
-        "typeSubject": TYPE_SUBJECT.get(_v(fields[0]) or "", "CUSTOMER"),
-        "subject": {
-            "id": _id(fields[1]),
-            "social_reason": _v(fields[2]),
-            "telephone": _v(fields[3]),
-            "cfpiva": _v(fields[4]),
-        },
-        "vector": {
-            "id": _id(fields[5]),
-            "social_reason": _v(fields[6]),
-            "telephone": _v(fields[7]),
-            "cfpiva": _v(fields[8]),
-        },
-        "driver": {
-            "id": _id(fields[9]),
-            "social_reason": _v(fields[10]),
-            "telephone": _v(fields[11]),
-        },
-        "vehicle": {
-            "id": _id(fields[12]),
-            "plate": _v(fields[13]),
-            "description": _v(fields[14]),
-        },
-        "material": {
-            "id": _id(fields[15]),
-            "description": _v(fields[16]),
-        },
-        "note": _v(fields[17]),
-        "document_reference": _v(fields[18]),
+        "typeSubject": type_subject if type_subject in ("CUSTOMER", "SUPPLIER") else "CUSTOMER",
+        "subject": {"id": id_subject},
+        "vector": {"id": id_vector},
+        "driver": {"id": id_driver},
+        "vehicle": {"id": id_vehicle, "plate": None if id_vehicle else plate},
+        "material": {"id": id_material},
+        "note": note,
+        "document_reference": reference,
         "idCardRegistry": id_card,
         "type": "RESERVATION",
         "mode": "TRANSIT",
@@ -200,11 +166,7 @@ def build_transit(fields: list, id_card: Optional[int] = None) -> dict:
     }
 
 
-# ===========================================================================
-# Chiamata API
-# ===========================================================================
-
-def create_transit(body: dict) -> None:
+def create_transit(body: dict) -> Optional[int]:
     """Crea il transito. Solleva RuntimeError con il dettaglio se fallisce."""
     req = urllib.request.Request(
         f"{IN_OUT_URL}/api/anagrafic/access",
@@ -217,8 +179,7 @@ def create_transit(body: dict) -> None:
     )
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read() or b"{}")
-            log.info("Transito creato: id=%s", data.get("id"))
+            return json.loads(resp.read() or b"{}").get("id")
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", errors="replace")
         try:
@@ -232,137 +193,93 @@ def create_transit(body: dict) -> None:
         raise RuntimeError(f"in-out non raggiungibile su {IN_OUT_URL}: {e.reason}") from None
 
 
-# ===========================================================================
-# Elaborazione di un file
-# ===========================================================================
-
-class State:
-    """Elenco dei CSV già elaborati, salvato su disco."""
-
-    def __init__(self, path: str):
-        self.path = path
-        self.lock = threading.Lock()
-        self.done: set = set()
-        self.first_run = not os.path.exists(path)
-        if not self.first_run:
-            try:
-                with open(path, encoding="utf-8") as f:
-                    self.done = set(json.load(f))
-            except Exception:
-                log.warning("Stato illeggibile (%s): riparto da vuoto", path)
-
-    def is_done(self, name: str) -> bool:
-        with self.lock:
-            return name in self.done
-
-    def mark(self, *names: str) -> None:
-        with self.lock:
-            self.done.update(names)
-            tmp = self.path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(sorted(self.done), f)
-            os.replace(tmp, self.path)
-
-
-def process_file(path: str, state: State) -> None:
-    name = os.path.basename(path)
-    if not name.lower().endswith(".csv") or state.is_done(name):
+def handle(row: tuple) -> None:
+    id_w2, id_in_out = row[0], row[1]
+    reference = (row[8] or "").strip()
+    plate = row[11] or f"veicolo id {row[10]}"
+    if not reference or reference.upper() == EXCLUDED_REFERENCE:
+        log.info("Pesata %s (in_out %s, %s): riferimento %r, nessun transito",
+                 id_w2, id_in_out, plate, reference or None)
         return
+    log.info("Pesata %s (in_out %s): riferimento %s, creo transito per %s (badge id %s)",
+             id_w2, id_in_out, reference, plate, row[9])
     try:
-        with open(path, encoding="utf-8", errors="replace") as f:
-            line = f.readline()
-    except OSError as e:
-        log.warning("%s: impossibile leggere il file (%s)", name, e)
-        return
-
-    fields = parse_csv_line(line)
-    if fields is None:
-        log.warning("%s: formato non riconosciuto, ignorato", name)
-        state.mark(name)
-        return
-
-    if not is_complete(fields):
-        # prima pesata: il CSV della pesata completa avrà un altro nome
-        log.info("%s: pesata non completa, ignorato", name)
-        state.mark(name)
-        return
-
-    reference = _v(fields[18])
-    if reference is None or reference.upper() == EXCLUDED_REFERENCE:
-        log.info("%s: riferimento documento %r, nessun transito", name, reference)
-        state.mark(name)
-        return
-
-    id_card = find_badge(fields, name)
-    body = build_transit(fields, id_card)
-    plate = body["vehicle"]["plate"] or f"veicolo id {body['vehicle']['id']}"
-    log.info("%s: riferimento %s, creo transito per %s (badge id %s)",
-             name, reference, plate, id_card)
-    try:
-        create_transit(body)
+        new_id = create_transit(build_transit(row))
+        log.info("Transito creato: id=%s", new_id)
     except RuntimeError as e:
-        log.error("%s: transito NON creato: %s", name, e)
-    # in ogni caso non riproviamo lo stesso file
-    state.mark(name)
+        log.error("Pesata %s: transito NON creato: %s", id_w2, e)
 
 
 # ===========================================================================
-# Watcher
+# Ciclo principale
 # ===========================================================================
+
+_running = True
+
+
+def _stop(*_):
+    global _running
+    _running = False
+
 
 def main() -> int:
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(message)s",
     )
-
     if not IN_OUT_TOKEN:
         log.error("Variabile IN_OUT_TOKEN mancante (token API di in-out)")
         return 1
 
-    try:
-        from watchdog.events import FileSystemEventHandler
-        from watchdog.observers import Observer
-    except ImportError:
-        log.error("watchdog non installato. Installalo nel venv con: pip install watchdog")
-        return 1
+    signal.signal(signal.SIGTERM, _stop)
+    signal.signal(signal.SIGINT, _stop)
 
-    os.makedirs(CSV_DIR, exist_ok=True)
-    state = State(STATE_PATH)
+    state = load_state()
+    while state is None and _running:
+        try:
+            db = open_db()
+            try:
+                start = last_weighing_id(db)
+            finally:
+                db.close()
+            state = (start, [])
+            save_state(*state)
+            log.info("Primo avvio: parto dopo la pesata %s (le precedenti sono ignorate)", start)
+        except sqlite3.Error as e:
+            log.warning("Database non leggibile (%s): riprovo", e)
+            time.sleep(5)
 
-    existing = [n for n in os.listdir(CSV_DIR) if n.lower().endswith(".csv")]
-    if state.first_run:
-        state.mark(*existing)
-        log.info("Primo avvio: %d CSV esistenti segnati come già elaborati", len(existing))
-    else:
-        # CSV arrivati mentre il servizio era fermo
-        for n in sorted(existing, key=lambda n: os.path.getmtime(os.path.join(CSV_DIR, n))):
-            process_file(os.path.join(CSV_DIR, n), state)
-
-    class Handler(FileSystemEventHandler):
-        # in-out scrive il CSV e chiude il file: agiamo alla chiusura
-        def on_closed(self, event):
-            if not event.is_directory:
-                process_file(event.src_path, state)
-
-        # file copiati/spostati nella cartella
-        def on_moved(self, event):
-            if not event.is_directory:
-                process_file(event.dest_path, state)
-
-    observer = Observer()
-    observer.schedule(Handler(), CSV_DIR, recursive=False)
-    observer.start()
-    log.info("In ascolto su %s (API %s, escluso riferimento %r)",
-             CSV_DIR, IN_OUT_URL, EXCLUDED_REFERENCE)
-    try:
-        while observer.is_alive():
-            observer.join(1)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        observer.stop()
-        observer.join()
+    if state is None:
+        return 0
+    floor, done = state
+    log.info("In ascolto su %s ogni %ss (API %s, escluso riferimento %r)",
+             MAIN_DB_PATH, POLL_INTERVAL, IN_OUT_URL, EXCLUDED_REFERENCE)
+    db_error = False
+    while _running:
+        try:
+            done_set = set(done)
+            since = max(floor, max(done) - LOOKBACK) if done else floor
+            db = open_db()
+            try:
+                rows = db.execute(SQL_COMPLETED, (since,)).fetchall()
+            finally:
+                db.close()
+            if db_error:
+                log.info("Database di nuovo leggibile")
+                db_error = False
+            for row in rows:
+                if row[0] in done_set:
+                    continue
+                handle(row)
+                done.append(row[0])
+                done_set.add(row[0])
+                save_state(floor, done)
+            done = done[-LOOKBACK:]
+        except sqlite3.Error as e:
+            if not db_error:
+                log.warning("Lettura database fallita (%s): riprovo", e)
+                db_error = True
+        time.sleep(POLL_INTERVAL)
     return 0
 
 

@@ -2,7 +2,7 @@
 # =============================================================================
 # Installa i servizi AS400 per in-out (Debian 13):
 #   - as400-sync:    sincronizzazione prenotazioni AS400 -> in-out (timer 5 min)
-#   - as400-transit: watcher dei CSV delle pesate -> transiti (sempre attivo)
+#   - as400-transit: pesate completate (database in-out) -> transiti (sempre attivo)
 #
 # Lo script lavora sulla cartella in cui si trova (quella con as400.py),
 # ovunque essa sia. Se sposti la cartella, rilancia l'installer.
@@ -228,8 +228,6 @@ elif [ -z "$(env_value IN_OUT_TOKEN)" ]; then
     echo "Configurazione API in-out per i transiti (salvata in $ENV_FILE):"
     read -r -p "  Indirizzo in-out [http://localhost:80]: " IN_OUT_URL
     IN_OUT_URL="${IN_OUT_URL:-http://localhost:80}"
-    read -r -p "  Cartella CSV pesate [/var/opt/in-out/csv]: " CSV_DIR
-    CSV_DIR="${CSV_DIR:-/var/opt/in-out/csv}"
     read -r -p "  Utente in-out [baronpesi]: " IN_OUT_USER
     IN_OUT_USER="${IN_OUT_USER:-baronpesi}"
 
@@ -265,7 +263,6 @@ PY
         cat >> "$ENV_FILE" <<EOF
 IN_OUT_URL=$IN_OUT_URL
 IN_OUT_TOKEN=$TOKEN
-CSV_DIR=$CSV_DIR
 EOF
         info "Token API di $IN_OUT_USER salvato in $ENV_FILE"
     else
@@ -282,7 +279,7 @@ fi
 if [ "$TRANSIT_ENABLED" = "1" ]; then
     cat > "$TRANSIT_FILE" <<EOF
 [Unit]
-Description=Transiti da CSV pesate (riferimento documento diverso da ITA)
+Description=Transiti dalle pesate in-out (riferimento documento diverso da ITA)
 After=network-online.target in-out.service
 Wants=network-online.target
 
