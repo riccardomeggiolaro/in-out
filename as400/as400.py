@@ -15,21 +15,27 @@ Comportamento:
 - Solo lettura sull'AS400: nessun UPDATE/DELETE sul sistema remoto.
 - Rilanciabile quante volte si vuole (idempotente).
 
-Dipendenze (Debian 13):
-    sudo apt install python3-pyodbc unixodbc
-    + driver "IBM i Access ODBC Driver" configurato in odbcinst.ini
-    + pacchetti del progetto nel PYTHONPATH (per importare md_database)
+Script autonomo: non importa nulla dal progetto in-out. Scrive direttamente
+nel database SQLite di in-out con il modulo standard sqlite3.
 
-Variabili d'ambiente:
+Dipendenze (Debian 13):
+    sudo apt install unixodbc
+    pip install pyodbc
+    + driver "IBM i Access ODBC Driver" configurato in odbcinst.ini
+
+Variabili d'ambiente (oppure file .env nella cartella dello script):
     AS400_SYSTEM=10.0.0.1
     AS400_UID=...
     AS400_PWD=...
-    AS400_DRIVER="IBM i Access ODBC Driver"   (opzionale)
-    TEST_DB_PATH=./test_as400.db              (opzionale, solo per lo staging)
+    AS400_DRIVER="IBM i Access ODBC Driver"        (opzionale)
+    MAIN_DB_PATH=/var/opt/in-out/database.db       (opzionale)
+    TEST_DB_PATH=<cartella script>/test_as400.db   (opzionale)
+    SAMPLE_DB_PATH=<cartella script>/sample_as400.db (opzionale)
+    AS400_ENV_FILE=/percorso/.env                  (opzionale, file .env alternativo)
 
 Uso:
-    # dalla root del progetto in-out:
-    python3 as400/as400.py
+    python3 as400.py                  # legge da AS400
+    python3 as400.py --source local   # legge da test_as400.db
 """
 
 import logging
@@ -40,15 +46,37 @@ from datetime import datetime, date, time
 from decimal import Decimal
 from typing import Optional
 
-# Aggiunge la root del progetto al path così i moduli si trovano
-# sia lanciando da as400/ che dalla root
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, _PROJECT_ROOT)
+# Cartella in cui si trova questo script: i percorsi di default sono relativi
+# a questa cartella, così lo script funziona da qualunque posizione venga lanciato.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Inizializza la config dell'app (richiesta da md_database)
-import libs.lb_config as lb_config
-lb_config.init()
+
+def _load_env_file(path: str) -> None:
+    """
+    Carica le variabili da un file .env (formato CHIAVE=valore, righe '#' ignorate,
+    'export ' iniziale ammesso, valori tra apici singoli o doppi).
+    Le variabili già presenti nell'ambiente NON vengono sovrascritte.
+    """
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for raw in f:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export "):].strip()
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key, value = key.strip(), value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+                value = value[1:-1]
+            os.environ.setdefault(key, value)
+
+
+# .env: prima quello indicato da AS400_ENV_FILE, poi quello accanto allo script
+_load_env_file(os.environ.get("AS400_ENV_FILE", os.path.join(SCRIPT_DIR, ".env")))
 
 try:
     import pyodbc
@@ -56,13 +84,16 @@ except ImportError:
     pyodbc = None  # type: ignore  # non serve per il caricamento da staging
 
 # ---------------------------------------------------------------------------
-# Configurazione connessione AS400 (lette solo quando serve main())
+# Configurazione
 # ---------------------------------------------------------------------------
 AS400_DRIVER = os.environ.get("AS400_DRIVER", "IBM i Access ODBC Driver")
 
-# Path del db di staging (usato solo dalla funzione _load_staging)
-TEST_DB_PATH   = os.environ.get("TEST_DB_PATH",   "test_as400.db")
-SAMPLE_DB_PATH = os.environ.get("SAMPLE_DB_PATH", "sample_as400.db")
+# Database principale di in-out (scritto direttamente con sqlite3)
+MAIN_DB_PATH = os.environ.get("MAIN_DB_PATH", "/var/opt/in-out/database.db")
+
+# Copie di controllo dei dati letti dall'AS400
+TEST_DB_PATH   = os.environ.get("TEST_DB_PATH",   os.path.join(SCRIPT_DIR, "test_as400.db"))
+SAMPLE_DB_PATH = os.environ.get("SAMPLE_DB_PATH", os.path.join(SCRIPT_DIR, "sample_as400.db"))
 
 # Colonne esposte nel db di esempio (da column.txt)
 SAMPLE_COLUMNS = [
@@ -322,140 +353,96 @@ def make_sample_db() -> int:
 
 
 # ===========================================================================
-# Lookup-or-create helpers (lavorano sulla sessione SQLAlchemy del db principale)
+# Accesso diretto al database principale di in-out (SQLite, senza ORM)
+#
+# Lo script NON importa nulla dal progetto in-out: scrive direttamente nelle
+# tabelle subject, vehicle, card_registry e access di database.db.
+# Gli enum sono salvati con il NOME (es. 'WAITING', 'RESERVATION'), come fa
+# SQLAlchemy; le date nel formato 'YYYY-MM-DD HH:MM:SS.ffffff'.
 # ===========================================================================
 
-def _get_or_create_subject(session, social_reason: Optional[str]) -> Optional[int]:
-    """Ritorna l'id di Subject (crea se non esiste). None se social_reason vuota."""
-    from modules.md_database.md_database import Subject
+def _now() -> str:
+    return _fmt_dt(datetime.now())
+
+
+def _fmt_dt(value: datetime) -> str:
+    return value.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def _get_or_create_subject(db: sqlite3.Connection, social_reason: Optional[str]) -> Optional[int]:
+    """Ritorna l'id del soggetto (lo crea se non esiste). None se ragione sociale vuota."""
     if not social_reason:
         return None
     sr = social_reason.strip()
-    obj = session.query(Subject).filter(Subject.social_reason.ilike(sr)).first()
-    if obj:
-        return obj.id
-    obj = Subject(social_reason=sr)
-    session.add(obj)
-    session.flush()
-    return obj.id
-
-
-def _get_or_create_vector(session, social_reason: Optional[str]) -> Optional[int]:
-    """Ritorna l'id di Vector (crea se non esiste). None se vuoto."""
-    from modules.md_database.md_database import Vector
-    if not social_reason:
-        return None
-    sr = social_reason.strip()
-    obj = session.query(Vector).filter(Vector.social_reason.ilike(sr)).first()
-    if obj:
-        return obj.id
-    obj = Vector(social_reason=sr)
-    session.add(obj)
-    session.flush()
-    return obj.id
-
-
-def _get_or_create_driver(session, social_reason: Optional[str],
-                           telephone: Optional[str]) -> Optional[int]:
-    """Ritorna l'id di Driver (crea se non esiste). Cerca prima per telefono."""
-    from modules.md_database.md_database import Driver
-    if not social_reason and not telephone:
-        return None
-    obj = None
-    if telephone:
-        obj = session.query(Driver).filter(Driver.telephone == telephone.strip()).first()
-    if obj is None and social_reason:
-        obj = session.query(Driver).filter(
-            Driver.social_reason.ilike(social_reason.strip())
-        ).first()
-    if obj:
-        return obj.id
-    obj = Driver(
-        social_reason=social_reason.strip() if social_reason else None,
-        telephone=telephone.strip() if telephone else None,
+    row = db.execute(
+        "SELECT id FROM subject WHERE social_reason = ? COLLATE NOCASE LIMIT 1", (sr,)
+    ).fetchone()
+    if row:
+        return row[0]
+    cur = db.execute(
+        "INSERT INTO subject (social_reason, date_created) VALUES (?, ?)", (sr, _now())
     )
-    session.add(obj)
-    session.flush()
-    return obj.id
+    return cur.lastrowid
 
 
-def _get_or_create_vehicle(session, plate: Optional[str],
-                            description: Optional[str],
-                            tare_kg: Optional[int],
-                            max_threshold: Optional[int],
-                            print_weight: Optional[str]) -> Optional[int]:
+def _get_or_create_vehicle(db: sqlite3.Connection, plate: Optional[str],
+                           description: Optional[str],
+                           tare_kg: Optional[int],
+                           max_threshold: Optional[int]) -> Optional[int]:
     """
-    Ritorna l'id di Vehicle (crea se non esiste).
-    - Targa valorizzata: lookup per targa (UNIQUE), riusa se esiste.
-    - Targa vuota + tara presente: lookup per tara, crea nuovo se tara diversa.
-      Usa plate=NULL per non violare il UNIQUE constraint (SQLite ammette NULL multipli).
-    - Targa vuota + nessuna tara: restituisce None.
+    Ritorna l'id del veicolo (lo crea se non esiste).
+    - Targa valorizzata: cerca per targa (UNIQUE), riusa se esiste.
+    - Targa vuota + tara presente: cerca un veicolo senza targa con la stessa
+      tara; se non c'è ne crea uno nuovo (plate=NULL, SQLite ammette NULL multipli).
+    - Targa vuota + nessuna tara: None.
     """
-    from modules.md_database.md_database import Vehicle
-
     p = plate.strip().upper() if plate and plate.strip() else None
 
-    # Nessuna targa e nessuna tara → non creare il veicolo
     if not p and not tare_kg:
         return None
 
     if p:
-        obj = session.query(Vehicle).filter(Vehicle.plate.ilike(p)).first()
+        row = db.execute(
+            "SELECT id, tare, max_threshold FROM vehicle "
+            "WHERE plate = ? COLLATE NOCASE LIMIT 1", (p,)
+        ).fetchone()
     else:
-        # Targa vuota: cerca per tara — se tara diversa crea nuovo veicolo
-        obj = session.query(Vehicle).filter(
-            Vehicle.plate.is_(None),
-            Vehicle.tare == tare_kg,
-        ).first()
+        row = db.execute(
+            "SELECT id, tare, max_threshold FROM vehicle "
+            "WHERE plate IS NULL AND tare = ? LIMIT 1", (tare_kg,)
+        ).fetchone()
 
-    if obj:
-        if tare_kg and not obj.tare:
-            obj.tare = tare_kg
-        if max_threshold and not obj.max_threshold:
-            obj.max_threshold = max_threshold
-        return obj.id
+    if row:
+        vid, cur_tare, cur_max = row
+        if tare_kg and not cur_tare:
+            db.execute("UPDATE vehicle SET tare = ? WHERE id = ?", (tare_kg, vid))
+        if max_threshold and not cur_max:
+            db.execute("UPDATE vehicle SET max_threshold = ? WHERE id = ?", (max_threshold, vid))
+        return vid
 
-    obj = Vehicle(
-        plate=p,  # None se targa vuota
-        description=description,
-        tare=tare_kg,
-        max_threshold=max_threshold,
+    cur = db.execute(
+        "INSERT INTO vehicle (plate, description, tare, max_threshold, date_created) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (p, description, tare_kg, max_threshold, _now()),
     )
-    session.add(obj)
-    session.flush()
-    return obj.id
+    return cur.lastrowid
 
 
-def _get_or_create_material(session, description: Optional[str]) -> Optional[int]:
-    """Ritorna l'id di Material (crea se non esiste). None se descrizione vuota."""
-    from modules.md_database.md_database import Material
-    if not description:
-        return None
-    d = description.strip()
-    obj = session.query(Material).filter(Material.description.ilike(d)).first()
-    if obj:
-        return obj.id
-    obj = Material(description=d)
-    session.add(obj)
-    session.flush()
-    return obj.id
-
-
-def _get_or_create_card_registry(session, code: Optional[str]) -> Optional[int]:
-    """Ritorna l'id di CardRegistry (crea se non esiste). None se code vuoto."""
-    from modules.md_database.md_database import CardRegistry
+def _get_or_create_card_registry(db: sqlite3.Connection, code: Optional[str]) -> Optional[int]:
+    """Ritorna l'id del badge (lo crea se non esiste). None se codice vuoto."""
     if not code:
         return None
     c = code.strip()
-    obj = session.query(CardRegistry).filter(
-        (CardRegistry.code == c) | (CardRegistry.number == c)
-    ).first()
-    if obj:
-        return obj.id
-    obj = CardRegistry(number=c, code=c)
-    session.add(obj)
-    session.flush()
-    return obj.id
+    row = db.execute(
+        "SELECT id FROM card_registry WHERE code = ? OR number = ? LIMIT 1", (c, c)
+    ).fetchone()
+    if row:
+        return row[0]
+    cur = db.execute(
+        "INSERT INTO card_registry (number, code, date_created) VALUES (?, ?, ?)",
+        (c, c, _now()),
+    )
+    return cur.lastrowid
 
 
 # ===========================================================================
@@ -523,74 +510,52 @@ def _map_row(row: dict) -> dict:
 # Upsert nel database principale
 # ===========================================================================
 
-def _upsert_access(session, mapped: dict) -> str:
+def _upsert_access(db: sqlite3.Connection, mapped: dict) -> str:
     """
-    Inserisce o aggiorna un Access nel database principale.
-    Chiave di upsert: document_reference (FEMRA0-FEE8A0).
+    Inserisce o aggiorna una prenotazione (tabella access).
+    Chiave: badge "AA-PPPPPPP" (FEMRA0-FEE8A0) → card_registry → access.
+    Se l'accesso esiste ed è ENTERED/CLOSED non viene toccato.
     Ritorna 'inserted', 'updated' o 'skipped'.
     """
-    from modules.md_database.md_database import (
-        Access, AccessStatus, TypeAccess, TypeSubjectEnum, AccessMode,
-    )
-
-def _upsert_access(session, mapped: dict) -> str:
-    """
-    Inserisce o aggiorna un Access nel database principale.
-    Chiave di upsert: badge (FEMRA0-FEE8A0) → card_registry + document_reference.
-    Ritorna 'inserted', 'updated' o 'skipped'.
-    """
-    from modules.md_database.md_database import (
-        Access, AccessStatus, TypeAccess, TypeSubjectEnum, AccessMode,
-    )
-
     badge = mapped["badge"]
     if not badge:
         return "skipped"
 
-    # --- Lookup / crea anagrafiche ---
-    id_subject = _get_or_create_subject(session, mapped["subject_name"])
+    id_subject = _get_or_create_subject(db, mapped["subject_name"])
     id_vehicle = _get_or_create_vehicle(
-        session,
+        db,
         mapped["plate"],
         mapped["plate_trail"],
         mapped["tare_kg"],
         mapped["max_threshold"],
-        mapped["print_weight"],
     )
-    id_card = _get_or_create_card_registry(session, badge)
+    id_card = _get_or_create_card_registry(db, badge)
 
-    # --- Cerca accesso esistente per badge ---
-    access = session.query(Access).filter(
-        Access.idCardRegistry == id_card
-    ).first()
+    row = db.execute(
+        "SELECT id, status FROM access WHERE idCardRegistry = ? LIMIT 1", (id_card,)
+    ).fetchone()
 
-    if access is not None:
-        if access.status in (AccessStatus.ENTERED, AccessStatus.CLOSED):
+    if row is not None:
+        access_id, status = row
+        if status in ("ENTERED", "CLOSED"):
             return "skipped"
-
-        access.typeSubject        = TypeSubjectEnum[mapped["type_subject"]]
-        access.idSubject          = id_subject
-        access.idVehicle          = id_vehicle
-        access.idCardRegistry     = id_card
-        access.note               = mapped["note"]
+        db.execute(
+            "UPDATE access SET typeSubject = ?, idSubject = ?, idVehicle = ?, "
+            "idCardRegistry = ?, note = ? WHERE id = ?",
+            (mapped["type_subject"], id_subject, id_vehicle, id_card,
+             mapped["note"], access_id),
+        )
         return "updated"
 
-    # --- Crea nuovo accesso ---
-    access = Access(
-        typeSubject        = TypeSubjectEnum[mapped["type_subject"]],
-        idSubject          = id_subject,
-        idVehicle          = id_vehicle,
-        idCardRegistry     = id_card,
-        number_in_out      = 2 if mapped["tare_kg"] else 1,
-        note               = mapped["note"],
-        document_reference = None,
-        type               = TypeAccess.RESERVATION,
-        status             = AccessStatus.WAITING,
-        mode               = AccessMode.STANDARD,
-        hidden             = False,
-        date_created       = mapped["booked_at"] or datetime.now(),
+    booked_at = mapped["booked_at"] or datetime.now()
+    db.execute(
+        "INSERT INTO access (typeSubject, idSubject, idVehicle, idCardRegistry, "
+        "number_in_out, note, selected, date_created, status, document_reference, "
+        "type, hidden, mode) "
+        "VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'WAITING', NULL, 'RESERVATION', 0, 'STANDARD')",
+        (mapped["type_subject"], id_subject, id_vehicle, id_card,
+         2 if mapped["tare_kg"] else 1, mapped["note"], _fmt_dt(booked_at)),
     )
-    session.add(access)
     return "inserted"
 
 
@@ -600,30 +565,30 @@ def _upsert_access(session, mapped: dict) -> str:
 
 def sync_to_main_db(rows: list[dict]) -> tuple[int, int, int]:
     """
-    Itera le righe CARARRP normalizzate e le upserta nel db principale.
+    Scrive le righe CARARRP nel database principale in un'unica transazione
+    (se qualcosa va storto non viene salvato niente).
     Ritorna (inseriti, aggiornati, saltati).
     """
-    from modules.md_database.md_database import SessionLocal
+    if not os.path.exists(MAIN_DB_PATH):
+        raise FileNotFoundError(f"Database principale non trovato: {MAIN_DB_PATH}")
 
     inserted = updated = skipped = 0
-
-    with SessionLocal() as session:
-        try:
+    # timeout alto: in-out può tenere il database occupato per qualche istante
+    db = sqlite3.connect(MAIN_DB_PATH, timeout=30)
+    try:
+        with db:  # commit se tutto ok, rollback in caso di eccezione
             for row in rows:
-                mapped = _map_row(row)
-                result = _upsert_access(session, mapped)
+                result = _upsert_access(db, _map_row(row))
                 if result == "inserted":
                     inserted += 1
                 elif result == "updated":
                     updated += 1
                 else:
                     skipped += 1
+    finally:
+        db.close()
 
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-
+    log.info("Database principale: %s", MAIN_DB_PATH)
     return inserted, updated, skipped
 
 
@@ -671,7 +636,11 @@ def main() -> int:
         if not rows:
             log.warning("Nessuna riga nel db locale, uscita.")
             return 1
-        ins, upd, skip = sync_to_main_db(rows)
+        try:
+            ins, upd, skip = sync_to_main_db(rows)
+        except Exception:
+            log.exception("Errore durante la sincronizzazione")
+            return 1
         log.info(
             "Sincronizzazione completata: %d inseriti, %d aggiornati, %d saltati",
             ins, upd, skip,
@@ -682,7 +651,7 @@ def main() -> int:
     # Sorgente: AS400 reale
     # ------------------------------------------------------------------
     if pyodbc is None:
-        log.error("pyodbc non installato. Installa con: sudo apt install python3-pyodbc")
+        log.error("pyodbc non installato. Installalo nel venv con: pip install pyodbc")
         return 1
 
     as400_system = os.environ.get("AS400_SYSTEM")
