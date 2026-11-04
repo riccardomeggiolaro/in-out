@@ -141,7 +141,8 @@ transazione**: se qualcosa fallisce a metà non viene salvato niente.
 - Se non esiste viene creato con `code` = `number` = badge.
 
 ### Prenotazione (`access`)
-La prenotazione è collegata al badge: badge uguale = stessa prenotazione.
+La prenotazione è collegata al badge: badge uguale = stessa prenotazione
+(i transiti con lo stesso badge, creati da `transit_watcher.py`, sono ignorati).
 
 | Situazione in in-out | Cosa fa lo script | Conteggio nel log |
 |---|---|---|
@@ -305,6 +306,15 @@ Presi dal CSV della pesata: tipo soggetto, soggetto, vettore, autista, veicolo
 l'id di un'anagrafica esistente viene usato quello, altrimenti in-out la crea.
 Il transito ha `type` `RESERVATION` e `mode` `TRANSIT`.
 
+**Badge**: non è nel CSV. Il watcher lo legge dal database di in-out (in sola
+lettura, `MAIN_DB_PATH`): dalla seconda pesata (`pid`) risale alla pesata
+completa e prende il badge della prenotazione appena pesata. Il transito ha
+quindi lo stesso badge della prenotazione. Se il badge non si trova, il
+transito viene creato senza badge (lo dice il log).
+
+`as400.py` ignora i transiti quando cerca la prenotazione per badge: un
+transito con lo stesso badge non viene mai aggiornato dalla sincronizzazione.
+
 ### Ogni CSV una sola volta
 
 I CSV già elaborati sono elencati in `transit_watcher_state.json` (cartella
@@ -328,6 +338,7 @@ token** (la password non viene salvata). Il token di in-out dura 100 anni.
 | `CSV_DIR` | `/var/opt/in-out/csv` |
 | `TRANSIT_EXCLUDED_REFERENCE` | `ITA` |
 | `TRANSIT_STATE_PATH` | `<cartella script>/transit_watcher_state.json` |
+| `MAIN_DB_PATH` | `/var/opt/in-out/database.db` (per leggere il badge) |
 
 Per rifare il token (es. password di baronpesi cambiata e token rifiutato con
 HTTP 401): togli la riga `IN_OUT_TOKEN` dal `.env` e rilancia l'installer.
