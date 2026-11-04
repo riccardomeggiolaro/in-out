@@ -9,7 +9,7 @@ Comportamento:
   FEONDT=0, FEBZTM=0, FEJSUS IN ('C','S','H')).
 - Per ogni riga crea/aggiorna le anagrafiche (Subject, Vector, Driver,
   Vehicle, Material, CardRegistry) con logica lookup-or-create.
-- Upsert sull'Access: chiave = document_reference (formato "AA-PPPPPPP").
+- Upsert sull'Access: chiave = badge "AA-PPPPPPP" (anno-progressivo).
   Se l'accesso esiste già e ha status WAITING/OPEN aggiorna i campi;
   se è ENTERED/CLOSED lo salta (non sovrascrive pesate già fatte).
 - Solo lettura sull'AS400: nessun UPDATE/DELETE sul sistema remoto.
@@ -108,6 +108,7 @@ SAMPLE_COLUMNS = [
     "FER5TS",   # Flag stampa peso
     "FERSTS",   # Tipo automezzo
     "FER3CC",   # Tara mezzo
+    "FEFMCD",   # Riferimento documento (codice nazione)
 ]
 
 STAGING_TABLE = "cararrp"
@@ -464,6 +465,7 @@ def _map_row(row: dict) -> dict:
         FEHBTY           → ragione sociale soggetto
         FEJSUS           → tipo soggetto (C=Cliente, S/H=Fornitore)
         FEG1TY           → note
+        FEFMCD           → riferimento documento (access.document_reference)
     """
     anno  = _s(row.get("FEMRA0"))
     prog  = _s(row.get("FEE8A0"))
@@ -488,6 +490,9 @@ def _map_row(row: dict) -> dict:
     # Note merce
     note = _s(row.get("FEG1TY"))
 
+    # Riferimento documento (es. codice nazione ITA, BGR, ...)
+    document_reference = _s(row.get("FEFMCD"))
+
     # Timestamp prenotazione (campi extra, presenti solo da AS400 reale)
     booked_at = _as400_datetime(row.get("FESIDT"), row.get("FEB9TM"))
 
@@ -502,6 +507,7 @@ def _map_row(row: dict) -> dict:
         "max_threshold": max_threshold,
         "print_weight":  print_weight,
         "note":          note,
+        "document_reference": document_reference,
         "booked_at":     booked_at,
     }
 
@@ -541,9 +547,9 @@ def _upsert_access(db: sqlite3.Connection, mapped: dict) -> str:
             return "skipped"
         db.execute(
             "UPDATE access SET typeSubject = ?, idSubject = ?, idVehicle = ?, "
-            "idCardRegistry = ?, note = ? WHERE id = ?",
+            "idCardRegistry = ?, note = ?, document_reference = ? WHERE id = ?",
             (mapped["type_subject"], id_subject, id_vehicle, id_card,
-             mapped["note"], access_id),
+             mapped["note"], mapped["document_reference"], access_id),
         )
         return "updated"
 
@@ -552,9 +558,10 @@ def _upsert_access(db: sqlite3.Connection, mapped: dict) -> str:
         "INSERT INTO access (typeSubject, idSubject, idVehicle, idCardRegistry, "
         "number_in_out, note, selected, date_created, status, document_reference, "
         "type, hidden, mode) "
-        "VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'WAITING', NULL, 'RESERVATION', 0, 'STANDARD')",
+        "VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'WAITING', ?, 'RESERVATION', 0, 'STANDARD')",
         (mapped["type_subject"], id_subject, id_vehicle, id_card,
-         2 if mapped["tare_kg"] else 1, mapped["note"], _fmt_dt(booked_at)),
+         2 if mapped["tare_kg"] else 1, mapped["note"], _fmt_dt(booked_at),
+         mapped["document_reference"]),
     )
     return "inserted"
 

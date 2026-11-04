@@ -10,3 +10,4 @@
 9	FER5TS	Flag stampa peso
 10	FERSTS	Tipo automezzo
 11	FER3CC	Tara mezzo
+12	FEFMCD	Riferimento documento
