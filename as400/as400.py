@@ -201,6 +201,19 @@ def _tare_from_type(fersts: Optional[str]) -> Optional[int]:
     return None
 
 
+def _tare(fersts: Optional[str], fer3cc) -> Optional[int]:
+    """
+    Tara mezzo in kg:
+        - FER3CC > 0 e diverso da 10000/15000 → valore di FER3CC (es. 15500)
+        - altrimenti                           → tara standard da FERSTS
+    Vale anche con targa vuota e per FERSTS = C o vuoto.
+    """
+    tare = _i(fer3cc)
+    if tare and tare > 0 and tare not in (10000, 15000):
+        return tare
+    return _tare_from_type(fersts)
+
+
 def _type_subject(fejsus: Optional[str]) -> str:
     """
     FEJSUS: C=Carico (cliente porta merce) → CUSTOMER
@@ -458,6 +471,7 @@ def _map_row(row: dict) -> dict:
         FEA335           → targa motrice
         FEHCTY           → descrizione veicolo (targa rimorchio)
         FERSTS           → tara veicolo (A/B=15000kg, M=10000kg, C=None)
+        FER3CC           → tara veicolo, prevale se > 0 e diversa da 10000/15000
         FERSCC           → soglia massima veicolo
         FER5TS           → flag stampa peso per autista
         FEHBTY           → ragione sociale soggetto
@@ -480,7 +494,7 @@ def _map_row(row: dict) -> dict:
     plate         = _s(row.get("FEA335"))           # Targa motrice
     plate_trail   = _s(row.get("FEHCTY"))           # Targa rimorchio → description
     veh_type      = _s(row.get("FERSTS"))           # Tipo automezzo
-    tare_kg       = _tare_from_type(veh_type)       # Tara da tipo (A/B/M/C)
+    tare_kg       = _tare(veh_type, row.get("FER3CC"))  # Tara da FER3CC o tipo
     max_threshold = _i(row.get("FERSCC"))           # Limite peso → soglia veicolo
     print_weight  = _s(row.get("FER5TS"))           # Flag stampa peso
 
