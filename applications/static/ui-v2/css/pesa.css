@@ -1,0 +1,99 @@
+/* ── Schermata Pesa ─────────────────────────────────────── */
+.weigher-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.weigher-tab {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 12px;
+  padding: 8px 14px; display: flex; align-items: center; gap: 10px; font-weight: 700; min-width: 150px;
+}
+.weigher-tab .w { font-variant-numeric: tabular-nums; color: var(--text-muted); font-weight: 600; margin-left: auto; }
+.weigher-tab[aria-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.weigher-tab .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--idle); }
+.weigher-tab .dot.ok { background: var(--ok); } .weigher-tab .dot.warn { background: var(--warn); } .weigher-tab .dot.err { background: var(--err); }
+
+.pesa-grid {
+  display: grid; gap: 16px;
+  grid-template-columns: minmax(260px, 340px) minmax(380px, 1fr) minmax(260px, 340px);
+  grid-template-areas: "vehicle weight side";
+  align-items: start;
+}
+.area-vehicle { grid-area: vehicle; }
+.area-weight { grid-area: weight; display: flex; flex-direction: column; gap: 16px; }
+.area-side { grid-area: side; display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 1180px) {
+  .pesa-grid { grid-template-columns: minmax(260px, 340px) 1fr; grid-template-areas: "vehicle weight" "side side"; }
+  .area-side { flex-direction: row; flex-wrap: wrap; }
+  .area-side > .card { flex: 1 1 260px; }
+}
+@media (max-width: 820px) {
+  .pesa-grid { grid-template-columns: 1fr; grid-template-areas: "weight" "vehicle" "side"; }
+}
+
+/* Peso grande */
+.weight-card { padding: 22px 24px; position: relative; overflow: hidden; }
+.weight-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--idle); }
+.weight-card.ok::before { background: var(--ok); }
+.weight-card.warn::before { background: var(--warn); }
+.weight-card.err::before { background: var(--err); }
+.weight-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.weight-name { font-weight: 700; font-size: 16px; }
+.weight-status { font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--idle-bg); color: var(--idle); }
+.weight-status.ok { background: var(--ok-bg); color: var(--ok); }
+.weight-status.warn { background: var(--warn-bg); color: var(--warn); }
+.weight-status.err { background: var(--err-bg); color: var(--err); }
+.weight-value {
+  font-size: clamp(56px, 9vw, 112px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05;
+  font-variant-numeric: tabular-nums; margin: 14px 0 4px; text-align: right;
+}
+.weight-value .unit { font-size: .32em; font-weight: 700; color: var(--text-muted); margin-left: 8px; letter-spacing: 0; }
+.weight-sub { display: flex; justify-content: flex-end; gap: 22px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.weight-sub b { color: var(--text); font-weight: 700; }
+
+/* Azioni */
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.actions .big { padding: 18px 14px; font-size: 18px; border-radius: 12px; }
+.actions .small-row { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.auto-banner {
+  display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px;
+  background: var(--ok-bg); color: var(--ok); font-weight: 600; font-size: 14px;
+}
+
+/* Mezzo */
+.vehicle-search { display: flex; gap: 8px; }
+.selected-box {
+  margin-top: 12px; padding: 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border);
+}
+.selected-box.has { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+.plate { font-weight: 800; font-size: 22px; letter-spacing: .04em; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin-top: 6px; font-size: 13px; }
+.kv dt { color: var(--text-muted); }
+.kv dd { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.access-list { list-style: none; margin-top: 12px; display: flex; flex-direction: column; gap: 6px; max-height: 46vh; overflow: auto; }
+.access-item {
+  width: 100%; text-align: left; border: 1px solid var(--border); background: var(--surface); border-radius: 10px;
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 1px;
+}
+.access-item:hover { border-color: var(--accent); }
+.access-item[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.access-item .p { font-weight: 700; display: flex; gap: 6px; align-items: center; }
+.access-item .s { font-size: 12px; color: var(--text-muted); }
+.tag { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: var(--warn-bg); color: var(--warn); }
+
+/* Foto */
+.photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: var(--surface-2); display: block; cursor: zoom-in; }
+.photo-empty { aspect-ratio: 4 / 3; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px; }
+.flash { animation: flash .7s ease-out; }
+@keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(255, 210, 60, .9); } 100% { box-shadow: 0 0 0 18px rgba(255, 210, 60, 0); } }
+
+/* Sbarre */
+.relay-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+.relay-row:first-child { border-top: 0; }
+.light { width: 14px; height: 14px; border-radius: 50%; background: var(--err); box-shadow: 0 0 8px color-mix(in srgb, var(--err) 60%, transparent); }
+.light.open { background: var(--ok); box-shadow: 0 0 8px color-mix(in srgb, var(--ok) 60%, transparent); }
+.relay-row .name { font-weight: 600; }
+.relay-row .btn { margin-left: auto; padding: 6px 10px; font-size: 13px; }
+
+/* Attività */
+.activity { list-style: none; display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow: auto; font-size: 13px; }
+.activity li { display: grid; grid-template-columns: 62px 1fr; gap: 6px; }
+.activity time { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.activity .err { color: var(--err); }
+.activity .ok { color: var(--ok); }
