@@ -87,12 +87,21 @@ info "Pacchetti di sistema presenti"
 # -----------------------------------------------------------------------------
 # 2. Virtualenv + pyodbc
 # -----------------------------------------------------------------------------
+# Un venv copiato o spostato da un'altra cartella ha gli script (pip, ...)
+# che puntano ancora al vecchio percorso: in quel caso lo ricreiamo.
+if [ -d "$VENV_DIR" ]; then
+    if ! "$VENV_DIR/bin/python3" -c "import sys" 2>/dev/null \
+       || ! head -n 1 "$VENV_DIR/bin/pip" 2>/dev/null | grep -qF "#!$VENV_DIR/bin/python"; then
+        warn "Il venv in $VENV_DIR è stato copiato da un'altra cartella o è danneggiato: lo ricreo"
+        rm -rf "$VENV_DIR"
+    fi
+fi
 if [ ! -x "$VENV_DIR/bin/python3" ]; then
     echo "Creazione venv in $VENV_DIR..."
     python3 -m venv "$VENV_DIR"
 fi
-"$VENV_DIR/bin/pip" install -q --upgrade pip
-"$VENV_DIR/bin/pip" install -q -r "$APP_DIR/requirements.txt"
+"$VENV_DIR/bin/python3" -m pip install -q --upgrade pip
+"$VENV_DIR/bin/python3" -m pip install -q -r "$APP_DIR/requirements.txt"
 if ! "$VENV_DIR/bin/python3" -c "import pyodbc" 2>/dev/null; then
     error "pyodbc installato ma non importabile (manca libodbc?). Controlla: $VENV_DIR/bin/python3 -c 'import pyodbc'"
     exit 1

@@ -26,7 +26,7 @@ di in-out (`/var/opt/in-out/database.db`).
               ▼                    ▼                          ▼
       test_as400.db        sample_as400.db        /var/opt/in-out/database.db
    (copia completa,      (copia ridotta,          (database di in-out:
-    tutte le colonne)     11 colonne usate)        subject, vehicle,
+    tutte le colonne)     12 colonne usate)        subject, vehicle,
                                                    card_registry, access)
 ```
 
@@ -34,7 +34,7 @@ di in-out (`/var/opt/in-out/database.db`).
 |---|---|---|
 | `database.db` | Database dell'app in-out. Qui finiscono le prenotazioni. | in-out |
 | `test_as400.db` | Copia di controllo con **tutte** le colonne lette dall'AS400. | `--source local`, debug |
-| `sample_as400.db` | Copia ridotta di `test_as400.db` con le sole 11 colonne usate. Ricreata a ogni esecuzione. | Solo consultazione |
+| `sample_as400.db` | Copia ridotta di `test_as400.db` con le sole 12 colonne usate. Ricreata a ogni esecuzione. | Solo consultazione |
 
 I dati che vanno in `database.db` arrivano **direttamente dall'AS400**, non da
 `test_as400.db`. Le due copie servono solo per controllo: se la loro scrittura
@@ -78,6 +78,7 @@ WHERE FEGUTS = '' AND FEADCE = '01' AND FEGVTS = ''
 | `FER3CC` | Tara mezzo | Tara specifica, vedi §4 |
 | `FERSCC` | Limite peso | `vehicle.max_threshold` |
 | `FEG1TY` | Note merce | `access.note` |
+| `FEFMCD` | Riferimento documento (es. codice nazione `ITA`, `BGR`) | `access.document_reference` |
 | `FESIDT` + `FEB9TM` | Data e ora prenotazione | `access.date_created` (solo alla creazione) |
 | `FER5TS` | Flag stampa peso | Letto ma **non usato** al momento |
 
@@ -145,7 +146,7 @@ La prenotazione è collegata al badge: badge uguale = stessa prenotazione.
 | Situazione in in-out | Cosa fa lo script | Conteggio nel log |
 |---|---|---|
 | Nessun accesso con quel badge | Crea l'accesso: `RESERVATION`, stato `WAITING`, modalità `STANDARD` | inseriti |
-| Accesso in stato `WAITING` o `OPEN` | Aggiorna tipo soggetto, soggetto, veicolo, note | aggiornati |
+| Accesso in stato `WAITING` o `OPEN` | Aggiorna tipo soggetto, soggetto, veicolo, note, riferimento documento | aggiornati |
 | Accesso in stato `ENTERED` o `CLOSED` | **Non lo tocca**, per non alterare una pesata in corso o completata | saltati |
 | Riga AS400 senza anno o progressivo | Ignorata | saltati |
 
