@@ -1,6 +1,8 @@
 #!/bin/bash
 # =============================================================================
-# Installa la sincronizzazione AS400 -> in-out come timer systemd (Debian 13).
+# Installa i servizi AS400 per in-out (Debian 13):
+#   - as400-sync:    sincronizzazione prenotazioni AS400 -> in-out (timer 5 min)
+#   - as400-transit: watcher dei CSV delle pesate -> transiti (sempre attivo)
 #
 # Lo script lavora sulla cartella in cui si trova (quella con as400.py),
 # ovunque essa sia. Se sposti la cartella, rilancia l'installer.
@@ -11,10 +13,12 @@
 #   3. controlla che il driver ODBC IBM sia presente (non lo installa)
 #   4. crea il file .env con le credenziali AS400 (se non esiste)
 #   5. crea e avvia as400-sync.service + as400-sync.timer (ogni 5 minuti)
+#   6. ottiene il token API di in-out (login baronpesi) e salva in .env
+#   7. crea e avvia as400-transit.service (transit_watcher.py)
 #
 # Uso:
 #   sudo ./install-debian13.sh              # installa / aggiorna
-#   sudo ./install-debian13.sh --uninstall  # rimuove servizio e timer
+#   sudo ./install-debian13.sh --uninstall  # rimuove servizi e timer
 # =============================================================================
 set -euo pipefail
 
@@ -27,6 +31,10 @@ APP_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 VENV_DIR="$APP_DIR/.venv"
 ENV_FILE="$APP_DIR/.env"
 SCRIPT="$APP_DIR/as400.py"
+
+TRANSIT_NAME="as400-transit"
+TRANSIT_FILE="/etc/systemd/system/${TRANSIT_NAME}.service"
+TRANSIT_SCRIPT="$APP_DIR/transit_watcher.py"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 info()  { echo -e "${GREEN}[OK]${NC} $1"; }
@@ -44,9 +52,10 @@ fi
 if [ "${1:-}" = "--uninstall" ]; then
     systemctl disable --now "${SERVICE_NAME}.timer" 2>/dev/null || true
     systemctl stop "${SERVICE_NAME}.service" 2>/dev/null || true
-    rm -f "$SERVICE_FILE" "$TIMER_FILE"
+    systemctl disable --now "${TRANSIT_NAME}.service" 2>/dev/null || true
+    rm -f "$SERVICE_FILE" "$TIMER_FILE" "$TRANSIT_FILE"
     systemctl daemon-reload
-    info "Servizio e timer ${SERVICE_NAME} rimossi."
+    info "Servizi ${SERVICE_NAME} (con timer) e ${TRANSIT_NAME} rimossi."
     echo "    La cartella $APP_DIR (script, .venv, .env, file .db) non è stata toccata."
     exit 0
 fi
@@ -203,6 +212,105 @@ else
 fi
 journalctl -u "${SERVICE_NAME}.service" -n 10 --no-pager || true
 
+# -----------------------------------------------------------------------------
+# 6. Token API di in-out per il watcher dei transiti
+# -----------------------------------------------------------------------------
+env_value() {
+    grep -E "^\s*(export\s+)?$1=" "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -E "s/^['\"]//; s/['\"]\s*$//"
+}
+
+TRANSIT_ENABLED=1
+if [ ! -f "$TRANSIT_SCRIPT" ]; then
+    warn "transit_watcher.py non trovato in $APP_DIR: servizio ${TRANSIT_NAME} non installato"
+    TRANSIT_ENABLED=0
+elif [ -z "$(env_value IN_OUT_TOKEN)" ]; then
+    echo
+    echo "Configurazione API in-out per i transiti (salvata in $ENV_FILE):"
+    read -r -p "  Indirizzo in-out [http://localhost:80]: " IN_OUT_URL
+    IN_OUT_URL="${IN_OUT_URL:-http://localhost:80}"
+    read -r -p "  Cartella CSV pesate [/var/opt/in-out/csv]: " CSV_DIR
+    CSV_DIR="${CSV_DIR:-/var/opt/in-out/csv}"
+    read -r -p "  Utente in-out [baronpesi]: " IN_OUT_USER
+    IN_OUT_USER="${IN_OUT_USER:-baronpesi}"
+
+    TOKEN=""
+    for attempt in 1 2 3; do
+        read -r -s -p "  Password di $IN_OUT_USER: " IN_OUT_PWD; echo
+        # password passata via ambiente: non compare nella lista dei processi
+        if TOKEN="$(IN_OUT_URL="$IN_OUT_URL" IN_OUT_USER="$IN_OUT_USER" IN_OUT_PWD="$IN_OUT_PWD" \
+            "$VENV_DIR/bin/python3" - <<'PY'
+import json, os, sys, urllib.request, urllib.error
+req = urllib.request.Request(
+    os.environ["IN_OUT_URL"].rstrip("/") + "/api/auth/login",
+    data=json.dumps({"username": os.environ["IN_OUT_USER"],
+                     "password": os.environ["IN_OUT_PWD"]}).encode(),
+    headers={"Content-Type": "application/json"}, method="POST")
+try:
+    with urllib.request.urlopen(req, timeout=10) as r:
+        print(json.loads(r.read())["access_token"])
+except urllib.error.HTTPError as e:
+    sys.stderr.write(f"login rifiutato (HTTP {e.code})\n"); sys.exit(1)
+except Exception as e:
+    sys.stderr.write(f"in-out non raggiungibile: {e}\n"); sys.exit(1)
+PY
+        )" && [ -n "$TOKEN" ]; then
+            break
+        fi
+        TOKEN=""
+        warn "Login non riuscito (tentativo $attempt di 3)"
+    done
+    unset IN_OUT_PWD
+
+    if [ -n "$TOKEN" ]; then
+        cat >> "$ENV_FILE" <<EOF
+IN_OUT_URL=$IN_OUT_URL
+IN_OUT_TOKEN=$TOKEN
+CSV_DIR=$CSV_DIR
+EOF
+        info "Token API di $IN_OUT_USER salvato in $ENV_FILE"
+    else
+        warn "Nessun token: servizio ${TRANSIT_NAME} non installato. Rilancia l'installer quando in-out è raggiungibile."
+        TRANSIT_ENABLED=0
+    fi
+else
+    info "Token API in-out già presente in $ENV_FILE"
+fi
+
+# -----------------------------------------------------------------------------
+# 7. Servizio del watcher dei transiti
+# -----------------------------------------------------------------------------
+if [ "$TRANSIT_ENABLED" = "1" ]; then
+    cat > "$TRANSIT_FILE" <<EOF
+[Unit]
+Description=Transiti da CSV pesate (riferimento documento diverso da ITA)
+After=network-online.target in-out.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=$APP_DIR
+Environment=AS400_ENV_FILE=$ENV_FILE
+ExecStart=$VENV_DIR/bin/python3 $TRANSIT_SCRIPT
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    systemctl daemon-reload
+    systemctl enable "${TRANSIT_NAME}.service" >/dev/null
+    systemctl restart "${TRANSIT_NAME}.service"
+    sleep 2
+    if systemctl is-active --quiet "${TRANSIT_NAME}.service"; then
+        info "Servizio ${TRANSIT_NAME} attivo"
+    else
+        warn "Il servizio ${TRANSIT_NAME} non è partito, controlla il log qui sotto."
+    fi
+    journalctl -u "${TRANSIT_NAME}.service" -n 5 --no-pager || true
+fi
+
 cat <<EOF
 
 Comandi utili:
@@ -210,5 +318,7 @@ Comandi utili:
   Log in tempo reale:   journalctl -u ${SERVICE_NAME}.service -f
   Lancia subito:        sudo systemctl start ${SERVICE_NAME}.service
   Ferma il timer:       sudo systemctl stop ${SERVICE_NAME}.timer
+  Log transiti:         journalctl -u ${TRANSIT_NAME}.service -f
+  Riavvia transiti:     sudo systemctl restart ${TRANSIT_NAME}.service
   Disinstalla:          sudo $APP_DIR/$(basename "$0") --uninstall
 EOF
