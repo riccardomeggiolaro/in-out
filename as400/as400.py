@@ -538,7 +538,10 @@ def _upsert_access(db: sqlite3.Connection, mapped: dict) -> str:
     id_card = _get_or_create_card_registry(db, badge)
 
     row = db.execute(
-        "SELECT id, status FROM access WHERE idCardRegistry = ? LIMIT 1", (id_card,)
+        # i transiti creati da transit_watcher.py hanno lo stesso badge:
+        # vanno ignorati, la prenotazione è l'accesso non di transito
+        "SELECT id, status FROM access WHERE idCardRegistry = ? "
+        "AND (mode IS NULL OR mode != 'TRANSIT') ORDER BY id LIMIT 1", (id_card,)
     ).fetchone()
 
     if row is not None:

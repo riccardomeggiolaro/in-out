@@ -11,6 +11,8 @@ Comportamento:
 - Ogni CSV viene elaborato una sola volta (elenco in transit_watcher_state.json).
   Al primo avvio i CSV già presenti vengono segnati come elaborati, senza
   creare transiti per le pesate vecchie.
+- Il badge non è nel CSV: viene letto (solo lettura) dal database di in-out,
+  risalendo dalla pesata (pid) alla prenotazione appena pesata.
 - Se la chiamata API fallisce scrive l'errore nel log e passa oltre.
 
 Formato CSV (una riga, separatore ';', generato da utils_report.generate_csv_report):
@@ -31,6 +33,7 @@ Variabili d'ambiente (oppure file .env nella cartella dello script):
     IN_OUT_URL=http://localhost:80            (opzionale)
     CSV_DIR=/var/opt/in-out/csv               (opzionale)
     TRANSIT_EXCLUDED_REFERENCE=ITA            (opzionale)
+    MAIN_DB_PATH=/var/opt/in-out/database.db  (opzionale, per leggere il badge)
 
 Uso:
     python3 transit_watcher.py
@@ -39,6 +42,7 @@ Uso:
 import json
 import logging
 import os
+import sqlite3
 import sys
 import threading
 import urllib.error
@@ -74,6 +78,7 @@ IN_OUT_URL = os.environ.get("IN_OUT_URL", "http://localhost:80").rstrip("/")
 IN_OUT_TOKEN = os.environ.get("IN_OUT_TOKEN", "")
 CSV_DIR = os.environ.get("CSV_DIR", "/var/opt/in-out/csv")
 EXCLUDED_REFERENCE = os.environ.get("TRANSIT_EXCLUDED_REFERENCE", "ITA").strip().upper()
+MAIN_DB_PATH = os.environ.get("MAIN_DB_PATH", "/var/opt/in-out/database.db")
 STATE_PATH = os.environ.get(
     "TRANSIT_STATE_PATH", os.path.join(SCRIPT_DIR, "transit_watcher_state.json")
 )
@@ -120,7 +125,42 @@ def is_complete(fields: list) -> bool:
     return _v(fields[24]) is not None or _v(fields[25]) is not None
 
 
-def build_transit(fields: list) -> dict:
+def find_badge(fields: list, file_name: str) -> Optional[int]:
+    """
+    id del badge (card_registry) della prenotazione appena pesata.
+    Pesata → in_out (idWeight2) → badge dell'in_out o, se vuoto, dell'accesso.
+    Se lo stesso pid esiste su più pese, preferisce quella che dà il nome al file
+    ("<pesa>_<pid...>.csv"), poi la più recente. Database in sola lettura.
+    """
+    pid = _v(fields[23])
+    if pid is None:
+        return None
+    try:
+        db = sqlite3.connect(f"file:{MAIN_DB_PATH}?mode=ro", uri=True, timeout=10)
+    except sqlite3.Error as e:
+        log.warning("%s: database non leggibile (%s), transito senza badge", file_name, e)
+        return None
+    try:
+        rows = db.execute(
+            "SELECT w.weigher, COALESCE(io.idCardRegistry, a.idCardRegistry) "
+            "FROM weighing w "
+            "JOIN in_out io ON io.idWeight2 = w.id "
+            "LEFT JOIN access a ON a.id = io.idAccess "
+            "WHERE w.pid = ? ORDER BY w.id DESC",
+            (pid,),
+        ).fetchall()
+    except sqlite3.Error as e:
+        log.warning("%s: lettura badge fallita (%s), transito senza badge", file_name, e)
+        return None
+    finally:
+        db.close()
+    for weigher, card in rows:
+        if weigher and file_name.startswith(f"{weigher}_"):
+            return card
+    return rows[0][1] if rows else None
+
+
+def build_transit(fields: list, id_card: Optional[int] = None) -> dict:
     """Corpo della POST /api/anagrafic/access per il transito."""
     return {
         "typeSubject": TYPE_SUBJECT.get(_v(fields[0]) or "", "CUSTOMER"),
@@ -152,6 +192,7 @@ def build_transit(fields: list) -> dict:
         },
         "note": _v(fields[17]),
         "document_reference": _v(fields[18]),
+        "idCardRegistry": id_card,
         "type": "RESERVATION",
         "mode": "TRANSIT",
         "permanent": False,
@@ -252,9 +293,11 @@ def process_file(path: str, state: State) -> None:
         state.mark(name)
         return
 
-    body = build_transit(fields)
+    id_card = find_badge(fields, name)
+    body = build_transit(fields, id_card)
     plate = body["vehicle"]["plate"] or f"veicolo id {body['vehicle']['id']}"
-    log.info("%s: riferimento %s, creo transito per %s", name, reference, plate)
+    log.info("%s: riferimento %s, creo transito per %s (badge id %s)",
+             name, reference, plate, id_card)
     try:
         create_transit(body)
     except RuntimeError as e:
