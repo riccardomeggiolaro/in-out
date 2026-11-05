@@ -2,12 +2,13 @@
 CSV Folder Watcher → Oracle DB
 - Monitora una cartella per nuovi file CSV (watchdog)
 - Carica i dati di pesatura nella tabella PESA_BA.ARCHIVIO
-- Entrata (solo 1a pesata): INSERT con STATO_IMPORTAZIONE = 0
+- STATO_IMPORTAZIONE sempre = 1
+- Entrata (solo 1a pesata): INSERT
 - CK1/CK2 = <pesa>-<pid>, dove <pesa> è il prefisso del nome file
   (es. file P1_00000-00001.csv → CK1 = P1-00000-00001)
 - Uscita (2a pesata): UPDATE del record di entrata ancora aperto
-  (CK1 che termina con -<pid1>, CK2 vuoto, stessa tessera, il più recente)
-  con STATO_IMPORTAZIONE = 1; se non esiste viene inserito completo
+  (CK1 che termina con -<pid1>, CK2 vuoto, stessa tessera, il più recente);
+  se non esiste viene inserito completo
 - Elimina il file dopo l'elaborazione (in caso di errori lo sposta in ./errori)
 """
 
@@ -240,7 +241,7 @@ def row_to_record(fields: list, weigher: str) -> dict:
             "CK2":      cut("CK2", make_ck(weigher, pid2)),
             "PESO2":    peso2,
             "NETTO":    netto,
-            "STATO_IMPORTAZIONE": 1 if is_uscita else 0,
+            "STATO_IMPORTAZIONE": 1,
         },
     }
 

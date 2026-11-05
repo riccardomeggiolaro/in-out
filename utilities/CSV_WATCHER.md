@@ -40,7 +40,7 @@ di `ARCHIVIO` non vengono mai toccate (né in inserimento né in aggiornamento).
 | `CK2`                | `<pesa>-` + campo 27 – `pid2`            |                                        |
 | `PESO2`              | campo 28 – `peso2`                       |                                        |
 | `NETTO`              | campo 29 – `netto` (o `\|PESO1-PESO2\|`) | solo in uscita                         |
-| `STATO_IMPORTAZIONE` | `0` entrata, `1` uscita                  |                                        |
+| `STATO_IMPORTAZIONE` | sempre `1`                               |                                        |
 
 (I numeri di campo sono 1-based, come nella documentazione del CSV.)
 
@@ -59,7 +59,7 @@ di `ARCHIVIO` non vengono mai toccate (né in inserimento né in aggiornamento).
 ## Entrata e uscita
 
 - **Entrata** (solo prima pesata): `INSERT` di un nuovo record con
-  `STATO_IMPORTAZIONE = 0`.
+  `STATO_IMPORTAZIONE = 1`.
 - **Uscita** (presente la seconda pesata): il file di uscita contiene solo
   la pesa della seconda pesata, quindi il record di entrata si cerca con:
   - `CK1` che termina con `-<pid1>` (qualsiasi pesa)
