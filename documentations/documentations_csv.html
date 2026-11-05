@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Documentazione Formato CSV - Sistema di Pesatura</title>
+<!--
+  Sorgente di documentations_csv.pdf.
+  Per rigenerare il PDF:  python3 documentations/genera_pdf_csv.py
+-->
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 10.5pt; color: #1f2933; line-height: 1.45; }
+  h1 { color: #1f3a5f; font-size: 22pt; margin: 0 0 2px; }
+  .subtitle { color: #52606d; font-size: 12pt; margin-bottom: 18px; }
+  h2 { color: #1f3a5f; font-size: 14pt; border-bottom: 2px solid #1f3a5f; padding-bottom: 3px; margin-top: 24px; break-after: avoid; page-break-after: avoid; }
+  h3 { color: #1f3a5f; font-size: 11.5pt; margin: 16px 0 6px; break-after: avoid; page-break-after: avoid; }
+  table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 8px; page-break-inside: avoid; }
+  th { background: #1f3a5f; color: #fff; text-align: left; padding: 5px 7px; font-weight: 600; }
+  td { padding: 4px 7px; border-bottom: 1px solid #d9e2ec; vertical-align: top; }
+  tr:nth-child(even) td { background: #f5f7fa; }
+  th:nth-child(1), td.pos { width: 7%; text-align: center; }
+  th:nth-child(2), td.campo { width: 31%; }
+  th:nth-child(3), td.tipo { width: 11%; }
+  th:nth-child(4) { width: 30%; }
+  th:nth-child(5), td.es { width: 21%; }
+  td.pos { font-weight: 600; }
+  td.campo, td.es { font-family: Consolas, monospace; font-size: 9.5pt; word-break: break-word; }
+  tr.new td { background: #fff8e1 !important; }
+  .info { display: grid; grid-template-columns: 140px 1fr; gap: 4px 12px; background: #f5f7fa; padding: 10px 14px; border-left: 4px solid #1f3a5f; }
+  .info b { color: #1f3a5f; }
+  pre { background: #f0f4f8; border: 1px solid #d9e2ec; padding: 10px; font-size: 9pt; white-space: pre-wrap; word-break: break-all; }
+  .box { border-left: 4px solid #e0a800; background: #fff8e1; padding: 8px 14px; margin: 10px 0; }
+  .box.blue { border-color: #1f3a5f; background: #f0f4f8; }
+  .badge { display: inline-block; background: #e0a800; color: #fff; font-size: 8pt; padding: 0 5px; border-radius: 3px; margin-left: 4px; }
+  footer { margin-top: 30px; text-align: center; color: #7b8794; font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<h1>Documentazione Formato CSV</h1>
+<div class="subtitle">Sistema di Pesatura – Export Dati Accessi</div>
+
+<h2>Panoramica</h2>
+<p>Il formato CSV del sistema di pesatura consente l'esportazione strutturata dei dati relativi agli accessi con le operazioni di pesatura di ingresso e uscita. Per ogni pesata viene generato un file contenente un solo record.</p>
+<div class="info">
+  <b>Formato file</b><span>CSV, senza riga di intestazione</span>
+  <b>Separatore</b><span>Punto e virgola (<code>;</code>)</span>
+  <b>Encoding</b><span>UTF-8</span>
+  <b>Campi totali</b><span>29 campi per record (28 separatori)</span>
+  <b>Nome file</b><span>
+    Entrata: <code>&lt;pesa&gt;_&lt;pid1&gt;.csv</code><br>
+    Uscita: <code>&lt;pesa&gt;_&lt;pid1&gt;_&lt;pid2&gt;.csv</code><br>
+    Tara / pesata singola: <code>&lt;pesa&gt;_&lt;pid&gt;.csv</code>
+  </span>
+</div>
+
+<div class="box"><b>Novità versione 2.0</b> – aggiunti i campi della tessera (posizioni 13–15) dopo i dati autista e il peso netto in coda (posizione 29). Tutti i campi successivi all'autista sono slittati di 3 posizioni rispetto alla versione 1.0.</div>
+
+<h2>Struttura Record</h2>
+
+<h3>Dati Soggetto / Cliente</h3>
+<table>
+  <tr><th>Pos.</th><th>Campo</th><th>Tipo</th><th>Descrizione</th><th>Esempio</th></tr>
+  <tr><td class="pos">1</td><td class="campo">tipo_soggetto</td><td class="tipo">string</td><td>Tipologia del soggetto (Cliente / Fornitore)</td><td class="es">Cliente</td></tr>
+  <tr><td class="pos">2</td><td class="campo">id_soggetto</td><td class="tipo">integer</td><td>ID numerico del soggetto</td><td class="es">1</td></tr>
+  <tr><td class="pos">3</td><td class="campo">ragione_sociale_soggetto</td><td class="tipo">string</td><td>Ragione sociale / nome azienda</td><td class="es">Baronpesi</td></tr>
+  <tr><td class="pos">4</td><td class="campo">cell_soggetto</td><td class="tipo">string</td><td>Numero di telefono</td><td class="es">0444370720</td></tr>
+  <tr><td class="pos">5</td><td class="campo">cfpiva_soggetto</td><td class="tipo">string</td><td>Codice fiscale / Partita IVA</td><td class="es">02331370243</td></tr>
+</table>
+
+<h3>Dati Vettore</h3>
+<table>
+  <tr><th>Pos.</th><th>Campo</th><th>Tipo</th><th>Descrizione</th><th>Esempio</th></tr>
+  <tr><td class="pos">6</td><td class="campo">id_vettore</td><td class="tipo">integer</td><td>ID numerico del vettore</td><td class="es">1</td></tr>
+  <tr><td class="pos">7</td><td class="campo">ragione_sociale_vettore</td><td class="tipo">string</td><td>Nome società di trasporto</td><td class="es">DHL</td></tr>
+  <tr><td class="pos">8</td><td class="campo">cell_vettore</td><td class="tipo">string</td><td>Telefono del vettore</td><td class="es">199199345</td></tr>
+  <tr><td class="pos">9</td><td class="campo">cfpiva_vettore</td><td class="tipo">string</td><td>CF / P.IVA del vettore</td><td class="es">00754800159</td></tr>
+</table>
+
+<h3>Dati Autista</h3>
+<table>
+  <tr><th>Pos.</th><th>Campo</th><th>Tipo</th><th>Descrizione</th><th>Esempio</th></tr>
+  <tr><td class="pos">10</td><td class="campo">id_autista</td><td class="tipo">integer</td><td>ID numerico dell'autista</td><td class="es">1</td></tr>
+  <tr><td class="pos">11</td><td class="campo">ragione_sociale_autista</td><td class="tipo">string</td><td>Nome e cognome dell'autista</td><td class="es">Marco Ruggero</td></tr>
+  <tr><td class="pos">12</td><td class="campo">cell_autista</td><td class="tipo">string</td><td>Telefono dell'autista</td><td class="es">237624343</td></tr>
+</table>
+
+<h3>Dati Tessera <span class="badge">NUOVO</span></h3>
+<table>
+  <tr><th>Pos.</th><th>Campo</th><th>Tipo</th><th>Descrizione</th><th>Esempio</th></tr>
+  <tr class="new"><td class="pos">13</td><td class="campo">id_tessera</td><td class="tipo">integer</td><td>ID numerico della tessera</td><td class="es">31</td></tr>
+  <tr class="new"><td class="pos">14</td><td class="campo">numero_tessera</td><td class="tipo">string</td><td>Numero stampato sulla tessera</td><td class="es">00485</td></tr>
+  <tr class="new"><td class="pos">15</td><td class="campo">codice_tessera</td><td class="tipo">string</td><td>Codice letto dal lettore (RFID/badge)</td><td class="es">3C00B4A1AC</td></tr>
+</table>
+
+<h3>Dati Veicolo</h3>
+<table>
+  <tr><th>Pos.</th><th>Campo</th><th>Tipo</th><th>Descrizione</th><th>Esempio</th></tr>
+  <tr><td class="pos">16</td><td class="campo">id_veicolo</td><td class="tipo">integer</td><td>ID numerico del veicolo</td><td class="es">7</td></tr>
+  <tr><td class="pos">17</td><td class="campo">targa_veicolo</td><td class="tipo">string</td><td>Targa del veicolo</td><td class="es">AB123CD</td></tr>
+  <tr><td class="pos">18</td><td class="campo">descrizione_veicolo</td><td class="tipo">string</td><td>Marca / modello del veicolo</td><td class="es">Iveco</td></tr>
+</table>
+
+<h3>Dati Materiale e Documento</h3>
+<table>
+  <tr><th>Pos.</th><th>Campo</th><th>Tipo</th><th>Descrizione</th><th>Esempio</th></tr>
+  <tr><td class="pos">19</td><td class="campo">id_materiale</td><td class="tipo">integer</td><td>ID numerico del materiale</td><td class="es">1</td></tr>
+  <tr><td class="pos">20</td><td class="campo">descrizione_materiale</td><td class="tipo">string</td><td>Tipo di materiale trasportato</td><td class="es">Ferro</td></tr>
+  <tr><td class="pos">21</td><td class="campo">note</td><td class="tipo">string</td><td>Note aggiuntive sull'operazione</td><td class="es">Nota di prova</td></tr>
+  <tr><td class="pos">22</td><td class="campo">referenza_documento</td><td class="tipo">string</td><td>Numero documento di riferimento</td><td class="es">DDT20250903</td></tr>
+</table>
+
+<h3>Dati Pesate</h3>
+<table>
+  <tr><th>Pos.</th><th>Campo</th><th>Tipo</th><th>Descrizione</th><th>Esempio</th></tr>
+  <tr><td class="pos">23</td><td class="campo">data1</td><td class="tipo">datetime</td><td>Data e ora prima pesata</td><td class="es">05/09/2025 17:11</td></tr>
+  <tr><td class="pos">24</td><td class="campo">pid1</td><td class="tipo">string</td><td>ID progressivo prima pesata</td><td class="es">00000-005301</td></tr>
+  <tr><td class="pos">25</td><td class="campo">peso1</td><td class="tipo">integer</td><td>Peso prima pesata (kg)</td><td class="es">16800</td></tr>
+  <tr><td class="pos">26</td><td class="campo">data2</td><td class="tipo">datetime</td><td>Data e ora seconda pesata</td><td class="es">05/09/2025 17:17</td></tr>
+  <tr><td class="pos">27</td><td class="campo">pid2</td><td class="tipo">string</td><td>ID progressivo seconda pesata</td><td class="es">00000-005304</td></tr>
+  <tr><td class="pos">28</td><td class="campo">peso2</td><td class="tipo">integer</td><td>Peso seconda pesata (kg)</td><td class="es">6200</td></tr>
+  <tr class="new"><td class="pos">29</td><td class="campo">netto</td><td class="tipo">integer</td><td>Peso netto (kg) <span class="badge">NUOVO</span></td><td class="es">10600</td></tr>
+</table>
+
+<h2>Esempi Record</h2>
+<h3>Uscita (entrambe le pesate) – file <code>P1_00000-005301_00000-005304.csv</code></h3>
+<pre>Cliente;1;Baronpesi;0444370720;02331370243;1;DHL;199199345;00754800159;1;Marco Ruggero;237624343;31;00485;3C00B4A1AC;7;AB123CD;Iveco;1;Ferro;Nota di prova;DDT20250903;05/09/2025 17:11;00000-005301;16800;05/09/2025 17:17;00000-005304;6200;10600</pre>
+
+<h3>Entrata (solo prima pesata) – file <code>P1_00000-005301.csv</code></h3>
+<pre>Cliente;1;Baronpesi;0444370720;02331370243;1;DHL;199199345;00754800159;1;Marco Ruggero;237624343;31;00485;3C00B4A1AC;7;AB123CD;Iveco;1;Ferro;Nota di prova;DDT20250903;05/09/2025 17:11;00000-005301;16800;;;;</pre>
+
+<h2>Calcolo Peso Netto</h2>
+<p>Il peso netto (campo 29) è la differenza assoluta tra le due pesate ed è valorizzato solo quando entrambe sono presenti:</p>
+<pre>Peso Netto = |Peso1 - Peso2|
+Esempio: |16800 - 6200| = 10600 kg</pre>
+
+<h2>Note Tecniche</h2>
+<div class="box">
+  <b>Specifiche importanti</b>
+  <ul>
+    <li>Formato data: <code>DD/MM/YYYY HH:MM</code></li>
+    <li>Separatore: punto e virgola (<code>;</code>) obbligatorio tra tutti i campi</li>
+    <li>Encoding: UTF-8 per supportare caratteri speciali</li>
+    <li>Campi vuoti: possono essere lasciati vuoti ma il separatore deve essere presente</li>
+    <li>Nella pesata con tara (preimpostata o manuale) il campo <code>peso1</code> contiene la tara e <code>data1</code> / <code>pid1</code> sono vuoti</li>
+  </ul>
+</div>
+<div class="box blue">
+  <b>Suggerimenti per l'importazione</b>
+  <ul>
+    <li>Verificare la codifica UTF-8 del file prima dell'importazione</li>
+    <li>Controllare che in ogni riga siano presenti tutti i 28 separatori (<code>;</code>)</li>
+    <li>Leggere i campi per posizione, non per numero di separatori dall'inizio di un blocco</li>
+    <li>Validare il formato delle date (<code>DD/MM/YYYY HH:MM</code>)</li>
+    <li>Il nome della pesa è il prefisso del nome file fino al primo <code>_</code></li>
+  </ul>
+</div>
+
+<h2>Interpretazione Dati</h2>
+<ul>
+  <li><b>Prima pesata:</b> generalmente il veicolo in ingresso</li>
+  <li><b>Seconda pesata:</b> generalmente il veicolo in uscita</li>
+  <li><b>Peso netto:</b> quantità effettiva di materiale scaricato / caricato</li>
+  <li><b>Stato:</b> l'operazione è completa quando sono presenti entrambe le pesate</li>
+</ul>
+
+<footer>Sistema di Pesatura – Documentazione Formato CSV v2.0 – Novembre 2026</footer>
+</body>
+</html>
