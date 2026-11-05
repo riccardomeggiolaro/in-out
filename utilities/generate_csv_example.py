@@ -33,6 +33,12 @@ AUTISTI = [
     (3, "Giorgio Ferrari", "3351122334"),
 ]
 
+TESSERE = [
+    (1, "00485", "3C00B4A1AC"),
+    (2, "00511", "3C00B3E3EB"),
+    (3, "00509", "01154A7BC5"),
+]
+
 VEICOLI = [
     (7,  "AB123CD", "Iveco Daily"),
     (12, "FG456HI", "Scania R450"),
@@ -65,6 +71,7 @@ def genera_riga(n: int) -> list:
     sogg    = random.choice(SOGGETTI)
     vett    = random.choice(VETTORI)
     aut     = random.choice(AUTISTI)
+    tess    = random.choice(TESSERE)
     veic    = random.choice(VEICOLI)
     mat     = random.choice(MATERIALI)
     nota    = random.choice(NOTE_LIST)
@@ -96,19 +103,23 @@ def genera_riga(n: int) -> list:
         str(aut[0]),                #  9 id_autista
         aut[1],                     # 10 ragione_sociale_autista
         aut[2],                     # 11 cell_autista
-        str(veic[0]),               # 12 id_veicolo
-        veic[1],                    # 13 targa_veicolo
-        veic[2],                    # 14 descrizione_veicolo
-        str(mat[0]),                # 15 id_materiale
-        mat[1],                     # 16 descrizione_materiale
-        nota,                       # 17 note
-        bolla,                      # 18 referenza_documento
-        data1.strftime(fmt),        # 19 data1
-        pid1,                       # 20 pid1
-        str(peso1),                 # 21 peso1
-        data2.strftime(fmt),        # 22 data2
-        pid2,                       # 23 pid2
-        str(peso2),                 # 24 peso2
+        str(tess[0]),               # 12 id_tessera
+        tess[1],                    # 13 numero_tessera
+        tess[2],                    # 14 codice_tessera
+        str(veic[0]),               # 15 id_veicolo
+        veic[1],                    # 16 targa_veicolo
+        veic[2],                    # 17 descrizione_veicolo
+        str(mat[0]),                # 18 id_materiale
+        mat[1],                     # 19 descrizione_materiale
+        nota,                       # 20 note
+        bolla,                      # 21 referenza_documento
+        data1.strftime(fmt),        # 22 data1
+        pid1,                       # 23 pid1
+        str(peso1),                 # 24 peso1
+        data2.strftime(fmt),        # 25 data2
+        pid2,                       # 26 pid2
+        str(peso2),                 # 27 peso2
+        str(abs(peso1 - peso2)),    # 28 netto
     ]
 
 
@@ -130,9 +141,10 @@ def main():
         "tipo_soggetto","id_soggetto","ragione_sociale_soggetto","cell_soggetto","cfpiva_soggetto",
         "id_vettore","ragione_sociale_vettore","cell_vettore","cfpiva_vettore",
         "id_autista","ragione_sociale_autista","cell_autista",
+        "id_tessera","numero_tessera","codice_tessera",
         "id_veicolo","targa_veicolo","descrizione_veicolo",
         "id_materiale","descrizione_materiale","note","referenza_documento",
-        "data1","pid1","peso1","data2","pid2","peso2",
+        "data1","pid1","peso1","data2","pid2","peso2","netto",
     ]
 
     for i in range(1, args.righe + 1):
