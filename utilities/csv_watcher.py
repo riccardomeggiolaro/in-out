@@ -35,7 +35,8 @@ ORA_DSN     = os.environ.get("ORA_DSN",     "localhost:1521/XEPDB1")
 ORA_SCHEMA  = os.environ.get("ORA_SCHEMA",  "PESA_BA")
 ORA_TABLE   = "ARCHIVIO"
 
-TIPO_PESATA = "P"
+TIPO_PESATA = "P"   # entrata, oppure entrata + uscita
+TIPO_TARA   = "M"   # solo uscita con tara (nessuna prima pesata)
 
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL),
@@ -82,7 +83,8 @@ logger = logging.getLogger(__name__)
 #   uscita:  <pesa2>_<pid1>_<pid2>.csv → CK2 = <pesa2>-<pid2>
 #   (la pesa della 1a pesata non è nota all'uscita: l'entrata si cerca
 #    per suffisso -<pid1>, CK2 vuoto e stessa tessera)
-# TIPO = 'P' fisso
+# TIPO = 'P' se c'è la 1a pesata (entrata o entrata + uscita)
+#        'M' se è solo un'uscita con tara (data1 e pid1 vuoti, peso1 = tara)
 # ID   = MAX(ID)+1 (con retry in caso di collisione)
 # ---------------------------------------------------------------------------
 IDX_NUMERO_TESSERA = 13
@@ -223,11 +225,14 @@ def row_to_record(fields: list, weigher: str) -> dict:
     pid1 = f(IDX_PID1)
     pid2 = f(IDX_PID2)
 
+    # Pesata con tara: nel CSV peso1 contiene la tara, data1 e pid1 sono vuoti
+    is_tara = is_uscita and not pid1 and dt1 is None
+
     return {
         "is_uscita": is_uscita,
         "pid1": pid1,
         "values": {
-            "TIPO":     TIPO_PESATA,
+            "TIPO":     TIPO_TARA if is_tara else TIPO_PESATA,
             "CLIENTE1": cut("CLIENTE1", f(IDX_NUMERO_TESSERA)),
             "DESCR":    cut("DESCR", f(IDX_CODICE_TESSERA)),
             "DATA1":    adapt_date("DATA1", dt1),
