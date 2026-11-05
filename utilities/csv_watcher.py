@@ -3,8 +3,11 @@ CSV Folder Watcher → Oracle DB
 - Monitora una cartella per nuovi file CSV (watchdog)
 - Carica i dati di pesatura nella tabella PESA_BA.ARCHIVIO
 - Entrata (solo 1a pesata): INSERT con STATO_IMPORTAZIONE = 0
-- Uscita (2a pesata): UPDATE del record di entrata (cercato per CK1 = pid1)
-  con STATO_IMPORTAZIONE = 1; se il record non esiste viene inserito completo
+- CK1/CK2 = <pesa>-<pid>, dove <pesa> è il prefisso del nome file
+  (es. file P1_00000-00001.csv → CK1 = P1-00000-00001)
+- Uscita (2a pesata): UPDATE del record di entrata ancora aperto
+  (CK1 che termina con -<pid1>, CK2 vuoto, stessa tessera, il più recente)
+  con STATO_IMPORTAZIONE = 1; se non esiste viene inserito completo
 - Elimina il file dopo l'elaborazione (in caso di errori lo sposta in ./errori)
 """
 
@@ -66,13 +69,18 @@ logger = logging.getLogger(__name__)
 #  20  note                       (ignorato)
 #  21  referenza_documento        (ignorato)
 #  22  data1 (DD/MM/YYYY HH:MM)   → DATA1 + ORA1
-#  23  pid1                       → CK1
+#  23  pid1                       → CK1 = <pesa>-<pid1>
 #  24  peso1                      → PESO1
 #  25  data2 (DD/MM/YYYY HH:MM)   → DATA2 + ORA2
-#  26  pid2                       → CK2
+#  26  pid2                       → CK2 = <pesa>-<pid2>
 #  27  peso2                      → PESO2
 #  28  netto                      → NETTO (solo uscita)
 #
+# <pesa> = prefisso del nome file fino al primo '_'
+#   entrata: <pesa1>_<pid1>.csv        → CK1 = <pesa1>-<pid1>
+#   uscita:  <pesa2>_<pid1>_<pid2>.csv → CK2 = <pesa2>-<pid2>
+#   (la pesa della 1a pesata non è nota all'uscita: l'entrata si cerca
+#    per suffisso -<pid1>, CK2 vuoto e stessa tessera)
 # TIPO = 'P' fisso
 # ID   = MAX(ID)+1 (con retry in caso di collisione)
 # ---------------------------------------------------------------------------
@@ -181,7 +189,19 @@ def to_num(val: str):
         return None
 
 
-def row_to_record(fields: list) -> dict:
+def weigher_from_filename(filepath: Path) -> str:
+    """Nome pesa = prefisso del nome file fino al primo '_' (es. P1_... → P1)."""
+    stem = filepath.stem
+    return stem.split("_", 1)[0] if "_" in stem else ""
+
+
+def make_ck(weigher: str, pid: str) -> str:
+    if not pid:
+        return ""
+    return f"{weigher}-{pid}" if weigher else pid
+
+
+def row_to_record(fields: list, weigher: str) -> dict:
     """Converte la riga CSV nei valori delle colonne di ARCHIVIO."""
     def f(idx):
         return fields[idx].strip() if idx < len(fields) else ""
@@ -199,19 +219,25 @@ def row_to_record(fields: list) -> dict:
         if netto is None and peso1 is not None and peso2 is not None:
             netto = abs(peso1 - peso2)
 
+    pid1 = f(IDX_PID1)
+    pid2 = f(IDX_PID2)
+
     return {
         "is_uscita": is_uscita,
+        "pid1": pid1,
         "values": {
             "TIPO":     TIPO_PESATA,
             "CLIENTE1": cut("CLIENTE1", f(IDX_NUMERO_TESSERA)),
             "DESCR":    cut("DESCR", f(IDX_CODICE_TESSERA)),
             "DATA1":    adapt_date("DATA1", dt1),
             "ORA1":     adapt_time("ORA1", dt1),
-            "CK1":      cut("CK1", f(IDX_PID1)),
+            # All'uscita la pesa della 1a pesata non è nota: in caso di
+            # inserimento completo si usa la pesa del file (2a pesata)
+            "CK1":      cut("CK1", make_ck(weigher, pid1)),
             "PESO1":    peso1,
             "DATA2":    adapt_date("DATA2", dt2),
             "ORA2":     adapt_time("ORA2", dt2),
-            "CK2":      cut("CK2", f(IDX_PID2)),
+            "CK2":      cut("CK2", make_ck(weigher, pid2)),
             "PESO2":    peso2,
             "NETTO":    netto,
             "STATO_IMPORTAZIONE": 1 if is_uscita else 0,
@@ -243,33 +269,63 @@ def insert_record(cur, values: dict) -> int:
             raise
 
 
-def update_uscita(cur, values: dict) -> int:
-    """Aggiorna il record di entrata (CK1 = pid1) con i dati di uscita."""
+FIND_ENTRATA_SQL = """
+SELECT ID FROM (
+    SELECT ID FROM {table}
+     WHERE SUBSTR(CK1, -LENGTH(:pid1_suffix)) = :pid1_suffix
+       AND CK2 IS NULL
+       {tessera_filter}
+     ORDER BY ID DESC
+) WHERE ROWNUM = 1
+"""
+
+
+def find_entrata(cur, pid1: str, numero_tessera):
+    """
+    Cerca il record di entrata ancora aperto:
+    CK1 che termina con '-<pid1>' (qualsiasi pesa), CK2 vuoto,
+    stessa tessera (se presente nel CSV), il più recente.
+    """
+    params = {"pid1_suffix": f"-{pid1}"}
+    tessera_filter = ""
+    if numero_tessera:
+        tessera_filter = "AND CLIENTE1 = :cliente1"
+        params["cliente1"] = numero_tessera
+    cur.execute(
+        FIND_ENTRATA_SQL.format(table=table(), tessera_filter=tessera_filter),
+        params,
+    )
+    row = cur.fetchone()
+    return row[0] if row else None
+
+
+def update_uscita(cur, record_id: int, values: dict):
+    """Aggiorna il record di entrata con i dati di uscita."""
     upd_cols = ["DATA2", "ORA2", "CK2", "PESO2", "NETTO", "STATO_IMPORTAZIONE"]
     # Aggiorna la tessera solo se presente nel CSV
     for c in ("CLIENTE1", "DESCR"):
         if values.get(c):
             upd_cols.append(c)
     params = {c: values[c] for c in upd_cols}
-    params["ck1_key"] = values["CK1"]
+    params["record_id"] = record_id
     sql = (
         f"UPDATE {table()} SET {', '.join(f'{c} = :{c}' for c in upd_cols)} "
-        f"WHERE CK1 = :ck1_key"
+        f"WHERE ID = :record_id"
     )
     cur.execute(sql, params)
-    return cur.rowcount
 
 
-def save_row(cur, fields: list) -> str:
-    rec = row_to_record(fields)
+def save_row(cur, fields: list, weigher: str) -> str:
+    rec = row_to_record(fields, weigher)
     values = rec["values"]
-    if rec["is_uscita"] and values["CK1"]:
-        n = update_uscita(cur, values)
-        if n > 0:
-            if n > 1:
-                logger.warning(f"  CK1={values['CK1']}: aggiornati {n} record")
-            return f"UPDATE uscita CK1={values['CK1']} CK2={values['CK2']}"
-        logger.warning(f"  Entrata CK1={values['CK1']} non trovata: inserisco record completo")
+    if rec["is_uscita"] and rec["pid1"]:
+        record_id = find_entrata(cur, rec["pid1"], values["CLIENTE1"])
+        if record_id is not None:
+            update_uscita(cur, record_id, values)
+            return f"UPDATE uscita ID={record_id} CK2={values['CK2']}"
+        logger.warning(
+            f"  Entrata con pid1={rec['pid1']} non trovata: inserisco record completo"
+        )
     new_id = insert_record(cur, values)
     kind = "uscita" if rec["is_uscita"] else "entrata"
     return f"INSERT {kind} ID={new_id} CK1={values['CK1']} CK2={values['CK2']}"
@@ -298,13 +354,16 @@ def process_file(filepath: Path):
         filepath.unlink()
         return
 
-    logger.info(f"File: {filepath.name} | Righe: {len(rows)}")
+    weigher = weigher_from_filename(filepath)
+    if not weigher:
+        logger.warning(f"{filepath.name}: nome pesa non trovato nel nome file")
+    logger.info(f"File: {filepath.name} | Pesa: {weigher or '-'} | Righe: {len(rows)}")
     errors = 0
     with get_connection() as conn:
         with conn.cursor() as cur:
             for i, fields in enumerate(rows, start=1):
                 try:
-                    logger.info(f"  Riga {i}: {save_row(cur, fields)}")
+                    logger.info(f"  Riga {i}: {save_row(cur, fields, weigher)}")
                     conn.commit()
                 except Exception as e:
                     conn.rollback()

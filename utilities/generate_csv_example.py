@@ -61,9 +61,12 @@ NOTE_LIST = [
 ]
 
 
+PESE = ["P1", "P2"]
+
+
 def genera_pid(n: int) -> str:
-    """Genera un PID nel formato 00000-XXXXXX."""
-    return f"00000-{n:06d}"
+    """Genera un PID nel formato 00000-XXXXX."""
+    return f"00000-{n:05d}"
 
 
 def genera_riga(n: int) -> list:
@@ -127,6 +130,7 @@ def main():
     parser = argparse.ArgumentParser(description="Genera CSV di esempio per il sistema di pesatura.")
     parser.add_argument("--righe", type=int, default=3,  help="Numero di righe da generare (default: 3)")
     parser.add_argument("--out",   type=str, default="", help="Cartella di output (default: WATCH_DIR)")
+    parser.add_argument("--pesa",  type=str, default="", help="Nome pesa (default: casuale tra P1/P2)")
     args = parser.parse_args()
 
     # Se --out è specificato, usa quella cartella; altrimenti WATCH_DIR
@@ -148,9 +152,10 @@ def main():
     ]
 
     for i in range(1, args.righe + 1):
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        file_path = out_dir / f"pesatura_{timestamp}_{i:03d}.csv"
         riga = genera_riga(i)
+        # Nome file come lo genera il sistema in uscita: <pesa>_<pid1>_<pid2>.csv
+        pesa = args.pesa or random.choice(PESE)
+        file_path = out_dir / f"{pesa}_{riga[23]}_{riga[26]}.csv"
 
         with open(file_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f, delimiter=";")
