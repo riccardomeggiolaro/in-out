@@ -8,6 +8,7 @@ from modules.md_database.interfaces.driver import DriverDataDTO
 from modules.md_database.interfaces.vehicle import VehicleDataDTO
 from modules.md_database.interfaces.material import MaterialDataDTO
 from modules.md_database.interfaces.operator import OperatorDataDTO
+from modules.md_database.interfaces.card_registry import CardRegistry as CardRegistryDTO
 import json
 from applications.utils.utils import image_to_base64_data_uri
 from reportlab.lib import colors as reportlab_colors
@@ -33,6 +34,12 @@ def get_data_variables(in_out, is_generic=False):
     variables.driver = in_out.driver if in_out.driver else DriverDataDTO(**{})
     variables.vehicle = in_out.access.vehicle if in_out.access and in_out.access.vehicle else VehicleDataDTO(**{})
     variables.material = in_out.material if in_out.material else MaterialDataDTO(**{})
+    card = getattr(in_out.access, "card_registry", None) if in_out.access else None
+    variables.card = CardRegistryDTO(
+        id=getattr(card, "id", None),
+        number=getattr(card, "number", None),
+        code=getattr(card, "code", None),
+    ) if card else CardRegistryDTO(**{})
     variables.operator = in_out.weight1.operator if in_out.weight1 and in_out.weight1.operator else in_out.weight2.operator if in_out.weight2 and in_out.weight2.operator else OperatorDataDTO(**{})
     variables.note = in_out.note
     variables.document_reference = in_out.document_reference
@@ -149,6 +156,9 @@ def generate_csv_report(variables: ReportVariables):
         variables.driver.id if variables.driver.id else '',
         variables.driver.social_reason if variables.driver.social_reason else '',
         variables.driver.telephone if variables.driver.telephone else '',
+        variables.card.id if variables.card.id else '',
+        variables.card.number if variables.card.number else '',
+        variables.card.code if variables.card.code else '',
         variables.vehicle.id if variables.vehicle.id else '',
         variables.vehicle.plate if variables.vehicle.plate else '',
         variables.vehicle.description if variables.vehicle.description else '',

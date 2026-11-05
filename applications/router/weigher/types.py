@@ -5,6 +5,7 @@ from modules.md_database.interfaces.driver import DriverDTO
 from modules.md_database.interfaces.vehicle import VehicleDTO
 from modules.md_database.interfaces.material import MaterialDTO
 from modules.md_database.interfaces.operator import OperatorDTO
+from modules.md_database.interfaces.card_registry import CardRegistry as CardRegistryDTO
 from modules.md_database.md_database import TypeAccess
 from typing import Union, Optional, List
 from datetime import datetime
@@ -73,6 +74,7 @@ class Weight2(Weight):
     pass
     
 class ReportVariables(DataInExecution):
+	card: CardRegistryDTO = CardRegistryDTO(**{})
 	weight1: Weight1 = Weight1(**{})
 	weight2: Weight2 = Weight2(**{})
 	net_weight: Union[int, float] = None
