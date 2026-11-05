@@ -30,7 +30,7 @@ di `ARCHIVIO` non vengono mai toccate (né in inserimento né in aggiornamento).
 | Colonna ARCHIVIO     | Origine                                  | Note                                   |
 |----------------------|------------------------------------------|----------------------------------------|
 | `ID`                 | `MAX(ID) + 1`                            | ritenta in caso di chiave duplicata    |
-| `TIPO`               | fisso `'P'`                              |                                        |
+| `TIPO`               | `'P'` entrata / entrata+uscita, `'M'` solo uscita con tara | vedi sotto           |
 | `CLIENTE1`           | campo 14 – `numero_tessera`              |                                        |
 | `DESCR`              | campo 15 – `codice_tessera`              |                                        |
 | `DATA1` / `ORA1`     | campo 23 – `data1`                       | ora nel formato `HH.MM` (es. `11.58`)  |
@@ -57,6 +57,11 @@ di `ARCHIVIO` non vengono mai toccate (né in inserimento né in aggiornamento).
 | `P2_00000-00001_00000-00007.csv`  | `P2` | `CK2 = P2-00000-00007`  |
 
 ## Entrata e uscita
+
+- **TIPO**: `'P'` se la pesata ha la prima pesata (entrata, oppure entrata
+  e uscita); `'M'` se è solo un'uscita con tara, riconosciuta da `data1` e
+  `pid1` vuoti (in quel caso `peso1` contiene la tara). Il TIPO viene
+  scritto all'inserimento e non viene modificato dall'aggiornamento di uscita.
 
 - **Entrata** (solo prima pesata): `INSERT` di un nuovo record con
   `STATO_IMPORTAZIONE = 1`.
