@@ -14,7 +14,6 @@ class MessageBrokerDTO(BaseModel):
 	host: str
 	port: int = 8883
 	qos: Literal[0, 1, 2] = 1
-	retain: bool = False
 	keepalive: int = 60
 	# Timeout (secondi) per la conferma di consegna (PUBACK/PUBCOMP) da parte del broker
 	publish_timeout: int = 30

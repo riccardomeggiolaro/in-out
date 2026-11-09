@@ -38,7 +38,6 @@ class MessageBrokerRouter:
         host: str = Form(...),
         port: int = Form(8883),
         qos: int = Form(1),
-        retain: bool = Form(False),
         include_images: bool = Form(True),
         include_pdf: bool = Form(True),
         include_csv: bool = Form(True),
@@ -48,7 +47,7 @@ class MessageBrokerRouter:
     ):
         try:
             body = MessageBrokerDTO(
-                host=host, port=port, qos=qos, retain=retain,
+                host=host, port=port, qos=qos,
                 include_images=include_images, include_pdf=include_pdf, include_csv=include_csv,
             )
         except ValidationError as e:
