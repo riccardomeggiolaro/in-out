@@ -779,13 +779,16 @@
                                 <strong>Server:</strong>
                                 <span id="mb-info-server"></span>
 
-                                <strong>Topic:</strong>
+                                <strong>Client ID / Topic:</strong>
                                 <span id="mb-info-topic"></span>
 
-                                <strong>Username:</strong>
-                                <span id="mb-info-username"></span>
+                                <strong>Certificato client:</strong>
+                                <span id="mb-info-cert"></span>
 
-                                <strong>QoS / TLS:</strong>
+                                <strong>Certificato CA:</strong>
+                                <span id="mb-info-ca"></span>
+
+                                <strong>QoS / Retain:</strong>
                                 <span id="mb-info-qos"></span>
 
                                 <strong>Allegati:</strong>
@@ -972,39 +975,36 @@
                 <input type="text" id="mb-host" required>
                 <br><br>
 
-                <label for="mb-tls">TLS: </label>
-                <input type="checkbox" id="mb-tls" onchange="onMessageBrokerTlsChange()">
-                <br><br>
-
                 <label for="mb-port">Porta: *</label>
                 <input type="number" id="mb-port" min="1" max="65535" required>
                 <br><br>
 
-                <div id="mb-tls-group">
-                    <label for="mb-ca-cert">Certificato CA (percorso): </label>
-                    <input type="text" id="mb-ca-cert">
-                    <br><br>
-                    <label for="mb-tls-insecure">Non verificare il certificato: </label>
-                    <input type="checkbox" id="mb-tls-insecure">
-                    <br><br>
-                </div>
-
-                <label for="mb-username">Username: </label>
-                <input type="text" id="mb-username">
-                <br><br>
-
-                <label for="mb-password">Password: </label>
-                <input type="password" id="mb-password">
-                <br><br>
-
-                <label for="mb-client-id">Client ID: </label>
-                <input type="text" id="mb-client-id" placeholder="automatico">
-                <br><br>
-
-                <label for="mb-topic">Topic: *</label>
-                <input type="text" id="mb-topic" required>
+                <label for="mb-ca-file">Certificato CA (.crt/.pem): *</label>
+                <input type="file" id="mb-ca-file" accept=".crt,.pem,.cer">
                 <br>
-                <small style="color: #666;">Segnaposto: {instance_name}, {weigher_name}, {event_type}</small>
+                <small id="mb-ca-current" style="color: #666;"></small>
+                <br><br>
+
+                <label for="mb-cert-file">Certificato client (.crt/.pem): *</label>
+                <input type="file" id="mb-cert-file" accept=".crt,.pem,.cer">
+                <br>
+                <small id="mb-cert-current" style="color: #666;"></small>
+                <br><br>
+
+                <label for="mb-key-file">Chiave privata client (.key/.pem): *</label>
+                <input type="file" id="mb-key-file" accept=".key,.pem">
+                <br>
+                <small id="mb-key-current" style="color: #666;"></small>
+                <br><br>
+
+                <label for="mb-tls-insecure">Non verificare il nome host del broker: </label>
+                <input type="checkbox" id="mb-tls-insecure">
+                <br><br>
+
+                <label>Client ID / Topic: </label>
+                <input type="text" id="mb-client-id" readonly style="background: #eee;">
+                <br>
+                <small style="color: #666;">Generato automaticamente: le pesate vengono pubblicate su questo topic.</small>
                 <br><br>
 
                 <label for="mb-qos">QoS: </label>
@@ -4515,16 +4515,27 @@
             setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
 
+        let currentMessageBrokerInfo = { client_id: '', certificates: {} };
+
         async function loadMessageBrokerConfig() {
             try {
                 const res = await fetch('/api/message-broker');
                 if (!res.ok) return;
                 const data = await res.json();
                 currentMessageBrokerConfig = data.broker || null;
+                currentMessageBrokerInfo = data;
                 updateMessageBrokerDisplay();
             } catch (err) {
                 console.error('Errore caricamento configurazione broker:', err);
             }
+        }
+
+        function describeCertificate(c) {
+            if (!c || !c.present) return 'Non caricato';
+            if (!c.subject) return 'Caricato';
+            const exp = c.expires_at ? new Date(c.expires_at) : null;
+            const expired = exp && exp < new Date();
+            return `${c.subject}${exp ? ` (scade il ${exp.toLocaleDateString()}${expired ? ' - SCADUTO' : ''})` : ''}`;
         }
 
         function updateMessageBrokerDisplay() {
@@ -4540,12 +4551,14 @@
                 return;
             }
             const c = currentMessageBrokerConfig;
+            const certs = currentMessageBrokerInfo.certificates || {};
             noConn.style.display = 'none';
             info.style.display = 'block';
-            document.getElementById('mb-info-server').textContent = `${c.tls ? 'mqtts' : 'mqtt'}://${c.host}:${c.port}`;
-            document.getElementById('mb-info-topic').textContent = c.topic;
-            document.getElementById('mb-info-username').textContent = c.username || '-';
-            document.getElementById('mb-info-qos').textContent = `QoS ${c.qos} / ${c.tls ? 'TLS attivo' : 'senza TLS'}${c.retain ? ' / retain' : ''}`;
+            document.getElementById('mb-info-server').textContent = `mqtts://${c.host}:${c.port}${c.tls_insecure ? ' (nome host non verificato)' : ''}`;
+            document.getElementById('mb-info-topic').textContent = currentMessageBrokerInfo.client_id || '-';
+            document.getElementById('mb-info-cert').textContent = describeCertificate(certs.cert) + (certs.key && certs.key.present ? '' : ' / chiave mancante');
+            document.getElementById('mb-info-ca').textContent = describeCertificate(certs.ca);
+            document.getElementById('mb-info-qos').textContent = `QoS ${c.qos}${c.retain ? ' / retain attivo' : ''}`;
             const attachments = [];
             if (c.include_images) attachments.push('Foto');
             if (c.include_pdf) attachments.push('PDF');
@@ -4588,31 +4601,25 @@
             });
         }
 
-        function onMessageBrokerTlsChange() {
-            const tls = document.getElementById('mb-tls').checked;
-            document.getElementById('mb-tls-group').style.display = tls ? 'block' : 'none';
-            const port = document.getElementById('mb-port');
-            if (tls && (port.value === '' || port.value === '1883')) port.value = 8883;
-            if (!tls && (port.value === '' || port.value === '8883')) port.value = 1883;
-        }
-
         function openMessageBrokerModal() {
             const c = currentMessageBrokerConfig || {};
+            const certs = currentMessageBrokerInfo.certificates || {};
             document.getElementById('mb-host').value = c.host || '';
-            document.getElementById('mb-tls').checked = !!c.tls;
-            document.getElementById('mb-port').value = c.port || (c.tls ? 8883 : 1883);
-            document.getElementById('mb-ca-cert').value = c.ca_cert || '';
+            document.getElementById('mb-port').value = c.port || 8883;
             document.getElementById('mb-tls-insecure').checked = !!c.tls_insecure;
-            document.getElementById('mb-username').value = c.username || '';
-            document.getElementById('mb-password').value = c.password || '';
-            document.getElementById('mb-client-id').value = c.client_id || '';
-            document.getElementById('mb-topic').value = c.topic || 'in-out/weighings';
+            document.getElementById('mb-client-id').value = currentMessageBrokerInfo.client_id || '';
             document.getElementById('mb-qos').value = String(c.qos !== undefined ? c.qos : 1);
             document.getElementById('mb-retain').checked = !!c.retain;
             document.getElementById('mb-include-images').checked = c.include_images !== false;
             document.getElementById('mb-include-pdf').checked = c.include_pdf !== false;
             document.getElementById('mb-include-csv').checked = c.include_csv !== false;
-            document.getElementById('mb-tls-group').style.display = c.tls ? 'block' : 'none';
+            [['ca', 'mb-ca'], ['cert', 'mb-cert'], ['key', 'mb-key']].forEach(([kind, prefix]) => {
+                document.getElementById(`${prefix}-file`).value = '';
+                const present = certs[kind] && certs[kind].present;
+                document.getElementById(`${prefix}-current`).textContent = present
+                    ? `Già caricato${certs[kind].subject ? ': ' + describeCertificate(certs[kind]) : ''}. Seleziona un file solo per sostituirlo.`
+                    : 'Nessun file caricato';
+            });
             showModalEl(mbModal('message-broker-modal'));
         }
 
@@ -4623,39 +4630,42 @@
         function saveMessageBroker() {
             const modal = mbModal('message-broker-modal');
             const host = document.getElementById('mb-host').value.trim();
-            const topic = document.getElementById('mb-topic').value.trim();
-            if (!host || !topic) {
-                showSnackbar("snackbar", 'Host e topic sono obbligatori', 'rgb(255, 208, 208)', 'black');
+            const port = document.getElementById('mb-port').value;
+            if (!host || !port) {
+                showSnackbar("snackbar", 'Host e porta sono obbligatori', 'rgb(255, 208, 208)', 'black');
                 return;
             }
-            const body = {
-                host: host,
-                port: parseInt(document.getElementById('mb-port').value) || null,
-                tls: document.getElementById('mb-tls').checked,
-                ca_cert: document.getElementById('mb-ca-cert').value.trim() || null,
-                tls_insecure: document.getElementById('mb-tls-insecure').checked,
-                username: document.getElementById('mb-username').value.trim() || null,
-                password: document.getElementById('mb-password').value || null,
-                client_id: document.getElementById('mb-client-id').value.trim() || null,
-                topic: topic,
-                qos: parseInt(document.getElementById('mb-qos').value),
-                retain: document.getElementById('mb-retain').checked,
-                include_images: document.getElementById('mb-include-images').checked,
-                include_pdf: document.getElementById('mb-include-pdf').checked,
-                include_csv: document.getElementById('mb-include-csv').checked
-            };
+            const certs = currentMessageBrokerInfo.certificates || {};
+            const form = new FormData();
+            form.append('host', host);
+            form.append('port', port);
+            form.append('qos', document.getElementById('mb-qos').value);
+            form.append('retain', document.getElementById('mb-retain').checked);
+            form.append('tls_insecure', document.getElementById('mb-tls-insecure').checked);
+            form.append('include_images', document.getElementById('mb-include-images').checked);
+            form.append('include_pdf', document.getElementById('mb-include-pdf').checked);
+            form.append('include_csv', document.getElementById('mb-include-csv').checked);
+            const fileFields = [['ca', 'mb-ca-file', 'ca_file', 'certificato CA'], ['cert', 'mb-cert-file', 'cert_file', 'certificato client'], ['key', 'mb-key-file', 'key_file', 'chiave privata']];
+            for (const [kind, inputId, field, label] of fileFields) {
+                const file = document.getElementById(inputId).files[0];
+                if (file) {
+                    form.append(field, file);
+                } else if (!(certs[kind] && certs[kind].present)) {
+                    showSnackbar("snackbar", `Carica il file: ${label}`, 'rgb(255, 208, 208)', 'black');
+                    return;
+                }
+            }
             modal.querySelectorAll("input, button, select").forEach(e => e.disabled = true);
             showSnackbar("snackbar", "Connessione al broker in corso...", 'rgb(255, 255, 208)', 'black');
-            fetch('/api/message-broker', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            })
+            fetch('/api/message-broker', { method: 'POST', body: form })
             .then(res => res.json().then(value => ({ status: res.status, value })))
             .then(({ status, value }) => {
                 modal.querySelectorAll("input, button, select").forEach(e => e.disabled = false);
+                document.getElementById('mb-client-id').readOnly = true;
                 if (status !== 200) {
-                    const message = value.detail && value.detail[0] ? value.detail[0].msg.replace("Value error, ", "") : 'Errore nel salvataggio';
+                    let message = 'Errore nel salvataggio';
+                    if (typeof value.detail === 'string') message = value.detail;
+                    else if (value.detail && value.detail[0]) message = value.detail[0].msg.replace("Value error, ", "");
                     showSnackbar("snackbar", message, 'rgb(255, 208, 208)', 'black');
                     return;
                 }
