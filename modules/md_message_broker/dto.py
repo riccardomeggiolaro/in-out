@@ -16,8 +16,6 @@ class MessageBrokerDTO(BaseModel):
 	qos: Literal[0, 1, 2] = 1
 	retain: bool = False
 	keepalive: int = 60
-	# Se True non verifica che il nome host corrisponda al certificato del broker
-	tls_insecure: bool = False
 	# Timeout (secondi) per la conferma di consegna (PUBACK/PUBCOMP) da parte del broker
 	publish_timeout: int = 30
 	# Contenuto del messaggio

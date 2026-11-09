@@ -363,8 +363,6 @@ class ModuleMessageBroker:
 			certfile=self.cert_path("cert"),
 			keyfile=self.cert_path("key"),
 		)
-		if config.tls_insecure:
-			client.tls_insecure_set(True)
 		client.on_connect = self._on_connect
 		client.on_disconnect = self._on_disconnect
 		return client

@@ -997,10 +997,6 @@
                 <small id="mb-key-current" style="color: #666;"></small>
                 <br><br>
 
-                <label for="mb-tls-insecure">Non verificare il nome host del broker: </label>
-                <input type="checkbox" id="mb-tls-insecure">
-                <br><br>
-
                 <label>Client ID / Topic: </label>
                 <input type="text" id="mb-client-id" readonly style="background: #eee;">
                 <br>
@@ -4556,7 +4552,7 @@
             const certs = currentMessageBrokerInfo.certificates || {};
             noConn.style.display = 'none';
             info.style.display = 'block';
-            document.getElementById('mb-info-server').textContent = `mqtts://${c.host}:${c.port}${c.tls_insecure ? ' (nome host non verificato)' : ''}`;
+            document.getElementById('mb-info-server').textContent = `mqtts://${c.host}:${c.port}`;
             document.getElementById('mb-info-topic').textContent = currentMessageBrokerInfo.client_id || '-';
             document.getElementById('mb-info-cert').textContent = describeCertificate(certs.cert) + (certs.key && certs.key.present ? '' : ' / chiave mancante');
             document.getElementById('mb-info-ca').textContent = describeCertificate(certs.ca);
@@ -4608,7 +4604,6 @@
             const certs = currentMessageBrokerInfo.certificates || {};
             document.getElementById('mb-host').value = c.host || '';
             document.getElementById('mb-port').value = c.port || 8883;
-            document.getElementById('mb-tls-insecure').checked = !!c.tls_insecure;
             document.getElementById('mb-client-id').value = currentMessageBrokerInfo.client_id || '';
             document.getElementById('mb-qos').value = String(c.qos !== undefined ? c.qos : 1);
             document.getElementById('mb-retain').checked = !!c.retain;
@@ -4643,7 +4638,6 @@
             form.append('port', port);
             form.append('qos', document.getElementById('mb-qos').value);
             form.append('retain', document.getElementById('mb-retain').checked);
-            form.append('tls_insecure', document.getElementById('mb-tls-insecure').checked);
             form.append('include_images', document.getElementById('mb-include-images').checked);
             form.append('include_pdf', document.getElementById('mb-include-pdf').checked);
             form.append('include_csv', document.getElementById('mb-include-csv').checked);
