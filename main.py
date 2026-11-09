@@ -41,6 +41,8 @@ def mainprg():
 
 	import modules.md_sync_folder.md_sync_folder as md_sync_folder
 
+	import modules.md_message_broker.md_message_broker as md_message_broker
+
 	import modules.md_database.md_database as md_database
 
 	import modules.md_tunnel_connections.md_tunnel_connections as md_tunnel_connections
@@ -53,7 +55,7 @@ def mainprg():
 
 	APPS = [app_api]
 
-	MODULES = [md_rfid, md_weigher, md_sync_folder, md_updating]
+	MODULES = [md_rfid, md_weigher, md_sync_folder, md_message_broker, md_updating]
 
 	# Carica thread per i mdouli esterni.
 

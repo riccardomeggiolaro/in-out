@@ -16,6 +16,7 @@ from applications.router.printer import PrinterRouter
 from applications.router.tunnel_connections import TunnelConnectionsRouter
 from applications.router.open_to_customer import OpenToCustomerRouter
 from applications.router.sync_folder import SyncFolderRouter
+from applications.router.message_broker import MessageBrokerRouter
 from applications.router.rfid.router import RfidRouter
 from applications.router.whoami import WhoAmIRouter
 from applications.router.database_viewer import DatabaseViewerRouter
@@ -156,6 +157,7 @@ def init():
 	tunnel_connections_router = TunnelConnectionsRouter()
 	open_to_customer = OpenToCustomerRouter()
 	sync_folder_router = SyncFolderRouter()
+	message_broker_router = MessageBrokerRouter()
 	rfid_router = RfidRouter()
 	whoami_router = WhoAmIRouter()
 	database_viewer_router = DatabaseViewerRouter()
@@ -187,6 +189,8 @@ def init():
 	app.include_router(open_to_customer.router, prefix="/api", tags=["open to customer"])
 
 	app.include_router(sync_folder_router.router, prefix="/api/sync-folder", tags=["sync folder"])
+
+	app.include_router(message_broker_router.router, prefix="/api/message-broker", tags=["message broker"])
 
 	app.include_router(rfid_router.router, prefix="/api/rfid", tags=["rfid"])
 
