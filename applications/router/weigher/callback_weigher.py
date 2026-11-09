@@ -593,17 +593,27 @@ class CallbackWeigher(Functions, WebSocket):
 					error_message = f"Il peso deve essere maggiore di {min_weight} kg"
 				elif access:
 					current_weigher_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
-					set_preset_tare_if_exists = None
+					# Il tipo di gestione (transito o pesata) dipende SOLO dalla modalità dell'accesso,
+					# anche se l'accesso è già selezionato (es. nuovo tentativo dopo una pesata automatica fallita).
+					# Prima veniva calcolato solo alla prima selezione: al nuovo tentativo restava None e una
+					# pesata con tara preimpostata veniva gestita come transito, aprendo i relè dell'entrata.
+					is_transit = access.get("mode") == AccessMode.TRANSIT
+					set_preset_tare_if_exists = not is_transit
 					if current_weigher_data["id_selected"]["id"] != access["id"]:
 						await self.DeleteData(instance=instance)
 						try:
-							is_transit = access.get("mode") == AccessMode.TRANSIT
 							data_dto = DataDTO(**{"id_selected": {"id": access["id"]}})
-							set_preset_tare_if_exists = not is_transit
 							need_to_confirm = True if mode == "SEMIAUTOMATIC" and set_preset_tare_if_exists else False
 							await self.SetData(request=None, data_dto=data_dto, instance=instance, need_to_confirm=need_to_confirm, set_preset_tare_if_exists=set_preset_tare_if_exists)
 						except Exception as e:
-							error_message = e.detail
+							error_message = getattr(e, "detail", str(e))
+					elif set_preset_tare_if_exists:
+						# Accesso già selezionato: reinvia la tara preimpostata del mezzo (come farebbe SetData),
+						# perché dopo una pesata fallita l'indicatore potrebbe non averla più
+						selected_data = self.getData(instance_name=instance.instance_name, weigher_name=instance.weigher_name)
+						vehicle_tare = selected_data["data_in_execution"]["vehicle"]["tare"]
+						if selected_data["id_selected"]["weight1"] is None and vehicle_tare is not None:
+							md_weigher.module_weigher.setModope(instance_name=instance.instance_name, weigher_name=instance.weigher_name, modope="PRESETTARE", presettare=vehicle_tare)
 					if not error_message:
 						self.automatic_weighing_process.append(proc)
 						if not set_preset_tare_if_exists:
