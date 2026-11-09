@@ -10,7 +10,7 @@ Funzionamento:
   e cadute di rete.
 - Un thread dedicato legge i file dell'outbox in ordine di creazione (FIFO) e li
   pubblica sul broker. Un messaggio viene eliminato dall'outbox solo dopo la
-  conferma di consegna del broker (PUBACK/PUBCOMP con QoS 1/2).
+  conferma di consegna del broker (PUBACK, QoS 1 fisso).
 - Se l'invio di un messaggio fallisce, il thread riprova LO STESSO messaggio
   (con attesa crescente) e non passa ai successivi finché non è stato inviato:
   l'ordine delle pesate è sempre rispettato.
@@ -50,6 +50,8 @@ FAILED_SUB_DIR = "failed"
 CONNECT_TIMEOUT = 10
 BACKOFF_MIN = 1
 BACKOFF_MAX = 60
+# QoS 1: il broker conferma ogni pesata (PUBACK), necessario per la coda con riprova
+QOS = 1
 
 module_message_broker = None
 
@@ -419,7 +421,7 @@ class ModuleMessageBroker:
 		# Il topic coincide con il client ID dell'impianto
 		topic = self.client_id
 		try:
-			info = client.publish(topic, raw, qos=config.qos, retain=False)
+			info = client.publish(topic, raw, qos=QOS, retain=False)
 			if info.rc != mqtt.MQTT_ERR_SUCCESS:
 				self.last_error = f"Publish fallito: {mqtt.error_string(info.rc)}"
 				return False
