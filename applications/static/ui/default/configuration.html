@@ -538,6 +538,7 @@
             <button class="menu-tab selected" onclick="changeSetupTab(event, 'settings')">SETTAGGI</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'instances')">INDICATORI</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'sync-folder')">SINC CARTELLA REM</button>
+            <button class="menu-tab" onclick="changeSetupTab(event, 'message-broker')">BROKER MQTT</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'panel')">PANNELLO</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'siren')">SIRENA</button>
         </div>
@@ -759,6 +760,64 @@
                     <br>
                 </div>
             </div>
+            <div id="message-broker" class="tab">
+                <div class="borders aliceblue">
+                    <br>
+                    <h3>INVIO PESATE A BROKER MQTT</h3>
+                    <br>
+
+                    <!-- Vista quando non c'è un broker configurato -->
+                    <div id="no-mb-connection" style="display: none; text-align: center; padding: 20px;">
+                        <p style="color: #666; margin-bottom: 15px;">Nessun broker configurato</p>
+                        <button onclick="openMessageBrokerModal()">Configura Broker</button>
+                    </div>
+
+                    <!-- Vista quando c'è un broker configurato -->
+                    <div id="mb-connection-info" style="display: none;">
+                        <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <div style="display: grid; grid-template-columns: 180px 1fr; gap: 10px; margin-bottom: 10px;">
+                                <strong>Server:</strong>
+                                <span id="mb-info-server"></span>
+
+                                <strong>Topic:</strong>
+                                <span id="mb-info-topic"></span>
+
+                                <strong>Username:</strong>
+                                <span id="mb-info-username"></span>
+
+                                <strong>QoS / TLS:</strong>
+                                <span id="mb-info-qos"></span>
+
+                                <strong>Allegati:</strong>
+                                <span id="mb-info-attachments"></span>
+
+                                <strong>Stato:</strong>
+                                <span id="mb-info-status">-</span>
+
+                                <strong>Pesate in coda:</strong>
+                                <span id="mb-info-pending">-</span>
+
+                                <strong>Pesate scartate:</strong>
+                                <span id="mb-info-failed">-</span>
+
+                                <strong>Ultimo invio:</strong>
+                                <span id="mb-info-last-sent">-</span>
+
+                                <strong>Ultimo errore:</strong>
+                                <span id="mb-info-last-error" style="color: #dc3545;">-</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="testMessageBroker(true)">Aggiorna Stato</button>
+                            <button onclick="openMessageBrokerModal()">Modifica</button>
+                            <button id="mb-retry-failed-btn" onclick="retryFailedMessageBroker()" style="display: none;">Rimetti in coda scartate</button>
+                            <button onclick="confirmDeleteMessageBroker()" style="background-color: #dc3545;">Elimina</button>
+                        </div>
+                    </div>
+                    <br>
+                </div>
+            </div>
             <div id="panel" class="tab">
                 <div class="borders aliceblue">
                     <br>
@@ -900,6 +959,93 @@
             <div class="container-buttons right">
                 <button class="cancel-btn" onclick="closeDeleteConfirmModal()">Annulla</button>
                 <button class="save-btn" style="background-color: #dc3545;" onclick="deleteSyncFolder()">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal per configurazione Message Broker -->
+    <div id="message-broker-modal" class="modal">
+        <div class="modal-content">
+            <h3>Configura Broker MQTT</h3>
+            <form id="message-broker-form" onsubmit="event.preventDefault()">
+                <label for="mb-host">Host: *</label>
+                <input type="text" id="mb-host" required>
+                <br><br>
+
+                <label for="mb-tls">TLS: </label>
+                <input type="checkbox" id="mb-tls" onchange="onMessageBrokerTlsChange()">
+                <br><br>
+
+                <label for="mb-port">Porta: *</label>
+                <input type="number" id="mb-port" min="1" max="65535" required>
+                <br><br>
+
+                <div id="mb-tls-group">
+                    <label for="mb-ca-cert">Certificato CA (percorso): </label>
+                    <input type="text" id="mb-ca-cert">
+                    <br><br>
+                    <label for="mb-tls-insecure">Non verificare il certificato: </label>
+                    <input type="checkbox" id="mb-tls-insecure">
+                    <br><br>
+                </div>
+
+                <label for="mb-username">Username: </label>
+                <input type="text" id="mb-username">
+                <br><br>
+
+                <label for="mb-password">Password: </label>
+                <input type="password" id="mb-password">
+                <br><br>
+
+                <label for="mb-client-id">Client ID: </label>
+                <input type="text" id="mb-client-id" placeholder="automatico">
+                <br><br>
+
+                <label for="mb-topic">Topic: *</label>
+                <input type="text" id="mb-topic" required>
+                <br>
+                <small style="color: #666;">Segnaposto: {instance_name}, {weigher_name}, {event_type}</small>
+                <br><br>
+
+                <label for="mb-qos">QoS: </label>
+                <select id="mb-qos">
+                    <option value="0">0 - nessuna conferma</option>
+                    <option value="1">1 - almeno una volta</option>
+                    <option value="2">2 - esattamente una volta</option>
+                </select>
+                <br><br>
+
+                <label for="mb-retain">Retain: </label>
+                <input type="checkbox" id="mb-retain">
+                <br><br>
+
+                <label><b>Allegati da inviare</b>:</label>
+                <br>
+                <input type="checkbox" id="mb-include-images">
+                <label for="mb-include-images">Foto</label>
+                <input type="checkbox" id="mb-include-pdf">
+                <label for="mb-include-pdf">Report PDF</label>
+                <input type="checkbox" id="mb-include-csv">
+                <label for="mb-include-csv">CSV</label>
+                <br><br>
+
+                <div class="container-buttons right">
+                    <button type="button" class="cancel-btn" onclick="closeMessageBrokerModal()">Annulla</button>
+                    <button type="submit" class="save-btn" onclick="saveMessageBroker()">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal di conferma eliminazione Message Broker -->
+    <div id="delete-message-broker-modal" class="modal">
+        <div class="modal-content">
+            <h3>Conferma Eliminazione</h3>
+            <p>Sei sicuro di voler eliminare la configurazione del broker MQTT? Le pesate gi&agrave; in coda resteranno salvate e verranno inviate alla prossima configurazione.</p>
+            <br>
+            <div class="container-buttons right">
+                <button class="cancel-btn" onclick="closeDeleteMessageBrokerModal()">Annulla</button>
+                <button class="save-btn" style="background-color: #dc3545;" onclick="deleteMessageBroker()">Elimina</button>
             </div>
         </div>
     </div>
@@ -1478,6 +1624,10 @@
                         closeSyncFolderModal();
                     } else if (modalId === 'delete-sync-folder-modal') {
                         closeDeleteConfirmModal();
+                    } else if (modalId === 'message-broker-modal') {
+                        closeMessageBrokerModal();
+                    } else if (modalId === 'delete-message-broker-modal') {
+                        closeDeleteMessageBrokerModal();
                     } else if (modalId === 'panel-modal') {
                         closePanelModal();
                     } else if (modalId === 'delete-panel-modal') {
@@ -2036,6 +2186,7 @@
             // Load panel and siren configurations
             await loadPanelConfig();
             await loadSirenConfig();
+            loadMessageBrokerConfig();
 
             fetch('/api/config-weigher/configuration', {
                 headers: {
@@ -4343,6 +4494,217 @@
                 syncFolderModal.querySelectorAll("input, button, select").forEach(e => e.disabled = false);
                 showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
             });
+        }
+
+        // ============================================
+        // MESSAGE BROKER (MQTT) FUNCTIONS
+        // ============================================
+
+        let currentMessageBrokerConfig = null;
+        let messageBrokerStatusTimer = null;
+
+        function mbModal(id) {
+            return document.getElementById(id);
+        }
+
+        function showModalEl(modal) {
+            modal.style.display = 'block';
+            modal.style.opacity = '1';
+        }
+
+        function hideModalEl(modal) {
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+
+        async function loadMessageBrokerConfig() {
+            try {
+                const res = await fetch('/api/message-broker');
+                if (!res.ok) return;
+                const data = await res.json();
+                currentMessageBrokerConfig = data.broker || null;
+                updateMessageBrokerDisplay();
+            } catch (err) {
+                console.error('Errore caricamento configurazione broker:', err);
+            }
+        }
+
+        function updateMessageBrokerDisplay() {
+            const noConn = document.getElementById('no-mb-connection');
+            const info = document.getElementById('mb-connection-info');
+            if (messageBrokerStatusTimer) {
+                clearInterval(messageBrokerStatusTimer);
+                messageBrokerStatusTimer = null;
+            }
+            if (!currentMessageBrokerConfig) {
+                noConn.style.display = 'block';
+                info.style.display = 'none';
+                return;
+            }
+            const c = currentMessageBrokerConfig;
+            noConn.style.display = 'none';
+            info.style.display = 'block';
+            document.getElementById('mb-info-server').textContent = `${c.tls ? 'mqtts' : 'mqtt'}://${c.host}:${c.port}`;
+            document.getElementById('mb-info-topic').textContent = c.topic;
+            document.getElementById('mb-info-username').textContent = c.username || '-';
+            document.getElementById('mb-info-qos').textContent = `QoS ${c.qos} / ${c.tls ? 'TLS attivo' : 'senza TLS'}${c.retain ? ' / retain' : ''}`;
+            const attachments = [];
+            if (c.include_images) attachments.push('Foto');
+            if (c.include_pdf) attachments.push('PDF');
+            if (c.include_csv) attachments.push('CSV');
+            document.getElementById('mb-info-attachments').textContent = attachments.join(', ') || 'Nessuno (solo dati)';
+            testMessageBroker(false);
+            // Aggiorna periodicamente lo stato solo se la scheda è visibile
+            messageBrokerStatusTimer = setInterval(() => {
+                const tab = document.getElementById('message-broker');
+                if (tab && tab.style.display === 'block') testMessageBroker(false);
+            }, 5000);
+        }
+
+        function renderMessageBrokerStatus(s) {
+            const statusEl = document.getElementById('mb-info-status');
+            statusEl.textContent = s.connected ? 'Connesso' : 'Non connesso';
+            statusEl.style.color = s.connected ? 'green' : '#dc3545';
+            document.getElementById('mb-info-pending').textContent = s.pending;
+            document.getElementById('mb-info-failed').textContent = s.failed;
+            document.getElementById('mb-info-last-sent').textContent = s.last_sent_at ? new Date(s.last_sent_at).toLocaleString() : '-';
+            document.getElementById('mb-info-last-error').textContent = s.last_error || '-';
+            document.getElementById('mb-retry-failed-btn').style.display = s.failed > 0 ? 'inline-block' : 'none';
+        }
+
+        function testMessageBroker(notify) {
+            if (notify) showSnackbar("snackbar", "Verifica stato broker...", 'rgb(255, 255, 208)', 'black');
+            fetch('/api/message-broker/test')
+            .then(res => res.json())
+            .then(s => {
+                renderMessageBrokerStatus(s);
+                if (!notify) return;
+                if (s.connected) {
+                    showSnackbar("snackbar", "Broker connesso", 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", s.last_error || 'Broker non connesso', 'rgb(255, 208, 208)', 'black');
+                }
+            })
+            .catch(() => {
+                if (notify) showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        function onMessageBrokerTlsChange() {
+            const tls = document.getElementById('mb-tls').checked;
+            document.getElementById('mb-tls-group').style.display = tls ? 'block' : 'none';
+            const port = document.getElementById('mb-port');
+            if (tls && (port.value === '' || port.value === '1883')) port.value = 8883;
+            if (!tls && (port.value === '' || port.value === '8883')) port.value = 1883;
+        }
+
+        function openMessageBrokerModal() {
+            const c = currentMessageBrokerConfig || {};
+            document.getElementById('mb-host').value = c.host || '';
+            document.getElementById('mb-tls').checked = !!c.tls;
+            document.getElementById('mb-port').value = c.port || (c.tls ? 8883 : 1883);
+            document.getElementById('mb-ca-cert').value = c.ca_cert || '';
+            document.getElementById('mb-tls-insecure').checked = !!c.tls_insecure;
+            document.getElementById('mb-username').value = c.username || '';
+            document.getElementById('mb-password').value = c.password || '';
+            document.getElementById('mb-client-id').value = c.client_id || '';
+            document.getElementById('mb-topic').value = c.topic || 'in-out/weighings';
+            document.getElementById('mb-qos').value = String(c.qos !== undefined ? c.qos : 1);
+            document.getElementById('mb-retain').checked = !!c.retain;
+            document.getElementById('mb-include-images').checked = c.include_images !== false;
+            document.getElementById('mb-include-pdf').checked = c.include_pdf !== false;
+            document.getElementById('mb-include-csv').checked = c.include_csv !== false;
+            document.getElementById('mb-tls-group').style.display = c.tls ? 'block' : 'none';
+            showModalEl(mbModal('message-broker-modal'));
+        }
+
+        function closeMessageBrokerModal() {
+            hideModalEl(mbModal('message-broker-modal'));
+        }
+
+        function saveMessageBroker() {
+            const modal = mbModal('message-broker-modal');
+            const host = document.getElementById('mb-host').value.trim();
+            const topic = document.getElementById('mb-topic').value.trim();
+            if (!host || !topic) {
+                showSnackbar("snackbar", 'Host e topic sono obbligatori', 'rgb(255, 208, 208)', 'black');
+                return;
+            }
+            const body = {
+                host: host,
+                port: parseInt(document.getElementById('mb-port').value) || null,
+                tls: document.getElementById('mb-tls').checked,
+                ca_cert: document.getElementById('mb-ca-cert').value.trim() || null,
+                tls_insecure: document.getElementById('mb-tls-insecure').checked,
+                username: document.getElementById('mb-username').value.trim() || null,
+                password: document.getElementById('mb-password').value || null,
+                client_id: document.getElementById('mb-client-id').value.trim() || null,
+                topic: topic,
+                qos: parseInt(document.getElementById('mb-qos').value),
+                retain: document.getElementById('mb-retain').checked,
+                include_images: document.getElementById('mb-include-images').checked,
+                include_pdf: document.getElementById('mb-include-pdf').checked,
+                include_csv: document.getElementById('mb-include-csv').checked
+            };
+            modal.querySelectorAll("input, button, select").forEach(e => e.disabled = true);
+            showSnackbar("snackbar", "Connessione al broker in corso...", 'rgb(255, 255, 208)', 'black');
+            fetch('/api/message-broker', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            .then(res => res.json().then(value => ({ status: res.status, value })))
+            .then(({ status, value }) => {
+                modal.querySelectorAll("input, button, select").forEach(e => e.disabled = false);
+                if (status !== 200) {
+                    const message = value.detail && value.detail[0] ? value.detail[0].msg.replace("Value error, ", "") : 'Errore nel salvataggio';
+                    showSnackbar("snackbar", message, 'rgb(255, 208, 208)', 'black');
+                    return;
+                }
+                if (value.connected) {
+                    showSnackbar("snackbar", "Broker configurato e connesso", 'rgb(208, 255, 208)', 'black');
+                } else {
+                    showSnackbar("snackbar", "Configurazione salvata, ma broker non raggiungibile: le pesate restano in coda", 'rgb(255, 255, 208)', 'black');
+                }
+                closeMessageBrokerModal();
+                loadMessageBrokerConfig();
+            })
+            .catch(() => {
+                modal.querySelectorAll("input, button, select").forEach(e => e.disabled = false);
+                showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black');
+            });
+        }
+
+        function confirmDeleteMessageBroker() {
+            showModalEl(mbModal('delete-message-broker-modal'));
+        }
+
+        function closeDeleteMessageBrokerModal() {
+            hideModalEl(mbModal('delete-message-broker-modal'));
+        }
+
+        function deleteMessageBroker() {
+            fetch('/api/message-broker', { method: 'DELETE' })
+            .then(res => {
+                if (res.status !== 200) {
+                    showSnackbar("snackbar", 'Errore nella eliminazione', 'rgb(255, 208, 208)', 'black');
+                    return;
+                }
+                showSnackbar("snackbar", "Configurazione broker eliminata", 'rgb(208, 255, 208)', 'black');
+                currentMessageBrokerConfig = null;
+                updateMessageBrokerDisplay();
+                closeDeleteMessageBrokerModal();
+            });
+        }
+
+        function retryFailedMessageBroker() {
+            fetch('/api/message-broker/retry-failed', { method: 'POST' })
+            .then(res => res.json())
+            .then(res => {
+                showSnackbar("snackbar", `${res.requeued} pesate rimesse in coda`, 'rgb(208, 255, 208)', 'black');
+                testMessageBroker(false);
+            })
+            .catch(() => showSnackbar("snackbar", 'Errore di connessione', 'rgb(255, 208, 208)', 'black'));
         }
 
         // ============================================
