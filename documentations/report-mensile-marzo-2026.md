@@ -82,19 +82,19 @@
 - Utilizzo ultimo `in_out` invece del primo per la descrizione del materiale
 
 **Mercoledì 11 marzo**
-- Sviluppo **Dashboard V2** con UI mobile migliorata e funzionalità real-time
-- Dashboard V2: lista ultime 10 letture OCR targa (in sostituzione lista accessi)
-- Dashboard V2: popup dettaglio lettura OCR con ora e esito
-- Dashboard V2: tabella accessi sotto il display peso con supporto selezione
-- Dashboard V2: layout peso/pulsanti full-width e riorganizzazione area bottoni
+- Sviluppo **Dashboard** con UI mobile migliorata e funzionalità real-time
+- Dashboard: lista ultime 10 letture OCR targa (in sostituzione lista accessi)
+- Dashboard: popup dettaglio lettura OCR con ora e esito
+- Dashboard: tabella accessi sotto il display peso con supporto selezione
+- Dashboard: layout peso/pulsanti full-width e riorganizzazione area bottoni
 
 **Giovedì 12 marzo**
-- Dashboard V2: molteplici iterazioni di raffinamento layout (barra peso, padding, margini)
-- Dashboard V2: gruppo input con etichetta sopra il campo, larghezza adattiva
-- Dashboard V2: troncamento testo JS con ricalcolo al resize
-- Dashboard V2: vista mobile con tab per lista accessi, breakpoint 800px
-- Dashboard V2: sostituzione pulsante diagnostica con pulsanti relay nella barra bilancia
-- Dashboard V2: tooltip info sostituito con popup (dettagli terminale + diagnostica)
+- Dashboard: molteplici iterazioni di raffinamento layout (barra peso, padding, margini)
+- Dashboard: gruppo input con etichetta sopra il campo, larghezza adattiva
+- Dashboard: troncamento testo JS con ricalcolo al resize
+- Dashboard: vista mobile con tab per lista accessi, breakpoint 800px
+- Dashboard: sostituzione pulsante diagnostica con pulsanti relay nella barra bilancia
+- Dashboard: tooltip info sostituito con popup (dettagli terminale + diagnostica)
 
 **Venerdì 13 marzo**
 - Sviluppo **Totem Weighing Wizard**: interfaccia guidata con display peso real-time
@@ -204,7 +204,7 @@
 - Fix visualizzazione soggetto/vettore nella lista accessi dopo assegnazione su prenotazione
 - Applicazione regola lock su targa: disabilitata solo se dato preesistente
 - Fallback a dati access quando campo `in_out` è vuoto, con lock automatico
-- Applicazione flag-based field locking anche a `_dashboard.js` e `_dashboard-v2.js`
+- Applicazione flag-based field locking anche a `_dashboard.js`
 - Visualizzazione soggetto/materiale in lista accessi con priorità `in_out` su prenotazione
 - Aggiunta ordinamento dinamico agli endpoint anagrafiche; ordinamento alfabetico nei suggerimenti popup
 - Totem: **aggiunta step selezione direzione (Entrata/Uscita)** come primo step, prima della targa
@@ -217,7 +217,7 @@
 
 | Area | Attività principali |
 |---|---|
-| **Dashboard V2** | Nuova interfaccia operatore mobile-first con OCR, relay, diagnostica |
+| **Dashboard** | Nuova interfaccia operatore mobile-first con OCR, relay, diagnostica |
 | **Totem SPA** | Sviluppo completo da zero del wizard totem (multipage → SPA WebSocket) |
 | **Prenotazioni / In-Out** | Gestione dati per-pesata, priorità campi, lock/unlock automatico |
 | **Materiali** | Tracciamento materiale a livello `in_out`, modifica da totem e dashboard |
