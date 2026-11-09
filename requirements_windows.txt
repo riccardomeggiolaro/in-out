@@ -28,6 +28,7 @@ MarkupSafe==3.0.2
 mdurl==0.1.2
 numpy==2.3.0
 packaging==25.0
+paho-mqtt==2.1.0
 pandas==2.3.0
 paramiko==3.5.1
 pillow==10.4.0
