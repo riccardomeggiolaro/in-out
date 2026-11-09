@@ -39,6 +39,13 @@ from modules.md_message_broker.dto import MessageBrokerDTO
 name_module = "md_message_broker"
 
 DEFAULT_OUTBOX_DIR = "/var/opt/in-out/message_broker_outbox"
+DEFAULT_CERT_DIR = "/var/opt/in-out/message_broker_certs"
+# Nomi dei file TLS salvati nella cartella dei certificati
+CERT_FILES = {
+	"ca": "ca.crt",
+	"cert": "client.crt",
+	"key": "client.key",
+}
 FAILED_SUB_DIR = "failed"
 CONNECT_TIMEOUT = 10
 BACKOFF_MIN = 1
@@ -74,7 +81,16 @@ def get_settings() -> dict:
 		settings = {}
 		app_api["message_broker"] = settings
 	settings.setdefault("outbox_dir", DEFAULT_OUTBOX_DIR)
+	settings.setdefault("cert_dir", DEFAULT_CERT_DIR)
 	settings.setdefault("broker", None)
+	# Client ID generato una sola volta e mantenuto anche se il broker viene eliminato
+	if not settings.get("client_id"):
+		hostname = "".join(c for c in socket.gethostname().lower() if c.isalnum() or c == "-") or "host"
+		settings["client_id"] = f"in-out-{hostname}-{uuid.uuid4().hex[:8]}"
+		try:
+			lb_config.saveconfig()
+		except Exception:
+			pass
 	return settings
 
 
@@ -119,6 +135,8 @@ class ModuleMessageBroker:
 			except Exception as e:
 				lb_log.error(f"Configurazione message broker non valida: {e}")
 		self.outbox_dir = self._resolve_dir(settings.get("outbox_dir") or DEFAULT_OUTBOX_DIR)
+		self.cert_dir = self._resolve_dir(settings.get("cert_dir") or DEFAULT_CERT_DIR)
+		self.client_id: str = settings["client_id"]
 
 		self._lock = threading.RLock()  # protegge config/client
 		self._write_lock = threading.Lock()  # protegge la generazione dei nomi file
@@ -142,6 +160,75 @@ class ModuleMessageBroker:
 		if not path.startswith("/") and not (len(path) > 1 and path[1] == ":"):
 			path = os.path.join(base_path, path)
 		return path
+
+	def cert_path(self, kind: str) -> str:
+		return os.path.join(self.cert_dir, CERT_FILES[kind])
+
+	def has_certificates(self) -> bool:
+		return all(os.path.isfile(self.cert_path(k)) for k in CERT_FILES)
+
+	def install_certificates(self, files: dict) -> None:
+		"""
+		Valida e installa i file TLS. `files` è {kind: bytes} con kind in "ca", "cert", "key";
+		i file non passati restano quelli già installati. Solleva ValueError se non validi.
+		"""
+		import ssl
+		import tempfile
+
+		for kind in files:
+			if kind not in CERT_FILES:
+				raise ValueError(f"Tipo di file TLS sconosciuto: {kind}")
+		os.makedirs(self.cert_dir, exist_ok=True)
+		# Prepara i file definitivi (nuovi o esistenti) in una cartella temporanea per validarli insieme
+		with tempfile.TemporaryDirectory(dir=self.cert_dir) as tmp:
+			paths = {}
+			for kind, name in CERT_FILES.items():
+				dst = os.path.join(tmp, name)
+				if kind in files and files[kind]:
+					with open(dst, "wb") as f:
+						f.write(files[kind])
+				elif os.path.isfile(self.cert_path(kind)):
+					shutil.copyfile(self.cert_path(kind), dst)
+				else:
+					labels = {"ca": "certificato CA", "cert": "certificato client", "key": "chiave privata"}
+					raise ValueError(f"Manca il file: {labels[kind]}")
+				paths[kind] = dst
+			try:
+				ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+				ctx.load_verify_locations(cafile=paths["ca"])
+			except Exception as e:
+				raise ValueError(f"Certificato CA non valido: {e}")
+			try:
+				ctx.load_cert_chain(certfile=paths["cert"], keyfile=paths["key"])
+			except Exception as e:
+				raise ValueError(f"Certificato client o chiave non validi (o non corrispondenti): {e}")
+			# Validi: installa solo i file nuovi
+			for kind in files:
+				if files[kind]:
+					final = self.cert_path(kind)
+					os.replace(paths[kind], final)
+					try:
+						os.chmod(final, 0o600 if kind == "key" else 0o644)
+					except Exception:
+						pass
+
+	def get_certificates_info(self) -> dict:
+		"""Ritorna per ogni file TLS se è presente e, per i certificati, soggetto e scadenza."""
+		info = {}
+		for kind in CERT_FILES:
+			path = self.cert_path(kind)
+			item = {"present": os.path.isfile(path)}
+			if item["present"] and kind != "key":
+				try:
+					from cryptography import x509
+					with open(path, "rb") as f:
+						cert = x509.load_pem_x509_certificate(f.read())
+					item["subject"] = cert.subject.rfc4514_string()
+					item["expires_at"] = cert.not_valid_after_utc.isoformat()
+				except Exception:
+					pass
+			info[kind] = item
+		return info
 
 	def set_config(self, config: Optional[MessageBrokerDTO]) -> bool:
 		"""Imposta (o rimuove con None) la configurazione del broker e prova a connettersi."""
@@ -263,18 +350,21 @@ class ModuleMessageBroker:
 			lb_log.warning(self.last_error)
 
 	def _create_client(self, config: MessageBrokerDTO) -> mqtt.Client:
-		client_id = config.client_id or f"in-out-{socket.gethostname()}"
 		client = mqtt.Client(
 			callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-			client_id=client_id,
+			client_id=self.client_id,
 			clean_session=True,
 		)
-		if config.username:
-			client.username_pw_set(config.username, config.password)
-		if config.tls:
-			client.tls_set(ca_certs=config.ca_cert or None)
-			if config.tls_insecure:
-				client.tls_insecure_set(True)
+		# Connessione sempre in TLS con autenticazione tramite certificato client (mTLS)
+		if not self.has_certificates():
+			raise RuntimeError("Certificati TLS mancanti (CA, certificato client e chiave)")
+		client.tls_set(
+			ca_certs=self.cert_path("ca"),
+			certfile=self.cert_path("cert"),
+			keyfile=self.cert_path("key"),
+		)
+		if config.tls_insecure:
+			client.tls_insecure_set(True)
 		client.on_connect = self._on_connect
 		client.on_disconnect = self._on_disconnect
 		return client
@@ -328,15 +418,8 @@ class ModuleMessageBroker:
 			client = self.client
 		if config is None or client is None:
 			return False
-		topic = config.topic
-		try:
-			topic = topic.format(
-				instance_name=message.get("instance_name") or "",
-				weigher_name=message.get("weigher_name") or "",
-				event_type=message.get("event_type") or "",
-			)
-		except (KeyError, IndexError, ValueError):
-			pass
+		# Il topic coincide con il client ID dell'impianto
+		topic = self.client_id
 		try:
 			info = client.publish(topic, raw, qos=config.qos, retain=config.retain)
 			if info.rc != mqtt.MQTT_ERR_SUCCESS:
@@ -357,6 +440,8 @@ class ModuleMessageBroker:
 	def get_status(self) -> dict:
 		return {
 			"configured": self.config is not None,
+			"client_id": self.client_id,
+			"topic": self.client_id,
 			"connected": self.client is not None and self._connected.is_set(),
 			"pending": len(self.list_pending()),
 			"failed": len(self.list_failed()),

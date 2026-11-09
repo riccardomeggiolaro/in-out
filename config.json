@@ -47,6 +47,8 @@
         },
         "message_broker": {
             "broker": null,
+            "cert_dir": "/var/opt/in-out/message_broker_certs",
+            "client_id": null,
             "outbox_dir": "/var/opt/in-out/message_broker_outbox"
         },
         "sync_folder": {
