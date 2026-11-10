@@ -13,11 +13,27 @@ Script autonomo (non importa nulla da in-out) che gira in loop e fa due cose:
 
 2. DA "csv" A "out" (locale → locale)
    Prende i CSV che in-out genera in  /var/opt/in-out/csv  (solo la cartella,
-   non le sottocartelle), li passa a transform() e scrive il risultato in
+   non le sottocartelle), li converte nel formato
+       codicetessera;numerotessera;materiale;data ora
+   (data della 2a pesata se presente, altrimenti della 1a) e li scrive in
    /var/opt/in-out/csv/out. L'originale viene spostato in csv/elaborati
    (oppure cancellato con KEEP_ORIGINAL=0).
    La sincronizzazione di in-out deve avere "csv/out" nei sub_paths al posto
    di "csv": così viene inviato al remoto solo il file già trasformato.
+
+3. IMPORTA "in" → PRENOTAZIONI
+   Ogni CSV in /var/opt/in-out/csv/in (separatore ;, senza intestazione) ha
+   righe del tipo:
+       119686;ZN2G5541C03000166;HISAL415164
+       campo 1 → codice tessera   (card_registry.code)
+       campo 2 → numero tessera   (card_registry.number, e anche targa)
+       campo 3 → materiale        (material.description)
+   Prima operazione: crea le tessere che non esistono (commit separato).
+   Seconda operazione: crea veicolo (targa = numero tessera) e materiale se
+   mancano e inserisce la prenotazione (access RESERVATION, stato WAITING).
+   Se per quella tessera c'è già una prenotazione in attesa, la aggiorna
+   invece di crearne un'altra. A fine elaborazione il file viene ELIMINATO;
+   se il file contiene errori viene spostato in csv/in/errori.
 
 Struttura risultante:
     /var/opt/in-out/csv/            ← CSV generati da in-out (intercettati qui)
@@ -34,6 +50,9 @@ Variabili d'ambiente (tutte opzionali):
     CSV_DIR          cartella CSV generati     (default: app_api.path_csv o /var/opt/in-out/csv)
     OUT_DIR          cartella di uscita        (default: <CSV_DIR>/out)
     IN_DIR           cartella locale di "in"   (default: <CSV_DIR>/in)
+    ERROR_DIR        file "in" con errori      (default: <IN_DIR>/errori)
+    DB_PATH          database di in-out        (default: app_api.path_database o /var/opt/in-out/database.db)
+    IMPORT_ENABLED   1 = crea prenotazioni da "in", 0 = no     (default: 1)
     ARCHIVE_DIR      cartella originali        (default: <CSV_DIR>/elaborati)
     KEEP_ORIGINAL    1 = sposta in ARCHIVE_DIR, 0 = cancella   (default: 1)
     REMOTE_IN        percorso di "in" sul remoto, relativo a share/sub_path
@@ -50,6 +69,7 @@ import time
 import shutil
 import logging
 import posixpath
+import sqlite3
 from datetime import datetime
 from ftplib import FTP, FTP_TLS, error_perm
 
@@ -63,6 +83,7 @@ POLL_SECONDS = float(os.environ.get("POLL_SECONDS", "2"))
 STABLE_SECONDS = float(os.environ.get("STABLE_SECONDS", "3"))
 KEEP_ORIGINAL = os.environ.get("KEEP_ORIGINAL", "1") == "1"
 PULL_ENABLED = os.environ.get("PULL_ENABLED", "1") == "1"
+IMPORT_ENABLED = os.environ.get("IMPORT_ENABLED", "1") == "1"
 
 logging.basicConfig(
     level=getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO),
@@ -94,13 +115,20 @@ def resolve_paths(app_cfg: dict) -> dict:
     if rel_csv.startswith(".."):
         rel_csv = "csv"
 
+    in_dir = os.environ.get("IN_DIR") or os.path.join(csv_dir, "in")
+    db_path = os.environ.get("DB_PATH") or app_cfg.get("path_database") or "/var/opt/in-out/database.db"
+    if not os.path.isabs(db_path):
+        db_path = os.path.join(PROJECT_DIR, db_path)
+
     return {
         "local_dir": local_dir,
+        "db_path": db_path,
+        "error_dir": os.environ.get("ERROR_DIR") or os.path.join(in_dir, "errori"),
         "mount_point": sync_cfg.get("mount_point") or "/mnt/sync-folder",
         "remote_folder": sync_cfg.get("remote_folder"),
         "csv_dir": csv_dir,
         "out_dir": os.environ.get("OUT_DIR") or os.path.join(csv_dir, "out"),
-        "in_dir": os.environ.get("IN_DIR") or os.path.join(csv_dir, "in"),
+        "in_dir": in_dir,
         "archive_dir": os.environ.get("ARCHIVE_DIR") or os.path.join(csv_dir, "elaborati"),
         "tmp_dir": os.path.join(csv_dir, ".tmp"),
         "remote_in": (os.environ.get("REMOTE_IN") or posixpath.join(rel_csv, "in")).strip("/"),
@@ -110,16 +138,45 @@ def resolve_paths(app_cfg: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Trasformazione CSV: personalizzare qui
 # ---------------------------------------------------------------------------
+# Il CSV generato da in-out (applications/utils/utils_report.py →
+# generate_csv_report) è una riga di 29 campi separati da ';':
+#   13 numero tessera   14 codice tessera   19 materiale
+#   22 data 1a pesata   25 data 2a pesata   (formato DD/MM/YYYY HH:MM)
+# I campi della tessera e del materiale si leggono dall'inizio, le date dalla
+# fine: così un ';' dentro note o riferimento documento non sposta le date.
+CSV_FIELDS = 29
+IDX_CARD_NUMBER = 13
+IDX_CARD_CODE = 14
+IDX_MATERIAL = 19
+IDX_DATE1_FROM_END = 7   # data1 = campo 22 su 29
+IDX_DATE2_FROM_END = 4   # data2 = campo 25 su 29
+
+
 def transform(content: str, file_name: str) -> str:
     """
-    Riceve il contenuto del CSV generato da in-out e restituisce quello da
-    scrivere in out. Per ora lo lascia invariato: inserire qui la logica
-    (es. cambio separatore, colonne, filtri).
+    Converte ogni riga del CSV di in-out nel formato:
+        codicetessera;numerotessera;materiale;data ora
+    La data è quella della 2a pesata se presente, altrimenti della 1a.
 
     Se solleva un'eccezione il file NON viene passato in out e resta in csv/
     per essere ritentato al giro successivo.
     """
-    return content
+    out_lines = []
+    for line in content.splitlines():
+        if not line.strip():
+            continue
+        f = line.split(";")
+        if len(f) < CSV_FIELDS:
+            raise ValueError(f"{file_name}: attesi {CSV_FIELDS} campi, trovati {len(f)}")
+        if len(f) > CSV_FIELDS:
+            logger.warning(f"{file_name}: {len(f)} campi invece di {CSV_FIELDS} "
+                           f"(';' dentro un testo?), date lette dalla fine della riga")
+        code = f[IDX_CARD_CODE].strip()
+        number = f[IDX_CARD_NUMBER].strip()
+        material = f[IDX_MATERIAL].strip()
+        date = f[-IDX_DATE2_FROM_END].strip() or f[-IDX_DATE1_FROM_END].strip()
+        out_lines.append(";".join([code, number, material, date]))
+    return "\n".join(out_lines)
 
 
 # ---------------------------------------------------------------------------
@@ -433,6 +490,178 @@ def pull_remote_in(paths: dict):
 
 
 # ---------------------------------------------------------------------------
+# 3) csv/in → prenotazioni nel database di in-out
+# ---------------------------------------------------------------------------
+# Le scritture seguono le convenzioni di as400/as400.py: enum salvati con il
+# NOME (es. 'WAITING', 'RESERVATION'), date 'YYYY-MM-DD HH:MM:SS.ffffff'.
+
+class RowError(Exception):
+    """Riga non valida o in conflitto con i dati esistenti."""
+
+
+def _now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def read_in_rows(path: str) -> list:
+    """Legge il CSV e ritorna [(n_riga, codice, numero, materiale)]."""
+    with open(path, "rb") as f:
+        raw = f.read()
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = raw.decode("latin-1")
+
+    rows = []
+    for n, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        fields = [x.strip().strip('"').strip() for x in line.split(";")]
+        if len(fields) < 3:
+            raise RowError(f"riga {n}: attesi 3 campi, trovati {len(fields)}: {line!r}")
+        code, number, material = fields[0], fields[1], fields[2]
+        if not code or not number:
+            raise RowError(f"riga {n}: codice o numero tessera vuoto: {line!r}")
+        rows.append((n, code, number, material))
+    return rows
+
+
+def ensure_card(db: sqlite3.Connection, code: str, number: str) -> tuple:
+    """Ritorna (id tessera, creata?). Cerca per codice o numero; se non c'è la crea."""
+    by_code = db.execute("SELECT id, number FROM card_registry WHERE code = ? LIMIT 1", (code,)).fetchone()
+    by_number = db.execute("SELECT id, code FROM card_registry WHERE number = ? LIMIT 1", (number,)).fetchone()
+
+    if by_code and by_number and by_code[0] != by_number[0]:
+        raise RowError(f"codice {code} e numero {number} appartengono a due tessere diverse")
+    if by_code:
+        if by_code[1] and by_code[1].upper() != number.upper():
+            raise RowError(f"il codice {code} è già associato al numero {by_code[1]}")
+        if not by_code[1]:
+            db.execute("UPDATE card_registry SET number = ? WHERE id = ?", (number, by_code[0]))
+        return by_code[0], False
+    if by_number:
+        if by_number[1] and by_number[1].upper() != code.upper():
+            raise RowError(f"il numero {number} è già associato al codice {by_number[1]}")
+        if not by_number[1]:
+            db.execute("UPDATE card_registry SET code = ? WHERE id = ?", (code, by_number[0]))
+        return by_number[0], False
+
+    cur = db.execute(
+        "INSERT INTO card_registry (number, code, date_created) VALUES (?, ?, ?)",
+        (number, code, _now()),
+    )
+    return cur.lastrowid, True
+
+
+def get_or_create_vehicle(db: sqlite3.Connection, plate: str) -> int:
+    p = plate.strip().upper()
+    row = db.execute("SELECT id FROM vehicle WHERE plate = ? COLLATE NOCASE LIMIT 1", (p,)).fetchone()
+    if row:
+        return row[0]
+    return db.execute(
+        "INSERT INTO vehicle (plate, date_created) VALUES (?, ?)", (p, _now())
+    ).lastrowid
+
+
+def get_or_create_material(db: sqlite3.Connection, description: str):
+    if not description:
+        return None
+    row = db.execute(
+        "SELECT id FROM material WHERE description = ? COLLATE NOCASE LIMIT 1", (description,)
+    ).fetchone()
+    if row:
+        return row[0]
+    return db.execute(
+        "INSERT INTO material (description, date_created) VALUES (?, ?)", (description, _now())
+    ).lastrowid
+
+
+def upsert_reservation(db: sqlite3.Connection, id_card: int, id_vehicle: int, id_material) -> str:
+    """
+    Se per la tessera esiste già una prenotazione in attesa (WAITING, non di
+    transito) la aggiorna, altrimenti ne inserisce una nuova.
+    """
+    row = db.execute(
+        "SELECT id FROM access WHERE idCardRegistry = ? AND status = 'WAITING' "
+        "AND type = 'RESERVATION' AND (mode IS NULL OR mode != 'TRANSIT') "
+        "ORDER BY id DESC LIMIT 1",
+        (id_card,),
+    ).fetchone()
+    if row:
+        db.execute(
+            "UPDATE access SET idVehicle = ?, idMaterial = ? WHERE id = ?",
+            (id_vehicle, id_material, row[0]),
+        )
+        return "aggiornata"
+    db.execute(
+        "INSERT INTO access (idVehicle, idMaterial, idCardRegistry, number_in_out, "
+        "selected, date_created, status, type, hidden, mode) "
+        "VALUES (?, ?, ?, 1, 0, ?, 'WAITING', 'RESERVATION', 0, 'STANDARD')",
+        (id_vehicle, id_material, id_card, _now()),
+    )
+    return "inserita"
+
+
+def import_file(path: str, db_path: str):
+    rows = read_in_rows(path)
+    if not rows:
+        logger.info(f"{os.path.basename(path)}: file vuoto")
+        return
+
+    db = sqlite3.connect(db_path, timeout=30)
+    try:
+        # Operazione 1: tessere (commit a sé, prima delle prenotazioni)
+        cards = {}
+        with db:
+            for n, code, number, _ in rows:
+                try:
+                    id_card, created = ensure_card(db, code, number)
+                except RowError as e:
+                    raise RowError(f"riga {n}: {e}")
+                cards[n] = id_card
+                if created:
+                    logger.info(f"Tessera creata: codice {code}, numero {number}")
+
+        # Operazione 2: veicoli, materiali e prenotazioni (tutto o niente)
+        with db:
+            for n, code, number, material in rows:
+                id_vehicle = get_or_create_vehicle(db, number)
+                id_material = get_or_create_material(db, material)
+                esito = upsert_reservation(db, cards[n], id_vehicle, id_material)
+                logger.info(f"Prenotazione {esito}: tessera {code}/{number}, materiale {material}")
+    finally:
+        db.close()
+
+
+def import_in_dir(paths: dict):
+    in_dir, db_path = paths["in_dir"], paths["db_path"]
+    if not os.path.isdir(in_dir):
+        return
+    if not os.path.exists(db_path):
+        logger.error(f"Database non trovato: {db_path}")
+        return
+
+    for name in sorted(os.listdir(in_dir)):
+        path = os.path.join(in_dir, name)
+        if not is_csv(name) or not os.path.isfile(path):
+            continue
+        try:
+            import_file(path, db_path)
+            os.remove(path)
+            logger.info(f"{name}: importato ed eliminato")
+        except (RowError, sqlite3.IntegrityError) as e:
+            # Dati non validi: riprovare non serve, si sposta in errori
+            os.makedirs(paths["error_dir"], exist_ok=True)
+            shutil.move(path, unique_path(paths["error_dir"], name))
+            logger.error(f"{name}: {e} → spostato in {paths['error_dir']}")
+        except sqlite3.OperationalError as e:
+            # Es. database bloccato: il file resta in "in" e si ritenta
+            logger.warning(f"{name}: database non disponibile ({e}), riprovo")
+        except Exception as e:
+            logger.error(f"{name}: errore imprevisto ({e}), riprovo")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main():
@@ -460,6 +689,8 @@ def main():
             process_local_csv(paths)
             if PULL_ENABLED:
                 pull_remote_in(paths)
+            if IMPORT_ENABLED:
+                import_in_dir(paths)
             time.sleep(POLL_SECONDS)
     except KeyboardInterrupt:
         logger.info("Arresto.")
