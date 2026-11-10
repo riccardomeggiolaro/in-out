@@ -589,6 +589,12 @@ const totemViews = {
         html: () => `
             <h2>${t('summary_title')}</h2>
             <div class="summary-list">
+                <div class="summary-item disabled" id="rowCard">
+                    <span class="summary-item-label">${t('card_title')}</span>
+                    <div class="summary-item-value">
+                        <span class="summary-item-text" id="summaryCard">-</span>
+                    </div>
+                </div>
                 <div class="summary-item" id="rowPlate">
                     <span class="summary-item-label">${t('plate_title')}</span>
                     <div class="summary-item-value" onclick="goTo('plate?from=summary')">
@@ -648,12 +654,19 @@ const totemViews = {
                 document.getElementById('summaryVector').textContent = selectedVector.social_reason || '-';
                 document.getElementById('summaryDriver').textContent = selectedDriver.social_reason || '-';
                 document.getElementById('summaryMaterial').textContent = selectedMaterial.description || '-';
+                const cardNumber = selectedCard.number || '';
+                const cardCode = selectedCard.code || '';
+                let cardText = '-';
+                if (cardNumber && cardCode && cardNumber !== cardCode) cardText = `${cardNumber} (${cardCode})`;
+                else if (cardNumber || cardCode) cardText = cardNumber || cardCode;
+                document.getElementById('summaryCard').textContent = cardText;
                 const btnWeigh = document.getElementById('btnWeigh');
                 const btnWeighLabel = document.getElementById('btnWeighLabel');
                 if (btnWeighLabel) btnWeighLabel.textContent = t('confirm_weigh');
 
                 // Hide rows for disabled anagrafiche
                 const rowVisibility = {
+                    rowCard: totemAnagrafiche.card !== false,
                     rowPlate: totemAnagrafiche.vehicle,
                     rowSubject: totemAnagrafiche.subject,
                     rowVector: totemAnagrafiche.vector,

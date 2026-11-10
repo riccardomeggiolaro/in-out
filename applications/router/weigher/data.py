@@ -321,6 +321,12 @@ class DataRouter(CallbackWeigher):
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_driver"] = data_in_execution.driver.id is not None
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_note"] = data_in_execution.note is not None and data_in_execution.note != ""
 				weighers_data[instance.instance_name][instance.weigher_name]["data"]["reservation_has_document_reference"] = data_in_execution.document_reference is not None and data_in_execution.document_reference != ""
+				card_registry = access.card_registry
+				weighers_data[instance.instance_name][instance.weigher_name]["data"]["card"] = {
+					"id": card_registry.id if card_registry else None,
+					"number": card_registry.number if card_registry else None,
+					"code": card_registry.code if card_registry else None
+				}
 				self.setIdSelected(instance_name=instance.instance_name, weigher_name=instance.weigher_name, new_id=data_dto.id_selected.id, weight1=weight1, need_to_confirm=need_to_confirm)
 				self.setDataInExecution(instance_name=instance.instance_name, weigher_name=instance.weigher_name, source=data_in_execution, idAccess=data_dto.id_selected.id)
 		else:
