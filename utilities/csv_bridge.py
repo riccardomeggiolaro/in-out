@@ -13,7 +13,9 @@ Script autonomo (non importa nulla da in-out) che gira in loop e fa due cose:
 
 2. DA "csv" A "out" (locale → locale)
    Prende i CSV che in-out genera in  /var/opt/in-out/csv  (solo la cartella,
-   non le sottocartelle), li passa a transform() e scrive il risultato in
+   non le sottocartelle), li converte nel formato
+       codicetessera;numerotessera;materiale;data ora
+   (data della 2a pesata se presente, altrimenti della 1a) e li scrive in
    /var/opt/in-out/csv/out. L'originale viene spostato in csv/elaborati
    (oppure cancellato con KEEP_ORIGINAL=0).
    La sincronizzazione di in-out deve avere "csv/out" nei sub_paths al posto
@@ -136,16 +138,45 @@ def resolve_paths(app_cfg: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Trasformazione CSV: personalizzare qui
 # ---------------------------------------------------------------------------
+# Il CSV generato da in-out (applications/utils/utils_report.py →
+# generate_csv_report) è una riga di 29 campi separati da ';':
+#   13 numero tessera   14 codice tessera   19 materiale
+#   22 data 1a pesata   25 data 2a pesata   (formato DD/MM/YYYY HH:MM)
+# I campi della tessera e del materiale si leggono dall'inizio, le date dalla
+# fine: così un ';' dentro note o riferimento documento non sposta le date.
+CSV_FIELDS = 29
+IDX_CARD_NUMBER = 13
+IDX_CARD_CODE = 14
+IDX_MATERIAL = 19
+IDX_DATE1_FROM_END = 7   # data1 = campo 22 su 29
+IDX_DATE2_FROM_END = 4   # data2 = campo 25 su 29
+
+
 def transform(content: str, file_name: str) -> str:
     """
-    Riceve il contenuto del CSV generato da in-out e restituisce quello da
-    scrivere in out. Per ora lo lascia invariato: inserire qui la logica
-    (es. cambio separatore, colonne, filtri).
+    Converte ogni riga del CSV di in-out nel formato:
+        codicetessera;numerotessera;materiale;data ora
+    La data è quella della 2a pesata se presente, altrimenti della 1a.
 
     Se solleva un'eccezione il file NON viene passato in out e resta in csv/
     per essere ritentato al giro successivo.
     """
-    return content
+    out_lines = []
+    for line in content.splitlines():
+        if not line.strip():
+            continue
+        f = line.split(";")
+        if len(f) < CSV_FIELDS:
+            raise ValueError(f"{file_name}: attesi {CSV_FIELDS} campi, trovati {len(f)}")
+        if len(f) > CSV_FIELDS:
+            logger.warning(f"{file_name}: {len(f)} campi invece di {CSV_FIELDS} "
+                           f"(';' dentro un testo?), date lette dalla fine della riga")
+        code = f[IDX_CARD_CODE].strip()
+        number = f[IDX_CARD_NUMBER].strip()
+        material = f[IDX_MATERIAL].strip()
+        date = f[-IDX_DATE2_FROM_END].strip() or f[-IDX_DATE1_FROM_END].strip()
+        out_lines.append(";".join([code, number, material, date]))
+    return "\n".join(out_lines)
 
 
 # ---------------------------------------------------------------------------
