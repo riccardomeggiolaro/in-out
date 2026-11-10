@@ -165,7 +165,7 @@ const totemViews = {
                         showToast(res.message || t('weighing_generic_error'), 5000);
                     } else {
                         _cardExitManual();
-                        if (selectedVehicle.plate) goTo('plate');
+                        if (selectedVehicle.plate) goTo(weigherMode === "AUTOMATIC" ? 'summary' : 'plate');
                     }
                 })
                 .catch(() => {
@@ -196,14 +196,16 @@ const totemViews = {
                 _cardUpdateDisplay();
             });
 
+            // In automatic mode go straight to summary (no fields are requested)
+            const _cardNextView = () => weigherMode === "AUTOMATIC" ? 'summary' : 'plate';
             window.onDataReady = function() {
                 if (selectedVehicle.plate) {
-                    goTo('plate');
+                    goTo(_cardNextView());
                 }
             };
             window.onDataUpdate = function() {
                 if (selectedVehicle.plate) {
-                    goTo('plate');
+                    goTo(_cardNextView());
                 }
             };
         }
@@ -444,6 +446,10 @@ const totemViews = {
                     cancelTotem();
                     return;
                 }
+                if (selectedVehicle.plate && weigherMode === "AUTOMATIC" && !isFromSummary()) {
+                    goTo('summary');
+                    return;
+                }
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
                     document.getElementById('btnCancelPlate').style.visibility = '';
@@ -455,6 +461,13 @@ const totemViews = {
 
             window.onDataUpdate = function() {
                 if (_plateManualMode) return;
+                // In automatic mode go to summary right away: the 3s timer below is
+                // restarted by every data update, so during an automatic weighing it never fired
+                if (selectedVehicle.plate && weigherMode === "AUTOMATIC") {
+                    if (window._plateAutoNavTimer) { clearTimeout(window._plateAutoNavTimer); window._plateAutoNavTimer = null; }
+                    goTo('summary');
+                    return;
+                }
                 if (selectedVehicle.plate) {
                     _plateShowPlate(selectedVehicle.plate);
                     if (window._plateAutoNavTimer) clearTimeout(window._plateAutoNavTimer);
