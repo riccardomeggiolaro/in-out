@@ -1,53 +1,7 @@
 // ===== TOTEM VIEWS - SPA view definitions =====
 
-const totemViews = {
-
-    // ==================== CARD ====================
-    card: {
-        get title() { return 'Totem - ' + t('card_title'); },
-        style: `
-            .card-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: clamp(12px, 3vh, 32px); color: #FFFFFF; }
-            .card-weight-card { background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(12px, 3vw, 24px); padding: clamp(16px, 4vw, 48px) clamp(24px, 6vw, 72px); display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2vh, 24px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-            .card-weight-display { display: flex; align-items: baseline; gap: clamp(8px, 2vw, 20px); }
-            .card-net-weight { font-size: clamp(3rem, 18vh, 12rem); font-weight: 700; letter-spacing: 4px; color: #111111; }
-            .card-unit { font-size: clamp(1.2rem, 7vh, 4rem); font-weight: 600; color: #666666; }
-            .card-status { font-size: clamp(0.9rem, 4vh, 2.5rem); font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #666666; border-top: 2px solid #CCCCCC; padding-top: clamp(8px, 2vh, 20px); width: 100%; text-align: center; }
-        `,
-        html: () => `
-            <h2 style="flex: none">${t('card_instruction')}</h2>
-            <div class="card-hint">
-                <div class="card-weight-card">
-                    <div class="card-weight-display">
-                        <span class="card-net-weight" id="netWeight">------</span>
-                        <span class="card-unit" id="uniteMisure">--</span>
-                    </div>
-                    <span class="card-status" id="status">--</span>
-                </div>
-            </div>
-            <div class="step-buttons"></div>
-        `,
-        init: () => {
-            window.onDataReady = function() {
-                if (selectedVehicle.plate) {
-                    goTo('plate');
-                }
-            };
-            window.onDataUpdate = function() {
-                if (selectedVehicle.plate) {
-                    goTo('plate');
-                }
-            };
-        }
-    },
-
-    // ==================== PLATE ====================
-    plate: {
-        get title() { return 'Totem - ' + t('plate_title'); },
-        style: `
-            .license-plate { cursor: pointer; }
-            .plate-empty .plate-text { color: #AAAAAA; letter-spacing: 12px; }
-            .plate-input { display: none; font-size: 3.5rem; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase; border: none; outline: none; background: transparent; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; }
-            .plate-input.active { display: flex; }
+// --- Shared virtual keyboard (used by plate and card views) ---
+const _virtualKeyboardStyle = `
             .virtual-keyboard { display: none; width: 100%; flex: 1; min-height: 0; padding: 4px 16px; box-sizing: border-box; flex-direction: column; gap: 4px; }
             .virtual-keyboard.active { display: flex; }
             .vk-row { display: flex; gap: 4px; flex: 1; justify-content: center; }
@@ -55,21 +9,10 @@ const totemViews = {
             .vk-key:active { background: #444444; }
             .vk-key.vk-wide { max-width: 15%; flex: 1.5; }
             .vk-key.vk-backspace { max-width: 15%; flex: 1.5; font-size: clamp(0.7rem, 3vh, 2rem); }
-            .rfid-hint { display: none; }
-            .step-content { justify-content: center; }
-            .step-content.keyboard-active { justify-content: flex-start; }
-        `,
-        html: () => `
-            <h2>${t('plate_title')}</h2>
-            <div class="license-plate plate-empty" id="plateDisplay">
-                <div class="plate-band plate-band-left">
-                    <div class="plate-stars">&#9733;</div>
-                </div>
-                <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
-                <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
-                <div class="plate-band plate-band-right"></div>
-            </div>
+`;
 
+function _virtualKeyboardHtml() {
+    return `
             <div class="virtual-keyboard" id="virtualKeyboard">
                 <div class="vk-row">
                     <button class="vk-key" data-key="1">1</button>
@@ -117,6 +60,180 @@ const totemViews = {
                     <button class="vk-key vk-backspace" data-key="BACKSPACE">&#9003;</button>
                 </div>
             </div>
+`;
+}
+
+const totemViews = {
+
+    // ==================== CARD ====================
+    card: {
+        get title() { return 'Totem - ' + t('card_title'); },
+        style: `
+            .card-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: clamp(12px, 3vh, 32px); color: #FFFFFF; }
+            .card-weight-card { background: #FFFFFF; border: 3px solid #CCCCCC; border-radius: clamp(12px, 3vw, 24px); padding: clamp(16px, 4vw, 48px) clamp(24px, 6vw, 72px); display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2vh, 24px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+            .card-weight-display { display: flex; align-items: baseline; gap: clamp(8px, 2vw, 20px); }
+            .card-net-weight { font-size: clamp(3rem, 18vh, 12rem); font-weight: 700; letter-spacing: 4px; color: #111111; }
+            .card-unit { font-size: clamp(1.2rem, 7vh, 4rem); font-weight: 600; color: #666666; }
+            .card-status { font-size: clamp(0.9rem, 4vh, 2.5rem); font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #666666; border-top: 2px solid #CCCCCC; padding-top: clamp(8px, 2vh, 20px); width: 100%; text-align: center; }
+            .card-manual { display: none; width: 100%; justify-content: center; padding: clamp(8px, 2vh, 20px) 16px; box-sizing: border-box; }
+            .card-manual.active { display: flex; }
+            .card-manual-display { background: #FFFFFF; color: #111111; border: 3px solid #CCCCCC; border-radius: clamp(8px, 2vw, 16px); min-height: clamp(48px, 12vh, 120px); width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: center; font-family: 'Courier New', monospace; font-size: clamp(1.5rem, 8vh, 5rem); font-weight: 700; letter-spacing: 6px; padding: 0 12px; box-sizing: border-box; overflow: hidden; white-space: nowrap; }
+            .card-manual-display.card-manual-empty { color: #AAAAAA; letter-spacing: 12px; }
+            .step-content.keyboard-active { justify-content: flex-start; }
+            ${_virtualKeyboardStyle}
+        `,
+        html: () => `
+            <h2 style="flex: none; cursor: pointer" id="cardTitle">${t('card_instruction')}</h2>
+            <div class="card-hint" id="cardHint">
+                <div class="card-weight-card">
+                    <div class="card-weight-display">
+                        <span class="card-net-weight" id="netWeight">------</span>
+                        <span class="card-unit" id="uniteMisure">--</span>
+                    </div>
+                    <span class="card-status" id="status">--</span>
+                </div>
+            </div>
+            <div class="card-manual" id="cardManual">
+                <div class="card-manual-display card-manual-empty" id="cardManualDisplay">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</div>
+            </div>
+            ${_virtualKeyboardHtml()}
+            <div class="step-buttons">
+                <button class="btn btn-secondary" id="btnCancelCard" style="visibility:hidden">${t('undo')}</button>
+                <button class="btn btn-primary btn-next" id="btnConfirmCard" style="visibility:hidden">${t('confirm')}</button>
+            </div>
+        `,
+        init: () => {
+            window._cardManualMode = false;
+            window._cardManualValue = '';
+            let _cardSending = false;
+
+            const _cardUpdateDisplay = function() {
+                const display = document.getElementById('cardManualDisplay');
+                if (!display) return;
+                if (_cardManualValue) {
+                    display.textContent = _cardManualValue;
+                    display.classList.remove('card-manual-empty');
+                } else {
+                    display.innerHTML = '&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;';
+                    display.classList.add('card-manual-empty');
+                }
+            };
+
+            const _cardEnterManual = function() {
+                _cardManualMode = true;
+                _cardManualValue = '';
+                _cardUpdateDisplay();
+                document.getElementById('cardHint').style.display = 'none';
+                document.getElementById('cardManual').classList.add('active');
+                document.getElementById('virtualKeyboard').classList.add('active');
+                document.querySelector('.step-content')?.classList.add('keyboard-active');
+                document.getElementById('btnCancelCard').style.visibility = '';
+                document.getElementById('btnConfirmCard').style.visibility = '';
+            };
+
+            const _cardExitManual = function() {
+                _cardManualMode = false;
+                _cardManualValue = '';
+                const hint = document.getElementById('cardHint');
+                if (!hint) return;
+                hint.style.display = '';
+                document.getElementById('cardManual').classList.remove('active');
+                document.getElementById('virtualKeyboard').classList.remove('active');
+                document.querySelector('.step-content')?.classList.remove('keyboard-active');
+                document.getElementById('btnCancelCard').style.visibility = 'hidden';
+                document.getElementById('btnConfirmCard').style.visibility = 'hidden';
+            };
+
+            const _cardConfirmManual = function() {
+                const value = _cardManualValue.trim().toUpperCase();
+                if (!value || _cardSending) return;
+                _cardSending = true;
+                const btnConfirm = document.getElementById('btnConfirmCard');
+                if (btnConfirm) btnConfirm.disabled = true;
+                // Same flow as a physical RFID read: the backend looks up the access by card code
+                const token = localStorage.getItem('token') || '';
+                fetch(`/api/command-weigher/weighing/auto${currentWeigherPath}&token=${encodeURIComponent(token)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identify: value })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.detail) {
+                        showToast(typeof res.detail === 'string' ? res.detail : JSON.stringify(res.detail), 5000);
+                    } else if (res.is_error) {
+                        showToast(res.message || t('weighing_generic_error'), 5000);
+                    } else {
+                        _cardExitManual();
+                        if (selectedVehicle.plate) goTo('plate');
+                    }
+                })
+                .catch(() => {
+                    showToast(t('weighing_generic_error') || 'Errore di rete', 4000);
+                })
+                .finally(() => {
+                    _cardSending = false;
+                    const btn = document.getElementById('btnConfirmCard');
+                    if (btn) btn.disabled = false;
+                });
+            };
+
+            document.getElementById('cardTitle').addEventListener('click', () => {
+                if (!_cardManualMode) _cardEnterManual();
+            });
+            document.getElementById('btnCancelCard').addEventListener('click', _cardExitManual);
+            document.getElementById('btnConfirmCard').addEventListener('click', _cardConfirmManual);
+
+            document.getElementById('virtualKeyboard').addEventListener('click', (e) => {
+                const key = e.target.closest('.vk-key');
+                if (!key) return;
+                const val = key.dataset.key;
+                if (val === 'BACKSPACE') {
+                    _cardManualValue = _cardManualValue.slice(0, -1);
+                } else if (_cardManualValue.length < 30) {
+                    _cardManualValue += val;
+                }
+                _cardUpdateDisplay();
+            });
+
+            window.onDataReady = function() {
+                if (selectedVehicle.plate) {
+                    goTo('plate');
+                }
+            };
+            window.onDataUpdate = function() {
+                if (selectedVehicle.plate) {
+                    goTo('plate');
+                }
+            };
+        }
+    },
+
+    // ==================== PLATE ====================
+    plate: {
+        get title() { return 'Totem - ' + t('plate_title'); },
+        style: `
+            .license-plate { cursor: pointer; }
+            .plate-empty .plate-text { color: #AAAAAA; letter-spacing: 12px; }
+            .plate-input { display: none; font-size: 3.5rem; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase; border: none; outline: none; background: transparent; width: 100%; height: 100%; padding: 0 8px; box-sizing: border-box; }
+            .plate-input.active { display: flex; }
+            ${_virtualKeyboardStyle}
+            .rfid-hint { display: none; }
+            .step-content { justify-content: center; }
+            .step-content.keyboard-active { justify-content: flex-start; }
+        `,
+        html: () => `
+            <h2>${t('plate_title')}</h2>
+            <div class="license-plate plate-empty" id="plateDisplay">
+                <div class="plate-band plate-band-left">
+                    <div class="plate-stars">&#9733;</div>
+                </div>
+                <span class="plate-text" id="plateText">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</span>
+                <input class="plate-input" id="manualPlateInput" type="text" maxlength="10" placeholder="AB123CD" autocomplete="off" inputmode="none" enterkeyhint="done" readonly>
+                <div class="plate-band plate-band-right"></div>
+            </div>
+
+            ${_virtualKeyboardHtml()}
             <div class="step-buttons">
                 <button class="btn btn-secondary" id="btnCancelPlate" style="visibility:hidden" onclick="cancelTotem()">${t('cancel')}</button>
                 <button class="btn btn-primary btn-next" id="btnNext" style="visibility:hidden" onclick="_plateGoToNext()">${t('next')}</button>
