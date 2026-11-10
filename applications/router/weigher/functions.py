@@ -134,6 +134,7 @@ class Functions:
 	def setIdSelected(self, instance_name: str, weigher_name: str, new_id: int, weight1: int, need_to_confirm: bool):
 		if new_id == -1:
 			new_id = None
+			weighers_data[instance_name][weigher_name]["data"]["card"] = {"id": None, "number": None, "code": None}
 		else:
 			success, locked_record, error = lock_record("access", new_id, "SELECT", None, None, weigher_name)
 			if success is False:
@@ -150,6 +151,7 @@ class Functions:
 		current_id = weighers_data[instance_name][weigher_name]["data"]["id_selected"]["id"]
 		if current_id is not None:
 			unlock_record_by_attributes("access", current_id, None, weigher_name)
+		weighers_data[instance_name][weigher_name]["data"]["card"] = {"id": None, "number": None, "code": None}
 		weighers_data[instance_name][weigher_name]["data"]["id_selected"] = {
 			"id": None,
 			"weight1": None,

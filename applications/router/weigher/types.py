@@ -38,6 +38,11 @@ class IdSelected(BaseModel):
 	id: Optional[int] = None
 	weight1: Optional[int] = None
 
+class CardSelected(BaseModel):
+	id: Optional[int] = None
+	number: Optional[str] = None
+	code: Optional[str] = None
+
 class IdSelectedExtended(IdSelected):
     need_to_confirm: Optional[bool] = False
 
@@ -53,6 +58,7 @@ class Data(BaseModel):
 	reservation_has_driver: Optional[bool] = False
 	reservation_has_note: Optional[bool] = False
 	reservation_has_document_reference: Optional[bool] = False
+	card: CardSelected = CardSelected(**{})
     
 class EventAction(BaseModel):
     take_picture: List[int] = []
