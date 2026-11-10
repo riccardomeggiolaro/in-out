@@ -56,6 +56,13 @@ class FileHandler(FileSystemEventHandler):
 			pending_files.append(event.src_path)
 			lb_log.warning(event.src_path)
 
+	def on_moved(self, event):
+		# File scritti in modo atomico (temporaneo + rename) arrivano come "moved":
+		# si accoda la destinazione se rientra nei path consentiti
+		if self._is_path_allowed(event.dest_path):
+			pending_files.append(event.dest_path)
+			lb_log.warning(event.dest_path)
+
 class ModuleSyncFolder:
 	def __init__(self):
 		self.observer = None
