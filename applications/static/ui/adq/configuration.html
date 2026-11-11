@@ -782,6 +782,9 @@
                                 <strong>Client ID / Topic:</strong>
                                 <span id="mb-info-topic"></span>
 
+                                <strong>Utente MQTT:</strong>
+                                <span id="mb-info-username"></span>
+
                                 <strong>Certificato client:</strong>
                                 <span id="mb-info-cert"></span>
 
@@ -976,22 +979,44 @@
                 <input type="number" id="mb-port" min="1" max="65535" required>
                 <br><br>
 
-                <label for="mb-ca-file">Certificato CA (.crt/.pem): *</label>
+                <small style="color: #666;">Autenticazione: username/password, certificato client, o entrambi.</small>
+                <br><br>
+
+                <label for="mb-username">Username:</label>
+                <input type="text" id="mb-username" autocomplete="off">
+                <br><br>
+
+                <label for="mb-password">Password:</label>
+                <input type="password" id="mb-password" autocomplete="new-password">
+                <br>
+                <small id="mb-password-current" style="color: #666;"></small>
+                <br><br>
+
+                <label for="mb-ca-file">Certificato CA (.crt/.pem):</label>
                 <input type="file" id="mb-ca-file" accept=".crt,.pem,.cer">
                 <br>
                 <small id="mb-ca-current" style="color: #666;"></small>
+                <span id="mb-ca-remove-wrap" style="display: none;">
+                    <input type="checkbox" id="mb-ca-remove">
+                    <label for="mb-ca-remove">Rimuovi (usa i CA di sistema)</label>
+                </span>
                 <br><br>
 
-                <label for="mb-cert-file">Certificato client (.crt/.pem): *</label>
+                <label for="mb-cert-file">Certificato client (.crt/.pem):</label>
                 <input type="file" id="mb-cert-file" accept=".crt,.pem,.cer">
                 <br>
                 <small id="mb-cert-current" style="color: #666;"></small>
                 <br><br>
 
-                <label for="mb-key-file">Chiave privata client (.key/.pem): *</label>
+                <label for="mb-key-file">Chiave privata client (.key/.pem):</label>
                 <input type="file" id="mb-key-file" accept=".key,.pem">
                 <br>
                 <small id="mb-key-current" style="color: #666;"></small>
+                <span id="mb-client-cert-remove-wrap" style="display: none;">
+                    <br>
+                    <input type="checkbox" id="mb-client-cert-remove">
+                    <label for="mb-client-cert-remove">Rimuovi certificato e chiave client</label>
+                </span>
                 <br><br>
 
                 <label>Client ID / Topic: </label>
@@ -4537,8 +4562,11 @@
             info.style.display = 'block';
             document.getElementById('mb-info-server').textContent = `mqtts://${c.host}:${c.port}`;
             document.getElementById('mb-info-topic').textContent = currentMessageBrokerInfo.client_id || '-';
-            document.getElementById('mb-info-cert').textContent = describeCertificate(certs.cert) + (certs.key && certs.key.present ? '' : ' / chiave mancante');
-            document.getElementById('mb-info-ca').textContent = describeCertificate(certs.ca);
+            document.getElementById('mb-info-username').textContent = c.username ? `${c.username}${c.has_password ? ' (password impostata)' : ' (senza password)'}` : '-';
+            document.getElementById('mb-info-cert').textContent = certs.cert && certs.cert.present
+                ? describeCertificate(certs.cert) + (certs.key && certs.key.present ? '' : ' / chiave mancante')
+                : 'Non usato';
+            document.getElementById('mb-info-ca').textContent = certs.ca && certs.ca.present ? describeCertificate(certs.ca) : 'CA di sistema';
             const attachments = [];
             if (c.include_images) attachments.push('Foto');
             if (c.include_pdf) attachments.push('PDF');
@@ -4587,6 +4615,15 @@
             document.getElementById('mb-host').value = c.host || '';
             document.getElementById('mb-port').value = c.port || 8883;
             document.getElementById('mb-client-id').value = currentMessageBrokerInfo.client_id || '';
+            document.getElementById('mb-username').value = c.username || '';
+            document.getElementById('mb-password').value = '';
+            document.getElementById('mb-password-current').textContent = c.has_password
+                ? 'Password già salvata: lascia vuoto per mantenerla.'
+                : '';
+            document.getElementById('mb-ca-remove').checked = false;
+            document.getElementById('mb-client-cert-remove').checked = false;
+            document.getElementById('mb-ca-remove-wrap').style.display = certs.ca && certs.ca.present ? 'inline' : 'none';
+            document.getElementById('mb-client-cert-remove-wrap').style.display = certs.cert && certs.cert.present ? 'inline' : 'none';
             document.getElementById('mb-include-images').checked = c.include_images !== false;
             document.getElementById('mb-include-pdf').checked = c.include_pdf !== false;
             document.getElementById('mb-include-csv').checked = c.include_csv !== false;
@@ -4595,7 +4632,7 @@
                 const present = certs[kind] && certs[kind].present;
                 document.getElementById(`${prefix}-current`).textContent = present
                     ? `Già caricato${certs[kind].subject ? ': ' + describeCertificate(certs[kind]) : ''}. Seleziona un file solo per sostituirlo.`
-                    : 'Nessun file caricato';
+                    : (kind === 'ca' ? 'Facoltativo: senza file si usano i CA di sistema' : 'Facoltativo se usi username/password');
             });
             showModalEl(mbModal('message-broker-modal'));
         }
@@ -4619,16 +4656,30 @@
             form.append('include_images', document.getElementById('mb-include-images').checked);
             form.append('include_pdf', document.getElementById('mb-include-pdf').checked);
             form.append('include_csv', document.getElementById('mb-include-csv').checked);
-            const fileFields = [['ca', 'mb-ca-file', 'ca_file', 'certificato CA'], ['cert', 'mb-cert-file', 'cert_file', 'certificato client'], ['key', 'mb-key-file', 'key_file', 'chiave privata']];
-            for (const [kind, inputId, field, label] of fileFields) {
-                const file = document.getElementById(inputId).files[0];
-                if (file) {
-                    form.append(field, file);
-                } else if (!(certs[kind] && certs[kind].present)) {
-                    showSnackbar("snackbar", `Carica il file: ${label}`, 'rgb(255, 208, 208)', 'black');
-                    return;
-                }
+            const username = document.getElementById('mb-username').value.trim();
+            const password = document.getElementById('mb-password').value;
+            const removeCa = document.getElementById('mb-ca-remove').checked;
+            const removeClientCert = document.getElementById('mb-client-cert-remove').checked;
+            const caFile = document.getElementById('mb-ca-file').files[0];
+            const certFile = document.getElementById('mb-cert-file').files[0];
+            const keyFile = document.getElementById('mb-key-file').files[0];
+            const hasCert = certFile || (!removeClientCert && certs.cert && certs.cert.present);
+            const hasKey = keyFile || (!removeClientCert && certs.key && certs.key.present);
+            if (!!hasCert !== !!hasKey) {
+                showSnackbar("snackbar", 'Certificato e chiave client vanno caricati insieme', 'rgb(255, 208, 208)', 'black');
+                return;
             }
+            if (!username && !hasCert) {
+                showSnackbar("snackbar", 'Imposta username e password oppure carica certificato e chiave client', 'rgb(255, 208, 208)', 'black');
+                return;
+            }
+            if (username) form.append('username', username);
+            if (password) form.append('password', password);
+            form.append('remove_ca', removeCa);
+            form.append('remove_client_cert', removeClientCert);
+            if (caFile) form.append('ca_file', caFile);
+            if (certFile) form.append('cert_file', certFile);
+            if (keyFile) form.append('key_file', keyFile);
             modal.querySelectorAll("input, button, select").forEach(e => e.disabled = true);
             showSnackbar("snackbar", "Connessione al broker in corso...", 'rgb(255, 255, 208)', 'black');
             fetch('/api/message-broker', { method: 'POST', body: form })

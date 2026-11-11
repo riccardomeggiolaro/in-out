@@ -23,8 +23,13 @@ class MessageBrokerRouter:
     def _response(self):
         module = md_message_broker.module_message_broker
         settings = md_message_broker.get_settings()
+        broker = settings.get("broker")
+        if broker:
+            # La password non viene mai restituita
+            broker = {k: v for k, v in broker.items() if k != "password"}
+            broker["has_password"] = bool(settings["broker"].get("password"))
         return {
-            "broker": settings.get("broker"),
+            "broker": broker,
             "client_id": module.client_id,
             "topic": module.client_id,
             "certificates": module.get_certificates_info(),
@@ -37,6 +42,10 @@ class MessageBrokerRouter:
         self,
         host: str = Form(...),
         port: int = Form(8883),
+        username: Optional[str] = Form(None),
+        password: Optional[str] = Form(None),
+        remove_ca: bool = Form(False),
+        remove_client_cert: bool = Form(False),
         include_images: bool = Form(True),
         include_pdf: bool = Form(True),
         include_csv: bool = Form(True),
@@ -44,9 +53,16 @@ class MessageBrokerRouter:
         cert_file: Optional[UploadFile] = File(None),
         key_file: Optional[UploadFile] = File(None),
     ):
+        # Password vuota/non inviata = mantiene quella già salvata (se l'utente non cambia)
+        current = md_message_broker.get_settings().get("broker") or {}
+        username = (username or "").strip() or None
+        if not password and username and username == current.get("username"):
+            password = current.get("password")
+        if not username:
+            password = None
         try:
             body = MessageBrokerDTO(
-                host=host, port=port,
+                host=host, port=port, username=username, password=password or None,
                 include_images=include_images, include_pdf=include_pdf, include_csv=include_csv,
             )
         except ValidationError as e:
@@ -62,8 +78,11 @@ class MessageBrokerRouter:
                 files[kind] = content
 
         module = md_message_broker.module_message_broker
+        will_have_client_cert = bool(files.get("cert")) or (module.has_client_certificate() and not remove_client_cert)
+        if not body.username and not will_have_client_cert:
+            raise HTTPException(status_code=400, detail="Imposta username e password oppure carica certificato e chiave client")
         try:
-            await run_in_threadpool(module.install_certificates, files)
+            await run_in_threadpool(module.install_certificates, files, remove_ca, remove_client_cert)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
 
