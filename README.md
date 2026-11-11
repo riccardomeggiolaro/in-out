@@ -53,3 +53,46 @@ git pull && docker compose up -d --build   # aggiornamento
 
 Il pulsante "Riavvia" dell'interfaccia in Docker riavvia il processo in-out
 nel container (non serve systemd).
+
+## Installazione con Docker su Windows
+
+Requisiti: Windows 10 (22H2) / 11 a 64 bit con virtualizzazione abilitata nel BIOS.
+
+1. Clona o copia il progetto, ad esempio in `C:\in-out`.
+2. Apri **PowerShell come Amministratore** nella cartella del progetto ed esegui:
+   ```powershell
+   Set-ExecutionPolicy -Scope Process Bypass
+   .\installer-docker.ps1
+   ```
+   La prima volta lo script installa WSL2 e Docker Desktop e chiede di riavviare:
+   dopo il riavvio apri Docker Desktop una volta (accetta i termini) e rilancia lo script.
+3. Apri `http://localhost/` (in-out) e `http://localhost:631/` (CUPS, credenziali nel file `.env`).
+
+Differenze rispetto a Linux:
+
+- il container usa la rete *bridge* con le porte pubblicate (`docker-compose.windows.yml`);
+  se cambi `app_api.port` in `config.json` aggiorna anche `IN_OUT_HTTP_PORT` nel `.env`
+  e la porta interna in `docker-compose.windows.yml`;
+- i dati stanno in `docker-data\` dentro la cartella del progetto;
+- Docker Desktop parte solo dopo il login dell'utente: abilita
+  *Settings → General → Start Docker Desktop when you sign in* e l'accesso automatico a Windows
+  se il PC deve ripartire da solo;
+- Docker Desktop è gratuito per aziende sotto i 250 dipendenti e 10 M$ di fatturato,
+  altrimenti serve un abbonamento.
+
+### Porte seriali su Windows
+
+Docker Desktop non vede le porte `COMx`. Le opzioni sono:
+
+- **Adattatori USB-seriale** con [usbipd-win](https://github.com/dorssel/usbipd-win)
+  (lo script propone di installarlo). Da PowerShell come Amministratore:
+  ```powershell
+  usbipd list                                   # trova il BUSID dell'adattatore
+  usbipd bind --busid 2-3                       # una sola volta
+  usbipd attach --wsl --busid 2-3 --auto-attach # ad ogni avvio
+  ```
+  Nel container il dispositivo appare come `/dev/ttyUSB0` (o `/dev/ttyACM0`):
+  usa questo nome nella configurazione della pesa/RFID al posto di `COM3`.
+- **Porte COM integrate** (RS232 sulla scheda madre): non possono essere passate al container.
+  Usa un convertitore seriale→TCP (es. Moxa NPort) e configura il dispositivo via TCP,
+  oppure mantieni l'installazione nativa di in-out su quel PC.

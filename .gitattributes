@@ -1,0 +1,6 @@
+# Gli script eseguiti nel container Linux devono avere fine riga LF
+# anche se il repository viene clonato su Windows (core.autocrlf=true)
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+docker/**       text eol=lf
+*.ps1           text eol=crlf

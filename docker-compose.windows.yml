@@ -1,0 +1,16 @@
+# Override per Docker Desktop su Windows.
+#
+# Docker Desktop non supporta in modo affidabile network_mode: host, quindi il
+# container usa la rete bridge pubblicando le porte sul PC Windows.
+# Bilance/RFID/Moxa via TCP restano raggiungibili (connessioni in uscita).
+#
+# Uso:  docker compose -f docker-compose.yml -f docker-compose.windows.yml up -d --build
+# (installer-docker.ps1 imposta COMPOSE_FILE nel file .env, quindi basta "docker compose up -d")
+services:
+  in-out:
+    network_mode: bridge
+    ports:
+      # porta web: deve corrispondere a app_api.port in config.json (default 80)
+      - "${IN_OUT_HTTP_PORT:-80}:80"
+      # interfaccia web di CUPS
+      - "${IN_OUT_CUPS_PORT:-631}:631"
