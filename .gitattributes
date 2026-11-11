@@ -4,3 +4,6 @@
 Dockerfile      text eol=lf
 docker/**       text eol=lf
 *.ps1           text eol=crlf
+
+# Installer dei driver: archivi autoestraenti con dati binari, mai convertire
+printers-driver/** -text
