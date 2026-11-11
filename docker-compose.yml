@@ -1,0 +1,30 @@
+# In-Out - avvio con:  docker compose up -d --build
+#
+# network_mode host  -> porta web (80), CUPS (631) e dispositivi TCP (bilance,
+#                       RFID, Moxa) raggiungibili come in un'installazione nativa
+# privileged         -> accesso alle porte seriali (/dev/ttyS*, /dev/ttyUSB*)
+#                       e mount CIFS della sync-folder
+services:
+  in-out:
+    build:
+      context: .
+    image: in-out:latest
+    container_name: in-out
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    environment:
+      TZ: ${TZ:-Europe/Rome}
+      CUPS_ENABLED: ${CUPS_ENABLED:-1}
+      CUPS_ADMIN_USER: ${CUPS_ADMIN_USER:-admin}
+      CUPS_ADMIN_PASSWORD: ${CUPS_ADMIN_PASSWORD:-}
+    volumes:
+      - ${IN_OUT_CONFIG_DIR:-./docker-data/config}:/etc/in-out
+      - ${IN_OUT_DATA_DIR:-./docker-data/data}:/var/opt/in-out
+      - ${IN_OUT_CUPS_DIR:-./docker-data/cups}:/etc/cups
+      - /dev:/dev
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"

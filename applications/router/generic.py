@@ -366,6 +366,16 @@ class GenericRouter:
         is_linux = lb_system.is_linux()
         service_name = "in-out"
 
+        # In Docker non c'e' systemd: si riavvia il processo sul posto
+        # (stesso meccanismo usato al cambio di config.json).
+        if lb_system.is_docker():
+            async def reexec_after_response():
+                await asyncio.sleep(1)  # Attendi che la risposta sia inviata
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+
+            asyncio.create_task(reexec_after_response())
+            return {"message": f"Riavvio di {service_name} in corso..."}
+
         def is_service_active():
             try:
                 if is_windows:

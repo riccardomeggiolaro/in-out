@@ -196,3 +196,6 @@ pdf
 images
 # Stato del watcher dei transiti AS400 (solo sul server)
 as400/transit_watcher_state.json
+
+# Docker
+docker-data/
