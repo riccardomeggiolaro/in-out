@@ -2,8 +2,13 @@
 # ==============================================================
 # Installer Docker per In-Out
 #
-# Uso:   sudo ./installer-docker.sh [-y]
-#   -y   modalita' non interattiva (risponde si' a tutte le domande)
+# Uso:   sudo ./installer-docker.sh [-y] [--build]
+#   -y        modalita' non interattiva (risponde si' a tutte le domande)
+#   --build   costruisce l'immagine dal codice sorgente invece di scaricarla
+#             da ghcr.io (richiede il progetto completo con il Dockerfile)
+#
+# Variabili per il login non interattivo al registry privato:
+#   GHCR_USER, GHCR_TOKEN (token GitHub con permesso read:packages)
 #
 # Cosa fa:
 #   1. installa Docker Engine + plugin compose (se mancanti)
@@ -11,7 +16,7 @@
 #   3. crea .env e le cartelle persistenti (/etc/in-out, /var/opt/in-out)
 #   4. migra config.json da un'eventuale installazione nativa
 #   5. ferma servizi in conflitto (in-out.service nativo, CUPS dell'host)
-#   6. builda l'immagine e avvia il container
+#   6. scarica l'immagine da ghcr.io (o la costruisce) e avvia il container
 # ==============================================================
 set -e
 
@@ -25,7 +30,14 @@ print_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 print_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
 ASSUME_YES=false
-[ "$1" = "-y" ] && ASSUME_YES=true
+BUILD=false
+for arg in "$@"; do
+    case "$arg" in
+        -y) ASSUME_YES=true ;;
+        --build) BUILD=true ;;
+        *) print_error "Opzione sconosciuta: $arg"; exit 1 ;;
+    esac
+done
 
 ask() {
     # ask "domanda" -> 0 se si'
@@ -69,7 +81,7 @@ if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
     print_info "Copia dei file da $SOURCE_DIR a $INSTALL_DIR..."
     mkdir -p "$INSTALL_DIR"
     # Mantiene un eventuale config.json di un'installazione nativa gia' presente
-    if [ -f "$INSTALL_DIR/config.json" ] && [ ! -f "$CONFIG_DIR/config.json" ]; then
+    if [ -f "$INSTALL_DIR/config.json" ] && [ -f "$INSTALL_DIR/main.py" ] && [ ! -f "$CONFIG_DIR/config.json" ]; then
         mkdir -p "$CONFIG_DIR"
         cp "$INSTALL_DIR/config.json" "$CONFIG_DIR/config.json"
         print_info "config.json dell'installazione nativa migrato in $CONFIG_DIR"
@@ -81,11 +93,10 @@ cd "$INSTALL_DIR"
 # --- 3. Cartelle persistenti e .env ---------------------------
 mkdir -p "$CONFIG_DIR" "$CUPS_DIR" "$DATA_DIR"/{pdf,csv,images,backup}
 
-if [ ! -f "$CONFIG_DIR/config.json" ]; then
-    cp "$INSTALL_DIR/config.json" "$CONFIG_DIR/config.json"
-    print_info "Creato $CONFIG_DIR/config.json dalla configurazione di default"
-else
+if [ -f "$CONFIG_DIR/config.json" ]; then
     print_info "Uso la configurazione esistente $CONFIG_DIR/config.json"
+else
+    print_info "Al primo avvio verra' creato $CONFIG_DIR/config.json con la configurazione di default"
 fi
 
 if [ ! -f "$INSTALL_DIR/.env" ]; then
@@ -126,9 +137,27 @@ if command -v ufw &>/dev/null && ufw status | grep -q "Status: active"; then
     ufw allow 631/tcp comment 'CUPS in-out'
 fi
 
-# --- 6. Build e avvio -----------------------------------------
-print_info "Build dell'immagine e avvio del container (puo' richiedere qualche minuto)..."
-docker compose up -d --build
+# --- 6. Immagine e avvio --------------------------------------
+if [ "$BUILD" = true ]; then
+    if [ ! -f Dockerfile ]; then
+        print_error "--build richiede il codice sorgente completo (Dockerfile non trovato)"
+        exit 1
+    fi
+    print_info "Build dell'immagine e avvio del container (puo' richiedere qualche minuto)..."
+    docker compose up -d --build
+else
+    print_info "Download dell'immagine da ghcr.io..."
+    if ! docker compose pull; then
+        print_warning "Download non riuscito: il registry e' privato, serve il login a ghcr.io"
+        echo "Serve un token GitHub (classic) con il solo permesso read:packages:"
+        echo "  GitHub > Settings > Developer settings > Personal access tokens"
+        if [ -z "$GHCR_USER" ]; then read -r -p "Utente GitHub: " GHCR_USER; fi
+        if [ -z "$GHCR_TOKEN" ]; then read -r -s -p "Token: " GHCR_TOKEN; echo; fi
+        echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+        docker compose pull
+    fi
+    docker compose up -d --no-build
+fi
 
 sleep 5
 if [ "$(docker inspect -f '{{.State.Running}}' in-out 2>/dev/null)" = "true" ]; then
@@ -143,7 +172,7 @@ if [ "$(docker inspect -f '{{.State.Running}}' in-out 2>/dev/null)" = "true" ]; 
     echo "  - Stato:      docker compose ps"
     echo "  - Riavvio:    docker compose restart"
     echo "  - Stop:       docker compose down"
-    echo "  - Aggiorna:   git pull && docker compose up -d --build"
+    echo "  - Aggiorna:   docker compose pull && docker compose up -d"
 else
     print_error "Il container non risulta in esecuzione"
     echo "Controllare con: cd $INSTALL_DIR && docker compose logs"

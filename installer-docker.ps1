@@ -2,18 +2,20 @@
 ==============================================================
  Installer Docker per In-Out su Windows (Docker Desktop + WSL2)
 
- Uso (PowerShell come Amministratore, dalla cartella del progetto):
+ Uso (PowerShell come Amministratore, dalla cartella estratta da in-out-docker.zip):
      Set-ExecutionPolicy -Scope Process Bypass
-     .\installer-docker.ps1
+     .\installer-docker.ps1            # scarica l'immagine da ghcr.io (privato)
+     .\installer-docker.ps1 -Build     # costruisce l'immagine dal codice sorgente
 
  Cosa fa:
    1. verifica/installa WSL2 e Docker Desktop (via winget)
    2. crea .env con cartelle dati locali e password CUPS casuale
    3. apre le porte nel firewall di Windows
-   4. builda l'immagine e avvia il container
+   4. scarica l'immagine da ghcr.io (o la costruisce) e avvia il container
    5. (opzionale) installa usbipd-win per le porte seriali USB
 ==============================================================
 #>
+param([switch]$Build)
 $ErrorActionPreference = "Stop"
 Set-Location -Path $PSScriptRoot
 
@@ -58,12 +60,20 @@ for ($i = 0; $i -lt 60; $i++) {
 if (-not $ready) { Fail "Docker non risponde: apri Docker Desktop e rilancia lo script" }
 
 # --- 2. File .env ---------------------------------------------
+# Valori di default (immagine e versione) dal file .env.example
+$defaults = @{ IN_OUT_IMAGE = "ghcr.io/riccardomeggiolaro/in-out"; IN_OUT_TAG = "latest" }
+if (Test-Path ".env.example") {
+    Get-Content ".env.example" | Where-Object { $_ -match '^\s*(IN_OUT_IMAGE|IN_OUT_TAG)=(.*)$' } | ForEach-Object { $defaults[$Matches[1]] = $Matches[2].Trim() }
+}
+
 if (-not (Test-Path ".env")) {
     $chars = [char[]]"ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"
     $cupsPassword = -join (1..12 | ForEach-Object { $chars | Get-Random })
     @"
 # Generato da installer-docker.ps1
 COMPOSE_FILE=docker-compose.yml;docker-compose.windows.yml
+IN_OUT_IMAGE=$($defaults["IN_OUT_IMAGE"])
+IN_OUT_TAG=$($defaults["IN_OUT_TAG"])
 TZ=Europe/Rome
 
 # Cartelle persistenti (relative alla cartella del progetto)
@@ -99,9 +109,28 @@ foreach ($rule in @(@{Name="In-Out HTTP"; Port=$httpPort}, @{Name="In-Out CUPS";
     }
 }
 
-# --- 4. Build e avvio -----------------------------------------
-Info "Build dell'immagine e avvio del container (la prima volta richiede alcuni minuti)..."
-docker compose up -d --build
+# --- 4. Immagine e avvio --------------------------------------
+if ($Build) {
+    if (-not (Test-Path "Dockerfile")) { Fail "-Build richiede il codice sorgente completo (Dockerfile non trovato)" }
+    Info "Build dell'immagine e avvio del container (la prima volta richiede alcuni minuti)..."
+    docker compose up -d --build
+} else {
+    Info "Download dell'immagine da ghcr.io..."
+    docker compose pull
+    if ($LASTEXITCODE -ne 0) {
+        Warn "Download non riuscito: il registry e' privato, serve il login a ghcr.io"
+        Write-Host "Serve un token GitHub (classic) con il solo permesso read:packages:"
+        Write-Host "  GitHub > Settings > Developer settings > Personal access tokens"
+        $ghUser = Read-Host "Utente GitHub"
+        $secure = Read-Host "Token" -AsSecureString
+        $token = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
+        $token | docker login ghcr.io -u $ghUser --password-stdin
+        if ($LASTEXITCODE -ne 0) { Fail "Login a ghcr.io non riuscito" }
+        docker compose pull
+        if ($LASTEXITCODE -ne 0) { Fail "Download dell'immagine non riuscito" }
+    }
+    docker compose up -d --no-build
+}
 if ($LASTEXITCODE -ne 0) { Fail "docker compose non e' riuscito: controlla l'output sopra" }
 
 Start-Sleep -Seconds 5
@@ -173,6 +202,6 @@ Write-Host "Comandi utili (da questa cartella):"
 Write-Host "  docker compose logs -f      log"
 Write-Host "  docker compose restart      riavvio"
 Write-Host "  docker compose down         stop"
-Write-Host "  git pull; docker compose up -d --build   aggiornamento"
+Write-Host "  docker compose pull; docker compose up -d   aggiornamento"
 Write-Host ""
 Write-Host "Per l'avvio automatico: Docker Desktop > Settings > General > 'Start Docker Desktop when you sign in'"

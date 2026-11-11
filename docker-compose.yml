@@ -1,4 +1,4 @@
-# In-Out - avvio con:  docker compose up -d --build
+# In-Out - avvio con:  docker compose pull && docker compose up -d
 #
 # network_mode host  -> porta web (80), CUPS (631) e dispositivi TCP (bilance,
 #                       RFID, Moxa) raggiungibili come in un'installazione nativa
@@ -8,7 +8,9 @@ services:
   in-out:
     build:
       context: .
-    image: in-out:latest
+    # Immagine pubblicata dalla GitHub Action (registry privato: serve "docker login ghcr.io").
+    # Con il codice sorgente si puo' anche costruire in locale: docker compose up -d --build
+    image: ${IN_OUT_IMAGE:-ghcr.io/riccardomeggiolaro/in-out}:${IN_OUT_TAG:-latest}
     container_name: in-out
     restart: unless-stopped
     network_mode: host
