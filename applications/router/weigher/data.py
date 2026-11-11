@@ -11,7 +11,7 @@ from modules.md_database.functions.get_data_by_attributes import get_data_by_att
 from modules.md_database.functions.update_access import update_access
 from modules.md_database.functions.update_data import update_data
 from modules.md_database.interfaces.access import SetAccessDTO
-from modules.md_database.md_database import AccessStatus, TypeAccess, TypeSubjectEnum
+from modules.md_database.md_database import AccessStatus, TypeAccess, AccessMode, TypeSubjectEnum
 import libs.lb_config as lb_config
 import json
 import modules.md_weigher.md_weigher as md_weigher
@@ -90,7 +90,8 @@ class DataRouter(CallbackWeigher):
 			if access.status == AccessStatus.CLOSED:
 				raise HTTPException(status_code=400, detail=f"Non puoi selezionare l'accesso con id '{data_dto.id_selected.id}' perchè è già chiuso")
 			last_in_out_open = False
-			if len(access.in_out) > 0:
+			# Prenotazione generica: ogni pesata è a sé, non c'è un'entrata da completare
+			if len(access.in_out) > 0 and access.mode != AccessMode.GENERIC:
 				if access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is None:
 					weight1 = access.in_out[-1].weight1.weight
 				elif access.in_out[-1].idWeight1 is not None and access.in_out[-1].idWeight2 is not None and access.number_in_out is not None:
@@ -171,7 +172,7 @@ class DataRouter(CallbackWeigher):
 		# Recalculate weight1 and io_data if an access was selected after the initial check
 		if data_dto.id_selected.id not in [-1, None] and weight1 is None:
 			access_for_weight = get_access_by_id(data_dto.id_selected.id)
-			if access_for_weight and len(access_for_weight.in_out) > 0:
+			if access_for_weight and len(access_for_weight.in_out) > 0 and access_for_weight.mode != AccessMode.GENERIC:
 				if access_for_weight.in_out[-1].idWeight1 is not None and access_for_weight.in_out[-1].idWeight2 is None:
 					weight1 = access_for_weight.in_out[-1].weight1.weight
 				elif access_for_weight.in_out[-1].idWeight1 is not None and access_for_weight.in_out[-1].idWeight2 is not None and access_for_weight.number_in_out is not None:

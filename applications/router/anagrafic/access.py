@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import StreamingResponse
 from typing import Dict, Union, Optional
-from modules.md_database.md_database import AccessStatus, LockRecordType, TypeAccess, TypeSubjectEnum
+from modules.md_database.md_database import AccessStatus, LockRecordType, TypeAccess, AccessMode, TypeSubjectEnum
 from modules.md_database.interfaces.access import Access, AddAccessDTO, SetAccessDTO
 from modules.md_database.interfaces.material import Material
 from modules.md_database.interfaces.operator import Operator
@@ -193,7 +193,7 @@ class AccessRouter(PanelSirenRouter):
     async def pdfInOut(self, id: int):
         in_out = get_in_out_by_id(id)
         report_dir = utils.base_path_applications / lb_config.g_config["app_api"]["path_content"] / "report"
-        is_generic = in_out.access.type == TypeAccess.TEST if in_out.access else False
+        is_generic = (in_out.access.type == TypeAccess.TEST or in_out.access.mode == AccessMode.GENERIC) if in_out.access else False
         name_file, variables, report = get_data_variables(in_out, is_generic=is_generic)
         html = generate_html_report(report_dir, report, v=variables.dict())
         pdf = printer.generate_pdf_from_html(html_content=html)
@@ -213,7 +213,7 @@ class AccessRouter(PanelSirenRouter):
         in_out = get_last_in_out_by_weigher(weigher_name=instance.weigher_name)
         if not in_out:
             raise HTTPException(status_code=404, detail="Pesata non esistente")
-        is_generic = in_out.access.type == TypeAccess.TEST if in_out.access else False
+        is_generic = (in_out.access.type == TypeAccess.TEST or in_out.access.mode == AccessMode.GENERIC) if in_out.access else False
         if is_generic:
             event_type = "generic"
         elif in_out.idWeight2:

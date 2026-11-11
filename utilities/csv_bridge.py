@@ -30,7 +30,9 @@ Script autonomo (non importa nulla da in-out) che gira in loop e fa due cose:
        campo 3 → materiale        (material.description)
    Prima operazione: crea le tessere che non esistono (commit separato).
    Seconda operazione: crea veicolo (targa = numero tessera) e materiale se
-   mancano e inserisce la prenotazione (access RESERVATION, stato WAITING).
+   mancano e inserisce la prenotazione (access RESERVATION, stato WAITING,
+   modalità GENERIC: al momento della pesata fa una pesata generica e si
+   chiude quando ha raggiunto il numero di operazioni, 1 di default).
    Se per quella tessera c'è già una prenotazione in attesa, la aggiorna
    invece di crearne un'altra. A fine elaborazione il file viene ELIMINATO;
    se il file contiene errori viene spostato in csv/in/errori.
@@ -589,14 +591,14 @@ def upsert_reservation(db: sqlite3.Connection, id_card: int, id_vehicle: int, id
     ).fetchone()
     if row:
         db.execute(
-            "UPDATE access SET idVehicle = ?, idMaterial = ? WHERE id = ?",
+            "UPDATE access SET idVehicle = ?, idMaterial = ?, mode = 'GENERIC' WHERE id = ?",
             (id_vehicle, id_material, row[0]),
         )
         return "aggiornata"
     db.execute(
         "INSERT INTO access (idVehicle, idMaterial, idCardRegistry, number_in_out, "
         "selected, date_created, status, type, hidden, mode) "
-        "VALUES (?, ?, ?, 1, 0, ?, 'WAITING', 'RESERVATION', 0, 'STANDARD')",
+        "VALUES (?, ?, ?, 1, 0, ?, 'WAITING', 'RESERVATION', 0, 'GENERIC')",
         (id_vehicle, id_material, id_card, _now()),
     )
     return "inserita"

@@ -145,6 +145,7 @@ class TypeAccess(PyEnum):
 class AccessMode(PyEnum):
     STANDARD = "Standard"
     TRANSIT = "Transito"
+    GENERIC = "Generica"  # ogni pesata è una generica, chiusura in base a number_in_out
 
 class CardRegistry(Base):
     __tablename__ = 'card_registry'
