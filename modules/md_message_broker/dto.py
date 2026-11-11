@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, field_validator
 
 
@@ -5,13 +6,19 @@ class MessageBrokerDTO(BaseModel):
 	"""
 	Configurazione della connessione al broker MQTT.
 
-	La connessione è sempre in TLS con autenticazione tramite certificato client
-	(mTLS): i file CA, certificato e chiave vengono caricati a parte e salvati
-	nella cartella dei certificati del modulo. Il client ID viene generato
+	La connessione è sempre in TLS. L'autenticazione può avvenire con:
+	- username/password (es. EMQX Serverless, HiveMQ Cloud, ...)
+	- certificato client (mTLS)
+	- entrambi.
+	I file TLS (CA facoltativo, certificato e chiave client facoltativi) vengono
+	caricati a parte e salvati nella cartella dei certificati del modulo; senza CA
+	si usano i certificati di sistema. Il client ID viene generato
 	automaticamente ed è usato anche come topic di pubblicazione.
 	"""
 	host: str
 	port: int = 8883
+	username: Optional[str] = None
+	password: Optional[str] = None
 	keepalive: int = 60
 	# Timeout (secondi) per la conferma di consegna (PUBACK/PUBCOMP) da parte del broker
 	publish_timeout: int = 30
@@ -27,6 +34,12 @@ class MessageBrokerDTO(BaseModel):
 		if not v:
 			raise ValueError("Host obbligatorio")
 		return v
+
+	@field_validator("username")
+	@classmethod
+	def validate_username(cls, v):
+		v = (v or "").strip()
+		return v or None
 
 	@field_validator("port")
 	@classmethod

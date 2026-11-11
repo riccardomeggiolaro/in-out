@@ -166,13 +166,19 @@ class ModuleMessageBroker:
 	def cert_path(self, kind: str) -> str:
 		return os.path.join(self.cert_dir, CERT_FILES[kind])
 
-	def has_certificates(self) -> bool:
-		return all(os.path.isfile(self.cert_path(k)) for k in CERT_FILES)
+	def has_ca(self) -> bool:
+		return os.path.isfile(self.cert_path("ca"))
 
-	def install_certificates(self, files: dict) -> None:
+	def has_client_certificate(self) -> bool:
+		return os.path.isfile(self.cert_path("cert")) and os.path.isfile(self.cert_path("key"))
+
+	def install_certificates(self, files: dict, remove_ca: bool = False, remove_client_cert: bool = False) -> None:
 		"""
 		Valida e installa i file TLS. `files` è {kind: bytes} con kind in "ca", "cert", "key";
-		i file non passati restano quelli già installati. Solleva ValueError se non validi.
+		i file non passati restano quelli già installati, salvo rimozione esplicita con
+		`remove_ca` / `remove_client_cert`. Il CA è facoltativo (senza si usano i CA di
+		sistema); certificato e chiave client sono facoltativi ma vanno forniti insieme.
+		Solleva ValueError se non validi.
 		"""
 		import ssl
 		import tempfile
@@ -180,31 +186,45 @@ class ModuleMessageBroker:
 		for kind in files:
 			if kind not in CERT_FILES:
 				raise ValueError(f"Tipo di file TLS sconosciuto: {kind}")
+		removed = set()
+		if remove_ca and not files.get("ca"):
+			removed.add("ca")
+		if remove_client_cert and not (files.get("cert") or files.get("key")):
+			removed.update(("cert", "key"))
 		os.makedirs(self.cert_dir, exist_ok=True)
 		# Prepara i file definitivi (nuovi o esistenti) in una cartella temporanea per validarli insieme
 		with tempfile.TemporaryDirectory(dir=self.cert_dir) as tmp:
 			paths = {}
 			for kind, name in CERT_FILES.items():
 				dst = os.path.join(tmp, name)
-				if kind in files and files[kind]:
+				if files.get(kind):
 					with open(dst, "wb") as f:
 						f.write(files[kind])
-				elif os.path.isfile(self.cert_path(kind)):
+				elif kind not in removed and os.path.isfile(self.cert_path(kind)):
 					shutil.copyfile(self.cert_path(kind), dst)
 				else:
-					labels = {"ca": "certificato CA", "cert": "certificato client", "key": "chiave privata"}
-					raise ValueError(f"Manca il file: {labels[kind]}")
+					continue
 				paths[kind] = dst
-			try:
-				ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-				ctx.load_verify_locations(cafile=paths["ca"])
-			except Exception as e:
-				raise ValueError(f"Certificato CA non valido: {e}")
-			try:
-				ctx.load_cert_chain(certfile=paths["cert"], keyfile=paths["key"])
-			except Exception as e:
-				raise ValueError(f"Certificato client o chiave non validi (o non corrispondenti): {e}")
-			# Validi: installa solo i file nuovi
+			if ("cert" in paths) != ("key" in paths):
+				missing = "chiave privata" if "cert" in paths else "certificato client"
+				raise ValueError(f"Manca il file: {missing} (certificato e chiave client vanno caricati insieme)")
+			ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+			if "ca" in paths:
+				try:
+					ctx.load_verify_locations(cafile=paths["ca"])
+				except Exception as e:
+					raise ValueError(f"Certificato CA non valido: {e}")
+			if "cert" in paths:
+				try:
+					ctx.load_cert_chain(certfile=paths["cert"], keyfile=paths["key"])
+				except Exception as e:
+					raise ValueError(f"Certificato client o chiave non validi (o non corrispondenti): {e}")
+			# Validi: installa i file nuovi e rimuove quelli richiesti
+			for kind in removed:
+				try:
+					os.remove(self.cert_path(kind))
+				except FileNotFoundError:
+					pass
 			for kind in files:
 				if files[kind]:
 					final = self.cert_path(kind)
@@ -357,14 +377,17 @@ class ModuleMessageBroker:
 			client_id=self.client_id,
 			clean_session=True,
 		)
-		# Connessione sempre in TLS con autenticazione tramite certificato client (mTLS)
-		if not self.has_certificates():
-			raise RuntimeError("Certificati TLS mancanti (CA, certificato client e chiave)")
+		# Connessione sempre in TLS. Senza CA caricato si usano i CA di sistema.
+		has_client_cert = self.has_client_certificate()
+		if not config.username and not has_client_cert:
+			raise RuntimeError("Nessuna credenziale: imposta username/password o carica certificato e chiave client")
 		client.tls_set(
-			ca_certs=self.cert_path("ca"),
-			certfile=self.cert_path("cert"),
-			keyfile=self.cert_path("key"),
+			ca_certs=self.cert_path("ca") if self.has_ca() else None,
+			certfile=self.cert_path("cert") if has_client_cert else None,
+			keyfile=self.cert_path("key") if has_client_cert else None,
 		)
+		if config.username:
+			client.username_pw_set(config.username, config.password or None)
 		client.on_connect = self._on_connect
 		client.on_disconnect = self._on_disconnect
 		return client
