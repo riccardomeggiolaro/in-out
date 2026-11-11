@@ -81,6 +81,7 @@ COPY . /opt/in-out
 RUN rm -rf /opt/in-out/printers-driver \
     && mkdir -p /var/opt/in-out/pdf /var/opt/in-out/csv /var/opt/in-out/images /var/opt/in-out/backup /etc/in-out \
     && cp /opt/in-out/config.json /opt/in-out/config.default.json \
+    && sed -i 's/\r$//' /opt/in-out/docker/entrypoint.sh \
     && chmod +x /opt/in-out/docker/entrypoint.sh
 
 VOLUME ["/etc/in-out", "/var/opt/in-out", "/etc/cups"]
