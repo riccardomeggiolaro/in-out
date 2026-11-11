@@ -10,7 +10,9 @@
    -Exclude 046d:c52b        VID:PID da non passare mai (in aggiunta alle esclusioni automatiche)
 
  Ogni 15 secondi controlla i dispositivi: quelli nuovi o ricollegati vengono passati
- al container automaticamente. Log in docker-data\usb-attach.log.
+ al container automaticamente. Carica anche i driver USB-seriale (FTDI, CH341, CP210x,
+ PL2303, CDC-ACM) nel kernel di WSL2, dove sono moduli non caricati di default:
+ senza di essi /dev/ttyUSB0 non viene creato. Log in docker-data\usb-attach.log.
 
  Uso manuale:  .\docker\windows-usb-attach.ps1 -All
 #>
@@ -52,13 +54,23 @@ function Get-ProtectedIds {
     return $ids
 }
 
+# Carica i driver USB-seriale nel kernel di WSL2 (namespace della VM di Docker Desktop)
+$helperImage = "alpine:3.20"
+function Load-SerialDrivers {
+    $out = docker run --rm --privileged --pid=host $helperImage nsenter -t 1 -m -u -n -i sh -c "modprobe -a usbserial ftdi_sio ch341 cp210x pl2303 cdc_acm 2>&1; echo ok" 2>&1
+    Log "driver USB-seriale: $out"
+}
+
 Log "avvio (modalita': $(if ($All) { 'tutti' } else { $wanted -join ',' }); esclusi: $($excluded -join ','))"
 $skipLogged = @{}
+$driversLoaded = $false
 
 while ($true) {
     # Docker Desktop (e quindi WSL2) deve essere in esecuzione
     docker info *> $null
-    if ($LASTEXITCODE -ne 0) { Start-Sleep -Seconds 10; continue }
+    if ($LASTEXITCODE -ne 0) { $driversLoaded = $false; Start-Sleep -Seconds 10; continue }
+    # Al primo avvio e dopo ogni riavvio di Docker Desktop i moduli vanno ricaricati
+    if (-not $driversLoaded) { Load-SerialDrivers; $driversLoaded = $true }
 
     try {
         $state = (usbipd state | Out-String) | ConvertFrom-Json
@@ -89,6 +101,9 @@ while ($true) {
         }
         $out = usbipd attach --wsl --busid $dev.BusId 2>&1
         Log "attach $id $($dev.Description) [$($dev.BusId)]: $(if ($LASTEXITCODE -eq 0) { 'ok' } else { $out })"
+        $attached = $true
     }
+    # Un nuovo dispositivo puo' richiedere un driver non ancora caricato
+    if ($attached) { Load-SerialDrivers; $attached = $false }
     Start-Sleep -Seconds 15
 }

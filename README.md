@@ -125,6 +125,15 @@ Docker Desktop non vede le porte `COMx`. Le opzioni sono:
   docker exec in-out ls /dev/ttyUSB* /dev/ttyACM*
   ```
   Per riprendere un dispositivo in Windows: `usbipd detach --busid <BUSID>` e aggiungilo alle esclusioni.
+
+  Nel kernel di WSL2 i driver USB-seriale (FTDI, CH341, CP210x, PL2303) sono moduli **non caricati
+  di default**: lo script li carica a ogni avvio di Docker Desktop. A mano:
+  ```powershell
+  usbipd bind --busid <BUSID>                     # una volta, da amministratore
+  usbipd attach --wsl --busid <BUSID>
+  docker run --rm --privileged --pid=host alpine nsenter -t 1 -m -u -n -i modprobe -a ftdi_sio ch341 cp210x pl2303 cdc_acm
+  docker exec in-out ls /dev/ttyUSB*
+  ```
 - **Porte COM integrate** (RS232 sulla scheda madre): non possono essere passate al container.
   Usa un convertitore seriale→TCP (es. Moxa NPort) e configura il dispositivo via TCP,
   oppure mantieni l'installazione nativa di in-out su quel PC.
