@@ -27,9 +27,10 @@ docker compose up -d --build
   interfaccia web su `http://<host>:631` (utente/password da `.env`)
 - `cifs-utils` per la sync-folder Samba
 
-Il container usa `network_mode: host` (bilance, RFID e Moxa via TCP raggiungibili
-come in un'installazione nativa) e `privileged: true` (porte seriali `/dev/tty*`
-e mount CIFS).
+Su Linux il container ha accesso completo all'host: `network_mode: host` (bilance,
+RFID e Moxa via TCP raggiungibili come in un'installazione nativa), `privileged: true`
+e tutto `/dev` montato (porte seriali e dispositivi USB, anche collegati a caldo,
+mount CIFS).
 
 ### Dati persistenti
 
@@ -84,18 +85,22 @@ Differenze rispetto a Linux:
 
 Docker Desktop non vede le porte `COMx`. Le opzioni sono:
 
-- **Adattatore USB-seriale**: l'installer chiede se ne usi uno, installa
-  [usbipd-win](https://github.com/dorssel/usbipd-win), ti mostra i dispositivi USB e ti chiede
-  il **VID:PID** dell'adattatore (es. `0403:6001`). Poi crea l'operazione pianificata
-  **"In-Out USB seriale"** che a ogni accesso aspetta Docker Desktop e collega l'adattatore
-  al container (`docker\windows-usb-attach.ps1`, log in `docker-data\usb-attach.log`).
-  Nel container il dispositivo appare come `/dev/ttyUSB0` (o `/dev/ttyACM0`):
-  usa questo nome nella configurazione della pesa/RFID al posto di `COM3`. Per verificarlo:
+- **Dispositivi USB** (adattatori USB-seriale, lettori, ...): l'installer installa
+  [usbipd-win](https://github.com/dorssel/usbipd-win) e chiede la modalità:
+  - **Tutti** (consigliata): ogni dispositivo USB collegato viene passato al container,
+    **tranne** quelli che Windows usa come tastiera, mouse, touch/HID, rete o Bluetooth
+    (un dispositivo passato al container sparisce da Windows). Si possono escludere altri VID:PID;
+  - **Solo specifici**: solo i VID:PID indicati.
+
+  Viene creata l'operazione pianificata **"In-Out USB"** che a ogni accesso aspetta
+  Docker Desktop e ogni 15 secondi passa al container i dispositivi nuovi o ricollegati
+  (`docker\windows-usb-attach.ps1`, log in `docker-data\usb-attach.log`).
+  Nel container le seriali appaiono come `/dev/ttyUSB0`, `/dev/ttyACM0`, ...:
+  usa questi nomi nella configurazione di pese/RFID al posto di `COM3`. Per verificarlo:
   ```powershell
   docker exec in-out ls /dev/ttyUSB* /dev/ttyACM*
   ```
-  Per configurarlo a mano: `usbipd bind --hardware-id VID:PID` (una volta, da amministratore)
-  e `usbipd attach --wsl --hardware-id VID:PID --auto-attach`.
+  Per riprendere un dispositivo in Windows: `usbipd detach --busid <BUSID>` e aggiungilo alle esclusioni.
 - **Porte COM integrate** (RS232 sulla scheda madre): non possono essere passate al container.
   Usa un convertitore seriale→TCP (es. Moxa NPort) e configura il dispositivo via TCP,
   oppure mantieni l'installazione nativa di in-out su quel PC.

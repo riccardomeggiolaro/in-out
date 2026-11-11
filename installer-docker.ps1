@@ -108,9 +108,15 @@ Start-Sleep -Seconds 5
 $running = docker inspect -f "{{.State.Running}}" in-out 2>$null
 if ($running -ne "true") { Fail "Il container non risulta in esecuzione: docker compose logs" }
 
-# --- 5. Adattatore USB-seriale (opzionale) -------------------
-$answer = Read-Host "Usi un adattatore USB-seriale (pesa/RFID) da passare al container? (s/n)"
-if ($answer -match '^[Ss]') {
+# --- 5. Dispositivi USB nel container (seriali, ecc.) ---------
+Write-Host ""
+Write-Host "Dispositivi USB da passare al container (adattatori USB-seriale, lettori, ...):"
+Write-Host "  [T] tutti, tranne quelli che Windows usa come tastiera, mouse, touch, rete, Bluetooth (consigliato)"
+Write-Host "  [S] solo dispositivi specifici (VID:PID)"
+Write-Host "  [N] nessuno"
+$mode = (Read-Host "Scelta [T/S/N]").Trim().ToUpper()
+if ($mode -eq "") { $mode = "T" }
+if ($mode -eq "T" -or $mode -eq "S") {
     if (-not (Get-Command usbipd -ErrorAction SilentlyContinue)) {
         Info "Installazione di usbipd-win..."
         winget install -e --id dorssel.usbipd-win --accept-package-agreements --accept-source-agreements
@@ -120,40 +126,39 @@ if ($answer -match '^[Ss]') {
         Warn "usbipd non trovato: riapri PowerShell come Amministratore e rilancia lo script"
     } else {
         usbipd list
-        $hw = ""
-        while ($hw -notmatch '^[0-9a-fA-F]{4}:[0-9a-fA-F]{4}$') {
-            $hw = (Read-Host "Scrivi il VID:PID dell'adattatore (colonna VID:PID, es. 0403:6001)").Trim()
-        }
-        usbipd bind --hardware-id $hw
-        if ($LASTEXITCODE -ne 0) {
-            Warn "usbipd bind non riuscito: controlla che l'adattatore sia collegato"
+        if ($mode -eq "T") {
+            $usbArgs = "-All"
+            $exclude = (Read-Host "VID:PID da NON passare mai, separati da virgola (invio = nessuno)").Trim()
+            if ($exclude) { $usbArgs += " -Exclude $exclude" }
         } else {
-            # Memorizza l'adattatore nel .env per riferimento
-            $envLines = Get-Content ".env" | Where-Object { $_ -notmatch '^USB_SERIAL_HARDWARE_ID=' }
-            $envLines += "USB_SERIAL_HARDWARE_ID=$hw"
-            $envLines | Set-Content -Path ".env" -Encoding ascii
-
-            # Operazione pianificata: collega l'adattatore a ogni accesso
-            $taskName = "In-Out USB seriale"
-            $script = Join-Path $PSScriptRoot "docker\windows-usb-attach.ps1"
-            $action = New-ScheduledTaskAction -Execute "powershell.exe" `
-                -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$script`" -HardwareId $hw"
-            $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
-            $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
-            $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
-            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
-            Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings | Out-Null
-            Start-ScheduledTask -TaskName $taskName
-            Info "Operazione pianificata '$taskName' creata e avviata"
-
-            Start-Sleep -Seconds 15
-            $devs = docker exec in-out sh -c "ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null"
-            if ($devs) {
-                Info "Adattatore visibile nel container: $devs (usa questo nome nella configurazione della pesa)"
-            } else {
-                Warn "Adattatore non ancora visibile nel container. Controlla docker-data\usb-attach.log e riprova tra poco con:"
-                Warn "  docker exec in-out ls /dev/ttyUSB* /dev/ttyACM*"
+            $ids = ""
+            while ($ids -notmatch '^[0-9a-fA-F]{4}:[0-9a-fA-F]{4}([ ,;]+[0-9a-fA-F]{4}:[0-9a-fA-F]{4})*$') {
+                $ids = (Read-Host "VID:PID dei dispositivi, separati da virgola (es. 0403:6001)").Trim()
             }
+            $usbArgs = "-HardwareIds $ids"
+        }
+
+        # Operazione pianificata: passa i dispositivi a ogni accesso e quando vengono ricollegati
+        Unregister-ScheduledTask -TaskName "In-Out USB seriale" -Confirm:$false -ErrorAction SilentlyContinue
+        $taskName = "In-Out USB"
+        $script = Join-Path $PSScriptRoot "docker\windows-usb-attach.ps1"
+        $action = New-ScheduledTaskAction -Execute "powershell.exe" `
+            -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$script`" $usbArgs"
+        $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+        $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
+        $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings | Out-Null
+        Start-ScheduledTask -TaskName $taskName
+        Info "Operazione pianificata '$taskName' creata e avviata ($usbArgs)"
+
+        Start-Sleep -Seconds 30
+        $devs = docker exec in-out sh -c "ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null"
+        if ($devs) {
+            Info "Seriali visibili nel container: $devs (usa questi nomi nella configurazione di pese/RFID)"
+        } else {
+            Warn "Nessuna seriale ancora visibile nel container. Controlla docker-data\usb-attach.log e riprova tra poco con:"
+            Warn "  docker exec in-out ls /dev/ttyUSB* /dev/ttyACM*"
         }
     }
 }
