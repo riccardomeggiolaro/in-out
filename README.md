@@ -1,24 +1,46 @@
 # In-Out
 
-## Installazione con Docker
+## Immagine Docker
+
+L'immagine viene costruita dalla GitHub Action `.github/workflows/docker-image.yml`
+e pubblicata **privata** su `ghcr.io/riccardomeggiolaro/in-out`:
+
+- ogni push su `main` aggiorna il tag `latest`;
+- un tag `vX.Y.Z` (es. `git tag v3.0.5 && git push origin v3.0.5`) pubblica la versione `X.Y.Z`
+  e crea una release GitHub con **`in-out-docker.zip`**, il pacchetto di installazione
+  (compose, installer, `.env.example`) senza codice sorgente.
+
+Per scaricare l'immagine serve un login a `ghcr.io` con un token GitHub *classic*
+con il solo permesso **`read:packages`** (GitHub → Settings → Developer settings →
+Personal access tokens). Gli installer lo chiedono la prima volta; Docker lo ricorda.
+
+Aggiornamento di un'installazione: `docker compose pull && docker compose up -d`
+(per una versione precisa imposta `IN_OUT_TAG` nel file `.env`).
+
+## Installazione con Docker su Linux
 
 Requisiti: host Linux **amd64** (i driver Epson/Custom sono solo x86_64).
 
 ```bash
+unzip in-out-docker.zip && cd in-out-docker
 sudo ./installer-docker.sh
 ```
 
-L'installer installa Docker (se manca), copia il progetto in `/opt/in-out`,
+L'installer installa Docker (se manca), copia i file in `/opt/in-out`,
 crea `.env` e le cartelle persistenti, ferma eventuali servizi in conflitto
-(`in-out.service` nativo, CUPS dell'host) e avvia il container.
-Con `-y` non fa domande.
+(`in-out.service` nativo, CUPS dell'host), scarica l'immagine e avvia il container.
+Con `-y` non fa domande; con `--build` costruisce l'immagine dal codice sorgente
+invece di scaricarla.
 
 ### Avvio manuale
 
 ```bash
 cp .env.example .env      # modifica percorsi e password CUPS
-docker compose up -d --build
+docker login ghcr.io      # utente GitHub + token read:packages
+docker compose pull && docker compose up -d
 ```
+
+Dal codice sorgente, senza registry: `docker compose up -d --build`.
 
 ### Cosa c'è nel container
 
@@ -49,7 +71,7 @@ Il percorso della configurazione è definito dalla variabile `IN_OUT_CONFIG_DIR`
 ```bash
 docker compose logs -f          # log
 docker compose restart          # riavvio
-git pull && docker compose up -d --build   # aggiornamento
+docker compose pull && docker compose up -d   # aggiornamento
 ```
 
 Il pulsante "Riavvia" dell'interfaccia in Docker riavvia il processo in-out
@@ -59,14 +81,16 @@ nel container (non serve systemd).
 
 Requisiti: Windows 10 (22H2) / 11 a 64 bit con virtualizzazione abilitata nel BIOS.
 
-1. Clona o copia il progetto, ad esempio in `C:\in-out`.
-2. Apri **PowerShell come Amministratore** nella cartella del progetto ed esegui:
+1. Scarica `in-out-docker.zip` dalla release GitHub ed estrailo, ad esempio in `C:\in-out`.
+2. Apri **PowerShell come Amministratore** in quella cartella ed esegui:
    ```powershell
    Set-ExecutionPolicy -Scope Process Bypass
    .\installer-docker.ps1
    ```
    La prima volta lo script installa WSL2 e Docker Desktop e chiede di riavviare:
    dopo il riavvio apri Docker Desktop una volta (accetta i termini) e rilancia lo script.
+   Al primo download chiede utente GitHub e token `read:packages`.
+   Con `-Build` (dal codice sorgente completo) costruisce l'immagine invece di scaricarla.
 3. Apri `http://localhost/` (in-out) e `http://localhost:631/` (CUPS, credenziali nel file `.env`).
 
 Differenze rispetto a Linux:
