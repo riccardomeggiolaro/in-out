@@ -152,8 +152,16 @@ def init():
 	# Ottiene il percorso della directory del modulo corrente.
 	# Determina il percorso base a seconda se l'applicazione è in esecuzione come eseguibile o come sorgente
 	base_path = Path(os.path.dirname(sys.executable)).resolve() if hasattr(sys, 'frozen') else Path(__file__).parent.parent.resolve()
-	config_path = os.path.join(base_path, "")
-	g_workpath = config_path.replace("/lib", "/")
+	# In Docker (o installazioni personalizzate) la cartella di configurazione
+	# puo' essere spostata fuori dal codice tramite la variabile IN_OUT_CONFIG_DIR,
+	# cosi' config.json e i log restano su un volume persistente.
+	custom_config_dir = os.environ.get("IN_OUT_CONFIG_DIR")
+	if custom_config_dir:
+		config_path = os.path.join(Path(custom_config_dir).resolve(), "")
+		g_workpath = config_path
+	else:
+		config_path = os.path.join(base_path, "")
+		g_workpath = config_path.replace("/lib", "/")
 
 	# Imposta la versione dell'applicazione.
 	g_vers = "0.0002"

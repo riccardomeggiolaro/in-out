@@ -1,0 +1,16 @@
+.git
+.gitignore
+.vscode
+.venv
+venv
+**/__pycache__
+**/*.pyc
+*.docx
+*.log
+output.txt
+Driver e stampe
+documentations
+as400
+docker-data
+build
+dist
