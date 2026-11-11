@@ -184,6 +184,11 @@ class CallbackWeigher(Functions, WebSocket):
 			############################
 			# ASSOCIAZIONE DELLA PESATA SALVATA ALLA COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
 			last_in_out = access.in_out[-1] if len(access.in_out) > 0 else None
+			# PRENOTAZIONE GENERICA: ogni pesata crea il proprio in-out (come la pesata generica),
+			# senza completare l'in-out precedente
+			is_generic_access = access.mode == AccessMode.GENERIC
+			if is_generic_access:
+				last_in_out = None
 			if last_in_out and not last_in_out.idWeight2:
 				weight1 = last_in_out.weight1.weight
 				net_weight = weight1 - gross_weight if weight1 > gross_weight else gross_weight - weight1
@@ -237,8 +242,15 @@ class CallbackWeigher(Functions, WebSocket):
 			access = get_access_by_id(last_pesata.data_assigned.accessId)
 			last_in_out = access.in_out[-1]
 			len_in_out = len(access.in_out)
-			is_test = access.type == TypeAccess.TEST
-			is_to_close = len_in_out == access.number_in_out and last_in_out.idWeight2 or is_test
+			is_generic_access = access.mode == AccessMode.GENERIC
+			# La pesata di una prenotazione generica viene trattata come una generica
+			# (report, stampante, copie, CSV e relè della configurazione "generic")
+			is_test = access.type == TypeAccess.TEST or is_generic_access
+			if is_generic_access:
+				# Si chiude quando ha effettuato il numero di operazioni previsto
+				is_to_close = access.number_in_out is not None and len_in_out >= access.number_in_out
+			else:
+				is_to_close = len_in_out == access.number_in_out and last_in_out.idWeight2 or is_test
 			last_in_out.access = access
    			############################
 			# CREO L'IN-OUT SUCCESSIVO PER L'ASSEGNAZIONE DEL MATERIALE SE L'ACCESSO NON E' STATO CHIUSO E HA PIU' DI UNA OPERAZIONE

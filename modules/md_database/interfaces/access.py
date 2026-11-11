@@ -66,7 +66,7 @@ class AddAccessDTO(BaseModel):
 
     @validator('mode', pre=True, always=True)
     def check_mode(cls, v, values):
-        if v in ['STANDARD', 'TRANSIT']:
+        if v in ['STANDARD', 'TRANSIT', 'GENERIC']:
             return v
         raise ValueError("mode is not a valid string")
 
@@ -98,6 +98,6 @@ class SetAccessDTO(BaseModel):
 
     @validator('mode', pre=True, always=True)
     def check_mode(cls, v, values):
-        if v is not None and v not in ['STANDARD', 'TRANSIT']:
+        if v is not None and v not in ['STANDARD', 'TRANSIT', 'GENERIC']:
             raise ValueError("mode is not a valid string")
         return v

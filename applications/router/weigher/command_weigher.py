@@ -426,6 +426,8 @@ class CommandWeigherRouter(DataRouter, AccessRouter):
 					error_message = "Inserire una tara o effettuare una entrata prima di effettuare l'uscita del mezzo tramite id."
 				if len(access.in_out) > 0 and weighers_data[instance.instance_name][instance.weigher_name]["data"]["id_selected"]["weight1"] is None and tare == "0":
 					error_message = "E' necessario effettuare l'entrata del mezzo"
+				if access.mode == AccessMode.GENERIC:
+					error_message = "La prenotazione è generica: effettuare la pesata di entrata."
 			if not access:
 				if tare == "0":
 					error_message = "Nessun id impostato per effettuare l'uscita."
