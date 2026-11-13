@@ -42,6 +42,7 @@ from applications.utils.utils_report import get_data_variables, generate_html_re
 from applications.middleware.writable_user import is_writable_user
 import applications.utils.utils as utils
 from reportlab.lib.pagesizes import landscape
+from applications.utils.utils_type_subject import remember_form_type_subject
 
 class AccessRouter(PanelSirenRouter):
     def __init__(self):
@@ -774,6 +775,11 @@ class AccessRouter(PanelSirenRouter):
             body.material.id = body.material.id if body.material.id not in [None, -1] else None
 
             data = add_access(body, status)
+
+            # Accesso creato da un form dell'interfaccia: il tipo soggetto scelto
+            # diventa il predefinito dei form (prenotazioni, transiti, preferiti, accessi)
+            if request is not None:
+                remember_form_type_subject(body.typeSubject)
 
             get_access_data = get_data_by_id("access", data["id"])
 

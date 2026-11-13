@@ -17,6 +17,7 @@ import json
 import modules.md_weigher.md_weigher as md_weigher
 import asyncio
 from typing import Optional
+from applications.utils.utils_type_subject import get_weigher_type_subject, remember_weigher_type_subject
 
 class DataRouter(CallbackWeigher):
 	def __init__(self):
@@ -55,6 +56,9 @@ class DataRouter(CallbackWeigher):
 				driver = get_data_by_attributes("driver", {"social_reason": data_dto.data_in_execution.driver.social_reason})
 				if driver:
 					data_dto.data_in_execution.driver.id = driver["id"]
+		# Scelta esplicita del tipo soggetto sulla pesa: diventa il predefinito per le pesate successive
+		if data_dto.data_in_execution.typeSubject:
+			remember_weigher_type_subject(instance.instance_name, instance.weigher_name, data_dto.data_in_execution.typeSubject)
 		if request is not None:
 			if request.state.user.level == 1:
 				continues = True
@@ -287,7 +291,7 @@ class DataRouter(CallbackWeigher):
 			if data_dto.id_selected.id != -1:
 				access = get_access_by_id(data_dto.id_selected.id)
 				data_in_execution = DataInExecutionType(**{
-					"typeSubject": io_data["typeSubject"] or (access.typeSubject.name if access.typeSubject else lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER")),
+					"typeSubject": io_data["typeSubject"] or (access.typeSubject.name if access.typeSubject else get_weigher_type_subject(instance.instance_name, instance.weigher_name)),
 					"subject": io_data["subject"] if io_data["subject"]["id"] else {
 						"id": access.subject.id if access.subject else None,
 						"social_reason": access.subject.social_reason if access.subject else None,

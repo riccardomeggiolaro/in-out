@@ -22,6 +22,7 @@ from applications.router.weigher.manager_weighers_data import weighers_data
 from modules.md_sync_folder.dto import SyncFolderDTO
 import random
 import string
+from applications.utils.utils_type_subject import get_form_type_subject
 
 class ConfigWeigher(CommandWeigherRouter):
 	def __init__(self):
@@ -77,7 +78,9 @@ class ConfigWeigher(CommandWeigherRouter):
 			app_api["default_type_subject"] = "CUSTOMER"
 		configuration = {
 			**ver,
-			**app_api
+			**app_api,
+			# Tipo soggetto da preselezionare nei form: ultimo usato, altrimenti il predefinito
+			"form_type_subject": get_form_type_subject(),
 		}
 		return configuration
 
@@ -151,6 +154,9 @@ class ConfigWeigher(CommandWeigherRouter):
 		if type_subject not in ["CUSTOMER", "SUPPLIER"]:
 			raise HTTPException(status_code=400, detail=f"Tipo soggetto '{type_subject}' non valido. Usa 'CUSTOMER' o 'SUPPLIER'")
 		lb_config.g_config["app_api"]["default_type_subject"] = type_subject
+		# Cambiando il predefinito si azzera la memoria dell'ultimo tipo usato,
+		# così il nuovo valore vale subito su tutte le pese e nei form
+		lb_config.g_config["app_api"]["last_type_subject"] = {}
 		lb_config.saveconfig()
 		return { "default_type_subject": type_subject }
 

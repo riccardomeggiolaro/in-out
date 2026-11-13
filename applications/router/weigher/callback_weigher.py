@@ -38,6 +38,7 @@ import time
 from libs.lb_utils import base_path
 from datetime import datetime
 import json
+from applications.utils.utils_type_subject import remember_weigher_type_subject
 
 class CallbackWeigher(Functions, WebSocket):
 	def __init__(self):
@@ -182,6 +183,8 @@ class CallbackWeigher(Functions, WebSocket):
 				material = add_anagrafic_if_not_exists(table_name="material", name="description", value=description_material)
 				id_material = material["id"]
 			############################
+			# Il tipo soggetto usato in questa pesata diventa il predefinito della pesa
+			remember_weigher_type_subject(instance_name, weigher_name, weighers_data[instance_name][weigher_name]["data"]["data_in_execution"].get("typeSubject"))
 			# ASSOCIAZIONE DELLA PESATA SALVATA ALLA COMBINAZIONE IN-OUT CORRETTA DELL'ACCESSO
 			last_in_out = access.in_out[-1] if len(access.in_out) > 0 else None
 			# PRENOTAZIONE GENERICA: ogni pesata crea il proprio in-out (come la pesata generica),
