@@ -12,6 +12,7 @@ from modules.md_database.functions.lock_record import lock_record
 from applications.router.weigher.types import DataInExecution
 from applications.utils.utils import just_locked_message
 from modules.md_database.functions.get_data_by_id import get_data_by_id
+from applications.utils.utils_type_subject import get_weigher_type_subject
 
 def _connection_needed(instance_name: str) -> bool:
 	return has_active_connections(instance_name)
@@ -35,7 +36,7 @@ class Functions:
 				nodes_sockets[weigher_name] = {
 					"sockets": NodeConnectionManager(),
 					"data": Data(**{
-						"data_in_execution": DataInExecution(**{"typeSubject": lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER")}),
+						"data_in_execution": DataInExecution(**{"typeSubject": get_weigher_type_subject(instance_name, weigher_name)}),
          			}).dict()
 				}
 				self.switch_to_call_instance_weigher[instance_name] = {weigher_name: None}
@@ -127,7 +128,8 @@ class Functions:
 				if "id" in value and value["id"] is not None:
 					unlock_record_by_attributes(key, value["id"], None, weigher_name)
 		# Per ogni chiave dei dati correnti
-		default_type = lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER")
+		# Ultimo tipo soggetto usato su questa pesa (o il predefinito di configurazione)
+		default_type = get_weigher_type_subject(instance_name, weigher_name)
 		weighers_data[instance_name][weigher_name]["data"]["data_in_execution"] = DataInExecution(**{"typeSubject": default_type}).dict()
 		self.Callback_DataInExecution(instance_name=instance_name, weigher_name=weigher_name)
 	

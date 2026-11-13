@@ -820,7 +820,7 @@
             fetch('/api/config-weigher/configuration')
             .then(res => res.json())
             .then(res => {
-                const defaultType = res.default_type_subject || 'CUSTOMER';
+                const defaultType = res.form_type_subject || res.default_type_subject || 'CUSTOMER';
                 if (defaultType === 'SUPPLIER') {
                     const customerRadio = document.querySelector('#add-popup #customer');
                     const supplierRadio = document.querySelector('#add-popup #supplier');

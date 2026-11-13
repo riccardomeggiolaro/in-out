@@ -391,7 +391,7 @@
             fetch('/api/config-weigher/configuration')
             .then(res => res.json())
             .then(res => {
-                const defaultType = res.default_type_subject || 'CUSTOMER';
+                const defaultType = res.form_type_subject || res.default_type_subject || 'CUSTOMER';
                 const radios = document.querySelectorAll('#add-popup input[name="typeSubject"]');
                 radios.forEach(r => r.checked = r.value === defaultType);
             });
