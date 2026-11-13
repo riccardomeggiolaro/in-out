@@ -14,7 +14,9 @@ def get_in_out_by_id(id):
                         selectinload(Access.driver),
                         selectinload(Access.subject),
                         selectinload(Access.vector),
-                        selectinload(Access.material)
+                        selectinload(Access.material),
+                        # Tessera: serve al report (variabile card), va caricata prima di chiudere la sessione
+                        selectinload(Access.card_registry)
                     ),
                     selectinload(InOut.subject),
                     selectinload(InOut.vector),

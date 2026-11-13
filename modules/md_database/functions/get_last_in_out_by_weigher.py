@@ -29,7 +29,9 @@ def get_last_in_out_by_weigher(weigher_name=None):
                             selectinload(Access.driver),
                             selectinload(Access.subject),
                             selectinload(Access.vector),
-                            selectinload(Access.material)
+                            selectinload(Access.material),
+                            # Tessera: serve al report (variabile card), va caricata prima di chiudere la sessione
+                            selectinload(Access.card_registry)
                         ),
                         selectinload(InOut.subject),
                         selectinload(InOut.vector),
