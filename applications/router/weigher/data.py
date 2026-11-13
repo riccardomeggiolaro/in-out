@@ -80,7 +80,10 @@ class DataRouter(CallbackWeigher):
 			"subject": {"id": None, "social_reason": None, "telephone": None, "cfpiva": None},
 			"vector": {"id": None, "social_reason": None, "telephone": None, "cfpiva": None},
 			"driver": {"id": None, "social_reason": None, "telephone": None},
-			"typeSubject": lb_config.g_config["app_api"].get("default_type_subject", "CUSTOMER"),
+			# None = non ancora determinato: il fallback (accesso -> default) è applicato
+			# quando si costruisce data_in_execution, altrimenti il default di configurazione
+			# sovrascriverebbe sempre il tipo soggetto della prenotazione.
+			"typeSubject": None,
 			"note": None,
 			"document_reference": None,
 		}
@@ -188,6 +191,8 @@ class DataRouter(CallbackWeigher):
 						io_data["vector"] = {"id": lio.vector.id, "social_reason": lio.vector.social_reason, "telephone": lio.vector.telephone, "cfpiva": lio.vector.cfpiva}
 					if lio.idDriver and lio.driver:
 						io_data["driver"] = {"id": lio.driver.id, "social_reason": lio.driver.social_reason, "telephone": lio.driver.telephone}
+					if lio.typeSubject:
+						io_data["typeSubject"] = lio.typeSubject.name if hasattr(lio.typeSubject, 'name') else lio.typeSubject
 			elif access_for_weight:
 				if access_for_weight.idMaterial and access_for_weight.material:
 					io_data["material"] = {"id": access_for_weight.material.id, "description": access_for_weight.material.description}
@@ -197,6 +202,8 @@ class DataRouter(CallbackWeigher):
 					io_data["vector"] = {"id": access_for_weight.vector.id, "social_reason": access_for_weight.vector.social_reason, "telephone": access_for_weight.vector.telephone, "cfpiva": access_for_weight.vector.cfpiva}
 				if access_for_weight.idDriver and access_for_weight.driver:
 					io_data["driver"] = {"id": access_for_weight.driver.id, "social_reason": access_for_weight.driver.social_reason, "telephone": access_for_weight.driver.telephone}
+				if access_for_weight.typeSubject:
+					io_data["typeSubject"] = access_for_weight.typeSubject.name if hasattr(access_for_weight.typeSubject, 'name') else access_for_weight.typeSubject
 		updated = None
 		if id_selected:
 			if type_current_access != TypeAccess.MANUALLY.name and (data_dto.id_selected.id is None or keep_selected):
