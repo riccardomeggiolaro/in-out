@@ -663,12 +663,6 @@ def copy_to_remote(file_path, local_dir, mount_point, sub_path):
 # Funzione per salvare le configurazioni in un file JSON specificato.
 # Questa funzione scrive le configurazioni memorizzate nelle variabili globali g_config
 # in un file JSON e aggiorna il timestamp dell'ultima modifica del file di configurazione.
-def is_docker():
-	"""
-	Restituisce True se il software e' in esecuzione dentro un container Docker.
-	"""
-	return os.environ.get("IN_OUT_DOCKER") == "1" or os.path.exists("/.dockerenv")
-
 def is_linux():
 	"""
 	Funzione per controllare se il sistema operativo è Linux.

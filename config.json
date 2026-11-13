@@ -45,12 +45,6 @@
             "ssh_port": 10022,
             "user": "root"
         },
-        "message_broker": {
-            "broker": null,
-            "cert_dir": "/var/opt/in-out/message_broker_certs",
-            "client_id": null,
-            "outbox_dir": "/var/opt/in-out/message_broker_outbox"
-        },
         "sync_folder": {
             "local_dir": "/var/opt/in-out",
             "mount_point": "/mnt/sync-folder",
