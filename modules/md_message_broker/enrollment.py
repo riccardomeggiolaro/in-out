@@ -38,8 +38,11 @@ class EnrollmentError(Exception):
 
 def _write_atomic(path: str, data: bytes, mode: int = 0o644) -> None:
 	directory = os.path.dirname(path)
-	os.makedirs(directory, exist_ok=True)
-	fd, tmp = tempfile.mkstemp(dir=directory, prefix=".tmp-")
+	try:
+		os.makedirs(directory, exist_ok=True)
+		fd, tmp = tempfile.mkstemp(dir=directory, prefix=".tmp-")
+	except OSError as e:
+		raise EnrollmentError(f"Impossibile scrivere nella cartella dei certificati {directory}: {e}", "file_access")
 	try:
 		with os.fdopen(fd, "wb") as f:
 			f.write(data)
@@ -69,11 +72,20 @@ def needs_renewal(cert_path: str) -> bool:
 
 
 def _load_or_create_key(key_path: str):
+	"""Carica la chiave privata; la crea solo se il file non esiste. Una chiave esistente
+	ma illeggibile non viene mai sostituita: il broker la conosce già."""
 	try:
 		with open(key_path, "rb") as f:
-			return serialization.load_pem_private_key(f.read(), password=None)
-	except (OSError, ValueError):
-		pass
+			data = f.read()
+	except FileNotFoundError:
+		data = None
+	except OSError as e:
+		raise EnrollmentError(f"Chiave privata {key_path} non leggibile: {e}", "key_access")
+	if data is not None:
+		try:
+			return serialization.load_pem_private_key(data, password=None)
+		except ValueError as e:
+			raise EnrollmentError(f"Chiave privata {key_path} non valida: {e}", "key_invalid")
 	key = ec.generate_private_key(ec.SECP256R1())
 	pem = key.private_bytes(
 		serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
