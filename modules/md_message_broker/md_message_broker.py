@@ -19,6 +19,8 @@ Funzionamento:
 - Il certificato client si ottiene da solo (vedi `enrollment.py`): basta impostare
   l'host del broker. L'in-out genera la sua chiave, si registra sul servizio di
   registrazione del broker (porta 8884) e rinnova il certificato prima della scadenza.
+- Accesso remoto (vedi `remote_tunnel.py`): sulla stessa connessione il pannello del
+  broker inoltra richieste HTTP e websocket all'API locale dell'in-out.
 """
 
 import base64
@@ -40,6 +42,7 @@ import libs.lb_log as lb_log
 from libs.lb_utils import base_path, createThread, startThread
 from modules.md_message_broker.dto import MessageBrokerDTO
 from modules.md_message_broker import enrollment
+from modules.md_message_broker.remote_tunnel import RemoteTunnel
 
 name_module = "md_message_broker"
 
@@ -182,6 +185,8 @@ class ModuleMessageBroker:
 		self.access_problem: Optional[str] = None
 		self.enroll_error: Optional[str] = None
 		self.last_enrolled_at: Optional[str] = None
+		# Accesso remoto dal pannello del broker: HTTP e websocket attraverso MQTT
+		self.remote = RemoteTunnel(self.client_id, lambda: self.client)
 
 		os.makedirs(self.outbox_dir, exist_ok=True)
 
@@ -263,7 +268,10 @@ class ModuleMessageBroker:
 			return None
 
 	def _on_message(self, client, userdata, msg):
-		"""Comandi dal broker sul topic <client_id>/control (messaggio retained)."""
+		"""Comandi dal broker sul topic <client_id>/control (messaggio retained) e accesso remoto."""
+		if msg.topic == self.remote.topic_req:
+			self.remote.handle(msg.payload)
+			return
 		if msg.topic != f"{self.client_id}/{CONTROL_SUFFIX}" or not msg.payload:
 			return
 		try:
@@ -534,9 +542,12 @@ class ModuleMessageBroker:
 			self._connected.set()
 			# Comandi dal broker (es. nuovo certificato richiesto dal pannello)
 			client.subscribe(f"{self.client_id}/{CONTROL_SUFFIX}", qos=QOS)
+			# Accesso remoto dal pannello del broker (richieste HTTP e websocket)
+			client.subscribe(self.remote.topic_req, qos=0)
 
 	def _on_disconnect(self, client, userdata, flags, reason_code, properties):
 		self._connected.clear()
+		self.remote.close_all()
 		if reason_code.is_failure:
 			self.last_error = f"Disconnesso dal broker: {reason_code}"
 			lb_log.warning(self.last_error)
@@ -609,6 +620,7 @@ class ModuleMessageBroker:
 			client = self.client
 			self.client = None
 			self._connected.clear()
+		self.remote.close_all()
 		if client is not None:
 			try:
 				client.disconnect()
