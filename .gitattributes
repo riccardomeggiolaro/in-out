@@ -5,3 +5,4 @@
 
 # Installer dei driver: archivi autoestraenti con dati binari, mai convertire
 printers-driver/** -text
+"Driver e stampe/**" -text
