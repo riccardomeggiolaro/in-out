@@ -16,6 +16,9 @@ Funzionamento:
   l'ordine delle pesate è sempre rispettato.
 - I file illeggibili/corrotti vengono spostati nella sottocartella "failed"
   per non bloccare la coda all'infinito.
+- Il certificato client si ottiene da solo (vedi `enrollment.py`): basta impostare
+  l'host del broker. L'in-out genera la sua chiave, si registra sul servizio di
+  registrazione del broker (porta 8884) e rinnova il certificato prima della scadenza.
 """
 
 import base64
@@ -35,6 +38,7 @@ import libs.lb_config as lb_config
 import libs.lb_log as lb_log
 from libs.lb_utils import base_path, createThread, startThread
 from modules.md_message_broker.dto import MessageBrokerDTO
+from modules.md_message_broker import enrollment
 
 name_module = "md_message_broker"
 
@@ -46,12 +50,19 @@ CERT_FILES = {
 	"cert": "client.crt",
 	"key": "client.key",
 }
+# Host del broker a cui appartengono i certificati: se cambia host si riparte da zero
+OWNER_FILE = "broker_host"
 FAILED_SUB_DIR = "failed"
 CONNECT_TIMEOUT = 10
 BACKOFF_MIN = 1
 BACKOFF_MAX = 60
 # QoS 1: il broker conferma ogni pesata (PUBACK), necessario per la coda con riprova
 QOS = 1
+# Registrazione: nuovo tentativo dopo un errore (senza certificato / rinnovo fallito)
+ENROLL_RETRY = 30
+RENEW_RETRY = 3600
+# Ogni quanto si controlla la scadenza del certificato
+CERT_CHECK_INTERVAL = 3600
 
 module_message_broker = None
 
@@ -152,6 +163,13 @@ class ModuleMessageBroker:
 		self.last_sent_id: Optional[str] = None
 		self._backoff = BACKOFF_MIN
 
+		self._enroll_lock = threading.Lock()
+		self._next_cert_check = 0.0
+		self._next_enroll_attempt = 0.0
+		self._renewed = threading.Event()
+		self.enroll_error: Optional[str] = None
+		self.last_enrolled_at: Optional[str] = None
+
 		os.makedirs(self.outbox_dir, exist_ok=True)
 
 	# ------------------------------------------------------------------
@@ -172,67 +190,69 @@ class ModuleMessageBroker:
 	def has_client_certificate(self) -> bool:
 		return os.path.isfile(self.cert_path("cert")) and os.path.isfile(self.cert_path("key"))
 
-	def install_certificates(self, files: dict, remove_ca: bool = False, remove_client_cert: bool = False) -> None:
-		"""
-		Valida e installa i file TLS. `files` è {kind: bytes} con kind in "ca", "cert", "key";
-		i file non passati restano quelli già installati, salvo rimozione esplicita con
-		`remove_ca` / `remove_client_cert`. Il CA è facoltativo (senza si usano i CA di
-		sistema); certificato e chiave client sono facoltativi ma vanno forniti insieme.
-		Solleva ValueError se non validi.
-		"""
-		import ssl
-		import tempfile
+	def _owner_path(self) -> str:
+		return os.path.join(self.cert_dir, OWNER_FILE)
 
-		for kind in files:
-			if kind not in CERT_FILES:
-				raise ValueError(f"Tipo di file TLS sconosciuto: {kind}")
-		removed = set()
-		if remove_ca and not files.get("ca"):
-			removed.add("ca")
-		if remove_client_cert and not (files.get("cert") or files.get("key")):
-			removed.update(("cert", "key"))
-		os.makedirs(self.cert_dir, exist_ok=True)
-		# Prepara i file definitivi (nuovi o esistenti) in una cartella temporanea per validarli insieme
-		with tempfile.TemporaryDirectory(dir=self.cert_dir) as tmp:
-			paths = {}
-			for kind, name in CERT_FILES.items():
-				dst = os.path.join(tmp, name)
-				if files.get(kind):
-					with open(dst, "wb") as f:
-						f.write(files[kind])
-				elif kind not in removed and os.path.isfile(self.cert_path(kind)):
-					shutil.copyfile(self.cert_path(kind), dst)
-				else:
-					continue
-				paths[kind] = dst
-			if ("cert" in paths) != ("key" in paths):
-				missing = "chiave privata" if "cert" in paths else "certificato client"
-				raise ValueError(f"Manca il file: {missing} (certificato e chiave client vanno caricati insieme)")
-			ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-			if "ca" in paths:
-				try:
-					ctx.load_verify_locations(cafile=paths["ca"])
-				except Exception as e:
-					raise ValueError(f"Certificato CA non valido: {e}")
-			if "cert" in paths:
-				try:
-					ctx.load_cert_chain(certfile=paths["cert"], keyfile=paths["key"])
-				except Exception as e:
-					raise ValueError(f"Certificato client o chiave non validi (o non corrispondenti): {e}")
-			# Validi: installa i file nuovi e rimuove quelli richiesti
-			for kind in removed:
-				try:
-					os.remove(self.cert_path(kind))
-				except FileNotFoundError:
-					pass
-			for kind in files:
-				if files[kind]:
-					final = self.cert_path(kind)
-					os.replace(paths[kind], final)
-					try:
-						os.chmod(final, 0o600 if kind == "key" else 0o644)
-					except Exception:
-						pass
+	def _certificates_owner(self) -> Optional[str]:
+		try:
+			with open(self._owner_path(), "r", encoding="utf-8") as f:
+				return f.read().strip() or None
+		except OSError:
+			return None
+
+	def _clear_certificates(self) -> None:
+		"""Elimina CA e certificato. La chiave resta: se il "nuovo" host è lo stesso broker
+		(es. da IP a nome DNS) la riconosce e rilascia subito un nuovo certificato."""
+		for path in (self.cert_path("ca"), self.cert_path("cert"), self._owner_path()):
+			try:
+				os.remove(path)
+			except FileNotFoundError:
+				pass
+
+	def _ensure_certificate(self, config: MessageBrokerDTO, force: bool = False) -> bool:
+		"""
+		Garantisce un certificato client valido, registrandosi sul broker se manca o
+		rinnovandolo se sta per scadere. Ritorna True se c'è un certificato utilizzabile.
+		I tentativi falliti vengono ripetuti dopo ENROLL_RETRY / RENEW_RETRY secondi.
+		"""
+		now = time.monotonic()
+		has = self.has_ca() and self.has_client_certificate()
+		if has and not force and now < self._next_cert_check:
+			return True
+		with self._enroll_lock:
+			has = self.has_ca() and self.has_client_certificate()
+			if has and not enrollment.needs_renewal(self.cert_path("cert")):
+				self._next_cert_check = now + CERT_CHECK_INTERVAL
+				self.enroll_error = None
+				return True
+			if not force and now < self._next_enroll_attempt:
+				return has
+			action = "Rinnovo" if has else "Registrazione"
+			try:
+				lb_log.info(f"{action} del certificato sul broker {config.host}:{config.enroll_port}")
+				cert = enrollment.enroll(
+					config.host, config.enroll_port, self.client_id,
+					self.cert_path("ca"), self.cert_path("cert"), self.cert_path("key"),
+					hostname=socket.gethostname(),
+				)
+				with open(self._owner_path(), "w", encoding="utf-8") as f:
+					f.write(config.host)
+			except enrollment.EnrollmentError as e:
+				self.enroll_error = f"{action} del certificato fallita: {e}"
+				self._next_enroll_attempt = now + (RENEW_RETRY if has else ENROLL_RETRY)
+				lb_log.error(self.enroll_error)
+				if not has:
+					self.last_error = self.enroll_error
+				return has
+			self.enroll_error = None
+			self._next_enroll_attempt = 0.0
+			self._next_cert_check = now + CERT_CHECK_INTERVAL
+			self.last_enrolled_at = datetime.now().isoformat()
+			lb_log.info(f"Certificato client ottenuto dal broker, scade il {cert.not_valid_after_utc.date()}")
+			if has:
+				# Nuovo certificato: la prossima connessione lo userà
+				self._renewed.set()
+			return True
 
 	def get_certificates_info(self) -> dict:
 		"""Ritorna per ogni file TLS se è presente e, per i certificati, soggetto e scadenza."""
@@ -256,9 +276,18 @@ class ModuleMessageBroker:
 		"""Imposta (o rimuove con None) la configurazione del broker e prova a connettersi."""
 		with self._lock:
 			self._disconnect()
+			# Certificati di un altro broker: si eliminano e ci si registra sul nuovo
+			if config is not None:
+				owner = self._certificates_owner() or (self.config.host if self.config else None)
+				if owner and owner != config.host:
+					lb_log.info(f"Host del broker cambiato ({owner} -> {config.host}): certificati eliminati")
+					self._clear_certificates()
 			self.config = config
 			self.last_error = None
+			self.enroll_error = None
 			self._backoff = BACKOFF_MIN
+			self._next_cert_check = 0.0
+			self._next_enroll_attempt = 0.0
 		connected = self._ensure_connected() if config else False
 		self._wake.set()
 		return connected
@@ -377,22 +406,27 @@ class ModuleMessageBroker:
 			client_id=self.client_id,
 			clean_session=True,
 		)
-		# Connessione sempre in TLS. Senza CA caricato si usano i CA di sistema.
-		has_client_cert = self.has_client_certificate()
-		if not config.username and not has_client_cert:
-			raise RuntimeError("Nessuna credenziale: imposta username/password o carica certificato e chiave client")
+		# Connessione sempre in TLS con il certificato ottenuto dalla registrazione
+		if not (self.has_ca() and self.has_client_certificate()):
+			raise RuntimeError("Certificato client non ancora ottenuto dal broker")
 		client.tls_set(
-			ca_certs=self.cert_path("ca") if self.has_ca() else None,
-			certfile=self.cert_path("cert") if has_client_cert else None,
-			keyfile=self.cert_path("key") if has_client_cert else None,
+			ca_certs=self.cert_path("ca"),
+			certfile=self.cert_path("cert"),
+			keyfile=self.cert_path("key"),
 		)
-		if config.username:
-			client.username_pw_set(config.username, config.password or None)
 		client.on_connect = self._on_connect
 		client.on_disconnect = self._on_disconnect
 		return client
 
 	def _ensure_connected(self) -> bool:
+		config = self.config
+		if config is None:
+			return False
+		if not self._ensure_certificate(config):
+			return False
+		if self._renewed.is_set():
+			self._renewed.clear()
+			self._disconnect()
 		with self._lock:
 			config = self.config
 			if config is None:
@@ -472,6 +506,8 @@ class ModuleMessageBroker:
 			"last_error": self.last_error,
 			"last_sent_at": self.last_sent_at,
 			"last_sent_id": self.last_sent_id,
+			"enroll_error": self.enroll_error,
+			"last_enrolled_at": self.last_enrolled_at,
 		}
 
 	# ------------------------------------------------------------------
@@ -492,6 +528,11 @@ class ModuleMessageBroker:
 
 				pending = self.list_pending()
 				if not pending:
+					# Anche senza pesate da inviare: registrazione al primo avvio e rinnovo
+					config = self.config
+					if config is not None and self._ensure_certificate(config) and self._renewed.is_set():
+						self._renewed.clear()
+						self._disconnect()
 					self._wake.wait(1)
 					self._wake.clear()
 					continue

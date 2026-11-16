@@ -1,13 +1,10 @@
-from typing import Optional
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.concurrency import run_in_threadpool
 from pydantic import ValidationError
 from applications.middleware.super_admin import is_super_admin
 import libs.lb_config as lb_config
 from modules.md_message_broker.dto import MessageBrokerDTO
 import modules.md_message_broker.md_message_broker as md_message_broker
-
-MAX_CERT_SIZE = 256 * 1024
 
 
 class MessageBrokerRouter:
@@ -25,9 +22,8 @@ class MessageBrokerRouter:
         settings = md_message_broker.get_settings()
         broker = settings.get("broker")
         if broker:
-            # La password non viene mai restituita
-            broker = {k: v for k, v in broker.items() if k != "password"}
-            broker["has_password"] = bool(settings["broker"].get("password"))
+            # Campi delle vecchie versioni (autenticazione manuale) non più usati
+            broker = {k: v for k, v in broker.items() if k not in ("username", "password")}
         return {
             "broker": broker,
             "client_id": module.client_id,
@@ -42,50 +38,21 @@ class MessageBrokerRouter:
         self,
         host: str = Form(...),
         port: int = Form(8883),
-        username: Optional[str] = Form(None),
-        password: Optional[str] = Form(None),
-        remove_ca: bool = Form(False),
-        remove_client_cert: bool = Form(False),
+        enroll_port: int = Form(8884),
         include_images: bool = Form(True),
         include_pdf: bool = Form(True),
         include_csv: bool = Form(True),
-        ca_file: Optional[UploadFile] = File(None),
-        cert_file: Optional[UploadFile] = File(None),
-        key_file: Optional[UploadFile] = File(None),
     ):
-        # Password vuota/non inviata = mantiene quella già salvata (se l'utente non cambia)
-        current = md_message_broker.get_settings().get("broker") or {}
-        username = (username or "").strip() or None
-        if not password and username and username == current.get("username"):
-            password = current.get("password")
-        if not username:
-            password = None
         try:
             body = MessageBrokerDTO(
-                host=host, port=port, username=username, password=password or None,
+                host=host, port=port, enroll_port=enroll_port,
                 include_images=include_images, include_pdf=include_pdf, include_csv=include_csv,
             )
         except ValidationError as e:
             raise HTTPException(status_code=400, detail=e.errors()[0]["msg"].replace("Value error, ", ""))
 
-        # File TLS: quelli non caricati restano quelli già installati
-        files = {}
-        for kind, upload in (("ca", ca_file), ("cert", cert_file), ("key", key_file)):
-            if upload is not None and upload.filename:
-                content = await upload.read(MAX_CERT_SIZE + 1)
-                if len(content) > MAX_CERT_SIZE:
-                    raise HTTPException(status_code=400, detail=f"File {upload.filename} troppo grande")
-                files[kind] = content
-
+        # Salva e prova a collegarsi: se manca il certificato l'in-out si registra sul broker
         module = md_message_broker.module_message_broker
-        will_have_client_cert = bool(files.get("cert")) or (module.has_client_certificate() and not remove_client_cert)
-        if not body.username and not will_have_client_cert:
-            raise HTTPException(status_code=400, detail="Imposta username e password oppure carica certificato e chiave client")
-        try:
-            await run_in_threadpool(module.install_certificates, files, remove_ca, remove_client_cert)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-
         connected = await run_in_threadpool(module.set_config, body)
         md_message_broker.get_settings()["broker"] = body.model_dump()
         lb_config.saveconfig()
