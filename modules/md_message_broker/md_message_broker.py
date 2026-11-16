@@ -22,6 +22,7 @@ Funzionamento:
 """
 
 import base64
+import getpass
 import json
 import os
 import shutil
@@ -177,6 +178,8 @@ class ModuleMessageBroker:
 		self._next_idle_connect = 0.0
 		# Problema del certificato rilevato dalla CRL (es. canale chiuso), più chiaro dell'errore TLS
 		self.certificate_problem: Optional[str] = None
+		# File dei certificati non accessibili all'utente che esegue l'in-out
+		self.access_problem: Optional[str] = None
 		self.enroll_error: Optional[str] = None
 		self.last_enrolled_at: Optional[str] = None
 
@@ -310,12 +313,42 @@ class ModuleMessageBroker:
 		else:
 			self.certificate_problem = None
 
+	def _check_files_access(self) -> bool:
+		"""
+		Verifica che chiave, certificati e cartella siano accessibili all'utente corrente.
+		Succede se l'in-out è stato avviato una volta con un altro utente (es. sudo): in quel
+		caso non si tocca nulla (una nuova chiave non sarebbe riconosciuta dal broker) e si
+		segnala come correggere i permessi.
+		"""
+		files = [self.cert_path(kind) for kind in CERT_FILES] + [self._owner_path()]
+		bad = [path for path in files if os.path.exists(path) and not os.access(path, os.R_OK)]
+		if os.path.isdir(self.cert_dir) and not os.access(self.cert_dir, os.W_OK | os.X_OK):
+			bad.append(self.cert_dir)
+		if not bad:
+			self.access_problem = None
+			return True
+		try:
+			user = getpass.getuser()
+		except Exception:
+			user = "corrente"
+		problem = (
+			f"File dei certificati non accessibili all'utente '{user}' ({', '.join(bad)}): "
+			f"probabilmente l'in-out è stato avviato con un altro utente (es. sudo). "
+			f"Correggi con: sudo chown -R {user} {self.cert_dir}"
+		)
+		if problem != self.access_problem:
+			lb_log.error(problem)
+		self.access_problem = problem
+		return False
+
 	def _ensure_certificate(self, config: MessageBrokerDTO, force: bool = False) -> bool:
 		"""
 		Garantisce un certificato client valido, registrandosi sul broker se manca o
 		rinnovandolo se sta per scadere. Ritorna True se c'è un certificato utilizzabile.
 		I tentativi falliti vengono ripetuti dopo ENROLL_RETRY / RENEW_RETRY secondi.
 		"""
+		if not self._check_files_access():
+			return False
 		now = time.monotonic()
 		has = self.has_ca() and self.has_client_certificate()
 		if has and self._renew_request:
@@ -620,7 +653,7 @@ class ModuleMessageBroker:
 			"pending": len(self.list_pending()),
 			"failed": len(self.list_failed()),
 			"outbox_dir": self.outbox_dir,
-			"last_error": self.certificate_problem or self.last_error,
+			"last_error": self.access_problem or self.certificate_problem or self.last_error,
 			"last_sent_at": self.last_sent_at,
 			"last_sent_id": self.last_sent_id,
 			"enroll_error": self.enroll_error,
