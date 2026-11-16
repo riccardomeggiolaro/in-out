@@ -163,8 +163,17 @@ def certificate_status(host: str, port: int, ca_path: str, cert_path: str) -> Op
 	return STATUS_HOLD if reason == x509.ReasonFlags.certificate_hold else STATUS_REVOKED
 
 
-def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, key_path: str, hostname: str = "") -> x509.Certificate:
-	"""Ottiene (o rinnova) il certificato client. Ritorna il certificato installato."""
+def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, key_path: str, hostname: str = "",
+		   rotate_key: bool = False) -> x509.Certificate:
+	"""
+	Ottiene (o rinnova) il certificato client. Ritorna il certificato installato.
+
+	Con `rotate_key` (nuovo certificato richiesto dal broker, o chiave revocata) viene
+	generata una chiave nuova, salvata prima in `<key>.new` e messa al posto di quella
+	attuale solo dopo aver ricevuto il certificato: se la risposta va persa, il
+	tentativo successivo riusa la stessa chiave nuova e il broker la riconosce.
+	"""
+	pending_key_path = key_path + ".new"
 	ca_pem = None
 	ca = load_certificate(ca_path)
 	if ca is None:
@@ -175,7 +184,8 @@ def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, k
 	ctx = ssl.create_default_context(cadata=ca.public_bytes(serialization.Encoding.PEM).decode())
 
 	for attempt in range(2):
-		key = _load_or_create_key(key_path)
+		use_pending = rotate_key or os.path.exists(pending_key_path)
+		key = _load_or_create_key(pending_key_path if use_pending else key_path)
 		csr = (
 			x509.CertificateSigningRequestBuilder()
 			.subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, client_id)]))
@@ -196,8 +206,10 @@ def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, k
 		code = payload.get("code", "")
 		detail = payload.get("detail") or f"HTTP {status}"
 		if code == "key_revoked" and attempt == 0:
-			# La chiave attuale è stata revocata dal broker: se ne genera una nuova
-			os.remove(key_path)
+			# La chiave è stata revocata dal broker: se ne genera una nuova
+			if use_pending:
+				os.remove(pending_key_path)
+			rotate_key = True
 			continue
 		raise EnrollmentError(f"Registrazione rifiutata dal broker: {detail}", code)
 
@@ -211,5 +223,7 @@ def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, k
 
 	if ca_pem is not None:
 		_write_atomic(ca_path, ca_pem)
+	if use_pending:
+		os.replace(pending_key_path, key_path)
 	_write_atomic(cert_path, cert.public_bytes(serialization.Encoding.PEM))
 	return cert
