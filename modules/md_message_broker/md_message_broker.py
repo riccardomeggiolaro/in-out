@@ -167,6 +167,9 @@ class ModuleMessageBroker:
 		self._next_cert_check = 0.0
 		self._next_enroll_attempt = 0.0
 		self._renewed = threading.Event()
+		self._next_status_check = 0.0
+		# Problema del certificato rilevato dalla CRL (es. canale chiuso), più chiaro dell'errore TLS
+		self.certificate_problem: Optional[str] = None
 		self.enroll_error: Optional[str] = None
 		self.last_enrolled_at: Optional[str] = None
 
@@ -208,6 +211,38 @@ class ModuleMessageBroker:
 				os.remove(path)
 			except FileNotFoundError:
 				pass
+
+	def _check_certificate_after_failure(self, config: MessageBrokerDTO) -> None:
+		"""
+		Connessione MQTT fallita: controlla sulla CRL del broker se il certificato è stato
+		revocato (es. dispositivo eliminato dal pannello) e in quel caso lo elimina, così
+		al giro successivo l'in-out si registra di nuovo. Se è sospeso (canale chiuso)
+		lo segnala e aspetta. Al massimo un controllo ogni ENROLL_RETRY secondi.
+		"""
+		now = time.monotonic()
+		if now < self._next_status_check or not (self.has_ca() and self.has_client_certificate()):
+			return
+		self._next_status_check = now + ENROLL_RETRY
+		try:
+			status = enrollment.certificate_status(config.host, config.enroll_port, self.cert_path("ca"), self.cert_path("cert"))
+		except enrollment.EnrollmentError as e:
+			lb_log.warning(f"Impossibile verificare lo stato del certificato: {e}")
+			return
+		if status == enrollment.STATUS_REVOKED:
+			with self._enroll_lock:
+				try:
+					os.remove(self.cert_path("cert"))
+				except FileNotFoundError:
+					pass
+				self._next_enroll_attempt = 0.0
+				self._next_cert_check = 0.0
+			self.certificate_problem = "Certificato revocato dal broker: nuova registrazione in corso"
+			lb_log.warning(self.certificate_problem)
+		elif status == enrollment.STATUS_HOLD:
+			self.certificate_problem = "Canale chiuso sul broker: le pesate restano in coda finché non viene riaperto"
+			lb_log.warning(self.certificate_problem)
+		else:
+			self.certificate_problem = None
 
 	def _ensure_certificate(self, config: MessageBrokerDTO, force: bool = False) -> bool:
 		"""
@@ -285,6 +320,7 @@ class ModuleMessageBroker:
 			self.config = config
 			self.last_error = None
 			self.enroll_error = None
+			self.certificate_problem = None
 			self._backoff = BACKOFF_MIN
 			self._next_cert_check = 0.0
 			self._next_enroll_attempt = 0.0
@@ -445,13 +481,21 @@ class ModuleMessageBroker:
 				self.last_error = f"Impossibile connettersi a {config.host}:{config.port}: {e}"
 				lb_log.error(self.last_error)
 				self._disconnect()
-				return False
+				failed = True
+			else:
+				failed = False
+		if failed:
+			self._check_certificate_after_failure(config)
+			return False
 		if not self._connected.wait(CONNECT_TIMEOUT):
 			if not self.last_error:
 				self.last_error = "Timeout in attesa della conferma di connessione (CONNACK)"
 			with self._lock:
 				self._disconnect()
+			self._check_certificate_after_failure(config)
 			return False
+		self._next_status_check = 0.0
+		self.certificate_problem = None
 		return True
 
 	def _disconnect(self):
@@ -503,7 +547,7 @@ class ModuleMessageBroker:
 			"pending": len(self.list_pending()),
 			"failed": len(self.list_failed()),
 			"outbox_dir": self.outbox_dir,
-			"last_error": self.last_error,
+			"last_error": self.certificate_problem or self.last_error,
 			"last_sent_at": self.last_sent_at,
 			"last_sent_id": self.last_sent_id,
 			"enroll_error": self.enroll_error,

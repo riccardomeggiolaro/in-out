@@ -9,6 +9,8 @@ Registrazione automatica sul broker MQTT (certificato client senza configurazion
 3. Il broker firma subito la richiesta e ritorna il certificato.
 4. Il rinnovo usa la stessa chiave: il broker riconosce la chiave del certificato
    attuale e rilascia il nuovo senza bisogno di altro.
+5. Se la connessione MQTT viene rifiutata, la CRL del broker dice se il certificato
+   è stato revocato (nuova registrazione) o sospeso (canale chiuso: si aspetta).
 """
 import http.client
 import json
@@ -123,6 +125,42 @@ def _fetch_ca(host: str, port: int) -> x509.Certificate:
 	except (ValueError, x509.ExtensionNotFound) as e:
 		raise EnrollmentError(f"La CA ricevuta dal broker non è valida: {e}", "ca")
 	return ca
+
+
+# Stato del certificato client secondo la CRL del broker
+STATUS_VALID = "valid"
+STATUS_REVOKED = "revoked"   # revocato (es. dispositivo eliminato): serve una nuova registrazione
+STATUS_HOLD = "hold"         # sospeso: canale chiuso sul broker, bisogna aspettare che venga riaperto
+
+
+def certificate_status(host: str, port: int, ca_path: str, cert_path: str) -> Optional[str]:
+	"""
+	Controlla sulla CRL del broker (verificata con la CA salvata) se il certificato
+	client è valido, revocato o sospeso. Ritorna None se non è possibile saperlo
+	(certificato o CA mancanti, broker senza CRL pubblicata).
+	"""
+	ca = load_certificate(ca_path)
+	cert = load_certificate(cert_path)
+	if ca is None or cert is None:
+		return None
+	ctx = ssl.create_default_context(cadata=ca.public_bytes(serialization.Encoding.PEM).decode())
+	status, data = _request(host, port, "GET", "/crl.pem", ctx)
+	if status != 200:
+		return None
+	try:
+		crl = x509.load_pem_x509_crl(data)
+	except ValueError:
+		return None
+	if not crl.is_signature_valid(ca.public_key()):
+		raise EnrollmentError("La CRL ricevuta non è firmata dalla CA del broker", "crl")
+	revoked = crl.get_revoked_certificate_by_serial_number(cert.serial_number)
+	if revoked is None:
+		return STATUS_VALID
+	try:
+		reason = revoked.extensions.get_extension_for_class(x509.CRLReason).value.reason
+	except x509.ExtensionNotFound:
+		reason = None
+	return STATUS_HOLD if reason == x509.ReasonFlags.certificate_hold else STATUS_REVOKED
 
 
 def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, key_path: str, hostname: str = "") -> x509.Certificate:
