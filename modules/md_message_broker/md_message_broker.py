@@ -52,6 +52,10 @@ CERT_FILES = {
 }
 # Host del broker a cui appartengono i certificati: se cambia host si riparte da zero
 OWNER_FILE = "broker_host"
+# Ultima richiesta di nuovo certificato ricevuta dal broker ed eseguita
+CONTROL_REQUEST_FILE = "control_request"
+# Topic dei comandi dal broker: <client_id>/control
+CONTROL_SUFFIX = "control"
 FAILED_SUB_DIR = "failed"
 CONNECT_TIMEOUT = 10
 BACKOFF_MIN = 1
@@ -167,6 +171,12 @@ class ModuleMessageBroker:
 		self._next_cert_check = 0.0
 		self._next_enroll_attempt = 0.0
 		self._renewed = threading.Event()
+		self._next_status_check = 0.0
+		# Nuovo certificato richiesto dal broker (request_id del comando), None se nessuna richiesta
+		self._renew_request: Optional[str] = None
+		self._next_idle_connect = 0.0
+		# Problema del certificato rilevato dalla CRL (es. canale chiuso), più chiaro dell'errore TLS
+		self.certificate_problem: Optional[str] = None
 		self.enroll_error: Optional[str] = None
 		self.last_enrolled_at: Optional[str] = None
 
@@ -209,6 +219,97 @@ class ModuleMessageBroker:
 			except FileNotFoundError:
 				pass
 
+	def _replace_certificate(self, config: MessageBrokerDTO) -> bool:
+		"""Nuovo certificato richiesto dal pannello del broker: nuova chiave e nuovo certificato."""
+		now = time.monotonic()
+		with self._enroll_lock:
+			request_id = self._renew_request
+			if not request_id or now < self._next_enroll_attempt:
+				return True
+			try:
+				lb_log.info("Nuovo certificato richiesto dal broker: generazione di una nuova chiave")
+				cert = enrollment.enroll(
+					config.host, config.enroll_port, self.client_id,
+					self.cert_path("ca"), self.cert_path("cert"), self.cert_path("key"),
+					hostname=socket.gethostname(), rotate_key=True,
+				)
+			except enrollment.EnrollmentError as e:
+				self.enroll_error = f"Sostituzione del certificato fallita: {e}"
+				self._next_enroll_attempt = now + ENROLL_RETRY
+				lb_log.error(self.enroll_error)
+				return True
+			try:
+				with open(os.path.join(self.cert_dir, CONTROL_REQUEST_FILE), "w", encoding="utf-8") as f:
+					f.write(request_id)
+			except OSError:
+				pass
+			self._renew_request = None
+			self.enroll_error = None
+			self._next_enroll_attempt = 0.0
+			self._next_cert_check = now + CERT_CHECK_INTERVAL
+			self.last_enrolled_at = datetime.now().isoformat()
+			lb_log.info(f"Nuovo certificato installato, scade il {cert.not_valid_after_utc.date()}: riconnessione")
+			self._renewed.set()
+			return True
+
+	def _last_control_request(self) -> Optional[str]:
+		try:
+			with open(os.path.join(self.cert_dir, CONTROL_REQUEST_FILE), "r", encoding="utf-8") as f:
+				return f.read().strip() or None
+		except OSError:
+			return None
+
+	def _on_message(self, client, userdata, msg):
+		"""Comandi dal broker sul topic <client_id>/control (messaggio retained)."""
+		if msg.topic != f"{self.client_id}/{CONTROL_SUFFIX}" or not msg.payload:
+			return
+		try:
+			command = json.loads(msg.payload)
+		except ValueError:
+			lb_log.warning("Comando dal broker non leggibile")
+			return
+		if not isinstance(command, dict) or command.get("command") != "renew_certificate":
+			return
+		request_id = str(command.get("request_id") or "")
+		if not request_id or request_id in (self._renew_request, self._last_control_request()):
+			return
+		lb_log.info("Il broker ha richiesto un nuovo certificato")
+		self._renew_request = request_id
+		self._next_enroll_attempt = 0.0
+		self._wake.set()
+
+	def _check_certificate_after_failure(self, config: MessageBrokerDTO) -> None:
+		"""
+		Connessione MQTT fallita: controlla sulla CRL del broker se il certificato è stato
+		revocato (es. dispositivo eliminato dal pannello) e in quel caso lo elimina, così
+		al giro successivo l'in-out si registra di nuovo. Se è sospeso (canale chiuso)
+		lo segnala e aspetta. Al massimo un controllo ogni ENROLL_RETRY secondi.
+		"""
+		now = time.monotonic()
+		if now < self._next_status_check or not (self.has_ca() and self.has_client_certificate()):
+			return
+		self._next_status_check = now + ENROLL_RETRY
+		try:
+			status = enrollment.certificate_status(config.host, config.enroll_port, self.cert_path("ca"), self.cert_path("cert"))
+		except enrollment.EnrollmentError as e:
+			lb_log.warning(f"Impossibile verificare lo stato del certificato: {e}")
+			return
+		if status == enrollment.STATUS_REVOKED:
+			with self._enroll_lock:
+				try:
+					os.remove(self.cert_path("cert"))
+				except FileNotFoundError:
+					pass
+				self._next_enroll_attempt = 0.0
+				self._next_cert_check = 0.0
+			self.certificate_problem = "Certificato revocato dal broker: nuova registrazione in corso"
+			lb_log.warning(self.certificate_problem)
+		elif status == enrollment.STATUS_HOLD:
+			self.certificate_problem = "Canale chiuso sul broker: le pesate restano in coda finché non viene riaperto"
+			lb_log.warning(self.certificate_problem)
+		else:
+			self.certificate_problem = None
+
 	def _ensure_certificate(self, config: MessageBrokerDTO, force: bool = False) -> bool:
 		"""
 		Garantisce un certificato client valido, registrandosi sul broker se manca o
@@ -217,6 +318,8 @@ class ModuleMessageBroker:
 		"""
 		now = time.monotonic()
 		has = self.has_ca() and self.has_client_certificate()
+		if has and self._renew_request:
+			return self._replace_certificate(config)
 		if has and not force and now < self._next_cert_check:
 			return True
 		with self._enroll_lock:
@@ -285,9 +388,12 @@ class ModuleMessageBroker:
 			self.config = config
 			self.last_error = None
 			self.enroll_error = None
+			self.certificate_problem = None
 			self._backoff = BACKOFF_MIN
 			self._next_cert_check = 0.0
 			self._next_enroll_attempt = 0.0
+			self._next_idle_connect = 0.0
+			self._next_status_check = 0.0
 		connected = self._ensure_connected() if config else False
 		self._wake.set()
 		return connected
@@ -393,6 +499,8 @@ class ModuleMessageBroker:
 		else:
 			lb_log.info("Connesso al message broker")
 			self._connected.set()
+			# Comandi dal broker (es. nuovo certificato richiesto dal pannello)
+			client.subscribe(f"{self.client_id}/{CONTROL_SUFFIX}", qos=QOS)
 
 	def _on_disconnect(self, client, userdata, flags, reason_code, properties):
 		self._connected.clear()
@@ -415,6 +523,7 @@ class ModuleMessageBroker:
 			keyfile=self.cert_path("key"),
 		)
 		client.on_connect = self._on_connect
+		client.on_message = self._on_message
 		client.on_disconnect = self._on_disconnect
 		return client
 
@@ -445,13 +554,21 @@ class ModuleMessageBroker:
 				self.last_error = f"Impossibile connettersi a {config.host}:{config.port}: {e}"
 				lb_log.error(self.last_error)
 				self._disconnect()
-				return False
+				failed = True
+			else:
+				failed = False
+		if failed:
+			self._check_certificate_after_failure(config)
+			return False
 		if not self._connected.wait(CONNECT_TIMEOUT):
 			if not self.last_error:
 				self.last_error = "Timeout in attesa della conferma di connessione (CONNACK)"
 			with self._lock:
 				self._disconnect()
+			self._check_certificate_after_failure(config)
 			return False
+		self._next_status_check = 0.0
+		self.certificate_problem = None
 		return True
 
 	def _disconnect(self):
@@ -503,7 +620,7 @@ class ModuleMessageBroker:
 			"pending": len(self.list_pending()),
 			"failed": len(self.list_failed()),
 			"outbox_dir": self.outbox_dir,
-			"last_error": self.last_error,
+			"last_error": self.certificate_problem or self.last_error,
 			"last_sent_at": self.last_sent_at,
 			"last_sent_id": self.last_sent_id,
 			"enroll_error": self.enroll_error,
@@ -528,11 +645,18 @@ class ModuleMessageBroker:
 
 				pending = self.list_pending()
 				if not pending:
-					# Anche senza pesate da inviare: registrazione al primo avvio e rinnovo
+					# Anche senza pesate da inviare la connessione resta aperta: registrazione al
+					# primo avvio, rinnovo del certificato e comandi dal broker arrivano subito
 					config = self.config
-					if config is not None and self._ensure_certificate(config) and self._renewed.is_set():
-						self._renewed.clear()
-						self._disconnect()
+					if config is not None:
+						self._ensure_certificate(config)
+						needs_connect = self._renewed.is_set() or not self._connected.is_set()
+						if needs_connect and time.monotonic() >= self._next_idle_connect:
+							if self._ensure_connected():
+								self._backoff = BACKOFF_MIN
+							else:
+								self._next_idle_connect = time.monotonic() + self._backoff
+								self._backoff = min(self._backoff * 2, BACKOFF_MAX)
 					self._wake.wait(1)
 					self._wake.clear()
 					continue

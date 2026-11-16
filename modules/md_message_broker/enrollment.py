@@ -9,6 +9,8 @@ Registrazione automatica sul broker MQTT (certificato client senza configurazion
 3. Il broker firma subito la richiesta e ritorna il certificato.
 4. Il rinnovo usa la stessa chiave: il broker riconosce la chiave del certificato
    attuale e rilascia il nuovo senza bisogno di altro.
+5. Se la connessione MQTT viene rifiutata, la CRL del broker dice se il certificato
+   è stato revocato (nuova registrazione) o sospeso (canale chiuso: si aspetta).
 """
 import http.client
 import json
@@ -125,8 +127,53 @@ def _fetch_ca(host: str, port: int) -> x509.Certificate:
 	return ca
 
 
-def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, key_path: str, hostname: str = "") -> x509.Certificate:
-	"""Ottiene (o rinnova) il certificato client. Ritorna il certificato installato."""
+# Stato del certificato client secondo la CRL del broker
+STATUS_VALID = "valid"
+STATUS_REVOKED = "revoked"   # revocato (es. dispositivo eliminato): serve una nuova registrazione
+STATUS_HOLD = "hold"         # sospeso: canale chiuso sul broker, bisogna aspettare che venga riaperto
+
+
+def certificate_status(host: str, port: int, ca_path: str, cert_path: str) -> Optional[str]:
+	"""
+	Controlla sulla CRL del broker (verificata con la CA salvata) se il certificato
+	client è valido, revocato o sospeso. Ritorna None se non è possibile saperlo
+	(certificato o CA mancanti, broker senza CRL pubblicata).
+	"""
+	ca = load_certificate(ca_path)
+	cert = load_certificate(cert_path)
+	if ca is None or cert is None:
+		return None
+	ctx = ssl.create_default_context(cadata=ca.public_bytes(serialization.Encoding.PEM).decode())
+	status, data = _request(host, port, "GET", "/crl.pem", ctx)
+	if status != 200:
+		return None
+	try:
+		crl = x509.load_pem_x509_crl(data)
+	except ValueError:
+		return None
+	if not crl.is_signature_valid(ca.public_key()):
+		raise EnrollmentError("La CRL ricevuta non è firmata dalla CA del broker", "crl")
+	revoked = crl.get_revoked_certificate_by_serial_number(cert.serial_number)
+	if revoked is None:
+		return STATUS_VALID
+	try:
+		reason = revoked.extensions.get_extension_for_class(x509.CRLReason).value.reason
+	except x509.ExtensionNotFound:
+		reason = None
+	return STATUS_HOLD if reason == x509.ReasonFlags.certificate_hold else STATUS_REVOKED
+
+
+def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, key_path: str, hostname: str = "",
+		   rotate_key: bool = False) -> x509.Certificate:
+	"""
+	Ottiene (o rinnova) il certificato client. Ritorna il certificato installato.
+
+	Con `rotate_key` (nuovo certificato richiesto dal broker, o chiave revocata) viene
+	generata una chiave nuova, salvata prima in `<key>.new` e messa al posto di quella
+	attuale solo dopo aver ricevuto il certificato: se la risposta va persa, il
+	tentativo successivo riusa la stessa chiave nuova e il broker la riconosce.
+	"""
+	pending_key_path = key_path + ".new"
 	ca_pem = None
 	ca = load_certificate(ca_path)
 	if ca is None:
@@ -137,7 +184,8 @@ def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, k
 	ctx = ssl.create_default_context(cadata=ca.public_bytes(serialization.Encoding.PEM).decode())
 
 	for attempt in range(2):
-		key = _load_or_create_key(key_path)
+		use_pending = rotate_key or os.path.exists(pending_key_path)
+		key = _load_or_create_key(pending_key_path if use_pending else key_path)
 		csr = (
 			x509.CertificateSigningRequestBuilder()
 			.subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, client_id)]))
@@ -158,8 +206,10 @@ def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, k
 		code = payload.get("code", "")
 		detail = payload.get("detail") or f"HTTP {status}"
 		if code == "key_revoked" and attempt == 0:
-			# La chiave attuale è stata revocata dal broker: se ne genera una nuova
-			os.remove(key_path)
+			# La chiave è stata revocata dal broker: se ne genera una nuova
+			if use_pending:
+				os.remove(pending_key_path)
+			rotate_key = True
 			continue
 		raise EnrollmentError(f"Registrazione rifiutata dal broker: {detail}", code)
 
@@ -173,5 +223,7 @@ def enroll(host: str, port: int, client_id: str, ca_path: str, cert_path: str, k
 
 	if ca_pem is not None:
 		_write_atomic(ca_path, ca_pem)
+	if use_pending:
+		os.replace(pending_key_path, key_path)
 	_write_atomic(cert_path, cert.public_bytes(serialization.Encoding.PEM))
 	return cert
