@@ -243,6 +243,51 @@
     }
     #reset-positions:hover { background: rgba(30,80,220,0.08); }
     .panel-empty { font-size: 11px; color: #99aacc; margin-bottom: 6px; }
+    /* ── EDITOR (aggiungi / modifica componenti) ─────────────── */
+    .tb-btn {
+      font: 600 11px system-ui; color: #fff; background: #2255cc; cursor: pointer;
+      border: 1px solid #2255cc; border-radius: 6px; padding: 5px 10px;
+    }
+    .tb-btn:hover { background: #1a44aa; }
+    .detail-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .detail-actions button, .editor-actions button {
+      font: 600 12px system-ui; border-radius: 6px; padding: 6px 12px; cursor: pointer;
+      border: 1px solid rgba(60,100,200,0.3); background: #fff; color: #2255cc;
+    }
+    .detail-actions button.primary, .editor-actions button.primary { background: #2255cc; color: #fff; border-color: #2255cc; }
+    .detail-actions button.danger, .editor-actions button.danger { background: #c0262d; color: #fff; border-color: #c0262d; }
+    .editor-actions button:disabled { opacity: .55; cursor: not-allowed; }
+    #editor-backdrop {
+      position: fixed; inset: 0; z-index: 400; background: rgba(10,20,50,0.35);
+      display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    #editor-backdrop.show { display: flex; }
+    #editor {
+      background: #fff; border-radius: 12px; width: 100%; max-width: 520px; max-height: calc(100vh - 32px);
+      overflow-y: auto; padding: 18px 22px; box-shadow: 0 12px 48px rgba(0,0,60,0.25);
+    }
+    #editor h2 { font-size: 15px; color: #2255cc; margin-bottom: 4px; }
+    #editor .sub { font-size: 11px; color: #8899bb; margin-bottom: 12px; }
+    #editor fieldset { border: 1px solid rgba(60,100,200,0.15); border-radius: 8px; padding: 10px 12px 4px; margin-bottom: 12px; }
+    #editor legend { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #2255cc; padding: 0 4px; }
+    #editor .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 9px; min-width: 0; }
+    #editor .field label { font-size: 11px; color: #556677; }
+    #editor .field input, #editor .field select {
+      font: 13px system-ui; padding: 6px 8px; border: 1px solid rgba(60,100,200,0.3); border-radius: 6px; background: #fff; color: #1a2540;
+      width: 100%; min-width: 0;
+    }
+    #editor .field input.invalid, #editor .field select.invalid { border-color: #c0262d; }
+    #editor .field .err { font-size: 10px; color: #c0262d; display: none; }
+    #editor .field .err.show { display: block; }
+    #editor .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+    #editor .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 10px; }
+    #editor .check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #2a3a5a; margin-bottom: 9px; }
+    #editor .note { font-size: 11px; color: #c07000; margin-bottom: 10px; }
+    #editor .form-error { font-size: 12px; color: #b02020; margin-bottom: 10px; display: none; word-break: break-word; }
+    #editor .form-error.show { display: block; }
+    .editor-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+    @media (max-width: 520px) { #editor .grid2, #editor .grid3 { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { #topbar .hint { display: none; } }
     #load-error { color: #b02020; font-size: 13px; margin-top: 10px; max-width: 420px; text-align: center; }
   </style>
 </head>
@@ -260,6 +305,7 @@
   <div class="logo">⚖ IN/OUT</div>
   <div class="version" id="topbar-version">Configurazione Hardware</div>
   <div class="hint">🖱 Ruota · Scroll zoom · <b>Trascina oggetto per spostarlo</b> · Click per dettagli</div>
+  <button id="add-weigher" class="tb-btn" title="Aggiunge una nuova pesa alla configurazione">＋ Aggiungi pesa</button>
   <button id="reset-positions" title="Rimette tutti gli oggetti nella disposizione iniziale">↺ Posizioni iniziali</button>
 </div>
 
@@ -274,7 +320,11 @@
   <span id="detail-close">✕</span>
   <h2 id="detail-title">–</h2>
   <table id="detail-table"></table>
+  <div id="detail-actions" class="detail-actions"></div>
 </div>
+
+<!-- EDITOR (form per aggiungere / modificare / eliminare componenti) -->
+<div id="editor-backdrop"><form id="editor" novalidate></form></div>
 
 <!-- LEGEND -->
 <div id="legend">
@@ -417,6 +467,7 @@ function buildModel(cfg) {
 
       const w = {
         instanceName, nodeName, connection,
+        rawNode: node, rawInstance: inst,
         timeBetweenActions: inst.time_between_actions,
         autoCloseConnection: !!inst.auto_close_connection,
         terminal: node.terminal,
@@ -698,6 +749,10 @@ function buildPesa(w, pos) {
       ['Divisione', w.division != null ? w.division + ' kg' : '—'],
       ['Trasmissione continua', w.continuousTransmission ? 'SÌ' : 'NO'],
       ['Relè configurati', w.relays.length ? w.relays.map(r => r.name).join(', ') : 'nessuno'],
+    ],
+    actions: [
+      { label: '✎ Modifica', cls: 'primary', onClick: () => openWeigherEditor(w) },
+      { label: '🗑 Elimina', cls: 'danger', onClick: () => openDeleteWeigher(w) },
     ]
   });
   pulseSphere(group, new THREE.Vector3(0, 0.56, 0), 0x22aa55);
@@ -1530,6 +1585,16 @@ function showDetail(data) {
   const rows = typeof data.rows === 'function' ? data.rows() : data.rows;
   detailTitle.textContent = data.title;
   detailTable.innerHTML = rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${cell(v)}</td></tr>`).join('');
+  const actionsEl = document.getElementById('detail-actions');
+  actionsEl.innerHTML = '';
+  for (const a of (data.actions || [])) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = a.cls || '';
+    b.textContent = a.label;
+    b.addEventListener('click', () => { detailPanel.classList.remove('show'); a.onClick(); });
+    actionsEl.appendChild(b);
+  }
   detailPanel.classList.add('show');
 }
 document.getElementById('detail-close').addEventListener('click', () => detailPanel.classList.remove('show'));
@@ -1637,6 +1702,408 @@ window.addEventListener('mouseup', e => {
 renderer.domElement.addEventListener('click', e => {
   if (hasDragged) return;
   if (!hitDraggable(e)) detailPanel.classList.remove('show');
+});
+
+
+/* ─────────────────────────────────────────────────────────────
+   EDITOR: AGGIUNGI / MODIFICA / ELIMINA PESE
+   Le modifiche passano dalle stesse API della pagina Configurazione;
+   dopo il salvataggio la scena viene ricaricata dalla nuova configurazione.
+───────────────────────────────────────────────────────────── */
+let currentCfg = null;
+
+async function api(method, url, body) {
+  let token = null;
+  try { token = localStorage.getItem('token'); } catch (_) {}
+  const headers = { 'Authorization': `Bearer ${token}` };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const res = await fetch(url, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+  let data = null;
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) {
+    const err = new Error(apiErrorText(res.status, data));
+    err.status = res.status;
+    err.detail = data?.detail;
+    throw err;
+  }
+  return data;
+}
+function apiErrorText(status, data) {
+  const d = data?.detail;
+  if (status === 401 && typeof d === 'string' && d.includes('super admin')) return 'Serve un utente super admin per modificare la configurazione.';
+  if (status === 401) return 'Sessione scaduta: rifai il login.';
+  if (Array.isArray(d)) return d.map(x => (x.loc ? x.loc[x.loc.length - 1] + ': ' : '') + (x.msg || '')).join(' · ');
+  if (typeof d === 'string') return d;
+  return `Errore del server (HTTP ${status}).`;
+}
+
+// Dopo una modifica ricarico la pagina: la scena viene ricostruita dalla nuova configurazione
+function reloadScene(message) {
+  try { sessionStorage.setItem('inout.config3d.toast', message); } catch (_) {}
+  location.reload();
+}
+(() => {
+  let msg = null;
+  try { msg = sessionStorage.getItem('inout.config3d.toast'); sessionStorage.removeItem('inout.config3d.toast'); } catch (_) {}
+  if (msg) setTimeout(() => showToast(msg, 'ok'), 900);
+})();
+
+// Sposta la posizione salvata quando una pesa cambia nome
+function renameSavedPosition(oldKey, newKey) {
+  if (oldKey === newKey) return;
+  try {
+    const all = loadSavedPositions();
+    if (all[oldKey]) { all[newKey] = all[oldKey]; delete all[oldKey]; }
+    localStorage.setItem(POSITIONS_KEY, JSON.stringify(all));
+  } catch (_) {}
+}
+
+const editorBackdrop = document.getElementById('editor-backdrop');
+const editorForm = document.getElementById('editor');
+function closeEditor() { editorBackdrop.classList.remove('show'); editorForm.innerHTML = ''; }
+editorBackdrop.addEventListener('mousedown', e => { if (e.target === editorBackdrop) closeEditor(); });
+// l'errore di un campo sparisce appena lo si corregge
+editorForm.addEventListener('input', e => {
+  const name = e.target.name;
+  if (!name) return;
+  e.target.classList.remove('invalid');
+  editorForm.querySelector(`[data-err="${name}"]`)?.classList.remove('show');
+});
+window.addEventListener('keydown', e => { if (e.key === 'Escape' && editorBackdrop.classList.contains('show')) closeEditor(); });
+
+function field(name, label, input, err = '') {
+  return `<div class="field"><label for="ed-${name}">${esc(label)}</label>${input}<span class="err" data-err="${name}">${esc(err)}</span></div>`;
+}
+function inp(name, value, attrs = '') {
+  return `<input id="ed-${name}" name="${name}" value="${esc(value ?? '')}" ${attrs}>`;
+}
+function sel(name, options, value) {
+  return `<select id="ed-${name}" name="${name}">` +
+    options.map(o => `<option value="${esc(o.value)}"${String(o.value) === String(value ?? '') ? ' selected' : ''}>${esc(o.label)}</option>`).join('') +
+    `</select>`;
+}
+function chk(name, label, checked) {
+  return `<label class="check"><input type="checkbox" id="ed-${name}" name="${name}"${checked ? ' checked' : ''}> ${esc(label)}</label>`;
+}
+const val = (name) => editorForm.querySelector(`[name="${name}"]`)?.value?.trim() ?? '';
+const checked = (name) => !!editorForm.querySelector(`[name="${name}"]`)?.checked;
+
+function connLabel(name, inst) {
+  const c = inst.connection || {};
+  const addr = c.ip ? `TCP ${c.ip}:${c.port}` : c.serial_port_name ? `Seriale ${c.serial_port_name} @ ${c.baudrate ?? '?'}` : 'non configurata';
+  const nodes = Object.keys(inst.nodes || {});
+  return `#${name} · ${addr}` + (nodes.length ? ` (${nodes.join(', ')})` : ' (nessuna pesa)');
+}
+
+async function loadTerminals() {
+  try { return await api('GET', '/api/config-weigher/terminals'); } catch (_) { return []; }
+}
+async function loadSerialPorts() {
+  try {
+    const data = await api('GET', '/api/generic/list/serial-ports');
+    return (data?.list_serial_ports || []).map(p => ({ port: p.port, busy: !!(p.using && p.using[0]) }));
+  } catch (_) { return null; }
+}
+
+// HTML dei campi di connessione (TCP o seriale) con valori iniziali
+function connectionFields(conn, timeBetween, serialPorts) {
+  const kind = conn?.serial_port_name ? 'serial' : 'tcp';
+  const ports = serialPorts || [];
+  const cur = conn?.serial_port_name;
+  const portOptions = [{ value: '', label: ports.length || cur ? '— scegli —' : 'nessuna porta trovata' }]
+    .concat(cur && !ports.some(p => p.port === cur) ? [{ value: cur, label: cur }] : [])
+    .concat(ports.map(p => ({ value: p.port, label: p.port + (p.busy && p.port !== cur ? ' (in uso)' : '') })));
+  return `
+    ${field('conn_kind', 'Tipo di connessione', sel('conn_kind', [{ value: 'tcp', label: 'TCP / IP' }, { value: 'serial', label: 'Seriale' }], kind))}
+    <div data-conn="tcp" class="grid3">
+      ${field('ip', 'Indirizzo IP', inp('ip', conn?.ip, 'placeholder="192.168.1.10"'), 'IP obbligatorio')}
+      ${field('port', 'Porta', inp('port', conn?.port, 'type="number" min="1" max="65535"'), 'Porta 1–65535')}
+      ${field('tcp_timeout', 'Timeout (s)', inp('tcp_timeout', conn?.ip ? conn?.timeout : 3, 'type="number" step="0.1" min="0.1"'), 'Maggiore di 0')}
+    </div>
+    <div data-conn="serial" class="grid3">
+      ${field('serial_port_name', 'Porta seriale', sel('serial_port_name', portOptions, cur), 'Scegli una porta')}
+      ${field('baudrate', 'Baudrate', inp('baudrate', conn?.baudrate ?? 19200, 'type="number" min="1"'), 'Maggiore di 0')}
+      ${field('serial_timeout', 'Timeout (s)', inp('serial_timeout', conn?.serial_port_name ? conn?.timeout : 1, 'type="number" step="0.1" min="0.1"'), 'Maggiore di 0')}
+    </div>
+    ${field('time_between_actions', 'Intervallo tra azioni (s)', inp('time_between_actions', timeBetween ?? 0.3, 'type="number" step="0.1" min="0.1"'), 'Maggiore di 0')}`;
+}
+function syncConnKind() {
+  const kind = val('conn_kind');
+  editorForm.querySelectorAll('[data-conn]').forEach(el => { el.style.display = el.dataset.conn === kind ? '' : 'none'; });
+}
+function readConnection() {
+  const t = parseFloat(val('time_between_actions'));
+  if (val('conn_kind') === 'serial') {
+    return { serial_port_name: val('serial_port_name'), baudrate: parseInt(val('baudrate')), timeout: parseFloat(val('serial_timeout')), time_between_actions: t };
+  }
+  return { ip: val('ip'), port: parseInt(val('port')), timeout: parseFloat(val('tcp_timeout')), time_between_actions: t };
+}
+
+function nodeFields(n, terminals, isNew) {
+  const termOptions = [{ value: '', label: '— scegli —' }]
+    .concat(n.terminal && !terminals.includes(n.terminal) ? [{ value: n.terminal, label: n.terminal }] : [])
+    .concat(terminals.map(t => ({ value: t, label: t })));
+  return `
+    <div class="grid2">
+      ${field('name', 'Nome pesa', inp('name', n.name, 'placeholder="es. P1" autocomplete="off"'), 'Nome obbligatorio, senza spazi')}
+      ${field('terminal', 'Terminale (indicatore)', sel('terminal', termOptions, n.terminal), 'Scegli il terminale')}
+    </div>
+    <div class="grid3">
+      ${field('max_weight', 'Peso massimo (kg)', inp('max_weight', n.max_weight ?? (isNew ? 80000 : ''), 'type="number" min="1"'), 'Maggiore di 0')}
+      ${field('min_weight', 'Peso minimo (kg)', inp('min_weight', n.min_weight ?? (isNew ? 500 : ''), 'type="number" min="0"'), 'Valore non valido')}
+      ${field('division', 'Divisione (kg)', inp('division', n.division ?? (isNew ? 20 : ''), 'type="number" min="1"'), 'Maggiore di 0')}
+    </div>
+    ${field('node', 'Nodo / indirizzo sul bus (facoltativo)', inp('node', n.node, 'autocomplete="off"'))}
+    ${chk('run', 'Pesa attiva', n.run !== false)}
+    ${chk('continuous_transmission', 'Trasmissione continua', !!n.continuous_transmission)}
+    ${chk('need_take_of_weight_on_startup', 'Richiedi scarico pesa all\'avvio', !!n.need_take_of_weight_on_startup)}
+    ${chk('need_take_of_weight_before_weighing', 'Richiedi scarico pesa prima della pesata', !!n.need_take_of_weight_before_weighing)}`;
+}
+
+function validateForm({ needConn, needNode, existingNames }) {
+  const errs = {};
+  if (needNode) {
+    const name = val('name');
+    if (!name || /\s/.test(name)) errs.name = 'Nome obbligatorio, senza spazi';
+    else if (existingNames.includes(name)) errs.name = 'Esiste già una pesa con questo nome';
+    if (!val('terminal')) errs.terminal = 'Scegli il terminale';
+    const max = parseInt(val('max_weight')), min = parseInt(val('min_weight')), div = parseInt(val('division'));
+    if (!(max > 0)) errs.max_weight = 'Maggiore di 0';
+    if (!(min >= 0)) errs.min_weight = 'Valore non valido';
+    else if (max > 0 && min >= max) errs.min_weight = 'Deve essere minore del massimo';
+    if (!(div > 0)) errs.division = 'Maggiore di 0';
+  }
+  if (needConn) {
+    if (val('conn_kind') === 'serial') {
+      if (!val('serial_port_name')) errs.serial_port_name = 'Scegli una porta';
+      if (!(parseInt(val('baudrate')) > 0)) errs.baudrate = 'Maggiore di 0';
+      if (!(parseFloat(val('serial_timeout')) > 0)) errs.serial_timeout = 'Maggiore di 0';
+    } else {
+      if (!val('ip')) errs.ip = 'IP obbligatorio';
+      const port = parseInt(val('port'));
+      if (!(port >= 1 && port <= 65535)) errs.port = 'Porta 1–65535';
+      if (!(parseFloat(val('tcp_timeout')) > 0)) errs.tcp_timeout = 'Maggiore di 0';
+    }
+    if (!(parseFloat(val('time_between_actions')) > 0)) errs.time_between_actions = 'Maggiore di 0';
+  }
+  editorForm.querySelectorAll('[data-err]').forEach(el => {
+    const k = el.dataset.err;
+    el.classList.toggle('show', !!errs[k]);
+    if (errs[k]) el.textContent = errs[k];
+    editorForm.querySelector(`[name="${k}"]`)?.classList.toggle('invalid', !!errs[k]);
+  });
+  return Object.keys(errs).length === 0;
+}
+
+function showFormError(msg) {
+  const el = editorForm.querySelector('.form-error');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+function setBusy(busy) {
+  editorForm.querySelectorAll('input, select, button').forEach(el => { el.disabled = busy; });
+}
+
+function allNodeNames() {
+  const names = [];
+  for (const inst of Object.values(currentCfg?.weighers || {})) names.push(...Object.keys(inst.nodes || {}));
+  return names;
+}
+
+// Ricostruisce il body del PATCH partendo dalla configurazione salvata, così
+// fotocamere, relè, stampanti e report della pesa restano come sono.
+function nodeToSetup(node) {
+  const wg = node.events?.weighing || {};
+  const rt = node.events?.realtime || {};
+  const rele = (list) => (list || []).map(parseSetRele).filter(Boolean).map((r, i) => ({
+    rele: r.rele, set: r.set === 0 || r.set === 1 ? r.set : 1, order: (list[i] && list[i].order) || 0,
+  }));
+  const out = {
+    name: node.name, terminal: node.terminal, node: node.node ?? null,
+    max_weight: node.max_weight, min_weight: node.min_weight, division: node.division,
+    max_theshold: node.max_theshold ?? null,
+    run: node.run !== false,
+    continuous_transmission: !!node.continuous_transmission,
+    need_take_of_weight_on_startup: !!node.need_take_of_weight_on_startup,
+    need_take_of_weight_before_weighing: !!node.need_take_of_weight_before_weighing,
+    maintaine_session_realtime_after_command: node.maintaine_session_realtime_after_command ?? true,
+    diagnostic_has_priority_than_realtime: node.diagnostic_has_priority_than_realtime ?? true,
+    always_execute_realtime_in_undeground: node.always_execute_realtime_in_undeground ?? true,
+    printer_name: node.printer_name ?? null,
+    number_of_prints: node.number_of_prints ?? 1,
+    cams: (wg.cams || []).filter(c => c && c.picture).map(c => ({
+      picture: c.picture, live: (c.live && c.live !== 'None') ? c.live : null, active: !!c.active,
+    })),
+    weighing_in: rele(wg.set_rele?.in),
+    weighing_out: rele(wg.set_rele?.out),
+    over_min: rele(rt.over_min?.set_rele),
+    under_min: rele(rt.under_min?.set_rele),
+  };
+  for (const t of ['in', 'out', 'tare', 'generic']) {
+    out[`report_on_${t}`] = !!wg.report?.[t];
+    out[`csv_on_${t}`] = !!wg.csv?.[t];
+    out[`printer_name_${t}`] = wg.printer?.[t] ?? null;
+    out[`number_of_prints_${t}`] = wg.prints?.[t] ?? 1;
+  }
+  return out;
+}
+
+function readNodeFields() {
+  return {
+    name: val('name'), terminal: val('terminal'), node: val('node') || null,
+    max_weight: parseInt(val('max_weight')), min_weight: parseInt(val('min_weight')), division: parseInt(val('division')),
+    run: checked('run'), continuous_transmission: checked('continuous_transmission'),
+    need_take_of_weight_on_startup: checked('need_take_of_weight_on_startup'),
+    need_take_of_weight_before_weighing: checked('need_take_of_weight_before_weighing'),
+  };
+}
+
+function sameConnection(a, b) {
+  const keys = ['ip', 'port', 'timeout', 'serial_port_name', 'baudrate', 'time_between_actions'];
+  return keys.every(k => (a[k] ?? null) === (b[k] ?? null));
+}
+
+/* ── Aggiungi pesa ── */
+async function openAddWeigher() {
+  const [terminals, serialPorts] = await Promise.all([loadTerminals(), loadSerialPorts()]);
+  const instances = Object.entries(currentCfg?.weighers || {});
+  const instOptions = instances.map(([name, inst]) => ({ value: name, label: 'Connessione esistente ' + connLabel(name, inst) }))
+    .concat([{ value: '__new', label: '＋ Nuova connessione' }]);
+  editorForm.innerHTML = `
+    <h2>＋ Aggiungi pesa</h2>
+    <div class="sub">La pesa viene aggiunta alla configurazione e compare subito nella scena.</div>
+    <fieldset><legend>Collegamento all'indicatore</legend>
+      ${field('instance', 'Connessione', sel('instance', instOptions, instances.length ? instances[0][0] : '__new'))}
+      <div id="new-conn">${connectionFields(null, 0.3, serialPorts)}</div>
+    </fieldset>
+    <fieldset><legend>Pesa</legend>${nodeFields({}, terminals, true)}</fieldset>
+    <div class="form-error"></div>
+    <div class="editor-actions">
+      <button type="button" data-act="cancel">Annulla</button>
+      <button type="submit" class="primary">Aggiungi</button>
+    </div>`;
+  const syncInstance = () => { editorForm.querySelector('#new-conn').style.display = val('instance') === '__new' ? '' : 'none'; };
+  editorForm.querySelector('[name="instance"]').addEventListener('change', syncInstance);
+  editorForm.querySelector('[name="conn_kind"]').addEventListener('change', syncConnKind);
+  editorForm.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+  syncInstance(); syncConnKind();
+  editorForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const isNewConn = val('instance') === '__new';
+    if (!validateForm({ needConn: isNewConn, needNode: true, existingNames: allNodeNames() })) return;
+    showFormError('');
+    setBusy(true);
+    let instanceName = val('instance');
+    let createdInstance = null;
+    try {
+      if (isNewConn) {
+        const res = await api('POST', '/api/config-weigher/instance/connection', readConnection());
+        instanceName = createdInstance = Object.keys(res)[0];
+      }
+      const setup = {
+        ...readNodeFields(),
+        maintaine_session_realtime_after_command: true,
+        diagnostic_has_priority_than_realtime: true,
+        always_execute_realtime_in_undeground: true,
+        report_on_in: false, report_on_out: false, report_on_tare: false, report_on_generic: false,
+        csv_on_in: false, csv_on_out: false, csv_on_tare: false, csv_on_generic: false,
+        cams: [], weighing_in: [], weighing_out: [], over_min: [], under_min: [],
+      };
+      await api('POST', `/api/config-weigher/instance/node?instance_name=${encodeURIComponent(instanceName)}`, setup);
+      reloadScene(`Pesa ${setup.name} aggiunta.`);
+    } catch (err) {
+      // se la pesa non è stata creata, non lascio una connessione vuota appena creata
+      if (createdInstance != null) {
+        try { await api('DELETE', `/api/config-weigher/instance/connection/${encodeURIComponent(createdInstance)}`); } catch (_) {}
+      }
+      setBusy(false);
+      showFormError(err.message);
+    }
+  };
+  editorBackdrop.classList.add('show');
+  editorForm.querySelector('[name="name"]').focus();
+}
+
+/* ── Modifica pesa ── */
+async function openWeigherEditor(w) {
+  const [terminals, serialPorts] = await Promise.all([loadTerminals(), loadSerialPorts()]);
+  const node = w.rawNode, inst = w.rawInstance;
+  const others = Object.keys(inst.nodes || {}).filter(n => n !== w.nodeName);
+  editorForm.innerHTML = `
+    <h2>✎ Modifica pesa ${esc(w.nodeName)}</h2>
+    <div class="sub">Fotocamere, relè, stampanti e report della pesa restano invariati.</div>
+    <fieldset><legend>Pesa</legend>${nodeFields(node, terminals, false)}</fieldset>
+    <fieldset><legend>Connessione #${esc(w.instanceName)}</legend>
+      ${others.length ? `<div class="note">Questa connessione è usata anche da: ${esc(others.join(', '))}. Se la cambi, cambia anche per loro.</div>` : ''}
+      ${connectionFields(inst.connection, inst.time_between_actions, serialPorts)}
+    </fieldset>
+    <div class="form-error"></div>
+    <div class="editor-actions">
+      <button type="button" data-act="cancel">Annulla</button>
+      <button type="submit" class="primary">Salva</button>
+    </div>`;
+  editorForm.querySelector('[name="conn_kind"]').addEventListener('change', syncConnKind);
+  editorForm.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+  syncConnKind();
+  editorForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const existing = allNodeNames().filter(n => n !== w.nodeName);
+    if (!validateForm({ needConn: true, needNode: true, existingNames: existing })) return;
+    showFormError('');
+    setBusy(true);
+    const changes = readNodeFields();
+    const conn = readConnection();
+    try {
+      const before = { ...(inst.connection || {}), time_between_actions: inst.time_between_actions };
+      if (!sameConnection(conn, before)) {
+        await api('PATCH', `/api/config-weigher/instance/connection/${encodeURIComponent(w.instanceName)}`, conn);
+      }
+      const setup = { ...nodeToSetup(node), ...changes };
+      await api('PATCH', `/api/config-weigher/instance/node?instance_name=${encodeURIComponent(w.instanceName)}&weigher_name=${encodeURIComponent(w.nodeName)}`, setup);
+      const oldKey = `${w.instanceName}/${w.nodeName}`, newKey = `${w.instanceName}/${changes.name}`;
+      renameSavedPosition(`pesa:${oldKey}`, `pesa:${newKey}`);
+      reloadScene(`Pesa ${changes.name} aggiornata.`);
+    } catch (err) {
+      setBusy(false);
+      showFormError(err.message);
+    }
+  };
+  editorBackdrop.classList.add('show');
+}
+
+/* ── Elimina pesa ── */
+function openDeleteWeigher(w) {
+  const others = Object.keys(w.rawInstance.nodes || {}).filter(n => n !== w.nodeName);
+  editorForm.innerHTML = `
+    <h2>🗑 Elimina pesa ${esc(w.nodeName)}</h2>
+    <div class="sub">La pesa viene tolta dalla configurazione insieme alle sue fotocamere, relè e lettore RFID.</div>
+    ${others.length ? '' : chk('delete_conn', `Elimina anche la connessione #${w.instanceName} (${w.connection.kind} ${w.connection.addr}), che non userebbe più nessuna pesa`, true)}
+    <div class="form-error"></div>
+    <div class="editor-actions">
+      <button type="button" data-act="cancel">Annulla</button>
+      <button type="submit" class="danger">Elimina</button>
+    </div>`;
+  editorForm.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+  editorForm.onsubmit = async (e) => {
+    e.preventDefault();
+    showFormError('');
+    const deleteConn = !others.length && checked('delete_conn');
+    setBusy(true);
+    try {
+      await api('DELETE', `/api/config-weigher/instance/node?instance_name=${encodeURIComponent(w.instanceName)}&weigher_name=${encodeURIComponent(w.nodeName)}`);
+      if (deleteConn) await api('DELETE', `/api/config-weigher/instance/connection/${encodeURIComponent(w.instanceName)}`);
+      reloadScene(`Pesa ${w.nodeName} eliminata.`);
+    } catch (err) {
+      setBusy(false);
+      showFormError(err.message);
+    }
+  };
+  editorBackdrop.classList.add('show');
+}
+
+document.getElementById('add-weigher').addEventListener('click', () => {
+  if (!currentCfg) return;
+  openAddWeigher();
 });
 
 /* ─────────────────────────────────────────────────────────────
@@ -1764,6 +2231,7 @@ function animate() {
   const loading = document.getElementById('loading');
   try {
     const cfg = await loadConfiguration();
+    currentCfg = cfg;
     const model = buildModel(cfg);
     if (model.version) document.getElementById('topbar-version').textContent = `v${model.version} · Configurazione Hardware`;
     renderSidebar(model);
