@@ -249,6 +249,23 @@
       border: 1px solid #2255cc; border-radius: 6px; padding: 5px 10px;
     }
     .tb-btn:hover { background: #1a44aa; }
+    #add-menu { position: relative; }
+    #add-menu-list {
+      position: absolute; top: calc(100% + 6px); right: 0; min-width: 180px; display: none; flex-direction: column;
+      background: #fff; border: 1px solid rgba(60,100,200,0.2); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,60,0.15);
+      padding: 4px; z-index: 150;
+    }
+    #add-menu.open #add-menu-list { display: flex; }
+    #add-menu-list button {
+      font: 600 12px system-ui; text-align: left; background: none; border: none; border-radius: 6px;
+      padding: 8px 10px; color: #1a2540; cursor: pointer;
+    }
+    #add-menu-list button:hover { background: rgba(30,80,220,0.08); color: #2255cc; }
+    .rule-row { display: grid; grid-template-columns: 1fr 150px 32px; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .rule-row select { font: 13px system-ui; padding: 6px 8px; border: 1px solid rgba(60,100,200,0.3); border-radius: 6px; background: #fff; width: 100%; min-width: 0; }
+    .rule-row button { height: 30px; border: 1px solid rgba(200,40,40,0.3); background: #fff; color: #b02020; border-radius: 6px; cursor: pointer; }
+    .add-rule { font: 600 12px system-ui; color: #2255cc; background: none; border: 1px dashed rgba(60,100,200,0.4); border-radius: 6px; padding: 6px 10px; cursor: pointer; margin-bottom: 10px; }
+    @media (max-width: 520px) { .rule-row { grid-template-columns: 1fr 1fr 32px; } }
     .detail-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
     .detail-actions button, .editor-actions button {
       font: 600 12px system-ui; border-radius: 6px; padding: 6px 12px; cursor: pointer;
@@ -305,8 +322,14 @@
   <div class="logo">⚖ IN/OUT</div>
   <div class="version" id="topbar-version">Configurazione Hardware</div>
   <div class="hint">🖱 Ruota · Scroll zoom · <b>Trascina oggetto per spostarlo</b> · Click per dettagli</div>
-  <button id="add-weigher" class="tb-btn" title="Aggiunge una nuova pesa alla configurazione">＋ Aggiungi pesa</button>
-  <button id="add-cam" class="tb-btn" title="Aggiunge una fotocamera a una pesa">＋ Aggiungi fotocamera</button>
+  <div id="add-menu">
+    <button id="add-menu-btn" class="tb-btn" type="button" aria-haspopup="true" aria-expanded="false">＋ Aggiungi ▾</button>
+    <div id="add-menu-list" role="menu">
+      <button type="button" role="menuitem" id="add-weigher">⚖ Pesa</button>
+      <button type="button" role="menuitem" id="add-cam">📷 Fotocamera</button>
+      <button type="button" role="menuitem" id="add-relay">🚧 Relè / sbarra</button>
+    </div>
+  </div>
   <button id="reset-positions" title="Rimette tutti gli oggetti nella disposizione iniziale">↺ Posizioni iniziali</button>
 </div>
 
@@ -753,6 +776,7 @@ function buildPesa(w, pos) {
     ],
     actions: [
       { label: '📷 Aggiungi fotocamera', onClick: () => openCamEditor(w, null) },
+      { label: '🚧 Aggiungi relè', onClick: () => openRelayEditor(w, null) },
       { label: '✎ Modifica', cls: 'primary', onClick: () => openWeigherEditor(w) },
       { label: '🗑 Elimina', cls: 'danger', onClick: () => openDeleteWeigher(w) },
     ]
@@ -981,6 +1005,10 @@ function buildRelay(w, relay, pos) {
       ...(relay.events.length
         ? relay.events.map(e => [e.label, e.set == null ? 'attiva' : (Number(e.set) === 1 ? 'ALZA (verde)' : 'ABBASSA (rosso)')])
         : [['Eventi', 'nessun evento associato']]),
+    ],
+    actions: [
+      { label: '✎ Modifica', cls: 'primary', onClick: () => openRelayEditor(w, relay.name) },
+      { label: '🗑 Elimina', cls: 'danger', onClick: () => openDeleteRelay(w, relay.name) },
     ]
   };
   clickable.forEach(m => registerObject(m, group, detail));
@@ -2246,6 +2274,158 @@ document.getElementById('add-cam').addEventListener('click', () => {
   if (!currentCfg) return;
   openCamEditor(null, null);
 });
+
+/* ─────────────────────────────────────────────────────────────
+   EDITOR: RELÈ / SBARRE DI UNA PESA
+   Un relè esiste finché almeno un evento lo comanda: le azioni stanno
+   negli eventi della pesa (entrata, uscita, sopra/sotto peso minimo).
+───────────────────────────────────────────────────────────── */
+const RELAY_EVENTS = {
+  weighing_in: 'Dopo la pesata in ENTRATA',
+  weighing_out: 'Dopo la pesata in USCITA',
+  over_min: 'Sopra peso minimo',
+  under_min: 'Sotto peso minimo',
+};
+
+// Tutte le azioni sui relè della pesa, in un'unica lista ordinata
+function relayActions(node) {
+  const setup = nodeToSetup(node);
+  const list = [];
+  for (const ev of Object.keys(RELAY_EVENTS)) for (const a of setup[ev]) list.push({ ...a, event: ev });
+  return list.sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+async function saveRelayActions(w, actions, message, afterSave) {
+  const setup = nodeToSetup(w.rawNode);
+  for (const ev of Object.keys(RELAY_EVENTS)) setup[ev] = [];
+  actions.forEach((a, i) => setup[a.event].push({ rele: String(a.rele), set: a.set, order: i }));
+  await api('PATCH', `/api/config-weigher/instance/node?instance_name=${encodeURIComponent(w.instanceName)}&weigher_name=${encodeURIComponent(w.nodeName)}`, setup);
+  if (afterSave) afterSave();
+  reloadScene(message);
+}
+
+function ruleRowHtml(rule) {
+  const evOpts = Object.entries(RELAY_EVENTS).map(([v, l]) => ({ value: v, label: l }));
+  const setOpts = [{ value: 1, label: 'Alza (verde)' }, { value: 0, label: 'Abbassa (rosso)' }];
+  const evSel = `<select data-rule="event" aria-label="Evento">` + evOpts.map(o => `<option value="${o.value}"${o.value === rule.event ? ' selected' : ''}>${esc(o.label)}</option>`).join('') + `</select>`;
+  const setSel = `<select data-rule="set" aria-label="Azione">` + setOpts.map(o => `<option value="${o.value}"${Number(rule.set) === o.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('') + `</select>`;
+  return `<div class="rule-row" data-order="${rule.order ?? ''}">${evSel}${setSel}<button type="button" data-rule="remove" title="Togli questa azione" aria-label="Togli questa azione">✕</button></div>`;
+}
+
+// name null = nuovo relè; w null = scegli la pesa nel form
+function openRelayEditor(w, name) {
+  const weighers = currentModel?.weighers || [];
+  if (!weighers.length) { showToast('Aggiungi prima una pesa.', 'err'); return; }
+  const isNew = name == null;
+  const rules = isNew
+    ? [{ event: 'under_min', set: 1 }, { event: 'over_min', set: 0 }]
+    : relayActions(w.rawNode).filter(a => String(a.rele) === String(name));
+  const weigherOptions = weighers.map((x, i) => ({ value: i, label: `${x.nodeName} (istanza #${x.instanceName})` }));
+  editorForm.innerHTML = `
+    <h2>${isNew ? '🚧 Aggiungi relè / sbarra' : `✎ Modifica relè ${esc(name)}`}</h2>
+    <div class="sub">Il relè dell'indicatore comanda la sbarra o il semaforo: scegli cosa fa a ogni evento della pesa.</div>
+    <fieldset><legend>Relè</legend>
+      ${isNew ? field('weigher', 'Pesa', sel('weigher', weigherOptions, w ? weighers.indexOf(w) : 0))
+              : `<div class="field"><label>Pesa</label><div>${esc(w.nodeName)}</div></div>`}
+      ${field('rele', 'Numero del relè sull\'indicatore', inp('rele', isNew ? '' : name, 'type="number" min="1" step="1"'), 'Numero obbligatorio')}
+    </fieldset>
+    <fieldset><legend>Azioni</legend>
+      <div id="rules">${rules.map(ruleRowHtml).join('')}</div>
+      <button type="button" class="add-rule">＋ Aggiungi azione</button>
+      <span class="err" data-err="rules"></span>
+    </fieldset>
+    <div class="form-error"></div>
+    <div class="editor-actions">
+      <button type="button" data-act="cancel">Annulla</button>
+      <button type="submit" class="primary">${isNew ? 'Aggiungi' : 'Salva'}</button>
+    </div>`;
+  const rulesEl = editorForm.querySelector('#rules');
+  rulesEl.addEventListener('click', e => {
+    if (e.target.dataset.rule === 'remove') e.target.closest('.rule-row').remove();
+  });
+  editorForm.querySelector('.add-rule').addEventListener('click', () => {
+    rulesEl.insertAdjacentHTML('beforeend', ruleRowHtml({ event: 'weighing_out', set: 1 }));
+    editorForm.querySelector('[data-err="rules"]').classList.remove('show');
+  });
+  editorForm.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+  editorForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const target = isNew ? weighers[parseInt(val('weigher'))] : w;
+    const number = val('rele');
+    const rows = [...rulesEl.querySelectorAll('.rule-row')].map(r => ({
+      event: r.querySelector('[data-rule="event"]').value,
+      set: parseInt(r.querySelector('[data-rule="set"]').value),
+      order: r.dataset.order === '' ? null : Number(r.dataset.order),
+    }));
+    const others = relayActions(target.rawNode).filter(a => isNew || String(a.rele) !== String(name));
+    const errs = {};
+    if (!/^[1-9]\d*$/.test(number)) errs.rele = 'Numero intero maggiore di 0';
+    else if (others.some(a => String(a.rele) === number)) errs.rele = `La pesa ${target.nodeName} ha già il relè ${number}`;
+    if (!rows.length) errs.rules = 'Serve almeno un\'azione: un relè senza azioni non viene salvato';
+    editorForm.querySelectorAll('[data-err]').forEach(el => {
+      const k = el.dataset.err;
+      el.classList.toggle('show', !!errs[k]);
+      if (errs[k]) el.textContent = errs[k];
+      editorForm.querySelector(`[name="${k}"]`)?.classList.toggle('invalid', !!errs[k]);
+    });
+    if (Object.keys(errs).length) return;
+    // le azioni esistenti mantengono il loro posto nella sequenza, le nuove vanno in fondo
+    const maxOrder = Math.max(-1, ...others.map(a => a.order || 0), ...rows.filter(r => r.order != null).map(r => r.order));
+    let next = maxOrder + 1;
+    const mine = rows.map(r => ({ rele: number, event: r.event, set: r.set, order: r.order != null ? r.order : next++ }));
+    const all = [...others, ...mine].sort((a, b) => a.order - b.order);
+    showFormError('');
+    setBusy(true);
+    try {
+      const wKey = `${target.instanceName}/${target.nodeName}`;
+      await saveRelayActions(target, all, isNew ? `Relè ${number} aggiunto alla pesa ${target.nodeName}.` : `Relè ${number} aggiornato.`,
+        () => { if (!isNew) renameSavedPosition(`rele:${wKey}/${name}`, `rele:${wKey}/${number}`); });
+    } catch (err) {
+      setBusy(false);
+      showFormError(err.message);
+    }
+  };
+  editorBackdrop.classList.add('show');
+  editorForm.querySelector('[name="rele"]').focus();
+}
+
+function openDeleteRelay(w, name) {
+  editorForm.innerHTML = `
+    <h2>🗑 Elimina relè ${esc(name)}</h2>
+    <div class="sub">Vengono tolte tutte le azioni del relè ${esc(name)} sulla pesa ${esc(w.nodeName)}: gli eventi non lo comanderanno più.</div>
+    <div class="form-error"></div>
+    <div class="editor-actions">
+      <button type="button" data-act="cancel">Annulla</button>
+      <button type="submit" class="danger">Elimina</button>
+    </div>`;
+  editorForm.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+  editorForm.onsubmit = async (e) => {
+    e.preventDefault();
+    showFormError('');
+    setBusy(true);
+    try {
+      const rest = relayActions(w.rawNode).filter(a => String(a.rele) !== String(name));
+      await saveRelayActions(w, rest, `Relè ${name} eliminato.`);
+    } catch (err) {
+      setBusy(false);
+      showFormError(err.message);
+    }
+  };
+  editorBackdrop.classList.add('show');
+}
+
+document.getElementById('add-relay').addEventListener('click', () => {
+  if (!currentCfg) return;
+  openRelayEditor(null, null);
+});
+
+// Menu "Aggiungi" nella barra in alto
+const addMenu = document.getElementById('add-menu');
+const addMenuBtn = document.getElementById('add-menu-btn');
+function setAddMenu(open) { addMenu.classList.toggle('open', open); addMenuBtn.setAttribute('aria-expanded', String(open)); }
+addMenuBtn.addEventListener('click', e => { e.stopPropagation(); setAddMenu(!addMenu.classList.contains('open')); });
+document.getElementById('add-menu-list').addEventListener('click', () => setAddMenu(false));
+document.addEventListener('click', e => { if (!addMenu.contains(e.target)) setAddMenu(false); });
+window.addEventListener('keydown', e => { if (e.key === 'Escape') setAddMenu(false); });
 
 document.getElementById('add-weigher').addEventListener('click', () => {
   if (!currentCfg) return;
