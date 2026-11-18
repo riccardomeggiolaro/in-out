@@ -306,6 +306,7 @@
   <div class="version" id="topbar-version">Configurazione Hardware</div>
   <div class="hint">🖱 Ruota · Scroll zoom · <b>Trascina oggetto per spostarlo</b> · Click per dettagli</div>
   <button id="add-weigher" class="tb-btn" title="Aggiunge una nuova pesa alla configurazione">＋ Aggiungi pesa</button>
+  <button id="add-cam" class="tb-btn" title="Aggiunge una fotocamera a una pesa">＋ Aggiungi fotocamera</button>
   <button id="reset-positions" title="Rimette tutti gli oggetti nella disposizione iniziale">↺ Posizioni iniziali</button>
 </div>
 
@@ -751,6 +752,7 @@ function buildPesa(w, pos) {
       ['Relè configurati', w.relays.length ? w.relays.map(r => r.name).join(', ') : 'nessuno'],
     ],
     actions: [
+      { label: '📷 Aggiungi fotocamera', onClick: () => openCamEditor(w, null) },
       { label: '✎ Modifica', cls: 'primary', onClick: () => openWeigherEditor(w) },
       { label: '🗑 Elimina', cls: 'danger', onClick: () => openDeleteWeigher(w) },
     ]
@@ -1041,6 +1043,10 @@ function buildCam(w, cam, raw, pos) {
       ['URL snapshot', raw?.picture ? stripCredentials(raw.picture) : '—'],
       ['Live stream', cam.live ? stripCredentials(cam.live) : '—'],
       ['Attivazione', 'Ad ogni pesata'],
+    ],
+    actions: [
+      { label: '✎ Modifica', cls: 'primary', onClick: () => openCamEditor(w, w.rawCams.indexOf(raw)) },
+      { label: '🗑 Elimina', cls: 'danger', onClick: () => openDeleteCam(w, w.rawCams.indexOf(raw)) },
     ]
   });
   pulseSphere(group, new THREE.Vector3(0, 0.4, 0), 0x8844cc);
@@ -1711,6 +1717,7 @@ renderer.domElement.addEventListener('click', e => {
    dopo il salvataggio la scena viene ricaricata dalla nuova configurazione.
 ───────────────────────────────────────────────────────────── */
 let currentCfg = null;
+let currentModel = null;
 
 async function api(method, url, body) {
   let token = null;
@@ -1931,9 +1938,7 @@ function nodeToSetup(node) {
     always_execute_realtime_in_undeground: node.always_execute_realtime_in_undeground ?? true,
     printer_name: node.printer_name ?? null,
     number_of_prints: node.number_of_prints ?? 1,
-    cams: (wg.cams || []).filter(c => c && c.picture).map(c => ({
-      picture: c.picture, live: (c.live && c.live !== 'None') ? c.live : null, active: !!c.active,
-    })),
+    cams: camsPayload(wg.cams),
     weighing_in: rele(wg.set_rele?.in),
     weighing_out: rele(wg.set_rele?.out),
     over_min: rele(rt.over_min?.set_rele),
@@ -2101,6 +2106,147 @@ function openDeleteWeigher(w) {
   editorBackdrop.classList.add('show');
 }
 
+/* ─────────────────────────────────────────────────────────────
+   EDITOR: FOTOCAMERE DI UNA PESA
+   Le fotocamere stanno nella configurazione della pesa: si salva
+   la pesa intera con la lista di fotocamere aggiornata.
+───────────────────────────────────────────────────────────── */
+function camsPayload(list) {
+  return (list || []).filter(c => c && c.picture).map(c => ({
+    picture: c.picture, live: (c.live && c.live !== 'None') ? c.live : null, active: !!c.active,
+  }));
+}
+
+// URL → { url senza credenziali, utente, password }
+function splitCredentials(url) {
+  try {
+    const u = new URL(url);
+    const user = decodeURIComponent(u.username), pass = decodeURIComponent(u.password);
+    u.username = ''; u.password = '';
+    return { url: u.toString(), user, pass };
+  } catch (_) { return { url: url || '', user: '', pass: '' }; }
+}
+function joinCredentials(url, user, pass) {
+  const u = new URL(url);
+  u.username = user ? encodeURIComponent(user) : '';
+  u.password = user && pass ? encodeURIComponent(pass) : '';
+  return u.toString();
+}
+function isHttpUrl(v) {
+  try { const u = new URL(v); return (u.protocol === 'http:' || u.protocol === 'https:') && !!u.hostname; }
+  catch (_) { return false; }
+}
+
+async function saveCams(w, cams, message, afterSave) {
+  const setup = { ...nodeToSetup(w.rawNode), cams: camsPayload(cams) };
+  await api('PATCH', `/api/config-weigher/instance/node?instance_name=${encodeURIComponent(w.instanceName)}&weigher_name=${encodeURIComponent(w.nodeName)}`, setup);
+  if (afterSave) afterSave();
+  reloadScene(message);
+}
+
+// index null = nuova fotocamera; w null = scegli la pesa nel form
+function openCamEditor(w, index) {
+  const weighers = currentModel?.weighers || [];
+  if (!weighers.length) { showToast('Aggiungi prima una pesa.', 'err'); return; }
+  const isNew = index == null;
+  const raw = isNew ? { picture: '', live: null, active: true } : w.rawCams[index];
+  const pic = splitCredentials(raw.picture);
+  const live = (raw.live && raw.live !== 'None') ? raw.live : '';
+  const weigherOptions = weighers.map((x, i) => ({ value: i, label: `${x.nodeName} (istanza #${x.instanceName})` }));
+  editorForm.innerHTML = `
+    <h2>${isNew ? '📷 Aggiungi fotocamera' : '✎ Modifica fotocamera'}</h2>
+    <div class="sub">La fotocamera scatta una foto a ogni pesata della pesa a cui è collegata.</div>
+    <fieldset><legend>Fotocamera</legend>
+      ${isNew ? field('weigher', 'Pesa inquadrata', sel('weigher', weigherOptions, w ? weighers.indexOf(w) : 0))
+              : `<div class="field"><label>Pesa inquadrata</label><div>${esc(w.nodeName)}</div></div>`}
+      ${field('picture', 'URL dello scatto (snapshot)', inp('picture', pic.url, 'placeholder="http://192.168.1.20/cgi-bin/snapshot.jpg" autocomplete="off"'), 'URL http:// o https:// obbligatorio')}
+      <div class="grid2">
+        ${field('cam_user', 'Utente (facoltativo)', inp('cam_user', pic.user, 'autocomplete="off"'))}
+        ${field('cam_pass', 'Password (facoltativa)', inp('cam_pass', pic.pass, 'type="password" autocomplete="new-password"'))}
+      </div>
+      ${field('live', 'URL live stream (facoltativo)', inp('live', live, 'placeholder="rtsp:// o http://" autocomplete="off"'), 'URL non valido')}
+      ${chk('active', 'Fotocamera attiva', raw.active !== false)}
+    </fieldset>
+    <div class="form-error"></div>
+    <div class="editor-actions">
+      <button type="button" data-act="cancel">Annulla</button>
+      <button type="submit" class="primary">${isNew ? 'Aggiungi' : 'Salva'}</button>
+    </div>`;
+  editorForm.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+  editorForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const errs = {};
+    const picture = val('picture'), liveUrl = val('live');
+    if (!isHttpUrl(picture)) errs.picture = 'URL http:// o https:// obbligatorio';
+    if (liveUrl) { try { new URL(liveUrl); } catch (_) { errs.live = 'URL non valido'; } }
+    editorForm.querySelectorAll('[data-err]').forEach(el => {
+      const k = el.dataset.err;
+      el.classList.toggle('show', !!errs[k]);
+      if (errs[k]) el.textContent = errs[k];
+      editorForm.querySelector(`[name="${k}"]`)?.classList.toggle('invalid', !!errs[k]);
+    });
+    if (Object.keys(errs).length) return;
+    const target = isNew ? weighers[parseInt(val('weigher'))] : w;
+    const cam = { picture: joinCredentials(picture, val('cam_user'), editorForm.querySelector('[name="cam_pass"]').value), live: liveUrl || null, active: checked('active') };
+    const cams = [...(target.rawCams || [])];
+    if (isNew) cams.push(cam); else cams[index] = cam;
+    showFormError('');
+    setBusy(true);
+    try {
+      await saveCams(target, cams, isNew ? `Fotocamera aggiunta alla pesa ${target.nodeName}.` : 'Fotocamera aggiornata.');
+    } catch (err) {
+      setBusy(false);
+      showFormError(err.message);
+    }
+  };
+  editorBackdrop.classList.add('show');
+  editorForm.querySelector('[name="picture"]').focus();
+}
+
+function openDeleteCam(w, index) {
+  const cam = parseCam(w.rawCams[index]);
+  const host = cam.host ? cam.host + (cam.port ? ':' + cam.port : '') : 'senza indirizzo';
+  editorForm.innerHTML = `
+    <h2>🗑 Elimina fotocamera</h2>
+    <div class="sub">La fotocamera ${esc(host)} viene tolta dalla pesa ${esc(w.nodeName)}: alle prossime pesate non scatterà più.</div>
+    <div class="form-error"></div>
+    <div class="editor-actions">
+      <button type="button" data-act="cancel">Annulla</button>
+      <button type="submit" class="danger">Elimina</button>
+    </div>`;
+  editorForm.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+  editorForm.onsubmit = async (e) => {
+    e.preventDefault();
+    showFormError('');
+    setBusy(true);
+    try {
+      // le posizioni salvate sono per indice: scalo quelle delle fotocamere successive
+      const shiftPositions = () => {
+        const key = (k) => `cam:${w.instanceName}/${w.nodeName}/${k}`;
+        try {
+          const all = loadSavedPositions();
+          delete all[key(index)];
+          for (let k = index + 1; k < w.rawCams.length; k++) {
+            if (all[key(k)]) all[key(k - 1)] = all[key(k)];
+            delete all[key(k)];
+          }
+          localStorage.setItem(POSITIONS_KEY, JSON.stringify(all));
+        } catch (_) {}
+      };
+      await saveCams(w, w.rawCams.filter((_, k) => k !== index), 'Fotocamera eliminata.', shiftPositions);
+    } catch (err) {
+      setBusy(false);
+      showFormError(err.message);
+    }
+  };
+  editorBackdrop.classList.add('show');
+}
+
+document.getElementById('add-cam').addEventListener('click', () => {
+  if (!currentCfg) return;
+  openCamEditor(null, null);
+});
+
 document.getElementById('add-weigher').addEventListener('click', () => {
   if (!currentCfg) return;
   openAddWeigher();
@@ -2233,6 +2379,7 @@ function animate() {
     const cfg = await loadConfiguration();
     currentCfg = cfg;
     const model = buildModel(cfg);
+    currentModel = model;
     if (model.version) document.getElementById('topbar-version').textContent = `v${model.version} · Configurazione Hardware`;
     renderSidebar(model);
     buildScene(model);
