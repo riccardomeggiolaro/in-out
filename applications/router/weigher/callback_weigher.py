@@ -104,6 +104,7 @@ class CallbackWeigher(Functions, WebSocket):
 					if self.relay_index_tracker[instance_name][weigher_name] >= len(rele_list):
 						self.relay_index_tracker[instance_name][weigher_name] = 0
 						self.switch_to_call_instance_weigher[instance_name][weigher_name] = 0
+				self.autoResetTare(instance_name=instance_name, weigher_name=weigher_name, pesa_real_time=pesa_real_time, numeric_gross_weight=numeric_gross_weight)
 				weight1 = weighers_data[instance_name][weigher_name]["data"]["id_selected"]["weight1"]
 				if pesa_real_time.status == "ST" and weight1:
 					pesa_real_time.potential_net_weight = numeric_gross_weight - weight1 if numeric_gross_weight > weight1 else weight1 - numeric_gross_weight
@@ -118,6 +119,37 @@ class CallbackWeigher(Functions, WebSocket):
 		except Exception as e:
 			lb_log.error(e)
 			pass
+
+	# Toglie in automatico la tara quando la pesa viene scaricata (lordo <= peso minimo).
+	# Condizioni: c'è una tara impostata, il peso è stabile oppure il lordo è esattamente 0,
+	# e non c'è nessun accesso selezionato (altrimenti cancellerebbe la tara preimpostata del mezzo
+	# inviata alla selezione, mentre la pesa è ancora vuota).
+	def autoResetTare(self, instance_name: str, weigher_name: str, pesa_real_time: Realtime, numeric_gross_weight):
+		try:
+			min_weight = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"]
+			if numeric_gross_weight > min_weight:
+				return
+			if pesa_real_time.status != "ST" and numeric_gross_weight != 0:
+				return
+			tare_digits = "".join(c for c in str(pesa_real_time.tare or "") if c.isdigit() or c in ".,").replace(",", ".")
+			try:
+				tare_value = float(tare_digits) if tare_digits else 0
+			except ValueError:
+				return
+			if tare_value == 0:
+				return
+			data = weighers_data[instance_name][weigher_name]["data"]
+			if data["id_selected"]["id"] is not None:
+				return
+			# invia il comando solo se la pesa è in REALTIME e non ci sono altri comandi in coda/esecuzione
+			modope = md_weigher.module_weigher.getModope(instance_name=instance_name, weigher_name=weigher_name)
+			current_modope = md_weigher.module_weigher.getCurrentModope(instance_name=instance_name, weigher_name=weigher_name)
+			if modope != "REALTIME" or current_modope != "REALTIME":
+				return
+			md_weigher.module_weigher.setModope(instance_name=instance_name, weigher_name=weigher_name, modope="PRESETTARE", presettare=0)
+			lb_log.info(f"Tara {pesa_real_time.tare} rimossa in automatico su {instance_name}/{weigher_name}: pesa scaricata")
+		except Exception as e:
+			lb_log.warning(f"Rimozione automatica tara non riuscita: {e}")
 
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di diagnostica
 	def Callback_Diagnostic(self, instance_name: str, weigher_name: str, diagnostic: Diagnostic):
