@@ -121,15 +121,13 @@ class CallbackWeigher(Functions, WebSocket):
 			pass
 
 	# Toglie in automatico la tara quando la pesa viene scaricata (lordo <= peso minimo).
-	# Condizioni: c'è una tara impostata, il peso è stabile oppure il lordo è esattamente 0,
+	# Condizioni: c'è una tara impostata (non serve che il peso sia stabile)
 	# e non c'è nessun accesso selezionato (altrimenti cancellerebbe la tara preimpostata del mezzo
 	# inviata alla selezione, mentre la pesa è ancora vuota).
 	def autoResetTare(self, instance_name: str, weigher_name: str, pesa_real_time: Realtime, numeric_gross_weight):
 		try:
 			min_weight = lb_config.g_config["app_api"]["weighers"][instance_name]["nodes"][weigher_name]["min_weight"]
 			if numeric_gross_weight > min_weight:
-				return
-			if pesa_real_time.status != "ST" and numeric_gross_weight != 0:
 				return
 			tare_digits = "".join(c for c in str(pesa_real_time.tare or "") if c.isdigit() or c in ".,").replace(",", ".")
 			try:
