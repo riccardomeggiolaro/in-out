@@ -21,6 +21,9 @@ Ogni messaggio è: intestazione JSON su una riga, "\\n", corpo binario.
     {"t":"ws_close","id","code"}                             {"t":"ws_close","id","code"}
 
 L'accesso remoto si può disattivare con `app_api.message_broker.remote_access = false`.
+
+Sullo stesso canale passa anche il terminale SSH del pannello (messaggi ssh_*, vedi
+`remote_ssh.py`), che ha un interruttore separato (`remote_ssh` nella configurazione del broker).
 """
 
 import http.client
@@ -31,6 +34,7 @@ from typing import Callable, Dict, Optional
 
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
+from modules.md_message_broker.remote_ssh import RemoteSSH
 
 try:  # import a livello di modulo: così PyInstaller include anche websockets.sync
 	from websockets.sync.client import connect as ws_connect
@@ -82,6 +86,7 @@ class RemoteTunnel:
 		self._executor = ThreadPoolExecutor(max_workers=MAX_WORKERS, thread_name_prefix="remote-http")
 		self._sockets: Dict[str, object] = {}
 		self._lock = threading.Lock()
+		self.ssh = RemoteSSH(client_id, self._send)
 
 	@staticmethod
 	def enabled() -> bool:
@@ -111,6 +116,9 @@ class RemoteTunnel:
 		kind = header.get("t")
 		if not sid:
 			return
+		if isinstance(kind, str) and kind.startswith("ssh_"):
+			self.ssh.handle(kind, sid, header, body)
+			return
 		if not self.enabled():
 			if kind == "http":
 				self._send({"t": "http", "id": sid, "error": "accesso remoto disattivato sull'in-out"})
@@ -133,7 +141,8 @@ class RemoteTunnel:
 			self._close_socket(sid)
 
 	def close_all(self) -> None:
-		"""Connessione MQTT persa: i websocket aperti non possono più rispondere."""
+		"""Connessione MQTT persa: i websocket e i terminali aperti non possono più rispondere."""
+		self.ssh.close_all()
 		with self._lock:
 			sockets = list(self._sockets.items())
 			self._sockets.clear()
