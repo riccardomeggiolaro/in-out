@@ -20,7 +20,8 @@ Funzionamento:
   l'host del broker. L'in-out genera la sua chiave, si registra sul servizio di
   registrazione del broker (porta 8884) e rinnova il certificato prima della scadenza.
 - Accesso remoto (vedi `remote_tunnel.py`): sulla stessa connessione il pannello del
-  broker inoltra richieste HTTP e websocket all'API locale dell'in-out.
+  broker inoltra richieste HTTP e websocket all'API locale dell'in-out, e apre un
+  terminale SSH verso il sshd locale (vedi `remote_ssh.py`).
 """
 
 import base64
@@ -43,6 +44,7 @@ from libs.lb_utils import base_path, createThread, startThread
 from modules.md_message_broker.dto import MessageBrokerDTO
 from modules.md_message_broker import enrollment
 from modules.md_message_broker.remote_tunnel import RemoteTunnel
+from modules.md_message_broker import remote_ssh
 
 name_module = "md_message_broker"
 
@@ -153,6 +155,8 @@ class ModuleMessageBroker:
 		if settings.get("broker"):
 			try:
 				self.config = MessageBrokerDTO(**settings["broker"])
+				if not self.config.remote_ssh:
+					remote_ssh.remove_key(self.config.ssh_user)
 			except Exception as e:
 				lb_log.error(f"Configurazione message broker non valida: {e}")
 		self.outbox_dir = self._resolve_dir(settings.get("outbox_dir") or DEFAULT_OUTBOX_DIR)
@@ -420,6 +424,11 @@ class ModuleMessageBroker:
 		"""Imposta (o rimuove con None) la configurazione del broker e prova a connettersi."""
 		with self._lock:
 			self._disconnect()
+			# Terminale remoto disattivato o utente cambiato: la chiave del broker non deve restare
+			old_ssh_user = self.config.ssh_user if self.config and self.config.remote_ssh else None
+			new_ssh_user = config.ssh_user if config and config.remote_ssh else None
+			if old_ssh_user and old_ssh_user != new_ssh_user:
+				remote_ssh.remove_key(old_ssh_user)
 			# Certificati di un altro broker: si eliminano e ci si registra sul nuovo
 			if config is not None:
 				owner = self._certificates_owner() or (self.config.host if self.config else None)

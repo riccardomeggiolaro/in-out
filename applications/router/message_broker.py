@@ -42,11 +42,15 @@ class MessageBrokerRouter:
         include_images: bool = Form(True),
         include_pdf: bool = Form(True),
         include_csv: bool = Form(True),
+        remote_ssh: bool = Form(True),
+        ssh_user: str = Form("root"),
+        ssh_port: int = Form(22),
     ):
         try:
             body = MessageBrokerDTO(
                 host=host, port=port, enroll_port=enroll_port,
                 include_images=include_images, include_pdf=include_pdf, include_csv=include_csv,
+                remote_ssh=remote_ssh, ssh_user=ssh_user, ssh_port=ssh_port,
             )
         except ValidationError as e:
             raise HTTPException(status_code=400, detail=e.errors()[0]["msg"].replace("Value error, ", ""))

@@ -1,3 +1,5 @@
+import re
+
 from pydantic import BaseModel, field_validator
 
 
@@ -21,6 +23,12 @@ class MessageBrokerDTO(BaseModel):
 	include_images: bool = True
 	include_pdf: bool = True
 	include_csv: bool = True
+	# Terminale SSH dal pannello del broker (attraverso la connessione MQTT, vedi remote_ssh.py)
+	remote_ssh: bool = True
+	# Utente Linux con cui si apre il terminale (la chiave del broker va nel suo authorized_keys)
+	ssh_user: str = "root"
+	# Porta del sshd locale
+	ssh_port: int = 22
 
 	@field_validator("host")
 	@classmethod
@@ -30,7 +38,15 @@ class MessageBrokerDTO(BaseModel):
 			raise ValueError("Host obbligatorio")
 		return v
 
-	@field_validator("port", "enroll_port")
+	@field_validator("ssh_user")
+	@classmethod
+	def validate_ssh_user(cls, v):
+		v = (v or "").strip() or "root"
+		if not re.match(r"^[a-z_][a-z0-9_.-]{0,31}$", v):
+			raise ValueError("Utente SSH non valido")
+		return v
+
+	@field_validator("port", "enroll_port", "ssh_port")
 	@classmethod
 	def validate_port(cls, v):
 		if not 1 <= v <= 65535:

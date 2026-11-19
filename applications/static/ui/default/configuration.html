@@ -801,6 +801,9 @@
                                 <strong>Allegati:</strong>
                                 <span id="mb-info-attachments"></span>
 
+                                <strong>Terminale remoto:</strong>
+                                <span id="mb-info-ssh"></span>
+
                                 <strong>Stato:</strong>
                                 <span id="mb-info-status">-</span>
 
@@ -1007,6 +1010,18 @@
                 <label for="mb-include-pdf">Report PDF</label>
                 <input type="checkbox" id="mb-include-csv">
                 <label for="mb-include-csv">CSV</label>
+                <br><br>
+
+                <label><b>Terminale remoto</b>:</label>
+                <br>
+                <input type="checkbox" id="mb-remote-ssh">
+                <label for="mb-remote-ssh">Consenti il terminale SSH dal pannello del broker</label>
+                <br>
+                <label for="mb-ssh-user">Utente SSH:</label>
+                <input type="text" id="mb-ssh-user" placeholder="root">
+                <br>
+                <small style="color: #666;">Il terminale passa dalla connessione MQTT, senza aprire porte: l'in-out installa la chiave del broker
+                    in authorized_keys di questo utente, valida solo per le connessioni dal tunnel. Disattivando l'opzione la chiave viene rimossa.</small>
                 <br><br>
 
                 <div class="container-buttons right">
@@ -4553,6 +4568,9 @@
             if (c.include_pdf) attachments.push('PDF');
             if (c.include_csv) attachments.push('CSV');
             document.getElementById('mb-info-attachments').textContent = attachments.join(', ') || 'Nessuno (solo dati)';
+            document.getElementById('mb-info-ssh').textContent = c.remote_ssh === false
+                ? 'Disattivato'
+                : `Attivo (utente ${c.ssh_user || 'root'})`;
             testMessageBroker(false);
             // Aggiorna periodicamente lo stato solo se la scheda è visibile
             messageBrokerStatusTimer = setInterval(() => {
@@ -4599,11 +4617,17 @@
             document.getElementById('mb-include-images').checked = c.include_images !== false;
             document.getElementById('mb-include-pdf').checked = c.include_pdf !== false;
             document.getElementById('mb-include-csv').checked = c.include_csv !== false;
+            document.getElementById('mb-remote-ssh').checked = c.remote_ssh !== false;
+            document.getElementById('mb-ssh-user').value = c.ssh_user || 'root';
             showModalEl(mbModal('message-broker-modal'));
         }
 
         function closeMessageBrokerModal() {
             hideModalEl(mbModal('message-broker-modal'));
+        }
+
+        function mbSshPort() {
+            return (currentMessageBrokerConfig && currentMessageBrokerConfig.ssh_port) || 22;
         }
 
         function saveMessageBroker() {
@@ -4626,6 +4650,9 @@
             form.append('include_images', document.getElementById('mb-include-images').checked);
             form.append('include_pdf', document.getElementById('mb-include-pdf').checked);
             form.append('include_csv', document.getElementById('mb-include-csv').checked);
+            form.append('remote_ssh', document.getElementById('mb-remote-ssh').checked);
+            form.append('ssh_user', document.getElementById('mb-ssh-user').value.trim() || 'root');
+            form.append('ssh_port', mbSshPort());
             modal.querySelectorAll("input, button, select").forEach(e => e.disabled = true);
             showSnackbar("snackbar", "Registrazione e connessione al broker in corso...", 'rgb(255, 255, 208)', 'black');
             fetch('/api/message-broker', { method: 'POST', body: form })
