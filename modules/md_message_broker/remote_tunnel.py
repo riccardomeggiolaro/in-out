@@ -22,6 +22,7 @@ Ogni messaggio è: intestazione JSON su una riga, "\\n", corpo binario.
 
 L'accesso remoto si può disattivare con `app_api.message_broker.remote_access = false`.
 
+Il pannello può chiedere lo stato della macchina con {"t":"info","id"} (vedi `remote_info.py`).
 Sullo stesso canale passa anche il terminale SSH del pannello (messaggi ssh_*, vedi
 `remote_ssh.py`), che ha un interruttore separato (`remote_ssh` nella configurazione del broker).
 """
@@ -34,6 +35,7 @@ from typing import Callable, Dict, Optional
 
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
+from modules.md_message_broker import remote_info
 from modules.md_message_broker.remote_ssh import RemoteSSH
 
 try:  # import a livello di modulo: così PyInstaller include anche websockets.sync
@@ -119,6 +121,9 @@ class RemoteTunnel:
 		if isinstance(kind, str) and kind.startswith("ssh_"):
 			self.ssh.handle(kind, sid, header, body)
 			return
+		if kind == "info":
+			self._executor.submit(self._info, sid)
+			return
 		if not self.enabled():
 			if kind == "http":
 				self._send({"t": "http", "id": sid, "error": "accesso remoto disattivato sull'in-out"})
@@ -160,6 +165,15 @@ class RemoteTunnel:
 				ws.close()
 			except Exception:
 				pass
+
+	def _info(self, sid: str) -> None:
+		"""Stato della macchina per il pannello del broker (vedi remote_info.py)."""
+		try:
+			data = remote_info.collect()
+			data["remote_access"] = self.enabled()
+			self._send({"t": "info", "id": sid, "ok": True, "data": data})
+		except Exception as e:
+			self._send({"t": "info", "id": sid, "ok": False, "error": str(e)})
 
 	# ------------------------------------------------------------------
 	# HTTP

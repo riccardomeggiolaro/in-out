@@ -25,7 +25,8 @@ class MessageBrokerDTO(BaseModel):
 	include_csv: bool = True
 	# Terminale SSH dal pannello del broker (attraverso la connessione MQTT, vedi remote_ssh.py)
 	remote_ssh: bool = True
-	# Utente Linux con cui si apre il terminale (la chiave del broker va nel suo authorized_keys)
+	# Utente con cui si apre il terminale (la chiave del broker va nel suo authorized_keys).
+	# Su Windows "root" vuol dire: l'utente con cui gira l'in-out.
 	ssh_user: str = "root"
 	# Porta del sshd locale
 	ssh_port: int = 22
@@ -42,7 +43,8 @@ class MessageBrokerDTO(BaseModel):
 	@classmethod
 	def validate_ssh_user(cls, v):
 		v = (v or "").strip() or "root"
-		if not re.match(r"^[a-z_][a-z0-9_.-]{0,31}$", v):
+		# Linux: nomi POSIX; Windows: anche maiuscole, spazi e DOMINIO\utente
+		if not re.match(r"^[A-Za-z0-9_][A-Za-z0-9_. \\@-]{0,63}$", v):
 			raise ValueError("Utente SSH non valido")
 		return v
 

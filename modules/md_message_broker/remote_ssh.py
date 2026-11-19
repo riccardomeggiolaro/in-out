@@ -24,15 +24,22 @@ Messaggi (intestazione JSON + "\\n" + corpo, come il resto del tunnel):
 Impostazioni (configurazione del broker sull'in-out):
 - `remote_ssh` (default true): se false le richieste vengono rifiutate e la chiave
   del broker viene tolta da authorized_keys;
-- `ssh_user` (default "root"): utente Linux con cui si apre il terminale;
+- `ssh_user` (default "root" su Linux, l'utente dell'in-out su Windows): utente con cui si apre il terminale;
 - `ssh_port` (default 22): porta del sshd locale.
 
-Solo Linux: su Windows le richieste vengono rifiutate.
+Linux: la chiave va in ~<ssh_user>/.ssh/authorized_keys.
+Windows (Win32-OpenSSH): se OpenSSH Server manca, l'in-out ne avvia l'installazione
+(Add-WindowsCapability, serve che giri come amministratore) e lo avvia; la chiave va in
+C:\\ProgramData\\ssh\\administrators_authorized_keys se l'utente è amministratore, altrimenti
+in %USERPROFILE%\\.ssh\\authorized_keys, con i permessi richiesti da sshd. Su Windows
+l'utente di default è quello con cui gira l'in-out.
 """
 
+import getpass
 import os
 import re
 import socket
+import subprocess
 import tempfile
 import threading
 from typing import Callable, Dict, Optional
@@ -45,14 +52,21 @@ try:
 except ImportError:  # Windows
 	pwd = None
 
+IS_WINDOWS = os.name == "nt"
 # Commento che identifica la riga installata dall'in-out in authorized_keys
 KEY_MARKER = "in-out-remote-broker"
 KEY_OPTIONS = 'from="127.0.0.1,::1",no-agent-forwarding,no-X11-forwarding,no-port-forwarding'
 RE_PUBLIC_KEY = re.compile(r"^(ssh-ed25519|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521|ssh-rsa) [A-Za-z0-9+/]+={0,3}$")
-RE_USER = re.compile(r"^[a-z_][a-z0-9_.-]{0,31}$")
+# Linux: nomi POSIX. Windows: anche maiuscole, spazi e dominio (DOMINIO\utente)
+RE_USER = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_. \\@-]{0,63}$")
 CONNECT_TIMEOUT = 10
 READ_SIZE = 32 * 1024
 MAX_SESSIONS = 8
+# Windows: SID dei gruppi usati nei permessi dei file delle chiavi (indipendenti dalla lingua)
+SID_ADMINISTRATORS = "*S-1-5-32-544"
+SID_SYSTEM = "*S-1-5-18"
+WINDOWS_CAPABILITY = "OpenSSH.Server~~~~0.0.1.0"
+SUBPROCESS_FLAGS = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
 def _settings() -> dict:
@@ -65,7 +79,11 @@ def enabled() -> bool:
 
 
 def ssh_user() -> str:
-	return str(_settings().get("ssh_user") or "root").strip()
+	user = str(_settings().get("ssh_user") or "").strip()
+	if IS_WINDOWS and user in ("", "root"):
+		# Su Windows "root" non esiste: utente con cui gira l'in-out
+		user = getpass.getuser()
+	return user or "root"
 
 
 def ssh_port() -> int:
@@ -76,53 +94,135 @@ def ssh_port() -> int:
 
 
 def supported() -> bool:
-	return os.name == "posix" and pwd is not None
+	return IS_WINDOWS or (os.name == "posix" and pwd is not None)
 
 
-# ----------------------------------------------------------------------
-# authorized_keys
-# ----------------------------------------------------------------------
-def _account(user: str):
-	if not supported():
-		raise RuntimeError("terminale remoto disponibile solo sugli in-out Linux")
-	if not RE_USER.match(user or ""):
-		raise RuntimeError(f"utente SSH non valido: {user!r}")
+def sshd_listening(timeout: float = 1.0) -> bool:
 	try:
-		return pwd.getpwnam(user)
+		with socket.create_connection(("127.0.0.1", ssh_port()), timeout=timeout):
+			return True
+	except OSError:
+		return False
+
+
+def _run(args, timeout: float = 60) -> subprocess.CompletedProcess:
+	return subprocess.run(args, capture_output=True, text=True, timeout=timeout, creationflags=SUBPROCESS_FLAGS)
+
+
+def _powershell(script: str, timeout: float = 60) -> subprocess.CompletedProcess:
+	return _run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], timeout)
+
+
+# ----------------------------------------------------------------------
+# File delle chiavi
+# ----------------------------------------------------------------------
+class _KeyFile:
+	"""Un file authorized_keys da tenere aggiornato, con i permessi giusti per sshd."""
+
+	def __init__(self, path: str, fix_permissions: Callable[[str], None]):
+		self.path = path
+		self.fix_permissions = fix_permissions
+
+	def read(self) -> list:
+		try:
+			with open(self.path, "r", encoding="utf-8-sig", errors="replace") as f:
+				return f.read().splitlines()
+		except FileNotFoundError:
+			return []
+
+	def write(self, lines) -> None:
+		directory = os.path.dirname(self.path)
+		os.makedirs(directory, exist_ok=True)
+		fd, tmp = tempfile.mkstemp(dir=directory, prefix=".authorized_keys.")
+		try:
+			with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+				f.write("".join(line + "\n" for line in lines))
+			os.replace(tmp, self.path)
+		except Exception:
+			try:
+				os.unlink(tmp)
+			except OSError:
+				pass
+			raise
+		self.fix_permissions(self.path)
+
+
+def _linux_key_files(user: str) -> list:
+	try:
+		account = pwd.getpwnam(user)
 	except KeyError:
 		raise RuntimeError(f"l'utente '{user}' non esiste sull'in-out")
-
-
-def _write_keys(account, lines) -> None:
+	if os.geteuid() != 0 and account.pw_uid != os.geteuid():
+		raise RuntimeError(f"l'in-out non ha i permessi per configurare l'utente '{user}'")
 	ssh_dir = os.path.join(account.pw_dir, ".ssh")
-	path = os.path.join(ssh_dir, "authorized_keys")
-	if not os.path.isdir(ssh_dir):
-		os.makedirs(ssh_dir, mode=0o700, exist_ok=True)
+
+	def fix(path: str) -> None:
+		os.chmod(ssh_dir, 0o700)
+		os.chmod(path, 0o600)
 		if os.geteuid() == 0:
 			os.chown(ssh_dir, account.pw_uid, account.pw_gid)
-	fd, tmp = tempfile.mkstemp(dir=ssh_dir, prefix=".authorized_keys.")
-	try:
-		with os.fdopen(fd, "w") as f:
-			f.write("".join(line + "\n" for line in lines))
-		os.chmod(tmp, 0o600)
-		if os.geteuid() == 0:
-			os.chown(tmp, account.pw_uid, account.pw_gid)
-		os.replace(tmp, path)
-	except Exception:
-		try:
-			os.unlink(tmp)
-		except OSError:
-			pass
-		raise
+			os.chown(path, account.pw_uid, account.pw_gid)
+
+	return [_KeyFile(os.path.join(ssh_dir, "authorized_keys"), fix)]
 
 
-def _read_keys(account) -> list:
-	path = os.path.join(account.pw_dir, ".ssh", "authorized_keys")
+def _windows_is_admin(user: str) -> Optional[bool]:
+	"""True/False se l'utente è (o non è) nel gruppo Administrators; None se non si riesce a saperlo."""
+	name = user.split("\\")[-1].lower()
 	try:
-		with open(path, "r", encoding="utf-8", errors="replace") as f:
-			return f.read().splitlines()
-	except FileNotFoundError:
-		return []
+		res = _powershell(
+			f"Get-LocalGroupMember -SID S-1-5-32-544 | ForEach-Object {{ $_.Name }}", timeout=30,
+		)
+	except (OSError, subprocess.SubprocessError):
+		return None
+	if res.returncode != 0:
+		return None
+	members = [line.strip().split("\\")[-1].lower() for line in res.stdout.splitlines() if line.strip()]
+	return name in members
+
+
+def _windows_key_files(user: str) -> list:
+	"""Win32-OpenSSH: gli amministratori usano solo C:\\ProgramData\\ssh\\administrators_authorized_keys,
+	gli altri utenti %USERPROFILE%\\.ssh\\authorized_keys. Se non si sa se l'utente è
+	amministratore si aggiornano entrambi."""
+	program_data = os.environ.get("ProgramData", r"C:\ProgramData")
+	admin_file = os.path.join(program_data, "ssh", "administrators_authorized_keys")
+	short = user.split("\\")[-1]
+	if short.lower() == getpass.getuser().lower():
+		profile = os.path.expanduser("~")
+	else:
+		profile = os.path.join(os.environ.get("SystemDrive", "C:") + "\\", "Users", short)
+
+	def fix_admin(path: str) -> None:
+		_run(["icacls", path, "/inheritance:r", "/grant", f"{SID_ADMINISTRATORS}:F", "/grant", f"{SID_SYSTEM}:F"])
+
+	def fix_user(path: str) -> None:
+		_run(["icacls", path, "/inheritance:r", "/grant", f"{short}:F", "/grant", f"{SID_SYSTEM}:F",
+			  "/grant", f"{SID_ADMINISTRATORS}:F"])
+
+	admin = _windows_is_admin(user)
+	files = []
+	if admin is not False:
+		files.append(_KeyFile(admin_file, fix_admin))
+	if admin is not True:
+		if not os.path.isdir(profile):
+			if admin is False:
+				raise RuntimeError(f"cartella dell'utente '{user}' non trovata ({profile})")
+		else:
+			files.append(_KeyFile(os.path.join(profile, ".ssh", "authorized_keys"), fix_user))
+	return files
+
+
+def _key_files(user: str) -> list:
+	if not supported():
+		raise RuntimeError("terminale remoto non disponibile su questo sistema operativo")
+	if not RE_USER.match(user or ""):
+		raise RuntimeError(f"utente SSH non valido: {user!r}")
+	if IS_WINDOWS:
+		if user.endswith("$"):
+			raise RuntimeError("l'in-out gira come servizio di sistema: imposta l'utente SSH nelle impostazioni del broker")
+		return _windows_key_files(user)
+	return _linux_key_files(user)
 
 
 def install_key(user: str, public_key: str, client_id: str) -> None:
@@ -130,31 +230,108 @@ def install_key(user: str, public_key: str, client_id: str) -> None:
 	parts = (public_key or "").strip().split()
 	if len(parts) < 2 or not RE_PUBLIC_KEY.match(f"{parts[0]} {parts[1]}"):
 		raise RuntimeError("chiave SSH del broker non valida")
-	account = _account(user)
-	if os.geteuid() != 0 and account.pw_uid != os.geteuid():
-		raise RuntimeError(f"l'in-out non ha i permessi per configurare l'utente '{user}'")
 	line = f"{KEY_OPTIONS} {parts[0]} {parts[1]} {KEY_MARKER}:{client_id}"
-	lines = _read_keys(account)
-	others = [l for l in lines if KEY_MARKER not in l]
-	if others + [line] == lines:
-		return
-	_write_keys(account, others + [line])
-	lb_log.info(f"Terminale remoto: chiave del broker installata per l'utente '{user}'")
+	changed = False
+	for key_file in _key_files(user):
+		lines = key_file.read()
+		others = [l for l in lines if KEY_MARKER not in l]
+		if others + [line] != lines:
+			key_file.write(others + [line])
+			changed = True
+	if changed:
+		lb_log.info(f"Terminale remoto: chiave del broker installata per l'utente '{user}'")
 
 
 def remove_key(user: Optional[str]) -> None:
 	"""Toglie la chiave del broker da authorized_keys (accesso SSH disattivato o utente cambiato)."""
 	if not user or not supported():
 		return
+	if IS_WINDOWS and user == "root":
+		user = getpass.getuser()
 	try:
-		account = _account(user)
-		lines = _read_keys(account)
-		others = [l for l in lines if KEY_MARKER not in l]
-		if others != lines:
-			_write_keys(account, others)
-			lb_log.info(f"Terminale remoto: chiave del broker rimossa per l'utente '{user}'")
+		for key_file in _key_files(user):
+			lines = key_file.read()
+			others = [l for l in lines if KEY_MARKER not in l]
+			if others != lines:
+				key_file.write(others)
+				lb_log.info(f"Terminale remoto: chiave del broker rimossa da {key_file.path}")
 	except Exception as e:
 		lb_log.warning(f"Terminale remoto: impossibile rimuovere la chiave del broker per '{user}': {e}")
+
+
+# ----------------------------------------------------------------------
+# Windows: OpenSSH Server
+# ----------------------------------------------------------------------
+_install_lock = threading.Lock()
+_install_state = {"running": False, "error": None}
+
+
+def _windows_service_state() -> Optional[str]:
+	"""'RUNNING', 'STOPPED'... oppure None se il servizio sshd non esiste."""
+	try:
+		res = _run(["sc", "query", "sshd"], timeout=15)
+	except (OSError, subprocess.SubprocessError):
+		return None
+	if res.returncode != 0:
+		return None
+	m = re.search(r"STATE\s*:\s*\d+\s+(\w+)", res.stdout)
+	return m.group(1) if m else "UNKNOWN"
+
+
+def _windows_install_sshd() -> None:
+	try:
+		lb_log.info("Terminale remoto: installazione di OpenSSH Server in corso")
+		res = _powershell(f"Add-WindowsCapability -Online -Name {WINDOWS_CAPABILITY} | Out-Null", timeout=1800)
+		if res.returncode != 0:
+			raise RuntimeError((res.stderr or res.stdout).strip()[:300] or "installazione non riuscita")
+		_powershell("Set-Service -Name sshd -StartupType Automatic; Start-Service sshd", timeout=120)
+		_install_state["error"] = None
+		lb_log.info("Terminale remoto: OpenSSH Server installato e avviato")
+	except Exception as e:
+		_install_state["error"] = f"installazione di OpenSSH Server non riuscita: {e}"
+		lb_log.error(f"Terminale remoto: {_install_state['error']}")
+	finally:
+		_install_state["running"] = False
+
+
+def ensure_windows_sshd() -> None:
+	"""Su Windows avvia sshd o, se manca, ne avvia l'installazione in background.
+	Solleva RuntimeError con un messaggio per il pannello se il server non è ancora pronto."""
+	if not IS_WINDOWS or sshd_listening():
+		return
+	state = _windows_service_state()
+	if state is not None:
+		if state != "RUNNING":
+			res = _powershell("Set-Service -Name sshd -StartupType Automatic; Start-Service sshd", timeout=60)
+			if res.returncode != 0:
+				raise RuntimeError("impossibile avviare il servizio sshd di Windows (serve che l'in-out "
+								   "giri come amministratore): " + (res.stderr or "").strip()[:200])
+		return
+	with _install_lock:
+		if _install_state["running"]:
+			raise RuntimeError("installazione di OpenSSH Server in corso sull'in-out: riprova tra qualche minuto")
+		if _install_state["error"]:
+			error, _install_state["error"] = _install_state["error"], None
+			raise RuntimeError(error)
+		_install_state["running"] = True
+	threading.Thread(target=_windows_install_sshd, name="remote-ssh-install", daemon=True).start()
+	raise RuntimeError("OpenSSH Server non era installato: installazione avviata sull'in-out, "
+					   "riprova tra qualche minuto")
+
+
+def status() -> dict:
+	"""Stato del terminale remoto per il pannello del broker."""
+	info = {
+		"supported": supported(),
+		"enabled": enabled(),
+		"user": ssh_user() if supported() else None,
+		"port": ssh_port(),
+		"listening": sshd_listening() if supported() else False,
+		"installing": _install_state["running"],
+	}
+	if IS_WINDOWS:
+		info["service"] = _windows_service_state()
+	return info
 
 
 # ----------------------------------------------------------------------
@@ -223,6 +400,7 @@ class RemoteSSH:
 				return
 		user = ssh_user()
 		try:
+			ensure_windows_sshd()
 			install_key(user, str(header.get("key") or ""), self.client_id)
 		except Exception as e:
 			fail(str(e))
@@ -230,7 +408,9 @@ class RemoteSSH:
 		try:
 			sock = socket.create_connection(("127.0.0.1", ssh_port()), timeout=CONNECT_TIMEOUT)
 		except OSError as e:
-			fail(f"sshd non raggiungibile su 127.0.0.1:{ssh_port()} ({e}): è installato e attivo?")
+			hint = ("avvia il servizio OpenSSH Server" if IS_WINDOWS
+					else "installa e avvia openssh-server: sudo apt-get install -y openssh-server && sudo systemctl enable --now ssh")
+			fail(f"sshd non raggiungibile su 127.0.0.1:{ssh_port()} ({e}): {hint}")
 			return
 		sock.settimeout(None)
 		sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
