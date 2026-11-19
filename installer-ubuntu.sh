@@ -170,6 +170,17 @@ cupsctl --remote-admin --remote-any --share-printers
 systemctl restart cups
 echo "Accesso remoto a CUPS abilitato"
 
+# Server SSH: serve al terminale remoto dal pannello del broker (attraverso la
+# connessione MQTT, si collega a 127.0.0.1:22: non serve aprire la porta all'esterno)
+if ! is_installed openssh-server; then
+    echo "Installazione di openssh-server..."
+    apt install -y openssh-server
+else
+    echo "openssh-server è già installato"
+fi
+systemctl enable --now ssh
+echo "Server SSH attivo"
+
 # Crea la directory di installazione /opt/in-out e copia i file
 if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
     echo "Creazione directory di installazione $INSTALL_DIR..."
