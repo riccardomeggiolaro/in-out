@@ -118,6 +118,17 @@ echo "Abilitazione e avvio del socket Cockpit..."
 systemctl enable --now cockpit.socket
 echo "Cockpit è attivo"
 
+# Server SSH: serve al terminale remoto dal pannello del broker (attraverso la
+# connessione MQTT, si collega a 127.0.0.1:22: non serve aprire la porta all'esterno)
+if ! is_installed openssh-server; then
+    echo "Installazione di openssh-server..."
+    apt install -y openssh-server
+else
+    echo "openssh-server è già installato"
+fi
+systemctl enable --now ssh
+echo "Server SSH attivo"
+
 # Crea la directory di installazione /opt/in-out e copia i file
 if [ "$SOURCE_DIR" != "$INSTALL_DIR" ]; then
     echo "Creazione directory di installazione $INSTALL_DIR..."
