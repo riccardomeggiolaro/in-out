@@ -429,8 +429,14 @@ class ModuleMessageBroker:
 			new_ssh_user = config.ssh_user if config and config.remote_ssh else None
 			if old_ssh_user and old_ssh_user != new_ssh_user:
 				remote_ssh.remove_key(old_ssh_user)
+			# Configurazione eliminata: via anche CA e certificato, così reimpostandola
+			# (anche con lo stesso host, es. broker reinstallato) si scarica la nuova CA
+			if config is None:
+				if self.has_ca() or self.has_client_certificate():
+					lb_log.info("Configurazione del broker eliminata: CA e certificato eliminati")
+				self._clear_certificates()
 			# Certificati di un altro broker: si eliminano e ci si registra sul nuovo
-			if config is not None:
+			else:
 				owner = self._certificates_owner() or (self.config.host if self.config else None)
 				if owner and owner != config.host:
 					lb_log.info(f"Host del broker cambiato ({owner} -> {config.host}): certificati eliminati")
