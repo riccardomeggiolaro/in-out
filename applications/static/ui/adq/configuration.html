@@ -978,16 +978,17 @@
                 <input type="text" id="mb-host" required>
                 <br><br>
 
-                <label for="mb-port">Porta MQTT: *</label>
-                <input type="number" id="mb-port" min="1" max="65535" required>
+                <label for="mb-port">Porta MQTT:</label>
+                <input type="number" id="mb-port" min="1" max="65535" placeholder="automatica">
                 <br><br>
 
-                <label for="mb-enroll-port">Porta registrazione: *</label>
-                <input type="number" id="mb-enroll-port" min="1" max="65535" required>
+                <label for="mb-enroll-port">Porta registrazione:</label>
+                <input type="number" id="mb-enroll-port" min="1" max="65535" placeholder="automatica">
                 <br>
                 <small style="color: #666;">Il certificato client viene richiesto e rinnovato automaticamente al broker su questa porta (HTTPS).
                     Al primo contatto l'in-out salva la CA del broker e da quel momento verifica sempre quella.<br>
-                    Broker con porta unica: imposta <b>443</b> sia come porta MQTT sia come porta registrazione (altrimenti 8883 e 8884).</small>
+                    Porte vuote = automatiche: <b>443</b> se l'host è un dominio (es. mqtt.esempio.it), <b>8883</b> e <b>8884</b> se è un IP della rete locale.
+                    Indicale solo se il broker usa porte diverse (es. 8883 e 8884 con un broker non ancora aggiornato alla porta unica).</small>
                 <br><br>
 
                 <label>Client ID / Topic: </label>
@@ -4544,9 +4545,9 @@
             const certs = currentMessageBrokerInfo.certificates || {};
             noConn.style.display = 'none';
             info.style.display = 'block';
-            document.getElementById('mb-info-server').textContent = `mqtts://${c.host}:${c.port}`;
+            document.getElementById('mb-info-server').textContent = `mqtts://${c.host}:${currentMessageBrokerInfo.mqtt_port || c.port || 8883}`;
             document.getElementById('mb-info-topic').textContent = currentMessageBrokerInfo.client_id || '-';
-            document.getElementById('mb-info-enroll').textContent = `https://${c.host}:${c.enroll_port || 8884}`;
+            document.getElementById('mb-info-enroll').textContent = `https://${c.host}:${currentMessageBrokerInfo.registration_port || c.enroll_port || 8884}`;
             document.getElementById('mb-info-cert').textContent = certs.cert && certs.cert.present
                 ? describeCertificate(certs.cert) + (certs.key && certs.key.present ? '' : ' / chiave mancante')
                 : 'Non ancora ottenuto (registrazione in corso)';
@@ -4599,9 +4600,10 @@
         function openMessageBrokerModal() {
             const c = currentMessageBrokerConfig || {};
             document.getElementById('mb-host').value = c.host || '';
-            document.getElementById('mb-port').value = c.port || 8883;
+            // Vuote = porte automatiche (443 con un dominio, 8883/8884 con un IP)
+            document.getElementById('mb-port').value = c.port || '';
             document.getElementById('mb-client-id').value = currentMessageBrokerInfo.client_id || '';
-            document.getElementById('mb-enroll-port').value = c.enroll_port || 8884;
+            document.getElementById('mb-enroll-port').value = c.enroll_port || '';
             document.getElementById('mb-include-images').checked = c.include_images !== false;
             document.getElementById('mb-include-pdf').checked = c.include_pdf !== false;
             document.getElementById('mb-include-csv').checked = c.include_csv !== false;
@@ -4622,15 +4624,11 @@
             const modal = mbModal('message-broker-modal');
             const host = document.getElementById('mb-host').value.trim();
             const port = document.getElementById('mb-port').value;
-            if (!host || !port) {
-                showSnackbar("snackbar", 'Host e porta sono obbligatori', 'rgb(255, 208, 208)', 'black');
+            if (!host) {
+                showSnackbar("snackbar", "L'host è obbligatorio", 'rgb(255, 208, 208)', 'black');
                 return;
             }
             const enrollPort = document.getElementById('mb-enroll-port').value;
-            if (!enrollPort) {
-                showSnackbar("snackbar", 'La porta di registrazione è obbligatoria', 'rgb(255, 208, 208)', 'black');
-                return;
-            }
             const form = new FormData();
             form.append('host', host);
             form.append('port', port);

@@ -245,7 +245,7 @@ class ModuleMessageBroker:
 			try:
 				lb_log.info("Nuovo certificato richiesto dal broker: generazione di una nuova chiave")
 				cert = enrollment.enroll(
-					config.host, config.enroll_port, self.client_id,
+					config.host, config.registration_port, self.client_id,
 					self.cert_path("ca"), self.cert_path("cert"), self.cert_path("key"),
 					hostname=socket.gethostname(), rotate_key=True,
 				)
@@ -309,7 +309,7 @@ class ModuleMessageBroker:
 			return
 		self._next_status_check = now + ENROLL_RETRY
 		try:
-			status = enrollment.certificate_status(config.host, config.enroll_port, self.cert_path("ca"), self.cert_path("cert"))
+			status = enrollment.certificate_status(config.host, config.registration_port, self.cert_path("ca"), self.cert_path("cert"))
 		except enrollment.EnrollmentError as e:
 			lb_log.warning(f"Impossibile verificare lo stato del certificato: {e}")
 			return
@@ -381,9 +381,9 @@ class ModuleMessageBroker:
 				return has
 			action = "Rinnovo" if has else "Registrazione"
 			try:
-				lb_log.info(f"{action} del certificato sul broker {config.host}:{config.enroll_port}")
+				lb_log.info(f"{action} del certificato sul broker {config.host}:{config.registration_port}")
 				cert = enrollment.enroll(
-					config.host, config.enroll_port, self.client_id,
+					config.host, config.registration_port, self.client_id,
 					self.cert_path("ca"), self.cert_path("cert"), self.cert_path("key"),
 					hostname=socket.gethostname(),
 				)
@@ -611,11 +611,11 @@ class ModuleMessageBroker:
 			try:
 				self._connected.clear()
 				client = self._create_client(config)
-				client.connect(config.host, config.port, keepalive=config.keepalive)
+				client.connect(config.host, config.mqtt_port, keepalive=config.keepalive)
 				client.loop_start()
 				self.client = client
 			except Exception as e:
-				self.last_error = f"Impossibile connettersi a {config.host}:{config.port}: {e}"
+				self.last_error = f"Impossibile connettersi a {config.host}:{config.mqtt_port}: {e}"
 				lb_log.error(self.last_error)
 				self._disconnect()
 				failed = True

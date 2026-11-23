@@ -1,6 +1,26 @@
+import ipaddress
 import re
+from typing import Optional
 
 from pydantic import BaseModel, field_validator
+
+# Porte usate quando non sono indicate: un broker con dominio pubblico ha la porta
+# unica 443 (MQTT e registrazione smistati per ALPN); in rete locale (IP o nome
+# senza dominio) il broker usa le porte dedicate.
+DOMAIN_PORT = 443
+LAN_MQTT_PORT = 8883
+LAN_ENROLL_PORT = 8884
+
+
+def is_domain(host: str) -> bool:
+	"""True per un nome di dominio (es. mqtt.esempio.it), False per IP o nomi locali."""
+	host = (host or "").strip().strip("[]")
+	try:
+		ipaddress.ip_address(host)
+		return False
+	except ValueError:
+		pass
+	return "." in host and not host.lower().endswith((".local", ".lan", ".localdomain"))
 
 
 class MessageBrokerDTO(BaseModel):
@@ -9,13 +29,14 @@ class MessageBrokerDTO(BaseModel):
 
 	La connessione è sempre in TLS con certificato client (mTLS). Il certificato
 	non si carica a mano: l'in-out lo ottiene da solo dal servizio di registrazione
-	del broker (`enroll_port`) e lo rinnova prima della scadenza. Il client ID viene
+	del broker (`registration_port`) e lo rinnova prima della scadenza. Il client ID viene
 	generato automaticamente ed è usato anche come CN del certificato e come topic.
 	"""
 	host: str
-	port: int = 8883
+	# Porte facoltative: vuote = 443 con un dominio, 8883/8884 con un IP (vedi mqtt_port)
+	port: Optional[int] = None
 	# Porta HTTPS del servizio di registrazione automatica del broker
-	enroll_port: int = 8884
+	enroll_port: Optional[int] = None
 	keepalive: int = 60
 	# Timeout (secondi) per la conferma di consegna (PUBACK/PUBCOMP) da parte del broker
 	publish_timeout: int = 30
@@ -51,6 +72,20 @@ class MessageBrokerDTO(BaseModel):
 	@field_validator("port", "enroll_port", "ssh_port")
 	@classmethod
 	def validate_port(cls, v):
-		if not 1 <= v <= 65535:
+		if v is not None and not 1 <= v <= 65535:
 			raise ValueError("Porta non valida")
 		return v
+
+	@property
+	def mqtt_port(self) -> int:
+		"""Porta MQTT effettiva."""
+		if self.port:
+			return self.port
+		return DOMAIN_PORT if is_domain(self.host) else LAN_MQTT_PORT
+
+	@property
+	def registration_port(self) -> int:
+		"""Porta effettiva del servizio di registrazione."""
+		if self.enroll_port:
+			return self.enroll_port
+		return DOMAIN_PORT if is_domain(self.host) else LAN_ENROLL_PORT
