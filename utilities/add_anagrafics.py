@@ -1,6 +1,8 @@
+import json
 import pandas as pd
 import requests
 from io import BytesIO
+from websockets.sync.client import connect as ws_connect
 
 # Prenotazioni permanenti (da pesatura.xlsx, foglio Preferiti)
 # Ogni riga: tessera (codice letto dal lettore) e codice cliente.
@@ -619,28 +621,43 @@ def get_vehicles_with_permanent_access():
     return ids
 
 
+def rename_locked(anagrafic, id_record, body, ws, id_request):
+    """Il server accetta la modifica solo se il record è bloccato via websocket."""
+    ws.send(json.dumps({"action": "lock", "anagrafic": anagrafic, "idRecord": id_record, "type": "UPDATE", "idRequest": id_request}))
+    while True:
+        message = json.loads(ws.recv(timeout=10))
+        if message.get("action") == "lock" and message.get("idRequest") == id_request:
+            break
+    if not message.get("success"):
+        return False, message.get("error")
+    response = requests.patch(f"{base_url}/{anagrafic}/{id_record}", json=body, headers=HEADERS)
+    return response.ok, f"{response.status_code} {response.text}"
+
+
 def ensure_subjects():
     """Crea i clienti via JSON (l'upload xlsx trasforma "00321" in 321).
     I clienti già caricati senza zeri iniziali vengono rinominati."""
     existing = get_ids("subject", "social_reason")
     created, renamed = 0, 0
-    for s in subjects:
-        name = s["social_reason"]
-        if name.upper() in existing:
-            continue
-        stripped = name.lstrip("0") or "0"
-        if stripped in existing:
-            response = requests.patch(f"{base_url}/subject/{existing[stripped]}", json={"social_reason": name}, headers=HEADERS)
+    ws_url = base_url.replace("http", "ws", 1) + f"/subject?token={AUTH_TOKEN}"
+    with ws_connect(ws_url) as ws:
+        for i, s in enumerate(subjects, start=1):
+            name = s["social_reason"]
+            if name.upper() in existing:
+                continue
+            stripped = name.lstrip("0") or "0"
+            if stripped in existing:
+                ok, detail = rename_locked("subject", existing[stripped], {"social_reason": name}, ws, i)
+                if ok:
+                    renamed += 1
+                else:
+                    print(f"Cliente {stripped} → {name}: errore {detail}")
+                continue
+            response = requests.post(f"{base_url}/subject", json=s, headers=HEADERS)
             if response.ok:
-                renamed += 1
+                created += 1
             else:
-                print(f"Cliente {stripped} → {name}: errore {response.status_code} {response.text}")
-            continue
-        response = requests.post(f"{base_url}/subject", json=s, headers=HEADERS)
-        if response.ok:
-            created += 1
-        else:
-            print(f"Cliente {name}: errore {response.status_code} {response.text}")
+                print(f"Cliente {name}: errore {response.status_code} {response.text}")
     print(f"Clienti creati: {created} | rinominati: {renamed}")
     print("-" * 60)
 
@@ -704,7 +721,8 @@ def create_reservations():
 # Carica tutti i file
 print("Inizio caricamento anagrafiche...\n")
 
-create_and_upload_xlsx(vehicles, "vehicle", f"{base_url}/vehicle/upload-file")
+existing_plates = get_ids("vehicle", "plate")
+create_and_upload_xlsx([v for v in vehicles if v["plate"].upper() not in existing_plates], "vehicle", f"{base_url}/vehicle/upload-file")
 ensure_subjects()
 ensure_cards()
 
