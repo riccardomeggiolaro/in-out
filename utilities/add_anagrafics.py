@@ -619,6 +619,48 @@ def get_vehicles_with_permanent_access():
     return ids
 
 
+def ensure_subjects():
+    """Crea i clienti via JSON (l'upload xlsx trasforma "00321" in 321).
+    I clienti già caricati senza zeri iniziali vengono rinominati."""
+    existing = get_ids("subject", "social_reason")
+    created, renamed = 0, 0
+    for s in subjects:
+        name = s["social_reason"]
+        if name.upper() in existing:
+            continue
+        stripped = name.lstrip("0") or "0"
+        if stripped in existing:
+            response = requests.patch(f"{base_url}/subject/{existing[stripped]}", json={"social_reason": name}, headers=HEADERS)
+            if response.ok:
+                renamed += 1
+            else:
+                print(f"Cliente {stripped} → {name}: errore {response.status_code} {response.text}")
+            continue
+        response = requests.post(f"{base_url}/subject", json=s, headers=HEADERS)
+        if response.ok:
+            created += 1
+        else:
+            print(f"Cliente {name}: errore {response.status_code} {response.text}")
+    print(f"Clienti creati: {created} | rinominati: {renamed}")
+    print("-" * 60)
+
+
+def ensure_cards():
+    """Registra le tessere una per una (non esiste un upload xlsx per le tessere)."""
+    existing = get_ids("card-registry", "code")
+    created = 0
+    for c in card_registry:
+        if c["code"].upper() in existing:
+            continue
+        response = requests.post(f"{base_url}/card-registry", json=c, headers=HEADERS)
+        if response.ok:
+            created += 1
+        else:
+            print(f"Tessera {c['code']} ({c['number']}): errore {response.status_code} {response.text}")
+    print(f"Tessere create: {created}")
+    print("-" * 60)
+
+
 def create_reservations():
     subject_ids = get_ids("subject", "social_reason")
     vehicle_ids = get_ids("vehicle", "plate")
@@ -660,14 +702,11 @@ def create_reservations():
 
 
 # Carica tutti i file
-print("Inizio caricamento file xlsx...\n")
+print("Inizio caricamento anagrafiche...\n")
 
 create_and_upload_xlsx(vehicles, "vehicle", f"{base_url}/vehicle/upload-file")
-create_and_upload_xlsx(drivers, "driver", f"{base_url}/driver/upload-file")
-create_and_upload_xlsx(vectors, "vector", f"{base_url}/vector/upload-file")
-create_and_upload_xlsx(subjects, "subject", f"{base_url}/subject/upload-file")
-create_and_upload_xlsx(materials, "material", f"{base_url}/material/upload-file")
-create_and_upload_xlsx(card_registry, "card-registry", f"{base_url}/card-registry/upload-file")
+ensure_subjects()
+ensure_cards()
 
 print("\nCaricamento anagrafiche completato!\n")
 
