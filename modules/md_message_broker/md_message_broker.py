@@ -18,7 +18,8 @@ Funzionamento:
   per non bloccare la coda all'infinito.
 - Il certificato client si ottiene da solo (vedi `enrollment.py`): basta impostare
   l'host del broker. L'in-out genera la sua chiave, si registra sul servizio di
-  registrazione del broker (porta 8884) e rinnova il certificato prima della scadenza.
+  registrazione del broker (porta 8884, o 443 con la porta unica: la connessione
+  dichiara l'ALPN "baronpesi-enroll", quella MQTT "mqtt") e rinnova il certificato.
 - Accesso remoto (vedi `remote_tunnel.py`): sulla stessa connessione il pannello del
   broker inoltra richieste HTTP e websocket all'API locale dell'in-out, e apre un
   terminale SSH verso il sshd locale (vedi `remote_ssh.py`).
@@ -30,6 +31,7 @@ import json
 import os
 import shutil
 import socket
+import ssl
 import threading
 import time
 import uuid
@@ -37,6 +39,8 @@ from datetime import datetime
 from typing import List, Optional, Tuple, Union
 
 import paho.mqtt.client as mqtt
+
+ALPN_MQTT = "mqtt"
 
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
@@ -576,11 +580,12 @@ class ModuleMessageBroker:
 		# Connessione sempre in TLS con il certificato ottenuto dalla registrazione
 		if not (self.has_ca() and self.has_client_certificate()):
 			raise RuntimeError("Certificato client non ancora ottenuto dal broker")
-		client.tls_set(
-			ca_certs=self.cert_path("ca"),
-			certfile=self.cert_path("cert"),
-			keyfile=self.cert_path("key"),
-		)
+		# ALPN "mqtt": sulla porta unica del broker (443) smista la connessione verso
+		# Mosquitto. Sulla porta dedicata (8883) viene ignorato.
+		ctx = ssl.create_default_context(cafile=self.cert_path("ca"))
+		ctx.load_cert_chain(certfile=self.cert_path("cert"), keyfile=self.cert_path("key"))
+		ctx.set_alpn_protocols([ALPN_MQTT])
+		client.tls_set_context(ctx)
 		client.on_connect = self._on_connect
 		client.on_message = self._on_message
 		client.on_disconnect = self._on_disconnect
