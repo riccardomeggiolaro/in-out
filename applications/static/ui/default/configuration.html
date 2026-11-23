@@ -993,7 +993,8 @@
                 <input type="number" id="mb-enroll-port" min="1" max="65535" required>
                 <br>
                 <small style="color: #666;">Il certificato client viene richiesto e rinnovato automaticamente al broker su questa porta (HTTPS).
-                    Al primo contatto l'in-out salva la CA del broker e da quel momento verifica sempre quella.</small>
+                    Al primo contatto l'in-out salva la CA del broker e da quel momento verifica sempre quella.<br>
+                    Broker con porta unica: imposta <b>443</b> sia come porta MQTT sia come porta registrazione (altrimenti 8883 e 8884).</small>
                 <br><br>
 
                 <label>Client ID / Topic: </label>

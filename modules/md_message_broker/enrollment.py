@@ -98,7 +98,13 @@ def _public_der(public_key) -> bytes:
 	return public_key.public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
 
 
+# ALPN della registrazione: sulla porta unica del broker (443) smista la connessione
+# verso il servizio di registrazione. Sulla porta dedicata (8884) viene ignorato.
+ALPN_ENROLL = "baronpesi-enroll"
+
+
 def _request(host: str, port: int, method: str, path: str, ctx: ssl.SSLContext, body: Optional[dict] = None):
+	ctx.set_alpn_protocols([ALPN_ENROLL])
 	conn = http.client.HTTPSConnection(host, port, timeout=TIMEOUT, context=ctx)
 	try:
 		headers = {"Accept": "application/json"}
