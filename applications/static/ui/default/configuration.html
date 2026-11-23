@@ -541,7 +541,6 @@
             <button class="menu-tab" onclick="changeSetupTab(event, 'message-broker')">BROKER MQTT</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'panel')">PANNELLO</button>
             <button class="menu-tab" onclick="changeSetupTab(event, 'siren')">SIRENA</button>
-            <button class="menu-tab" onclick="changeSetupTab(event, 'view-3d')">VISTA 3D</button>
         </div>
         <br>
         <div id="tabs">
@@ -717,12 +716,6 @@
                     <br>
                 </div>
                 <br>
-            </div>
-            <div id="view-3d" class="tab">
-                <div style="text-align: right; margin-bottom: 8px;">
-                    <button onclick="window.open('/static/config3d.html', '_blank')" class="btn-secondary">Apri a schermo intero</button>
-                </div>
-                <iframe id="view-3d-frame" title="Vista 3D dell'impianto" style="width: 100%; height: calc(100vh - 220px); min-height: 400px; border: 1px solid #ccc; border-radius: 8px; background: #f0f4f8;"></iframe>
             </div>
             <div id="instances" class="tab">
                 <div id="instance-sub-menu" class="instance-sub-menu"></div>
@@ -4082,11 +4075,6 @@
             document.querySelectorAll(".tab").forEach(div => div.style.display = 'none');
             document.querySelector(`#${tab}`).style.display = "block";
             event.target.classList.toggle("selected");
-            // La vista 3D viene caricata solo la prima volta che si apre la scheda
-            const frame3d = document.getElementById('view-3d-frame');
-            if (tab === 'view-3d' && frame3d && !frame3d.getAttribute('src')) {
-                frame3d.setAttribute('src', '/static/config3d.html');
-            }
         }
 
         function setMode(mode) {
