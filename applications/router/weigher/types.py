@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from modules.md_database.interfaces.subject import SubjectDTO
 from modules.md_database.interfaces.vector import VectorDTO
 from modules.md_database.interfaces.driver import DriverDTO
@@ -12,8 +12,10 @@ from datetime import datetime
 import libs.lb_config as lb_config
 
 class DataAssignedDTO(BaseModel):
-    accessId: int
-    userId: int
+    # Interi in ingresso; a fine pesata vengono sostituiti con il JSON di accesso e utente
+    # da inviare alla dashboard (callback_weigher.Callback_Weighing)
+    accessId: Union[int, str] = Field(union_mode='left_to_right')
+    userId: Union[int, str] = Field(union_mode='left_to_right')
     mode: str = "MANUAL" # MANUAL or AUTOMATIC
     token: Optional[str] = None
     identify_code: Optional[str] = None
@@ -69,7 +71,8 @@ class WeighingPicture(BaseModel):
     
 class Weight(BaseModel):
 	weight: Union[int, float] = None
-	date: Optional[datetime] = None
+	# Nel report contiene la data già formattata come testo (utils_report.get_data_variables)
+	date: Optional[Union[datetime, str]] = None
 	pid: Optional[str] = None
 	weighing_pictures: List[WeighingPicture] = []
     
