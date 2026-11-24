@@ -12,6 +12,7 @@ import asyncio
 from modules.md_weigher.types import Realtime, Diagnostic, Weight, WeightTerminal
 import libs.lb_config as lb_config
 import libs.lb_log as lb_log
+import libs.lb_watchdog as lb_watchdog
 from modules.md_database.md_database import AccessStatus, TypeAccess, AccessMode, TypeSubjectEnum
 from modules.md_database.functions.get_access_by_id import get_access_by_id
 from modules.md_database.functions.add_data import add_data
@@ -45,10 +46,20 @@ class CallbackWeigher(Functions, WebSocket):
 		super().__init__()
 
 		self.automatic_weighing_process = []
+		# Watchdog diagnostico: se il thread della pesa smette di mandare il peso in tempo reale
+		# salva lo stack di tutti i thread (vedi libs/lb_watchdog.py)
+		lb_watchdog.start(should_alert=self._watchdog_has_realtime_clients)
+
+	def _watchdog_has_realtime_clients(self, key):
+		instance_name, weigher_name = key
+		if instance_name not in weighers_data or weigher_name not in weighers_data[instance_name]:
+			return False
+		return len(weighers_data[instance_name][weigher_name]["sockets"].manager_realtime.active_connections) > 0
   
 	# ==== FUNZIONI RICHIAMABILI DENTRO LA APPLICAZIONE =================
 	# Callback che verrà chiamata dal modulo dgt1 quando viene ritornata un stringa di peso in tempo reale
 	def Callback_Realtime(self, instance_name: str, weigher_name: str, pesa_real_time: Realtime):
+		lb_watchdog.beat((instance_name, weigher_name))
 		try:
 			gross_weight = pesa_real_time.gross_weight
 			if gross_weight == "":
