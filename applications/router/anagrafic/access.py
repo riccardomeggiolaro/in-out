@@ -763,8 +763,11 @@ class AccessRouter(PanelSirenRouter):
 
     async def addAccess(self, request: Request, body: AddAccessDTO, status: Optional[AccessStatus] = None):
         try:
-            if request and not body.vehicle.id and not body.vehicle.plate:
-                raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa")
+            # Serve almeno uno tra targa e badge (tessera): con il badge la targa non è obbligatoria
+            has_plate = body.vehicle.id not in [None, -1] or bool(body.vehicle.plate and body.vehicle.plate.strip())
+            has_badge = body.idCardRegistry not in [None, -1]
+            if request and not has_plate and not has_badge:
+                raise HTTPException(status_code=400, detail="E' necessario l'inserimento di una targa o di un badge")
             elif request is not None:
                 status = None
 
@@ -964,6 +967,8 @@ class AccessRouter(PanelSirenRouter):
             data = get_data_by_id("access", id)
             if data["status"] == AccessStatus.CLOSED:
                 raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' è già stata chiusa")
+            elif not (data.get("vehicle") or {}).get("plate"):
+                raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' non ha una targa da chiamare")
             elif data["vehicle"]["plate"] in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' è già presente nel buffer")
             edit_buffer = await self.sendMessagePanel(data["vehicle"]["plate"], True)
@@ -992,6 +997,8 @@ class AccessRouter(PanelSirenRouter):
             if not locked_data:
                 raise HTTPException(status_code=403, detail=f"You need to block the access with id '{id}' before to delete its last weighing")
             data = get_data_by_id("access", id)
+            if not (data.get("vehicle") or {}).get("plate"):
+                raise HTTPException(status_code=400, detail=f"La prenotazione con id '{id}' non ha una targa da chiamare")
             if data["vehicle"]["plate"] not in self.buffer:
                 raise HTTPException(status_code=400, detail=f"La targa '{data['vehicle']['plate']}' della prenotazione con id '{id}' non è presente nel buffer")
             undo_buffer = await self.deleteMessagePanel(data["vehicle"]["plate"])
