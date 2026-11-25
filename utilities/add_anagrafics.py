@@ -562,8 +562,8 @@ drivers = []
 vectors = []
 subjects = [{"social_reason": s} for s in unique(r["subject"] for r in reservations)]
 materials = []
-# number = codice cliente (etichetta della tessera), code = codice letto dal lettore
-card_registry = [{"number": r["subject"], "code": r["card"]} for r in reservations]
+# number = code = codice letto dal lettore
+card_registry = [{"number": r["card"], "code": r["card"]} for r in reservations]
 
 # Token di autenticazione
 AUTH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJiYXJvbnBlc2kiLCJwYXNzd29yZCI6IiQyYiQxMiRQQUhFNGtoNmxuWG8zdzlTRjl0ajdPamVjbzkxdmdXNzVDcFM5QzBuM0JPNHNoYVdHR08ubSIsImxldmVsIjo0LCJkZXNjcmlwdGlvbiI6ImJhcm9ub3Blc2kiLCJkYXRlX2NyZWF0ZWQiOiIyMDI1LTEwLTMxVDEwOjIyOjEwLjIyODgyNiIsImV4cCI6NDkxNTUwNjk1OH0.EsGLRj73mXHK5hJ-FUyKyy51VKKMvIwODXMi5H4Kpos"
