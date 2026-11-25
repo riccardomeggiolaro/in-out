@@ -551,8 +551,9 @@ for r in reservations:
     _seen_cards.add(r["card"].upper())
     _seen_subjects.add(r["subject"].upper())
     _rows.append(r)
-# Tessere e prenotazioni vengono create in ordine crescente di numero tessera (ID_Preferiti)
-reservations = sorted(_rows, key=lambda r: int(r["id"]))
+# Le liste mostrano per primo l'ultimo record creato: si crea dal numero tessera più alto
+# al più basso, così a video tessere e prenotazioni risultano in ordine crescente (16 in cima)
+reservations = sorted(_rows, key=lambda r: int(r["id"]), reverse=True)
 
 # Anagrafiche ricavate dalle prenotazioni
 drivers = []
