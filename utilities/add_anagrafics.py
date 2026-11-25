@@ -506,7 +506,7 @@ reservations = [
     {"id": "528", "card": "01154A6CF5", "subject": "00528"},
     {"id": "529", "card": "01154A8F6C", "subject": "00529"},
     {"id": "530", "card": "01154A6C56", "subject": "00530"},
-    {"id": "531", "card": "01154A5A89", "subject": "00531"},
+    {"id": "531", "card": "01154A84F4", "subject": "00531"},  # nel CSV ha la stessa tessera di 00532
     {"id": "532", "card": "01154A5A89", "subject": "00532"},
     {"id": "533", "card": "01154A6E08", "subject": "00533"},
     {"id": "534", "card": "01154A6C91", "subject": "00534"},
@@ -536,7 +536,6 @@ reservations = [
     {"id": "558", "card": "0114C2542E", "subject": "00558"},
     {"id": "559", "card": "0114C2A22B", "subject": "00559"},
     {"id": "560", "card": "0114C2AB95", "subject": "00560"},
-    {"id": "531", "card": "01154A84F4", "subject": "00531"},
 ]
 
 
@@ -663,18 +662,30 @@ def ensure_subjects():
 
 
 def ensure_cards():
-    """Registra le tessere una per una (non esiste un upload xlsx per le tessere)."""
-    existing = get_ids("card-registry", "code")
-    created = 0
-    for c in card_registry:
-        if c["code"].upper() in existing:
-            continue
-        response = requests.post(f"{base_url}/card-registry", json=c, headers=HEADERS)
-        if response.ok:
-            created += 1
-        else:
-            print(f"Tessera {c['code']} ({c['number']}): errore {response.status_code} {response.text}")
-    print(f"Tessere create: {created}")
+    """Registra le tessere una per una (non esiste un upload xlsx per le tessere).
+    Le tessere già presenti con un numero diverso dall'ID_Preferiti vengono aggiornate."""
+    response = requests.get(f"{base_url}/card-registry/list", headers=HEADERS)
+    response.raise_for_status()
+    existing = {str(c["code"]).strip().upper(): c for c in response.json()["data"] if c.get("code")}
+    created, updated = 0, 0
+    ws_url = base_url.replace("http", "ws", 1) + f"/card-registry?token={AUTH_TOKEN}"
+    with ws_connect(ws_url) as ws:
+        for i, c in enumerate(card_registry, start=1):
+            current = existing.get(c["code"].upper())
+            if current:
+                if str(current.get("number") or "") != c["number"]:
+                    ok, detail = rename_locked("card-registry", current["id"], {"number": c["number"]}, ws, i)
+                    if ok:
+                        updated += 1
+                    else:
+                        print(f"Tessera {c['code']}: numero {current.get('number')} → {c['number']} errore {detail}")
+                continue
+            response = requests.post(f"{base_url}/card-registry", json=c, headers=HEADERS)
+            if response.ok:
+                created += 1
+            else:
+                print(f"Tessera {c['code']} ({c['number']}): errore {response.status_code} {response.text}")
+    print(f"Tessere create: {created} | numeri aggiornati: {updated}")
     print("-" * 60)
 
 
