@@ -1,12 +1,10 @@
 import json
-import pandas as pd
 import requests
-from io import BytesIO
 from websockets.sync.client import connect as ws_connect
 
 # Prenotazioni permanenti (da pesatura.xlsx, foglio Preferiti)
 # Ogni riga: ID_Preferiti (numero tessera), tessera (codice letto dal lettore) e codice cliente.
-# La targa del mezzo coincide con il codice della tessera.
+# Le prenotazioni non hanno targa: il mezzo è identificato dalla tessera.
 reservations = [
     {"id": "351", "card": "7A00618303", "subject": "00321"},
     {"id": "352", "card": "7A00613A4C", "subject": "00322"},
@@ -543,7 +541,7 @@ def unique(values):
     return list(dict.fromkeys(values))
 
 
-# Tessera e codice cliente devono essere univoci (targa e tessera sono campi unique):
+# Tessera e codice cliente devono essere univoci (la tessera è un campo unique):
 # in caso di doppioni si tiene la prima riga e si segnalano le altre.
 _seen_cards, _seen_subjects, _rows = set(), set(), []
 for r in reservations:
@@ -556,7 +554,6 @@ for r in reservations:
 reservations = _rows
 
 # Anagrafiche ricavate dalle prenotazioni
-vehicles = [{"plate": r["card"]} for r in reservations]
 drivers = []
 vectors = []
 subjects = [{"social_reason": s} for s in unique(r["subject"] for r in reservations)]
@@ -573,31 +570,6 @@ base_url = "http://localhost/api/anagrafic"
 
 
 # Funzione per creare e inviare file xlsx
-def create_and_upload_xlsx(data, filename, endpoint):
-    if not data:
-        print(f"{filename}: nessun dato, salto")
-        print("-" * 60)
-        return None
-    buffer = BytesIO()
-    df = pd.DataFrame(data)
-    df.to_excel(buffer, index=False, engine='openpyxl')
-    buffer.seek(0)
-
-    files = {'file': (filename, buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-
-    try:
-        response = requests.post(endpoint, files=files, headers=HEADERS)
-        print(f"{filename} → {endpoint}")
-        print(f"Status: {response.status_code}")
-        print(f"Response: {response.text}")
-        print("-" * 60)
-        return response
-    except Exception as e:
-        print(f"Errore con {filename}: {e}")
-        print("-" * 60)
-        return None
-
-
 def get_ids(anagrafic, key):
     """Ritorna una mappa valore → id per l'anagrafica indicata."""
     response = requests.get(f"{base_url}/{anagrafic}/list", headers=HEADERS)
@@ -609,14 +581,14 @@ def get_ids(anagrafic, key):
     }
 
 
-def get_vehicles_with_permanent_access():
+def get_cards_with_permanent_access():
     response = requests.get(f"{base_url}/access/list", params={"permanent": "true"}, headers=HEADERS)
     response.raise_for_status()
     ids = set()
     for access in response.json().get("data", []):
-        id_vehicle = access.get("idVehicle") or (access.get("vehicle") or {}).get("id")
-        if id_vehicle:
-            ids.add(id_vehicle)
+        id_card = access.get("idCardRegistry") or (access.get("card_registry") or {}).get("id")
+        if id_card:
+            ids.add(id_card)
     return ids
 
 
@@ -691,23 +663,21 @@ def ensure_cards():
 
 def create_reservations():
     subject_ids = get_ids("subject", "social_reason")
-    vehicle_ids = get_ids("vehicle", "plate")
     card_ids = get_ids("card-registry", "code")
-    already_reserved = get_vehicles_with_permanent_access()
+    already_reserved = get_cards_with_permanent_access()
 
     created, skipped, errors = 0, 0, 0
     for r in reservations:
         try:
-            id_vehicle = vehicle_ids[r["card"].upper()]
-            if id_vehicle in already_reserved:
+            id_card = card_ids[r["card"].upper()]
+            if id_card in already_reserved:
                 print(f"{r['card']}: prenotazione permanente già presente, salto")
                 skipped += 1
                 continue
             body = {
                 "typeSubject": "CUSTOMER",
                 "subject": {"id": subject_ids[r["subject"].upper()]},
-                "vehicle": {"id": id_vehicle},
-                "idCardRegistry": card_ids[r["card"].upper()],
+                "idCardRegistry": id_card,
                 "number_in_out": None,  # None = prenotazione permanente
                 "type": "RESERVATION",
                 "mode": "STANDARD",
@@ -732,8 +702,6 @@ def create_reservations():
 # Carica tutti i file
 print("Inizio caricamento anagrafiche...\n")
 
-existing_plates = get_ids("vehicle", "plate")
-create_and_upload_xlsx([v for v in vehicles if v["plate"].upper() not in existing_plates], "vehicle", f"{base_url}/vehicle/upload-file")
 ensure_subjects()
 ensure_cards()
 
