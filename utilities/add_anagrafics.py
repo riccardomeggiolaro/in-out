@@ -551,7 +551,8 @@ for r in reservations:
     _seen_cards.add(r["card"].upper())
     _seen_subjects.add(r["subject"].upper())
     _rows.append(r)
-reservations = _rows
+# Tessere e prenotazioni vengono create in ordine crescente di numero tessera (ID_Preferiti)
+reservations = sorted(_rows, key=lambda r: int(r["id"]))
 
 # Anagrafiche ricavate dalle prenotazioni
 drivers = []
