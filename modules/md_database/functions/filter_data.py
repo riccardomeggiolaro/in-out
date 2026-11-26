@@ -222,3 +222,19 @@ def filter_data(table_name, filters=None, limit=None, offset=None, fromDate=None
     except Exception as e:
         session.close()
         raise e
+
+async def filter_data_async(*args, **kwargs):
+    """Versione non bloccante di filter_data per gli endpoint FastAPI.
+
+    Esegue query e serializzazione JSON in un thread separato, cosi' l'event loop
+    resta libero (websocket realtime, ping/pong) anche con anagrafiche grandi.
+    Restituisce {"data": [...], "total_rows": n} gia' serializzato.
+    """
+    from fastapi.concurrency import run_in_threadpool
+    from fastapi.encoders import jsonable_encoder
+
+    def _run():
+        data, total_rows = filter_data(*args, **kwargs)
+        return jsonable_encoder({"data": data, "total_rows": total_rows})
+
+    return await run_in_threadpool(_run)

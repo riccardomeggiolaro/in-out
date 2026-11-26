@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import LockRecordType
 from modules.md_database.interfaces.card_registry import CardRegistry, AddCardRegistryDTO, SetCardRegistryDTO
-from modules.md_database.functions.filter_data import filter_data
+from modules.md_database.functions.filter_data import filter_data, filter_data_async
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.delete_all_data import delete_all_data
@@ -45,11 +45,7 @@ class CardRegistryRouter(WebSocket):
             if order_direction is not None:
                 del query_params["order_direction"]
             sort = (order_by, order_direction if order_direction else 'asc') if order_by else ('date_created', 'desc')
-            data, total_rows = filter_data("card-registry", query_params, limit, offset, None, None, sort)
-            return {
-                "data": data,
-                "total_rows": total_rows
-            }
+            return await filter_data_async("card-registry", query_params, limit, offset, None, None, sort)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 

@@ -481,9 +481,28 @@ function isDate(string) {
     return !isNaN(date.getTime());
 }
 
-async function showSuggestions(name_list, inputHtml, filter, inputValue, columns_to_obscure, popup, showList, condition = null, valueCondition = null) {
+// Ricerca anagrafiche: debounce + annullamento delle richieste superate.
+// Senza questo ogni tasto lanciava una query completa sul server, saturandolo
+// e facendo cadere il realtime della pesa ("Errore di ricezione").
+const SUGGESTIONS_DEBOUNCE_MS = 300;
+const SUGGESTIONS_LIMIT = 100;
+const suggestionsTimers = {};
+const suggestionsControllers = {};
+
+function showSuggestions(...args) {
+    const inputValue = args[3];
+    const showList = args[6];
+    clearTimeout(suggestionsTimers[showList]);
+    // All'apertura del popup (input vuoto) carica subito, mentre si digita attende una pausa
+    const delay = inputValue ? SUGGESTIONS_DEBOUNCE_MS : 0;
+    suggestionsTimers[showList] = setTimeout(() => {
+        delete suggestionsTimers[showList];
+        fetchSuggestions(...args);
+    }, delay);
+}
+
+async function fetchSuggestions(name_list, inputHtml, filter, inputValue, columns_to_obscure, popup, showList, condition = null, valueCondition = null) {
     const suggestionsList = document.getElementById(showList);
-    suggestionsList.innerHTML = ""; // Pulisce la lista precedente
 
     let currentId;
     let anagrafic_to_set;
@@ -506,16 +525,30 @@ async function showSuggestions(name_list, inputHtml, filter, inputValue, columns
     const alphabeticalField = name_list === 'vehicle' ? 'plate'
                              : name_list === 'material' || name_list === 'operator' ? 'description'
                              : 'social_reason';
-    let url = `/api/anagrafic/${name_list}/list?order_by=${alphabeticalField}&order_direction=asc&`;
+    let url = `/api/anagrafic/${name_list}/list?order_by=${alphabeticalField}&order_direction=asc&limit=${SUGGESTIONS_LIMIT}&`;
 
     if (anagrafic_to_set === 'vehicle' && selectedIdWeight !== null && selectedIdWeight["id"] === null) url += `permanentAssociatedFirstToWeighing1=true&`;
 
-    if (inputValue) url += `${filter}=${inputValue}%`;
+    if (inputValue) url += `${filter}=${encodeURIComponent(inputValue)}%`;
 
-    // Eseguire una chiamata HTTP per ottenere la lista
-    const response = await fetch(url)
-    .then(response => response.json())
-    .catch(error => console.error(error)); // Sostituisci con l'URL del tuo endpoint
+    // Annulla l'eventuale richiesta precedente ancora in corso per la stessa lista
+    if (suggestionsControllers[showList]) suggestionsControllers[showList].abort();
+    const controller = new AbortController();
+    suggestionsControllers[showList] = controller;
+
+    let response;
+    try {
+        const res = await fetch(url, { signal: controller.signal });
+        response = await res.json();
+    } catch (error) {
+        if (error.name !== 'AbortError') console.error(error);
+        return;
+    } finally {
+        if (suggestionsControllers[showList] === controller) delete suggestionsControllers[showList];
+    }
+    if (controller.signal.aborted || !response || !Array.isArray(response.data)) return;
+
+    suggestionsList.innerHTML = ""; // Pulisce la lista precedente solo quando arrivano i nuovi dati
 
     response.data.forEach(suggestion => {
         if (suggestion[filter] && suggestion.selected !== true || suggestion.id === currentId) {
