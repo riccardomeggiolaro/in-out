@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Request
 from typing import Dict, Union, Optional
 from modules.md_database.md_database import upload_file_datas_required_columns, LockRecordType
 from modules.md_database.interfaces.vehicle import Vehicle, AddVehicleDTO, SetVehicleDTO
-from modules.md_database.functions.filter_data import filter_data
+from modules.md_database.functions.filter_data import filter_data, filter_data_async
 from modules.md_database.functions.add_data import add_data
 from modules.md_database.functions.delete_data import delete_data
 from modules.md_database.functions.update_data import update_data
@@ -44,11 +44,7 @@ class VehicleRouter(WebSocket):
             if order_direction is not None:
                 del query_params["order_direction"]
             sort = (order_by, order_direction if order_direction else 'asc') if order_by else ('date_created', 'desc')
-            data, total_rows = filter_data("vehicle", query_params, limit, offset, None, None, sort, permanentAssociatedFirstToWeighing1)
-            return {
-                "data": data,
-                "total_rows": total_rows
-            }
+            return await filter_data_async("vehicle", query_params, limit, offset, None, None, sort, permanentAssociatedFirstToWeighing1)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"{e}")
 
